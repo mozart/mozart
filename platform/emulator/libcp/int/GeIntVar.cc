@@ -35,7 +35,7 @@ using namespace Gecode::Int;
 
 
 OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
-  printf("unifyV GeIntVar\n");fflush(stdout);
+  ////  printf("unifyV GeIntVar\n");fflush(stdout);
   //  if (!OZ_isGeIntVar(*rPtr)) return OZ_suspendOnInternal(*rPtr);
   
   GeIntVar* lgeintvar = this;
@@ -57,16 +57,25 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
     GeIntVar* rgeintvar = get_GeIntVar(*rPtr);
     IntVar& lintvar = lgeintvar->getIntVarInfo();
     IntVar& rintvar = rgeintvar->getIntVarInfo();
+
+    if(am.inEqEq()) {
+      if( IsEmptyInter(rintvar, lintvar) ) return FAILED;
+      else {
+	trail.pushBind(lPtr);
+	trail.pushBind(rPtr);
+	return PROCEED;
+      }
+    }
     
     Assert(space);
     if(oz_isLocalVar(extVar2Var(lgeintvar))){
       if(!oz_isLocalVar(extVar2Var(rgeintvar))){
 	if(!(rgeintvar->intersect(makeTaggedRef(lPtr))))
 	  return FAILED;
-	printf("local, no local \n");fflush(stdout);
+	////	printf("local, no local \n");fflush(stdout);
 	oz_bindGlobalVar2(extVar2Var(rgeintvar), rPtr, makeTaggedRef(lPtr));	
       }else{
-	printf("unifyV GeIntVar this is local\n");fflush(stdout);
+	////	printf("unifyV GeIntVar this is local\n");fflush(stdout);
 	// "this" is local.  The binding cannot go upwards, so...    
 	//Assert(oz_isLocalVar(extVar2Var(rgeintvar)));
 	//I don't think this assert is correct,  other can be a global var
@@ -120,6 +129,17 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
 */
 OZ_Return GeIntVar::bindV(TaggedRef* vPtr, TaggedRef val) {
   if (validV(val)) {
+
+    if(am.inEqEq()) {
+      GeIntVar* gvar = get_GeIntVar(*vPtr);
+      IntVar& var = gvar->getIntVarInfo();
+      IntView vvar(var);
+      if( !vvar.in(OZ_intToC(val)) ) return FAILED;
+      else {
+	trail.pushBind(vPtr);
+	return PROCEED;
+      }
+    }
     //Board *tmp = oz_currentBoard();
     //am.setCurrent(extVar2Var(this)->getBoardInternal(),extVar2Var(this)->getBoardInternal()->getOptVar());
     if (oz_isLocalVar(extVar2Var(this))) {
@@ -225,6 +245,22 @@ TaggedRef GeIntVar::clone(TaggedRef v) {
   get_GeIntVar(v)->intersect(lv);
   return lv;
 }
+
+/*this function checks if the intersection between v1 and v2 is empty or not*/
+bool GeIntVar::IsEmptyInter(Gecode::Int::IntView v1, Gecode::Int::IntView v2) {
+  Gecode::Int::ViewRanges< Gecode::Int::IntView > vr1 (v1);
+  Gecode::Int::ViewRanges< Gecode::Int::IntView > vr2 (v2);
+  
+  while(true) {
+    if(!vr1() || !vr2() ) return true;
+    if( vr2.min() <= vr2.max() && vr2.max() <= vr1.max() && vr1.min() <= vr2.max() ) return false;
+    if( vr1.min() <= vr2.max() && vr1.max() <= vr2.max() && vr2.min() <= vr1.max() ) return false;
+    
+    if( vr2.max() <= vr1.max() ) ++vr2;
+    ++vr1;
+  }
+}
+
 
 #include <iostream>
 #include <sstream>
