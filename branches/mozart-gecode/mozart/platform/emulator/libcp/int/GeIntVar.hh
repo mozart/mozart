@@ -102,6 +102,8 @@ public:
   //clone para crear variable local desde los propagadores.
   virtual TaggedRef clone(TaggedRef v);
 
+  bool IsEmptyInter(Gecode::Int::IntView v1, Gecode::Int::IntView v2);
+
 };
 
 // This Gecode propagator reflects an IntVar assignment inside Mozart

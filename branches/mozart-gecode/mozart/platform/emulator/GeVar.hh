@@ -248,11 +248,10 @@ public:
     Assert(oz_isVar(oz_deref(ref)));	
     OzVariable *var=extVar2Var(oz_getExtVar(oz_deref(ref)));
     
-    SuspList *tmp[1];
-    tmp[0] = var->unlinkSuspList();
-    if (tmp[0]){
-      oz_checkAnySuspensionList(tmp, var->getBoardInternal(), pc_all);
-      var->setSuspList(tmp[0]);
+    if(oz_isGeVar(ref)) {
+      OzVariable *var=extVar2Var(oz_getExtVar(oz_deref(ref)));
+      SuspList **sl = var->getSuspListRef();
+      oz_checkAnySuspensionList(sl, var->getBoardInternal(), pc_all);
     }
 
     return Gecode::ES_FIX;
