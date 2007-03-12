@@ -108,7 +108,7 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
   
   }
   /* Unification is entailed by means of an eq propagator. After post this
-     propagator the generic space must becomes unstable. The unstability is
+     propagator the generic space must become unstable. The unstability is
      a result of posting the propagator */
     
  PROP:
@@ -140,39 +140,32 @@ OZ_Return GeIntVar::bindV(TaggedRef* vPtr, TaggedRef val) {
 	return PROCEED;
       }
     }
-    //Board *tmp = oz_currentBoard();
-    //am.setCurrent(extVar2Var(this)->getBoardInternal(),extVar2Var(this)->getBoardInternal()->getOptVar());
     if (oz_isLocalVar(extVar2Var(this))) {
-      //if (true) {
       // first bind the variable in Mozart
-      //printf("bindV var length=%d isVarOrRef=%d\n",extVar2Var(this)->getSuspListLengthS(),oz_isVarOrRef(val));fflush(stdout);
       oz_bindLocalVar(extVar2Var(this), vPtr, val);
 
       // then bind the IntVar in the GenericSpace
       GenericSpace* s =  extVar2Var(this)->getBoardInternal()->getGenericSpace();      
       int n = OZ_intToC(val);
-      //printf("GeIntVar::bindV\n");fflush(stdout);
+      
       ModEvent me = IntView(getIntVarInfo()).eq(s, n);
       Assert(!me_failed(me));     // must succeed
 
       unsigned long alt = 0; //useless variable
-      //      return (s->status(alt)== Gecode::SS_FAILED) ? FAILED: PROCEED ;
+      
       if (s->status(alt) == Gecode::SS_FAILED) {
 	extVar2Var(this)->getBoardInternal()->setFailed();
 	return FAILED;
       }
-      //printf("end bindV\n");fflush(stdout);
       return PROCEED;
 
       // wakeup space propagators to inmediatly update all related variables
       //unsigned int alt = 0; //useless variable
       //s->status(alt);
     } else {
-      //cout<<"NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO global var"<<endl; fflush(stdout);
       // global binding...
       oz_bindGlobalVar(extVar2Var(this), vPtr, val);
     }
-    //am.setCurrent(tmp,tmp->getOptVar());
     return PROCEED;
   }
   return OZ_FAILED;
@@ -204,7 +197,6 @@ Bool GeIntVar::validV(TaggedRef val) {
 }
 
 OZ_Term GeIntVar::statusV() {
-  //printf("called statusV\n");fflush(stdout);
   return OZ_mkTupleC("kinded", 1, OZ_atom("int"));
 }
 
@@ -261,6 +253,36 @@ bool GeIntVar::IsEmptyInter(Gecode::Int::IntView v1, Gecode::Int::IntView v2) {
   }
 }
 
+inline
+void GeIntVar::ensureValReflection(OZ_Term ref) {
+  Assert(OZ_isGeIntVar(ref));
+  if (!hasValRefl) {
+    GenericSpace *s = extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
+    // post the var reflector propagator
+    s->setVarRef(index,ref);
+    Gecode::Int::IntVarImp *ivp = reinterpret_cast<Gecode::Int::IntVarImp*>(s->getVar(index));
+     GeView<Gecode::Int::IntVarImp> iv(ivp);
+     Gecode::Int::IntView *vv = reinterpret_cast<Gecode::Int::IntView*>(&iv);
+     new (s) IntVarReflector(s, *vv, index);
+     hasValRefl = true;
+  }
+}
+
+inline
+void GeIntVar::ensureDomReflection(OZ_Term ref) {
+  Assert(OZ_isGeIntVar(ref));
+  if (!hasDomRefl) {
+    GenericSpace *s = extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
+    // post the dom reflector propagator
+    s->setVarRef(index,ref);
+    Gecode::Int::IntVarImp *ivp = reinterpret_cast<Gecode::Int::IntVarImp*>(s->getVar(index));
+    GeView<Gecode::Int::IntVarImp> iv(ivp);
+    Gecode::Int::IntView *vv = reinterpret_cast<Gecode::Int::IntView*>(&iv);
+    new (s) VarInspector<Gecode::Int::IntView, Gecode::Int::PC_INT_DOM>(s,*vv,index); 
+    hasDomRefl = true;
+  }
+}
+
 
 #include <iostream>
 #include <sstream>
@@ -271,7 +293,6 @@ void GeIntVar::printStreamV(ostream &out,int depth) {
   std::stringstream oss;
   oss << getIntVarInfo();
   out << "<GeIntVar " << oss.str().c_str() << ">"; 
-  //printf("called print stream-FINISHED\n");fflush(stdout);
 }
 
 void module_init_geintvar(void){
