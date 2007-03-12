@@ -58,8 +58,8 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
     oz_currentBoard()->deleteGenericSpace();
     return FAILED;
   } 
-  //printf("lateThread %p\n",gs);fflush(stdout);
-  if (!gs->solved()) {
+  printf("lateThread %p is entailed?? %d\n",gs,gs->isEntailed());fflush(stdout);
+  if (!gs->isSolved()) {
   	TaggedRef t =  gs->getTrigger();
   	DEREF(t,t_ptr);
   	return oz_var_addSusp(t_ptr, oz_currentThread());
