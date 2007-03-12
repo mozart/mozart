@@ -57,7 +57,7 @@ unsigned long int GenericSpace::unused_uli;
 int GenericSpace::gscounter = 0;
 
 GenericSpace::GenericSpace(Board* b) 
-  : vars(), board(b), determined(0),
+  : vars(), board(b), determined(0), domReflVars(0),
     gc_pred(NULL), gc_succ(NULL), gc_marked(false),
     allocatedMemory(usedMem())
 {
@@ -71,7 +71,7 @@ inline
 GenericSpace::GenericSpace(GenericSpace& s, bool share) 
     : Space(share, s), vars(this, s.vars, share),      
       board(s.board),
-      determined(s.determined), trigger(s.trigger),
+      determined(s.determined), domReflVars(s.domReflVars), trigger(s.trigger),
       gc_pred(NULL), gc_succ(NULL), gc_marked(false),
       allocatedMemory(usedMem())
 {
@@ -96,13 +96,8 @@ GenericSpace::~GenericSpace(void) {
   }
   gscounter--;
 
-  //  printf("Delete-antes: New Allocated memory: %u - %u\n",GeSpaceAllocatedMem,allocatedMemory);fflush(stdout);
-
   GeSpaceAllocatedMem = GeSpaceAllocatedMem <= allocatedMemory ?
     0 : GeSpaceAllocatedMem - allocatedMemory;
-  
-  //GeSpaceAllocatedMem-=allocatedMemory;
-  //printf("Delete: New Allocated memory: %u - %u\n",GeSpaceAllocatedMem,allocatedMemory);fflush(stdout);
 }
 
 inline
@@ -110,13 +105,24 @@ void GenericSpace::setBoard(Board* b) {
   board = b;
 }
 
+//inline
+bool GenericSpace::isStable(void) {
+  Assert(getTrigger());
+  return oz_isReadOnly(oz_deref(getTrigger()));
+}
+
 inline
 void GenericSpace::makeStable(void) { 
-  Assert(getTrigger());
-  if (oz_isReadOnly(oz_deref(getTrigger()))) {
-    return;
+  if (!isStable()) {
+    trigger = oz_newReadOnly(board);
   }
-  trigger = oz_newReadOnly(board);
+  /*
+    Assert(getTrigger());
+    if (oz_isReadOnly(oz_deref(getTrigger()))) {
+    return;
+    }
+    trigger = oz_newReadOnly(board);
+  */
 }
 
 inline

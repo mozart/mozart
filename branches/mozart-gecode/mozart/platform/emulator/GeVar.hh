@@ -111,6 +111,7 @@ public:
 
 
   int getIndex(void) {return index;}
+  bool hasDomReflector(void) {return hasDomRefl; }
 
   virtual void printDomain(void) = 0;
 
@@ -149,6 +150,14 @@ inline
 bool oz_isGeVar(OZ_Term t) {
   OZ_Term dt = OZ_deref(t);
   return oz_isExtVar(dt) && oz_getExtVar(dt)->getIdV() == OZ_EVAR_GEVAR;
+}
+
+inline 
+GeVar * get_GeVar(OZ_Term v) {
+  OZ_Term ref = OZ_deref(v);
+  Assert(oz_isGeVar(ref));
+  ExtVar *ev = oz_getExtVar(ref);
+  return static_cast<GeVar*>(ev);
 }
 
 inline
@@ -201,12 +210,18 @@ public:
     //    printf("Variable determined by gecode....%d\n",index);fflush(stdout);
     //    cout<<"SPACE::::: "<<s<<endl; fflush(stdout);    
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
+    GeVar *gv = get_GeVar(ref);
+
     //printf("GeVar.hh ExecStatus index=%d\n",index);fflush(stdout);
     GenericSpace *tmp = static_cast<GenericSpace*>(s);        
     OZ_Term val = getVal();
     OZ_Return ret = OZ_unify(ref, val);
     if (ret == FAILED) return Gecode::ES_FAILED;
     tmp->incDetermined();
+    if (gv->hasDomReflector()) {
+      printf("decrementing space dom reflection\n");fflush(stdout);
+      tmp->decDomReflVars();
+    }
     return Gecode::ES_SUBSUMED;
   }
 };
@@ -237,7 +252,7 @@ public:
 
   virtual OZ_Term getVarRef(GenericSpace* s) {return s->getVarRef(index); }
 
-  // this propagator should never fail
+  // this propagator should never fail nor subsume
   Gecode::ExecStatus propagate(Gecode::Space* s) {
     printf("Variable inspected from mozart ....%d\n",index);fflush(stdout);    
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
