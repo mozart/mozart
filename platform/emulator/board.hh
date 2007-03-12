@@ -434,6 +434,7 @@ public:
   //GenericSpace declaration
 private:
   GenericSpace *gespace;
+  Thread *lateThread;
 public:
   /* Return the generic space corresponding to this board. This method will
      create it lazily if needed unless to is set to true (to stands for test
@@ -444,7 +445,8 @@ public:
       if (gespace == NULL) {
 	//printf("creating new gespace on request\n");fflush(stdout);
     	gespace = new GenericSpace(this);
-    	oz_newThreadInject(this)->pushCall(BI_PROP_GEC,NULL);
+	lateThread = oz_newThreadInject(this);
+	lateThread->pushCall(BI_PROP_GEC,NULL);
       }	
     }
     
@@ -457,8 +459,10 @@ public:
     //printf("Deleting genericspace\n");fflush(stdout);
     delete gespace;
     gespace = NULL;
-    //printf("deleted \n);fflush(stdout);
+    lateThread = NULL;
   }
+
+  Thread * getLateThread(void) { return lateThread; }
 #endif
 
 };

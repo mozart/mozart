@@ -44,8 +44,6 @@ public:
     : Gecode::VariableViewBase<Var>(static_cast<Var*>(var)) {} 
 };
 
-
-
 enum GeVarType {T_GeIntVar, T_GeSetVar};
 
 /** 
@@ -55,14 +53,13 @@ class GeVar : public ExtVar {
 private:
   GeVarType type;    /// Type of variable (e.g IntVar, SetVar, etc)
 protected:
-  //  GenericSpace *home;     /// The GeSpace the variable belongs to
   int index;        /// The index inside the corresponding GenericSpace
-
+  bool hasValRefl, hasDomRefl;  /// Refelction Mechanism control
  
   /// Copy constructor
   GeVar(GeVar& gv) : ExtVar(extVar2Var(&gv)->getBoardInternal()),
-		     type(gv.type), 
-		     index(gv.index) 
+		     type(gv.type), index(gv.index),  
+		     hasValRefl(gv.hasValRefl), hasDomRefl(gv.hasDomRefl) 
   {
     // ensure a valid type of varable.
     Assert(type >= T_GeIntVar && type <= T_GeSetVar);
@@ -78,7 +75,8 @@ public:
    * @param n The index inside the corresponding GenericSpace
    */
   GeVar(int n, GeVarType t) :
-    ExtVar(oz_currentBoard()), type(t), index(n)
+    ExtVar(oz_currentBoard()), type(t), index(n), 
+    hasValRefl(false), hasDomRefl(false) 
   {
     Assert(type >= T_GeIntVar && type <= T_GeSetVar);
   }

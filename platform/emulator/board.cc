@@ -107,6 +107,7 @@ Board::Board()
   setGCStep(oz_getGCStep());
 #ifdef BUILD_GECODE
   gespace = NULL;
+  lateThread = NULL;
 #endif
 }
 
@@ -125,7 +126,8 @@ Board::Board(Board * p)
 #ifdef BUILD_GECODE
   if(p->gespace != NULL) {
     gespace = new GenericSpace(this);
-    oz_newThreadInject(this)->pushCall(BI_PROP_GEC,NULL);
+    lateThread = oz_newThreadInject(this);
+    lateThread->pushCall(BI_PROP_GEC,NULL);
   } else {
     gespace = NULL;
   }

@@ -104,6 +104,10 @@ public:
 
   bool IsEmptyInter(Gecode::Int::IntView v1, Gecode::Int::IntView v2);
 
+  // reflection mechanism 
+  void ensureValReflection(OZ_Term t);
+  void ensureDomReflection(OZ_Term t);
+
 };
 
 // This Gecode propagator reflects an IntVar assignment inside Mozart
@@ -124,28 +128,18 @@ public:
   bool IsDet(){return x0.assigned();}
 };
 
-inline void postIntVarReflector(GenericSpace* s, int index, OZ_Term ref) {
-  s->setVarRef(index,ref);
-
-  Gecode::Int::IntVarImp *ivp = reinterpret_cast<Gecode::Int::IntVarImp*>(s->getVar(index));
-  GeView<Gecode::Int::IntVarImp> iv(ivp);
-  Gecode::Int::IntView *vv = reinterpret_cast<Gecode::Int::IntView*>(&iv);
-  new (s) IntVarReflector(s, *vv, index);
-   
-  printf("before post\n");fflush(stdout); 
- 
-  //temporal:
-  new (s) VarInspector<Gecode::Int::IntView, Gecode::Int::PC_INT_DOM>(s,*vv,index);
-}
 
 inline OZ_Term new_GeIntVar(const Gecode::IntSet& dom) {
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
   Gecode::IntVar x(sp,dom);
-  OzVariable* ov   = extVar2Var(new GeIntVar(sp->getVarsSize()));
+  GeIntVar *nv = new GeIntVar(sp->getVarsSize());
+  OzVariable* ov   = extVar2Var(nv);
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
   int index        = sp->newVar(static_cast<Gecode::VarBase*>(x.variable()), ref);
 
-  postIntVarReflector(sp,index,ref);
+  nv->ensureValReflection(ref);
+  //  nv->ensureDomReflection(ref);
+ 
   return ref;
 }
 
