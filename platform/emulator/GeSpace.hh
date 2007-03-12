@@ -215,6 +215,7 @@ private:
    * when all the variables in the space become determined. 
    */
   unsigned int determined;
+  unsigned int domReflVars;
   
   static unsigned long int unused_uli;
   
@@ -254,10 +255,23 @@ public:
   // return current trigger
   TaggedRef getTrigger(void) { return trigger; }
 
-  bool solved(void) { 
+  bool isSolved(void) { 
     return determined == (vars.getSize()); }
   void incDetermined(void) { determined++; }
 
+  /**
+     \brief Returns whether the generic space is stable or not.
+     
+  */
+  bool isStable();
+
+  bool isEntailed(void) { 
+    Assert(isStable());
+    int nondet = vars.getSize() - determined;
+    return (nondet + domReflVars) == propagators();
+  }
+  void incDomReflVars(void) { domReflVars++; }
+  void decDomReflVars(void) { domReflVars--; }
 
   /// \name Variable creation
   //@{

@@ -278,7 +278,8 @@ void GeIntVar::ensureDomReflection(OZ_Term ref) {
     Gecode::Int::IntVarImp *ivp = reinterpret_cast<Gecode::Int::IntVarImp*>(s->getVar(index));
     GeView<Gecode::Int::IntVarImp> iv(ivp);
     Gecode::Int::IntView *vv = reinterpret_cast<Gecode::Int::IntView*>(&iv);
-    new (s) VarInspector<Gecode::Int::IntView, Gecode::Int::PC_INT_DOM>(s,*vv,index); 
+    new (s) VarInspector<Gecode::Int::IntView, Gecode::Int::PC_INT_DOM>(s,*vv,index);
+    s->incDomReflVars();
     hasDomRefl = true;
   }
 }
