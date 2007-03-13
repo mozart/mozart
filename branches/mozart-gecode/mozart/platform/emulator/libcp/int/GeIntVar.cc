@@ -238,6 +238,20 @@ TaggedRef GeIntVar::clone(TaggedRef v) {
   return lv;
 }
 
+bool GeIntVar::hasSameDomain(TaggedRef v) {
+  Assert(OZ_isGeIntVar(v));
+  IntVar v1 = get_GeIntVar(v)->getIntVarInfo();
+  Gecode::Int::ViewRanges< Gecode::Int::IntView > vr1 (v1);
+  Gecode::Int::ViewRanges< Gecode::Int::IntView > vr2 (getIntVarInfo());
+  
+  while(true) {
+    if(!vr1() && !vr2()) return true;
+    if(!vr1() || !vr2()) return false;
+    if( (vr1.min() != vr2.min()) || (vr1.max() != vr2.max() ) ) return false;
+    ++vr1; ++vr2;
+  }
+}
+
 /*this function checks if the intersection between v1 and v2 is empty or not*/
 bool GeIntVar::IsEmptyInter(Gecode::Int::IntView v1, Gecode::Int::IntView v2) {
   Gecode::Int::ViewRanges< Gecode::Int::IntView > vr1 (v1);

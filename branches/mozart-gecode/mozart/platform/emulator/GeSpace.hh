@@ -218,7 +218,7 @@ private:
   unsigned int domReflVars;
   
   static unsigned long int unused_uli;
-  
+
 public:
   
   static int gscounter;

@@ -427,12 +427,16 @@ void Board::clearSuspList(Suspendable * killSusp) {
 void Board::checkStability(void) {
   Assert(!isRoot() && !isFailed() && !isCommitted());
   Assert(this == oz_currentBoard());
-
   crt--;
   
   Board * pb = getParent();
   
   if (isStable()) {
+
+#ifdef BUILD_GECODE    
+    if(!trail.isEmptyChunk())
+      setScript(trail.unwindGeVar(this));
+#endif
 
     pb->decRunnableThreads();
 
@@ -528,7 +532,7 @@ void Board::fail(void) {
 
 OZ_Return Board::installScript(Bool isMerging)
 {
-  //cout<<"installScript"<<endl; fflush(stdout);
+  printf("installScript on board: %p\n",this); fflush(stdout);
   TaggedRef xys = oz_deref(script);
 
   setScript(oz_nil());
@@ -575,7 +579,7 @@ OZ_Return Board::installScript(Bool isMerging)
       TaggedRef xaux = x;
       if (oz_isGeVar(y)) {
 	GeVar *tmpVar2 = static_cast<GeVar*>(var2ExtVar(tagged2Var(oz_deref(y))));
-	//printf(" install %s  \n",oz_varGetName(x));fflush(stdout);        
+	printf(" install %s  \n",oz_varGetName(x));fflush(stdout);        
 	if (oz_isLocalVar(tagged2Var(oz_deref(y)))) {
 	  res = oz_unify(x,gespace->getVarRef(tmpVar2->getIndex()));	
 	  //printf(" install end %s  %d\n",oz_varGetName(x),res);fflush(stdout);    
@@ -595,8 +599,8 @@ OZ_Return Board::installScript(Bool isMerging)
       //No siempre es verdadero este invariante porque la variable local puede estar determinada
       //Esto no puede ser solo si es Int,  debe es mejor si esta determinado.
       
-      if(!oz_isVarOrRef(oz_deref(y)))  
-	res = oz_unify(x,y);		      
+      if(!oz_isVarOrRef(oz_deref(y))) 
+	res = oz_unify(x,y);
     } else 
       res = oz_unify(x,y);
     
