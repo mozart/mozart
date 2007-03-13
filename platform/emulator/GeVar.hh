@@ -142,6 +142,9 @@ public:
   virtual bool intersect(TaggedRef x) = 0;
   virtual bool In(TaggedRef x) = 0;
   virtual TaggedRef clone(TaggedRef v) = 0;
+
+  virtual bool hasSameDomain(TaggedRef) = 0;
+
   
 
 };
@@ -158,6 +161,19 @@ GeVar * get_GeVar(OZ_Term v) {
   Assert(oz_isGeVar(ref));
   ExtVar *ev = oz_getExtVar(ref);
   return static_cast<GeVar*>(ev);
+}
+
+inline
+bool oz_isGeVar(OzVariable *v) {
+  /*printf("Estoy en esta funcion oz_isGeVar con OzVariable \n"); fflush(stdout);
+  if(! (v->getType() == OZ_VAR_EXT)) return false;
+  ExtVar *vextVar = var2ExtVar(v);
+
+  bool res = vextVar->getIdV() == OZ_EVAR_GEVAR;
+  printf("Despues de esta mierda: %d \n",res); fflush(stdout);
+  return res;*/
+  if ( v->getType() != OZ_VAR_EXT ) return false;
+  return var2ExtVar(v)->getIdV() == OZ_EVAR_GEVAR;
 }
 
 inline
