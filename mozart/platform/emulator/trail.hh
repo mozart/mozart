@@ -75,10 +75,6 @@ public:
 
   void pushVariable(TaggedRef *);
 
-  //void pushGeVariable(TaggedRef *, TaggedRef);
-  //void pushGeVariable(TaggedRef *);
-
-
   /*
    * Popping
    *
@@ -90,7 +86,6 @@ public:
 
   void popVariable(TaggedRef *&, OzVariable *&);
   
-  void popGeVariable(TaggedRef *&, OzVariable *&);
   /*
    * Unwinding
    *
@@ -101,6 +96,13 @@ public:
   void unwindFailed(void);
 
   void unwindEqEq(void);
+
+#ifdef BUILD_GECODE
+  bool isSpeculating(void);
+
+  TaggedRef unwindGeVar(Board *);
+#endif
+
 
 };
 
