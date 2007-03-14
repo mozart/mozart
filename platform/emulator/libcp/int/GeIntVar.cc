@@ -84,6 +84,10 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
 	  return FAILED;
 	oz_bindLocalVar(extVar2Var(this), lPtr, makeTaggedRef(rPtr));
 	eq(space, lintvar, rintvar);
+
+	//should be in the same method in gevar
+	lgeintvar->incLeftUnifyC();
+	space->incForeignProps();
       }
     }else{
       // "this" is global.
@@ -293,7 +297,7 @@ void GeIntVar::ensureDomReflection(OZ_Term ref) {
     GeView<Gecode::Int::IntVarImp> iv(ivp);
     Gecode::Int::IntView *vv = reinterpret_cast<Gecode::Int::IntView*>(&iv);
     new (s) VarInspector<Gecode::Int::IntView, Gecode::Int::PC_INT_DOM>(s,*vv,index);
-    s->incDomReflVars();
+    s->incForeignProps();
     hasDomRefl = true;
   }
 }
