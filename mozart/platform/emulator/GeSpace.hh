@@ -215,8 +215,14 @@ private:
    * when all the variables in the space become determined. 
    */
   unsigned int determined;
-  unsigned int domReflVars;
-  
+
+  /**
+   * \brief This variable is to count how many foreign propagators 
+   * have been posted in the space. Foreign propagators include domain
+   * reflection propagators and unification ones.
+   */
+  unsigned int foreignProps;
+
   static unsigned long int unused_uli;
 
 public:
@@ -268,10 +274,16 @@ public:
   bool isEntailed(void) { 
     Assert(isStable());
     int nondet = vars.getSize() - determined;
-    return (nondet + domReflVars) == propagators();
+    printf("Nondet: %d\n",nondet);fflush(stdout);
+    printf("foreignProps: %d\n",foreignProps);fflush(stdout);
+    printf("Propagators: %d\n",propagators());fflush(stdout);
+    return (nondet + foreignProps) == propagators();
   }
-  void incDomReflVars(void) { domReflVars++; }
-  void decDomReflVars(void) { domReflVars--; }
+
+  void incForeignProps(void) { foreignProps++; }
+  void decForeignProps(int d = 1) { foreignProps -= d; }
+
+ 
 
   /// \name Variable creation
   //@{
