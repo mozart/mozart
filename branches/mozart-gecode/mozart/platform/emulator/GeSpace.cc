@@ -57,7 +57,7 @@ unsigned long int GenericSpace::unused_uli;
 int GenericSpace::gscounter = 0;
 
 GenericSpace::GenericSpace(Board* b) 
-  : vars(), board(b), determined(0), domReflVars(0),
+  : vars(), board(b), determined(0), foreignProps(0),
     gc_pred(NULL), gc_succ(NULL), gc_marked(false),
     allocatedMemory(usedMem())
 {
@@ -71,8 +71,8 @@ inline
 GenericSpace::GenericSpace(GenericSpace& s, bool share) 
     : Space(share, s), vars(this, s.vars, share),      
       board(s.board),
-      determined(s.determined), domReflVars(s.domReflVars), trigger(s.trigger),
-      gc_pred(NULL), gc_succ(NULL), gc_marked(false),
+      determined(s.determined), foreignProps(s.foreignProps),
+      trigger(s.trigger), gc_pred(NULL), gc_succ(NULL), gc_marked(false),
       allocatedMemory(usedMem())
 {
   registerGeSpace(this);

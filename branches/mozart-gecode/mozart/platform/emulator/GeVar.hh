@@ -54,17 +54,29 @@ private:
   GeVarType type;    /// Type of variable (e.g IntVar, SetVar, etc)
 protected:
   int index;        /// The index inside the corresponding GenericSpace
+
+  // hasValRefl is unnecessary. we are not using it.
   bool hasValRefl, hasDomRefl;  /// Refelction Mechanism control
+
+  /**
+   \brief Counter for the number of unifications in that this variable 
+   is the left term. For example, if there is a unification X=Y the counter
+   of X is incremented by one but the one of Y is not modified.
+  */
+  unsigned int leftUnifyC;
+  
  
   /// Copy constructor
   GeVar(GeVar& gv) : ExtVar(extVar2Var(&gv)->getBoardInternal()),
 		     type(gv.type), index(gv.index),  
-		     hasValRefl(gv.hasValRefl), hasDomRefl(gv.hasDomRefl) 
+		     hasValRefl(gv.hasValRefl), hasDomRefl(gv.hasDomRefl),
+		     leftUnifyC(gv.leftUnifyC)
   {
     // ensure a valid type of varable.
     Assert(type >= T_GeIntVar && type <= T_GeSetVar);
   }
 
+  void incLeftUnifyC(void) { leftUnifyC++; }
 public:
   /// \name Constructor
   //@{
@@ -76,7 +88,7 @@ public:
    */
   GeVar(int n, GeVarType t) :
     ExtVar(oz_currentBoard()), type(t), index(n), 
-    hasValRefl(false), hasDomRefl(false) 
+    hasValRefl(false), hasDomRefl(false), leftUnifyC(0) 
   {
     Assert(type >= T_GeIntVar && type <= T_GeSetVar);
   }
@@ -125,9 +137,10 @@ public:
 
   /** 
       \brief Add a suspendable to the variable suspension list.
-      By default this function returns PROCEED for an ExtVar. However, for constraint variables
-      it should return SUSPEND as buil-tin mozart constraints variables (i.e FD, FS). Returning
-      PROCCED will lead to an infinite execution of BIwait built-in when it is used.
+      By default this function returns PROCEED for an ExtVar. However, 
+      for constraint variables it should return SUSPEND as buil-tin mozart 
+      constraints variables (i.e FD, FS). Returning PROCCED will lead to an 
+      infinite execution of BIwait built-in when it is used.
   */ 
   OZ_Return addSuspV(TaggedRef*, Suspendable* susp) {
     extVar2Var(this)->addSuspSVar(susp);
@@ -145,7 +158,7 @@ public:
 
   virtual bool hasSameDomain(TaggedRef) = 0;
 
-  
+  int getLeftUnifyC(void) { return leftUnifyC; }
 
 };
 
@@ -229,15 +242,17 @@ public:
     GeVar *gv = get_GeVar(ref);
 
     //printf("GeVar.hh ExecStatus index=%d\n",index);fflush(stdout);
-    GenericSpace *tmp = static_cast<GenericSpace*>(s);        
+    GenericSpace *gs = static_cast<GenericSpace*>(s);        
     OZ_Term val = getVal();
     OZ_Return ret = OZ_unify(ref, val);
     if (ret == FAILED) return Gecode::ES_FAILED;
-    tmp->incDetermined();
+    gs->incDetermined();
     if (gv->hasDomReflector()) {
       printf("decrementing space dom reflection\n");fflush(stdout);
-      tmp->decDomReflVars();
+      gs->decForeignProps();
     }
+    gs->decForeignProps(gv->getLeftUnifyC());
+      
     return Gecode::ES_SUBSUMED;
   }
 };
@@ -274,7 +289,6 @@ public:
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
    
     Assert(oz_isVarOrRef(ref));	
-    Assert(oz_isVar(oz_deref(ref)));	
     OzVariable *var=extVar2Var(oz_getExtVar(oz_deref(ref)));
     
     if(oz_isGeVar(ref)) {
