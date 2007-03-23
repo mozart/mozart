@@ -74,7 +74,7 @@ public:
   virtual ExtVar* sCloneV() { //printf("virtual ExtVar sCloneV()\n");fflush(stdout);
   return new GeIntVar(*this); }
 
-  virtual OZ_Return     unifyV(TaggedRef*, TaggedRef*);
+  //virtual OZ_Return     unifyV(TaggedRef*, TaggedRef*);
   virtual OZ_Return     bindV(TaggedRef*, TaggedRef);
 
   /** 
@@ -104,7 +104,15 @@ public:
 
   virtual bool hasSameDomain(TaggedRef v);
 
-  bool IsEmptyInter(Gecode::Int::IntView v1, Gecode::Int::IntView v2);
+  virtual bool IsEmptyInter(TaggedRef* var1, TaggedRef* var2);
+
+  virtual TaggedRef newVar();
+
+  virtual void propagator(GeVar *lgevar,GeVar *rgevar){
+      Gecode::IntVar& lintvar = (static_cast<GeIntVar*>(lgevar))->getIntVarInfo();
+      Gecode::IntVar& rintvar = (static_cast<GeIntVar*>(rgevar))->getIntVarInfo();    
+      eq(extVar2Var(lgevar)->getBoardInternal()->getGenericSpace(),lintvar, rintvar);
+  }
 
   // reflection mechanism 
   void ensureValReflection(OZ_Term t);
