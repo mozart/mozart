@@ -111,10 +111,11 @@ public:
   
   virtual void gCollectRecurseV() { }
   virtual void sCloneRecurseV() { }
-
-  virtual OZ_Return     unifyV(TaggedRef*, TaggedRef*) = 0;
+  
+  OZ_Return unifyV(TaggedRef* lPtr, TaggedRef* rPtr);
   virtual OZ_Return     bindV(TaggedRef*, TaggedRef) = 0;
   virtual Bool          validV(TaggedRef) = 0;
+ 
 
   virtual OZ_Term       statusV() = 0;
   virtual VarStatus checkStatusV() {
@@ -157,8 +158,16 @@ public:
   virtual TaggedRef clone(TaggedRef v) = 0;
 
   virtual bool hasSameDomain(TaggedRef) = 0;
+  virtual bool IsEmptyInter(TaggedRef*, TaggedRef*) = 0;
+
+
+  virtual TaggedRef newVar() = 0;
+
+  virtual void propagator(GeVar* var1,  GeVar* var2) = 0;
+
 
   int getLeftUnifyC(void) { return leftUnifyC; }
+
 
 };
 
@@ -235,12 +244,12 @@ public:
   virtual bool IsDet() = 0;
 
   // this propagator should never fail
-  Gecode::ExecStatus propagate(Gecode::Space* s) {
-    //    printf("Variable determined by gecode....%d\n",index);fflush(stdout);
-    //    cout<<"SPACE::::: "<<s<<endl; fflush(stdout);    
-    OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
-    GeVar *gv = get_GeVar(ref);
-
+  Gecode::ExecStatus propagate(Gecode::Space* s){
+  //    printf("Variable determined by gecode....%d\n",index);fflush(stdout);
+  //    cout<<"SPACE::::: "<<s<<endl; fflush(stdout);    
+  OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
+  GeVar *gv = get_GeVar(ref);
+  
     //printf("GeVar.hh ExecStatus index=%d\n",index);fflush(stdout);
     GenericSpace *gs = static_cast<GenericSpace*>(s);        
     OZ_Term val = getVal();
@@ -255,6 +264,9 @@ public:
       
     return Gecode::ES_SUBSUMED;
   }
+
+
+
 };
 
 
