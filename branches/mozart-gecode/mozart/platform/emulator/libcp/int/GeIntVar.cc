@@ -33,7 +33,7 @@ using namespace Gecode;
 using namespace Gecode::Int;
 
 
-
+/*
 OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
   ////  printf("unifyV GeIntVar\n");fflush(stdout);
   //  if (!OZ_isGeIntVar(*rPtr)) return OZ_suspendOnInternal(*rPtr);
@@ -42,13 +42,13 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
   GenericSpace* space = extVar2Var(lgeintvar)->getBoardInternal()->getGenericSpace();
 
    
-  /* the real condition we need to check here is:
-     if (oz_isSimpleVar(*rPtr) || oz_isOptVar(*rPtr))
-  */
+  // the real condition we need to check here is:
+  //   if (oz_isSimpleVar(*rPtr) || oz_isOptVar(*rPtr))
+  
   if (!OZ_isGeIntVar(*rPtr)) {
-    /* This is the case when right var is either a simple var or an
-       optimized var and this represents a global var.
-    */
+    // This is the case when right var is either a simple var or an
+    // optimized var and this represents a global var.
+    
     oz_bindGlobalVar2(tagged2Var(*rPtr),rPtr,makeTaggedRef(lPtr));
     goto PROP;
   }
@@ -111,9 +111,9 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
     }
   
   }
-  /* Unification is entailed by means of an eq propagator. After post this
-     propagator the generic space must become unstable. The unstability is
-     a result of posting the propagator */
+  // Unification is entailed by means of an eq propagator. After post this
+  //   propagator the generic space must become unstable. The unstability is
+  //   a result of posting the propagator 
     
  PROP:
   // wakeup space propagators to inmediatly update all related variables
@@ -126,7 +126,7 @@ OZ_Return GeIntVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr) {
   else
     return PROCEED;
 }
-
+*/
 
 /*
   At this point vPtr must be a local variable (be careful)
@@ -242,6 +242,7 @@ TaggedRef GeIntVar::clone(TaggedRef v) {
   return lv;
 }
 
+
 bool GeIntVar::hasSameDomain(TaggedRef v) {
   Assert(OZ_isGeIntVar(v));
   IntVar v1 = get_GeIntVar(v)->getIntVarInfo();
@@ -256,10 +257,25 @@ bool GeIntVar::hasSameDomain(TaggedRef v) {
   }
 }
 
+
+TaggedRef GeIntVar::newVar(){
+  return new_GeIntVar(Gecode::IntSet(Gecode::Limits::Int::int_min,Gecode::Limits::Int::int_max));
+}
+
 /*this function checks if the intersection between v1 and v2 is empty or not*/
-bool GeIntVar::IsEmptyInter(Gecode::Int::IntView v1, Gecode::Int::IntView v2) {
-  Gecode::Int::ViewRanges< Gecode::Int::IntView > vr1 (v1);
-  Gecode::Int::ViewRanges< Gecode::Int::IntView > vr2 (v2);
+
+bool GeIntVar::IsEmptyInter(TaggedRef* var1,  TaggedRef* var2) {
+
+GeIntVar* rgeintvar = get_GeIntVar(*var1);
+GeIntVar* lgeintvar = get_GeIntVar(*var2);
+Gecode::IntVar& v1 = lgeintvar->getIntVarInfo();
+Gecode::IntVar& v2 = rgeintvar->getIntVarInfo();
+
+
+//Gecode::Int::IntView v1, Gecode::Int::IntView v2
+
+Gecode::Int::ViewRanges< Gecode::Int::IntView > vr1 (v1);
+Gecode::Int::ViewRanges< Gecode::Int::IntView > vr2 (v2);
   
   while(true) {
     if(!vr1() || !vr2() ) return true;
