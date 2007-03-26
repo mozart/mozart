@@ -47,16 +47,15 @@ public:
 enum GeVarType {T_GeIntVar, T_GeSetVar};
 
 /** 
- * \brief Abstract class for Oz variables that interface Gecode variables inside a GenericSpace
+ * \brief Abstract class for Oz variables that interface Gecode 
+ * variables inside a GenericSpace
  */
 class GeVar : public ExtVar {
 private:
   GeVarType type;    /// Type of variable (e.g IntVar, SetVar, etc)
 protected:
   int index;        /// The index inside the corresponding GenericSpace
-
-  // hasValRefl is unnecessary. we are not using it.
-  bool hasValRefl, hasDomRefl;  /// Refelction Mechanism control
+  bool hasValRefl,hasDomRefl;  /// Refelction Mechanism control
 
   /**
    \brief Counter for the number of unifications in that this variable 
@@ -67,16 +66,17 @@ protected:
   
  
   /// Copy constructor
-  GeVar(GeVar& gv) : ExtVar(extVar2Var(&gv)->getBoardInternal()),
-		     type(gv.type), index(gv.index),  
-		     hasValRefl(gv.hasValRefl), hasDomRefl(gv.hasDomRefl),
-		     leftUnifyC(gv.leftUnifyC)
+  GeVar(GeVar& gv) : 
+    ExtVar(extVar2Var(&gv)->getBoardInternal()), type(gv.type), 
+    index(gv.index), hasValRefl(gv.hasValRefl), hasDomRefl(gv.hasDomRefl),
+    leftUnifyC(gv.leftUnifyC)
   {
     // ensure a valid type of varable.
     Assert(type >= T_GeIntVar && type <= T_GeSetVar);
   }
 
   void incLeftUnifyC(void) { leftUnifyC++; }
+
 public:
   /// \name Constructor
   //@{
@@ -94,41 +94,24 @@ public:
   }
   //@}
   
-  /// \name Space access
-  //@{
-  /** 
-   * \brief Returns the GeSpace where the variable belongs to
-   */
-  /// Returns a pointer to the variable's GeSpace
-  //  GenericSpace* getGeSpace() { return home; }
-  //@}
-
   /// \name Mozart ExtVar stuff  
   //@{
-  ExtVarType    getIdV() { return OZ_EVAR_GEVAR;}
-  virtual ExtVar*       gCollectV() = 0;
-  virtual ExtVar*       sCloneV() = 0;
+  ExtVarType getIdV() { return OZ_EVAR_GEVAR;}
+  virtual ExtVar* gCollectV() = 0;
+  virtual ExtVar* sCloneV() = 0;
   
   virtual void gCollectRecurseV() { }
   virtual void sCloneRecurseV() { }
-  
-  OZ_Return unifyV(TaggedRef* lPtr, TaggedRef* rPtr);
-  virtual OZ_Return     bindV(TaggedRef*, TaggedRef) = 0;
-  virtual Bool          validV(TaggedRef) = 0;
- 
-
-  virtual OZ_Term       statusV() = 0;
+  virtual OZ_Term statusV() = 0;
   virtual VarStatus checkStatusV() {
     return EVAR_STATUS_KINDED;
   }
 
-
   int getIndex(void) {return index;}
   bool hasDomReflector(void) {return hasDomRefl; }
-
+  
   virtual void printDomain(void) = 0;
-
-
+  
   virtual void disposeV() {
     disposeS();     // free susplist
     // here we can free the memory taken by the variable itself (if we
@@ -152,23 +135,48 @@ public:
 
   // Method needed to clone pointed gecode variables.
   virtual Gecode::VarBase* clone(void) = 0;
-
-  virtual bool intersect(TaggedRef x) = 0;
+ 
   virtual bool In(TaggedRef x) = 0;
   virtual TaggedRef clone(TaggedRef v) = 0;
 
   virtual bool hasSameDomain(TaggedRef) = 0;
-  virtual bool IsEmptyInter(TaggedRef*, TaggedRef*) = 0;
-
-
-  virtual TaggedRef newVar() = 0;
-
-  virtual void propagator(GeVar* var1,  GeVar* var2) = 0;
-
 
   int getLeftUnifyC(void) { return leftUnifyC; }
 
+  /// \name Unification and Binding.
+  //@{
+  /**
+     \brief Unify lPtr with rPtr.
+  */
+  OZ_Return unifyV(TaggedRef* lPtr, TaggedRef* rPtr);
+  
+  /**
+     \brief Test whether x and y have an empty intersection.
+     This method is called when unifying two variables and the flag am.inEqEq
+     is on. If intersection is empty then there is enough information
+     to make the test == fail.
+  */
+  virtual bool IsEmptyInter(TaggedRef *x, TaggedRef *y) = 0;
+  
+  /**
+     \brief Unification in gecode is ensured by means of an "equality" 
+     propagator. Equality must be defined according with the constraint
+     system. For finite domains, the intersection between domains is enough.
+     This method have to post a propagator in the gecode space that only 
+     subsums when both variables get determined. It needs to ensure completeness,
+     otherwise unification may work unexpectedly.
+   */
+  virtual void propagator(GenericSpace *s, GeVar* x,  GeVar* y) = 0;
+  
+  virtual TaggedRef newVar() = 0; 
+  virtual bool intersect(TaggedRef x) = 0; 
 
+  
+  OZ_Return bindV(TaggedRef*, TaggedRef);
+  virtual Bool validV(TaggedRef v) = 0;
+  
+  virtual Gecode::ModEvent bind(GenericSpace *s, GeVar *v, OZ_Term val) = 0;
+//@}
 };
 
 inline 
@@ -245,11 +253,14 @@ public:
 
   // this propagator should never fail
   Gecode::ExecStatus propagate(Gecode::Space* s){
-  //    printf("Variable determined by gecode....%d\n",index);fflush(stdout);
-  //    cout<<"SPACE::::: "<<s<<endl; fflush(stdout);    
-  OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
-  GeVar *gv = get_GeVar(ref);
-  
+    //printf("Variable determined by gecode....%d\n",index);fflush(stdout);
+    
+    OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
+    if (!oz_isGeVar(ref))
+      return  Gecode::ES_SUBSUMED;
+
+    GeVar *gv = get_GeVar(ref);
+    
     //printf("GeVar.hh ExecStatus index=%d\n",index);fflush(stdout);
     GenericSpace *gs = static_cast<GenericSpace*>(s);        
     OZ_Term val = getVal();
@@ -257,16 +268,13 @@ public:
     if (ret == FAILED) return Gecode::ES_FAILED;
     gs->incDetermined();
     if (gv->hasDomReflector()) {
-      printf("decrementing space dom reflection\n");fflush(stdout);
+      //printf("decrementing space dom reflection\n");fflush(stdout);
       gs->decForeignProps();
     }
     gs->decForeignProps(gv->getLeftUnifyC());
       
     return Gecode::ES_SUBSUMED;
   }
-
-
-
 };
 
 
@@ -297,7 +305,7 @@ public:
 
   // this propagator should never fail nor subsume
   Gecode::ExecStatus propagate(Gecode::Space* s) {
-    printf("Variable inspected from mozart ....%d\n",index);fflush(stdout);    
+    // printf("Variable inspected from mozart ....%d\n",index);fflush(stdout);    
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
    
     Assert(oz_isVarOrRef(ref));	

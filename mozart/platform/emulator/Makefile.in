@@ -140,7 +140,7 @@ RUNSRCS=\
 	susp_queue.cc thr_int.cc suspendable.cc
 
 ifeq ($(BUILD_GECODE), yes)
-RUNSRCS += lateThread.cc
+RUNSRCS += lateThread.cc GeVar.cc
 endif
 
 SPACESRCS=\

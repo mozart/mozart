@@ -74,8 +74,7 @@ public:
   virtual ExtVar* sCloneV() { //printf("virtual ExtVar sCloneV()\n");fflush(stdout);
   return new GeIntVar(*this); }
 
-  //virtual OZ_Return     unifyV(TaggedRef*, TaggedRef*);
-  virtual OZ_Return     bindV(TaggedRef*, TaggedRef);
+  //virtual OZ_Return     bindV(TaggedRef*, TaggedRef);
 
   /** 
    * \brief Test whether \a v contains a valid element for the domain
@@ -85,7 +84,7 @@ public:
    * 
    * @param v An OZ_Term containing a possible value of the variable domain
    */ 
-  virtual Bool          validV(TaggedRef v);
+  //virtual Bool          validV(TaggedRef v);
   virtual OZ_Term       statusV();
 
 
@@ -106,14 +105,21 @@ public:
 
   virtual bool IsEmptyInter(TaggedRef* var1, TaggedRef* var2);
 
-  virtual TaggedRef newVar();
+  virtual TaggedRef newVar(void);
 
-  virtual void propagator(GeVar *lgevar,GeVar *rgevar){
-      Gecode::IntVar& lintvar = (static_cast<GeIntVar*>(lgevar))->getIntVarInfo();
-      Gecode::IntVar& rintvar = (static_cast<GeIntVar*>(rgevar))->getIntVarInfo();    
-      eq(extVar2Var(lgevar)->getBoardInternal()->getGenericSpace(),lintvar, rintvar);
+  virtual void propagator(GenericSpace *s, GeVar *lgevar,GeVar *rgevar){
+    Gecode::IntVar& lintvar = (static_cast<GeIntVar*>(lgevar))->getIntVarInfo();
+    Gecode::IntVar& rintvar = (static_cast<GeIntVar*>(rgevar))->getIntVarInfo();    
+    eq(s,lintvar, rintvar);
   }
 
+  virtual Gecode::ModEvent bind(GenericSpace *s, GeVar *v, OZ_Term val) {
+    int n = OZ_intToC(val);
+    return Gecode::Int::IntView(getIntVarInfo()).eq(s,n);
+  }
+
+  virtual Bool validV(OZ_Term v);
+    
   // reflection mechanism 
   void ensureValReflection(OZ_Term t);
   void ensureDomReflection(OZ_Term t);
