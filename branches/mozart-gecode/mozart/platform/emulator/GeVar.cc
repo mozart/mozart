@@ -1,11 +1,11 @@
 #include "GeVar.hh"
-//#include "GeSpace.hh"
+
+using namespace Gecode;
 
 OZ_Return GeVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
 {
   printf("unifyV GeVar\n");fflush(stdout);
-  //  if (!OZ_isGeIntVar(*rPtr)) return OZ_suspendOnInternal(*rPtr);
-    
+  
   GeVar* lgevar = this;
   GenericSpace* space = extVar2Var(lgevar)->getBoardInternal()->getGenericSpace();
   
@@ -24,9 +24,6 @@ OZ_Return GeVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
   
   { 
     GeVar* rgevar = get_GeVar(*rPtr);
-    /*IntVar& lintvar = lgeintvar->getIntVarInfo();
-      IntVar& rintvar = rgeintvar->getIntVarInfo();
-      */
     if(am.inEqEq()) {
       if( IsEmptyInter(lPtr, rPtr) ) return FAILED;
       else {
@@ -52,7 +49,7 @@ OZ_Return GeVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
 	if(!(rgevar->intersect(makeTaggedRef(lPtr))))
 	  return FAILED;
 	oz_bindLocalVar(extVar2Var(this), lPtr, makeTaggedRef(rPtr));
-	propagator(lgevar,rgevar);
+	propagator(space,lgevar,rgevar);
 	lgevar->incLeftUnifyC();
 	space->incForeignProps();
       }
@@ -84,16 +81,46 @@ OZ_Return GeVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
      a result of posting the propagator */
   
  PROP:
-  // wakeup space propagators to inmediatly update all related variables
-  unsigned long alt = 0; //useless variable
-  //    return (space->status(alt)== Gecode::SS_FAILED) ? FAILED: PROCEED ;
-    if(space->status(alt) == Gecode::SS_FAILED) {
-      extVar2Var(this)->getBoardInternal()->setFailed();
-      return FAILED;
-    }
-    else
-      return PROCEED;
-    
+  //wakeup space propagators to inmediatly update all related variables
+  if(space->status() == SS_FAILED) {
+    extVar2Var(this)->getBoardInternal()->setFailed();
+    return FAILED;
+  }
+  else
+    return PROCEED;
 }
 
 
+OZ_Return GeVar::bindV(TaggedRef* vPtr, TaggedRef val) {
+  if (validV(val)) {
+    if(am.inEqEq()) {
+      if( !In(val) ) return FAILED;
+      else {
+	trail.pushBind(vPtr);
+	return PROCEED;
+      }
+    }
+    if (oz_isLocalVar(extVar2Var(this))) {
+      // first bind the variable in Mozart
+      oz_bindLocalVar(extVar2Var(this), vPtr, val);
+
+      // then bind the IntVar in the GenericSpace
+      GenericSpace* s =  extVar2Var(this)->getBoardInternal()->getGenericSpace();
+      ModEvent me = bind(s,this,val);
+      Assert(!me_failed(me));
+      
+      //unsigned long alt = 0; //useless variable
+      
+      if (s->status() == SS_FAILED) {
+	extVar2Var(this)->getBoardInternal()->setFailed();
+	return FAILED;
+      }
+      return PROCEED;
+    } else {
+      // global binding...
+      oz_bindGlobalVar(extVar2Var(this), vPtr, val);
+    }
+    return PROCEED;
+  }
+  return OZ_FAILED;
+}
