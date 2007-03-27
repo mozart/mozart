@@ -237,7 +237,14 @@ namespace _dss_internal{ //Start namespace
     virtual bool    clearWeakRoot();
     
     // ****************** GET **********************
-    inline ProtocolProxy *m_getProtocol() { return a_prot; }
+    virtual AccessArchitecture getAccessArchitecture() const = 0;
+    inline ProtocolProxy* m_getProtocol() const { return a_prot; }
+    inline Reference* m_getReference() const {
+      return (a_remoteRef ? static_cast<Reference*>(a_remoteRef) :
+	      static_cast<Reference*>(a_coordinator->a_homeRef));
+    }
+
+    virtual void getParameters(ProtocolName&,AccessArchitecture&,RCalg&) const;
     
     // ************* DOE Abstraction* ***************
     

@@ -179,6 +179,15 @@ namespace _dss_internal{ //Start namespace
     DebugCode(a_allocated--);
     m_getEnvironment()->a_proxyTable->m_remove(this); //free self    
   }
+
+  // return the parameters (protocol name, access architecture, and
+  // reference consistency protocols) of this proxy
+  void Proxy::getParameters(ProtocolName &pn,
+			    AccessArchitecture &aa, RCalg &rc) const {
+    pn = m_getProtocol()->getProtocolName();
+    aa = getAccessArchitecture();
+    rc = m_getReference()->m_getAlgorithms();
+  }
   
 
   AOcallback

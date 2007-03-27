@@ -128,7 +128,10 @@ namespace _dss_internal{ //Start namespace
     ProxyFwdChain(NetIdentity ni, ProtocolProxy* const prot,
 		   DSS_Environment* const env);
     ~ProxyFwdChain();
-    
+
+    virtual AccessArchitecture getAccessArchitecture() const {
+      return AA_MIGRATORY_MANAGER; }
+
     virtual void m_initHomeProxy(Coordinator *m);
     virtual bool m_initRemoteProxy(DssReadBuffer *bs);
     

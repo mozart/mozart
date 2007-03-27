@@ -96,7 +96,10 @@ namespace _dss_internal{ //Start namespace
 		DSS_Environment* const env); 
 		
     ~ProxyMobile();
-    
+
+    virtual AccessArchitecture getAccessArchitecture() const {
+      return AA_MOBILE_COORDINATOR; }
+
     virtual void m_initHomeProxy(Coordinator *m);
     virtual bool m_initRemoteProxy(DssReadBuffer *bs);
     

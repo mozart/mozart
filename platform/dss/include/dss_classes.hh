@@ -278,6 +278,7 @@ public:
 class DSSDLLSPEC CoordinatorAssistant {
 public:
   virtual AbstractEntity* getAbstractEntity() const = 0;
+  virtual void getParameters(ProtocolName&,AccessArchitecture&,RCalg&) const=0;
 
   // ******************** Coordination Manipulation ********************
   virtual bool  manipulateCNET(void* argument) = 0; 
