@@ -72,6 +72,9 @@ namespace _dss_internal{ //Start namespace
     ProxyStationary(NetIdentity ni, ProtocolProxy* const prot,
 		    DSS_Environment* const env);
     ~ProxyStationary();
+
+    virtual AccessArchitecture getAccessArchitecture() const {
+      return AA_STATIONARY_MANAGER; }
     
     virtual void m_initHomeProxy(Coordinator *m);
     virtual bool m_initRemoteProxy(DssReadBuffer *bs);
