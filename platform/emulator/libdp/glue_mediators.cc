@@ -139,6 +139,15 @@ void
 Mediator::setProxy(CoordinatorAssistant* p) {
   setCoordinatorAssistant(p);
   if (p) {
+    // first check annotation; set annotation from proxy if necessary
+    if (!annotation.pn || !annotation.aa || !annotation.rc) {
+      ProtocolName pn;
+      AccessArchitecture aa;
+      RCalg rc;
+      p->getParameters(pn, aa, rc);
+      annotation = makeAnnotation(pn, aa, rc);
+    }
+    // then check fault state
     if (faultState == GLUE_FAULT_PERM) {
       abstractOperation_Kill();     // globalizing a failed entity...
     } else {
