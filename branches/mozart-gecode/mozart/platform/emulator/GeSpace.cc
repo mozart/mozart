@@ -58,7 +58,7 @@ int GenericSpace::gscounter = 0;
 
 GenericSpace::GenericSpace(Board* b) 
   : vars(), board(b), determined(0), foreignProps(0),
-    gc_pred(NULL), gc_succ(NULL), gc_marked(false),
+    unifyProps(0),gc_pred(NULL), gc_succ(NULL), gc_marked(false),
     allocatedMemory(usedMem())
 {
   trigger = oz_newReadOnly(board);  
@@ -71,7 +71,7 @@ inline
 GenericSpace::GenericSpace(GenericSpace& s, bool share) 
     : Space(share, s), vars(this, s.vars, share),      
       board(s.board),
-      determined(s.determined), foreignProps(s.foreignProps),
+      determined(s.determined), foreignProps(s.foreignProps),unifyProps(s.unifyProps),
       trigger(s.trigger), gc_pred(NULL), gc_succ(NULL), gc_marked(false),
       allocatedMemory(usedMem())
 {

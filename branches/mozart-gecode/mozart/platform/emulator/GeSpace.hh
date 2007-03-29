@@ -219,9 +219,16 @@ private:
   /**
    * \brief This variable is to count how many foreign propagators 
    * have been posted in the space. Foreign propagators include domain
-   * reflection propagators and unification ones.
+   * reflection propagators.
    */
   unsigned int foreignProps;
+
+
+  /**
+   * \brief This variable is to count how many unification propagators 
+   * have been posted in the space. 
+   */
+  unsigned int unifyProps;
 
   static unsigned long int unused_uli;
 
@@ -277,12 +284,15 @@ public:
     printf("Nondet: %d\n",nondet);fflush(stdout);
     printf("foreignProps: %d\n",foreignProps);fflush(stdout);
     printf("Propagators: %d\n",propagators());fflush(stdout);
-    return (nondet + foreignProps) == propagators();
+    printf("Propagators: %d\n",unifyProps);fflush(stdout);
+    return (nondet + foreignProps + unifyProps/2) == propagators();
   }
 
   void incForeignProps(void) { foreignProps++; }
   void decForeignProps(int d = 1) { foreignProps -= d; }
 
+  void incUnifyProps(void) { unifyProps+=2; }
+  void decUnifyProps(int d = 1) { unifyProps -= d; }
  
 
   /// \name Variable creation

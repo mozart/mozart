@@ -50,8 +50,9 @@ OZ_Return GeVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
 	  return FAILED;
 	oz_bindLocalVar(extVar2Var(this), lPtr, makeTaggedRef(rPtr));
 	propagator(space,lgevar,rgevar);
-	lgevar->incLeftUnifyC();
-	space->incForeignProps();
+	lgevar->incUnifyC();
+	rgevar->incUnifyC();
+	space->incUnifyProps();
       }
     }else{
       // "this" is global.
