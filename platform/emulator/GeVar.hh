@@ -50,6 +50,7 @@ enum GeVarType {T_GeIntVar, T_GeSetVar};
  * \brief Abstract class for Oz variables that interface Gecode 
  * variables inside a GenericSpace
  */
+//template<class VarImp>
 class GeVar : public ExtVar {
 private:
   GeVarType type;    /// Type of variable (e.g IntVar, SetVar, etc)
@@ -59,23 +60,22 @@ protected:
 
   /**
    \brief Counter for the number of unifications in that this variable 
-   is the left term. For example, if there is a unification X=Y the counter
-   of X is incremented by one but the one of Y is not modified.
+   is involved. 
   */
-  unsigned int leftUnifyC;
+  unsigned int unifyC;
   
  
   /// Copy constructor
   GeVar(GeVar& gv) : 
     ExtVar(extVar2Var(&gv)->getBoardInternal()), type(gv.type), 
     index(gv.index), hasValRefl(gv.hasValRefl), hasDomRefl(gv.hasDomRefl),
-    leftUnifyC(gv.leftUnifyC)
+    unifyC(gv.unifyC)
   {
     // ensure a valid type of varable.
     Assert(type >= T_GeIntVar && type <= T_GeSetVar);
   }
 
-  void incLeftUnifyC(void) { leftUnifyC++; }
+  void incUnifyC(void) { unifyC++; }
 
 public:
   /// \name Constructor
@@ -88,7 +88,7 @@ public:
    */
   GeVar(int n, GeVarType t) :
     ExtVar(oz_currentBoard()), type(t), index(n), 
-    hasValRefl(false), hasDomRefl(false), leftUnifyC(0) 
+    hasValRefl(false), hasDomRefl(false), unifyC(0) 
   {
     Assert(type >= T_GeIntVar && type <= T_GeSetVar);
   }
@@ -141,7 +141,7 @@ public:
 
   virtual bool hasSameDomain(TaggedRef) = 0;
 
-  int getLeftUnifyC(void) { return leftUnifyC; }
+  int getUnifyC(void) { return unifyC; }
 
   /// \name Unification and Binding.
   //@{
@@ -271,7 +271,7 @@ public:
       //printf("decrementing space dom reflection\n");fflush(stdout);
       gs->decForeignProps();
     }
-    gs->decForeignProps(gv->getLeftUnifyC());
+    gs->decUnifyProps(gv->getUnifyC());
       
     return Gecode::ES_SUBSUMED;
   }
