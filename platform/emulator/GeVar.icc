@@ -1,5 +1,6 @@
 
 template <class VarImp>
+inline
 OZ_Return GeVar<VarImp>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
 {
   printf("unifyV GeVar\n");fflush(stdout);
@@ -90,6 +91,7 @@ OZ_Return GeVar<VarImp>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
 }
 
 template <class VarImp>
+inline
 OZ_Return GeVar<VarImp>::bindV(TaggedRef* vPtr, TaggedRef val) {
   if (validV(val)) {
     if(am.inEqEq()) {
@@ -123,3 +125,22 @@ OZ_Return GeVar<VarImp>::bindV(TaggedRef* vPtr, TaggedRef val) {
   }
   return OZ_FAILED;
 }
+
+// ojo con el tipo. OZ_isGeIntVar()
+/*template<class VarImp>
+inline
+void GeVar<VarImp>::ensureValReflection(OZ_Term ref) {
+  //Assert(oz_isGeVar(ref));
+  if (!hasValRefl) {
+    GenericSpace *s = getGSpace();
+    
+    // post the var reflector propagator
+    s->setVarRef(index,ref);
+    //VarImp *ivp = reinterpret_cast<VarImp*>(s->getVar(index));
+    //GeView<VarImp> iv(ivp);
+    //Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
+    new (s) VarReflector<GeView<VarImp>,VarImp>(s, this, index);
+    hasValRefl = true;
+  }
+  }
+*/

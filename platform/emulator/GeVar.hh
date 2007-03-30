@@ -63,8 +63,7 @@ protected:
    is involved. 
   */
   unsigned int unifyC;
-  
- 
+   
   /// Copy constructor
   GeVar(GeVar& gv) : 
     ExtVar(extVar2Var(&gv)->getBoardInternal()), type(gv.type), 
@@ -108,6 +107,14 @@ public:
   }
 
   int getIndex(void) {return index;}
+
+  /// Returns the GenericSpace associated with this variable.
+  GenericSpace * getGSpace(void) {
+    GenericSpace *gs =  extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
+    Assert(gs);
+    return gs;
+  }
+
   bool hasDomReflector(void) {return hasDomRefl; }
   
   virtual void printDomain(void) = 0;
@@ -163,7 +170,7 @@ public:
      propagator. Equality must be defined according with the constraint
      system. For finite domains, the intersection between domains is enough.
      This method have to post a propagator in the gecode space that only 
-     subsums when both variables get determined. It needs to ensure completeness,
+     subsumes when both variables get determined. It needs to ensure completeness,
      otherwise unification may work unexpectedly.
    */
   virtual void propagator(GenericSpace *s, GeVar* x,  GeVar* y) = 0;
@@ -177,9 +184,26 @@ public:
   
   virtual Gecode::ModEvent bind(GenericSpace *s, GeVar *v, OZ_Term val) = 0;
   void test();
-//@}
+  //@}
+
+  /// \name Reflection mechanisms
+  //@{
+  
+  /** 
+      \brief Tests whether this GeVar represents an assigned variable.
+  */
+  virtual bool assigned(void) = 0;
+  virtual OZ_Term getVal(void) = 0;
+  //void ensureValReflection(OZ_Term t);
+  //void ensureDomReflection(OZ_Term t);
+  //@}
 };
 
+inline
+bool oz_isGeVar(OzVariable *v) {
+  if ( v->getType() != OZ_VAR_EXT ) return false;
+  return var2ExtVar(v)->getIdV() == OZ_EVAR_GEVAR;
+}
 
 inline 
 bool oz_isGeVar(OZ_Term t) {
@@ -194,41 +218,6 @@ GeVar<VarImp>* get_GeVar(OZ_Term v) {
   Assert(oz_isGeVar(ref));
   ExtVar *ev = oz_getExtVar(ref);
   return static_cast<GeVar<VarImp>*>(ev);
-}
-
-inline
-bool oz_isGeVar(OzVariable *v) {
-  /*printf("Estoy en esta funcion oz_isGeVar con OzVariable \n"); fflush(stdout);
-  if(! (v->getType() == OZ_VAR_EXT)) return false;
-  ExtVar *vextVar = var2ExtVar(v);
-
-  bool res = vextVar->getIdV() == OZ_EVAR_GEVAR;
-  printf("Despues de esta mierda: %d \n",res); fflush(stdout);
-  return res;*/
-  if ( v->getType() != OZ_VAR_EXT ) return false;
-  return var2ExtVar(v)->getIdV() == OZ_EVAR_GEVAR;
-}
-
-template <class VarImp>
-inline
-void checkGlobalVar(OZ_Term v) {
-  // Why this comparison is made with ints?
-  //cout<<"Inicio check: "<<oz_isInt(v)<<endl; fflush(stdout);
-  Assert(oz_isGeVar(v));
-
-  ExtVar *ev = oz_getExtVar(oz_deref(v));
-  if (!oz_isLocalVar(ev)) {
-    TaggedRef nlv = static_cast<GeVar<VarImp>*>(ev)->clone(v);
-
-    ExtVar *varTmp = var2ExtVar(tagged2Var(oz_deref(nlv)));
-    GeVar<VarImp> *gvar = static_cast<GeVar<VarImp>*>(varTmp);
-
-    //meter al trail v [v]
-    TaggedRef nlvAux = oz_deref(nlv);
-
-    Assert(oz_isVar(nlvAux));
-    oz_unify(v,nlv);
-  }
 }
 
 // This Gecode propagator reflects a Gecode variable assignment inside
@@ -248,13 +237,12 @@ public:
   VarReflector(GenericSpace* s, bool share, VarReflector& p) :
     Gecode::UnaryPropagator<View, Gecode::PC_GEN_ASSIGNED>(s, share, p), index(p.index) {}
 
-  virtual Gecode::Actor* copy(Gecode::Space* s, bool share) = 0;
+  virtual Gecode::Actor* copy(Gecode::Space* s, bool share) {
+    return new (s) VarReflector(static_cast<GenericSpace*>(s), share, *this);
+  }
 
-  //virtual OZ_Term getVarRef(GenericSpace*) = 0;
   virtual OZ_Term getVarRef(GenericSpace* s) {return s->getVarRef(index); }
-  virtual OZ_Term getVal() = 0;
-  virtual bool IsDet() = 0;
-
+ 
   // this propagator should never fail
   Gecode::ExecStatus propagate(Gecode::Space* s){
     //printf("Variable determined by gecode....%d\n",index);fflush(stdout);
@@ -265,9 +253,8 @@ public:
 
     GeVar<VarImp> *gv = get_GeVar<VarImp>(ref);
     
-    //printf("GeVar.hh ExecStatus index=%d\n",index);fflush(stdout);
     GenericSpace *gs = static_cast<GenericSpace*>(s);        
-    OZ_Term val = getVal();
+    OZ_Term val = gv->getVal();
     OZ_Return ret = OZ_unify(ref, val);
     if (ret == FAILED) return Gecode::ES_FAILED;
     gs->incDetermined();
@@ -280,6 +267,7 @@ public:
     return Gecode::ES_SUBSUMED;
   }
 };
+#include "GeVar.icc"
 
 
 /*
@@ -325,5 +313,28 @@ public:
   }
 };
 
-#include "GeVar.icc"
+
+
+template <class VarImp>
+inline
+void checkGlobalVar(OZ_Term v) {
+  // Why this comparison is made with ints?
+  //cout<<"Inicio check: "<<oz_isInt(v)<<endl; fflush(stdout);
+  Assert(oz_isGeVar(v));
+
+  ExtVar *ev = oz_getExtVar(oz_deref(v));
+  if (!oz_isLocalVar(ev)) {
+    TaggedRef nlv = static_cast<GeVar<VarImp>*>(ev)->clone(v);
+
+    ExtVar *varTmp = var2ExtVar(tagged2Var(oz_deref(nlv)));
+    GeVar<VarImp> *gvar = static_cast<GeVar<VarImp>*>(varTmp);
+
+    //meter al trail v [v]
+    TaggedRef nlvAux = oz_deref(nlv);
+
+    Assert(oz_isVar(nlvAux));
+    oz_unify(v,nlv);
+  }
+}
+
 #endif
