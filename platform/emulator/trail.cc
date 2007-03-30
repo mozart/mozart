@@ -428,7 +428,7 @@ bool Trail::isSpeculating(void) {
 	return true; 
       }
       
-      GeVar *vlocal = static_cast<GeVar*>(var2ExtVar(v));
+      GeVar<void> *vlocal = static_cast<GeVar<void>*>(var2ExtVar(v));
       //Revisar si el espacio de gecode esta estable antes de esto
       //      if(!vlocal->hasSameDomain(*var)) return true;
       if(!vlocal->hasSameDomain(*var)) { printf("Tienen el mismo dominio \n"); fflush(stdout); }
