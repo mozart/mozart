@@ -73,7 +73,7 @@
     v=_tmp;								\
   }									\
   else if(OZ_isGeIntVar(OZ_in(p))) {					\
-    checkGlobalVar(OZ_in(p));                                           \
+    checkGlobalVar<Gecode::Int::IntVarImp>(OZ_in(p));                   \
     v = get_IntVar(OZ_in(p));						\
     /*if(sp != get_Space(OZ_in(p)))					\
       RAISE_EXCEPTION("The variables are in differents spaces");*/	\
@@ -90,8 +90,8 @@
   }									\
   /*else if(sp!= get_Space(val)){}					\
     RAISE_EXCEPTION("The variables are not in the same space");  */     	\
-  else if(OZ_isGeIntVar(val)) { 						\
-      checkGlobalVar(val);                                              \
+  else if(OZ_isGeIntVar(val)) { 					\
+      checkGlobalVar<Gecode::Int::IntVarImp>(val);                      \
       ar[i]=get_IntVar(val);						\
   /*_array[i++] = _tmp;*/ \
   } \

@@ -574,11 +574,11 @@ OZ_Return Board::installScript(Bool isMerging)
     
     //x is the global var,  y is the local one
     if (oz_isGeVar(x)) {
-      GeVar *tmpVar = static_cast<GeVar*>(oz_getExtVar(oz_deref(x)));
+      GeVar<void> *tmpVar = static_cast<GeVar<void>*>(oz_getExtVar(oz_deref(x)));
       TaggedRef *xpt = tagged2Ref(x);
       TaggedRef xaux = x;
       if (oz_isGeVar(y)) {
-	GeVar *tmpVar2 = static_cast<GeVar*>(var2ExtVar(tagged2Var(oz_deref(y))));
+	GeVar<void> *tmpVar2 = static_cast<GeVar<void>*>(var2ExtVar(tagged2Var(oz_deref(y))));
 	printf(" install %s  \n",oz_varGetName(x));fflush(stdout);        
 	if (oz_isLocalVar(tagged2Var(oz_deref(y)))) {
 	  res = oz_unify(x,gespace->getVarRef(tmpVar2->getIndex()));	

@@ -30,17 +30,20 @@
 #define __GECODE_INT_VAR_HH__
 
 #include "GeVar.hh"
+//#include "GeVar.cc"
 
-
+//template class GeVar<Gecode::Int::IntVarImpBase>;
 // A GeIntVar interfaces an IntVar inside a GenericSpace.
 
-class GeIntVar : public GeVar {
+class GeIntVar : public GeVar<Gecode::Int::IntVarImpBase> {
 protected:
   // copy constructor
-  GeIntVar(GeIntVar& gv) : GeVar(gv) {}
+
+
+  GeIntVar(GeIntVar& gv) : GeVar<Gecode::Int::IntVarImpBase>(gv) {}
 
 public:
-  GeIntVar(int index) : GeVar(index,T_GeIntVar) {}
+  GeIntVar(int index) : GeVar<Gecode::Int::IntVarImpBase>(index,T_GeIntVar) {}
 
   Gecode::IntVar& getIntVar(void) {
     GenericSpace* gs = extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
@@ -107,13 +110,13 @@ public:
 
   virtual TaggedRef newVar(void);
 
-  virtual void propagator(GenericSpace *s, GeVar *lgevar,GeVar *rgevar){
+  virtual void propagator(GenericSpace *s, GeVar<Gecode::Int::IntVarImpBase> *lgevar,GeVar<Gecode::Int::IntVarImpBase> *rgevar){
     Gecode::IntVar& lintvar = (static_cast<GeIntVar*>(lgevar))->getIntVarInfo();
     Gecode::IntVar& rintvar = (static_cast<GeIntVar*>(rgevar))->getIntVarInfo();    
     eq(s,lintvar, rintvar);
   }
 
-  virtual Gecode::ModEvent bind(GenericSpace *s, GeVar *v, OZ_Term val) {
+  virtual Gecode::ModEvent bind(GenericSpace *s, GeVar<Gecode::Int::IntVarImpBase> *v, OZ_Term val) {
     int n = OZ_intToC(val);
     return Gecode::Int::IntView(getIntVarInfo()).eq(s,n);
   }
@@ -128,13 +131,13 @@ public:
 
 // This Gecode propagator reflects an IntVar assignment inside Mozart
 
-class IntVarReflector : public VarReflector<Gecode::Int::IntView> {
+class IntVarReflector : public VarReflector<Gecode::Int::IntView, Gecode::Int::IntVarImpBase> {
 public:
   IntVarReflector(GenericSpace* s, Gecode::Int::IntView v, int idx) :
-    VarReflector<Gecode::Int::IntView>(s, v, idx) {}
+    VarReflector<Gecode::Int::IntView, Gecode::Int::IntVarImpBase>(s, v, idx) {}
 
   IntVarReflector(GenericSpace* s, bool share, IntVarReflector& p) :
-    VarReflector<Gecode::Int::IntView>(s, share, p) {}
+    VarReflector<Gecode::Int::IntView, Gecode::Int::IntVarImpBase>(s, share, p) {}
 
   Gecode::Actor* copy(Gecode::Space* s, bool share) {
     return new (s) IntVarReflector(static_cast<GenericSpace*>(s), share, *this);
@@ -164,7 +167,7 @@ inline
 bool OZ_isGeIntVar(OZ_Term v) { 
   OZ_Term v_local = OZ_deref(v);
   if (oz_isGeVar(v_local)) {
-    GeVar *gv = static_cast<GeVar*>(oz_getExtVar(v_local));
+    GeVar<Gecode::Int::IntVarImpBase> *gv = static_cast<GeVar<Gecode::Int::IntVarImpBase>*>(oz_getExtVar(v_local));
     return gv->getType() == T_GeIntVar;
   }
   return false;
