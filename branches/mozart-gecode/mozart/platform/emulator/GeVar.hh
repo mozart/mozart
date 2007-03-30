@@ -50,7 +50,7 @@ enum GeVarType {T_GeIntVar, T_GeSetVar};
  * \brief Abstract class for Oz variables that interface Gecode 
  * variables inside a GenericSpace
  */
-//template<class VarImp>
+template<class VarImp>
 class GeVar : public ExtVar {
 private:
   GeVarType type;    /// Type of variable (e.g IntVar, SetVar, etc)
@@ -176,8 +176,10 @@ public:
   virtual Bool validV(TaggedRef v) = 0;
   
   virtual Gecode::ModEvent bind(GenericSpace *s, GeVar *v, OZ_Term val) = 0;
+  void test();
 //@}
 };
+
 
 inline 
 bool oz_isGeVar(OZ_Term t) {
@@ -185,12 +187,13 @@ bool oz_isGeVar(OZ_Term t) {
   return oz_isExtVar(dt) && oz_getExtVar(dt)->getIdV() == OZ_EVAR_GEVAR;
 }
 
+template <class VarImp>
 inline 
-GeVar * get_GeVar(OZ_Term v) {
+GeVar<VarImp>* get_GeVar(OZ_Term v) {
   OZ_Term ref = OZ_deref(v);
   Assert(oz_isGeVar(ref));
   ExtVar *ev = oz_getExtVar(ref);
-  return static_cast<GeVar*>(ev);
+  return static_cast<GeVar<VarImp>*>(ev);
 }
 
 inline
@@ -206,6 +209,7 @@ bool oz_isGeVar(OzVariable *v) {
   return var2ExtVar(v)->getIdV() == OZ_EVAR_GEVAR;
 }
 
+template <class VarImp>
 inline
 void checkGlobalVar(OZ_Term v) {
   // Why this comparison is made with ints?
@@ -214,10 +218,10 @@ void checkGlobalVar(OZ_Term v) {
 
   ExtVar *ev = oz_getExtVar(oz_deref(v));
   if (!oz_isLocalVar(ev)) {
-    TaggedRef nlv = static_cast<GeVar*>(ev)->clone(v);
+    TaggedRef nlv = static_cast<GeVar<VarImp>*>(ev)->clone(v);
 
     ExtVar *varTmp = var2ExtVar(tagged2Var(oz_deref(nlv)));
-    GeVar *gvar = static_cast<GeVar*>(varTmp);
+    GeVar<VarImp> *gvar = static_cast<GeVar<VarImp>*>(varTmp);
 
     //meter al trail v [v]
     TaggedRef nlvAux = oz_deref(nlv);
@@ -230,7 +234,7 @@ void checkGlobalVar(OZ_Term v) {
 // This Gecode propagator reflects a Gecode variable assignment inside
 // Mozart.
 
-template <class View>
+template <class View, class VarImp>
 class VarReflector :
   public Gecode::UnaryPropagator<View, Gecode::PC_GEN_ASSIGNED>
 {
@@ -259,7 +263,7 @@ public:
     if (!oz_isGeVar(ref))
       return  Gecode::ES_SUBSUMED;
 
-    GeVar *gv = get_GeVar(ref);
+    GeVar<VarImp> *gv = get_GeVar<VarImp>(ref);
     
     //printf("GeVar.hh ExecStatus index=%d\n",index);fflush(stdout);
     GenericSpace *gs = static_cast<GenericSpace*>(s);        
@@ -321,5 +325,5 @@ public:
   }
 };
 
-
+#include "GeVar.icc"
 #endif

@@ -40,7 +40,7 @@ VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share) {
     if (oz_isExtVar(dt)) {
       // ensures that refs[i] is a gecode contrain variable 
       Assert(oz_getExtVar(dt)->getIdV() == OZ_EVAR_GEVAR);
-      vars.push_back(static_cast<GeVar*>(oz_getExtVar(dt))->clone());      
+      vars.push_back(static_cast<GeVar<void>*>(oz_getExtVar(dt))->clone());      
     } else {
       /*
 	When vars[i] has been bound to a value, refs[i] no longer points to a GeVar but
