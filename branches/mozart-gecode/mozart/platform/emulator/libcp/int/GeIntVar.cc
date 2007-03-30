@@ -160,7 +160,7 @@ void GeIntVar::ensureValReflection(OZ_Term ref) {
     Int::IntVarImp *ivp = reinterpret_cast<Int::IntVarImp*>(s->getVar(index));
     GeView<Int::IntVarImp> iv(ivp);
     Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
-    new (s) IntVarReflector(s, *vv, index);
+    new (s) VarReflector<Gecode::Int::IntView, Gecode::Int::IntVarImpBase>(s, *vv, index);
     hasValRefl = true;
   }
 }
