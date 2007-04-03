@@ -352,7 +352,9 @@ OZ_BI_define(BImsToPort,1,1)
   
   GlueReadBuffer buf(raw_buf, len);
   AbstractEntityName aen;
-  CoordinatorAssistant* proxy = dss->unmarshalProxy(&buf, PUF_FREE, aen);
+  bool trail;
+  CoordinatorAssistant* proxy = dss->unmarshalProxy(&buf, PUF_FREE, aen, trail);
+  Assert(!trail);
   free(raw_buf);
 
   PortMediator* med = dynamic_cast<PortMediator*>(proxy->getAbstractEntity());

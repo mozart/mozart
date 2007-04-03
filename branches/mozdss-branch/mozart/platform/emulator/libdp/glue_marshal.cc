@@ -126,8 +126,13 @@ void ObjectMediator::marshal(ByteBuffer *bs) {
 OZ_Term glue_unmarshalEntity(ByteBuffer *bs) {
   GlueReadBuffer *grb = static_cast<GlueReadBuffer*>(bs);
   AbstractEntityName aen;
-  CoordinatorAssistant* proxy = dss->unmarshalProxy(grb, PUF_ORDINARY, aen);
+  bool trailingState;
+  CoordinatorAssistant* proxy =
+    dss->unmarshalProxy(grb, PUF_ORDINARY, aen, trailingState);
   GlueTag tag = static_cast<GlueTag>(bs->get());
+
+  // temporary assertion, because this case is not handled yet
+  Assert(!trailingState);
 
   if (proxy->getAbstractEntity()) {
     // drop entity-specific data
