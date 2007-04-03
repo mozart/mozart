@@ -77,14 +77,20 @@ public:
   DSS_Object(IoFactoryInterface* const io, ComServiceInterface*  const sa, Mediation_Object* const mo, const bool& sec_channel = false);
   virtual ~DSS_Object();
 
-  // create/unmarshal a coordination proxy
+  // create a coordination proxy
   CoordinatorAssistant* createProxy(const ProtocolName&,
 				    const AccessArchitecture&,
 				    const RCalg&);
 
+  // unmarshal a coordination proxy p.  If an abstract entity already
+  // exists for p, then it is available via p->getAbstractEntity();
+  // otherwise the latter returns NULL.  The boolean trailingState is
+  // set to true if the entity's state is marshaled as well (immediate
+  // copy, see CoordinatorAssistant::marshal()).
   CoordinatorAssistant* unmarshalProxy(DssReadBuffer* const,
 				       const ProxyUnmarshalFlag&,
-				       AbstractEntityName&);
+				       AbstractEntityName &aen,
+				       bool &trailingState);
 
   DssThreadId* m_createDssThreadId();
   

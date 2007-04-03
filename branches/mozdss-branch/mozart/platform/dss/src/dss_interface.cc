@@ -132,16 +132,18 @@ namespace _dss_internal{
 
 
   //
-  //   Internal routin. Used by the unmarshaler to create its proxies. 
+  // Internal routine.  Used by the unmarshaler to create its proxies.
   //  
-  // raph: This is a simplification of former method
+  // raph: This is a simplification of the former method
   // m_unmarshalProxy(), because abstract entities are no longer
-  // created by the DSS itself.
+  // created by the DSS itself.  It returns the coordination proxy
+  // instead of the abstract entity.
   //
   Proxy*
   DSS_Environment::m_unmarshalProxy(DssReadBuffer* const buf,
 				    const ProxyUnmarshalFlag& flag, 
-				    AbstractEntityName& ae_name)
+				    AbstractEntityName& ae_name,
+				    bool &trailingState)
   {
     if (flag == PUF_ORDINARY && m_getSrcDSite() == NULL) {
       a_map->GL_warning("Called unmarshalProxy without source");
@@ -159,7 +161,7 @@ namespace _dss_internal{
 
     if (p != NULL) {
       p->m_mergeReferenceInfo(buf);
-      (void) p->m_getProtocol()->dispose_protocol_info(buf); 
+      trailingState = p->m_getProtocol()->dispose_protocol_info(buf); 
       return p;
 
     } else {
@@ -190,7 +192,7 @@ namespace _dss_internal{
       // Create proxy, don't forget to init the protocol after creation
       // (perhaps one should "init" the proxy instead...
       p = gf_createCoordinationProxy(aa, ni, prox, this); 
-      (void) p->m_initRemoteProxy(buf);
+      trailingState = p->m_initRemoteProxy(buf);
       return p;
     }
     Assert(0);
@@ -417,9 +419,10 @@ DSS_Object::createProxy(const ProtocolName& prot,
 CoordinatorAssistant*
 DSS_Object::unmarshalProxy(DssReadBuffer* const buf, 
 			   const ProxyUnmarshalFlag& flag,
-			   AbstractEntityName& cm)
+			   AbstractEntityName &aen,
+			   bool &trailingState)
 {
-  return _a_env->m_unmarshalProxy(buf,flag,cm); 
+  return _a_env->m_unmarshalProxy(buf, flag, aen, trailingState); 
 }
 
 

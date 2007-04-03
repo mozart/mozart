@@ -296,7 +296,7 @@ namespace _dss_internal{ //Start namespace
   bool 
   ProtocolMigratoryProxy::m_initRemoteProt(DssReadBuffer*) {
     setStatus(MIGT_EMPTY);
-    return true;
+    return false;
   }
 
   void

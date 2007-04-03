@@ -590,8 +590,7 @@ namespace _dss_internal{ //Start namespace
       printf("no reference info is received.\n"); 
       Assert(0); 
     }
-    bool skel = m_getProtocol()->m_initRemoteProt(bs);
-    return skel;
+    return m_getProtocol()->m_initRemoteProt(bs);
   }
   
   ProxyFwdChain::~ProxyFwdChain(){

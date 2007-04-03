@@ -297,8 +297,9 @@ public:
   virtual FaultState  getFaultState() const= 0; 
 
   // *********************** Marshaler interface ***********************
-  virtual bool        marshal(DssWriteBuffer          *buf,
-			      const ProxyMarshalFlag&  flag )=0;
+  // returns true if the entity's state should be marshaled as well
+  // (immediate copy for immutables)
+  virtual bool marshal(DssWriteBuffer*, const ProxyMarshalFlag&) = 0;
 };
 
 

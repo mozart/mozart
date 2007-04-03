@@ -295,7 +295,7 @@ namespace _dss_internal{ //Start namespace
     m_setReader(false);
     m_setValid(false);
     if (!m_isLazy()) m_subscribe();     // subscribe now if eager
-    return true;
+    return false;
   }
 
   ProtocolInvalidProxy::~ProtocolInvalidProxy(){

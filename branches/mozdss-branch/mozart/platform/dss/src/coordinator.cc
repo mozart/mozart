@@ -227,7 +227,7 @@ namespace _dss_internal{ //Start namespace
     case PMF_PUSH: // ERIK: ZACHARIAS Should probably be handled outside of this. i.e in dss_accesbs
       if (m_getEnvironment()->m_getDestDSite() == NULL) {
 	m_getEnvironment()->a_map->GL_warning("Called marshalProxy without destination");
-	return true;
+	return false;
       };
       break;
     case PMF_FREE:
@@ -254,7 +254,7 @@ namespace _dss_internal{ //Start namespace
     gf_marshalNetIdentity(buf, m_getNetId());   // a DSite + a number
     m_getReferenceInfo(buf, dest);              // up to 48 (often ~10, WRC)
 
-    // Returns true except when the protocol is immediate, when the
+    // Returns true when the protocol is immediate, i.e., when the
     // whole node should be distributed.  The protocol using DKS
     // marshals a NetId + 3 numbers + a DSite.  The other protocols
     // marshal at most 1 byte.

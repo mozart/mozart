@@ -267,7 +267,7 @@ namespace _dss_internal{ //Start namespace
   ProtocolPilgrimProxy::m_initRemoteProt(DssReadBuffer*) {
     hasToken(false); isInRing(false); isReachable(false);
     a_successor = NULL;
-    return true;
+    return false;
   }
 
   ProtocolPilgrimProxy::~ProtocolPilgrimProxy() {

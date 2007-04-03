@@ -317,7 +317,7 @@ namespace _dss_internal{ //Start namespace
       buf->putByte(OO_REG_MANUAL);
     }
 #endif
-    return true;
+    return false;
   }
 
   bool 
@@ -325,7 +325,7 @@ namespace _dss_internal{ //Start namespace
 #ifdef AUTOREGISTRATION
     buf->getByte();
 #endif
-    return true;
+    return false;
   }
 
   // initialize remote proxy (for registration)
@@ -333,12 +333,12 @@ namespace _dss_internal{ //Start namespace
   ProtocolOnceOnlyProxy::m_initRemoteProt(DssReadBuffer* buf) {
 #ifdef AUTOREGISTRATION
     Assert(!a_proxy->m_isHomeProxy());
-    if (buf->getByte() == OO_REG_AUTO) return true;
+    if (buf->getByte() == OO_REG_AUTO) return false;
 #endif
     dssLog(DLL_BEHAVIOR,"ONCE ONLY (%p): Send REGISTER",this);
     setRegistered(false);
     protocol_Register();
-    return true;
+    return false;
   }
 
   // interpret a site failure

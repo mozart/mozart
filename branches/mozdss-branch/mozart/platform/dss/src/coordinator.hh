@@ -204,6 +204,9 @@ namespace _dss_internal{ //Start namespace
 	  ProtocolProxy* const prot, DSS_Environment* const env);
     virtual ~Proxy();
 
+    // m_initRemoteProxy() is called upon unmarshaling.  It returns
+    // true if the entity's state is marshaled as well (immediate
+    // protocol).
     virtual void m_initHomeProxy(Coordinator *m)=0;
     virtual bool m_initRemoteProxy(DssReadBuffer *bs)=0;
 
@@ -226,7 +229,9 @@ namespace _dss_internal{ //Start namespace
     void    updateFaultState(FaultState fs); 
     
     // ***************** Marshal *********************
-    // Marshaling    Flag = [ORDINARY,FREE, PUSH ?(i.e push)]
+    // Marshaling Flag = [ORDINARY,FREE, PUSH ?(i.e push)]
+    // The method returns true if the entity's state should be
+    // marshaled as well (immediate copy for immutables).
     virtual bool marshal(DssWriteBuffer* , const ProxyMarshalFlag&);
     inline AbstractEntityName m_getAEname(){
       return a_abstractEntity ? a_abstractEntity->getAEName() : AEN_NOT_DEFINED;

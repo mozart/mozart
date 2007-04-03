@@ -100,7 +100,7 @@ namespace _dss_internal{ //Start namespace
 
   bool ProtocolImmutableProxy::m_initRemoteProt(DssReadBuffer*) {
     setStatus(false);     // remote proxies don't have the state
-    return true;
+    return false;
   }
 
   void
@@ -160,7 +160,7 @@ namespace _dss_internal{ //Start namespace
   ProtocolImmutableEagerProxy::m_initRemoteProt(DssReadBuffer*){
     setStatus(false);
     m_requestState();
-    return true;
+    return false;
   }
 
   OpRetVal

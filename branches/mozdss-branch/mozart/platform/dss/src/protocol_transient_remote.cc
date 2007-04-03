@@ -554,13 +554,13 @@ namespace _dss_internal{ //Start namespace
     } else {
       buf->putByte(TR_REG_MANUAL);
     }
-    return true;
+    return false;
   }
   
   bool 
   ProtocolTransientRemoteProxy::dispose_protocol_info(DssReadBuffer *buf) {
     buf->getByte();
-    return true;
+    return false;
   }
 
   // initialize remote proxy (for registration)
@@ -579,7 +579,7 @@ namespace _dss_internal{ //Start namespace
       protocol_Register();
       break;
     }
-    return true;
+    return false;
   }
 
   // interpret a site failure

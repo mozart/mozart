@@ -126,7 +126,7 @@ namespace _dss_internal{ //Start namespace
 
   bool ProtocolSimpleChannelProxy::m_initRemoteProt(DssReadBuffer*){
     setStatus(false); // change to non-stateholder
-    return true;
+    return false;
   }
 
   // used for resuming callbacks when they are not atomic

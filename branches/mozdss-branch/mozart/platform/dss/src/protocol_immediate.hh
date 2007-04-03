@@ -38,8 +38,7 @@ namespace _dss_internal{ //Start namespace
   class ProtocolImmediateManager:public ProtocolManager{
   public:
     ProtocolImmediateManager();
-    virtual void msgReceived(MsgContainer*,DSite*);    
-
+    virtual void msgReceived(MsgContainer*,DSite*);
   };
   
   
@@ -53,7 +52,6 @@ namespace _dss_internal{ //Start namespace
     
     virtual bool marshal_protocol_info(DssWriteBuffer *buf, DSite *);
     virtual bool dispose_protocol_info(DssReadBuffer *buf); //töm bufferten
-    virtual bool isWeakRoot(){ return true; }; // The glue should know if a thread is relying on proxy
     OpRetVal protocol_send(GlobalThread* const th_id);
     virtual bool m_initRemoteProt(DssReadBuffer*); 
   };
