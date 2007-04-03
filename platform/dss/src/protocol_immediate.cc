@@ -42,25 +42,18 @@ namespace _dss_internal{ //Start namespace
   ProtocolImmediateManager::msgReceived(MsgContainer *msg, DSite* sender){;}
 
   bool
-  ProtocolImmediateProxy::m_initRemoteProt(DssReadBuffer* buf){
-    //    stateHolder = true; 
-    //       bool skel = !(buf->getByte() == IM_C_FULL);
-    //  MsgContainer *msgC = a_proxy->m_createProtMsg();
-    //msgC->setMessageType(M_MANAGER_PROTOCOL);
-    //a_proxy->m_sendToCoordinator(msgC);
-    return false;
+  ProtocolImmediateProxy::m_initRemoteProt(DssReadBuffer*) {
+    return true;
   }
   
   bool
-  ProtocolImmediateProxy::marshal_protocol_info(DssWriteBuffer *buf, DSite *dest){
-    // Packa ihop allt och skicka över returnera false
-    //  buf->putByte(IM_C_FULL);
-    return false;
+  ProtocolImmediateProxy::marshal_protocol_info(DssWriteBuffer*, DSite*) {
+    return true;
   }
 
   bool 
-  ProtocolImmediateProxy::dispose_protocol_info(DssReadBuffer *buf) {
-    return false;
+  ProtocolImmediateProxy::dispose_protocol_info(DssReadBuffer*) {
+    return true;
   }
 
   void
@@ -69,11 +62,7 @@ namespace _dss_internal{ //Start namespace
   {;}
 
   void
-  ProtocolImmediateProxy::msgReceived(MsgContainer *msg, DSite* u){
-    GlobalThread *th = gf_popThreadIdVal(msg, a_proxy->m_getEnvironment()); 
-    PstInContainerInterface* load = gf_popPstIn(msg);
-    th->resumeRemoteDone(load); 
-  }
+  ProtocolImmediateProxy::msgReceived(MsgContainer *msg, DSite* u) {}
 
   OpRetVal
   ProtocolImmediateProxy::protocol_send(GlobalThread* const th_id){

@@ -301,8 +301,7 @@ namespace _dss_internal{ //Start namespace
       a_remoteRef  = new RemoteReference(this,bs);
     else // make a persistent ref(no danger)
       a_remoteRef  = new RemoteReference(this); 
-    bool skel    = m_getProtocol()->m_initRemoteProt(bs);
-    return skel;
+    return m_getProtocol()->m_initRemoteProt(bs);
   }
   void 
   ProxyMobile::m_makePersistent(){

@@ -153,14 +153,14 @@ namespace _dss_internal{ //Start namespace
   ProxyStationary::m_initRemoteProxy(DssReadBuffer *bs){
     a_ps  = PROXY_STATUS_REMOTE;
     a_remoteRef = new RemoteReference(this,bs);
-    bool skel = m_getProtocol()->m_initRemoteProt(bs);
+    bool trailingState = m_getProtocol()->m_initRemoteProt(bs);
 		
     DSite *hs = m_getGUIdSite(); 
     DSiteState state = hs->m_getFaultState();
     if(state != DSite_OK){
       m_siteStateChange(hs,state);
     }
-    return skel;
+    return trailingState;
   }
 
 

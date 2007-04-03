@@ -265,7 +265,8 @@ namespace _dss_internal{ //Start namespace
 
     Proxy* m_unmarshalProxy(DssReadBuffer* const buf,
 			    const ProxyUnmarshalFlag& flag,
-			    AbstractEntityName& cm);
+			    AbstractEntityName& aen,
+			    bool &trailingState);
 
     DssThreadId *m_createDssThreadId(); 
     

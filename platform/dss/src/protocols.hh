@@ -144,10 +144,11 @@ namespace _dss_internal{ //Start namespace
 
     // Marshaling and unmarshaling proxy information.  The information
     // is used to initialize a remote proxy, or disposed if the proxy
-    // already exists.
-    virtual bool marshal_protocol_info(DssWriteBuffer*, DSite*) { return true; }
-    virtual bool m_initRemoteProt(DssReadBuffer*) { return true; }
-    virtual bool dispose_protocol_info(DssReadBuffer*) { return true; }
+    // already exists.  All these methods return true if the entity's
+    // state should be marshaled as well (immediate protocol).
+    virtual bool marshal_protocol_info(DssWriteBuffer*, DSite*) { return false;}
+    virtual bool m_initRemoteProt(DssReadBuffer*) { return false; }
+    virtual bool dispose_protocol_info(DssReadBuffer*) { return false; }
 
     // Called when the state of a site changes. It is up to the
     // protocol to deduce if it is affected by the site. 

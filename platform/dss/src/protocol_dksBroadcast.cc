@@ -106,7 +106,7 @@ void ProtocolDksBcManager::makeGCpreps(){
     a_proxy->m_getEnvironment()->a_dksInstHT->m_unmarshalDksInstance(buf, a_dks);
     a_dks->setCallBackService(this); 
     a_dks->m_joinNetwork(a_proxy->m_getCoordinatorSite()); 
-    return true; 
+    return false; 
   }
   
   char *ProtocolDksBcProxy::m_stringrep(){
@@ -115,13 +115,13 @@ void ProtocolDksBcManager::makeGCpreps(){
   
   bool ProtocolDksBcProxy::marshal_protocol_info(DssWriteBuffer *buf, DSite *){
     a_dks->m_marshal(buf); 
-    return true; 
+    return false; 
   }
   bool ProtocolDksBcProxy::dispose_protocol_info(DssReadBuffer *buf){ 
     DksInstance* _unused; 
     a_proxy->m_getEnvironment()->a_dksInstHT->m_unmarshalDksInstance(buf, _unused); 
     Assert(a_dks == _unused); 
-    return true; 
+    return false; 
   }
   
   void ProtocolDksBcProxy::remoteInitatedOperationCompleted(DssOperationId* opId,
