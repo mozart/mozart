@@ -160,6 +160,22 @@ in
 end
 </code>
 </FIGURE>
+<P CLASS=WARNING> The code above is correct but, due to a limitation in the current Oz implementation, leaks memory. As a workaround, one can use the code below as a drop-in replacement.
+<code display>
+declare
+fun {NewQueueServer}
+   Given GivePort={Port.new Given}
+   Taken TakePort={Port.new Taken}
+in
+   thread 
+      for X in Given Y in Taken do
+         X=Y
+      end
+   end
+   queue(put:proc {$ X} {Port.send GivePort X} end
+	 get:proc {$ X} {Port.send TakePort X} end)
+end
+</code>
 
 
 <SECTION id=section.stateful.chunk><TITLE/Chunks/
