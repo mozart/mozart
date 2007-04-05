@@ -88,9 +88,10 @@
   the mediator table (using the entity's taggedref as a key).
   Attached mediators are not found by looking up the mediator table.
 
-  Note 1. Insertion of the mediator in the mediator table is automatic
-  upon creation.  Connection to the coordination proxy is also
-  automatic upon globalization.
+  Note 1. Upon creation, the mediator may or may not know its entity
+  (for instance, when unmarshaling).  Insertion of the mediator in the
+  mediator table is automatic once the entity is known.  Connection to
+  the coordination proxy is also automatic upon globalization.
 
   Note 2. Mediators of failed entities should be attached, otherwise
   the emulator might not notice the failure.  This is because we only
@@ -151,7 +152,7 @@ protected:
 
 public:
   /*************** constructor/destructor ***************/
-  Mediator(TaggedRef entity, GlueTag type, bool attached);
+  Mediator(GlueTag type);
   virtual ~Mediator();
 
   /*************** active/passive, attached/detached ***************/
@@ -163,11 +164,14 @@ public:
   virtual void detach() {}     // detach mediator if possible
 
   /*************** entity/coordinator ***************/
+  bool      hasEntity() const { return entity != makeTaggedNULL(); }
   TaggedRef getEntity() const { return entity; }
+  void      setEntity(TaggedRef e);
+
   void setProxy(CoordinatorAssistant*);
   bool isDistributed() const { return getCoordinatorAssistant() != NULL; }
 
-  // Note: use setProxy() instead of setCoordinatorAssistant().
+  // Note. Use setProxy() instead of setCoordinatorAssistant().
 
   /*************** annotate/globalize/localize ***************/
   GlueTag getType() const { return type; }
@@ -196,8 +200,9 @@ public:
 
   virtual void reportFaultState(const FaultState&);
 
-  /*************** marshaling ***************/
-  virtual void marshal(ByteBuffer *bs);
+  /*************** marshaling, see glue_marshal.hh ***************/
+  virtual void marshal(ByteBuffer*);
+  virtual void unmarshal(ByteBuffer*) = 0;
 
   /*************** debugging ***************/
   virtual char* getPrintType() { return "unknown"; }
@@ -205,6 +210,9 @@ public:
 };
 
 
+
+// create a new mediator for a given entity type (set entity later)
+Mediator *glue_newMediator(GlueTag);
 
 // return the mediator of an entity (create one if necessary)
 Mediator *glue_getMediator(TaggedRef entity);
@@ -215,8 +223,9 @@ Mediator *glue_getMediator(TaggedRef entity);
 // ConstTermWithHome in the emulator.
 class ConstMediator: public Mediator {
 public: 
-  ConstMediator(TaggedRef t, GlueTag type, bool attached);
+  ConstMediator(GlueTag type);
   ConstTermWithHome* getConst() const;
+  void setConst(ConstTermWithHome* c) { setEntity(makeTaggedConst(c)); }
   virtual void attach();
   virtual void detach();
   virtual char *getPrintType() { return "const"; }
@@ -227,8 +236,8 @@ public:
 // mediators for Oz ports
 class PortMediator: public ConstMediator, public RelaxedMutableAbstractEntity {
 public:
+  PortMediator();
   PortMediator(TaggedRef);
-  PortMediator(TaggedRef, CoordinatorAssistant*);
 
   virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
 				    PstInContainerInterface*);
@@ -239,6 +248,7 @@ public:
     Assert(0); return NULL; }
   virtual void installEntityRepresentation(PstInContainerInterface*) {
     Assert(0); }
+  virtual void unmarshal(ByteBuffer*);
   virtual char *getPrintType() { return "port"; }
 }; 
 
@@ -246,8 +256,8 @@ public:
 // mediators for Oz cells
 class CellMediator: public ConstMediator, public MutableAbstractEntity {
 public:
+  CellMediator();
   CellMediator(TaggedRef);
-  CellMediator(TaggedRef, CoordinatorAssistant*);
 
   virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
 				    PstInContainerInterface*,
@@ -258,6 +268,7 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
+  virtual void unmarshal(ByteBuffer*);
   virtual char *getPrintType() { return "cell"; }
 }; 
 
@@ -265,8 +276,8 @@ public:
 // mediators for Oz locks
 class LockMediator: public ConstMediator, public MutableAbstractEntity {
 public:
+  LockMediator();
   LockMediator(TaggedRef);
-  LockMediator(TaggedRef, CoordinatorAssistant*);
 
   virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
 				    PstInContainerInterface*,
@@ -277,6 +288,7 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
+  virtual void unmarshal(ByteBuffer*);
   virtual char *getPrintType() { return "lock"; }
 }; 
 
@@ -284,8 +296,8 @@ public:
 // mediators for Oz arrays
 class ArrayMediator: public ConstMediator, public MutableAbstractEntity {
 public:
+  ArrayMediator();
   ArrayMediator(TaggedRef);
-  ArrayMediator(TaggedRef, CoordinatorAssistant*);
 
   virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
 				    PstInContainerInterface*,
@@ -297,6 +309,7 @@ public:
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
   virtual void marshal(ByteBuffer*);
+  virtual void unmarshal(ByteBuffer*);
   virtual char *getPrintType() { return "array"; }
 }; 
 
@@ -304,8 +317,8 @@ public:
 // mediators for Oz dictionaries
 class DictionaryMediator: public ConstMediator, public MutableAbstractEntity {
 public:
+  DictionaryMediator();
   DictionaryMediator(TaggedRef);
-  DictionaryMediator(TaggedRef, CoordinatorAssistant*);
 
   virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
 				    PstInContainerInterface*,
@@ -316,6 +329,7 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
+  virtual void unmarshal(ByteBuffer*);
   virtual char *getPrintType() { return "dictionary"; }
 }; 
 
@@ -323,8 +337,8 @@ public:
 // mediators for Oz objects
 class ObjectMediator: public ConstMediator, public MutableAbstractEntity {
 public:
+  ObjectMediator();
   ObjectMediator(TaggedRef);
-  ObjectMediator(TaggedRef, CoordinatorAssistant*);
 
   virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
 				    PstInContainerInterface*,
@@ -335,7 +349,7 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
-  virtual void marshal(ByteBuffer*);
+  virtual void unmarshal(ByteBuffer*);
   virtual char *getPrintType() { return "object"; }
 };
 
@@ -343,8 +357,8 @@ public:
 // mediators for Oz threads
 class OzThreadMediator: public ConstMediator, public MutableAbstractEntity {
 public:
+  OzThreadMediator();
   OzThreadMediator(TaggedRef);
-  OzThreadMediator(TaggedRef, CoordinatorAssistant*);
 
   virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
 				    PstInContainerInterface*,
@@ -354,6 +368,7 @@ public:
 				   PstOutContainerInterface*&);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
+  virtual void unmarshal(ByteBuffer*);
   virtual char *getPrintType() { return "thread"; }
 };
 
@@ -361,10 +376,10 @@ public:
 
 // mediators for "unusables".  An unusable is a remote representation
 // of a site-specific entity.
-class UnusableMediator: public Mediator, public ImmutableAbstractEntity {
+class UnusableMediator: public ConstMediator, public ImmutableAbstractEntity {
 public:
+  UnusableMediator();
   UnusableMediator(TaggedRef);
-  UnusableMediator(TaggedRef, CoordinatorAssistant*);
 
   virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
 				   PstInContainerInterface*,
@@ -373,6 +388,7 @@ public:
     Assert(0); return NULL; }
   virtual void installEntityRepresentation(PstInContainerInterface*) {
     Assert(0); }
+  virtual void unmarshal(ByteBuffer*);
   virtual char *getPrintType() { return "unusable"; }
 };
 
@@ -381,9 +397,10 @@ public:
 // mediators for Oz variables
 class OzVariableMediator: public Mediator, public MonotonicAbstractEntity {
 public:
+  OzVariableMediator(GlueTag);
   OzVariableMediator(TaggedRef);
-  OzVariableMediator(TaggedRef, CoordinatorAssistant*);
   
+  virtual void attach();
   virtual char *getPrintType() { return "var"; }
 
   virtual AOcallback callback_Bind(DssOperationId *id,
@@ -394,6 +411,7 @@ public:
 				      PstOutContainerInterface*& answer);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);
+  virtual void unmarshal(ByteBuffer*);
 }; 
 
 // Note.  Patched variables keep their distribution support alive,

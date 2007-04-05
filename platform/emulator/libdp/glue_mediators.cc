@@ -43,7 +43,29 @@
 
 // The identity of the mediators, used for... I dont remeber
 // Check it out, Erik. 
-static int medIdCntr = 1; 
+static int medIdCntr = 1;
+
+
+
+/************************* glue_newMediator *************************/
+
+Mediator *glue_newMediator(GlueTag tag) {
+  // to be fixed
+  switch (tag) {
+  case GLUE_UNUSABLE:   return new UnusableMediator();
+  case GLUE_VARIABLE:   return new OzVariableMediator(GLUE_VARIABLE);
+  case GLUE_READONLY:   return new OzVariableMediator(GLUE_READONLY);
+  case GLUE_PORT:       return new PortMediator();
+  case GLUE_CELL:       return new CellMediator();
+  case GLUE_LOCK:       return new LockMediator();
+  case GLUE_OBJECT:     return new ObjectMediator();
+  case GLUE_ARRAY:      return new ArrayMediator();
+  case GLUE_DICTIONARY: return new DictionaryMediator();
+  case GLUE_THREAD:     return new OzThreadMediator();
+  default:
+    Assert(0); return NULL;
+  }
+}
 
 
 
@@ -109,16 +131,18 @@ Mediator *glue_getMediator(TaggedRef entity) {
 
 
 
-//************************** Mediator ***************************//
+/************************** Mediator ***************************/
 
-Mediator::Mediator(TaggedRef ref, GlueTag etype, bool attach) :
-  active(TRUE), attached(attach), collected(FALSE),
-  dss_gc_status(DSS_GC_NONE), type(etype), faultState(GLUE_FAULT_NONE),
+Mediator::Mediator(GlueTag t) :
+  active(TRUE), attached(FALSE), collected(FALSE),
+  dss_gc_status(DSS_GC_NONE), type(t), faultState(GLUE_FAULT_NONE),
   annotation(emptyAnnotation),
-  entity(ref), faultStream(0), faultCtlVar(0), next(NULL)
+  entity(makeTaggedNULL()),
+  faultStream(makeTaggedNULL()),
+  faultCtlVar(makeTaggedNULL()),
+  next(NULL)
 {
-  id = medIdCntr++; 
-  mediatorTable->insert(this);
+  id = medIdCntr++;
 }
 
 Mediator::~Mediator(){
@@ -135,6 +159,13 @@ Mediator::makePassive() {
   active = FALSE;
 }
 
+void Mediator::setEntity(TaggedRef e) {
+  Assert(!hasEntity() && e != makeTaggedNULL());
+  entity = e;
+  if (isDistributed() || faultState != GLUE_FAULT_NONE) attach();
+  mediatorTable->insert(this);     // now we can put it in the table
+}
+
 void
 Mediator::setProxy(CoordinatorAssistant* p) {
   setCoordinatorAssistant(p);
@@ -147,6 +178,8 @@ Mediator::setProxy(CoordinatorAssistant* p) {
       p->getParameters(pn, aa, rc);
       annotation = makeAnnotation(pn, aa, rc);
     }
+    // attach mediator to entity if required
+    if (hasEntity() && !attached) attach();
     // then check fault state
     if (faultState == GLUE_FAULT_PERM) {
       abstractOperation_Kill();     // globalizing a failed entity...
@@ -154,6 +187,9 @@ Mediator::setProxy(CoordinatorAssistant* p) {
       p->setRegisteredFS(FS_PROT_MASK);   // register fault reporting
       if (faultStream) abstractOperation_Monitor();
     }
+  } else {
+    // detach the mediator (unless the entity has failed)
+    if (attached && faultState == GLUE_FAULT_NONE) detach();
   }
 }
 
@@ -173,16 +209,13 @@ void Mediator::globalize() {
   // and attach the mediator.
   completeAnnotation();
   setProxy(dss->createProxy(annotation.pn, annotation.aa, annotation.rc));
-  if (!attached) attach();
 }
 
 void Mediator::localize() {
   Assert(isDistributed());
-  // We have to keep the mediator for future globalizations.  So
-  // remove the coordination proxy, and detach the mediator (unless
-  // the entity has failed).
+  // We have to keep the mediator for future globalizations, so simply
+  // remove the coordination proxy.
   setProxy(NULL);
-  if (attached && faultState == GLUE_FAULT_NONE) detach();
 }
 
 void Mediator::gCollect(){
@@ -243,7 +276,7 @@ Mediator::setFaultState(GlueFaultState fs) {
   } else {
     // The entity failed.  The failure will not be noticed by the
     // emulator if the mediator is detached, so try to attach it.
-    if (!attached) attach();
+    if (hasEntity() && !attached) attach();
   }
 }
 
@@ -290,9 +323,7 @@ Mediator::print(){
 
 /************************* ConstMediator *************************/
 
-ConstMediator::ConstMediator(TaggedRef t, GlueTag type, bool attached) :
-  Mediator(t, type, attached)
-{}
+ConstMediator::ConstMediator(GlueTag t) : Mediator(t) {}
 
 ConstTermWithHome* ConstMediator::getConst() const {
   return static_cast<ConstTermWithHome*>(tagged2Const(getEntity()));
@@ -312,14 +343,10 @@ void ConstMediator::detach() {
 
 /************************* PortMediator *************************/
 
-PortMediator::PortMediator(TaggedRef t) :
-  ConstMediator(t, GLUE_PORT, DETACHED)
-{}
+PortMediator::PortMediator() : ConstMediator(GLUE_PORT) {}
 
-PortMediator::PortMediator(TaggedRef t, CoordinatorAssistant* p) :
-  ConstMediator(t, GLUE_PORT, ATTACHED)
-{
-  setProxy(p);
+PortMediator::PortMediator(TaggedRef e) : ConstMediator(GLUE_PORT) {
+  setEntity(e);
 }
 
 AOcallback
@@ -345,14 +372,10 @@ PortMediator::callback_Read(DssThreadId*, DssOperationId*,
 /************************* CellMediator *************************/
 
 // use this constructor for annotations, etc.
-CellMediator::CellMediator(TaggedRef t) :
-  ConstMediator(t, GLUE_CELL, DETACHED)
-{}
+CellMediator::CellMediator() : ConstMediator(GLUE_CELL) {}
 
-CellMediator::CellMediator(TaggedRef t, CoordinatorAssistant* p) :
-  ConstMediator(t, GLUE_CELL, ATTACHED)
-{
-  setProxy(p);
+CellMediator::CellMediator(TaggedRef e) : ConstMediator(GLUE_CELL) {
+  setEntity(e);
 }
 
 PstOutContainerInterface *
@@ -401,14 +424,10 @@ CellMediator::callback_Read(DssThreadId*, DssOperationId*,
 
 /************************* LockMediator *************************/
 
-LockMediator::LockMediator(TaggedRef t) :
-  ConstMediator(t, GLUE_LOCK, DETACHED)
-{}
+LockMediator::LockMediator() : ConstMediator(GLUE_LOCK) {}
 
-LockMediator::LockMediator(TaggedRef t, CoordinatorAssistant* p) :
-  ConstMediator(t, GLUE_LOCK, ATTACHED)
-{
-  setProxy(p);
+LockMediator::LockMediator(TaggedRef e) : ConstMediator(GLUE_LOCK) {
+  setEntity(e);
 }
 
 AOcallback 
@@ -493,14 +512,10 @@ LockMediator::installEntityRepresentation(PstInContainerInterface* pstIn){
 
 /************************* ArrayMediator *************************/
 
-ArrayMediator::ArrayMediator(TaggedRef t) :
-  ConstMediator(t, GLUE_ARRAY, DETACHED)
-{}
+ArrayMediator::ArrayMediator() : ConstMediator(GLUE_ARRAY) {}
 
-ArrayMediator::ArrayMediator(TaggedRef t, CoordinatorAssistant* p) :
-  ConstMediator(t, GLUE_ARRAY, ATTACHED)
-{
-  setProxy(p);
+ArrayMediator::ArrayMediator(TaggedRef e) : ConstMediator(GLUE_ARRAY) {
+  setEntity(e);
 }
 
 AOcallback 
@@ -579,14 +594,11 @@ ArrayMediator::installEntityRepresentation(PstInContainerInterface* pstin){
 
 /************************* DictionaryMediator *************************/
 
-DictionaryMediator::DictionaryMediator(TaggedRef t) :
-  ConstMediator(t, GLUE_DICTIONARY, DETACHED)
-{}
+DictionaryMediator::DictionaryMediator() : ConstMediator(GLUE_DICTIONARY) {}
 
-DictionaryMediator::DictionaryMediator(TaggedRef t, CoordinatorAssistant* p) :
-  ConstMediator(t, GLUE_DICTIONARY, ATTACHED)
-{
-  setProxy(p);
+DictionaryMediator::DictionaryMediator(TaggedRef e) :
+  ConstMediator(GLUE_DICTIONARY) {
+  setEntity(e);
 }
 
 AOcallback 
@@ -654,14 +666,10 @@ DictionaryMediator::installEntityRepresentation(PstInContainerInterface* pstin){
 
 /************************* ObjectMediator *************************/
 
-ObjectMediator::ObjectMediator(TaggedRef t) :
-  ConstMediator(t, GLUE_OBJECT, DETACHED)
-{}
+ObjectMediator::ObjectMediator() : ConstMediator(GLUE_OBJECT) {}
 
-ObjectMediator::ObjectMediator(TaggedRef t, CoordinatorAssistant* p) :
-  ConstMediator(t, GLUE_OBJECT, ATTACHED)
-{
-  setProxy(p);
+ObjectMediator::ObjectMediator(TaggedRef e) : ConstMediator(GLUE_OBJECT) {
+  setEntity(e);
 }
 
 AOcallback
@@ -691,14 +699,10 @@ ObjectMediator::installEntityRepresentation(PstInContainerInterface*){;}
 
 /************************* OzThreadMediator *************************/
 
-OzThreadMediator::OzThreadMediator(TaggedRef t) :
-  ConstMediator(t, GLUE_THREAD, DETACHED)
-{}
+OzThreadMediator::OzThreadMediator() : ConstMediator(GLUE_THREAD) {}
 
-OzThreadMediator::OzThreadMediator(TaggedRef t, CoordinatorAssistant* p) :
-  ConstMediator(t, GLUE_THREAD, ATTACHED)
-{
-  setProxy(p);
+OzThreadMediator::OzThreadMediator(TaggedRef e) : ConstMediator(GLUE_THREAD) {
+  setEntity(e);
 }
 
 AOcallback
@@ -731,14 +735,10 @@ OzThreadMediator::installEntityRepresentation(PstInContainerInterface*){
 
 /************************* UnusableMediator *************************/
 
-UnusableMediator::UnusableMediator(TaggedRef t) :
-  Mediator(t, GLUE_UNUSABLE, DETACHED)
-{}
+UnusableMediator::UnusableMediator() : ConstMediator(GLUE_UNUSABLE) {}
 
-UnusableMediator::UnusableMediator(TaggedRef t, CoordinatorAssistant* p) :
-  Mediator(t, GLUE_UNUSABLE, DETACHED)
-{
-  setProxy(p);
+UnusableMediator::UnusableMediator(TaggedRef e) : ConstMediator(GLUE_UNUSABLE) {
+  setEntity(e);
 }
 
 AOcallback
@@ -753,25 +753,27 @@ UnusableMediator::callback_Read(DssThreadId*, DssOperationId*,
 
 /************************* OzVariableMediator *************************/
 
-// assumption: t is a tagged REF to a tagged VAR.
-OzVariableMediator::OzVariableMediator(TaggedRef t) :
-  Mediator(t, oz_isFree(*tagged2Ref(t)) ? GLUE_VARIABLE : GLUE_READONLY,
-	   ATTACHED)
-{}
+OzVariableMediator::OzVariableMediator(GlueTag t) : Mediator(t) {}
 
-// assumption: t is a tagged REF to a tagged VAR.
-OzVariableMediator::OzVariableMediator(TaggedRef t, CoordinatorAssistant* p) :
-  Mediator(t, oz_isFree(*tagged2Ref(t)) ? GLUE_VARIABLE : GLUE_READONLY,
-	   ATTACHED)
-{
-  setProxy(p);
+// assumption: e is a tagged REF to a tagged VAR.
+OzVariableMediator::OzVariableMediator(TaggedRef e) :
+  Mediator(oz_isFree(*tagged2Ref(e)) ? GLUE_VARIABLE : GLUE_READONLY) {
+  setEntity(e);
+  attach();
+}
+
+void OzVariableMediator::attach() {
+  OzVariable* var = tagged2Var(*tagged2Ref(getEntity()));
+  var->setMediator(this);
+  attached = true;
 }
 
 PstOutContainerInterface *OzVariableMediator::retrieveEntityRepresentation(){
   return new PstOutContainer(getEntity());
 }
 
-void OzVariableMediator::installEntityRepresentation(PstInContainerInterface* pstin){
+void
+OzVariableMediator::installEntityRepresentation(PstInContainerInterface* pstin){
   Assert(active);
   TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
   TaggedRef* ref = tagged2Ref(getEntity()); // points to the var's tagged ref

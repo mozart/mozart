@@ -333,9 +333,10 @@ OZ_BI_define(BIportToMS,1,1)
   glue_globalizeEntity(prt);
   Mediator *med = glue_getMediator(prt);
 
-  // marshal the Dss abstract entity
+  // marshal the Dss abstract entity, and entity-specific stuff
   GlueWriteBuffer buf(portToTickBuf, PORT_TO_TICK_BUF_LEN);
   med->getCoordinatorAssistant()->marshal(&buf, PMF_FREE);
+  med->marshal(&buf);
 
   // turn it into a string
   int len = buf.bufferUsed();
@@ -349,25 +350,25 @@ OZ_BI_define(BImsToPort,1,1)
   oz_declareProperStringIN(0,str);
   int len = strlen(str); 
   unsigned char* raw_buf = (unsigned char*) decodeB64((char*)str, len);
-  
+
+  // unmarshal the Dss abstract entity, and entity-specific stuff  
   GlueReadBuffer buf(raw_buf, len);
   AbstractEntityName aen;
   bool trail;
   CoordinatorAssistant* proxy = dss->unmarshalProxy(&buf, PUF_FREE, aen, trail);
   Assert(!trail);
+
+  // build mediator and entity if not present
+  Mediator* med = dynamic_cast<Mediator*>(proxy->getAbstractEntity());
+  if (!med) { // create mediator
+    med = glue_newMediator(GLUE_PORT);
+    med->setProxy(proxy);
+  }
+  med->unmarshal(&buf);
   free(raw_buf);
 
-  PortMediator* med = dynamic_cast<PortMediator*>(proxy->getAbstractEntity());
-  if (med) {
-    OZ_RETURN(med->getEntity());
+  OZ_RETURN(med->getEntity());
 
-  } else {
-    // create a port whose stream is unused
-    OzPort* prt = new OzPort(oz_currentBoard(), makeTaggedNULL());
-    TaggedRef t = makeTaggedConst(prt);
-    prt->setMediator(new PortMediator(t, proxy));
-    OZ_RETURN(t);
-  }
 }OZ_BI_end
 
 
