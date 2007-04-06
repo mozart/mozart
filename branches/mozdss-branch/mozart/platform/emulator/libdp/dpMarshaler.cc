@@ -1595,7 +1595,8 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
     case DIF_OBJECT_DEF: {
       printf("We are in Object_DEF\n"); //bmc
       int refTag = unmarshalRefTag(bs);
-      OZ_Term t = glue_unmarshalEntity(bs);
+      OZ_Term t;
+      (void) glue_unmarshalEntity(bs, t);
 #if defined(DBG_TRACE)
       fprintf(dbgout, " = %s\n", toC(t));
       fflush(dbgout);
@@ -1657,7 +1658,8 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 
     case DIF_OBJECT: {
       printf("We are in DIF_Object\n"); //bmc
-      OZ_Term t = glue_unmarshalEntity(bs);
+      OZ_Term t;
+      (void) glue_unmarshalEntity(bs, t);
 #if defined(DBG_TRACE)
       fprintf(dbgout, " = %s\n", toC(t));
       fflush(dbgout);
@@ -2073,7 +2075,9 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
     }
 
     case DIF_GLUE: {
-      OZ_Term t = glue_unmarshalEntity(bs);
+      OZ_Term t;
+      bool immediate = glue_unmarshalEntity(bs, t);
+      Assert(!immediate);     // not handled yet
 #if defined(DBG_TRACE)
 	fprintf(dbgout, " = %s\n", toC(t));
 	fflush(dbgout);
@@ -2084,7 +2088,9 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 
     case DIF_GLUE_DEF: {
       int refTag = unmarshalRefTag(bs);
-      OZ_Term t = glue_unmarshalEntity(bs);
+      OZ_Term t;
+      bool immediate = glue_unmarshalEntity(bs, t);
+      Assert(!immediate);     // not handled yet
 #if defined(DBG_TRACE)
       fprintf(dbgout, " = %s (at %d)\n", toC(t), refTag);
       fflush(dbgout);

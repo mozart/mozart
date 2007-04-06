@@ -83,7 +83,7 @@ void glue_globalizeEntity(TaggedRef entity) {
 */
 
 // marshal an entity
-void glue_marshalEntity(TaggedRef entity, ByteBuffer *bs) {
+bool glue_marshalEntity(TaggedRef entity, ByteBuffer *bs) {
   GlueWriteBuffer* buf = static_cast<GlueWriteBuffer*>(bs);
   Mediator* med = glue_getMediator(entity);
   if (!med->isDistributed()) med->globalize();
@@ -94,11 +94,13 @@ void glue_marshalEntity(TaggedRef entity, ByteBuffer *bs) {
 
   // marshal entity-specific data
   med->marshal(bs);
+
+  return immediate;
 }
 
 
 // unmarshal an entity
-OZ_Term glue_unmarshalEntity(ByteBuffer *bs) {
+bool glue_unmarshalEntity(ByteBuffer *bs, TaggedRef &entity) {
   GlueReadBuffer* buf = static_cast<GlueReadBuffer*>(bs);
   AbstractEntityName aen;
   bool immediate;
@@ -108,14 +110,16 @@ OZ_Term glue_unmarshalEntity(ByteBuffer *bs) {
   proxy = dss->unmarshalProxy(buf, PUF_ORDINARY, aen, immediate);
   GlueTag tag = static_cast<GlueTag>(bs->get());
 
+  // unmarshal entity-specific data
   Mediator* med = dynamic_cast<Mediator*>(proxy->getAbstractEntity());
   if (!med) { // create mediator
     med = glue_newMediator(tag);
     med->setProxy(proxy);
   }
   med->unmarshal(bs);
+  entity = med->getEntity();
 
-  return med->getEntity();
+  return immediate;
 }
 
 

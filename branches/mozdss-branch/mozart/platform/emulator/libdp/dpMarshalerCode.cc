@@ -248,7 +248,7 @@ void DPMARSHALERCLASS::processNoGood(OZ_Term resTerm)
     //
     if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
     else { bs->put(DIF_GLUE); }
-    glue_marshalEntity(resTerm, bs);
+    (void) glue_marshalEntity(resTerm, bs);
     //
     Assert(bs->availableSpace() >= DIFMaxSize);
   } else {
@@ -284,7 +284,7 @@ void DPMARSHALERCLASS::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
     if (bi->isSited()) {
       if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
       else { bs->put(DIF_GLUE); }
-      glue_marshalEntity(biTerm, bs);
+      (void) glue_marshalEntity(biTerm, bs);
 
     } else {
 #if defined(DBG_TRACE)
@@ -395,13 +395,13 @@ Bool DPMARSHALERCLASS::marshalObjectStub(OZ_Term term, ConstTerm *objConst)
       // marshal term as an unusable (should eventually be automatic...)
       if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
       else { bs->put(DIF_GLUE); }
-      glue_marshalEntity(term, bs);
+      (void) glue_marshalEntity(term, bs);
 
     } else {
       // marshal the object stub
       if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
       else { bs->put(DIF_GLUE); }
-      glue_marshalEntity(term, bs);
+      (void) glue_marshalEntity(term, bs);
     }
 
     //
@@ -497,7 +497,7 @@ Bool DPMARSHALERCLASS::processObject(OZ_Term term, ConstTerm *objConst)
       // marshal term as an unusable (should eventually be automatic...)
       if (index) { bs->put(DIF_OBJECT_DEF); marshalTermDef(bs, index); }
       else { bs->put(DIF_OBJECT); }
-      glue_marshalEntity(term, bs);
+      (void) glue_marshalEntity(term, bs);
 
     } else {
       // marshal the object stub
@@ -507,7 +507,7 @@ Bool DPMARSHALERCLASS::processObject(OZ_Term term, ConstTerm *objConst)
       } else { 
         bs->put(DIF_OBJECT); 
       }
-      glue_marshalEntity(term, bs);
+      (void) glue_marshalEntity(term, bs);
     }
 
     //
@@ -530,7 +530,7 @@ void DPMARSHALERCLASS::processLock(OZ_Term term, ConstTerm *lockConst)
     VISITNODE(term, vIT, bs, index, return);
     if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
     else { bs->put(DIF_GLUE); }
-    glue_marshalEntity(term, bs);
+    (void) glue_marshalEntity(term, bs);
     Assert(bs->availableSpace() >= DIFMaxSize);
 
   } else {
@@ -555,7 +555,7 @@ Bool DPMARSHALERCLASS::processCell(OZ_Term term, ConstTerm *cellConst)
     VISITNODE(term, vIT, bs, index, return(OK));
     if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
     else { bs->put(DIF_GLUE); }
-    glue_marshalEntity(term, bs);
+    (void) glue_marshalEntity(term, bs);
     Assert(bs->availableSpace() >= DIFMaxSize);
 
   } else {
@@ -581,7 +581,7 @@ void DPMARSHALERCLASS::processPort(OZ_Term term, ConstTerm *portConst)
     VISITNODE(term, vIT, bs, index, return);
     if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
     else { bs->put(DIF_GLUE); }
-    glue_marshalEntity(term, bs);
+    (void) glue_marshalEntity(term, bs);
     Assert(bs->availableSpace() >= DIFMaxSize);
 
   } else {
@@ -606,7 +606,7 @@ void DPMARSHALERCLASS::processResource(OZ_Term term, ConstTerm *unusConst)
     VISITNODE(term, vIT, bs, index, return);
     if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
     else { bs->put(DIF_GLUE); }
-    glue_marshalEntity(term, bs);
+    (void) glue_marshalEntity(term, bs);
     Assert(bs->availableSpace() >= DIFMaxSize);
 
   } else {
@@ -662,7 +662,7 @@ Bool DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
 	printf("--- raph: marshaling distributed var patch\n");
 	if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
 	else { bs->put(DIF_GLUE); }
-	glue_marshalEntity(vrt, bs);
+	(void) glue_marshalEntity(vrt, bs);
 	break;
 
       case OZ_EVAR_MARSHALEDVARPATCH:
@@ -676,7 +676,7 @@ Bool DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
       // marshal it
       if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
       else { bs->put(DIF_GLUE); }
-      glue_marshalEntity(vrt, bs);
+      (void) glue_marshalEntity(vrt, bs);
       // patch it
       expVars = new MarshaledVarPatch(vrt, expVars);
 
@@ -930,7 +930,7 @@ Bool DPMARSHALERCLASS::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
       } else { 
         bs->put(DIF_GLUE); 
       }
-      glue_marshalEntity(dictTerm, bs);
+      (void) glue_marshalEntity(dictTerm, bs);
       Assert(bs->availableSpace() >= DIFMaxSize);
       return (OK);
     } else {
@@ -982,7 +982,7 @@ Bool DPMARSHALERCLASS::processArray(OZ_Term arrayTerm, ConstTerm *arrayConst)
     //
     if (index) { bs->put(DIF_GLUE_DEF); marshalTermDef(bs, index); }
     else { bs->put(DIF_GLUE); }
-    glue_marshalEntity(arrayTerm, bs);
+    (void) glue_marshalEntity(arrayTerm, bs);
     //
     Assert(bs->availableSpace() >= DIFMaxSize);
   } else {
