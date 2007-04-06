@@ -37,8 +37,10 @@
 // globalize an entity
 void glue_globalizeEntity(TaggedRef entity);
 
-// marshal/unmarshal an entity
-void glue_marshalEntity(TaggedRef entity, ByteBuffer *bs);
-OZ_Term glue_unmarshalEntity(ByteBuffer *bs);
+// marshal/unmarshal an entity.  Those functions return true if the
+// protocol is immediate, i.e., the entity's state is marshaled
+// together with the glue reference.
+bool glue_marshalEntity(TaggedRef entity, ByteBuffer *bs);
+bool glue_unmarshalEntity(ByteBuffer *bs, TaggedRef &entity);
 
 #endif
