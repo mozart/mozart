@@ -69,13 +69,23 @@ static FILE *dbgout = (FILE *) 0;
 #endif
 
 // The count of marshaled diffs should be done for the distributed
-// messages and not for other marshaled structures. 
-// Erik
+// messages and not for other marshaled structures.  Erik
 inline
-void marshalDIFcounted(MarshalerBuffer *bs, MarshalTag tag)
- {
+void marshalDIFcounted(MarshalerBuffer *bs, MarshalTag tag) {
   dif_counter[tag].send();
   marshalDIF(bs,tag);
+}
+
+// combined with an index: marshal either 'tag', or 'tagdef' and 'index'
+inline
+void marshalDIFindex(MarshalerBuffer *bs,
+		     MarshalTag tag, MarshalTag tagdef, int index) {
+  if (index) {
+    marshalDIFcounted(bs, tagdef);
+    marshalTermDef(bs, index);
+  } else {
+    marshalDIFcounted(bs, tag);
+  }
 }
 
 
