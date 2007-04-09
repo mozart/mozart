@@ -289,6 +289,7 @@ TaggedRef Trail::unwindGeVar(Board * b) {
 	
 	s = oz_cons(oz_cons(makeTaggedRef(refPtr),*refPtr),s);
 	
+	unBind(refPtr,value);
 
 	break;
       }
