@@ -65,7 +65,6 @@ private:
   GeVarType type;    /// Type of variable (e.g IntVar, SetVar, etc)
 protected:
   int index;        /// The index inside the corresponding GenericSpace
-  bool hasValRefl,hasDomRefl;  /// Refelction Mechanism control
 
   /**
    \brief Counter for the number of unifications in that this variable 
@@ -76,7 +75,7 @@ protected:
   /// Copy constructor
   GeVar(GeVar& gv) : 
     ExtVar(extVar2Var(&gv)->getBoardInternal()), type(gv.type), 
-    index(gv.index), hasValRefl(gv.hasValRefl), hasDomRefl(gv.hasDomRefl),
+    index(gv.index), hasDomRefl(gv.hasDomRefl),
     unifyC(gv.unifyC)
   {
     // ensure a valid type of varable.
@@ -94,9 +93,9 @@ public:
    * @param h The corresponding GeSpace for the variable  
    * @param n The index inside the corresponding GenericSpace
    */
-  GeVar(int n, GeVarType t) :
-    ExtVar(oz_currentBoard()), type(t), index(n), 
-    hasValRefl(false), hasDomRefl(false), unifyC(0) 
+  GeVar(int n, GeVarType t)
+    : ExtVar(oz_currentBoard()), type(t), index(n), 
+      hasDomRefl(false), unifyC(0) 
   {
     Assert(type >= T_GeIntVar && type <= T_GeSetVar);
   }
@@ -197,13 +196,22 @@ public:
 
   /// \name Reflection mechanisms
   //@{
+protected:
   
+  /**
+     \brief Test whether the variable has a domain reflection propagator.
+     This propagator reflects any domain change in mozart. It is useful
+     when a variable is browsed or inspected. It is also neede to wake up the
+     supervisor thread if variable is not local to the space.
+  */
+  bool hasDomRefl;
+public:
   /** 
       \brief Tests whether this GeVar represents an assigned variable.
   */
   virtual bool assigned(void) = 0;
   virtual OZ_Term getVal(void) = 0;
-  //void ensureValReflection(OZ_Term t);
+  void ensureValReflection(OZ_Term t);
   //void ensureDomReflection(OZ_Term t);
   //@}
 };
