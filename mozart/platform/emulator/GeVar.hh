@@ -39,9 +39,18 @@
 
 template<class Var>
 class GeView: public Gecode::VariableViewBase<Var> {
+protected:
+  using Gecode::VariableViewBase<Var>::var;
 public:
-  GeView(Gecode::VarBase *var)
-    : Gecode::VariableViewBase<Var>(static_cast<Var*>(var)) {} 
+  GeView(void)
+    : Gecode::VariableViewBase<Var>() {}
+  
+  void update(Gecode::Space* home, bool share, GeView<Var>& x) {
+    var = x.var->copy(home,share);
+  }
+
+  GeView(Gecode::VarBase *v)
+    : Gecode::VariableViewBase<Var>(static_cast<Var*>(v)) {} 
 };
 
 enum GeVarType {T_GeIntVar, T_GeSetVar};
@@ -222,7 +231,7 @@ GeVar<VarImp>* get_GeVar(OZ_Term v) {
 
 // This Gecode propagator reflects a Gecode variable assignment inside
 // Mozart.
-
+/*
 template <class View, class VarImp>
 class VarReflector :
   public Gecode::UnaryPropagator<View, Gecode::PC_GEN_ASSIGNED>
@@ -232,16 +241,70 @@ protected:
 
 public:
   VarReflector(GenericSpace* s, View v, int idx) :
-    Gecode::UnaryPropagator<View, Gecode::PC_GEN_ASSIGNED>(s, v), index(idx) {}
+    Gecode::UnaryPropagator<View, Gecode::PC_GEN_ASSIGNED>(s, v),
+    index(idx) {}
 
   VarReflector(GenericSpace* s, bool share, VarReflector& p) :
-    Gecode::UnaryPropagator<View, Gecode::PC_GEN_ASSIGNED>(s, share, p), index(p.index) {}
+    Gecode::UnaryPropagator<View, Gecode::PC_GEN_ASSIGNED>(s, share, p),
+    index(p.index) {}
 
   virtual Gecode::Actor* copy(Gecode::Space* s, bool share) {
     return new (s) VarReflector(static_cast<GenericSpace*>(s), share, *this);
   }
 
-  virtual OZ_Term getVarRef(GenericSpace* s) {return s->getVarRef(index); }
+  virtual OZ_Term getVarRef(GenericSpace* s) {
+    return s->getVarRef(index); 
+  }
+ 
+  // this propagator should never fail
+  Gecode::ExecStatus propagate(Gecode::Space* s){
+    //printf("Variable determined by gecode....%d\n",index);fflush(stdout);
+    
+    OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
+    if (!oz_isGeVar(ref))
+      return  Gecode::ES_SUBSUMED;
+
+    GeVar<VarImp> *gv = get_GeVar<VarImp>(ref);
+    
+    GenericSpace *gs = static_cast<GenericSpace*>(s);        
+    OZ_Term val = gv->getVal();
+    OZ_Return ret = OZ_unify(ref, val);
+    if (ret == FAILED) return Gecode::ES_FAILED;
+    gs->incDetermined();
+    if (gv->hasDomReflector()) {
+      //printf("decrementing space dom reflection\n");fflush(stdout);
+      gs->decForeignProps();
+    }
+    gs->decUnifyProps(gv->getUnifyC());
+      
+    return Gecode::ES_SUBSUMED;
+  }
+};
+*/
+
+template <class VarImp>
+class VarReflector :
+  public Gecode::UnaryPropagator<GeView<VarImp>, Gecode::PC_GEN_ASSIGNED>
+{
+protected:
+  int index;
+
+public:
+  VarReflector(GenericSpace* s, GeView<VarImp> v, int idx) :
+    Gecode::UnaryPropagator<GeView<VarImp>, Gecode::PC_GEN_ASSIGNED>(s, v),
+    index(idx) {}
+
+  VarReflector(GenericSpace* s, bool share, VarReflector& p) :
+    Gecode::UnaryPropagator<GeView<VarImp>, Gecode::PC_GEN_ASSIGNED>(s, share, p),
+    index(p.index) {}
+
+  virtual Gecode::Actor* copy(Gecode::Space* s, bool share) {
+    return new (s) VarReflector(static_cast<GenericSpace*>(s), share, *this);
+  }
+
+  virtual OZ_Term getVarRef(GenericSpace* s) {
+    return s->getVarRef(index); 
+  }
  
   // this propagator should never fail
   Gecode::ExecStatus propagate(Gecode::Space* s){
