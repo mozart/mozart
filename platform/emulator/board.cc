@@ -425,6 +425,7 @@ void Board::clearSuspList(Suspendable * killSusp) {
  */
 
 void Board::checkStability(void) {
+  printf("Board::checkStability \n"); fflush(stdout);
   Assert(!isRoot() && !isFailed() && !isCommitted());
   Assert(this == oz_currentBoard());
   crt--;
@@ -465,11 +466,21 @@ void Board::checkStability(void) {
 	Assert(!oz_onToplevel() || trail.isEmptyChunk());
 	am.setCurrent(pb, pb->getOptVar());
 	
-	bindStatus(genSucceeded(getSuspCount() == 0));
+	//	bindStatus(genSucceeded(getSuspCount() == 0));
+
+	if(gespace!=NULL) {
+	  bool testGe = getGenericSpace(true)->isEntailed();
+	  printf("VAL: %d genSuc: %d\n",testGe,getSuspCount()); fflush(stdout);
+	  //	printf("VAL : %d\n",(gespace!=NULL ? (getSuspCount() - b->) == 0 : getSuspCount() == 0) ); fflush(stdout);
+	  bindStatus(genSucceeded( getSuspCount() - testGe == 0 ) );
+	}
+	else {
+	  bindStatus(genSucceeded( getSuspCount() == 0 ) );
+	}
+	
 	Assert(!oz_onToplevel() || trail.isEmptyChunk());
       }
     }
-
   } else {
     int n = crt;
     setScript(trail.unwind(this));
@@ -571,14 +582,17 @@ OZ_Return Board::installScript(Bool isMerging)
 
     if (oz_isGeVar(x)||oz_isGeVar(y))
       Board::ignoreWakeUp(NO);
+
     
     //x is the global var,  y is the local one
     if (oz_isGeVar(x)) {
-      GeVar<void> *tmpVar = static_cast<GeVar<void>*>(oz_getExtVar(oz_deref(x)));
+      //      GeVar<void> *tmpVar = static_cast<GeVar<void>*>(oz_getExtVar(oz_deref(x)));
+      GeVarBase *tmpVar = static_cast<GeVarBase*>(oz_getExtVar(oz_deref(x)));
       TaggedRef *xpt = tagged2Ref(x);
       TaggedRef xaux = x;
       if (oz_isGeVar(y)) {
-	GeVar<void> *tmpVar2 = static_cast<GeVar<void>*>(var2ExtVar(tagged2Var(oz_deref(y))));
+	//	GeVar<void> *tmpVar2 = static_cast<GeVar<void>*>(var2ExtVar(tagged2Var(oz_deref(y))));
+	GeVarBase *tmpVar2 = static_cast<GeVarBase*>(var2ExtVar(tagged2Var(oz_deref(y))));
 	printf(" install %s  \n",oz_varGetName(x));fflush(stdout);        
 	if (oz_isLocalVar(tagged2Var(oz_deref(y)))) {
 	  res = oz_unify(x,gespace->getVarRef(tmpVar2->getIndex()));	

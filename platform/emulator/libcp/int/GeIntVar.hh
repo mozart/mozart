@@ -137,7 +137,7 @@ inline OZ_Term new_GeIntVar(const Gecode::IntSet& dom) {
   int index        = sp->newVar(static_cast<Gecode::VarBase*>(x.variable()), ref);
 
   nv->ensureValReflection(ref);
-  //  nv->ensureDomReflection(ref);
+  nv->ensureDomReflection(ref);
  
   return ref;
 }
