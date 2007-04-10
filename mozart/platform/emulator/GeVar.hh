@@ -36,7 +36,6 @@
 #include "unify.hh"
 #include "GeSpace.hh"
 
-
 template<class Var>
 class GeView: public Gecode::VariableViewBase<Var> {
 protected:
@@ -55,12 +54,24 @@ public:
 
 enum GeVarType {T_GeIntVar, T_GeSetVar};
 
+class GeVarBase: public ExtVar {
+public:
+  GeVarBase(Board *b) : ExtVar(b) {}
+  virtual int degree(void) = 0;
+  virtual int getIndex(void) = 0;
+  virtual Gecode::VarBase* clone(void) = 0;
+  virtual bool hasSameDomain(TaggedRef) = 0;
+
+  virtual int varprops(void) = 0;
+};
+
 /** 
  * \brief Abstract class for Oz variables that interface Gecode 
  * variables inside a GenericSpace
  */
 template<class VarImp>
-class GeVar : public ExtVar {
+//class GeVar : public ExtVar {
+class GeVar : public GeVarBase {
 private:
   GeVarType type;    /// Type of variable (e.g IntVar, SetVar, etc)
 protected:
@@ -74,7 +85,7 @@ protected:
    
   /// Copy constructor
   GeVar(GeVar& gv) : 
-    ExtVar(extVar2Var(&gv)->getBoardInternal()), type(gv.type), 
+    GeVarBase(extVar2Var(&gv)->getBoardInternal()), type(gv.type), 
     index(gv.index), hasDomRefl(gv.hasDomRefl),
     unifyC(gv.unifyC)
   {
@@ -85,6 +96,7 @@ protected:
   void incUnifyC(void) { unifyC++; }
 
 public:
+ 
   /// \name Constructor
   //@{
   /** 
@@ -94,7 +106,7 @@ public:
    * @param n The index inside the corresponding GenericSpace
    */
   GeVar(int n, GeVarType t)
-    : ExtVar(oz_currentBoard()), type(t), index(n), 
+    : GeVarBase(oz_currentBoard()), type(t), index(n), 
       hasDomRefl(false), unifyC(0) 
   {
     Assert(type >= T_GeIntVar && type <= T_GeSetVar);
@@ -124,6 +136,8 @@ public:
   }
 
   bool hasDomReflector(void) {return hasDomRefl; }
+
+  virtual int varprops(void) { return hasDomRefl+unifyC+1; }
   
   virtual void printDomain(void) = 0;
   
@@ -191,7 +205,13 @@ public:
   virtual Bool validV(TaggedRef v) = 0;
   
   virtual Gecode::ModEvent bind(GenericSpace *s, GeVar *v, OZ_Term val) = 0;
+
   void test();
+
+  int degree(void) { 
+    GeView< VarImp > vi (getGSpace()->getVarInfo(index)); 
+    return vi.degree(); 
+  }
   //@}
 
   /// \name Reflection mechanisms
