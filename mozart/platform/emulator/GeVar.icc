@@ -127,20 +127,13 @@ OZ_Return GeVar<VarImp>::bindV(TaggedRef* vPtr, TaggedRef val) {
 }
 
 // ojo con el tipo. OZ_isGeIntVar()
-/*template<class VarImp>
+template <class VarImp> 
 inline
 void GeVar<VarImp>::ensureValReflection(OZ_Term ref) {
-  //Assert(oz_isGeVar(ref));
-  if (!hasValRefl) {
-    GenericSpace *s = getGSpace();
-    
-    // post the var reflector propagator
-    s->setVarRef(index,ref);
-    //VarImp *ivp = reinterpret_cast<VarImp*>(s->getVar(index));
-    //GeView<VarImp> iv(ivp);
-    //Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
-    new (s) VarReflector<GeView<VarImp>,VarImp>(s, this, index);
-    hasValRefl = true;
-  }
-  }
-*/
+  //Assert(OZ_isGeVar(ref));
+  GenericSpace *s = getGSpace();
+  s->setVarRef(index,ref);
+  VarImp *vip = reinterpret_cast<VarImp*>(s->getVar(index));
+  GeView<VarImp> v(vip);
+  new (s) VarReflector<VarImp>(s, v, index);
+}

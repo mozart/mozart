@@ -1,4 +1,3 @@
-
 /*
  *  Main authors:
  *     Raphael Collet <raph@info.ucl.ac.be>
@@ -35,15 +34,15 @@
 //template class GeVar<Gecode::Int::IntVarImpBase>;
 // A GeIntVar interfaces an IntVar inside a GenericSpace.
 
-class GeIntVar : public GeVar<Gecode::Int::IntVarImpBase> {
+class GeIntVar : public GeVar<Gecode::Int::IntVarImp> {
 protected:
   /// copy constructor
   GeIntVar(GeIntVar& gv) :
-    GeVar<Gecode::Int::IntVarImpBase>(gv) {}
+    GeVar<Gecode::Int::IntVarImp>(gv) {}
 
 public:
   GeIntVar(int index) :
-    GeVar<Gecode::Int::IntVarImpBase>(index,T_GeIntVar) {}
+    GeVar<Gecode::Int::IntVarImp>(index,T_GeIntVar) {}
 
   Gecode::IntVar& getIntVar(void) {
     GeView<Gecode::Int::IntVarImp> iv(getGSpace()->getVar(index));
@@ -95,15 +94,15 @@ public:
   virtual TaggedRef newVar(void);
 
   virtual void propagator(GenericSpace *s, 
-			  GeVar<Gecode::Int::IntVarImpBase> *lgevar,
-			  GeVar<Gecode::Int::IntVarImpBase> *rgevar) {
+			  GeVar<Gecode::Int::IntVarImp> *lgevar,
+			  GeVar<Gecode::Int::IntVarImp> *rgevar) {
     Gecode::IntVar& lintvar = (static_cast<GeIntVar*>(lgevar))->getIntVarInfo();
     Gecode::IntVar& rintvar = (static_cast<GeIntVar*>(rgevar))->getIntVarInfo();    
     eq(s,lintvar, rintvar);
   }
 
   virtual Gecode::ModEvent bind(GenericSpace *s, 
-				GeVar<Gecode::Int::IntVarImpBase> *v, 
+				GeVar<Gecode::Int::IntVarImp> *v, 
 				OZ_Term val) {
     int n = OZ_intToC(val);
     return Gecode::Int::IntView(getIntVarInfo()).eq(s,n);
@@ -124,7 +123,6 @@ public:
     return OZ_int(vv->val());
   }
 
-  void ensureValReflection(OZ_Term t);
   void ensureDomReflection(OZ_Term t);
 
 };
