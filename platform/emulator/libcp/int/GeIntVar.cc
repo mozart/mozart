@@ -154,13 +154,14 @@ inline
 void GeIntVar::ensureValReflection(OZ_Term ref) {
   Assert(OZ_isGeIntVar(ref));
   if (!hasValRefl) {
-    GenericSpace *s = extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
+    GenericSpace *s = getGSpace();
+    //extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
     // post the var reflector propagator
     s->setVarRef(index,ref);
     Int::IntVarImp *ivp = reinterpret_cast<Int::IntVarImp*>(s->getVar(index));
     GeView<Int::IntVarImp> iv(ivp);
-    Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
-    new (s) VarReflector<Gecode::Int::IntView, Gecode::Int::IntVarImpBase>(s, *vv, index);
+    //Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
+    new (s) VarReflector<Gecode::Int::IntVarImp>(s, iv, index);
     hasValRefl = true;
   }
 }
