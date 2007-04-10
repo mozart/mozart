@@ -210,10 +210,10 @@ TaggedRef Trail::unwind(Board * b) {
 	DEREF(vv,vvPtr);
 
 	Assert(!oz_isRef(vv));
-	if (hasNoRunnable && oz_isVarOrRef(vv) && !oz_var_hasSuspAt(vv,b)) {
+	/*	if (hasNoRunnable && oz_isVarOrRef(vv) && !oz_var_hasSuspAt(vv,b)) {
 	  AssureThread;
 	  oz_var_addSusp(vvPtr,t);
-	}
+	  }*/
 	//TaggedRef * tmp = newTaggedRef(refPtr);
 	//printf("unwind refPtr=%d *refPtr=%d\n",refPtr,&(*refPtr));fflush(stdout);
 	unBind(refPtr, value);
@@ -221,13 +221,23 @@ TaggedRef Trail::unwind(Board * b) {
 	//unBind(tmp, value);
 	
 	// value is always global variable, so add always a thread;
-	if (hasNoRunnable && !oz_var_hasSuspAt(*refPtr,b)) {
+	/*if (hasNoRunnable && !oz_var_hasSuspAt(*refPtr,b)) {
 	  AssureThread;
 	  if (oz_var_addSusp(refPtr,t)!=SUSPEND) {
 	    Assert(0);
 	  }
-	}
-	
+	  }*/
+	if(hasNoRunnable && !oz_var_hasSuspAt(*refPtr,b)) {
+	  if(oz_isGeVar(*refPtr)) {
+	    printf("ENSURE DOM REFLECTION \n"); fflush(stdout);
+	    //	    GeVar *vglobal = get_GeVar(*refPtr);
+	    //	    vglobal->ensureDomReflection(*refPtr);
+	  }
+	  if (oz_var_addSusp(refPtr,b->getLateThread()) != SUSPEND ) {
+	    Assert(0);
+	  }
+	}	
+	printf("Termino unwind Te_Bind \n"); fflush(stdout);
 	break;
       }
       case Te_Variable: {
@@ -420,19 +430,34 @@ bool Trail::isSpeculating(void) {
       printf("isSpeculing Te_Bind \n"); fflush(stdout);
       TaggedRef *var = (TaggedRef*) * (top-2);
 
-      if(!oz_isGeVar(*var)) { printf("MALDITA SEA\n"); fflush(stdout); return true; }
+      if(!oz_isGeVar(*var)) { return true; }
       printf("DESPUES ddel maldito if \n"); fflush(stdout);
       TaggedRef tvar = (TaggedRef) ToInt32(* (top-1) );
       OzVariable *v = tagged2Var(tvar);
       
-      if(!oz_isGeVar(v)) { printf("Entro aqui \n"); fflush(stdout);
+      if(!oz_isGeVar(v)) {
 	return true; 
       }
       
-      GeVar<void> *vlocal = static_cast<GeVar<void>*>(var2ExtVar(v));
+      if(!oz_currentBoard()->getGenericSpace(true)->isStable()) return true;
+	//return false;
+      
+      //      GeVar<Gecode::VarBase> *vlocal = static_cast<GeVar<Gecode::VarBase>*>(var2ExtVar(v));
+      ////      GeVar<void> *vlocal = static_cast<GeVar<void>*>(var2ExtVar(v));
+      //      GeVar<Gecode::Int::IntVarImpBase> *vlocal = static_cast<GeVar <Gecode::Int::IntVarImpBase>*>(var2ExtVar(v));
+      //vlocal->test2();
       //Revisar si el espacio de gecode esta estable antes de esto
       //      if(!vlocal->hasSameDomain(*var)) return true;
-      if(!vlocal->hasSameDomain(*var)) { printf("Tienen el mismo dominio \n"); fflush(stdout); }
+
+      //      vlocal->test2();
+
+      GeVarBase *vglobal = static_cast<GeVarBase*>(var2ExtVar(v));
+
+      GeVarBase *vlocal = static_cast<GeVarBase*>(oz_getExtVar(oz_deref(*var)));
+
+      if(vlocal->degree() != vlocal->varprops()) return true;
+
+      if(!vglobal->hasSameDomain(*var)) { return true; }
 
       printf("isGeVar Te_Bind \n"); fflush(stdout);
       break;
