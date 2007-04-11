@@ -1,6 +1,6 @@
 #include "GeVar.hh"
 
-template <class VarImp>
-void GeVar<VarImp>::test(){
+template <class VarImp, Gecode::PropCond pc>
+void GeVar<VarImp,pc>::test(){
   printf("test\n");fflush(stdout);
 }
