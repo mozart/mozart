@@ -54,40 +54,79 @@ public:
 
 enum GeVarType {T_GeIntVar, T_GeSetVar};
 
+/**
+   \brief This class is intended to provide access without template
+   arguments to methods/functions used by some core and constraint 
+   system independent functions such as trailing and unification.
+*/
 class GeVarBase: public ExtVar {
+protected:
+  GeVarBase(Board *b, GeVarBase& gv) 
+    :  hasDomRefl(gv.hasDomRefl), unifyC(gv.unifyC), ExtVar(b) {}
+
 public:
-  GeVarBase(Board *b) : ExtVar(b) {}
+  GeVarBase(Board *b) : hasDomRefl(false), unifyC(0), ExtVar(b) {}
+  
+  /**
+     \brief Number of propagators associated with a variable. This method
+     is used to test for space stability when speculating on variables.
+  */
   virtual int degree(void) = 0;
   virtual int getIndex(void) = 0;
   virtual Gecode::VarBase* clone(void) = 0;
   virtual bool hasSameDomain(TaggedRef) = 0;
 
   virtual int varprops(void) = 0;
+
+   /// \name Reflection mechanisms
+  //@{
+protected:
+  
+  /**
+     \brief Test whether the variable has a domain reflection propagator.
+     This propagator reflects any domain change in mozart. It is useful
+     when a variable is browsed or inspected. It is also neede to wake up the
+     supervisor thread if variable is not local to the space.
+  */
+  bool hasDomRefl;
+ /**
+   \brief Counter for the number of unifications in that this variable 
+   is involved. 
+  */
+  unsigned int unifyC;
+
+public:
+  /** 
+      \brief Tests whether this GeVar represents an assigned variable.
+  */
+  bool hasDomReflector(void) {return hasDomRefl; }
+  int getUnifyC(void) { return unifyC; }
+
+  //  virtual bool assigned(void) = 0;
+  virtual OZ_Term getVal(void) = 0;
+  //void ensureDomReflection(OZ_Term t);
+  //@}
+
+  virtual TaggedRef clone(TaggedRef v) = 0;
 };
 
 /** 
  * \brief Abstract class for Oz variables that interface Gecode 
  * variables inside a GenericSpace
  */
-template<class VarImp>
-//class GeVar : public ExtVar {
+template<class VarImp, Gecode::PropCond pc> 
 class GeVar : public GeVarBase {
 private:
   GeVarType type;    /// Type of variable (e.g IntVar, SetVar, etc)
 protected:
   int index;        /// The index inside the corresponding GenericSpace
 
-  /**
-   \brief Counter for the number of unifications in that this variable 
-   is involved. 
-  */
-  unsigned int unifyC;
+ 
    
   /// Copy constructor
   GeVar(GeVar& gv) : 
     GeVarBase(extVar2Var(&gv)->getBoardInternal()), type(gv.type), 
-    index(gv.index), hasDomRefl(gv.hasDomRefl),
-    unifyC(gv.unifyC)
+    index(gv.index)
   {
     // ensure a valid type of varable.
     Assert(type >= T_GeIntVar && type <= T_GeSetVar);
@@ -106,8 +145,7 @@ public:
    * @param n The index inside the corresponding GenericSpace
    */
   GeVar(int n, GeVarType t)
-    : GeVarBase(oz_currentBoard()), type(t), index(n), 
-      hasDomRefl(false), unifyC(0) 
+    : GeVarBase(oz_currentBoard()), type(t), index(n) 
   {
     Assert(type >= T_GeIntVar && type <= T_GeSetVar);
   }
@@ -130,12 +168,13 @@ public:
 
   /// Returns the GenericSpace associated with this variable.
   GenericSpace * getGSpace(void) {
-    GenericSpace *gs =  extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
+    GenericSpace *gs =  
+      extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
     Assert(gs);
     return gs;
   }
 
-  bool hasDomReflector(void) {return hasDomRefl; }
+ 
 
   virtual int varprops(void) { return hasDomRefl+unifyC+1; }
   
@@ -166,11 +205,11 @@ public:
   virtual Gecode::VarBase* clone(void) = 0;
  
   virtual bool In(TaggedRef x) = 0;
-  virtual TaggedRef clone(TaggedRef v) = 0;
+
 
   virtual bool hasSameDomain(TaggedRef) = 0;
 
-  int getUnifyC(void) { return unifyC; }
+ 
 
   /// \name Unification and Binding.
   //@{
@@ -224,13 +263,13 @@ protected:
      when a variable is browsed or inspected. It is also neede to wake up the
      supervisor thread if variable is not local to the space.
   */
-  bool hasDomRefl;
+  //bool hasDomRefl;
 public:
   /** 
       \brief Tests whether this GeVar represents an assigned variable.
   */
   virtual bool assigned(void) = 0;
-  virtual OZ_Term getVal(void) = 0;
+  //virtual OZ_Term getVal(void) = 0;
   void ensureValReflection(OZ_Term t);
   //void ensureDomReflection(OZ_Term t);
   //@}
@@ -248,68 +287,19 @@ bool oz_isGeVar(OZ_Term t) {
   return oz_isExtVar(dt) && oz_getExtVar(dt)->getIdV() == OZ_EVAR_GEVAR;
 }
 
-template <class VarImp>
+//template <class VarImp>
 inline 
-GeVar<VarImp>* get_GeVar(OZ_Term v) {
+//GeVar<VarImp>* get_GeVar(OZ_Term v) {
+GeVarBase* get_GeVar(OZ_Term v) {
   OZ_Term ref = OZ_deref(v);
   Assert(oz_isGeVar(ref));
   ExtVar *ev = oz_getExtVar(ref);
-  return static_cast<GeVar<VarImp>*>(ev);
+  //  return static_cast<GeVar<VarImp>*>(ev);
+  return static_cast<GeVarBase*>(ev);
 }
 
 // This Gecode propagator reflects a Gecode variable assignment inside
 // Mozart.
-/*
-template <class View, class VarImp>
-class VarReflector :
-  public Gecode::UnaryPropagator<View, Gecode::PC_GEN_ASSIGNED>
-{
-protected:
-  int index;
-
-public:
-  VarReflector(GenericSpace* s, View v, int idx) :
-    Gecode::UnaryPropagator<View, Gecode::PC_GEN_ASSIGNED>(s, v),
-    index(idx) {}
-
-  VarReflector(GenericSpace* s, bool share, VarReflector& p) :
-    Gecode::UnaryPropagator<View, Gecode::PC_GEN_ASSIGNED>(s, share, p),
-    index(p.index) {}
-
-  virtual Gecode::Actor* copy(Gecode::Space* s, bool share) {
-    return new (s) VarReflector(static_cast<GenericSpace*>(s), share, *this);
-  }
-
-  virtual OZ_Term getVarRef(GenericSpace* s) {
-    return s->getVarRef(index); 
-  }
- 
-  // this propagator should never fail
-  Gecode::ExecStatus propagate(Gecode::Space* s){
-    //printf("Variable determined by gecode....%d\n",index);fflush(stdout);
-    
-    OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
-    if (!oz_isGeVar(ref))
-      return  Gecode::ES_SUBSUMED;
-
-    GeVar<VarImp> *gv = get_GeVar<VarImp>(ref);
-    
-    GenericSpace *gs = static_cast<GenericSpace*>(s);        
-    OZ_Term val = gv->getVal();
-    OZ_Return ret = OZ_unify(ref, val);
-    if (ret == FAILED) return Gecode::ES_FAILED;
-    gs->incDetermined();
-    if (gv->hasDomReflector()) {
-      //printf("decrementing space dom reflection\n");fflush(stdout);
-      gs->decForeignProps();
-    }
-    gs->decUnifyProps(gv->getUnifyC());
-      
-    return Gecode::ES_SUBSUMED;
-  }
-};
-*/
-
 template <class VarImp>
 class VarReflector :
   public Gecode::UnaryPropagator<GeView<VarImp>, Gecode::PC_GEN_ASSIGNED>
@@ -342,7 +332,8 @@ public:
     if (!oz_isGeVar(ref))
       return  Gecode::ES_SUBSUMED;
 
-    GeVar<VarImp> *gv = get_GeVar<VarImp>(ref);
+    //GeVar<VarImp> *gv = get_GeVar<VarImp>(ref);
+    GeVarBase *gv = get_GeVar(ref);
     
     GenericSpace *gs = static_cast<GenericSpace*>(s);        
     OZ_Term val = gv->getVal();
@@ -362,9 +353,7 @@ public:
 
 
 /*
-  This Gecode propagator reflects variable's domains changes to mozart.
-  PC_GEN_MAX is used as propagation condition in order to make it generic
-  for all variables.
+  This Gecode propagator reflects variable's domain changes to mozart.
 */
 template <class View, Gecode::PropCond pc>
 class VarInspector :
@@ -392,7 +381,7 @@ public:
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
    
     Assert(oz_isVarOrRef(ref));	
-    OzVariable *var=extVar2Var(oz_getExtVar(oz_deref(ref)));
+    //OzVariable *var=extVar2Var(oz_getExtVar(oz_deref(ref)));
     
     if(oz_isGeVar(ref)) {
       OzVariable *var=extVar2Var(oz_getExtVar(oz_deref(ref)));
@@ -404,9 +393,6 @@ public:
   }
 };
 
-
-
-template <class VarImp>
 inline
 void checkGlobalVar(OZ_Term v) {
   // Why this comparison is made with ints?
@@ -415,11 +401,12 @@ void checkGlobalVar(OZ_Term v) {
 
   ExtVar *ev = oz_getExtVar(oz_deref(v));
   if (!oz_isLocalVar(ev)) {
-    TaggedRef nlv = static_cast<GeVar<VarImp>*>(ev)->clone(v);
-
+    //    TaggedRef nlv = static_cast<GeVar<VarImp>*>(ev)->clone(v);
+    TaggedRef nlv = static_cast<GeVarBase*>(ev)->clone(v);
     ExtVar *varTmp = var2ExtVar(tagged2Var(oz_deref(nlv)));
-    GeVar<VarImp> *gvar = static_cast<GeVar<VarImp>*>(varTmp);
-
+    //GeVar<VarImp> *gvar = static_cast<GeVar<VarImp>*>(varTmp);
+    GeVarBase *gvar = static_cast<GeVarBase*>(varTmp);
+ 
     //meter al trail v [v]
     TaggedRef nlvAux = oz_deref(nlv);
 
