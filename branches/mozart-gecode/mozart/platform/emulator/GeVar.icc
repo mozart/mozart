@@ -1,11 +1,11 @@
 
-template <class VarImp>
+template <class VarImp, Gecode::PropCond pc>
 inline
-OZ_Return GeVar<VarImp>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
+OZ_Return GeVar<VarImp, pc>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
 {
   printf("unifyV GeVar\n");fflush(stdout);
   
-  GeVar<VarImp>* lgevar = this;
+  GeVar<VarImp,pc>* lgevar = this;
   GenericSpace* space = extVar2Var(lgevar)->getBoardInternal()->getGenericSpace();
   
   
@@ -22,7 +22,8 @@ OZ_Return GeVar<VarImp>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
   
   
   { 
-    GeVar<VarImp>* rgevar = get_GeVar<VarImp>(*rPtr);
+    GeVar<VarImp,pc>* rgevar = static_cast<GeVar<VarImp,pc>*>(get_GeVar(*rPtr));
+    //GeVarBase *rgevar = get_GeVar(*rPtr);
     if(am.inEqEq()) {
       if( IsEmptyInter(lPtr, rPtr) ) return FAILED;
       else {
@@ -90,9 +91,9 @@ OZ_Return GeVar<VarImp>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
     return PROCEED;
 }
 
-template <class VarImp>
+template <class VarImp, Gecode::PropCond pc>
 inline
-OZ_Return GeVar<VarImp>::bindV(TaggedRef* vPtr, TaggedRef val) {
+OZ_Return GeVar<VarImp,pc>::bindV(TaggedRef* vPtr, TaggedRef val) {
   if (validV(val)) {
     if(am.inEqEq()) {
       if( !In(val) ) return FAILED;
@@ -127,9 +128,9 @@ OZ_Return GeVar<VarImp>::bindV(TaggedRef* vPtr, TaggedRef val) {
 }
 
 // ojo con el tipo. OZ_isGeIntVar()
-template <class VarImp> 
+template <class VarImp, Gecode::PropCond pc> 
 inline
-void GeVar<VarImp>::ensureValReflection(OZ_Term ref) {
+void GeVar<VarImp,pc>::ensureValReflection(OZ_Term ref) {
   //Assert(OZ_isGeVar(ref));
   GenericSpace *s = getGSpace();
   s->setVarRef(index,ref);

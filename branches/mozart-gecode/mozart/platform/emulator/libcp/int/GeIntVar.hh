@@ -29,38 +29,38 @@
 #define __GECODE_INT_VAR_HH__
 
 #include "GeVar.hh"
-//#include "GeVar.cc"
 
-//template class GeVar<Gecode::Int::IntVarImpBase>;
+using namespace Gecode;
+using namespace Gecode::Int;
+
 // A GeIntVar interfaces an IntVar inside a GenericSpace.
-
-class GeIntVar : public GeVar<Gecode::Int::IntVarImp> {
+class GeIntVar : public GeVar<IntVarImp,PC_INT_DOM> {
 protected:
   /// copy constructor
   GeIntVar(GeIntVar& gv) :
-    GeVar<Gecode::Int::IntVarImp>(gv) {}
+    GeVar<IntVarImp,PC_INT_DOM>(gv) {}
 
 public:
   GeIntVar(int index) :
-    GeVar<Gecode::Int::IntVarImp>(index,T_GeIntVar) {}
+    GeVar<IntVarImp,PC_INT_DOM>(index,T_GeIntVar) {}
 
-  Gecode::IntVar& getIntVar(void) {
-    GeView<Gecode::Int::IntVarImp> iv(getGSpace()->getVar(index));
-    Gecode::Int::IntView *vv = reinterpret_cast<Gecode::Int::IntView*>(&iv);
-    Gecode::IntVar *tmp = new Gecode::IntVar(*vv);
+  IntVar& getIntVar(void) {
+    GeView<Int::IntVarImp> iv(getGSpace()->getVar(index));
+    Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
+    IntVar *tmp = new IntVar(*vv);
     return (*tmp);
   }
 
   // the returned reference should be constant
-  Gecode::IntVar& getIntVarInfo() {
-    GeView<Gecode::Int::IntVarImp> iv(getGSpace()->getVarInfo(index));
-    Gecode::Int::IntView *vv = reinterpret_cast<Gecode::Int::IntView*>(&iv);
-    Gecode::IntVar *tmp = new Gecode::IntVar(*vv);
+  IntVar& getIntVarInfo() {
+    GeView<Int::IntVarImp> iv(getGSpace()->getVarInfo(index));
+    Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
+    IntVar *tmp = new IntVar(*vv);
     return (*tmp);
   }
 
   virtual void printDomain(void) {
-    Gecode::IntVar tmp = getIntVarInfo();
+    IntVar tmp = getIntVarInfo();
     //cout<<"tmp ---> ["<<tmp.min()<<", "<<tmp.max()<<"]"<<endl; fflush(stdout);
   }
 
@@ -79,7 +79,7 @@ public:
    */ 
   virtual OZ_Term       statusV();
   virtual void printStreamV(ostream &out,int depth);
-  virtual Gecode::VarBase* clone(void);
+  virtual VarBase* clone(void);
   virtual bool intersect(TaggedRef x);
   
   virtual bool In(TaggedRef x);
@@ -94,32 +94,32 @@ public:
   virtual TaggedRef newVar(void);
 
   virtual void propagator(GenericSpace *s, 
-			  GeVar<Gecode::Int::IntVarImp> *lgevar,
-			  GeVar<Gecode::Int::IntVarImp> *rgevar) {
-    Gecode::IntVar& lintvar = (static_cast<GeIntVar*>(lgevar))->getIntVarInfo();
-    Gecode::IntVar& rintvar = (static_cast<GeIntVar*>(rgevar))->getIntVarInfo();    
+			  GeVar<IntVarImp,PC_INT_DOM> *lgevar,
+			  GeVar<IntVarImp,PC_INT_DOM> *rgevar) {
+    IntVar& lintvar = (static_cast<GeIntVar*>(lgevar))->getIntVarInfo();
+    IntVar& rintvar = (static_cast<GeIntVar*>(rgevar))->getIntVarInfo();    
     eq(s,lintvar, rintvar);
   }
 
-  virtual Gecode::ModEvent bind(GenericSpace *s, 
-				GeVar<Gecode::Int::IntVarImp> *v, 
-				OZ_Term val) {
+  virtual ModEvent bind(GenericSpace *s, 
+			GeVar<IntVarImp,PC_INT_DOM> *v, 
+			OZ_Term val) {
     int n = OZ_intToC(val);
-    return Gecode::Int::IntView(getIntVarInfo()).eq(s,n);
+    return Int::IntView(getIntVarInfo()).eq(s,n);
   }
 
   virtual Bool validV(OZ_Term v);
     
   // reflection mechanism 
   virtual bool assigned(void) {
-    GeView<Gecode::Int::IntVarImp> iv(getGSpace()->getVarInfo(index));
-    Gecode::Int::IntView *vv = reinterpret_cast<Gecode::Int::IntView*>(&iv);
+    GeView<Int::IntVarImp> iv(getGSpace()->getVarInfo(index));
+    Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
     return vv->assigned();
   }
   
   virtual OZ_Term getVal(void) {
-    GeView<Gecode::Int::IntVarImp> iv(getGSpace()->getVarInfo(index));
-    Gecode::Int::IntView *vv = reinterpret_cast<Gecode::Int::IntView*>(&iv);
+    GeView<Int::IntVarImp> iv(getGSpace()->getVarInfo(index));
+    Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
     return OZ_int(vv->val());
   }
 
@@ -128,13 +128,13 @@ public:
 };
 
 
-inline OZ_Term new_GeIntVar(const Gecode::IntSet& dom) {
+inline OZ_Term new_GeIntVar(const IntSet& dom) {
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
-  Gecode::IntVar x(sp,dom);
+  IntVar x(sp,dom);
   GeIntVar *nv = new GeIntVar(sp->getVarsSize());
   OzVariable* ov   = extVar2Var(nv);
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
-  int index        = sp->newVar(static_cast<Gecode::VarBase*>(x.variable()), ref);
+  int index        = sp->newVar(static_cast<VarBase*>(x.variable()), ref);
 
   nv->ensureValReflection(ref);
   nv->ensureDomReflection(ref);
@@ -147,7 +147,8 @@ inline
 bool OZ_isGeIntVar(OZ_Term v) { 
   OZ_Term v_local = OZ_deref(v);
   if (oz_isGeVar(v_local)) {
-    GeVar<Gecode::Int::IntVarImpBase> *gv = static_cast<GeVar<Gecode::Int::IntVarImpBase>*>(oz_getExtVar(v_local));
+    GeVar<Int::IntVarImp,PC_INT_DOM> *gv = 
+      static_cast< GeVar <Int::IntVarImp,PC_INT_DOM > * >(oz_getExtVar(v_local));
     return gv->getType() == T_GeIntVar;
   }
   return false;
@@ -161,8 +162,8 @@ inline GeIntVar* get_GeIntVar(OZ_Term v) {
   return static_cast<GeIntVar*>(ev);
 }
 
-// get the Gecode::IntVar from the OZ_Term v
-inline Gecode::IntVar& get_IntVar(OZ_Term v) {
+// get the IntVar from the OZ_Term v
+inline IntVar& get_IntVar(OZ_Term v) {
   return get_GeIntVar(v)->getIntVar();
 }
 
