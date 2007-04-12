@@ -123,8 +123,6 @@ public:
     return OZ_int(vv->val());
   }
 
-  void ensureDomReflection(OZ_Term t);
-
 };
 
 

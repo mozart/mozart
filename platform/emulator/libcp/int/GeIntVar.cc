@@ -109,8 +109,8 @@ bool GeIntVar::hasSameDomain(TaggedRef v) {
   printf("GeIntVar.cc hasSameDomain\n");fflush(stdout);
   Assert(OZ_isGeIntVar(v));
   IntVar v1 = get_GeIntVar(v)->getIntVarInfo();
-  Int::ViewRanges< Gecode::Int::IntView > vr1 (v1);
-  Int::ViewRanges< Gecode::Int::IntView > vr2 (getIntVarInfo());
+  ViewRanges< IntView > vr1 (v1);
+  ViewRanges< IntView > vr2 (getIntVarInfo());
   
   while(true) {
     if(!vr1() && !vr2()) return true;
@@ -122,7 +122,7 @@ bool GeIntVar::hasSameDomain(TaggedRef v) {
 
 inline
 TaggedRef GeIntVar::newVar(void){
-  return new_GeIntVar(Gecode::IntSet(Limits::Int::int_min,
+  return new_GeIntVar(IntSet(Limits::Int::int_min,
 				     Limits::Int::int_max));
 }
 
@@ -135,8 +135,8 @@ bool GeIntVar::IsEmptyInter(TaggedRef* var1,  TaggedRef* var2) {
   IntVar& v1 = lgeintvar->getIntVarInfo();
   IntVar& v2 = rgeintvar->getIntVarInfo();
   
-  Int::ViewRanges<Int::IntView > vr1 (v1);
-  Int::ViewRanges<Int::IntView > vr2 (v2);
+  ViewRanges<IntView > vr1 (v1);
+  ViewRanges<IntView > vr2 (v2);
   
   while(true) {
     if(!vr1() || !vr2() ) return true;
@@ -149,23 +149,6 @@ bool GeIntVar::IsEmptyInter(TaggedRef* var1,  TaggedRef* var2) {
     ++vr1;
   }
 }
-
-inline
-void GeIntVar::ensureDomReflection(OZ_Term ref) {
-  Assert(OZ_isGeIntVar(ref));
-  if (!hasDomRefl) {
-    GenericSpace *s = extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
-    // post the dom reflector propagator
-    s->setVarRef(index,ref);
-    Int::IntVarImp *ivp = reinterpret_cast<Int::IntVarImp*>(s->getVar(index));
-    GeView<Int::IntVarImp> iv(ivp);
-    Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
-    new (s) VarInspector<Int::IntView,Int::PC_INT_DOM>(s,*vv,index);
-    s->incForeignProps();
-    hasDomRefl = true;
-  }
-}
-
 
 #include <iostream>
 #include <sstream>
