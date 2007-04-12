@@ -59,7 +59,7 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
     return FAILED;
   } 
   printf("lateThread %p is entailed?? %d\n",gs,gs->isEntailed());fflush(stdout);
-  if (!gs->isSolved()) {
+  if (! ( gs->isSolved() || gs->isEntailed() ) ) {
   	TaggedRef t =  gs->getTrigger();
   	DEREF(t,t_ptr);
   	return oz_var_addSusp(t_ptr, oz_currentThread());

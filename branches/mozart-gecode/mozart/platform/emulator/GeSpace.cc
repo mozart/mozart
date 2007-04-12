@@ -128,7 +128,7 @@ void GenericSpace::makeStable(void) {
 
 inline
 void GenericSpace::makeUnstable(void) {
-  Assert(getTrigger());
+  Assert(getTrigger() && oz_currentBoard()->getLateThread());
   TaggedRef t = getTrigger();
   DEREF(t,t_ptr);
   if (oz_isReadOnly(t)) {
@@ -158,6 +158,7 @@ int GenericSpace::newVar(Gecode::VarBase *v, OZ_Term r) {
 
 Gecode::VarBase* GenericSpace::getVar(int n) { 
   Assert(n >= 0 && n<vars.getSize() && &vars.getVar(n));
+  oz_currentBoard()->ensureLateThread();
   makeUnstable();
   return &vars.getVar(n);
 }

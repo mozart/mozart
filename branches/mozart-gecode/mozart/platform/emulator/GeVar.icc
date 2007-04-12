@@ -134,7 +134,7 @@ void GeVar<VarImp,pc>::ensureValReflection(OZ_Term ref) {
   //Assert(OZ_isGeVar(ref));
   GenericSpace *s = getGSpace();
   s->setVarRef(index,ref);
-  VarImp *vip = reinterpret_cast<VarImp*>(s->getVar(index));
+  VarImp *vip = reinterpret_cast<VarImp*>(s->getVarInfo(index));
   GeView<VarImp> v(vip);
   new (s) VarReflector<VarImp>(s, v, index);
 }
@@ -148,7 +148,7 @@ void GeVar<VarImp,pc>::ensureDomReflection(OZ_Term ref) {
     GenericSpace *s = getGSpace();
     // post the dom reflector propagator
     s->setVarRef(index,ref);
-    VarImp *ivp = reinterpret_cast<VarImp*>(s->getVar(index));
+    VarImp *ivp = reinterpret_cast<VarImp*>(s->getVarInfo(index));
     GeView<VarImp> v(ivp);
     //Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
     new (s) VarInspector<VarImp,pc>(s,v,index);
