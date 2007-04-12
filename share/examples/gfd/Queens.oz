@@ -38,4 +38,4 @@ fun{Queens N}
    end
 end
 
-{Show {SearchAll {Queens 11}}}
+{Show {SearchOne {Queens 11}}}

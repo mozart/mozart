@@ -230,11 +230,18 @@ TaggedRef Trail::unwind(Board * b) {
 	if(hasNoRunnable && !oz_var_hasSuspAt(*refPtr,b)) {
 	  if(oz_isGeVar(*refPtr)) {
 	    printf("ENSURE DOM REFLECTION \n"); fflush(stdout);
-	    //	    GeVar *vglobal = get_GeVar(*refPtr);
-	    //	    vglobal->ensureDomReflection(*refPtr);
+	    GeVarBase *vglobal = get_GeVar(*refPtr);
+	    vglobal->ensureDomReflection(*refPtr);
 	  }
-	  if (oz_var_addSusp(refPtr,b->getLateThread()) != SUSPEND ) {
-	    Assert(0);
+	  if(!b->getLateThread()) { printf("YA NO HAY UN LATE THREAD PILAS\n"); fflush(stdout); }
+	  if(b->getLateThread()) {
+	    if (oz_var_addSusp(refPtr,b->getLateThread()) != SUSPEND ) {
+	      Assert(0);
+	    }
+	  }
+	  else {
+	    AssureThread;
+	    oz_var_addSusp(refPtr,t);
 	  }
 	}	
 	printf("Termino unwind Te_Bind \n"); fflush(stdout);
