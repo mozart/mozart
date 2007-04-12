@@ -138,3 +138,21 @@ void GeVar<VarImp,pc>::ensureValReflection(OZ_Term ref) {
   GeView<VarImp> v(vip);
   new (s) VarReflector<VarImp>(s, v, index);
 }
+
+
+template <class VarImp, Gecode::PropCond pc>
+inline
+void GeVar<VarImp,pc>::ensureDomReflection(OZ_Term ref) {
+  //Assert(OZ_isGeIntVar(ref));
+  if (!hasDomRefl) {
+    GenericSpace *s = getGSpace();
+    // post the dom reflector propagator
+    s->setVarRef(index,ref);
+    VarImp *ivp = reinterpret_cast<VarImp*>(s->getVar(index));
+    GeView<VarImp> v(ivp);
+    //Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
+    new (s) VarInspector<VarImp,pc>(s,v,index);
+    s->incForeignProps();
+    hasDomRefl = true;
+  }
+}

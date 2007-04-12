@@ -100,14 +100,25 @@ public:
       \brief Tests whether this GeVar represents an assigned variable.
   */
   bool hasDomReflector(void) {return hasDomRefl; }
+  
+  /**
+     \brief Puts a propagator to reflect any change in the variable domain to mozart.
+     Should be here or in GeVar??
+   */
+  virtual void ensureDomReflection(OZ_Term ref) = 0;
+ 
   int getUnifyC(void) { return unifyC; }
 
-  //  virtual bool assigned(void) = 0;
   virtual OZ_Term getVal(void) = 0;
-  //void ensureDomReflection(OZ_Term t);
   //@}
-
+  
+   /// \name Variable speculation
+  //@{
+  /**
+     \brief This functions returns a tagged reference to a clone of the variable v.
+  */
   virtual TaggedRef clone(TaggedRef v) = 0;
+  //@}
 };
 
 /** 
@@ -271,7 +282,7 @@ public:
   virtual bool assigned(void) = 0;
   //virtual OZ_Term getVal(void) = 0;
   void ensureValReflection(OZ_Term t);
-  //void ensureDomReflection(OZ_Term t);
+  void ensureDomReflection(OZ_Term t);
   //@}
 };
 
@@ -349,25 +360,23 @@ public:
     return Gecode::ES_SUBSUMED;
   }
 };
-#include "GeVar.icc"
-
 
 /*
   This Gecode propagator reflects variable's domain changes to mozart.
 */
-template <class View, Gecode::PropCond pc>
+template <class VarImp, Gecode::PropCond pc>
 class VarInspector :
-  public Gecode::UnaryPropagator<View, pc>
+  public Gecode::UnaryPropagator<GeView<VarImp>, pc>
 {
 protected:
   int index;
   
 public:
-  VarInspector(GenericSpace* s, View v, int idx) :
-    Gecode::UnaryPropagator<View, pc>(s, v), index(idx) { }
+  VarInspector(GenericSpace* s, GeView<VarImp> v, int idx) :
+    Gecode::UnaryPropagator<GeView<VarImp>, pc>(s, v), index(idx) { }
 
   VarInspector(GenericSpace* s, bool share, VarInspector& p) :
-    Gecode::UnaryPropagator<View, pc>(s, share, p), index(p.index) {}
+    Gecode::UnaryPropagator<GeView<VarImp>, pc>(s, share, p), index(p.index) {}
 
   virtual Gecode::Actor* copy(Gecode::Space* s, bool share) {
     return new (s) VarInspector(static_cast<GenericSpace*>(s), share, *this);
@@ -392,6 +401,8 @@ public:
     return Gecode::ES_FIX;
   }
 };
+
+#include "GeVar.icc"
 
 inline
 void checkGlobalVar(OZ_Term v) {
