@@ -445,14 +445,19 @@ public:
       if (gespace == NULL) {
 	//printf("creating new gespace on request\n");fflush(stdout);
     	gespace = new GenericSpace(this);
-	lateThread = oz_newThreadInject(this);
-	lateThread->pushCall(BI_PROP_GEC,NULL);
+	/*lateThread = oz_newThreadInject(this);
+	  lateThread->pushCall(BI_PROP_GEC,NULL);*/
       }	
     }
     
     return gespace;
   }
-  
+  void ensureLateThread(void) {
+    if(!lateThread) {
+      lateThread = oz_newThreadInject(this);
+      lateThread->pushCall(BI_PROP_GEC,NULL);
+    }
+  }
   void deleteGenericSpace(void) {
     Assert(gespace);
     //printf("deleting generic space is the first?? %d",GeSpaceCollectList);fflush(stdout);

@@ -126,8 +126,7 @@ Board::Board(Board * p)
 #ifdef BUILD_GECODE
   if(p->gespace != NULL) {
     gespace = new GenericSpace(this);
-    lateThread = oz_newThreadInject(this);
-    lateThread->pushCall(BI_PROP_GEC,NULL);
+    ensureLateThread();
   } else {
     gespace = NULL;
   }
@@ -471,11 +470,11 @@ void Board::checkStability(void) {
 	if(gespace!=NULL) {
 	  bool testGe = getGenericSpace(true)->isEntailed();
 	  printf("VAL: %d genSuc: %d\n",testGe,getSuspCount()); fflush(stdout);
-	  //	printf("VAL : %d\n",(gespace!=NULL ? (getSuspCount() - b->) == 0 : getSuspCount() == 0) ); fflush(stdout);
-	  bindStatus(genSucceeded( getSuspCount() - testGe == 0 ) );
+
+ 	  bindStatus(genSucceeded( (getSuspCount() == 0 && testGe) ) );
 	}
 	else {
-	  bindStatus(genSucceeded( getSuspCount() == 0 ) );
+ 	  bindStatus(genSucceeded( getSuspCount() == 0 ) );
 	}
 	
 	Assert(!oz_onToplevel() || trail.isEmptyChunk());
