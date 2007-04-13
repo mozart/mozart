@@ -436,9 +436,10 @@ private:
   GenericSpace *gespace;
   Thread *lateThread;
 public:
-  /* Return the generic space corresponding to this board. This method will
-     create it lazily if needed unless to is set to true (to stands for test
-     only 
+  /**
+     \brief Return the generic space corresponding to this board. 
+     This method will create it lazily if needed unless to is set 
+     to true (to stands for test only)
   */
   GenericSpace* getGenericSpace(bool to = false) {
     if (!to) {
@@ -446,28 +447,52 @@ public:
 	//printf("creating new gespace on request\n");fflush(stdout);
     	gespace = new GenericSpace(this);
 	lateThread = NULL;
-	/*lateThread = oz_newThreadInject(this);
-	  lateThread->pushCall(BI_PROP_GEC,NULL);*/
       }	
     }
     
     return gespace;
   }
+  
+  /**
+     \brief Lazily creation of lateThread. This method is used when 
+     a lateThread is needed in mozart to run generic space propagation.
+     The following table describes when a lateThread is needed:
+     ---------------------------------------------------------
+     | Computation    | GenericSpace | LateThrea  | Status   |
+     | Space          |              |            |          |
+     ---------------------------------------------------------
+     | Constraint Vars|     True     |   False    | Entailed |
+     | No Propagators |              |            |          |
+     ---------------------------------------------------------
+     | Constraint Vars|     True     |   True     | Stuck    |
+     | Propagators    |              |            |          |
+     ---------------------------------------------------------
+     | No Const Vars  |     False    |   False    | Succeded |
+     | No Propagators |              |            |          |
+     ---------------------------------------------------------
+ */
   void ensureLateThread(void) {
     if(!lateThread) {
       lateThread = oz_newThreadInject(this);
       lateThread->pushCall(BI_PROP_GEC,NULL);
     }
   }
+  
+  /**
+     \brief Removes the generic space when is no longer needed.
+  */
   void deleteGenericSpace(void) {
     Assert(gespace);
-    //printf("deleting generic space is the first?? %d",GeSpaceCollectList);fflush(stdout);
+    //printf("deleting generic space is the first?? %d",GeSpaceCollectList);
     //printf("Deleting genericspace\n");fflush(stdout);
     delete gespace;
     gespace = NULL;
     lateThread = NULL;
   }
-
+  
+  /**
+     \brief Returns a pointer to the actual lateThread.
+  */
   void deleteLateThread(void) { lateThread = NULL; }
 
   Thread * getLateThread(void) { return lateThread; }
