@@ -343,12 +343,13 @@ public:
     if (!oz_isGeVar(ref))
       return  Gecode::ES_SUBSUMED;
 
+   
     //GeVar<VarImp> *gv = get_GeVar<VarImp>(ref);
     GeVarBase *gv = get_GeVar(ref);
     
     GenericSpace *gs = static_cast<GenericSpace*>(s);        
     OZ_Term val = gv->getVal();
-    OZ_Return ret = OZ_unify(ref, val);
+    OZ_Return ret = OZ_unify(makeTaggedRef(&ref), val);
     if (ret == FAILED) return Gecode::ES_FAILED;
     gs->incDetermined();
     if (gv->hasDomReflector()) {
@@ -356,7 +357,7 @@ public:
       gs->decForeignProps();
     }
     gs->decUnifyProps(gv->getUnifyC());
-      
+    
     return Gecode::ES_SUBSUMED;
   }
 };
