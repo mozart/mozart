@@ -126,9 +126,13 @@ Board::Board(Board * p)
 #ifdef BUILD_GECODE
   if(p->gespace != NULL) {
     gespace = new GenericSpace(this);
-    ensureLateThread();
+    if(p->getLateThread())
+      ensureLateThread();
+    else
+      lateThread = NULL;
   } else {
     gespace = NULL;
+    lateThread = NULL;
   }
 #endif
 
