@@ -445,6 +445,7 @@ public:
       if (gespace == NULL) {
 	//printf("creating new gespace on request\n");fflush(stdout);
     	gespace = new GenericSpace(this);
+	lateThread = NULL;
 	/*lateThread = oz_newThreadInject(this);
 	  lateThread->pushCall(BI_PROP_GEC,NULL);*/
       }	
@@ -466,6 +467,8 @@ public:
     gespace = NULL;
     lateThread = NULL;
   }
+
+  void deleteLateThread(void) { lateThread = NULL; }
 
   Thread * getLateThread(void) { return lateThread; }
 #endif

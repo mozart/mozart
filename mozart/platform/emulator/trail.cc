@@ -234,12 +234,13 @@ TaggedRef Trail::unwind(Board * b) {
 	    vglobal->ensureDomReflection(*refPtr);
 	  }
 	  if(!b->getLateThread()) { printf("YA NO HAY UN LATE THREAD PILAS\n"); fflush(stdout); }
-	  if(b->getLateThread()) {
+	  if(b->getLateThread()) { printf("hilo supervisor lateThread \n"); fflush(stdout); 
 	    if (oz_var_addSusp(refPtr,b->getLateThread()) != SUSPEND ) {
 	      Assert(0);
 	    }
 	  }
 	  else {
+	    printf("hilo supervisro SKIP \n"); fflush(stdout);
 	    AssureThread;
 	    oz_var_addSusp(refPtr,t);
 	  }
