@@ -178,10 +178,6 @@ void initDP(int port, int ip, const char *siteId, int primKey)
   const AccessArchitecture aa = AA_STATIONARY_MANAGER;
   const RCalg              rc = RC_ALG_WRC;
   setDefaultAnnotation(GLUE_NONE,       emptyAnnotation);
-  setDefaultAnnotation(GLUE_LAZYCOPY,   PN_IMMUTABLE_LAZY,  aa, rc);
-  setDefaultAnnotation(GLUE_UNUSABLE,   PN_SIMPLE_CHANNEL,  aa, rc);
-  setDefaultAnnotation(GLUE_VARIABLE,   PN_TRANSIENT,       aa, rc);
-  setDefaultAnnotation(GLUE_READONLY,   PN_TRANSIENT,       aa, rc);
   setDefaultAnnotation(GLUE_PORT,       PN_SIMPLE_CHANNEL,  aa, rc);
   setDefaultAnnotation(GLUE_CELL,       PN_MIGRATORY_STATE, aa, rc);
   setDefaultAnnotation(GLUE_LOCK,       PN_MIGRATORY_STATE, aa, rc);
@@ -189,6 +185,10 @@ void initDP(int port, int ip, const char *siteId, int primKey)
   setDefaultAnnotation(GLUE_ARRAY,      PN_SIMPLE_CHANNEL,  aa, rc);
   setDefaultAnnotation(GLUE_DICTIONARY, PN_SIMPLE_CHANNEL,  aa, rc);
   setDefaultAnnotation(GLUE_THREAD,     PN_SIMPLE_CHANNEL,  aa, rc);
+  setDefaultAnnotation(GLUE_VARIABLE,   PN_TRANSIENT,       aa, rc);
+  setDefaultAnnotation(GLUE_READONLY,   PN_TRANSIENT,       aa, rc);
+  setDefaultAnnotation(GLUE_UNUSABLE,   PN_SIMPLE_CHANNEL,  aa, rc);
+  setDefaultAnnotation(GLUE_CHUNK,      PN_IMMEDIATE,       aa, rc);
 
   // create mediator table
   mediatorTable     = new MediatorTable();

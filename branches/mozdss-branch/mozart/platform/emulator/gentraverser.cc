@@ -360,12 +360,17 @@ repeat:
       GetBTTaskPtr1(frame, GName*, gname);
 
       //
-      OZ_Term chunkTerm;
-      SChunk *sc = new SChunk(am.currentBoard(), 0);
-      sc->setGName(gname);
-      chunkTerm = makeTaggedConst(sc);
-      overwriteGName(gname, chunkTerm);
-      sc->import(value);
+      OZ_Term chunkTerm = gname->getValue();
+      if (chunkTerm) {
+	SChunk* sc = tagged2SChunk(chunkTerm);
+	if (!sc->getValue()) sc->import(value);
+      } else {
+	SChunk *sc = new SChunk(am.currentBoard(), 0);
+	sc->setGName(gname);
+	chunkTerm = makeTaggedConst(sc);
+	overwriteGName(gname, chunkTerm);
+	sc->import(value);
+      }
 
       //
       if (doMemo) {

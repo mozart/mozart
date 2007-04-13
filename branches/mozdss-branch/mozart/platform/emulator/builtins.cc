@@ -675,11 +675,16 @@ OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
     case Co_Port:
     case Co_Lock:
       goto no_feature;
-    case Co_Chunk:
-      tf = tagged2SChunk(t)->getFeature(f);
-      if (tf == makeTaggedNULL())
-	goto no_feature;
-      return PROCEED;
+    case Co_Chunk: {
+      SChunk* chunk = tagged2SChunk(t);
+      if (chunk->getValue()) {
+	tf = chunk->getFeature(f);
+	if (tf == makeTaggedNULL()) goto no_feature;
+	return PROCEED;
+      }
+      // chunk is a stub: call the distribution layer
+      return (*distChunkGet)(chunk, f, tf);
+    }
     case Co_Class:
       tf = tagged2OzClass(t)->classGetFeature(f);
       if (tf == makeTaggedNULL()) {

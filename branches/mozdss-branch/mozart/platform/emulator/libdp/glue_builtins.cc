@@ -661,6 +661,7 @@ OZ_BI_define(BIsetAnnotation,4,0)
     case PN_TRANSIENT_REMOTE:
       if (!oz_isVarOrRef(entity)) goto protocol_error;
       break;
+    case PN_IMMEDIATE:
     case PN_IMMUTABLE_LAZY:
     case PN_IMMUTABLE_EAGER:
       if (!oz_isConst(entity)) goto protocol_error;

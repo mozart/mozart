@@ -755,9 +755,9 @@ Bool DPMARSHALERCLASS::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
 { 
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
-  //
+  // to be marshaled: DIF_CHUNK, index, mediator, gname
   if (bs->availableSpace() >=
-      2*DIFMaxSize + MNumberMaxSize + MGNameMaxSize) {
+      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize + MGNameMaxSize) {
     int index;
 
     //
@@ -771,15 +771,11 @@ Bool DPMARSHALERCLASS::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
     fflush(dbgout);
 #endif
     marshalDIFindex(bs, DIF_CHUNK, DIF_CHUNK_DEF, index);
-
     //
-    GName *gname = ((SChunk *)chunkConst)->globalize();
-    Assert(gname);
-    marshalGName(bs, gname);
-
-    //
+    bool immediate = glue_marshalEntity(chunkTerm, bs);
     Assert(bs->availableSpace() >= DIFMaxSize);
-    return (NO);
+    return !immediate;
+
   } else {
 #if defined(DBG_TRACE)
     DBGINIT();

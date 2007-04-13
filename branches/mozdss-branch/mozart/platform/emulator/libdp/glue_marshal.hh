@@ -33,6 +33,7 @@
 
 #include "base.hh"
 #include "value.hh"
+#include "gentraverser.hh"     // for GTAbstractEntity
 
 // globalize an entity
 void glue_globalizeEntity(TaggedRef entity);

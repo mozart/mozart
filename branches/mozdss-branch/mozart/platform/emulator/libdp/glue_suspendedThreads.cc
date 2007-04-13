@@ -414,6 +414,7 @@ WakeRetVal SuspendedDictionaryGet::resumeRemoteDone(PstInContainerInterface* pst
 
 bool SuspendedDictionaryGet::gCollect(){
   if (gc()) {
+    oz_gCollectTerm(key, key);
     oz_gCollectTerm(result, result);
     return true;
   } else
@@ -445,9 +446,58 @@ WakeRetVal SuspendedDictionaryPut::resumeRemoteDone(PstInContainerInterface* pst
 
 bool SuspendedDictionaryPut::gCollect() {
   if (gc()) {
+    oz_gCollectTerm(key, key);
     oz_gCollectTerm(value, value);
     return true;
   } else
     return false;
 }
 
+
+
+/************************* SuspendedGenericDot *************************/
+
+SuspendedGenericDot::SuspendedGenericDot(Mediator* med,
+					 OZ_Term k,  OZ_Term var) :
+  SuspendedOperation(med), key(k), result(var)
+{
+  suspend();
+}
+
+WakeRetVal SuspendedGenericDot::resumeDoLocal(DssOperationId*) {
+  TaggedRef entity = getMediator()->getEntity();
+  TaggedRef out;
+  switch (dotInline(entity, key, out)) {
+  case PROCEED:
+    resumeUnify(result, out);
+    break;
+  case RAISE:
+    resumeRaise(OZ_makeException(E_ERROR, E_KERNEL, ".", 2, entity, key));
+    break;
+  default:
+    // should never happen, because the state is local
+    Assert(0);
+  }
+  return WRV_DONE;
+}
+
+WakeRetVal
+SuspendedGenericDot::resumeRemoteDone(PstInContainerInterface* pstin) {
+  if (pstin) {
+    PstInContainer *pst = static_cast<PstInContainer*>(pstin);
+    resumeUnify(result, pst->a_term);
+  } else {
+    TaggedRef entity = getMediator()->getEntity();
+    resumeRaise(OZ_makeException(E_ERROR, E_KERNEL, ".", 2, entity, key));
+  }
+  return WRV_DONE;
+}
+
+bool SuspendedGenericDot::gCollect(){
+  if (gc()) {
+    oz_gCollectTerm(key, key);
+    oz_gCollectTerm(result, result);
+    return true;
+  } else
+    return false;
+}

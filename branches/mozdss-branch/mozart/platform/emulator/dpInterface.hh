@@ -89,6 +89,9 @@ extern OZ_Return (*distVarUnify)(OzVariable*, TaggedRef*,
 				 OzVariable*, TaggedRef*);
 extern OZ_Return (*distVarMakeNeeded)(TaggedRef*);
 
+// chunks
+extern OZ_Return (*distChunkGet)(SChunk*, TaggedRef, TaggedRef&);
+
 
 
 /******************** Garbage collection routines *********************/

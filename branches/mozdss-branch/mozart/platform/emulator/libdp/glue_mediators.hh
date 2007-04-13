@@ -105,17 +105,17 @@
 // used as marshaling tags.
 enum GlueTag {
   GLUE_NONE = 0,       // 
-  GLUE_LAZYCOPY,       // immutables
-  GLUE_UNUSABLE,
-  GLUE_VARIABLE,       // transients
-  GLUE_READONLY,
-  GLUE_PORT,           // asynchronuous mutables
-  GLUE_CELL,           // mutables
+  GLUE_PORT,           // mutables
+  GLUE_CELL,
   GLUE_LOCK,
   GLUE_OBJECT,
   GLUE_ARRAY,
   GLUE_DICTIONARY,
   GLUE_THREAD,
+  GLUE_VARIABLE,       // transients
+  GLUE_READONLY,
+  GLUE_UNUSABLE,       // immutables
+  GLUE_CHUNK,
   GLUE_LAST            // must be last
 };
 
@@ -374,26 +374,6 @@ public:
 
 
 
-// mediators for "unusables".  An unusable is a remote representation
-// of a site-specific entity.
-class UnusableMediator: public ConstMediator, public ImmutableAbstractEntity {
-public:
-  UnusableMediator();
-  UnusableMediator(TaggedRef);
-
-  virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
-				   PstInContainerInterface*,
-				   PstOutContainerInterface*&);
-  virtual PstOutContainerInterface *retrieveEntityRepresentation() {
-    Assert(0); return NULL; }
-  virtual void installEntityRepresentation(PstInContainerInterface*) {
-    Assert(0); }
-  virtual void unmarshal(ByteBuffer*);
-  virtual char *getPrintType() { return "unusable"; }
-};
-
-
-
 // mediators for Oz variables
 class OzVariableMediator: public Mediator, public MonotonicAbstractEntity {
 public:
@@ -418,5 +398,62 @@ public:
 // even when the variable is bound.  The DistributedVarPatches do
 // collect their mediators, which forces them to keep the coordination
 // proxy alive.
+
+
+
+// mediators for "unusables".  An unusable is a remote representation
+// of a site-specific entity.
+class UnusableMediator: public ConstMediator, public ImmutableAbstractEntity {
+public:
+  UnusableMediator();
+  UnusableMediator(TaggedRef);
+
+  virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
+				   PstInContainerInterface*,
+				   PstOutContainerInterface*&);
+  virtual PstOutContainerInterface *retrieveEntityRepresentation() {
+    Assert(0); return NULL; }
+  virtual void installEntityRepresentation(PstInContainerInterface*) {
+    Assert(0); }
+  virtual void unmarshal(ByteBuffer*);
+  virtual char *getPrintType() { return "unusable"; }
+};
+
+
+
+// The following mediators are for immutables with a GName.  For those
+// values, we have to keep the GName in order to maintain reference
+// integrity.  This is because those values are not dependent on any
+// site (unless they are explicitly sited, or stationary); they can be
+// pickled to a file, for instance.
+//
+// A consequence of this fact is that those mediators must remain
+// detached.  Indeed, the value already has a reference to its GName.
+// We cannot remove this reference, because otherwise the pickler may
+// create a second GName for that same entity: the pickler simply
+// ignores the existence of mediators!
+//
+//                          Entity <---> GName
+//                            ^
+//                            |
+//                         Mediator
+
+// mediators for chunks
+class ChunkMediator : public ConstMediator, public ImmutableAbstractEntity {
+public:
+  ChunkMediator();
+  ChunkMediator(TaggedRef);
+  virtual void attach() {}     // always detached (because of gname)
+  virtual void detach() {}
+
+  virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
+				   PstInContainerInterface*,
+				   PstOutContainerInterface*&);
+  virtual PstOutContainerInterface *retrieveEntityRepresentation();
+  virtual void installEntityRepresentation(PstInContainerInterface*);
+  virtual void marshal(ByteBuffer*);
+  virtual void unmarshal(ByteBuffer*);
+  virtual char *getPrintType() { return "chunk"; }
+};
 
 #endif

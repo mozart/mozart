@@ -211,4 +211,17 @@ public:
 };
 
 
+// generic dot operation for distributed chunks, dictionaries, etc.
+class SuspendedGenericDot: public SuspendedOperation {
+private:
+  OZ_Term key;
+  OZ_Term result;     // a variable
+public:
+  SuspendedGenericDot(Mediator*, OZ_Term, OZ_Term);
+  WakeRetVal resumeDoLocal(DssOperationId*);
+  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  bool gCollect();
+};
+
+
 #endif 
