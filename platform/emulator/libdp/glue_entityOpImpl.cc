@@ -529,6 +529,36 @@ OZ_Return objectExchangeImpl(OzCell* o, TaggedRef fea, TaggedRef oVal, TaggedRef
 
 
 
+/**************************** Chunks ****************************/
+
+OZ_Return
+distChunkGetImpl(SChunk *chunk, TaggedRef key, TaggedRef &ans) {
+  // precondition: the chunk is only a stub
+  Assert(chunk->getValue() == makeTaggedNULL());
+  ChunkMediator* med =
+    static_cast<ChunkMediator*>(glue_getMediator(makeTaggedConst(chunk)));
+
+  // suspend if fault state not ok
+  if (med->getFaultState()) return med->suspendOnFault();
+
+  DssThreadId *thrId = currentThreadId();
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = med->abstractOperation_Read(thrId, pstout);
+  if (pstout != NULL) *(pstout) = new PstOutContainer(key);
+
+  switch (cont) {
+  case DSS_SUSPEND:   // we cannot have DSS_PROCEED here!
+    ans = oz_newVariable();
+    new SuspendedGenericDot(med, key, ans);
+    return BI_REPLACEBICALL;
+  default:
+    OZ_error("Unhandled error in distChunkGet");
+    return PROCEED;
+  }
+}
+
+
+
 void initEntityOperations(){
   // ports
   distPortSend = &distPortSendImpl;
@@ -558,4 +588,7 @@ void initEntityOperations(){
   distVarBind = &distVarBindImpl;
   distVarUnify = &distVarUnifyImpl;
   distVarMakeNeeded = &distVarMakeNeededImpl;
+
+  // chunks
+  distChunkGet = &distChunkGetImpl;
 }

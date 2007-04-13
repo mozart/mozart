@@ -1407,39 +1407,44 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       
     case DIF_CHUNK_DEF:
       {
-	int refTag = unmarshalRefTag(bs);
 	OZ_Term value;
-	GName *gname = unmarshalGName(&value, bs);
-	if (gname) {
-#if defined(DBG_TRACE)
-	  fprintf(dbgout, " (at %d)\n", refTag);
-	  fflush(dbgout);
-#endif
-	  b->buildChunkRemember(gname, refTag);
+	int refTag = unmarshalRefTag(bs);
+	bool immediate = glue_unmarshalEntity(bs, value);
+	Assert(oz_isSChunk(value));
+	//
+	b->setTerm(value, refTag);
+	//
+	if (immediate) {
+	  SChunk* chunk = tagged2SChunk(value);
+	  if (chunk->getValue()) {
+	    b->knownChunk(value);
+	  } else {
+ 	    b->buildChunk(chunk->getGName());
+	  }
 	} else {
-	  b->knownChunk(value);
-	  b->setTerm(value, refTag);
-#if defined(DBG_TRACE)
-	  fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
-	  fflush(dbgout);
-#endif
+	  b->buildValue(value);
 	}
+
 	break;
       }
 
     case DIF_CHUNK:
       {
 	OZ_Term value;
-	GName *gname = unmarshalGName(&value, bs);
-	if (gname) {
-	  b->buildChunk(gname);
+	bool immediate = glue_unmarshalEntity(bs, value);
+	Assert(oz_isSChunk(value));
+	//
+	if (immediate) {
+	  SChunk* chunk = tagged2SChunk(value);
+	  if (chunk->getValue()) {
+	    b->knownChunk(value);
+	  } else {
+ 	    b->buildChunk(chunk->getGName());
+	  }
 	} else {
-	  b->knownChunk(value);
-#if defined(DBG_TRACE)
-	  fprintf(dbgout, " = %s\n", toC(value));
-	  fflush(dbgout);
-#endif
+	  b->buildValue(value);
 	}
+
 	break;
       }
 

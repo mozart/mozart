@@ -1074,12 +1074,13 @@ void Space::printLongStream(ostream &stream, int depth, int offset)
 void SChunk::printLongStream(ostream &stream, int depth, int offset)
 {
   stream << indent(offset)
-	 << "Chunk@id" << this << endl
-	 << indent(offset)
-	 << " value:"<<endl;
-  ozd_printLongStream(value,stream,depth,offset+2);
+	 << "Chunk@id" << this << endl;
+  if (value) {
+    stream << indent(offset) << " value:" << endl;
+    ozd_printLongStream(value,stream,depth,offset+2);
+  }
   stream << indent(offset)
-    << " home:"<<endl;
+	 << " home:"<<endl;
   GETBOARD(this)->printLongStream(stream,depth,offset);
 }
 

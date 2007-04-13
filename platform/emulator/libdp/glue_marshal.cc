@@ -183,12 +183,6 @@ void OzThreadMediator::unmarshal(ByteBuffer* bs) {
 }
 
 
-// unusables
-void UnusableMediator::unmarshal(ByteBuffer* bs) {
-  if (!hasEntity()) setConst(new UnusableResource());
-}
-
-
 // variables
 void OzVariableMediator::unmarshal(ByteBuffer* bs) {
   if (!hasEntity()) {
@@ -202,5 +196,35 @@ void OzVariableMediator::unmarshal(ByteBuffer* bs) {
     default:
       Assert(0);
     }
+  }
+}
+
+
+// unusables
+void UnusableMediator::unmarshal(ByteBuffer* bs) {
+  if (!hasEntity()) setConst(new UnusableResource());
+}
+
+
+// chunks
+void ChunkMediator::marshal(ByteBuffer *bs) {
+  SChunk* chunk = static_cast<SChunk*>(getConst());
+  GName* gname = chunk->globalize();
+  Assert(gname);
+  marshalGName(bs, gname);
+}
+
+void ChunkMediator::unmarshal(ByteBuffer* bs) {
+  TaggedRef value;
+  GName* gname = unmarshalGName(&value, bs);
+  if (!hasEntity()) {
+    if (gname) {   // entity does not exist on this site
+      SChunk* chunk = new SChunk(oz_currentBoard(), makeTaggedNULL());
+      value = makeTaggedConst(chunk);
+      chunk->setGName(gname);
+      addGName(gname, value);
+    }
+    Assert(oz_isSChunk(value));
+    setEntity(value);
   }
 }

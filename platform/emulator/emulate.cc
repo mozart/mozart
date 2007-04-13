@@ -2213,6 +2213,11 @@ LBLdispatcher:
 	    MAGIC_RET;
 	  }
 
+	case BI_REPLACEBICALL: 
+	  PC += 6;
+	  Assert(!e->isEmptyPreparedCalls());
+	  goto LBLreplaceBICall;
+
 	case RAISE:
 	  RAISE_THREAD;
 

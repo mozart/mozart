@@ -1963,7 +1963,7 @@ public:
 
   TaggedRef getValue() { return value; }
   TaggedRef getFeature(TaggedRef fea) { return OZ_subtree(value,fea); }
-  TaggedRef getArityList() { return ::getArityList(value); }
+  TaggedRef getArityList() { return value ? ::getArityList(value) : oz_nil(); }
   int getWidth () { return ::getWidth(value); }
 
   void import(TaggedRef val) {

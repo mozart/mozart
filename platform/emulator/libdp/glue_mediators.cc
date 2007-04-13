@@ -52,9 +52,6 @@ static int medIdCntr = 1;
 Mediator *glue_newMediator(GlueTag tag) {
   // to be fixed
   switch (tag) {
-  case GLUE_UNUSABLE:   return new UnusableMediator();
-  case GLUE_VARIABLE:   return new OzVariableMediator(GLUE_VARIABLE);
-  case GLUE_READONLY:   return new OzVariableMediator(GLUE_READONLY);
   case GLUE_PORT:       return new PortMediator();
   case GLUE_CELL:       return new CellMediator();
   case GLUE_LOCK:       return new LockMediator();
@@ -62,6 +59,10 @@ Mediator *glue_newMediator(GlueTag tag) {
   case GLUE_ARRAY:      return new ArrayMediator();
   case GLUE_DICTIONARY: return new DictionaryMediator();
   case GLUE_THREAD:     return new OzThreadMediator();
+  case GLUE_VARIABLE:   return new OzVariableMediator(GLUE_VARIABLE);
+  case GLUE_READONLY:   return new OzVariableMediator(GLUE_READONLY);
+  case GLUE_UNUSABLE:   return new UnusableMediator();
+  case GLUE_CHUNK:      return new ChunkMediator();
   default:
     Assert(0); return NULL;
   }
@@ -104,6 +105,7 @@ Mediator *glue_getMediator(TaggedRef entity) {
     case Co_Cell:       return getCTWHMediator<CellMediator>(ct);
     case Co_Object:     return getCTWHMediator<ObjectMediator>(ct);
     case Co_Port:       return getCTWHMediator<PortMediator>(ct);
+    case Co_Chunk:      return getCTWHMediator<ChunkMediator>(ct);
     case Co_Array:      return getCTWHMediator<ArrayMediator>(ct);
     case Co_Dictionary: return getCTWHMediator<DictionaryMediator>(ct);
     case Co_Lock:       return getCTWHMediator<LockMediator>(ct);
@@ -733,24 +735,6 @@ OzThreadMediator::installEntityRepresentation(PstInContainerInterface*){
 
 
 
-/************************* UnusableMediator *************************/
-
-UnusableMediator::UnusableMediator() : ConstMediator(GLUE_UNUSABLE) {}
-
-UnusableMediator::UnusableMediator(TaggedRef e) : ConstMediator(GLUE_UNUSABLE) {
-  setEntity(e);
-}
-
-AOcallback
-UnusableMediator::callback_Read(DssThreadId*, DssOperationId*,
-				PstInContainerInterface*,
-				PstOutContainerInterface*&)
-{
-  return AOCB_FINISH;
-}
-
-
-
 /************************* OzVariableMediator *************************/
 
 OzVariableMediator::OzVariableMediator(GlueTag t) : Mediator(t) {}
@@ -821,4 +805,57 @@ OzVariableMediator::callback_Changes(DssOperationId*,
   answer = (active && oz_isNeeded(oz_deref(entity)) ?
 	    new PstOutContainer(oz_atom("needed")) : NULL);
   return AOCB_FINISH; 
+}
+
+
+
+/************************* UnusableMediator *************************/
+
+UnusableMediator::UnusableMediator() : ConstMediator(GLUE_UNUSABLE) {}
+
+UnusableMediator::UnusableMediator(TaggedRef e) : ConstMediator(GLUE_UNUSABLE) {
+  setEntity(e);
+}
+
+AOcallback
+UnusableMediator::callback_Read(DssThreadId*, DssOperationId*,
+				PstInContainerInterface*,
+				PstOutContainerInterface*&)
+{
+  return AOCB_FINISH;
+}
+
+
+
+/************************* ChunkMediator *************************/
+
+ChunkMediator::ChunkMediator() : ConstMediator(GLUE_CHUNK) {}
+
+ChunkMediator::ChunkMediator(TaggedRef e) : ConstMediator(GLUE_CHUNK) {
+  setEntity(e);
+}
+
+AOcallback
+ChunkMediator::callback_Read(DssThreadId*, DssOperationId*,
+			     PstInContainerInterface* pstin,
+			     PstOutContainerInterface*& answer) {
+  // the only operation is '.'
+  SChunk* chunk = static_cast<SChunk*>(getConst());
+  TaggedRef key = static_cast<PstInContainer*>(pstin)->a_term;
+  TaggedRef out = chunk->getFeature(key);
+  answer = out ? new PstOutContainer(out) : NULL;
+  return AOCB_FINISH;
+}
+
+PstOutContainerInterface*
+ChunkMediator::retrieveEntityRepresentation() {
+  SChunk* chunk = static_cast<SChunk*>(getConst());
+  return new PstOutContainer(chunk->getValue());
+}
+
+void
+ChunkMediator::installEntityRepresentation(PstInContainerInterface* pst) {
+  SChunk* chunk = static_cast<SChunk*>(getConst());
+  TaggedRef value = static_cast<PstInContainer*>(pst)->a_term;
+  if (!chunk->getValue()) chunk->import(value);
 }
