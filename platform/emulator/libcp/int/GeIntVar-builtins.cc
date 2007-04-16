@@ -44,10 +44,7 @@ using namespace Gecode::Int;
  */
 OZ_BI_define(new_intvar,1,1)
 {
-  //  DECLARE_SPACE(sp,0);      // the GenericSpace of the var
-  //printf("antes de declaración\n");fflush(stdout);
   DECLARE_INT_SET(dom,0);   // the domain of the IntVar
-  //printf("despues de declaración new_\n");fflush(stdout);
   OZ_RETURN(new_GeIntVar(dom));
 }
 OZ_BI_end
@@ -63,24 +60,6 @@ OZ_BI_define(intvar_is,1,1)
 OZ_BI_end
 
 /** 
- * \brief Returns the GeSpace where OZ_in(0) belongs to
- * 
- */
-/*
-OZ_BI_define(intvar_space,1,1)
-  {
-    Board *CBB = extVar2Var(get_GeIntVar(OZ_in(0)))->getBoardInternal();
-    Board *sd = new Board(CBB);
-
-    //OZ_result(makeTaggedConst(new Space(CBB,sd)));
-    OZ_result(makeTaggedConst(NULL));
-    return BI_PREEMPT;
-    //OZ_RETURN(OZ_extension(get_GeIntVar(OZ_in(0))->getGeSpace()));
-  }
-OZ_BI_end
-*/
-
-/** 
  * \brief Returns the minimum elemen in the domain
  * 
  * @param intvar_getMin 
@@ -89,7 +68,8 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getMin,1,1)
 {
-  OZ_RETURN_INT(get_IntVar(OZ_in(0)).min());
+  DeclareGeIntVar1(0,v);
+  OZ_RETURN_INT(v.min());
 }
 OZ_BI_end
 
@@ -102,7 +82,8 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getMax,1,1)
 {
-  OZ_RETURN_INT(get_IntVar(OZ_in(0)).max());
+  DeclareGeIntVar1(0,v);
+  OZ_RETURN_INT(v.max());
 }
 OZ_BI_end
 
@@ -114,7 +95,8 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getSize,1,1)
 {
-  OZ_RETURN_INT(get_IntVar(OZ_in(0)).size());
+  DeclareGeIntVar1(0,v);
+  OZ_RETURN_INT(v.size());
 }
 OZ_BI_end
 
@@ -127,7 +109,8 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getMed,1,1)
 {
-  OZ_RETURN_INT(get_IntVar(OZ_in(0)).med());
+  DeclareGeIntVar1(0,v);
+  OZ_RETURN_INT(v.med());
 }
 OZ_BI_end
 
@@ -140,7 +123,8 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getWidth,1,1)
 {
-  OZ_RETURN_INT(get_IntVar(OZ_in(0)).width());
+  DeclareGeIntVar1(0,v);
+  OZ_RETURN_INT(v.width());
 }
 OZ_BI_end
 
@@ -152,7 +136,8 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getRegretMin,1,1)
 {
-  OZ_RETURN_INT(IntView(get_IntVar(OZ_in(0))).regret_min());
+  DeclareGeIntVar1(0,v);
+  OZ_RETURN_INT(IntView(v).regret_min());
 }
 OZ_BI_end
 
@@ -164,31 +149,8 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getRegretMax,1,1)
 {
-  OZ_RETURN_INT(IntView(get_IntVar(OZ_in(0))).regret_max());
+  DeclareGeIntVar1(0,v);
+  OZ_RETURN_INT(IntView(v).regret_max());
 }
 OZ_BI_end
-
-/** 
- * \brief Creates a branching strategy 
- * 
- * @param 0 List of variables
- * @param 1 Variable selection strategy
- * @param 2 Value selection strategy
- */
-OZ_BI_define(intvar_branch,3,0)
-{ 
-  OZ_declareInt(1,var_sel);
-  OZ_declareInt(2,val_sel);
-  DeclareGSpace(sp);
-  DECLARE_INTVARARRAY(sp,vars,0);
-  try{
-    branch(sp,vars, (BvarSel) var_sel,(BvalSel) val_sel);
-  }catch(Exception e) {
-    RAISE_GE_EXCEPTION(e);
-   }
-  return PROCEED;
-}
-OZ_BI_end
-
-
 #endif
