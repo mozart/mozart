@@ -206,6 +206,7 @@ public:
       infinite execution of BIwait built-in when it is used.
   */ 
   OZ_Return addSuspV(TaggedRef*, Suspendable* susp) {
+    printf("addSuspV\n");fflush(stdout);
     extVar2Var(this)->addSuspSVar(susp);
     return SUSPEND;
   }
@@ -221,7 +222,6 @@ public:
   virtual bool hasSameDomain(TaggedRef) = 0;
 
  
-
   /// \name Unification and Binding.
   //@{
   /**
@@ -405,12 +405,13 @@ public:
 
 #include "GeVar.icc"
 
+
 inline
 void checkGlobalVar(OZ_Term v) {
   // Why this comparison is made with ints?
   //cout<<"Inicio check: "<<oz_isInt(v)<<endl; fflush(stdout);
   Assert(oz_isGeVar(v));
-
+  
   ExtVar *ev = oz_getExtVar(oz_deref(v));
   if (!oz_isLocalVar(ev)) {
     //    TaggedRef nlv = static_cast<GeVar<VarImp>*>(ev)->clone(v);
@@ -418,7 +419,7 @@ void checkGlobalVar(OZ_Term v) {
     ExtVar *varTmp = var2ExtVar(tagged2Var(oz_deref(nlv)));
     //GeVar<VarImp> *gvar = static_cast<GeVar<VarImp>*>(varTmp);
     GeVarBase *gvar = static_cast<GeVarBase*>(varTmp);
- 
+    
     //meter al trail v [v]
     TaggedRef nlvAux = oz_deref(nlv);
 

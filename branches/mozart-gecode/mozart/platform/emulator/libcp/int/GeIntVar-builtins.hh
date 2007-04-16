@@ -31,7 +31,7 @@
 #include "value.hh"
 #include "GeIntVar.hh"
 #include "GeSpace-builtins.hh"
-
+#include "builtins.hh"
 
 /** 
  * \brief Declares a Gecode::Int::IntSet from an Oz domain description
@@ -65,7 +65,7 @@
 #define DeclareGSpace(sp) GenericSpace *sp = oz_currentBoard()->getGenericSpace();
 #define get_Space(t) extVar2Var(get_GeIntVar(t))->getBoardInternal()->getGenericSpace()
 
-#define DeclareGeIntVar(p,v,sp)					        \
+#define DeclareGeIntVar2(p,v,sp)					        \
   IntVar v;                                                             \
   if(OZ_isInt(OZ_in(p))) {						\
     OZ_declareInt(p,domain);						\
@@ -80,22 +80,67 @@
   }									\
   else RAISE_EXCEPTION("The variables must be either GeIntVar or int");
 
+#define DeclareGeIntVar1(p,v)					\
+  IntVar v;							\
+  { TaggedRef x = OZ_in(p);					\
+    DEREF(x,x_ptr);						\
+    Assert(!oz_isRef(x));					\
+    if (oz_isFree(x)) {						\
+      oz_suspendOn(makeTaggedRef(x_ptr));			\
+    }								\
+    if (OZ_isInt(x)) {						\
+      OZ_declareInt(p,domain);					\
+      IntVar _tmp(oz_currentBoard()->getGenericSpace(),		\
+		  domain, domain);				\
+      v=_tmp;							\
+    }								\
+    else if(OZ_isGeIntVar(x)) {					\
+      checkGlobalVar(x);					\
+      v = get_IntVar(x);					\
+    } else							\
+      RAISE_EXCEPTION("Type error: Expected IntVar");		\
+  }
 
-#define DeclareGeIntVarT2(val,ar,i)					\
-{									\
-  /*OZ_Term val = OZ_deref(OZ_head(t));*/				\
+#define DeclareGeIntVar(p,v,sp)					        \
+  {  TaggedRef x = OZ_in(p);						\
+    DEREF(x,x_ptr);							\
+    Assert(!oz_isRef(x));						\
+    if (oz_isFree(x)) {							\
+      oz_suspendOn(makeTaggedRef(x_ptr));				\
+    }}									\
+  IntVar v;								\
+  if(OZ_isInt(OZ_in(p))) {						\
+    OZ_declareInt(p,domain);						\
+    IntVar _tmp(sp,domain,domain);					\
+    v=_tmp;								\
+  }									\
+  else if(OZ_isGeIntVar(OZ_in(p))) {					\
+    checkGlobalVar(OZ_in(p));						\
+    v = get_IntVar(OZ_in(p));						\
+    /*if(sp != get_Space(OZ_in(p)))					\
+      RAISE_EXCEPTION("The variables are in differents spaces");*/	\
+  }									\
+  else RAISE_EXCEPTION("The variables must be either GeIntVar or int");
+
+
+#define DeclareGeIntVarT2(val,ar,i)					\ 
+{  TaggedRef x = val;							\
+  DEREF(x,x_ptr);							\
+  Assert(!oz_isRef(x));							\
+  if (oz_isFree(x)) {							\
+    printf("suspending for simple var\n");fflush(stdout);		\
+    oz_suspendOn(makeTaggedRef(x_ptr));					\
+  }									\
+  printf("resuming for simple var\n");fflush(stdout);			\
   if(OZ_isInt(val)) {							\
     int domain=OZ_intToC(val);						\
     ar[i].init(sp,domain,domain);					\
   }									\
-  /*else if(sp!= get_Space(val)){}					\
-    RAISE_EXCEPTION("The variables are not in the same space");  */     	\
   else if(OZ_isGeIntVar(val)) { 					\
-      checkGlobalVar(val);                      \
+      checkGlobalVar(val);						\
       ar[i]=get_IntVar(val);						\
-  /*_array[i++] = _tmp;*/ \
-  } \
-      }
+  }									\
+}
 
 #define DECLARE_INTVARARRAY(sp,array,tIn)  		\
 /*DeclareGSpace(sp);*/                                  \

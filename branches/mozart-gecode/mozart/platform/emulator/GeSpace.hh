@@ -381,5 +381,4 @@ public:
 
 };
 
-
 #endif /* __GESPACE_HH__ */
