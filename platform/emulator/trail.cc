@@ -438,7 +438,13 @@ bool Trail::isSpeculating(void) {
       printf("isSpeculing Te_Bind \n"); fflush(stdout);
       TaggedRef *var = (TaggedRef*) * (top-2);
 
-      if(!oz_isGeVar(*var)) { return true; }
+
+      //local variable is a valid value
+      if(!oz_isVarOrRef(oz_deref(*var))) { break; }
+
+      //pilas con esta condición tiene que ser un invariante cuando separemos pushBind de pushGeVariable
+      /*      if(!oz_isGeVar(*var))  { printf("!oz_isGeVar(*var)\n"); fflush(stdout); return true; } */
+
       printf("DESPUES ddel maldito if \n"); fflush(stdout);
       TaggedRef tvar = (TaggedRef) ToInt32(* (top-1) );
       OzVariable *v = tagged2Var(tvar);
