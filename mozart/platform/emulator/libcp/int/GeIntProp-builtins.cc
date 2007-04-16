@@ -33,60 +33,6 @@
 using namespace Gecode;
 using namespace Gecode::Int;
 
-/*
-OZ_BI_define(int_eq,3,0)
-{
- //Both spaces must be the same
-  
-  IntVar v1,v2;
-  GenericSpace *gesp1;   
-  int consistencyLevel; 
-  cout<<"int_eq : "<<endl; fflush(stdout);
-
-  GenericSpace *gesp2 = extVar2Var(get_GeIntVar(OZ_in(0)))->getBoardInternal()->getGenericSpace();
-  
-  printf("espacio variable global %p\n", gesp2); fflush(stdout); 
-  
-  checkGlobalVar(OZ_in(0));
-  
-  if(!OZ_isInt(OZ_in(2)))
-      RAISE_EXCEPTION("The last value must be the consistency level");
-    
-  consistencyLevel=OZ_intToC(OZ_in(2));
-  if (!OZ_isGeIntVar(OZ_in(0)))
-      RAISE_EXCEPTION("The first argument must be GeIntVar");
-  
-  v1 = get_IntVar(OZ_in(0));
-  gesp1 = extVar2Var(get_GeIntVar(OZ_in(0)))->getBoardInternal()->getGenericSpace();
-  printf("espacio variable local %p\n", gesp1); fflush(stdout); 
-  if(OZ_isInt(OZ_in(1)))
-    {       
-      int domain=OZ_intToC(OZ_in(1));
-      IntVar geint2(gesp1,domain,domain);
-      v2 = geint2;      
-    }
-  else if(!OZ_isGeIntVar(OZ_deref(OZ_in(1)))){
-    RAISE_EXCEPTION("The second argument must be either Int or GeIntVar ");}
-  else
-    {
-      v2 = get_IntVar(OZ_in(1));
-      if(!(gesp1 == extVar2Var(get_GeIntVar(OZ_in(1)))->getBoardInternal()->getGenericSpace()))
-	RAISE_EXCEPTION("The variables are not in the same space");
-    }	
-
-  try{
-    cout<<"v1: ["<<v1.min()<<", "<<v1.max()<<" ]"<<endl; fflush(stdout);
-    eq(gesp1,v1,v2,(IntConLevel)consistencyLevel);
-    gesp1->status();
-     unsigned int a;
-     GZ_RETURN(gesp1);
-  } catch (Exception e) {
-     RAISE_GE_EXCEPTION(e);
-  }
-} OZ_BI_end
-
-*/
-
 OZ_BI_define(int_eq,3,0) 
 {
   DeclareGSpace(gs);
