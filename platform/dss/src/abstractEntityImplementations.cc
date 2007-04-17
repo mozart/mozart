@@ -282,10 +282,13 @@ ImmutableAbstractEntity::abstractOperation_Read(DssThreadId *id,
   case PN_SIMPLE_CHANNEL:
     return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Synch(gid,out,AO_STATE_READ);
   case PN_IMMUTABLE_LAZY:
+    out = NULL;
     return static_cast<ProtocolImmutableLazyProxy*>(pp)->protocol_Access(gid);
   case PN_IMMUTABLE_EAGER:
+    out = NULL;
     return static_cast<ProtocolImmutableEagerProxy*>(pp)->protocol_Access(gid);
   case PN_IMMEDIATE:
+    out = NULL;
     return static_cast<ProtocolImmediateProxy*>(pp)->protocol_send(gid);
   default:
     Assert(0);
