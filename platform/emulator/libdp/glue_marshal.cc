@@ -123,6 +123,12 @@ bool glue_unmarshalEntity(ByteBuffer *bs, TaggedRef &entity) {
 }
 
 
+// marshaler hook
+bool glue_isImmediate(TaggedRef entity) {
+  return glue_getMediator(entity)->isImmediate();
+}
+
+
 
 /************************* Entity-specific stuff *************************/
 

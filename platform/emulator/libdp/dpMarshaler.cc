@@ -1404,47 +1404,46 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 #endif
         break;
       }
-      
+
     case DIF_CHUNK_DEF:
       {
-	OZ_Term value;
 	int refTag = unmarshalRefTag(bs);
-	bool immediate = glue_unmarshalEntity(bs, value);
-	Assert(oz_isSChunk(value));
-	//
-	b->setTerm(value, refTag);
-	//
-	if (immediate) {
-	  SChunk* chunk = tagged2SChunk(value);
-	  if (chunk->getValue()) {
-	    b->knownChunk(value);
-	  } else {
- 	    b->buildChunk(chunk->getGName());
-	  }
+	OZ_Term value;
+	GName *gname = unmarshalGName(&value, bs);
+	if (gname) {
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " (at %d)\n", refTag);
+	  fflush(dbgout);
+#endif
+	  b->buildChunkRemember(gname, refTag);
+	} else if (!tagged2SChunk(value)->getValue()) {   // lazy protocol
+	  b->buildChunkRemember(tagged2SChunk(value)->getGName(), refTag);
 	} else {
-	  b->buildValue(value);
+	  b->knownChunk(value);
+	  b->setTerm(value, refTag);
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
+	  fflush(dbgout);
+#endif
 	}
-
 	break;
       }
 
     case DIF_CHUNK:
       {
 	OZ_Term value;
-	bool immediate = glue_unmarshalEntity(bs, value);
-	Assert(oz_isSChunk(value));
-	//
-	if (immediate) {
-	  SChunk* chunk = tagged2SChunk(value);
-	  if (chunk->getValue()) {
-	    b->knownChunk(value);
-	  } else {
- 	    b->buildChunk(chunk->getGName());
-	  }
+	GName *gname = unmarshalGName(&value, bs);
+	if (gname) {
+	  b->buildChunk(gname);
+	} else if (!tagged2SChunk(value)->getValue()) {   // lazy protocol
+	  b->buildChunk(tagged2SChunk(value)->getGName());
 	} else {
-	  b->buildValue(value);
+	  b->knownChunk(value);
+#if defined(DBG_TRACE)
+	  fprintf(dbgout, " = %s\n", toC(value));
+	  fflush(dbgout);
+#endif
 	}
-
 	break;
       }
 
@@ -2092,7 +2091,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
     case DIF_GLUE: {
       OZ_Term t;
       bool immediate = glue_unmarshalEntity(bs, t);
-      Assert(!immediate);     // not handled yet
+      Assert(!immediate);     // not handled here
 #if defined(DBG_TRACE)
 	fprintf(dbgout, " = %s\n", toC(t));
 	fflush(dbgout);
@@ -2105,7 +2104,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       int refTag = unmarshalRefTag(bs);
       OZ_Term t;
       bool immediate = glue_unmarshalEntity(bs, t);
-      Assert(!immediate);     // not handled yet
+      Assert(!immediate);     // not handled here
 #if defined(DBG_TRACE)
       fprintf(dbgout, " = %s (at %d)\n", toC(t), refTag);
       fflush(dbgout);

@@ -755,14 +755,13 @@ Bool DPMARSHALERCLASS::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
 { 
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
-  // to be marshaled: DIF_CHUNK, index, mediator, gname
-  if (bs->availableSpace() >=
-      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize + MGNameMaxSize) {
+  if (isImmediate() || glue_isImmediate(chunkTerm)) {
+    // immediate marshaling: DIF_CHUNK, index, gname
+    if (bs->availableSpace() < 2*DIFMaxSize + MNumberMaxSize + MGNameMaxSize)
+      goto suspend;
+
     int index;
-
-    //
     VISITNODE(chunkTerm, vIT, bs, index, return(OK));
-
     //
 #if defined(DBG_TRACE)
     DBGINIT();
@@ -772,21 +771,44 @@ Bool DPMARSHALERCLASS::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
 #endif
     marshalDIFindex(bs, DIF_CHUNK, DIF_CHUNK_DEF, index);
     //
-    bool immediate = glue_marshalEntity(chunkTerm, bs);
+    GName *gname = ((SChunk *)chunkConst)->globalize();
+    Assert(gname);
+    marshalGName(bs, gname);
+    //
+    setImmediate(false);     // back to normal mode
+    //
     Assert(bs->availableSpace() >= DIFMaxSize);
-    return !immediate;
+    return (NO);
 
   } else {
+    // marshaling a mediator: DIF_GLUE, index, mediator, gname
+    if (bs->availableSpace() <
+	2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize + MGNameMaxSize)
+      goto suspend;
+
+    int index;
+    //
+    VISITNODE(chunkTerm, vIT, bs, index, return(OK));
+    //
+    marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
+    //
+    (void) glue_marshalEntity(chunkTerm, bs);
+    Assert(bs->availableSpace() >= DIFMaxSize);
+    return (OK);     // leaf node
+
+  }
+  Assert(0);
+
+ suspend:
 #if defined(DBG_TRACE)
-    DBGINIT();
-    fprintf(dbgout, "> tag: %s(%d) on %s\n",
-	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(chunkTerm));
-    fflush(dbgout);
+  DBGINIT();
+  fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	  dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(chunkTerm));
+  fflush(dbgout);
 #endif
-    marshalDIFcounted(bs, DIF_SUSPEND);
-    suspend(chunkTerm);
-    return (OK);
-  }    
+  marshalDIFcounted(bs, DIF_SUSPEND);
+  suspend(chunkTerm);
+  return (OK);
 }
 
 //
