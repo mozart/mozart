@@ -61,13 +61,12 @@ class PstOutContainer: public PstContainer,
 {
 private:
   DPMarshaler *a_marshal_cont; 
+  bool a_immediate;
+
 public:
 #ifdef INTERFACE
   static int a_allocated;
 #endif
-
-  bool a_fullTopTerm;
-  bool a_pushContents; 
   
   PstOutContainer(OZ_Term);
   PstOutContainer(PstInContainer *pst);
@@ -76,6 +75,9 @@ public:
     a_allocated--;
 #endif
   }
+
+  // ask for immediate marshaling
+  void setImmediate() { a_immediate = true; }
 
   void gc();
   void gcStart();
@@ -107,7 +109,6 @@ public:
     a_allocated--;
 #endif
   }
-
 
   void gc();
   void gcStart();

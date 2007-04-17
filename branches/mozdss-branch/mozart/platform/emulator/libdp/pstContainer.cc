@@ -145,15 +145,14 @@ int PstOutContainer::a_allocated=0;
 
 
 PstOutContainer::PstOutContainer(OZ_Term t):
-  PstContainer(t), a_marshal_cont(NULL), a_fullTopTerm(FALSE), a_pushContents(FALSE){
+  PstContainer(t), a_marshal_cont(NULL), a_immediate(false) {
 #ifdef INTERFACE
   a_allocated++;
 #endif
 }
 
-
 PstOutContainer::PstOutContainer(PstInContainer *pst):
-  PstContainer(pst->a_term), a_marshal_cont(NULL), a_fullTopTerm(FALSE), a_pushContents(FALSE){
+  PstContainer(pst->a_term), a_marshal_cont(NULL), a_immediate(false) {
 #ifdef INTERFACE
   a_allocated++;
 #endif
@@ -182,8 +181,7 @@ bool PstOutContainer::marshal(DssWriteBuffer* buf){
   if (a_marshal_cont == NULL) {
     // start marshaling
     dpm = DPM_Repository->dpGetMarshaler();
-    if (a_fullTopTerm) dpm->genFullToplevel();
-    if (a_pushContents) dpm->pushContents();
+    if (a_immediate) dpm->setImmediate(true);
     a_marshal_cont = dpMarshalTerm(a_term, &bb, dpm);
 
   } else {

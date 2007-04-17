@@ -180,6 +180,10 @@ public:
   void setAnnotation(const Annotation& a) { annotation = a; }
   void completeAnnotation();
 
+  // hook for the marshaler: complete the annotation if necessary, and
+  // return true if the immediate protocol is used.
+  bool isImmediate();
+
   void globalize();     // create coordination proxy
   void localize();      // localize entity
 

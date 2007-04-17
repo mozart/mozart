@@ -44,4 +44,7 @@ void glue_globalizeEntity(TaggedRef entity);
 bool glue_marshalEntity(TaggedRef entity, ByteBuffer *bs);
 bool glue_unmarshalEntity(ByteBuffer *bs, TaggedRef &entity);
 
+// hook for the marshaler: return true if the protocol is immediate
+bool glue_isImmediate(TaggedRef entity);
+
 #endif

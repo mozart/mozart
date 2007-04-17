@@ -296,17 +296,20 @@ protected:
   OzValuePatch *expVars;
   OZ_Term gcExpVars;		// "OZ_Term" version of 'expVars';
 
+  // Support for immutable protocols: when 'immediate' is true, the
+  // next value is marshaled completely; otherwise marshaling is
+  // delegated to the Glue layer.  This is used to send the contents
+  // of an immutable, instead of its identity only.
+  bool immediate;
+
   //
   // Support for lazy protocols: when 'doToplevel' is set to TRUE, a
   // complete representation of the first object (etc.?) is generated,
   // as opposed to its stub.
   Bool doToplevel;
-
-  // Defines wich of the proxy-marshal interfaces to se. 
-  Bool pushTerm;  
   //
 public:
-  DPMarshaler() : doToplevel(FALSE), pushTerm(FALSE) {
+  DPMarshaler() : doToplevel(FALSE), immediate(false) {
     lIT = new AddressHashTableO1Reset(LocationsITInitSize);
     vIT = new MarshalerDict(ValuesITInitSize);
     expVars = (OzValuePatch *) 0;
@@ -363,14 +366,16 @@ public:
   OzValuePatch* getExpVars() { return (expVars); }
   void setExpVars(OzValuePatch *p) { expVars = p; }
 
+  // Support for immutable protocols: the next value will be marshaled
+  // completely
+  bool isImmediate() const { return immediate; }
+  void setImmediate(bool b = true) { immediate = b; }
+
   //
   // Support for lazy protocols: next marshaling will generate a full
   // representation of a top-level object (as opposed to its stub);
   void genFullToplevel() { doToplevel = TRUE; }
   Bool isFullToplevel() { return (doToplevel); }
-
-  void pushContents(){ pushTerm = TRUE;}
-  Bool isPushContents(){ return pushTerm; }
   //
   MarshalerDict *getVIT() { return (vIT); }
 };

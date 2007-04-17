@@ -205,6 +205,11 @@ Mediator::completeAnnotation() {
   }
 }
 
+bool Mediator::isImmediate() {
+  completeAnnotation();
+  return annotation.pn == PN_IMMEDIATE;
+}
+
 void Mediator::globalize() {
   Assert(!isDistributed());
   // Determine full annotation, create a coordination proxy with it,
@@ -849,13 +854,13 @@ ChunkMediator::callback_Read(DssThreadId*, DssOperationId*,
 
 PstOutContainerInterface*
 ChunkMediator::retrieveEntityRepresentation() {
-  SChunk* chunk = static_cast<SChunk*>(getConst());
-  return new PstOutContainer(chunk->getValue());
+  PstOutContainer* pst = new PstOutContainer(getEntity());
+  pst->setImmediate();
+  return pst;
 }
 
 void
 ChunkMediator::installEntityRepresentation(PstInContainerInterface* pst) {
-  SChunk* chunk = static_cast<SChunk*>(getConst());
-  TaggedRef value = static_cast<PstInContainer*>(pst)->a_term;
-  if (!chunk->getValue()) chunk->import(value);
+  // we have nothing to do here, the unmarshaling of the value has
+  // already completed the entity (via its gname)
 }
