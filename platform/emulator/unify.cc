@@ -145,7 +145,17 @@ void oz_bind_global(TaggedRef var, TaggedRef term)
 //
 // kost@ : Variables with GREATER types are bound to variables with
 // SMALLER types;
-#define CMPVAR(v1, v2)		(v1->getType() - v2->getType())
+//#define CMPVAR(v1, v2)		(v1->getType() - v2->getType())
+/**
+   \brief To get the same mozart behavior if a constrain variable is compared, the
+   type to be used is the one of ct variables and not the one of ext variables. In
+   this way we can ensure that unification policies are respected. VAR_CT = 3 and 
+   VAR_EXT = 8 so we have to subtract 5 when comparing a GeVar.
+*/
+#include "GeVar.hh"
+#define CMPVAR(v1,v2) \
+  (oz_isGeVar(v1) ? v1->getType() - 5 : v1->getType()) - ((oz_isGeVar(v2) ?  v2->getType() - 5 : v2->getType()))
+
 
 const StackEntry mark=(StackEntry)-1;
 class UnifyStack : public Stack {
