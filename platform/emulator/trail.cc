@@ -454,16 +454,6 @@ bool Trail::isSpeculating(void) {
       }
       
       if(!oz_currentBoard()->getGenericSpace(true)->isStable()) return true;
-	//return false;
-      
-      //      GeVar<Gecode::VarBase> *vlocal = static_cast<GeVar<Gecode::VarBase>*>(var2ExtVar(v));
-      ////      GeVar<void> *vlocal = static_cast<GeVar<void>*>(var2ExtVar(v));
-      //      GeVar<Gecode::Int::IntVarImpBase> *vlocal = static_cast<GeVar <Gecode::Int::IntVarImpBase>*>(var2ExtVar(v));
-      //vlocal->test2();
-      //Revisar si el espacio de gecode esta estable antes de esto
-      //      if(!vlocal->hasSameDomain(*var)) return true;
-
-      //      vlocal->test2();
 
       GeVarBase *vglobal = static_cast<GeVarBase*>(var2ExtVar(v));
 
@@ -477,11 +467,11 @@ bool Trail::isSpeculating(void) {
       break;
     }
     case Te_Mark: { 
-      printf("Encontre marca \n"); fflush(stdout);
+      //printf("Encontre marca \n"); fflush(stdout);
       return false;
     }
     default: {
-      printf("Entro a default \n"); fflush(stdout);
+
       return true;
     }
     }

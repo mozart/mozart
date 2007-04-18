@@ -82,7 +82,7 @@ bool GeIntVar::intersect(TaggedRef x) {
   IntVar& gv = getIntVarInfo();
   ViewRanges<IntView> gvr(gv);
 
-  IntVar& liv = get_GeIntVar(x)->getIntVarInfo();
+  IntVar& liv = get_IntVarInfo(x);
   IntView vw(liv);
   return (vw.inter(oz_currentBoard()->getGenericSpace(),gvr)==ME_GEN_FAILED ? false: true);
 }
@@ -100,7 +100,7 @@ TaggedRef GeIntVar::clone(TaggedRef v) {
   Assert(OZ_isGeIntVar(v));
   
   OZ_Term lv = new_GeIntVar(IntSet(Limits::Int::int_min,Limits::Int::int_max));
-  get_GeIntVar(v)->intersect(lv);
+  get_GeIntVar(v,false)->intersect(lv);
   return lv;
 }
 
@@ -108,7 +108,7 @@ inline
 bool GeIntVar::hasSameDomain(TaggedRef v) {
   printf("GeIntVar.cc hasSameDomain\n");fflush(stdout);
   Assert(OZ_isGeIntVar(v));
-  IntVar v1 = get_GeIntVar(v)->getIntVarInfo();
+  IntVar v1 = get_IntVarInfo(v);
   ViewRanges< IntView > vr1 (v1);
   ViewRanges< IntView > vr2 (getIntVarInfo());
   
@@ -130,10 +130,8 @@ TaggedRef GeIntVar::newVar(void){
 inline
 bool GeIntVar::IsEmptyInter(TaggedRef* var1,  TaggedRef* var2) {
   
-  GeIntVar* rgeintvar = get_GeIntVar(*var1);
-  GeIntVar* lgeintvar = get_GeIntVar(*var2);
-  IntVar& v1 = lgeintvar->getIntVarInfo();
-  IntVar& v2 = rgeintvar->getIntVarInfo();
+  IntVar& v1 = get_IntVarInfo(*var1);
+  IntVar& v2 = get_IntVarInfo(*var2);
   
   ViewRanges<IntView > vr1 (v1);
   ViewRanges<IntView > vr2 (v2);
