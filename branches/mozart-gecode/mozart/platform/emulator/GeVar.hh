@@ -105,7 +105,7 @@ public:
      \brief Puts a propagator to reflect any change in the variable domain to mozart.
      Should be here or in GeVar??
    */
-  virtual void ensureDomReflection(OZ_Term ref) = 0;
+  virtual void ensureDomReflection(void) = 0;
  
   int getUnifyC(void) { return unifyC; }
 
@@ -283,14 +283,14 @@ public:
      \brief Ensures the existence of a ValRelection propagator on this
      variable and creates it if needed.
   */
-  void ensureValReflection(OZ_Term t);
+  void ensureValReflection(void);
 
   /**
      \brief Ensures the existence of a dom reflection propagator on this
      variable. Creates it if needed. This propagator is used when speculationg 
      (Supervisor Thread) to ensure the suspensions of the variable are kicked off.
   */
-  void ensureDomReflection(OZ_Term t);
+  void ensureDomReflection(void);
   //@}
 };
 
@@ -351,25 +351,31 @@ public:
   // this propagator should never fail
   Gecode::ExecStatus propagate(Gecode::Space* s){
     //printf("Variable determined by gecode....%d\n",index);fflush(stdout);
-    
+
+
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
+
     if (!oz_isGeVar(ref))
       return  Gecode::ES_SUBSUMED;
 
    
     //GeVar<VarImp> *gv = get_GeVar<VarImp>(ref);
-    GeVarBase *gv = get_GeVar(ref);
     
-    GenericSpace *gs = static_cast<GenericSpace*>(s);        
+    GenericSpace *gs = static_cast<GenericSpace*>(s);
+
+
+    GeVarBase *gv = get_GeVar(ref);
     OZ_Term val = gv->getVal();
-    OZ_Return ret = OZ_unify(makeTaggedRef(&ref), val);
-    if (ret == FAILED) return Gecode::ES_FAILED;
-    gs->incDetermined();
+
+    /*    gs->incDetermined();
     if (gv->hasDomReflector()) {
       //printf("decrementing space dom reflection\n");fflush(stdout);
       gs->decForeignProps();
     }
-    gs->decUnifyProps(gv->getUnifyC());
+    gs->decUnifyProps(gv->getUnifyC());    */
+
+    OZ_Return ret = OZ_unify(ref, val);
+    if (ret == FAILED) return Gecode::ES_FAILED;
     
     return Gecode::ES_SUBSUMED;
   }
