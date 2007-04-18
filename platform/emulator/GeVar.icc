@@ -136,7 +136,7 @@ void GeVar<VarImp,pc>::ensureValReflection(OZ_Term ref) {
   s->setVarRef(index,ref);
   VarImp *vip = reinterpret_cast<VarImp*>(s->getVarInfo(index));
   GeView<VarImp> v(vip);
-  new (s) VarReflector<VarImp>(s, v, index);
+  new (s) ValReflector<VarImp>(s, v, index);
 }
 
 
@@ -151,7 +151,7 @@ void GeVar<VarImp,pc>::ensureDomReflection(OZ_Term ref) {
     VarImp *ivp = reinterpret_cast<VarImp*>(s->getVarInfo(index));
     GeView<VarImp> v(ivp);
     //Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
-    new (s) VarInspector<VarImp,pc>(s,v,index);
+    new (s) DomReflector<VarImp,pc>(s,v,index);
     s->incForeignProps();
     hasDomRefl = true;
   }

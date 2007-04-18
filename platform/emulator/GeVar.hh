@@ -320,26 +320,28 @@ GeVarBase* get_GeVar(OZ_Term v) {
   return static_cast<GeVarBase*>(ev);
 }
 
-// This Gecode propagator reflects a Gecode variable assignment inside
-// Mozart.
+/**
+   \brief This Gecode propagator reflects a Gecode variable assignment inside
+   Mozart. It wakes up upon determination, and bind Oz variable
+*/
 template <class VarImp>
-class VarReflector :
+class ValReflector :
   public Gecode::UnaryPropagator<GeView<VarImp>, Gecode::PC_GEN_ASSIGNED>
 {
 protected:
   int index;
 
 public:
-  VarReflector(GenericSpace* s, GeView<VarImp> v, int idx) :
+  ValReflector(GenericSpace* s, GeView<VarImp> v, int idx) :
     Gecode::UnaryPropagator<GeView<VarImp>, Gecode::PC_GEN_ASSIGNED>(s, v),
     index(idx) {}
 
-  VarReflector(GenericSpace* s, bool share, VarReflector& p) :
+  ValReflector(GenericSpace* s, bool share, ValReflector& p) :
     Gecode::UnaryPropagator<GeView<VarImp>, Gecode::PC_GEN_ASSIGNED>(s, share, p),
     index(p.index) {}
 
   virtual Gecode::Actor* copy(Gecode::Space* s, bool share) {
-    return new (s) VarReflector(static_cast<GenericSpace*>(s), share, *this);
+    return new (s) ValReflector(static_cast<GenericSpace*>(s), share, *this);
   }
 
   virtual OZ_Term getVarRef(GenericSpace* s) {
@@ -374,24 +376,25 @@ public:
 };
 
 /*
-  This Gecode propagator reflects variable's domain changes to mozart.
+  \brief This Gecode propagator reflects variable's domain changes to mozart.
+  It wakes up upon domain change, and kicks suspensions.
 */
 template <class VarImp, Gecode::PropCond pc>
-class VarInspector :
+class DomReflector :
   public Gecode::UnaryPropagator<GeView<VarImp>, pc>
 {
 protected:
   int index;
   
 public:
-  VarInspector(GenericSpace* s, GeView<VarImp> v, int idx) :
+  DomReflector(GenericSpace* s, GeView<VarImp> v, int idx) :
     Gecode::UnaryPropagator<GeView<VarImp>, pc>(s, v), index(idx) { }
 
-  VarInspector(GenericSpace* s, bool share, VarInspector& p) :
+  DomReflector(GenericSpace* s, bool share, DomReflector& p) :
     Gecode::UnaryPropagator<GeView<VarImp>, pc>(s, share, p), index(p.index) {}
 
   virtual Gecode::Actor* copy(Gecode::Space* s, bool share) {
-    return new (s) VarInspector(static_cast<GenericSpace*>(s), share, *this);
+    return new (s) DomReflector(static_cast<GenericSpace*>(s), share, *this);
   }
 
   virtual OZ_Term getVarRef(GenericSpace* s) {return s->getVarRef(index); }
