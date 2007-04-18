@@ -56,7 +56,6 @@ OZ_BI_define(int_eq,3,0)
 OZ_BI_define(int_rel,4,0) {
   DeclareGSpace(gesp1);
 
-  //  cout<<"rell ---. "<<oz_isLocalVar(get_GeIntVar(OZ_in(0)))<<endl; fflush(stdout);
   int consistencyLevel,relType; 
   if(!OZ_isInt(OZ_in(3))) {
     RAISE_EXCEPTION("The last value must be the consistency level: relProp");

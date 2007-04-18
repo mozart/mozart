@@ -63,9 +63,8 @@
 
 
 #define DeclareGSpace(sp) GenericSpace *sp = oz_currentBoard()->getGenericSpace();
-#define get_Space(t) extVar2Var(get_GeIntVar(t))->getBoardInternal()->getGenericSpace()
 
-#define DeclareGeIntVar2(p,v,sp)					        \
+#define DeclareGeIntVar2(p,v,sp)					\
   IntVar v;                                                             \
   if(OZ_isInt(OZ_in(p))) {						\
     OZ_declareInt(p,domain);						\
@@ -73,13 +72,14 @@
     v=_tmp;								\
   }									\
   else if(OZ_isGeIntVar(OZ_in(p))) {					\
-    checkGlobalVar(OZ_in(p));                   \
     v = get_IntVar(OZ_in(p));						\
-    /*if(sp != get_Space(OZ_in(p)))					\
-      RAISE_EXCEPTION("The variables are in differents spaces");*/	\
   }									\
   else RAISE_EXCEPTION("The variables must be either GeIntVar or int");
 
+/*
+  This macro declares a variable without comprising space stability.
+  It must be used from functions that no require further propagation.
+*/
 #define DeclareGeIntVar1(p,v)					\
   IntVar v;							\
   { TaggedRef x = OZ_in(p);					\
@@ -95,8 +95,7 @@
       v=_tmp;							\
     }								\
     else if(OZ_isGeIntVar(x)) {					\
-      checkGlobalVar(x);					\
-      v = get_IntVar(x);					\
+      v = get_IntVarInfo(x);					\
     } else							\
       RAISE_EXCEPTION("Type error: Expected IntVar");		\
   }
@@ -115,41 +114,34 @@
     v=_tmp;								\
   }									\
   else if(OZ_isGeIntVar(OZ_in(p))) {					\
-    checkGlobalVar(OZ_in(p));						\
     v = get_IntVar(OZ_in(p));						\
-    /*if(sp != get_Space(OZ_in(p)))					\
-      RAISE_EXCEPTION("The variables are in differents spaces");*/	\
   }									\
   else RAISE_EXCEPTION("The variables must be either GeIntVar or int");
 
 
-#define DeclareGeIntVarT2(val,ar,i)					\ 
-{  TaggedRef x = val;							\
-  DEREF(x,x_ptr);							\
-  Assert(!oz_isRef(x));							\
-  if (oz_isFree(x)) {							\
-    printf("suspending for simple var\n");fflush(stdout);		\
-    oz_suspendOn(makeTaggedRef(x_ptr));					\
-  }									\
-  printf("resuming for simple var\n");fflush(stdout);			\
-  if(OZ_isInt(val)) {							\
-    int domain=OZ_intToC(val);						\
-    ar[i].init(sp,domain,domain);					\
-  }									\
-  else if(OZ_isGeIntVar(val)) { 					\
-      checkGlobalVar(val);						\
-      ar[i]=get_IntVar(val);						\
-  }									\
+#define DeclareGeIntVarT2(val,ar,i)				\
+{  TaggedRef x = val;						\
+  DEREF(x,x_ptr);						\
+  Assert(!oz_isRef(x));						\
+  if (oz_isFree(x)) {						\
+    printf("suspending for simple var\n");fflush(stdout);	\
+    oz_suspendOn(makeTaggedRef(x_ptr));				\
+  }								\
+  printf("resuming for simple var\n");fflush(stdout);		\
+  if(OZ_isInt(val)) {						\
+    int domain=OZ_intToC(val);					\
+    ar[i].init(sp,domain,domain);				\
+  }								\
+  else if(OZ_isGeIntVar(val)) {					\
+      ar[i]=get_IntVar(val);					\
+  }								\
 }
 
 #define DECLARE_INTVARARRAY(sp,array,tIn)  		\
-/*DeclareGSpace(sp);*/                                  \
 IntVarArray array;					\
 {							\
   int sz;						\
-  /*OZ_declareTerm(tInt,t);*/				\
   OZ_Term t = OZ_deref(OZ_in(tIn));                     \
-  /*OZ_Term t = tIn; */   \
   if(OZ_isLiteral(t)) {					\
     sz=0;						\
     Gecode::IntVarArray _array((Gecode::Space*)sp,sz);		\
@@ -182,14 +174,5 @@ IntVarArray array;					\
     array=_array;                                       \
     }							\
 }
-
-
-/*void DECLARE_INTVARARRAY_PRO(GenericSpace *sp, Gecode::IntVarArray &array, OZ_Term tIn);
-
-
-#define DECLARE_INTVARARRAY(sp,array,tIn) \
- Gecode::IntVarArray array; \
- DECLARE_INTVARARRAY_PRO(sp,array,oz_deref(OZ_in(tIn)));
-*/
 
 #endif
