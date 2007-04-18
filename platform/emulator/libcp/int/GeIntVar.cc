@@ -146,15 +146,12 @@ bool GeIntVar::IsEmptyInter(TaggedRef* var1,  TaggedRef* var2) {
   }
 }
 
-#include <iostream>
-#include <sstream>
-#include <string>
-
-void GeIntVar::printStreamV(ostream &out,int depth) {
+void GeIntVar::toStream(ostream &out) {
   std::stringstream oss;
   oss << getIntVarInfo();
   out << "<GeIntVar " << oss.str().c_str() << ">"; 
 }
+  
 
 void module_init_geintvar(void){
   
