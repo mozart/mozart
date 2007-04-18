@@ -133,7 +133,7 @@ inline OZ_Term new_GeIntVar(const IntSet& dom) {
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
   int index        = sp->newVar(static_cast<VarBase*>(x.variable()), ref);
 
-  nv->ensureValReflection(ref);
+  nv->ensureValReflection();
   return ref;
 }
 

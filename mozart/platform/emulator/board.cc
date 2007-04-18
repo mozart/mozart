@@ -428,7 +428,7 @@ void Board::clearSuspList(Suspendable * killSusp) {
  */
 
 void Board::checkStability(void) {
-  printf("Board::checkStability \n"); fflush(stdout);
+  //  printf("Board::checkStability \n"); fflush(stdout);
   Assert(!isRoot() && !isFailed() && !isCommitted());
   Assert(this == oz_currentBoard());
   crt--;
@@ -473,8 +473,6 @@ void Board::checkStability(void) {
 
 	if(gespace!=NULL) {
 	  bool testGe = getGenericSpace(true)->isEntailed();
-	  printf("VAL: %d genSuc: %d\n",testGe,getSuspCount()); fflush(stdout);
-
  	  bindStatus(genSucceeded( (getSuspCount() == 0 && testGe) ) );
 	}
 	else {
@@ -546,7 +544,7 @@ void Board::fail(void) {
 
 OZ_Return Board::installScript(Bool isMerging)
 {
-  printf("installScript on board: %p\n",this); fflush(stdout);
+  //  printf("installScript on board: %p\n",this); fflush(stdout);
   TaggedRef xys = oz_deref(script);
 
   setScript(oz_nil());
@@ -586,40 +584,7 @@ OZ_Return Board::installScript(Bool isMerging)
     if (oz_isGeVar(x)||oz_isGeVar(y))
       Board::ignoreWakeUp(NO);
 
-    
-    //x is the global var,  y is the local one
-    if (oz_isGeVar(x)) {
-      //      GeVar<void> *tmpVar = static_cast<GeVar<void>*>(oz_getExtVar(oz_deref(x)));
-      GeVarBase *tmpVar = static_cast<GeVarBase*>(oz_getExtVar(oz_deref(x)));
-      TaggedRef *xpt = tagged2Ref(x);
-      TaggedRef xaux = x;
-      if (oz_isGeVar(y)) {
-	//	GeVar<void> *tmpVar2 = static_cast<GeVar<void>*>(var2ExtVar(tagged2Var(oz_deref(y))));
-	GeVarBase *tmpVar2 = static_cast<GeVarBase*>(var2ExtVar(tagged2Var(oz_deref(y))));
-	printf(" install %s  \n",oz_varGetName(x));fflush(stdout);        
-	if (oz_isLocalVar(tagged2Var(oz_deref(y)))) {
-	  res = oz_unify(x,gespace->getVarRef(tmpVar2->getIndex()));	
-	  //printf(" install end %s  %d\n",oz_varGetName(x),res);fflush(stdout);    
-	} else {
-	  res = oz_unify(x,y);	
-	  //printf(" install end-otro %s  %d\n",oz_varGetName(x),res);fflush(stdout); 
-	}
-      }
-      //Igual toca intersectar el valor local y con la variable global x
-      else { 
-	printf("Su madre GeVar-Simple\n");fflush(stdout);
-	//PAra que se hace esto si al final hay un if donde se pregunta 
-	//si y es entero y se llama a la unificacion
-	Assert(!oz_isVarOrRef(oz_deref(y)));
-	res = oz_unify(x,y);}
-       
-      //No siempre es verdadero este invariante porque la variable local puede estar determinada
-      //Esto no puede ser solo si es Int,  debe es mejor si esta determinado.
-      
-      if(!oz_isVarOrRef(oz_deref(y))) 
-	res = oz_unify(x,y);
-    } else 
-      res = oz_unify(x,y);
+    res = oz_unify(x,y);
     
     Board::ignoreWakeUp(NO);
     if (res != PROCEED) {

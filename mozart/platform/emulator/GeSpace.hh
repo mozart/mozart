@@ -232,6 +232,16 @@ private:
 
   static unsigned long int unused_uli;
 
+  /// \name Reference access
+  //@{  
+  /** 
+   * \brief Set the reference to the corresponding variable in Mozart
+   * 
+   * @param n Variable index 
+   * @param OZ_Term Heap reference
+   */
+  void setVarRef(int n,OZ_Term);
+
 public:
   
   static int gscounter;
@@ -335,16 +345,6 @@ public:
   Gecode::VarBase* getVarInfo(int n);
 
   //@}
-
-  /// \name Reference access
-  //@{  
-  /** 
-   * \brief Set the reference to the corresponding variable in Mozart
-   * 
-   * @param n Variable index 
-   * @param OZ_Term Heap reference
-   */
-  void setVarRef(int n,OZ_Term);
 
   /** 
    * \brief Get the reference to the heap of the corresponding variable
