@@ -231,7 +231,7 @@ TaggedRef Trail::unwind(Board * b) {
 	  if(oz_isGeVar(*refPtr)) {
 	    printf("ENSURE DOM REFLECTION \n"); fflush(stdout);
 	    GeVarBase *vglobal = get_GeVar(*refPtr);
-	    vglobal->ensureDomReflection(*refPtr);
+	    vglobal->ensureDomReflection();
 	  }
 	  if(!b->getLateThread()) { printf("YA NO HAY UN LATE THREAD PILAS\n"); fflush(stdout); }
 	  if(b->getLateThread()) { printf("hilo supervisor lateThread \n"); fflush(stdout); 
