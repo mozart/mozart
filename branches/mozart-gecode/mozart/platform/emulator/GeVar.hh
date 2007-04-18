@@ -188,7 +188,23 @@ public:
   virtual int varprops(void) { return hasDomRefl+unifyC+1; }
   
   virtual void printDomain(void) = 0;
-  
+
+  /// \name Variable Display
+  //@{
+private:
+  /**
+     \brief Puts in out a textual representation of the variable.
+   */
+  virtual void toStream(ostream &out) = 0;
+public:
+  /**
+     \brief Called from Inspector to display variables. This method is 
+    also called by Show but it does not needs reflection because of its
+    nature.
+   */
+  void printStreamV(ostream &out,int depth);
+  //@}
+
   virtual void disposeV() {
     disposeS();     // free susplist
     // here we can free the memory taken by the variable itself (if we

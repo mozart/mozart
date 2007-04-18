@@ -62,6 +62,11 @@ public:
   virtual void printDomain(void) {
     IntVar tmp = getIntVarInfo();
   }
+  
+  /**
+     \brief Put in out a text representation of the variable.
+   */
+  void toStream(ostream &out);
 
   GeVarType type() { return getType(); }
 
@@ -77,7 +82,7 @@ public:
    * @param v An OZ_Term containing a possible value of the variable domain
    */ 
   virtual OZ_Term       statusV();
-  virtual void printStreamV(ostream &out,int depth);
+  //  virtual void printStreamV(ostream &out,int depth);
   virtual VarBase* clone(void);
   virtual bool intersect(TaggedRef x);
   

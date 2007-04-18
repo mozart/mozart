@@ -126,13 +126,20 @@ public:
     return vars.size();
   }
 
-  OZ_Term *getRef(int n) { return &(refs[n]); }
+  OZ_Term *getRef(int n) { 
+    Assert(n >= 0 && n < vars.size());
+    return &(refs[n]); 
+  }
 
   Gecode::VarBase& getVar(int n) {
+    Assert(n >= 0 && n < vars.size());
     return *vars[n];
   }
 
-  void setRef(int n, OZ_Term t) { refs[n] = t; }
+  void setRef(int n, OZ_Term t) { 
+    Assert(n >= 0 && n < vars.size());
+    refs[n] = t; 
+  }
 };
 
 // Garbage collection related stuff 

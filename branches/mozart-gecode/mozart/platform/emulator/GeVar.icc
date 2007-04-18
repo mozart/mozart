@@ -114,8 +114,6 @@ OZ_Return GeVar<VarImp,pc>::bindV(TaggedRef* vPtr, TaggedRef val) {
       Gecode::ModEvent me = bind(s,this,val);
       Assert(!Gecode::me_failed(me));
       
-      //unsigned long alt = 0; //useless variable
-
       if(s->status() == Gecode::SS_FAILED) {
 	extVar2Var(this)->getBoardInternal()->setFailed();
 	return FAILED;
@@ -134,19 +132,14 @@ OZ_Return GeVar<VarImp,pc>::bindV(TaggedRef* vPtr, TaggedRef val) {
       // global binding...
       oz_bindGlobalVar(extVar2Var(this), vPtr, val);
     }
-
     return PROCEED;
-
-    // then bind the IntVar in the GenericSpace
   }
   return OZ_FAILED;
 }
 
-// ojo con el tipo. OZ_isGeIntVar()
 template <class VarImp, Gecode::PropCond pc> 
 inline
 void GeVar<VarImp,pc>::ensureValReflection(void) {
-  //Assert(OZ_isGeVar(ref));
   GenericSpace *s = getGSpace();
   VarImp *vip = reinterpret_cast<VarImp*>(s->getVarInfo(index));
   GeView<VarImp> v(vip);
@@ -157,15 +150,21 @@ void GeVar<VarImp,pc>::ensureValReflection(void) {
 template <class VarImp, Gecode::PropCond pc>
 inline
 void GeVar<VarImp,pc>::ensureDomReflection(void) {
-  //Assert(OZ_isGeIntVar(ref));
   if (!hasDomRefl) {
     GenericSpace *s = getGSpace();
-    // post the dom reflector propagator
     VarImp *ivp = reinterpret_cast<VarImp*>(s->getVarInfo(index));
     GeView<VarImp> v(ivp);
-    //Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
     new (s) DomReflector<VarImp,pc>(s,v,index);
     s->incForeignProps();
     hasDomRefl = true;
   }
+}
+
+#include <sstream>
+
+template <class VarImp, Gecode::PropCond pc>
+void GeVar<VarImp,pc>::printStreamV(ostream &out,int depth) {
+  printf("GeVar->printStreamV\n");fflush(stdout);
+  ensureDomReflection();
+  toStream(out);
 }
