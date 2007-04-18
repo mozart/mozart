@@ -405,19 +405,15 @@ public:
 
 #include "GeVar.icc"
 
-
 inline
 void checkGlobalVar(OZ_Term v) {
   // Why this comparison is made with ints?
   //cout<<"Inicio check: "<<oz_isInt(v)<<endl; fflush(stdout);
   Assert(oz_isGeVar(v));
-  
   ExtVar *ev = oz_getExtVar(oz_deref(v));
   if (!oz_isLocalVar(ev)) {
-    //    TaggedRef nlv = static_cast<GeVar<VarImp>*>(ev)->clone(v);
     TaggedRef nlv = static_cast<GeVarBase*>(ev)->clone(v);
     ExtVar *varTmp = var2ExtVar(tagged2Var(oz_deref(nlv)));
-    //GeVar<VarImp> *gvar = static_cast<GeVar<VarImp>*>(varTmp);
     GeVarBase *gvar = static_cast<GeVarBase*>(varTmp);
     
     //meter al trail v [v]
@@ -426,6 +422,17 @@ void checkGlobalVar(OZ_Term v) {
     Assert(oz_isVar(nlvAux));
     oz_unify(v,nlv);
   }
+}
+
+
+template <class VarImp, Gecode::PropCond pc>
+inline
+GeVar<VarImp,pc>* get_GeVar(OZ_Term v, bool cgv = true) {
+  if (cgv) checkGlobalVar(v);
+  OZ_Term ref = OZ_deref(v);
+  Assert(oz_isGeVar(ref));
+  ExtVar *ev = oz_getExtVar(ref);
+  return static_cast<GeVar<VarImp,pc>*>(ev);
 }
 
 #endif

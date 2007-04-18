@@ -153,16 +153,18 @@ bool OZ_isGeIntVar(OZ_Term v) {
 }
 
 // get the GeIntVar inside the OZ_Term v
-inline GeIntVar* get_GeIntVar(OZ_Term v) {
-  OZ_Term ref = OZ_deref(v);
-  Assert(OZ_isGeIntVar(ref));
-  ExtVar *ev = oz_getExtVar(ref);
-  return static_cast<GeIntVar*>(ev);
+inline
+GeIntVar* get_GeIntVar(OZ_Term v, bool cgv = true) {
+  return static_cast<GeIntVar*>(get_GeVar<IntVarImp,PC_INT_DOM>(v,cgv));
 }
 
 // get the IntVar from the OZ_Term v
 inline IntVar& get_IntVar(OZ_Term v) {
-  return get_GeIntVar(v)->getIntVar();
+    return get_GeIntVar(v)->getIntVar();
+}
+
+inline IntVar& get_IntVarInfo(OZ_Term v) {
+  return get_GeIntVar(v)->getIntVarInfo();
 }
 
 void module_init_geintvar(void);
