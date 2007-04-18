@@ -32,9 +32,6 @@
 using namespace Gecode;
 using namespace Gecode::Int;
 
-
-
-
 Bool GeIntVar::validV(OZ_Term val) {
   // BigInts cannot be represented by normal c int type. 
   // SmallInts are just c ints so we only allow that kind of integer values
@@ -66,7 +63,7 @@ OZ_Term GeIntVar::statusV() {
 
 
 VarBase* GeIntVar::clone(void) {
-  GenericSpace* gs = extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
+  GenericSpace* gs = getGSpace(); //extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
   Assert(gs);
   IntVar &v = getIntVarInfo();
   IntVar x;
@@ -84,6 +81,7 @@ bool GeIntVar::intersect(TaggedRef x) {
 
   IntVar& liv = get_IntVarInfo(x);
   IntView vw(liv);
+  //Ask Alejandro about the use of getGSpace() instead of oz_currentBoard()
   return (vw.inter(oz_currentBoard()->getGenericSpace(),gvr)==ME_GEN_FAILED ? false: true);
 }
 
@@ -121,9 +119,9 @@ bool GeIntVar::hasSameDomain(TaggedRef v) {
 }
 
 inline
-TaggedRef GeIntVar::newVar(void){
+TaggedRef GeIntVar::newVar(void) {
   return new_GeIntVar(IntSet(Limits::Int::int_min,
-				     Limits::Int::int_max));
+			     Limits::Int::int_max));
 }
 
 
@@ -153,7 +151,6 @@ bool GeIntVar::IsEmptyInter(TaggedRef* var1,  TaggedRef* var2) {
 #include <string>
 
 void GeIntVar::printStreamV(ostream &out,int depth) {
-  // Falta parametro de getIntVarInfo??
   std::stringstream oss;
   oss << getIntVarInfo();
   out << "<GeIntVar " << oss.str().c_str() << ">"; 

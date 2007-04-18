@@ -61,7 +61,6 @@ public:
 
   virtual void printDomain(void) {
     IntVar tmp = getIntVarInfo();
-    //cout<<"tmp ---> ["<<tmp.min()<<", "<<tmp.max()<<"]"<<endl; fflush(stdout);
   }
 
   GeVarType type() { return getType(); }
@@ -135,12 +134,13 @@ inline OZ_Term new_GeIntVar(const IntSet& dom) {
   int index        = sp->newVar(static_cast<VarBase*>(x.variable()), ref);
 
   nv->ensureValReflection(ref);
-  //  nv->ensureDomReflection(ref);
- 
   return ref;
 }
 
-// test whether v is a var reference to a GeIntVar
+/**
+   \brief Checks if the OZ_Term v represents a integer constraint
+   variable in the store.
+ */
 inline 
 bool OZ_isGeIntVar(OZ_Term v) { 
   OZ_Term v_local = OZ_deref(v);
@@ -153,16 +153,30 @@ bool OZ_isGeIntVar(OZ_Term v) {
 }
 
 // get the GeIntVar inside the OZ_Term v
+/**
+   \brief Retrieves a GeIntVar from an OZ_Term. cgv parameter indicates
+   if checking for globality needs to be performed.
+*/
 inline
 GeIntVar* get_GeIntVar(OZ_Term v, bool cgv = true) {
+  Assert(OZ_isGeIntVar(v));
   return static_cast<GeIntVar*>(get_GeVar<IntVarImp,PC_INT_DOM>(v,cgv));
 }
 
-// get the IntVar from the OZ_Term v
+/**
+   \brief Retrieve gecode variable from an OZ_Term afecting 
+   space stability. A call to this method will make the gecode
+   space unstable.
+*/
 inline IntVar& get_IntVar(OZ_Term v) {
     return get_GeIntVar(v)->getIntVar();
 }
 
+/**
+   \brief Retrieve gecode variable from an OZ_Term without afecting 
+   space stability. A call to this method will not make the gecode
+   space unstable.
+*/
 inline IntVar& get_IntVarInfo(OZ_Term v) {
   return get_GeIntVar(v)->getIntVarInfo();
 }
