@@ -185,8 +185,6 @@ public:
     return gs;
   }
 
- 
-
   virtual int varprops(void) { return hasDomRefl+unifyC+1; }
   
   virtual void printDomain(void) = 0;
@@ -280,32 +278,45 @@ public:
       \brief Tests whether this GeVar represents an assigned variable.
   */
   virtual bool assigned(void) = 0;
-  //virtual OZ_Term getVal(void) = 0;
+  
+  /**
+     \brief Ensures the existence of a ValRelection propagator on this
+     variable and creates it if needed.
+  */
   void ensureValReflection(OZ_Term t);
+
+  /**
+     \brief Ensures the existence of a dom reflection propagator on this
+     variable. Creates it if needed. This propagator is used when speculationg 
+     (Supervisor Thread) to ensure the suspensions of the variable are kicked off.
+  */
   void ensureDomReflection(OZ_Term t);
   //@}
 };
 
+/**
+   \brief Tests if v contains a Gecode Variale.
+*/
 inline
 bool oz_isGeVar(OzVariable *v) {
   if ( v->getType() != OZ_VAR_EXT ) return false;
   return var2ExtVar(v)->getIdV() == OZ_EVAR_GEVAR;
 }
 
+/**
+   \brief Tests if the OZ_Term t represents a Gecode variable.
+*/
 inline 
 bool oz_isGeVar(OZ_Term t) {
   OZ_Term dt = OZ_deref(t);
   return oz_isExtVar(dt) && oz_getExtVar(dt)->getIdV() == OZ_EVAR_GEVAR;
 }
 
-//template <class VarImp>
 inline 
-//GeVar<VarImp>* get_GeVar(OZ_Term v) {
 GeVarBase* get_GeVar(OZ_Term v) {
   OZ_Term ref = OZ_deref(v);
   Assert(oz_isGeVar(ref));
   ExtVar *ev = oz_getExtVar(ref);
-  //  return static_cast<GeVar<VarImp>*>(ev);
   return static_cast<GeVarBase*>(ev);
 }
 
@@ -416,7 +427,7 @@ void checkGlobalVar(OZ_Term v) {
     ExtVar *varTmp = var2ExtVar(tagged2Var(oz_deref(nlv)));
     GeVarBase *gvar = static_cast<GeVarBase*>(varTmp);
     
-    //meter al trail v [v]
+    //put v [v] in the trail
     TaggedRef nlvAux = oz_deref(nlv);
 
     Assert(oz_isVar(nlvAux));
