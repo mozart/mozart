@@ -149,12 +149,11 @@ void oz_bind_global(TaggedRef var, TaggedRef term)
 /**
    \brief To get the same mozart behavior if a constrain variable is compared, the
    type to be used is the one of ct variables and not the one of ext variables. In
-   this way we can ensure that unification policies are respected. VAR_CT = 3 and 
-   VAR_EXT = 8 so we have to subtract 5 when comparing a GeVar.
+   this way we can ensure that unification policies are respected.
 */
-#include "GeVar.hh"
+#define GEVAR(v) (v->getType() == OZ_VAR_EXT) && (var2ExtVar(v)->getIdV() == OZ_EVAR_GEVAR)
 #define CMPVAR(v1,v2) \
-  (oz_isGeVar(v1) ? v1->getType() - 5 : v1->getType()) - ((oz_isGeVar(v2) ?  v2->getType() - 5 : v2->getType()))
+  (GEVAR(v1) ? OZ_VAR_CT : v1->getType()) - ((GEVAR(v2) ?  OZ_VAR_CT : v2->getType()))
 
 
 const StackEntry mark=(StackEntry)-1;
