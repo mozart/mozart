@@ -66,6 +66,15 @@ void Trail::pushVariable(TaggedRef * varPtr) {
 
 }
 
+void Trail::pushGeVariable(TaggedRef *varPtr) {
+  Assert(oz_isGeVar(*varPtr));
+
+  ensureFree(3);
+  Stack::push((StackEntry) varPtr,             NO);
+  Stack::push((StackEntry) ToPointer(*varPtr), NO);
+  Stack::push((StackEntry) Te_GeVariable,      NO);
+}
+
 void Trail::pushMark(void) {
   // All variables marked as trailed must be unmarked!
 
@@ -141,6 +150,14 @@ void Trail::popVariable(TaggedRef *&varPtr, OzVariable *&orig) {
   varPtr = (TaggedRef *)  Stack::pop();
 }
 
+inline
+void Trail::popGeVariable(TaggedRef *&val, TaggedRef &old) {
+  Assert(getTeType() == Te_GeVariable);
+  (void) Stack::pop();
+  old = (TaggedRef) ToInt32(Stack::pop());
+  val = (TaggedRef*) Stack::pop();
+}
+
 void Trail::popMark(void) {
   Assert(isEmptyChunk());
   (void) Stack::pop();
@@ -210,30 +227,47 @@ TaggedRef Trail::unwind(Board * b) {
 	DEREF(vv,vvPtr);
 
 	Assert(!oz_isRef(vv));
-	/*	if (hasNoRunnable && oz_isVarOrRef(vv) && !oz_var_hasSuspAt(vv,b)) {
+	if (hasNoRunnable && oz_isVarOrRef(vv) && !oz_var_hasSuspAt(vv,b)) {
 	  AssureThread;
 	  oz_var_addSusp(vvPtr,t);
-	  }*/
-	//TaggedRef * tmp = newTaggedRef(refPtr);
-	//printf("unwind refPtr=%d *refPtr=%d\n",refPtr,&(*refPtr));fflush(stdout);
+	}
+
 	unBind(refPtr, value);
-	//printf("unwind desp refPtr=%d *refPtr=%d\n",refPtr,*refPtr );fflush(stdout);
-	//unBind(tmp, value);
 	
 	// value is always global variable, so add always a thread;
-	/*if (hasNoRunnable && !oz_var_hasSuspAt(*refPtr,b)) {
+	if (hasNoRunnable && !oz_var_hasSuspAt(*refPtr,b)) {
 	  AssureThread;
 	  if (oz_var_addSusp(refPtr,t)!=SUSPEND) {
 	    Assert(0);
 	  }
-	  }*/
+	}
+	break;
+      }
+      case Te_GeVariable: {
+	TaggedRef * refPtr, value;
+	
+	popGeVariable(refPtr, value);
+	Assert(oz_isRef(*refPtr) || !oz_isVar(*refPtr));
+	Assert(oz_isGeVar(value));
+
+	s = oz_cons(oz_cons(makeTaggedRef(refPtr),*refPtr),s);
+	
+	TaggedRef vv= *refPtr;
+	DEREF(vv,vvPtr);
+
+	Assert(!oz_isRef(vv));
+
+	unBind(refPtr, value);
+	
 	if(hasNoRunnable && !oz_var_hasSuspAt(*refPtr,b)) {
 	  if(oz_isGeVar(*refPtr)) {
-	    printf("ENSURE DOM REFLECTION \n"); fflush(stdout);
+	    //	    printf("ENSURE DOM REFLECTION \n"); fflush(stdout);
 	    GeVarBase *vglobal = get_GeVar(*refPtr);
 	    vglobal->ensureDomReflection();
 	  }
+
 	  if(!b->getLateThread()) { printf("YA NO HAY UN LATE THREAD PILAS\n"); fflush(stdout); }
+
 	  if(b->getLateThread()) { printf("hilo supervisor lateThread \n"); fflush(stdout); 
 	    if (oz_var_addSusp(refPtr,b->getLateThread()) != SUSPEND ) {
 	      Assert(0);
@@ -244,10 +278,11 @@ TaggedRef Trail::unwind(Board * b) {
 	    AssureThread;
 	    oz_var_addSusp(refPtr,t);
 	  }
-	}	
-	printf("Termino unwind Te_Bind \n"); fflush(stdout);
+	}
+	printf("Termino unwind Te_GeVariable \n"); fflush(stdout);
 	break;
       }
+	
       case Te_Variable: {
 	//printf("Te_Variable\n");fflush(stdout);
 	TaggedRef * varPtr;
@@ -297,9 +332,9 @@ TaggedRef Trail::unwindGeVar(Board * b) {
     
     while(!isEmptyChunk()) {
       switch (getTeType()) {
-      case Te_Bind: {
+      case Te_GeVariable: {
 	TaggedRef *refPtr, value;
-	popBind(refPtr, value);
+	popGeVariable(refPtr, value);
 	Assert(oz_isRef(*refPtr) || !oz_isVar(*refPtr));
 	//	Assert(oz_isVar(value));
 
@@ -336,6 +371,13 @@ void Trail::unwindFailed(void) {
       break;
     }
 
+    case Te_GeVariable: {
+      TaggedRef *refPtr;
+      TaggedRef value;
+      popGeVariable(refPtr,value);
+      unBind(refPtr,value);
+      break;
+    }
     case Te_Variable: {
       TaggedRef * varPtr;
       OzVariable * copy;
@@ -394,6 +436,28 @@ void Trail::unwindEqEq(void) {
       break;
     }
 
+    case Te_GeVariable: {
+      TaggedRef *refPtr;
+      TaggedRef value;
+      popGeVariable(refPtr,value);
+
+      Assert(oz_isVar(value));
+
+      TaggedRef oldVal = makeTaggedRef(refPtr);
+      DEREF(oldVal,ptrOldVal);
+
+      unBind(refPtr,value);
+
+      Assert(!oz_isRef(oldVal));
+
+      if (oz_isVarOrRef(oldVal))
+	(void) oz_addSuspendVarList(ptrOldVal);
+
+      (void) oz_addSuspendVarList(refPtr);
+
+      break;
+    }
+
     case Te_Variable: {
       TaggedRef * varPtr;
       OzVariable * copy;
@@ -434,8 +498,8 @@ bool Trail::isSpeculating(void) {
 
     switch ( (TeType)(int)*top )  {
       
-    case Te_Bind: {
-      printf("isSpeculing Te_Bind \n"); fflush(stdout);
+    case Te_GeVariable: {
+      printf("isSpeculing Te_GeVariable \n"); fflush(stdout);
       TaggedRef *var = (TaggedRef*) * (top-2);
 
 
@@ -445,7 +509,10 @@ bool Trail::isSpeculating(void) {
       //pilas con esta condición tiene que ser un invariante cuando separemos pushBind de pushGeVariable
       /*      if(!oz_isGeVar(*var))  { printf("!oz_isGeVar(*var)\n"); fflush(stdout); return true; } */
 
-      printf("DESPUES ddel maldito if \n"); fflush(stdout);
+      //local variable should be a GeVariable
+      Assert(oz_isGeVar(*var));
+
+      //      printf("DESPUES ddel maldito if \n"); fflush(stdout);
       TaggedRef tvar = (TaggedRef) ToInt32(* (top-1) );
       OzVariable *v = tagged2Var(tvar);
       
@@ -463,7 +530,7 @@ bool Trail::isSpeculating(void) {
 
       if(!vglobal->hasSameDomain(*var)) { return true; }
 
-      printf("isGeVar Te_Bind \n"); fflush(stdout);
+      printf("isGeVar Te_GeVariable \n"); fflush(stdout);
       break;
     }
     case Te_Mark: { 
