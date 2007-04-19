@@ -183,7 +183,7 @@ inline IntVar& get_IntVar(OZ_Term v) {
    space unstable.
 */
 inline IntVar& get_IntVarInfo(OZ_Term v) {
-  return get_GeIntVar(v)->getIntVarInfo();
+  return get_GeIntVar(v,false)->getIntVarInfo();
 }
 
 void module_init_geintvar(void);
