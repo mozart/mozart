@@ -78,7 +78,8 @@ void oz_bindGlobalVar2(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
   oz_checkSuspensionList(ov, pc_std_unif);
   oz_checkSuspensionList(tagged2Var(oz_deref(term)), pc_std_unif);
   
-  trail.pushBind(varPtr);
+  //  trail.pushBind(varPtr);
+  trail.pushGeVariable(varPtr);
   //printf("oz_bindGlobalVar  = %s -- varPtr=%d *varPtr=%d term=%d\n",oz_varGetName(makeTaggedRef(varPtr)),varPtr,*varPtr,term);fflush(stdout);
   doBind(varPtr,term);
   //printf("oz_bindGlobalVar22  = %s varPtr=%d %d end\n",oz_varGetName(makeTaggedRef(varPtr)),varPtr,(*varPtr));fflush(stdout);

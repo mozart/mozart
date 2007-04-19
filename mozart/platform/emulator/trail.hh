@@ -75,6 +75,8 @@ public:
 
   void pushVariable(TaggedRef *);
 
+  void pushGeVariable(TaggedRef *);
+
   /*
    * Popping
    *
@@ -86,6 +88,8 @@ public:
 
   void popVariable(TaggedRef *&, OzVariable *&);
   
+  void popGeVariable(TaggedRef *&, TaggedRef &);
+
   /*
    * Unwinding
    *
