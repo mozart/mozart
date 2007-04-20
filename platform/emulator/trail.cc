@@ -67,7 +67,7 @@ void Trail::pushVariable(TaggedRef * varPtr) {
 }
 
 void Trail::pushGeVariable(TaggedRef *varPtr) {
-  Assert(oz_isGeVar(*varPtr));
+  //  Assert(oz_isGeVar(*varPtr));
 
   ensureFree(3);
   Stack::push((StackEntry) varPtr,             NO);
@@ -248,7 +248,8 @@ TaggedRef Trail::unwind(Board * b) {
 	
 	popGeVariable(refPtr, value);
 	Assert(oz_isRef(*refPtr) || !oz_isVar(*refPtr));
-	Assert(oz_isGeVar(value));
+	Assert(oz_isVar(value));
+	//	Assert(oz_isGeVar(value));
 
 	s = oz_cons(oz_cons(makeTaggedRef(refPtr),*refPtr),s);
 	
@@ -261,12 +262,17 @@ TaggedRef Trail::unwind(Board * b) {
 	
 	if(hasNoRunnable && !oz_var_hasSuspAt(*refPtr,b)) {
 	  if(oz_isGeVar(*refPtr)) {
-	    //	    printf("ENSURE DOM REFLECTION \n"); fflush(stdout);
 	    GeVarBase *vglobal = get_GeVar(*refPtr);
 	    vglobal->ensureDomReflection();
+	    if(vglobal->hasSameDomain(vv)) {
+	      GeVarBase *vlocal = get_GeVar(vv);
+	      if(vlocal->degree() == vlocal->varprops() && tagged2Var(vv)->isEmptySuspList() ){
+		break;
+	      }
+	    }
 	  }
 
-	  if(!b->getLateThread()) { printf("YA NO HAY UN LATE THREAD PILAS\n"); fflush(stdout); }
+	  //	  if(!b->getLateThread()) { printf("YA NO HAY UN LATE THREAD PILAS\n"); fflush(stdout); }
 
 	  if(b->getLateThread()) { printf("hilo supervisor lateThread \n"); fflush(stdout); 
 	    if (oz_var_addSusp(refPtr,b->getLateThread()) != SUSPEND ) {
@@ -274,12 +280,11 @@ TaggedRef Trail::unwind(Board * b) {
 	    }
 	  }
 	  else {
-	    printf("hilo supervisro SKIP \n"); fflush(stdout);
+	    //	    printf("hilo supervisro SKIP \n"); fflush(stdout);
 	    AssureThread;
 	    oz_var_addSusp(refPtr,t);
 	  }
 	}
-	printf("Termino unwind Te_GeVariable \n"); fflush(stdout);
 	break;
       }
 	
@@ -336,7 +341,6 @@ TaggedRef Trail::unwindGeVar(Board * b) {
 	TaggedRef *refPtr, value;
 	popGeVariable(refPtr, value);
 	Assert(oz_isRef(*refPtr) || !oz_isVar(*refPtr));
-	//	Assert(oz_isVar(value));
 
 	Assert(oz_isGeVar(value));
 	
@@ -506,13 +510,8 @@ bool Trail::isSpeculating(void) {
       //local variable is a valid value
       if(!oz_isVarOrRef(oz_deref(*var))) { break; }
 
-      //pilas con esta condición tiene que ser un invariante cuando separemos pushBind de pushGeVariable
-      /*      if(!oz_isGeVar(*var))  { printf("!oz_isGeVar(*var)\n"); fflush(stdout); return true; } */
+      if(!oz_isGeVar(*var))  { fflush(stdout); return true; }
 
-      //local variable should be a GeVariable
-      Assert(oz_isGeVar(*var));
-
-      //      printf("DESPUES ddel maldito if \n"); fflush(stdout);
       TaggedRef tvar = (TaggedRef) ToInt32(* (top-1) );
       OzVariable *v = tagged2Var(tvar);
       
