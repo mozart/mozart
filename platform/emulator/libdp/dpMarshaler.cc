@@ -1460,43 +1460,17 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	  fflush(dbgout);
 #endif
 	  b->buildClassRemember(gname, flags, refTag);
+	} else if (!tagged2OzClass(value)->isComplete()) {
+	  b->buildClassRemember(tagged2OzClass(value)->getGName(),
+				flags, refTag);
 	} else {
-	  // Either we have the class itself, or that's the lazy
-	  // object protocol, in which case it must be a variable
-	  // that denotes an object (of this class);
-	  OZ_Term vd = oz_deref(value);
-	  Assert(!oz_isRef(vd));
-	  if (oz_isConst(vd)) {
-	    Assert(tagged2Const(vd)->getType() == Co_Class);
-	    b->knownClass(value);
-	    b->setTerm(value, refTag);
+	  // optimization: we already have the class
+	  b->knownClass(value);
+	  b->setTerm(value, refTag);
 #if defined(DBG_TRACE)
-	    fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
-	    fflush(dbgout);
+	  fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
+	  fflush(dbgout);
 #endif
-	  } else if (oz_isVar(vd)) {
-	    OZ_error("Should not happened, a variable in place of a class");
-	    /*
-	      OzVariable *var = tagged2Var(vd);
-	      Assert(var->getType() == OZ_VAR_EXT);
-	      ExtVar *evar = var2ExtVar(var);
-	      Assert(evar->getIdV() == OZ_EVAR_LAZY);
-	      LazyVar *lvar = (LazyVar *) evar;
-	      Assert(lvar->getLazyType() == LT_CLASS);
-	      ClassVar *cv = (ClassVar *) lvar;
-	      // The binding of a class'es gname is kept until the
-	      // construction of a class is finished.
-	      gname = cv->getGName();
-	      b->buildClassRemember(gname, flags, refTag);
-	      #if defined(DBG_TRACE)
-	      fprintf(dbgout, " (at %d)\n", refTag);
-	      fflush(dbgout);
-	      #endif
-	    */
-	  } else {
-	    OZ_error("Unexpected value is bound to an object's gname");
-	    b->buildValue(oz_nil());
-	  }
 	}
 	break;
       }
@@ -1509,38 +1483,15 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	//
 	if (gname) {
 	  b->buildClass(gname, flags);
+	} else if (!tagged2OzClass(value)->isComplete()) {
+	  b->buildClass(tagged2OzClass(value)->getGName(), flags);
 	} else {
-	  // Either we have the class itself, or that's the lazy
-	  // object protocol, in which case it must be a variable
-	  // that denotes an object (of this class);
-	  OZ_Term vd = oz_deref(value);
-	  Assert(!oz_isRef(vd));
-	  if (oz_isConst(vd)) {
-	    Assert(tagged2Const(vd)->getType() == Co_Class);
-	    b->knownClass(value);
+	  // optimization: we already have the class
+	  b->knownClass(value);
 #if defined(DBG_TRACE)
-	    fprintf(dbgout, " = %s\n", toC(value));
-	    fflush(dbgout);
+	  fprintf(dbgout, " = %s\n", toC(value));
+	  fflush(dbgout);
 #endif
-	  } else if (oz_isVar(vd)) {
-	    OZ_error("Should not happened, variable in place of a class");
-	    /*
-	    OzVariable *var = tagged2Var(vd);
-	    Assert(var->getType() == OZ_VAR_EXT);
-	    ExtVar *evar = var2ExtVar(var);
-	    Assert(evar->getIdV() == OZ_EVAR_LAZY);
-	    LazyVar *lvar = (LazyVar *) evar;
-	    Assert(lvar->getLazyType() == LT_CLASS);
-	    ClassVar *cv = (ClassVar *) lvar;
-	    // The binding of a class'es gname is kept until the
-	    // construction of a class is finished.
-	    gname = cv->getGName();
-	    b->buildClass(gname, flags);
-	    */
-	  } else {
-	    OZ_error("Unexpected value is bound to an object's gname");
-	    b->buildValue(oz_nil());
-	  }
 	}
 	break;
       }

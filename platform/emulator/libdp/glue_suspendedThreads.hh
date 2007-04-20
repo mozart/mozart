@@ -224,4 +224,14 @@ public:
 };
 
 
+// class operations
+class SuspendedClassGet : public SuspendedOperation {
+public:
+  SuspendedClassGet(Mediator*);
+  WakeRetVal resumeDoLocal(DssOperationId*);
+  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  bool gCollect();
+};
+
+
 #endif 

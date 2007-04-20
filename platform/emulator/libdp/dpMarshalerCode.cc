@@ -933,61 +933,69 @@ Bool DPMARSHALERCLASS::processClass(OZ_Term classTerm, ConstTerm *classConst)
 { 
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
-  printf("Process Class %s\n", toC(classTerm));
+  if (isImmediate() || glue_isImmediate(classTerm)) {
+    // immediate marshaling: DIF_CLASS, index, gname, number
+    if (bs->availableSpace() < 2*DIFMaxSize + 2*MNumberMaxSize + MGNameMaxSize)
+      goto suspend;
 
-  //
-  if (bs->availableSpace() >= 
-      max(2*DIFMaxSize + 2*MNumberMaxSize + MGNameMaxSize, 
-	  2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize)) {
     int index;
-
-    //
     VISITNODE(classTerm, vIT, bs, index, return(OK));
 
     OzClass *cl = (OzClass *) classConst;
-    // classes are not handled by the lazy protocol specially right
-    // now, but they are still sent using SEND_LAZY, so the flag is to
-    // be reset:
-    doToplevel = FALSE;
     //
-    if (cl->isSited()) {
+    if (cl->isSited()) {   // stupidness check: should not happen
       OZ_error("DPMARSHALERCLASS::processClass : MRHTentry\n");
       Assert(bs->availableSpace() >= DIFMaxSize);
       return (OK);		// done - a leaf;
-    } else {
-
-      //
-#if defined(DBG_TRACE)
-      DBGINIT();
-      fprintf(dbgout, "> tag: %s(%d) = %s\n",
-	      dif_names[DIF_CLASS].name, DIF_CLASS, toC(classTerm));
-      fflush(dbgout);
-#endif
-      marshalDIFindex(bs, DIF_CLASS, DIF_CLASS_DEF, index);
-
-      //
-      GName *gn = cl->globalize();
-      Assert(gn);
-      marshalGName(bs, gn);
-      marshalNumber(bs, cl->getFlags());
-      Assert(bs->availableSpace() >= DIFMaxSize);
-      return (NO);
     }
-    Assert(0);
-
     //
-  } else {
 #if defined(DBG_TRACE)
     DBGINIT();
-    fprintf(dbgout, "> tag: %s(%d) on %s\n",
-	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(classTerm));
+    fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	    dif_names[DIF_CLASS].name, DIF_CLASS, toC(classTerm));
     fflush(dbgout);
 #endif
-    marshalDIFcounted(bs, DIF_SUSPEND);
-    suspend(classTerm);
-    return (OK);
+    marshalDIFindex(bs, DIF_CLASS, DIF_CLASS_DEF, index);
+    //
+    GName *gn = cl->globalize();
+    Assert(gn);
+    marshalGName(bs, gn);
+    marshalNumber(bs, cl->getFlags());
+    //
+    setImmediate(false);     // back to normal mode
+    //
+    Assert(bs->availableSpace() >= DIFMaxSize);
+    return (NO);
+
+  } else {
+    // marshaling a mediator: DIF_GLUE, index, mediator, gname
+    if (bs->availableSpace() <
+	2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize + MGNameMaxSize)
+      goto suspend;
+
+    int index;
+    //
+    VISITNODE(classTerm, vIT, bs, index, return(OK));
+    //
+    marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
+    //
+    (void) glue_marshalEntity(classTerm, bs);
+    Assert(bs->availableSpace() >= DIFMaxSize);
+    return (OK);     // leaf node
+
   }
   Assert(0);
+
+ suspend:
+#if defined(DBG_TRACE)
+  DBGINIT();
+  fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	  dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(classTerm));
+  fflush(dbgout);
+#endif
+  marshalDIFcounted(bs, DIF_SUSPEND);
+  suspend(classTerm);
+  return (OK);
 }
 
 //

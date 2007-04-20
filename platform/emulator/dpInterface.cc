@@ -132,6 +132,12 @@ OZ_Return distChunkGetStub(SChunk*, TaggedRef, TaggedRef&) {
   return PROCEED;
 }
 
+// classes
+OZ_Return distClassGetStub(OzClass*) {
+  OZD_error("'distClassGet' called without DP library?");
+  return PROCEED;
+}
+
 // interface for GC;
 void gCollectMediatorStub(Mediator*) {
   OZD_error("'gCollectMediator' called without DP library?");
@@ -211,6 +217,10 @@ OZ_Return (*distVarMakeNeeded)(TaggedRef*)
 // chunks
 OZ_Return (*distChunkGet)(SChunk*, TaggedRef, TaggedRef&)
   = distChunkGetStub;
+
+// classes
+OZ_Return (*distClassGet)(OzClass*)
+  = distClassGetStub;
 
 // experimental 
 void (*cellOperationDone)(OzCell*,TaggedRef)

@@ -394,24 +394,16 @@ repeat:
       DiscardBTFrame(frame);
 
       //
-      SRecord *feat = tagged2SRecord(value);
-      TaggedRef ff = feat->getFeature(NameOoFeat);
-      //
-      cl->import(value,
-		 feat->getFeature(NameOoFastMeth),
-		 oz_isSRecord(ff) ? ff : makeTaggedNULL(),
-		 feat->getFeature(NameOoDefaults),
-		 flags);
-
-      //
-      // Observe: it can overwrite the gname's binding even without
-      // any lazy protocols, just due to the concurrency & suspendable
-      // unmarshaling!! The same holds of course for other "named"
-      // data structures, notably - objects and procedures.
-      GName *gn = cl->getGName();
-      OZ_Term ct = makeTaggedConst(cl);
-      overwriteGName(gn, ct);
-      gn->gcOn();
+      if (!cl->isComplete()) {
+	SRecord *feat = tagged2SRecord(value);
+	TaggedRef ff = feat->getFeature(NameOoFeat);
+	//
+	cl->import(value,
+		   feat->getFeature(NameOoFastMeth),
+		   oz_isSRecord(ff) ? ff : makeTaggedNULL(),
+		   feat->getFeature(NameOoDefaults),
+		   flags);
+      }
       //
       value = makeTaggedConst(cl);
       GetBTTaskTypeNoDecl(frame, type);

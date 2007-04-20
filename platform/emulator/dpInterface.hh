@@ -92,6 +92,9 @@ extern OZ_Return (*distVarMakeNeeded)(TaggedRef*);
 // chunks
 extern OZ_Return (*distChunkGet)(SChunk*, TaggedRef, TaggedRef&);
 
+// classes
+extern OZ_Return (*distClassGet)(OzClass*);
+
 
 
 /******************** Garbage collection routines *********************/

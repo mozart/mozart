@@ -183,7 +183,7 @@ int oz_fastlength(OZ_Term l) {
 
 const char *OzClass::getPrintName() 
 { 
-  TaggedRef aux = classGetFeature(NameOoPrintName);
+  TaggedRef aux = isComplete() ? classGetFeature(NameOoPrintName) : 0;
   return aux ? tagged2Literal(oz_deref(aux))->getPrintName() : "???";
 }
 

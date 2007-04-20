@@ -559,6 +559,34 @@ distChunkGetImpl(SChunk *chunk, TaggedRef key, TaggedRef &ans) {
 
 
 
+/**************************** Classes ****************************/
+
+OZ_Return
+distClassGetImpl(OzClass *cls) {
+  // precondition: the class is only a stub
+  Assert(!cls->isComplete());
+  ClassMediator* med =
+    static_cast<ClassMediator*>(glue_getMediator(makeTaggedConst(cls)));
+
+  // suspend if fault state not ok
+  if (med->getFaultState()) return med->suspendOnFault();
+
+  DssThreadId *thrId = currentThreadId();
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = med->abstractOperation_Read(thrId, pstout);
+
+  switch (cont) {
+  case DSS_SUSPEND:   // we cannot have DSS_PROCEED here!
+    new SuspendedClassGet(med);
+    return BI_REPLACEBICALL;
+  default:
+    OZ_error("Unhandled error in distChunkGet");
+    return PROCEED;
+  }
+}
+
+
+
 void initEntityOperations(){
   // ports
   distPortSend = &distPortSendImpl;
