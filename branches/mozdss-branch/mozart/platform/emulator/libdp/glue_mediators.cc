@@ -63,6 +63,7 @@ Mediator *glue_newMediator(GlueTag tag) {
   case GLUE_READONLY:   return new OzVariableMediator(GLUE_READONLY);
   case GLUE_UNUSABLE:   return new UnusableMediator();
   case GLUE_CHUNK:      return new ChunkMediator();
+  case GLUE_CLASS:      return new ClassMediator();
   default:
     Assert(0); return NULL;
   }
@@ -109,6 +110,7 @@ Mediator *glue_getMediator(TaggedRef entity) {
     case Co_Array:      return getCTWHMediator<ArrayMediator>(ct);
     case Co_Dictionary: return getCTWHMediator<DictionaryMediator>(ct);
     case Co_Lock:       return getCTWHMediator<LockMediator>(ct);
+    case Co_Class:      return getCTWHMediator<ClassMediator>(ct);
 
     case Co_Builtin:
       if (static_cast<Builtin*>(ct)->isSited())
@@ -832,11 +834,30 @@ UnusableMediator::callback_Read(DssThreadId*, DssOperationId*,
 
 
 
+/************************* TokenMediator *************************/
+
+TokenMediator::TokenMediator(GlueTag type) : ConstMediator(type) {}
+
+PstOutContainerInterface* TokenMediator::retrieveEntityRepresentation() {
+  // send the entity, but in the immediate mode
+  PstOutContainer* pst = new PstOutContainer(getEntity());
+  pst->setImmediate();
+  return pst;
+}
+
+void
+TokenMediator::installEntityRepresentation(PstInContainerInterface* pst) {
+  // we have nothing to do here, since the unmarshaling of the value
+  // has already completed the entity (via its gname)
+}
+
+
+
 /************************* ChunkMediator *************************/
 
-ChunkMediator::ChunkMediator() : ConstMediator(GLUE_CHUNK) {}
+ChunkMediator::ChunkMediator() : TokenMediator(GLUE_CHUNK) {}
 
-ChunkMediator::ChunkMediator(TaggedRef e) : ConstMediator(GLUE_CHUNK) {
+ChunkMediator::ChunkMediator(TaggedRef e) : TokenMediator(GLUE_CHUNK) {
   setEntity(e);
 }
 
@@ -852,15 +873,21 @@ ChunkMediator::callback_Read(DssThreadId*, DssOperationId*,
   return AOCB_FINISH;
 }
 
-PstOutContainerInterface*
-ChunkMediator::retrieveEntityRepresentation() {
-  PstOutContainer* pst = new PstOutContainer(getEntity());
-  pst->setImmediate();
-  return pst;
+
+
+/************************* ClassMediator *************************/
+
+ClassMediator::ClassMediator() : TokenMediator(GLUE_CLASS) {}
+
+ClassMediator::ClassMediator(TaggedRef e) : TokenMediator(GLUE_CLASS) {
+  setEntity(e);
 }
 
-void
-ChunkMediator::installEntityRepresentation(PstInContainerInterface* pst) {
-  // we have nothing to do here, the unmarshaling of the value has
-  // already completed the entity (via its gname)
+AOcallback
+ClassMediator::callback_Read(DssThreadId*, DssOperationId*,
+			     PstInContainerInterface* pstin,
+			     PstOutContainerInterface*& answer) {
+  // no distributed operation on stationary classes!
+  Assert(0);
+  return AOCB_FINISH;
 }

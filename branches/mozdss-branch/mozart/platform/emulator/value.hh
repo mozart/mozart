@@ -1735,6 +1735,8 @@ public:
     return getFeatures()->getWidth();
   }
 
+  // distribution support: the state is present iff feat!=0
+  Bool isComplete() { return features != makeTaggedNULL(); }
 
   GName *globalize(void);
 };

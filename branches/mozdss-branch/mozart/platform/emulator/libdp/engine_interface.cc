@@ -189,6 +189,7 @@ void initDP(int port, int ip, const char *siteId, int primKey)
   setDefaultAnnotation(GLUE_READONLY,   PN_TRANSIENT,       aa, rc);
   setDefaultAnnotation(GLUE_UNUSABLE,   PN_SIMPLE_CHANNEL,  aa, rc);
   setDefaultAnnotation(GLUE_CHUNK,      PN_IMMEDIATE,       aa, rc);
+  setDefaultAnnotation(GLUE_CLASS,      PN_IMMEDIATE,       aa, rc);
 
   // create mediator table
   mediatorTable     = new MediatorTable();

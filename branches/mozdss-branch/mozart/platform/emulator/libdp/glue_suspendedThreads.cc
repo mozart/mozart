@@ -501,3 +501,23 @@ bool SuspendedGenericDot::gCollect(){
   } else
     return false;
 }
+
+
+
+/************************* SuspendedClassGet *************************/
+
+SuspendedClassGet::SuspendedClassGet(Mediator* med) : SuspendedOperation(med) {
+  suspend();
+}
+
+WakeRetVal SuspendedClassGet::resumeDoLocal(DssOperationId*) {
+  resume(); return WRV_DONE;
+}
+
+WakeRetVal SuspendedClassGet::resumeRemoteDone(PstInContainerInterface*) {
+  Assert(0); return WRV_DONE;
+}
+
+bool SuspendedClassGet::gCollect() {
+  return gc();
+}

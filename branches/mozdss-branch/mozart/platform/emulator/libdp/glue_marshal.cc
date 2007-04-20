@@ -226,11 +226,39 @@ void ChunkMediator::unmarshal(ByteBuffer* bs) {
   if (!hasEntity()) {
     if (gname) {   // entity does not exist on this site
       SChunk* chunk = new SChunk(oz_currentBoard(), makeTaggedNULL());
-      value = makeTaggedConst(chunk);
       chunk->setGName(gname);
+      value = makeTaggedConst(chunk);
       addGName(gname, value);
     }
     Assert(oz_isSChunk(value));
+    setEntity(value);
+  }
+}
+
+
+// classes
+void ClassMediator::marshal(ByteBuffer *bs) {
+  OzClass* cls = static_cast<OzClass*>(getConst());
+  GName* gname = cls->globalize();
+  Assert(gname);
+  marshalGName(bs, gname);
+}
+
+void ClassMediator::unmarshal(ByteBuffer* bs) {
+  TaggedRef value;
+  GName* gname = unmarshalGName(&value, bs);
+  if (!hasEntity()) {
+    if (gname) {   // entity does not exist on this site
+      OzClass* cls = new OzClass(makeTaggedNULL(), 
+				 makeTaggedNULL(),
+				 makeTaggedNULL(), 
+				 makeTaggedNULL(), NO, NO,
+				 oz_currentBoard());
+      cls->setGName(gname);
+      value = makeTaggedConst(cls);
+      addGName(gname, value);
+    }
+    Assert(oz_isClass(value));
     setEntity(value);
   }
 }

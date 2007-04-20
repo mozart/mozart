@@ -116,6 +116,7 @@ enum GlueTag {
   GLUE_READONLY,
   GLUE_UNUSABLE,       // immutables
   GLUE_CHUNK,
+  GLUE_CLASS,
   GLUE_LAST            // must be last
 };
 
@@ -442,22 +443,42 @@ public:
 //                            |
 //                         Mediator
 
+// abstract base class for immutables with a gname ("tokens")
+class TokenMediator : public ConstMediator, public ImmutableAbstractEntity {
+public:
+  TokenMediator(GlueTag);
+  virtual void attach() {}     // always detached (because of gname)
+  virtual void detach() {}
+  virtual PstOutContainerInterface *retrieveEntityRepresentation();
+  virtual void installEntityRepresentation(PstInContainerInterface*);
+};
+
 // mediators for chunks
-class ChunkMediator : public ConstMediator, public ImmutableAbstractEntity {
+class ChunkMediator : public TokenMediator {
 public:
   ChunkMediator();
   ChunkMediator(TaggedRef);
-  virtual void attach() {}     // always detached (because of gname)
-  virtual void detach() {}
 
   virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
 				   PstInContainerInterface*,
 				   PstOutContainerInterface*&);
-  virtual PstOutContainerInterface *retrieveEntityRepresentation();
-  virtual void installEntityRepresentation(PstInContainerInterface*);
   virtual void marshal(ByteBuffer*);
   virtual void unmarshal(ByteBuffer*);
   virtual char *getPrintType() { return "chunk"; }
+};
+
+// mediators for classes
+class ClassMediator : public TokenMediator {
+public:
+  ClassMediator();
+  ClassMediator(TaggedRef);
+
+  virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
+				   PstInContainerInterface*,
+				   PstOutContainerInterface*&);
+  virtual void marshal(ByteBuffer*);
+  virtual void unmarshal(ByteBuffer*);
+  virtual char *getPrintType() { return "class"; }
 };
 
 #endif

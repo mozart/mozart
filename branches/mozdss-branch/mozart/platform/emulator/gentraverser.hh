@@ -1740,41 +1740,29 @@ public:
   //
   void buildClass(GName *gname, int flags) {
     Assert(gname);
-
-    //      
-    OzClass *cl = new OzClass(makeTaggedNULL(), 
-				      makeTaggedNULL(),
-				      makeTaggedNULL(), 
-				      makeTaggedNULL(), NO, NO,
-				      am.currentBoard());
-    cl->setGName(gname);
-    gname->gcMaybeOff();	// if not in the table right now;;
-    OZ_Term classTerm = makeTaggedConst(cl);
-    // Note: no gname"s are assigned globally until the construction
-    // of the class is *completely* finished;
-
+    //
+    OZ_Term classTerm = gname->getValue();
+    OzClass *cl;
+    if (classTerm) {
+      cl = tagged2OzClass(classTerm);
+    } else {
+      // create class stub, and associate with gname
+      cl = new OzClass(makeTaggedNULL(), makeTaggedNULL(), makeTaggedNULL(), 
+		       makeTaggedNULL(), NO, NO, am.currentBoard());
+      cl->setGName(gname);
+      classTerm = makeTaggedConst(cl);
+      addGName(gname, classTerm);
+    }
     //
     putTask(BT_classFeatures, cl, flags);
   }
 
   //
   void buildClassRemember(GName *gname, int flags, int n) {
-    Assert(gname);
-
-    //      
-    OzClass *cl = new OzClass(makeTaggedNULL(), 
-				      makeTaggedNULL(),
-				      makeTaggedNULL(), 
-				      makeTaggedNULL(), NO, NO,
-				      am.currentBoard());
-    cl->setGName(gname);
-    gname->gcMaybeOff();
-    OZ_Term classTerm = makeTaggedConst(cl);
+    buildClass(gname, flags);
     //
-    setTerm(classTerm, n);
-
-    //
-    putTask(BT_classFeatures, cl, flags);
+    Assert(oz_isClass(gname->getValue()));
+    setTerm(gname->getValue(), n);
   }
 
   //
