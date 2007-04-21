@@ -745,3 +745,22 @@ void Board::unsetGlobalMarks(void) {
 OZ_Return (*OZ_checkSituatedness)(Board *,TaggedRef *);
 
 
+void Board::ensureLateThread(void) {
+  Assert(getGenericSpace(true));
+  if(!lateThread) {
+    if(isRoot()) {
+      //printf("ensure lateThread on toplevel: %p\n",this);fflush(stdout);
+      lateThread = oz_newThreadInject(this);
+      lateThread->pushCall(BI_PROP_GEC,NULL);
+    } else {
+      //printf("ensure lateThread on %p\n",this);fflush(stdout);	
+      lateThread = oz_newThreadSuspended(DEFAULT_PRIORITY);
+      lateThread->pushCall(BI_PROP_GEC,NULL);
+      TaggedRef st = getStatus();
+      DEREF(st, stPtr);
+      oz_var_addQuietSusp(stPtr, lateThread);
+    }
+    
+  }
+}
+

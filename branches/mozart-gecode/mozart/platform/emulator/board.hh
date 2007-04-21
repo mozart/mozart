@@ -471,12 +471,7 @@ public:
      | No Propagators |              |            |          |
      ---------------------------------------------------------
  */
-  void ensureLateThread(void) {
-    if(!lateThread) {
-      lateThread = oz_newThreadInject(this);
-      lateThread->pushCall(BI_PROP_GEC,NULL);
-    }
-  }
+  void ensureLateThread(void);
   
   /**
      \brief Removes the generic space when is no longer needed.
