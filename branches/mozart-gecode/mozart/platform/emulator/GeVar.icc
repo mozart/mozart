@@ -1,4 +1,3 @@
-
 template <class VarImp, Gecode::PropCond pc>
 inline
 OZ_Return GeVar<VarImp, pc>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
@@ -38,8 +37,9 @@ OZ_Return GeVar<VarImp, pc>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
       if(!oz_isLocalVar(extVar2Var(rgevar))){
 	if(!(rgevar->intersect(makeTaggedRef(lPtr))))
 	  return FAILED;
-	////	printf("local, no local \n");fflush(stdout);
+	////printf("local, no local \n");fflush(stdout);
 	oz_bindGlobalVar2(extVar2Var(rgevar), rPtr, makeTaggedRef(lPtr));	
+	disposeS();
       }else{
 	////	printf("unifyV GeIntVar this is local\n");fflush(stdout);
 	  // "this" is local.  The binding cannot go upwards, so...    
@@ -55,25 +55,17 @@ OZ_Return GeVar<VarImp, pc>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
 	space->incUnifyProps();
       }
     }else{
-      // "this" is global.
-      if (oz_isLocalVar(extVar2Var(rgevar))) {
-	  if(!(lgevar->intersect(makeTaggedRef(rPtr))))
-	    return FAILED;
-	  //printf("global, local \n");fflush(stdout);
-	  oz_bindGlobalVar2(extVar2Var(lgevar), lPtr, makeTaggedRef(rPtr));	
-      } else {
-	//printf("global, global \n");fflush(stdout);
-	OZ_Term lv = newVar();
-	
-	//TaggedRef glv_tmp = oz_deref(makeTaggedVar(extVar2Var(get_GeIntVar(lv))));
-	if(!(lgevar->intersect(lv)))
-	  return FAILED;
-	if(!(rgevar->intersect(lv)))
-	  return FAILED;	
-	Assert(oz_isRef(lv));
-	oz_bindGlobalVar2(extVar2Var(lgevar), lPtr, lv);	
-	oz_bindGlobalVar2(extVar2Var(rgevar), rPtr, lv);	
-	}
+      //printf("global, global \n");fflush(stdout);
+      OZ_Term lv = newVar();
+      
+      //TaggedRef glv_tmp = oz_deref(makeTaggedVar(extVar2Var(get_GeIntVar(lv))));
+      if(!(lgevar->intersect(lv)))
+	return FAILED;
+      if(!(rgevar->intersect(lv)))
+	return FAILED;	
+      Assert(oz_isRef(lv));
+      oz_bindGlobalVar2(extVar2Var(lgevar), lPtr, lv);	
+      oz_bindGlobalVar2(extVar2Var(rgevar), rPtr, lv);	
     }
     
   }
