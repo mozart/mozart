@@ -497,13 +497,14 @@ void Board::checkStability(void) {
 	OzVariable* nv = tagged2Var(oz_deref(newVar));
 	TaggedRef oldVar = getStatus();
 	DEREF(oldVar, oldVarPtr);
-	// Transfer the suspensions in this space to the new variable
+	// Remove lateThread from oldvar susp list.
 	SuspList** suspPtr = tagged2Var(oldVar)->getSuspListRef();
 	SuspList* susp = *suspPtr;
 	while (susp) {
-	  if (susp->getSuspendable()->getBoardInternal() == this) {
+	  if (susp->getSuspendable() == lateThread) {
 	    nv->addSuspSVar(susp->getSuspendable());
 	    *suspPtr = susp->getNext();     // drop susp from list
+	    break;
 	  } else {
 	    suspPtr = (*suspPtr)->getNextRef();
 	  }
