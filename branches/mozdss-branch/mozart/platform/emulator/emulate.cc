@@ -2732,6 +2732,12 @@ LBLdispatcher:
        if (typ==Co_Object) {
 	 CheckArity(1, makeTaggedConst(predicate));
 	 OzObject *o = (OzObject*) predicate;
+	 if (! o->getClass()->isComplete()) {   // class not available yet
+	   OZ_Return ret = (*distClassGet)(o->getClass());
+	   Assert(ret = SUSPEND);
+	   PushContX(PC);
+	   SUSPENDONVARLIST;
+	 }
 	 Assert(o->getClass()->getFallbackApply());
 	 Abstraction *def =
 	   tagged2Abstraction(o->getClass()->getFallbackApply());
@@ -3239,9 +3245,17 @@ LBLdispatcher:
       }
 
       if (oz_isClass(cls)) {
+	// if the class is a stub, call distribution layer
+	if (!tagged2OzClass(cls)->isComplete()) {
+	  OZ_Return ret = (*distClassGet)(tagged2OzClass(cls));
+	  Assert(ret == SUSPEND);
+	  PushContX(PC);
+	  SUSPENDONVARLIST;
+	}
+
 	Bool defaultsUsed;
 	Abstraction *abstr = tagged2OzClass(cls)->getMethod(cmi->mn,cmi->arity,
-								NO,defaultsUsed);
+							    NO,defaultsUsed);
 	/* fill cache and try again later */
 	if (abstr==NULL || defaultsUsed) {
 	  isTailCall = cmi->isTailCall;

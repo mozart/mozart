@@ -166,7 +166,6 @@ void TRAVERSERCLASS::doit()
 	  break;
 
 	case Co_Class:
-    printf("we are marshaling a darn Class\n"); //bmc
 	  if (!processClass(t, ct)) {
 	    Assert(tosNotRunning == (StackEntry *) 0);
 	    OzClass *cl = (OzClass *) ct;

@@ -578,7 +578,7 @@ distClassGetImpl(OzClass *cls) {
   switch (cont) {
   case DSS_SUSPEND:   // we cannot have DSS_PROCEED here!
     new SuspendedClassGet(med);
-    return BI_REPLACEBICALL;
+    return SUSPEND;
   default:
     OZ_error("Unhandled error in distChunkGet");
     return PROCEED;
@@ -619,4 +619,7 @@ void initEntityOperations(){
 
   // chunks
   distChunkGet = &distChunkGetImpl;
+
+  // classes
+  distClassGet = &distClassGetImpl;
 }

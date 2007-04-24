@@ -612,6 +612,10 @@ Bool ResourceExcavator::processChunk(OZ_Term chunkTerm,
 				     ConstTerm *chunkConst)
 {
   VisitNodeTrav(chunkTerm, vIT, return(TRUE));
+  if (!tagged2SChunk(chunkTerm)->getValue()) {
+    addResource(chunkTerm);
+    return (OK);
+  }
   return (NO);
 }
 
@@ -658,6 +662,9 @@ ResourceExcavator::processClass(OZ_Term classTerm, ConstTerm *classConst)
   if (cl->isSited()) {
     addNogood(classTerm);
     return (OK);		// done - a leaf;
+  } else if (!cl->isComplete()) {
+    addResource(classTerm);
+    return (OK);
   } else {
     return (NO);
   }
