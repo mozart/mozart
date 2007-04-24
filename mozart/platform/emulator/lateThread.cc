@@ -31,7 +31,7 @@
 #include "GeSpace.hh"
 
 OZ_BI_define(BI_prop_gec, 0, 0) {
-  //printf("Thread %p running at board %p\n",oz_currentThread(), oz_currentBoard());fflush(stdout);
+  printf("Thread %p running at board %p\n",oz_currentThread(), oz_currentBoard());fflush(stdout);
   
   /* Curren board cannot be failed */
   Assert(!oz_currentBoard()->isFailed());
@@ -46,7 +46,7 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
 
   TaggedRef status = oz_currentBoard()->getStatus();
   DEREF(status, statusPtr); 
-  Assert(oz_isNeeded(status) || oz_currentBoard()->isRoot());
+  //Assert(oz_isNeeded(status) || oz_currentBoard()->isRoot());
     
 
   using namespace Gecode;
