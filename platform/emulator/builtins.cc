@@ -677,18 +677,21 @@ OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
       goto no_feature;
     case Co_Chunk: {
       SChunk* chunk = tagged2SChunk(t);
-      if (chunk->getValue()) {
-	tf = chunk->getFeature(f);
-	if (tf == makeTaggedNULL()) goto no_feature;
-	return PROCEED;
-      }
-      // chunk is a stub: call the distribution layer
-      return (*distChunkGet)(chunk, f, tf);
+      if (!chunk->getValue())   // chunk is a stub: call distribution
+	return (*distChunkGet)(chunk, f, tf);
+      //
+      tf = chunk->getFeature(f);
+      if (tf == makeTaggedNULL()) goto no_feature;
+      return PROCEED;
     }
-    case Co_Class:
-      tf = tagged2OzClass(t)->classGetFeature(f);
+    case Co_Class: {
+      OzClass* cls = tagged2OzClass(t);
+      if (!cls->isComplete())   // class is only a stub: call distribution
+	return (*distClassGet)(cls);
+      //
+      tf = cls->classGetFeature(f);
       if (tf == makeTaggedNULL()) {
-	TaggedRef cfs = oz_deref(tagged2OzClass(t)->classGetFeature(NameOoFeat));
+	TaggedRef cfs = oz_deref(cls->classGetFeature(NameOoFeat));
 	if (oz_isSRecord(cfs)) {
 	  tf = tagged2SRecord(cfs)->getFeature(f);
 	  if (tf) {
@@ -701,6 +704,7 @@ OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
 	goto no_feature;
       }
       return PROCEED;
+    }
     case Co_Array:
       {
 	if (!oz_isSmallInt(f))
@@ -4223,12 +4227,12 @@ OZ_BI_define(BInewClass,3,1) {
   TaggedRef uf = oz_isSRecord(ufeatures) ? ufeatures : makeTaggedNULL();
 
   OzClass *cl = new OzClass(features,
-				    fastmeth,
-				    uf,
-				    defmethods,
-				    oz_isTrue(locking),
-				    oz_isTrue(sited),
-				    oz_currentBoard());
+			    fastmeth,
+			    uf,
+			    defmethods,
+			    oz_isTrue(locking),
+			    oz_isTrue(sited),
+			    oz_currentBoard());
 
   OZ_RETURN(makeTaggedConst(cl));
 } OZ_BI_end
@@ -4243,7 +4247,11 @@ OZ_BI_define(BIcomma,2,0)
     oz_typeError(0,"Class");
   }
 
-  TaggedRef fb = tagged2OzClass(cl)->getFallbackApply();
+  OzClass* cls = tagged2OzClass(cl);
+  // guard for distribution (lazy copying)
+  if (!cls->isComplete()) return (*distClassGet)(cls);
+
+  TaggedRef fb = cls->getFallbackApply();
   Assert(fb);
 
   am.prepareCall(fb,RefsArray::make(OZ_in(0),OZ_in(1)));
@@ -4266,7 +4274,11 @@ OZ_BI_define(BIsend,3,0)
     oz_typeError(2,"Object");
   }
 
-  TaggedRef fb = tagged2OzClass(cl)->getFallbackApply();
+  OzClass* cls = tagged2OzClass(cl);
+  // guard for distribution (lazy copying)
+  if (!cls->isComplete()) return (*distClassGet)(cls);
+
+  TaggedRef fb = cls->getFallbackApply();
   Assert(fb);
 
   am.changeSelf(tagged2Object(obj));
@@ -4344,35 +4356,29 @@ OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, OzClass *clas)
 }
 
 
-inline
-OZ_Return newObjectInline(TaggedRef cla, TaggedRef &out)
-{ 
-  { DEREF(cla,_1); }
-  Assert(!oz_isRef(cla));
-  if (oz_isVarOrRef(cla)) return SUSPEND;
+OZ_BI_define(BInewObject,1,1)
+{
+  oz_declareNonvarIN(0, cla);
+  Assert(!oz_isVarOrRef(cla));
   if (!oz_isClass(cla)) {
     oz_typeError(0,"Class");
   }
 
   OzClass *realclass = tagged2OzClass(cla);
-  TaggedRef attr = realclass->classGetFeature(NameOoAttr);
-  { DEREF(attr,_1); }
-  Assert(!oz_isRef(attr));
-  if (oz_isVarOrRef(attr)) return SUSPEND;
+  // guard for distribution (lazy copying)
+  if (!realclass->isComplete()) return (*distClassGet)(realclass);
+
+  TaggedRef attr = oz_safeDeref(realclass->classGetFeature(NameOoAttr));
+  if (oz_isVarOrRef(attr)) { oz_suspendOn(attr); }
   
   TaggedRef attrclone = cloneObjectRecord(attr,NO);
 
-  TaggedRef freefeat = realclass->classGetFeature(NameOoFreeFeat);
-  { DEREF(freefeat,_1); }
+  TaggedRef freefeat = oz_deref(realclass->classGetFeature(NameOoFreeFeat));
   Assert(!oz_isVar(freefeat));
   TaggedRef freefeatclone = cloneObjectRecord(freefeat,OK);
 
-  out = makeObject(attrclone, freefeatclone, realclass);
-
-  return PROCEED;
-}
-
-OZ_DECLAREBI_USEINLINEFUN1(BInewObject,newObjectInline)
+  OZ_RETURN(makeObject(attrclone, freefeatclone, realclass));
+} OZ_BI_end
 
 
 OZ_BI_define(BINew,3,0)
@@ -4385,6 +4391,8 @@ OZ_BI_define(BINew,3,0)
   }
 
   OzClass * oc = tagged2OzClass(cl);
+  // guard for distribution (lazy copying)
+  if (!oc->isComplete()) return (*distClassGet)(oc);
 
   TaggedRef fb = oc->getFallbackNew();
 
@@ -4424,7 +4432,11 @@ OZ_BI_define(BIclassIsSited,1,1)  {
     oz_typeError(0,"Class");
   }
 
-  OZ_RETURN(tagged2OzClass(cl)->isSited() ? oz_true() : oz_false());
+  OzClass* cls = tagged2OzClass(cl);
+  // guard for distribution (lazy copying)
+  if (!cls->isComplete()) return (*distClassGet)(cls);
+
+  OZ_RETURN(cls->isSited() ? oz_true() : oz_false());
 } OZ_BI_end
 
 OZ_BI_define(BIclassIsLocking,1,1)  {
@@ -4435,7 +4447,11 @@ OZ_BI_define(BIclassIsLocking,1,1)  {
     oz_typeError(0,"Class");
   }
 
-  OZ_RETURN(tagged2OzClass(cl)->supportsLocking() ? oz_true():oz_false());
+  OzClass* cls = tagged2OzClass(cl);
+  // guard for distribution (lazy copying)
+  if (!cls->isComplete()) return (*distClassGet)(cls);
+
+  OZ_RETURN(cls->supportsLocking() ? oz_true():oz_false());
 } OZ_BI_end
 
 #ifdef MISC_BUILTINS

@@ -507,7 +507,10 @@ bool SuspendedGenericDot::gCollect(){
 /************************* SuspendedClassGet *************************/
 
 SuspendedClassGet::SuspendedClassGet(Mediator* med) : SuspendedOperation(med) {
-  suspend();
+  // this operation is only a Wait, and does not replace the current
+  // operation.  So we do not call suspendOnControlVar() here...
+  ControlVarNew(cv, oz_rootBoard());
+  ctlVar = cv;
 }
 
 WakeRetVal SuspendedClassGet::resumeDoLocal(DssOperationId*) {

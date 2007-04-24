@@ -61,9 +61,13 @@ OZ_BI_define(BIchunkWidth, 1,1)
     int w;
     switch (tagged2Const(ch)->getType()) {
     case Co_Class: 
+      if (!tagged2OzClass(ch)->isComplete())   // call distribution layer
+	return (*distClassGet)(tagged2OzClass(ch));
       w = tagged2OzClass(ch)->getWidth();
       break;
     case Co_Object:
+      if (! tagged2Object(ch)->getClass()->isComplete())   // distribution
+	return (*distClassGet)(tagged2Object(ch)->getClass());
       w = tagged2Object(ch)->getWidth();
       break;
     case Co_Chunk: 
@@ -142,9 +146,13 @@ OZ_BI_define(BIchunkArityBrowser,1,1)
     TaggedRef as;
     switch (tagged2Const(ch)->getType()) {
     case Co_Class : 
+      if (!tagged2OzClass(ch)->isComplete())   // call distribution layer
+	return (*distClassGet)(tagged2OzClass(ch));
       as = tagged2OzClass(ch)->getArityList();
       break;
     case Co_Object: 
+      if (! tagged2Object(ch)->getClass()->isComplete())   // distribution
+	return (*distClassGet)(tagged2Object(ch)->getClass());
       as = tagged2Object(ch)->getArityList();
       break;
     case Co_Chunk : 
