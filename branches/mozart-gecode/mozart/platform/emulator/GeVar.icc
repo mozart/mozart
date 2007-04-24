@@ -26,6 +26,8 @@ OZ_Return GeVar<VarImp, pc>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
     if(am.inEqEq()) {
       if( IsEmptyInter(lPtr, rPtr) ) return FAILED;
       else {
+	ensureDomReflection();
+	rgevar->ensureDomReflection();
 	trail.pushGeVariable(lPtr);
 	trail.pushGeVariable(rPtr);
 	return PROCEED;
@@ -91,13 +93,14 @@ OZ_Return GeVar<VarImp,pc>::bindV(TaggedRef* vPtr, TaggedRef val) {
     if(am.inEqEq()) {
       if( !In(val) ) return FAILED;
       else {
+	ensureDomReflection();
 	trail.pushGeVariable(vPtr);
 	return PROCEED;
       }
     }
 
     if (oz_isLocalVar(extVar2Var(this))) {
-      printf("variable local\n"); fflush(stdout);
+      //printf("variable local\n"); fflush(stdout);
       // first bind the variable in Mozart
       oz_bindLocalVar(extVar2Var(this), vPtr, val);
 
