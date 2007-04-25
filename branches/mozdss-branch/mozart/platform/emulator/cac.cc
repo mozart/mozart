@@ -1310,7 +1310,7 @@ void ConstTerm::_cacConstRecurse(void) {
   case Co_Object:
     {
       OzObject *o = (OzObject *) this;
-      OZ_cacBlock(&(o->cl1), &(o->cl1), 4);
+      OZ_cacBlock(&(o->cls), &(o->cls), 4);
       break;
     }
 

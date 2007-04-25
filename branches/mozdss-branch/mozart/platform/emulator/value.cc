@@ -187,6 +187,10 @@ const char *OzClass::getPrintName()
   return aux ? tagged2Literal(oz_deref(aux))->getPrintName() : "???";
 }
 
+const char *OzObject::getPrintName() {
+  return getClass() ? getClass()->getPrintName() : "???";
+}
+
 const char *ConstTerm::getPrintName()
 {
   switch (getType()) {
@@ -309,12 +313,6 @@ int OzObject::getWidth(void) {
   SRecord *rec=getClass()->getUnfreeRecord();
   if (rec) ret += rec->getWidth();
   return ret;
-}
-
-GName *OzObject::globalize(){
-  if (!getGName1()) {
-    setGName(newGName(makeTaggedConst(this),GNT_OBJECT));}
-  return getGName1();
 }
 
 

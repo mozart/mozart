@@ -436,13 +436,16 @@ repeat:
       //
       GetBTFramePtr1(frame, GName*, gname);
 
+      // raph: objects are no longer marshaled this way
+      Assert(0);
+      /*
       // 'value' is the free record (incompete by now, - see also
       // gentraverserLoop.cc, case Co_Object):
       SRecord *feat = oz_isNil(value) ?
 	(SRecord *) NULL : tagged2SRecord(value);
       OzLock *lock = oz_isNil(lockTerm) ? 
 	(OzLock *) NULL : (OzLock *) tagged2Const(lockTerm);
-      OzObject *o = new OzObject(oz_rootBoard(), gname, state, feat, lock);
+      OzObject *o = new OzObject(oz_rootBoard());
       OZ_Term objTerm = makeTaggedConst(o);
       overwriteGName(gname, objTerm);
       if (doMemo) {
@@ -454,6 +457,8 @@ repeat:
 
       //
       value = objTerm;
+      */
+      value = makeTaggedNULL();
       GetBTTaskTypeNoDecl(frame, type);
       goto repeat;
     }

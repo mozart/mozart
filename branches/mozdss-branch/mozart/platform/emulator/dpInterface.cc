@@ -66,30 +66,26 @@ OZ_Return distLockReleaseStub(OzLock*, TaggedRef) {
   return PROCEED;
 }
 
-//
-OZ_Return objectExchangeStub(OzCell*,TaggedRef,TaggedRef,TaggedRef)
-{
-  OZD_error("'objectExchange' called without DP library?");
-  return (PROCEED);
+// objects
+OZ_Return distObjectInvokeStub(OzObject*, TaggedRef) {
+  OZD_error("'distObjectInvoke' called without DP library?");
+  return PROCEED;
 }
-void cellOperationDoneStub(OzCell*,TaggedRef){
-  OZD_error("'cellDoAccess' called without DP library?");
+OZ_Return distObjectGetFeatureStub(OzObject*, TaggedRef, TaggedRef&) {
+  OZD_error("'distObjectGetFeature' called without DP library?");
+  return PROCEED;
 }
-
-OZ_Return cellAtAccessStub(OzCell*,TaggedRef,TaggedRef)
-{
-  OZD_error("'cellAtAccess' called without DP library?");
-  return (PROCEED);
+OZ_Return distObjectAccessStub(OzObject*, TaggedRef, TaggedRef&) {
+  OZD_error("'distObjectAccess' called without DP library?");
+  return PROCEED;
 }
-OZ_Return cellAtExchangeStub(OzCell*,TaggedRef,TaggedRef)
-{
-  OZD_error("'cellAtExchange' called without DP library?");
-  return (PROCEED);
+OZ_Return distObjectAssignStub(OzObject*, TaggedRef, TaggedRef) {
+  OZD_error("'distObjectAssign' called without DP library?");
+  return PROCEED;
 }
-OZ_Return cellAssignExchangeStub(OzCell*,TaggedRef,TaggedRef)
-{
-  OZD_error("'cellAssignExchange' called without DP library?");
-  return (PROCEED);
+OZ_Return distObjectExchangeStub(OzObject*, TaggedRef, TaggedRef, TaggedRef&) {
+  OZD_error("'distObjectExchange' called without DP library?");
+  return PROCEED;
 }
 
 // arrays
@@ -184,15 +180,17 @@ OZ_Return (*distLockTake)(OzLock*, TaggedRef)
 OZ_Return (*distLockRelease)(OzLock*, TaggedRef)
   = distLockReleaseStub;
 
-//
-OZ_Return (*objectExchange)(OzCell*,TaggedRef,TaggedRef,TaggedRef)
-  = objectExchangeStub;
-OZ_Return (*cellAtAccess)(OzCell*,TaggedRef,TaggedRef)
-  = cellAtAccessStub;
-OZ_Return (*cellAtExchange)(OzCell*,TaggedRef,TaggedRef)
-  = cellAtExchangeStub;
-OZ_Return (*cellAssignExchange)(OzCell*,TaggedRef,TaggedRef)
-  = cellAssignExchangeStub;
+// objects
+OZ_Return (*distObjectInvoke)(OzObject*, TaggedRef)
+  = distObjectInvokeStub;
+OZ_Return (*distObjectGetFeature)(OzObject*, TaggedRef, TaggedRef&)
+  = distObjectGetFeatureStub;
+OZ_Return (*distObjectAccess)(OzObject*, TaggedRef, TaggedRef&)
+  = distObjectAccessStub;
+OZ_Return (*distObjectAssign)(OzObject*, TaggedRef, TaggedRef)
+  = distObjectAssignStub;
+OZ_Return (*distObjectExchange)(OzObject*, TaggedRef, TaggedRef, TaggedRef&)
+  = distObjectExchangeStub;
 
 // arrays
 OZ_Return (*distArrayGet)(OzArray*, TaggedRef, TaggedRef&)
@@ -221,10 +219,6 @@ OZ_Return (*distChunkGet)(SChunk*, TaggedRef, TaggedRef&)
 // classes
 OZ_Return (*distClassGet)(OzClass*)
   = distClassGetStub;
-
-// experimental 
-void (*cellOperationDone)(OzCell*,TaggedRef)
-  =cellOperationDoneStub;
 
 // garbage collection of a mediator
 void (*gCollectMediator)(Mediator*)

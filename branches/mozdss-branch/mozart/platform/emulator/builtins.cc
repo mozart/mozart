@@ -667,11 +667,20 @@ OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
       if (tf == makeTaggedNULL())
 	goto no_feature;
       return PROCEED;
-    case Co_Object:
+    case Co_Object: {
+      OzObject* obj = tagged2Object(t);
+      OzClass* cls = obj->getClass();
+      if (!cls)   // object is a stub: call distribution
+	return (*distObjectGetFeature)(obj, f, tf);
+      //
+      if (!cls->isComplete())   // class is necessary: call distribution
+	return (*distClassGet)(cls);
+      //
       tf = tagged2Object(t)->getFeature(f);
       if (tf == makeTaggedNULL())
 	goto no_feature;
       return PROCEED;
+    }
     case Co_Port:
     case Co_Lock:
       goto no_feature;
@@ -3352,6 +3361,18 @@ OZ_Return accessCell(OZ_Term term, OZ_Term &out)
   return PROCEED;
 }
 
+OZ_Return assignCell(OZ_Term term, OZ_Term val)
+{
+  OzCell *cell = tagged2Cell(term);
+  if (cell->isDistributed()) {
+    OZ_Term old;
+    return (*distCellExchange)(cell, old, val);
+  }
+  CheckLocalBoard(cell,"cell");
+  cell->setValue(val);
+  return PROCEED;
+}
+
 OZ_Return exchangeCell(OZ_Term term, OZ_Term newVal, OZ_Term &oldVal)
 {
   Assert(!oz_isVar(newVal));
@@ -3363,37 +3384,28 @@ OZ_Return exchangeCell(OZ_Term term, OZ_Term newVal, OZ_Term &oldVal)
   return PROCEED;
 }
 
+
 OZ_BI_define(BIaccessCell,1,1)
 {			
   oz_declareNonvarIN(0,cell);
   if (!oz_isCell(cell)) { oz_typeError(0,"Cell"); }
-
-  OZ_Term out;
-  int ret = accessCell(cell,out);
-  OZ_result(out);
-  return ret;
+  return accessCell(cell, OZ_out(0));
 } OZ_BI_end
 
 OZ_BI_define(BIassignCell,2,0)
 {			
   oz_declareNonvarIN(0,cell);
   if (!oz_isCell(cell)) { oz_typeError(0,"Cell"); }
-  oz_declareIN(1,newVal);
-  // SaveDeref(newVal);
-  OZ_Term oldIgnored;
-  return exchangeCell(cell,newVal,oldIgnored);
+  oz_declareIN(1,val);
+  return assignCell(cell,val);
 } OZ_BI_end
-
 
 OZ_BI_define(BIexchangeCellFun,2,1)
 {			
   oz_declareNonvarIN(0,cell);
   if (!oz_isCell(cell)) { oz_typeError(0,"Cell"); }
   oz_declareIN(1,newVal);
-  OZ_Term old;
-  int ret = exchangeCell(cell,newVal,old);
-  OZ_result(old);
-  return ret;
+  return exchangeCell(cell,newVal,OZ_out(0));
 } OZ_BI_end
 
 /*
@@ -3699,516 +3711,7 @@ TaggedRef Abstraction::DBGgetGlobals() {
 // OO Stuff
 // ---------------------------------------------------------------------
 
-/*
- *	Construct a new SRecord to be a copy of old.
- *	This is the functionality of adjoin(old,newlabel).
- */
-OZ_BI_define(BIcopyRecord,1,1)
-{
-  oz_declareNonvarIN(0,rec);
-  
-  if (oz_isSRecord(rec)) {
-    SRecord *rec0 = tagged2SRecord(rec);
-    SRecord *rec1 = SRecord::newSRecord(rec0);
-    OZ_RETURN(makeTaggedSRecord(rec1));
-  }
-  
-  if (oz_isLiteral(rec)) {
-    OZ_RETURN(rec);
-  }
-
-  oz_typeError(0,"Determined Record");
-} OZ_BI_end
-
-
-// perdio
-inline
-SRecord *getRecordFromState(RecOrCell state)
-{
-  if (!stateIsCell(state))
-    return getRecord(state);
-
-  OzCell *c = getCell(state);          // shortcut
-  if(!c->isDistributed()) { // can happen if globalized object becomes localized again
-    return tagged2SRecord(oz_deref(c->getValue()));
-  }
-  return NULL;
-}
-  
-
-// perdio
-// returns SUSPEND (suspend on variable feature)
-// returns BI_REPLACEBICALL (suspend on perdio)
-// returns PROCEED
-
-inline
-OZ_Return stateAt(RecOrCell state, OZ_Term fea, OZ_Term &old){
-  Assert(!oz_isVar(fea));
-  SRecord *aux = getRecordFromState(state);
-  if (aux){
-    TaggedRef t;
-    t=aux->getFeature(fea);
-    if(t){
-      old=t;
-      return PROCEED;}
-    oz_typeError(0,"(valid) Feature");
-  }
-  
-  old=oz_newVariable();  
-  OzCell *cell = getCell(state);          // shortcut
-  if (oz_onToplevel()) {
-    return (*cellAtExchange)(cell, fea, old);}
-  return (*cellAtAccess)(cell, fea, old);
-}
-
-OZ_Return stateLevelError(TaggedRef fea,TaggedRef newVal){
-  return oz_raise(E_ERROR,E_OBJECT,
-		  "deep assignment attempted",3,
-		  makeTaggedConst(am.getSelf()),fea,newVal);}
-
-inline
-OZ_Return stateAssign(RecOrCell state, OZ_Term fea, OZ_Term neW){
-  Assert(!oz_isVar(fea));
-  SRecord *aux = getRecordFromState(state);
-  if (aux){
-    TaggedRef t;
-    t=aux->replaceFeature(fea,neW); 
-    if(t){
-      return PROCEED;}
-    oz_typeError(0,"(valid) Feature");
-  }
-
-  if (!oz_onToplevel()) {return stateLevelError(fea,neW);}
-  OzCell *cell = getCell(state);          // shortcut
-  return (*cellAssignExchange)(cell, fea, neW);
-}
-
-inline
-OZ_Return stateExch(RecOrCell state, OZ_Term fea, OZ_Term &old, OZ_Term neW){
-  Assert(!oz_isVar(fea));
-  SRecord *aux = getRecordFromState(state);
-  if (aux){
-    TaggedRef t=aux->getFeature(fea); 
-    if(t){
-      old=t;
-      t=aux->replaceFeature(fea,neW);
-      Assert(t);
-      return PROCEED;}
-    oz_typeError(0,"(valid) Feature");}
-  
-  old=oz_newVariable();
-  OzCell *cell = getCell(state);          // shortcut
-  if (!oz_onToplevel()) {return stateLevelError(fea,neW);} 
-  return (*objectExchange)(cell, fea, old, neW);
-}
-
-//perdio interface to engine inline object functions
-SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea,OZ_Term &val)
-{
-  Assert(!oz_isVar(fea));  
-  SRecord *aux=getRecordFromState(state);
-  if(aux){
-    return aux;}
-  
-  int EmCode;
-  OzCell *cell = getCell(state);          // shortcut
-
-  if (oz_onToplevel()) {
-    if(isAssign) {
-      EmCode = (*cellAssignExchange)(cell, fea, val);
-    } else {
-      val= oz_newVariable();
-      EmCode = (*cellAtAccess)(cell, fea, val);
-    }
-  } else {
-    if(!isAssign) val = oz_newVariable();
-    EmCode = (*cellAtAccess)(cell, fea, val);
-  }
-
-  Assert(EmCode==BI_REPLACEBICALL);
-  return NULL;
-}
-
-
-//perdio
-OZ_Return atInlineRedo(TaggedRef fea, TaggedRef out)
-{
-  DEREF(fea, feaPtr);
-  if (!oz_isFeature(fea)) {
-    Assert(!oz_isRef(fea));
-    if (oz_isVarOrRef(fea)) {
-      oz_suspendOnPtr(feaPtr);
-    }
-    oz_typeError(0,"Feature");
-  }
-
-  RecOrCell state = am.getSelf()->getState();
-  return stateAt(state,fea,out);
-}
-
-OZ_DECLAREBI_USEINLINEREL2(BIatRedo,atInlineRedo)
-
-OZ_BI_define(BIat,1,1)
-{
-  oz_declareIN(0,fea);
-
-  DEREF(fea, feaPtr);
-  if (!oz_isFeature(fea)) {
-    Assert(!oz_isRef(fea));
-    if (oz_isVarOrRef(fea)) {
-      oz_suspendOnPtr(feaPtr);
-    }
-    oz_typeError(0,"Feature");
-  }
-
-  RecOrCell state = am.getSelf()->getState();
-  OZ_Term old;
-  OZ_Return ret=stateAt(state,fea,old);
-  if(ret==PROCEED) {
-    OZ_RETURN(old);}
-  else{
-    OZ_result(old);
-    return ret;}
-} OZ_BI_end
-
-// ---------------------------------------------------------------------
-// catXxxxxx routines work on mutable references 
-// (cell/attribute/dict#key/array#index)
-// ---------------------------------------------------------------------
-
-
-OZ_BI_define(BIcatAccessOO,1,1)
-{
-  OZ_Return ret;
-  oz_declareNonvarIN(0,cat);
-
-  // cat can be either a cell, feature, D#I tuple, or an error
-  if (oz_isCell(cat)) {
-    // Cell
-    OZ_Term out;
-    ret = accessCell(cat,out);
-    OZ_result(out);
-  }
-  else {
-    if (oz_isPair2(cat)) {
-      OZ_Term left = oz_left(cat);
-      DEREF(left, leftptr);
-      if (oz_isDictionary(left) || oz_isArray(left)) {
-	OZ_Term out;
-	ret = genericDot(left, oz_right(cat), out, TRUE);
-	if (ret == SUSPEND) {
-	  // Must explicitly suspend on key
-	  oz_suspendOn(oz_right(cat));
-	}         
-	OZ_result(out);
-      }
-      else {
-	// Type Error
-	oz_typeError(0,"Dict#Key, Array#Index");
-      }
-    }
-    else {
-      // Check for feature
-      OzObject *self = am.getSelf();
-      if (self && oz_isFeature(cat)) {
-	// OzObject attribute
-	RecOrCell state = self->getState();
-	OZ_Term old;
-	ret = stateAt(state,cat,old);
-	if(ret==PROCEED) {
-	  OZ_RETURN(old);}
-	else {
-	  OZ_result(old);}
-      }
-      else {
-        // Type Error
-        oz_typeError(0,"Feature, Cell, Dict#Key, Array#Index");}
-    }
-  }
-  return ret;
-} OZ_BI_end
-
-OZ_BI_define(BIcatAssignOO,2,0)
-{
-  oz_declareNonvarIN(0,cat);
-  oz_declareIN(1,value);
-
-  // cat can be either a cell, feature, D#I tuple, or an error
-  if (oz_isCell(cat)) {
-    // Cell
-    OZ_Term oldIgnored;
-    return exchangeCell(cat,value,oldIgnored);
-  }
-  if (oz_isPair2(cat)) {
-    OZ_Term left = oz_left(cat);
-    DEREF(left, leftptr);
-    if (oz_isDictionary(left) || oz_isArray(left)) {
-      // T#K pair
-      OZ_Return ret = genericSet(left, oz_right(cat), value);
-      if (ret == SUSPEND) {
-        // Must explicitly suspend on components of arg 
-        oz_suspendOn(oz_right(cat));
-      }
-      return ret;
-    }
-    else {
-      // Type Error
-      oz_typeError(0,"Dict#Key, Array#Index");
-    }
-  }         
-  // Check for feature
-  OzObject *self = am.getSelf();
-  if (oz_isFeature(cat) && self) {
-    // OzObject attribute
-    CheckLocalBoard(self,"object");
-  
-    RecOrCell state = self->getState();
-    return stateAssign(state,cat,value);
-  }
-  else {
-    // Type Error
-    oz_typeError(0,"Feature, Cell, Dict#Key, Array#Index");
-  }
-} OZ_BI_end
-
-OZ_BI_define(BIcatExchangeOO,2,1)
-{
-  OZ_Term old;
-  OZ_Return ret;
-
-  oz_declareNonvarIN(0,cat);
-  oz_declareIN(1,newVal);
-
-  // ca can be either a cell or feature or an error
-  if (oz_isCell(cat)) {
-    // Cell
-    ret = exchangeCell(cat,newVal,old);
-    OZ_result(old);
-  }
-  else {
-    if (oz_isPair2(cat)) {
-      OZ_Term left = oz_left(cat);
-      DEREF(left, leftptr);
-      // T#K pair
-      if (oz_isDictionary(left) || oz_isArray(left)) {
-	ret = genericExchange(left, oz_right(cat), newVal, old);
-	if (ret == SUSPEND) {
-	  // Must explicitly suspend on key
-	  oz_suspendOn(oz_right(cat));
-	}         
-	OZ_result(old);
-      }
-      else {
-	// Type Error
-	oz_typeError(0,"Dict#Key, Array#Index");
-      }
-    }
-    else {
-      // Check for feature
-      OzObject *self = am.getSelf();
-      if (oz_isFeature(cat) && self) {
-	// OzObject attribute
-	CheckLocalBoard(self,"object");
-	RecOrCell state = self->getState();
-
-	OZ_Return ret=stateExch(state,cat,old,newVal);
-	if(ret==PROCEED) {
-	  OZ_RETURN(old);}
-	else{
-	  OZ_result(old);
-	  return ret;}
-      } 
-      else {
-        // Type Error
-        oz_typeError(0,"Feature, Cell, Dict#Key, Array#Index");
-      }
-    }
-  }
-  return ret;
-
-} OZ_BI_end
-
-OZ_BI_define(BIcatAccess,1,1)
-{
-  OZ_Return ret;
-  oz_declareNonvarIN(0,cat);
-
-  // cat can be either a cell, D#I tuple, or an error
-  if (oz_isCell(cat)) {
-    // Cell
-    OZ_Term out;
-    ret = accessCell(cat,out);
-    OZ_result(out);
-  }
-  else {
-    if (oz_isPair2(cat)) {
-      OZ_Term left = oz_left(cat);
-      DEREF(left, leftptr);
-      if (oz_isDictionary(left) || oz_isArray(left)) {
-	OZ_Term out;
-	ret = genericDot(left, oz_right(cat), out, TRUE);
-	if (ret == SUSPEND) {
-	  // Must explicitly suspend on key
-	  oz_suspendOn(oz_right(cat));
-	}         
-	OZ_result(out);
-      }
-      else {
-	// Type Error
-	oz_typeError(0,"Dict#Key, Array#Index");
-      }
-    }
-    else {
-      // Type Error
-      oz_typeError(0,"Cell, Dict#Key, Array#Index");
-    }
-  }
-  return ret;
-} OZ_BI_end
-
-OZ_BI_define(BIcatAssign,2,0)
-{
-  oz_declareNonvarIN(0,cat);
-  oz_declareIN(1,value);
-
-  // cat can be either a cell, feature, D#I tuple, or an error
-  if (oz_isCell(cat)) {
-    // Cell
-    OZ_Term oldIgnored;
-    return exchangeCell(cat,value,oldIgnored);
-  }
-  if (oz_isPair2(cat)) {
-    OZ_Term left = oz_left(cat);
-    DEREF(left, leftptr);
-    if (oz_isDictionary(left) || oz_isArray(left)) {
-      // T#K pair
-      OZ_Return ret = genericSet(left, oz_right(cat), value);
-      if (ret == SUSPEND) {
-        // Must explicitly suspend on components of arg 
-        oz_suspendOn(oz_right(cat));
-      }
-      return ret;
-    }
-    else {
-      // Type Error
-      oz_typeError(0,"Dict#Key, Array#Index");
-    }
-  }         
-  // Type Error
-  oz_typeError(0,"Cell, Dict#Key, Array#Index");
-} OZ_BI_end
-
-OZ_BI_define(BIcatExchange,2,1)
-{
-  OZ_Term old;
-  OZ_Return ret;
-
-  oz_declareNonvarIN(0,cat);
-  oz_declareIN(1,newVal);
-
-  // ca can be either a cell or feature or an error
-  if (oz_isCell(cat)) {
-    // Cell
-    ret = exchangeCell(cat,newVal,old);
-    OZ_result(old);
-  }
-  else {
-    if (oz_isPair2(cat)) {
-      OZ_Term left = oz_left(cat);
-      DEREF(left, leftptr);
-      // T#K pair
-      if (oz_isDictionary(left) || oz_isArray(left)) {
-	ret = genericExchange(left, oz_right(cat), newVal, old);
-	if (ret == SUSPEND) {
-	  // Must explicitly suspend on key
-	  oz_suspendOn(oz_right(cat));
-	}         
-	OZ_result(old);
-      }
-      else {
-	// Type Error
-	oz_typeError(0,"Dict#Key, Array#Index");
-      }
-    }
-    else {
-      // Type Error
-      oz_typeError(0,"Cell, Dict#Key, Array#Index");
-    }
-  }
-  return ret;
-
-} OZ_BI_end
-
-OZ_BI_define(BIassign,2,0)
-{
-  oz_declareIN(0,fea);
-  oz_declareIN(1,value);
-
-  DEREF(fea, feaPtr);
-  if (!oz_isFeature(fea)) {
-    Assert(!oz_isRef(fea));
-    if (oz_isVarOrRef(fea)) {
-      oz_suspendOnPtr(feaPtr);
-    }
-    oz_typeError(0,"Feature");
-  }
-
-  OzObject *self = am.getSelf();
-  CheckLocalBoard(self,"object");
-  
-  RecOrCell state = self->getState();
-  return stateAssign(state,fea,value);
-} OZ_BI_end
-
-
-OZ_BI_define(BIexchange,2,1)
-{
-  oz_declareIN(0,fea);
-  oz_declareIN(1,newVal);
-
-  DEREF(fea, feaPtr);
-
-  if (!oz_isFeature(fea)) {
-    Assert(!oz_isRef(fea));
-    if (oz_isVarOrRef(fea)) {
-      oz_suspendOnPtr(feaPtr);
-      return SUSPEND;
-    }
-    oz_typeError(1,"Feature");
-  }
-
-  OzObject *self=am.getSelf();
-  CheckLocalBoard(self,"object");
-  RecOrCell state = self->getState();
-  TaggedRef old;
-
-  OZ_Return ret=stateExch(state,fea,old,newVal);
-  if(ret==PROCEED) {
-    OZ_RETURN(old);}
-  else{
-    OZ_result(old);
-    return ret;}
-
-} OZ_BI_end
-
-
-
-
-inline int sizeOf(SRecord *sr)
-{
-  return sr ? sr->sizeOf() : 0;
-}
-
-inline
-OzObject *newObject(SRecord *feat, SRecord *st, OzClass *cla, Board *b)
-{
-  OzLock *lck=NULL;
-  if (cla->supportsLocking()) {
-    lck = new OzLock(oz_currentBoard());
-  }
-  return new OzObject(b,st,cla,feat,lck);
-}
-
+// classes
 
 OZ_BI_define(BInewClass,3,1) {
   OZ_Term features   = OZ_in(0); { DEREF(features,_1); }
@@ -4237,6 +3740,182 @@ OZ_BI_define(BInewClass,3,1) {
   OZ_RETURN(makeTaggedConst(cl));
 } OZ_BI_end
 
+
+OZ_BI_define(BIclassIs,1,1)  {
+  oz_declareNonvarIN(0,cl);
+  cl = oz_deref(cl);
+
+  OZ_RETURN(oz_isClass(cl) ? oz_true() : oz_false());
+} OZ_BI_end
+
+OZ_BI_define(BIclassIsSited,1,1)  {
+  oz_declareNonvarIN(0,cl);
+  cl = oz_deref(cl);
+
+  if (!oz_isClass(cl)) {
+    oz_typeError(0,"Class");
+  }
+
+  OzClass* cls = tagged2OzClass(cl);
+  // guard for distribution (lazy copying)
+  if (!cls->isComplete()) return (*distClassGet)(cls);
+
+  OZ_RETURN(cls->isSited() ? oz_true() : oz_false());
+} OZ_BI_end
+
+OZ_BI_define(BIclassIsLocking,1,1)  {
+  oz_declareNonvarIN(0,cl);
+  cl = oz_deref(cl);
+
+  if (!oz_isClass(cl)) {
+    oz_typeError(0,"Class");
+  }
+
+  OzClass* cls = tagged2OzClass(cl);
+  // guard for distribution (lazy copying)
+  if (!cls->isComplete()) return (*distClassGet)(cls);
+
+  OZ_RETURN(cls->supportsLocking() ? oz_true():oz_false());
+} OZ_BI_end
+
+
+// object state
+
+// raph: those functions do access and/or assign an object's state.
+// They handle both the local and distributed cases.  They are used by
+// builtins BIat, BIassign, BIexchange, BIcatAccessOO, BIcatAssignOO,
+// and BIcatExchangeOO.
+
+inline
+OZ_Return objectAccess(OzObject* obj, TaggedRef fea, TaggedRef &res) {
+  Assert(!oz_isVar(fea));
+
+  if (obj->isDistributed())
+    return (*distObjectAccess)(obj, fea, res);
+
+  SRecord* rec = obj->getState();
+  Assert(rec);
+  TaggedRef t = rec->getFeature(fea);
+  if (t) {
+    res = t;
+    return PROCEED;
+  }
+  oz_typeError(0,"(valid) Feature");
+}
+
+inline
+OZ_Return objectAssign(OzObject* obj, TaggedRef fea, TaggedRef val) {
+  Assert(!oz_isVar(fea));
+
+  if (obj->isDistributed())
+    return (*distObjectAssign)(obj, fea, val);
+
+  SRecord* rec = obj->getState();
+  Assert(rec);
+  TaggedRef t = rec->replaceFeature(fea, val);
+  if (t) return PROCEED;
+  oz_typeError(0,"(valid) Feature");
+}
+
+inline
+OZ_Return objectExchange(OzObject* obj, TaggedRef fea,
+			 TaggedRef val, TaggedRef& old) {
+  Assert(!oz_isVar(fea));
+
+  if (obj->isDistributed())
+    return (*distObjectExchange)(obj, fea, val, old);
+
+  SRecord* rec = obj->getState();
+  Assert(rec);
+  TaggedRef t = rec->getFeature(fea);
+  if (t) {
+    old = t;
+    t = rec->replaceFeature(fea, val);
+    Assert(t);
+    return PROCEED;
+  }
+  oz_typeError(0,"(valid) Feature");
+}
+
+
+// now the builtins
+
+OZ_BI_define(BIat,1,1)
+{
+  oz_declareNonvarIN(0, fea);
+  if (!oz_isFeature(fea)) {
+    oz_typeError(0,"Feature");
+  }
+  return objectAccess(am.getSelf(), fea, OZ_out(0));
+
+} OZ_BI_end
+
+
+OZ_BI_define(BIassign,2,0)
+{
+  oz_declareNonvarIN(0, fea);
+  oz_declareIN(1, value);
+
+  if (!oz_isFeature(fea)) {
+    oz_typeError(0,"Feature");
+  }
+  OzObject *self = am.getSelf();
+  CheckLocalBoard(self,"object");     // situatedness check
+
+  return objectAssign(self, fea, value);
+
+} OZ_BI_end
+
+
+OZ_BI_define(BIexchange,2,1)
+{
+  oz_declareNonvarIN(0, fea);
+  oz_declareIN(1, value);
+
+  if (!oz_isFeature(fea)) {
+    oz_typeError(0,"Feature");
+  }
+  OzObject *self = am.getSelf();
+  CheckLocalBoard(self,"object");     // situatedness check
+
+  return objectExchange(self, fea, value, OZ_out(0));
+
+} OZ_BI_end
+
+
+// from the old perdio, no longer functional
+OZ_Return atInlineRedo(TaggedRef fea, TaggedRef out)
+{
+  OZ_error("illegal call to defunct builtin BIatRedo");
+  return PROCEED;
+}
+
+OZ_DECLAREBI_USEINLINEREL2(BIatRedo,atInlineRedo)
+
+
+/*
+ *	Construct a new SRecord to be a copy of old.
+ *	This is the functionality of adjoin(old,newlabel).
+ */
+OZ_BI_define(BIcopyRecord,1,1)
+{
+  oz_declareNonvarIN(0,rec);
+  
+  if (oz_isSRecord(rec)) {
+    SRecord *rec0 = tagged2SRecord(rec);
+    SRecord *rec1 = SRecord::newSRecord(rec0);
+    OZ_RETURN(makeTaggedSRecord(rec1));
+  }
+  
+  if (oz_isLiteral(rec)) {
+    OZ_RETURN(rec);
+  }
+
+  oz_typeError(0,"Determined Record");
+} OZ_BI_end
+
+
+// comma and send
 
 OZ_BI_define(BIcomma,2,0) 
 {
@@ -4305,7 +3984,7 @@ OZ_Return getClassInline(TaggedRef t, TaggedRef &out)
 OZ_DECLAREBI_USEINLINEFUN1(BIgetClass,getClassInline)
 
 
-
+// object creation
 
 inline
 TaggedRef cloneObjectRecord(TaggedRef record, Bool cloneAll)
@@ -4329,6 +4008,16 @@ TaggedRef cloneObjectRecord(TaggedRef record, Bool cloneAll)
   return makeTaggedSRecord(rec);
 }
 
+inline
+OzObject *newObject(SRecord *feat, SRecord *st, OzClass *cla, Board *b)
+{
+  OzLock *lck=NULL;
+  if (cla->supportsLocking()) {
+    lck = new OzLock(oz_currentBoard());
+  }
+  return new OzObject(b,st,cla,feat,lck);
+}
+
 static TaggedRef dummyRecord = 0;
 
 inline
@@ -4340,14 +4029,16 @@ OZ_Term makeObject(OZ_Term initState, OZ_Term ffeatures, OzClass *clas)
   if (!oz_isSRecord(initState)) {
     if (dummyRecord==0) {
       dummyRecord = OZ_recordInitC("noattributes",
-				   oz_list(OZ_pair2(OZ_newName(),taggedVoidValue),0));
+				   oz_list(OZ_pair2(OZ_newName(),
+						    taggedVoidValue),
+					   0));
       OZ_protect(&dummyRecord);
     }
     initState = dummyRecord;
   }
 
   OzObject *out = 
-    newObject(oz_isSRecord(ffeatures) ? tagged2SRecord(ffeatures) : (SRecord*) NULL,
+    newObject(oz_isSRecord(ffeatures) ? tagged2SRecord(ffeatures) : NULL,
 	      tagged2SRecord(initState),
 	      clas,
 	      oz_currentBoard());
@@ -4404,6 +4095,8 @@ OZ_BI_define(BINew,3,0)
 } OZ_BI_end
 
 
+// object lock
+
 inline
 OZ_Return ooGetLockInline(TaggedRef val)
 { 
@@ -4417,42 +4110,196 @@ OZ_Return ooGetLockInline(TaggedRef val)
 OZ_DECLAREBI_USEINLINEREL1(BIooGetLock,ooGetLockInline)
 
 
-OZ_BI_define(BIclassIs,1,1)  {
-  oz_declareNonvarIN(0,cl);
-  cl = oz_deref(cl);
 
-  OZ_RETURN(oz_isClass(cl) ? oz_true() : oz_false());
-} OZ_BI_end
+// ---------------------------------------------------------------------
+// catXxxxxx routines work on mutable references 
+// (cell/attribute/dict#key/array#index)
+// ---------------------------------------------------------------------
 
-OZ_BI_define(BIclassIsSited,1,1)  {
-  oz_declareNonvarIN(0,cl);
-  cl = oz_deref(cl);
+// BIcatAccessOO, BIcatAssignOO, BIcatExchangeOO:
+//    accept cell, attribute, dict#key, array#index
+//
+// BIcatAccess, BIcatAssign, BIcatExchange
+//    accept cell, dict#key, array#index (no attribute)
 
-  if (!oz_isClass(cl)) {
-    oz_typeError(0,"Class");
+OZ_BI_define(BIcatAccessOO,1,1)
+{
+  oz_declareNonvarIN(0,cat);
+  // cat can be either a cell, feature, D#I tuple, or an error
+
+  if (oz_isCell(cat)) {   // cell
+    return accessCell(cat, OZ_out(0));
   }
-
-  OzClass* cls = tagged2OzClass(cl);
-  // guard for distribution (lazy copying)
-  if (!cls->isComplete()) return (*distClassGet)(cls);
-
-  OZ_RETURN(cls->isSited() ? oz_true() : oz_false());
-} OZ_BI_end
-
-OZ_BI_define(BIclassIsLocking,1,1)  {
-  oz_declareNonvarIN(0,cl);
-  cl = oz_deref(cl);
-
-  if (!oz_isClass(cl)) {
-    oz_typeError(0,"Class");
+  if (oz_isPair2(cat)) {   // D#I
+    OZ_Term left = oz_left(cat);
+    DEREF(left, leftptr);
+    if (oz_isDictionary(left) || oz_isArray(left)) {
+      OZ_Return ret = genericDot(left, oz_right(cat), OZ_out(0), TRUE);
+      if (ret == SUSPEND) {
+	oz_suspendOn(oz_right(cat));   // Must explicitly suspend on key
+      }
+      return ret;
+    }
+    oz_typeError(0,"Dict#Key, Array#Index");   // not the right pair
   }
+  if (am.getSelf() && oz_isFeature(cat)) {   // feature
+    return objectAccess(am.getSelf(), cat, OZ_out(0));
+  }
+  // none of the above
+  oz_typeError(0,"Feature, Cell, Dict#Key, Array#Index");
 
-  OzClass* cls = tagged2OzClass(cl);
-  // guard for distribution (lazy copying)
-  if (!cls->isComplete()) return (*distClassGet)(cls);
-
-  OZ_RETURN(cls->supportsLocking() ? oz_true():oz_false());
 } OZ_BI_end
+
+
+OZ_BI_define(BIcatAssignOO,2,0)
+{
+  oz_declareNonvarIN(0,cat);
+  oz_declareIN(1,value);
+
+  // cat can be either a cell, feature, D#I tuple, or an error
+  if (oz_isCell(cat)) {   // cell
+    return assignCell(cat,value);
+  }
+  if (oz_isPair2(cat)) {   // D#I
+    OZ_Term left = oz_left(cat);
+    DEREF(left, leftptr);
+    if (oz_isDictionary(left) || oz_isArray(left)) {
+      OZ_Return ret = genericSet(left, oz_right(cat), value);
+      if (ret == SUSPEND) {
+        // Must explicitly suspend on components of arg 
+        oz_suspendOn(oz_right(cat));
+      }
+      return ret;
+    }
+    oz_typeError(0,"Dict#Key, Array#Index");   // not the right pair
+  }
+  OzObject *self = am.getSelf();
+  if (self && oz_isFeature(cat)) {   // attribute
+    CheckLocalBoard(self,"object");
+    return objectAssign(self, cat, value);
+  }
+  // none of the above
+  oz_typeError(0,"Feature, Cell, Dict#Key, Array#Index");
+
+} OZ_BI_end
+
+
+OZ_BI_define(BIcatExchangeOO,2,1)
+{
+  oz_declareNonvarIN(0,cat);
+  oz_declareIN(1,value);
+
+  // cat can be either a cell, feature, D#I tuple, or an error
+  if (oz_isCell(cat)) {   // cell
+    return exchangeCell(cat, value, OZ_out(0));
+  }
+  if (oz_isPair2(cat)) {   // D#I
+    OZ_Term left = oz_left(cat);
+    DEREF(left, leftptr);
+    if (oz_isDictionary(left) || oz_isArray(left)) {
+      OZ_Return ret = genericExchange(left, oz_right(cat), value, OZ_out(0));
+      if (ret == SUSPEND) {
+	oz_suspendOn(oz_right(cat));   // Must explicitly suspend on key
+      }
+      return ret;
+    }
+    oz_typeError(0,"Dict#Key, Array#Index");   // not the right pair
+  }
+  OzObject *self = am.getSelf();
+  if (self && oz_isFeature(cat)) {   // attribute
+    CheckLocalBoard(self,"object");
+    return objectExchange(self, cat, value, OZ_out(0));
+  }
+  // none of the above
+  oz_typeError(0,"Feature, Cell, Dict#Key, Array#Index");
+
+} OZ_BI_end
+
+
+OZ_BI_define(BIcatAccess,1,1)
+{
+  oz_declareNonvarIN(0,cat);
+  // cat can be either a cell, feature, D#I tuple, or an error
+
+  if (oz_isCell(cat)) {   // cell
+    return accessCell(cat, OZ_out(0));
+  }
+  if (oz_isPair2(cat)) {   // D#I
+    OZ_Term left = oz_left(cat);
+    DEREF(left, leftptr);
+    if (oz_isDictionary(left) || oz_isArray(left)) {
+      OZ_Return ret = genericDot(left, oz_right(cat), OZ_out(0), TRUE);
+      if (ret == SUSPEND) {
+	oz_suspendOn(oz_right(cat));   // Must explicitly suspend on key
+      }
+      return ret;
+    }
+    oz_typeError(0,"Dict#Key, Array#Index");   // not the right pair
+  }
+  if (am.getSelf() && oz_isFeature(cat)) {   // feature
+    return objectAccess(am.getSelf(), cat, OZ_out(0));
+  }
+  // none of the above
+  oz_typeError(0,"Cell, Dict#Key, Array#Index");
+
+} OZ_BI_end
+
+
+OZ_BI_define(BIcatAssign,2,0)
+{
+  oz_declareNonvarIN(0,cat);
+  oz_declareIN(1,value);
+
+  // cat can be either a cell, feature, D#I tuple, or an error
+  if (oz_isCell(cat)) {   // cell
+    return assignCell(cat,value);
+  }
+  if (oz_isPair2(cat)) {   // D#I
+    OZ_Term left = oz_left(cat);
+    DEREF(left, leftptr);
+    if (oz_isDictionary(left) || oz_isArray(left)) {
+      OZ_Return ret = genericSet(left, oz_right(cat), value);
+      if (ret == SUSPEND) {
+        // Must explicitly suspend on components of arg 
+        oz_suspendOn(oz_right(cat));
+      }
+      return ret;
+    }
+    oz_typeError(0,"Dict#Key, Array#Index");   // not the right pair
+  }
+  // none of the above
+  oz_typeError(0,"Cell, Dict#Key, Array#Index");
+
+} OZ_BI_end
+
+
+OZ_BI_define(BIcatExchange,2,1)
+{
+  oz_declareNonvarIN(0,cat);
+  oz_declareIN(1,value);
+
+  // cat can be either a cell, feature, D#I tuple, or an error
+  if (oz_isCell(cat)) {   // cell
+    return exchangeCell(cat, value, OZ_out(0));
+  }
+  if (oz_isPair2(cat)) {   // D#I
+    OZ_Term left = oz_left(cat);
+    DEREF(left, leftptr);
+    if (oz_isDictionary(left) || oz_isArray(left)) {
+      OZ_Return ret = genericExchange(left, oz_right(cat), value, OZ_out(0));
+      if (ret == SUSPEND) {
+	oz_suspendOn(oz_right(cat));   // Must explicitly suspend on key
+      }
+      return ret;
+    }
+    oz_typeError(0,"Dict#Key, Array#Index");   // not the right pair
+  }
+  // none of the above
+  oz_typeError(0,"Cell, Dict#Key, Array#Index");
+
+} OZ_BI_end
+
+
 
 #ifdef MISC_BUILTINS
 

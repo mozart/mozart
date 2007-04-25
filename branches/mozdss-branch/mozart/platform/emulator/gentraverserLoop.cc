@@ -197,10 +197,12 @@ void TRAVERSERCLASS::doit()
 
 	case Co_Object:
 	  if (!processObject(t, ct)) {
+	    // raph: objects are no longer marshaled this way
+
 	    //
 	    OzObject *o = tagged2Object(t);
 
-      put(o->getClassTerm());
+	    put(makeTaggedConst(o->getClass()));
 	    //
 	    SRecord *sr = o->getFreeRecord();
 	    OZ_Term tsr;
@@ -216,8 +218,8 @@ void TRAVERSERCLASS::doit()
 	    put(tsr);
 
 	    //
-      //bmc: I should not put the state yet.
-	    put(makeTaggedConst(getCell(o->getState())));
+	    //bmc: I should not put the state yet.
+	    put(makeTaggedSRecord(o->getState()));
 
 	    //
 	    if (o->getLock())
