@@ -67,13 +67,13 @@ extern OZ_Return (*distCellExchange)(OzCell*, TaggedRef&, TaggedRef);
 extern OZ_Return (*distLockTake)(OzLock*, TaggedRef);
 extern OZ_Return (*distLockRelease)(OzLock*, TaggedRef);
 
-// 
-extern OZ_Return (*cellAtAccess)(OzCell*,TaggedRef,TaggedRef);
-extern OZ_Return (*cellAtExchange)(OzCell*,TaggedRef,TaggedRef);
-extern OZ_Return (*cellAssignExchange)(OzCell*,TaggedRef,TaggedRef);
-extern OZ_Return (*objectExchange) (OzCell*,TaggedRef,TaggedRef,TaggedRef);
-// Experimental, just for testing the behavior of the GDS PROC_EXEC
-extern void (*cellOperationDone)(OzCell*,TaggedRef);
+// objects
+extern OZ_Return (*distObjectInvoke)(OzObject*, TaggedRef);
+extern OZ_Return (*distObjectGetFeature)(OzObject*, TaggedRef, TaggedRef&);
+extern OZ_Return (*distObjectAccess)(OzObject*, TaggedRef, TaggedRef&);
+extern OZ_Return (*distObjectAssign)(OzObject*, TaggedRef, TaggedRef);
+extern OZ_Return (*distObjectExchange)(OzObject*, TaggedRef,
+				       TaggedRef, TaggedRef&);
 
 // arrays
 extern OZ_Return (*distArrayGet)(OzArray*, TaggedRef, TaggedRef&);

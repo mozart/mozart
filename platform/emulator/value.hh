@@ -1741,104 +1741,103 @@ public:
   GName *globalize(void);
 };
 
+inline
+Bool isOzClass(ConstTerm *t)
+{
+  return (t->getType()==Co_Class);
+}
+
+inline
+Bool oz_isClass(TaggedRef term)
+{
+  return oz_isConst(term) && isOzClass(tagged2Const(term));
+}
+
+inline
+OzClass *tagged2OzClass(TaggedRef term)
+{
+  Assert(oz_isClass(term));
+  return (OzClass *)tagged2Const(term);
+}
+
 
 /*
  * Object
  */
 
-
-typedef TaggedRef RecOrCell;
-
-inline
-Bool stateIsCell(RecOrCell rc) { 
-  return oz_isConst(rc); 
-}
-
-inline
-OzCell * getCell(RecOrCell rc)   {
-  Assert(stateIsCell(rc)); 
-  return reinterpret_cast<OzCell*>(tagged2Const(rc));
-}
-
-inline
-SRecord * getRecord(RecOrCell rc) {
-  Assert(!stateIsCell(rc)); 
-  return tagged2SRecord(rc);
-}
+// raph: Objects are now distributed with a mediator.  And the lazy
+// serialization of an object's class is now independent from the
+// object.  Therefore, objects no longer use GNames.  Moreover, the
+// state of the object is now handled by the object's mediator (no
+// more RecOrCell).
 
 class OzObject: public ConstTermWithHome {
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
-  GName  *objectID; 
-  TaggedRef cl1, lock, freeFeatures, state;
+  // do not change order, the garbage collector relies on it!
+  TaggedRef cls, lock, freeFeatures, state;
+
 public:
   OZPRINTLONG
   NO_DEFAULT_CONSTRUCTORS(OzObject)
 
-  OzClass * getClass(void) { 
-    return (OzClass *) tagged2Const(cl1); 
-  }
-  OZ_Term getClassTerm(void) {
-    return (cl1);
+  // handle class, lock, free features, and state
+  OzClass* getClass(void) {
+    return cls == makeTaggedNULL() ? NULL : tagged2OzClass(cls);
   }
   void setClass(OzClass *c) {
-    Assert(!c || c->supportsLocking()>=0);
-    cl1=makeTaggedConst(c);
+    cls = c ? makeTaggedConst(c) : makeTaggedNULL();
   }
-  void setClassTerm(OZ_Term cl) {
-    Assert(oz_isConst(cl) && tagged2Const(cl)->getType()==Co_Class);
-    cl1 = cl;
-  }
-
-  GName *getGName1(void)       {
-    return objectID;
-  }
-  void setGName(GName *gn) {
-    objectID = gn;
+  void setClass(OZ_Term cl) {
+    Assert(oz_isClass(cl));
+    cls = cl;
   }
     
   OzLock *getLock(void) { 
-    return ((lock == makeTaggedNULL()) ? 
-	    (OzLock *) NULL : (OzLock *) tagged2Const(lock)); 
+    return lock == makeTaggedNULL() ? NULL : (OzLock *) tagged2Const(lock); 
   }
-  void setLock(OzLock *l) { 
-    lock = l ? makeTaggedConst((ConstTerm *) l) : makeTaggedNULL();
+  void setLock(OzLock *l) {
+    lock = l ? makeTaggedConst((ConstTerm*) l) : makeTaggedNULL();
   }
-
-  const char *getPrintName(void) { 
-    return getClass()->getPrintName(); 
-  }
-  RecOrCell getState(void) { 
-    return state; 
-  }
-  void setState(SRecord *s) { 
-    Assert(s!=0); 
-    state=makeTaggedSRecord(s); 
-  }
-  void setState(ConstTerm *c) { 
-    state = c ? makeTaggedConst(c) : makeTaggedNULL(); 
-  }
-  void setState(OZ_Term s) {
-    state = s;
-  }
-
-  OzDictionary *getDefMethods() {
-    return getClass()->getDefMethods();
+  void setLock(OZ_Term l) {
+    Assert(oz_isConst(l) && tagged2Const(l)->getType() == Co_Lock);
+    lock = l;
   }
 
   SRecord *getFreeRecord(void) { 
     return freeFeatures ? tagged2SRecord(freeFeatures) : (SRecord *) NULL;
   }
-  SRecord *getUnfreeRecord() { 
-    return getClass()->getUnfreeRecord(); 
+  void setFreeRecord(SRecord *sr) { 
+    freeFeatures = sr ? makeTaggedSRecord(sr) : makeTaggedNULL(); 
   }
-  void setFreeRecord(SRecord *aRec) { 
-    freeFeatures = aRec ? makeTaggedSRecord(aRec) : makeTaggedNULL(); 
+  void setFreeRecord(OZ_Term r) {
+    freeFeatures = r; 
+  }
+
+  SRecord* getState(void) {
+    return state == makeTaggedNULL() ? NULL : tagged2SRecord(state);
+  }
+  void setState(SRecord *sr) { 
+    state = sr ? makeTaggedSRecord(sr) : makeTaggedNULL();
+  }
+  void setState(OZ_Term s) {
+    Assert(s == makeTaggedNULL() || oz_isSRecord(s));
+    state = s;
+  }
+
+  // properties coming directly from the class
+  const char *getPrintName(void);
+
+  OzDictionary *getDefMethods() {   // unsafe
+    return getClass()->getDefMethods();
+  }
+  SRecord *getUnfreeRecord() {   // unsafe
+    return getClass()->getUnfreeRecord(); 
   }
 
   /* same functionality is also in instruction inlineDot */
-  TaggedRef getFeature(TaggedRef lit) {
+  TaggedRef getFeature(TaggedRef lit) {   // unsafe
     SRecord *freefeat = getFreeRecord();
     if (freefeat) {
       TaggedRef ret = freefeat->getFeature(lit);
@@ -1849,7 +1848,7 @@ public:
     return fr ?  fr->getFeature(lit) : makeTaggedNULL();
   }
 
-  TaggedRef replaceFeature(TaggedRef lit, TaggedRef value) {
+  TaggedRef replaceFeature(TaggedRef lit, TaggedRef value) {   // unsafe
     SRecord *freefeat = getFreeRecord();
     if (freefeat) {
       int ind = freefeat->getIndex(lit);
@@ -1860,51 +1859,37 @@ public:
       }
     }
     SRecord *fr = getUnfreeRecord();
-    
-    if (!fr)
-      return makeTaggedNULL();
-
-    int ind = fr->getIndex(lit);
-
-    if (ind == -1)
-      return makeTaggedNULL();
-    
-    TaggedRef ret = fr->getArg(ind);
-    fr->setArg(ind, value);
-    
-    return ret;
+    if (fr) {
+      int ind = fr->getIndex(lit);
+      if (ind != -1) {
+	TaggedRef ret = fr->getArg(ind);
+	fr->setArg(ind, value);
+	return ret;
+      }
+    }
+    return makeTaggedNULL();
   }
 
   TaggedRef getArityList();
   int getWidth ();
 
-  GName *globalize();
-  void localize();
-
+  // constructor
   OzObject(Board *bb, SRecord *s, OzClass *ac, SRecord *feat, OzLock *lck)
     : ConstTermWithHome(bb, Co_Object)
   {
     setFreeRecord(feat);
     setClass(ac);
     setState(s);
-    setGName(NULL);
     setLock(lck);
   }
 
-  // kost@ : this is THE constructor to be used by the builder (for
-  // distribution and eventually persistence);
-  OzObject(Board *bb, GName *gn, OZ_Term s, SRecord *feat, OzLock *lck)
-    : ConstTermWithHome(bb, Co_Object)
-  {
-    setFreeRecord(feat);
-    setState(s);
-    setGName(gn);
-    setLock(lck);
-    DebugCode(cl1 = (OZ_Term) 0;);
-  }
+  // raph: this is the constructor to be used by the builder
+  OzObject(Board *bb)
+    : ConstTermWithHome(bb, Co_Object),
+      cls(makeTaggedNULL()), lock(makeTaggedNULL()),
+      freeFeatures(makeTaggedNULL()), state(makeTaggedNULL())
+  {}
 };
-
-SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &val);
 
 inline
 Bool isObject(ConstTerm *t)
@@ -1923,25 +1908,6 @@ OzObject *tagged2Object(TaggedRef term)
 {
   Assert(oz_isObject(term));
   return (OzObject *)tagged2Const(term);
-}
-
-inline
-Bool isOzClass(ConstTerm *t)
-{
-  return (t->getType()==Co_Class);
-}
-
-inline
-Bool oz_isClass(TaggedRef term)
-{
-  return oz_isConst(term) && isOzClass(tagged2Const(term));
-}
-
-inline
-OzClass *tagged2OzClass(TaggedRef term)
-{
-  Assert(oz_isClass(term));
-  return (OzClass *)tagged2Const(term);
 }
 
 /*===================================================================
@@ -2598,8 +2564,6 @@ public:
     return ret;}
 
   TaggedRef *getRef() { return &val; }
-
-  void globalize(int);
 };
 
 inline

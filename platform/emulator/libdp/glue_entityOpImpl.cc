@@ -232,19 +232,6 @@ OZ_Return distLockReleaseImpl(OzLock* lock, TaggedRef thr) {
 
 
 
-
-void cellOperationDoneReadImpl(OzCell* cell, TaggedRef ans, int thid){
-    OZ_error("Unexpected return value from AO_RE_W_DONE"); 
-}
-
-
-void cellOperationDoneWriteImpl(OzCell* cell)
-{
-  ; 
-}
-
-
-
 /******************************* Arrays *******************************/
 
 OZ_Return distArrayGetImpl(OzArray *oza, TaggedRef indx, TaggedRef &ans) {
@@ -494,41 +481,6 @@ OZ_Return distVarMakeNeededImpl(TaggedRef *varPtr) {
 
 
 
-OZ_Return cellAtExchangeImpl(OzCell* cell, TaggedRef fea, TaggedRef val){
-  /*
-  printf("cellAtExchange feature:%s",toC(fea));
-  printf(" val:%s\n", toC(val));
-  ProxyInterface *pi = index2Pi(o->getIndex());
-  SuspCellAtExchange *sps = new SuspCellAtExchange(o, fea, val);
-  OZ_Term msg = OZ_mkTupleC("exchange",2,fea,val);
-  PstOutContainer *Load = new PstOutContainer(msg); 
-  OpRetVal ret = pi->doAbstractOperation(AO_STATE_WRITE, sps->thId,Load);
-  return decodeOpRetVal(ret,sps);
-  */
-  return PROCEED;
-}
-
-
-OZ_Return cellAtAccessImpl(OzCell* cell, TaggedRef fea, TaggedRef val){
-  /*
-  printf("cellAtAccess feature:%s",toC(fea));
-  printf(" val:%s\n",toC(val)); 
-  ProxyInterface *pi = index2Pi(o->getIndex());
-  SuspCellAtAccess *sps = new SuspCellAtAccess(o, fea, val);
-  OZ_Term msg = OZ_mkTupleC("access",2,fea,val);
-  PstOutContainer *Load = new PstOutContainer(msg);
-  OpRetVal ret = pi->doAbstractOperation(AO_STATE_READ, sps->thId,Load);
-  return  decodeOpRetVal(ret,sps);
-  */
-  return PROCEED;
-}
-
-OZ_Return objectExchangeImpl(OzCell* o, TaggedRef fea, TaggedRef oVal, TaggedRef nVal){
-  return PROCEED;
-}
-
-
-
 /**************************** Chunks ****************************/
 
 OZ_Return
@@ -598,11 +550,6 @@ void initEntityOperations(){
   // locks
   distLockTake = &distLockTakeImpl;
   distLockRelease = &distLockReleaseImpl;
-  
-  // objects 
-  cellAtExchange = &cellAtExchangeImpl;
-  cellAtAccess   = &cellAtAccessImpl; 
-  objectExchange = &objectExchangeImpl;
 
   // arrays
   distArrayPut = &distArrayPutImpl;

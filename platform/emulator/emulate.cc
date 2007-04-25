@@ -2235,15 +2235,10 @@ LBLdispatcher:
     {
       TaggedRef fea = getLiteralArg(PC+1);
       OzObject *self = e->getSelf();
+      Assert(self);
 
-      Assert(e->getSelf()!=NULL);
-      RecOrCell state = self->getState();
-      SRecord *rec;
-      if (stateIsCell(state)) {
-	OZ_Term ans = oz_newVariable();
-	XPC(2) = ans;
-	OZ_Return res = cellAtAccess(getCell(state), fea, XPC(2));
-
+      if (self->isDistributed()) {     // call distribution layer
+	OZ_Return res = distObjectAccess(self, fea, XPC(2));
 	switch(res) {
 	case PROCEED: {
 	  DISPATCH(5);
@@ -2254,21 +2249,18 @@ LBLdispatcher:
 	  SUSPENDONVARLIST;
 	  MAGIC_RET;
 	}
-	default:
-	  Assert(0);
-	}
-	/*
-	rec = getState(state,NO,fea,XPC(2));
-	if (rec==NULL) {
+	case BI_REPLACEBICALL: {
 	  PC += 5;
 	  Assert(!e->isEmptyPreparedCalls());
 	  goto LBLreplaceBICall;
 	}
-	*/
-      } else {
-	rec = getRecord(state);
+	default:
+	  Assert(0);
+	}
       }
-      Assert(rec!=NULL);
+      // handle local case
+      SRecord* rec = self->getState();
+      Assert(rec);
       int index = ((InlineCache*)(PC+3))->lookup(rec,fea);
       if (index>=0) {
 	XPC(2) = rec->getArg(index);
@@ -2281,45 +2273,39 @@ LBLdispatcher:
   Case(INLINEASSIGN)
     {      
       TaggedRef fea = getLiteralArg(PC+1);
-
       OzObject *self = e->getSelf();
+      Assert(self);
 
+      // situatedness check
       if (!e->isCurrentRoot() && !oz_isCurrentBoard(GETBOARD(self))) {
 	(void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomObject);
 	RAISE_THREAD;
-     }
+      }
 
-      RecOrCell state = self->getState();
-      SRecord *rec;
-      
-      if (stateIsCell(state)) {
-	
-	OZ_Return res = cellAtExchange(getCell(state),fea,XPC(2)); 
-	switch(res){
-	case PROCEED:{
+      if (self->isDistributed()) {     // call distribution layer
+	OZ_Return res = distObjectAssign(self, fea, XPC(2));
+	switch(res) {
+	case PROCEED: {
 	  DISPATCH(5);
 	}
-	case SUSPEND:{
-	  PC += 5; 
+	case SUSPEND: {
+	  PC += 5;
 	  PushContX(PC);
 	  SUSPENDONVARLIST;
 	  MAGIC_RET;
 	}
-	default:
-	  Assert(0); 
-	}
-	/*
-	rec = getState(state,OK,fea,XPC(2));
-	if (rec==NULL) {
+	case BI_REPLACEBICALL: {
 	  PC += 5;
 	  Assert(!e->isEmptyPreparedCalls());
 	  goto LBLreplaceBICall;
 	}
-	*/
-      } else {
-	rec = getRecord(state);
+	default:
+	  Assert(0);
+	}
       }
-      Assert(rec!=NULL);
+      // handle local case
+      SRecord *rec = self->getState();
+      Assert(rec);
       int index = ((InlineCache*)(PC+3))->lookup(rec,fea);
       if (index>=0) {
 	Assert(oz_isRef(*rec->getRef(index)) || !oz_isVar(*rec->getRef(index)));

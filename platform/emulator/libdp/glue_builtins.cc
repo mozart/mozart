@@ -961,9 +961,9 @@ OZ_BI_define(BIgetEntityCond,2,0){
 }OZ_BI_end
 
 
-void cellOperationDoneReadImpl(OzCell*, TaggedRef, int);
-
+// ???
 OZ_BI_define(BIremoteExecDone,3,0){
+  /*
   OZ_Term entity  =   OZ_in(0);
   OZ_Term ans     =   OZ_in(1);
   OZ_Term id      =   OZ_in(2); 
@@ -971,6 +971,7 @@ OZ_BI_define(BIremoteExecDone,3,0){
   OzCell *cell = tagged2Cell(entity);
   int id_int = OZ_intToC(id); 
   cellOperationDoneReadImpl(cell, ans, id_int); 
+  */
   return PROCEED;
 }OZ_BI_end
 
