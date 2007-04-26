@@ -524,9 +524,8 @@ void initBuiltins() {
   BI_waitStatus        = string2Builtin("INTERNAL", "waitStatus");
   BI_bindReadOnly      = string2Builtin("INTERNAL", "bindReadOnly");
   BI_varToReadOnly     = string2Builtin("INTERNAL", "varToReadOnly");
-#ifdef BUILD_GECODE
   BI_PROP_GEC          = string2Builtin("INTERNAL", "gec_propagate");
-#endif
+
 
   // to execute boot functor in am.cc
   BI_dot           = string2Builtin("Value", ".");

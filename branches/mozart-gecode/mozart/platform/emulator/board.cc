@@ -105,10 +105,8 @@ Board::Board()
   optVar = makeTaggedVar(new OptVar(this));
   lpq.init();
   setGCStep(oz_getGCStep());
-#ifdef BUILD_GECODE
   gespace = NULL;
   lateThread = NULL;
-#endif
 }
 
 
@@ -123,7 +121,6 @@ Board::Board(Board * p)
   rootVar = makeTaggedRef(newTaggedOptVar(optVar));
   setGCStep(oz_getGCStep());
   lpq.init();
-#ifdef BUILD_GECODE
   if(p->gespace != NULL) {
     gespace = new GenericSpace(this);
     if(p->getLateThread())
@@ -134,7 +131,6 @@ Board::Board(Board * p)
     gespace = NULL;
     lateThread = NULL;
   }
-#endif
 
 #ifdef CS_PROFILE
   orig_start  = (int32 *) NULL;
@@ -437,10 +433,8 @@ void Board::checkStability(void) {
   
   if (isStable()) {
 
-#ifdef BUILD_GECODE    
     if(!trail.isEmptyChunk())
       setScript(trail.unwindGeVar(this));
-#endif
 
     pb->decRunnableThreads();
 
@@ -492,7 +486,6 @@ void Board::checkStability(void) {
       // No runnable threads: suspended      
       TaggedRef newVar = oz_newReadOnly(pb);
       
-#ifdef BUILD_GECODE
       if (getGenericSpace(true)){
 	OzVariable* nv = tagged2Var(oz_deref(newVar));
 	TaggedRef oldVar = getStatus();
@@ -511,7 +504,7 @@ void Board::checkStability(void) {
 	  susp = *suspPtr;
 	}
       }
-#endif
+
 
       bindStatus(genSuspended(newVar));
       setStatus(newVar);

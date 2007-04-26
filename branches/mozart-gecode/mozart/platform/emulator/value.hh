@@ -58,9 +58,7 @@ extern TaggedRef
   BI_bindReadOnly,
   BI_varToReadOnly,
   BI_raise,
-#ifdef BUILD_GECODE
   BI_PROP_GEC,
-#endif
   __UNUSED_DUMMY_END_MARKER;
 
 extern Builtin *bi_raise, *bi_raiseError;

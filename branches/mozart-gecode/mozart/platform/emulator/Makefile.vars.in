@@ -83,10 +83,10 @@ endif
 
 LDFLAGS=	   @LDFLAGS@ $(CUSR)
 
-BUILD_GECODE = @BUILD_GECODE@
-ifeq ($(BUILD_GECODE),yes)
+
+
 LDFLAGS += @GECODE_LDFLAGS@
-endif
+
 
 EMULDFLAGS=	   @EMULDFLAGS@
 
@@ -103,9 +103,9 @@ CXXFLAGS_NO_ERROR= @CXXFLAGS@ $(COPT) $(OZ_WARN) $(CUSR)
 CXXFLAGS=	$(CXXFLAGS_NO_ERROR) $(TARGET_CXXFLAGS) $(OZ_WARN_ERROR)
 DEPEND=		@DEPEND@ $(CPPFLAGS)
 
-ifeq ($(BUILD_GECODE),yes)
+## Add this flag to build with gecode
 GESPACE_CXXFLAGS = $(subst -fno-implicit-templates,,$(CXXFLAGS))
-endif
+
 
 
 OZVERSION=	$(SRCTOP)/OZVERSION
