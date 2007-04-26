@@ -101,11 +101,11 @@ public:
 
   void unwindEqEq(void);
 
-#ifdef BUILD_GECODE
+
   bool isSpeculating(void);
 
   TaggedRef unwindGeVar(Board *);
-#endif
+
 
 
 };
