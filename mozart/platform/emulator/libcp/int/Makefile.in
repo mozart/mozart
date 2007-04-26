@@ -7,9 +7,9 @@ SRCDIR		= @srcdir@
 INCS		= -I$(SRCDIR) -I. -I$(SRCDIR)/../.. -I../..
 
 
-GECODE_LIBS	= @GECODE_LIBS@
-GECODE_INC	= @GECODE_INC@
-#LDFLAGS		= @GECODE_LDFLAGS@
+GECODE_LIBS	= `pkg-config --libs "gecode = ${GECODEVERSION}"`
+GECODE_INC	= `pkg-config --cflags "gecode = ${GECODEVERSION}"`
+
 
 
 CFLAGS 		= $(INCS) $(GECODE_INC) $(GESPACE_CXXFLAGS) $(CPPFLAGS) 

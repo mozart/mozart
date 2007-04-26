@@ -162,17 +162,6 @@ esac
 AC_SUBST(EMULATOR_EXE)
 
 dnl *****************************************************************
-dnl *** gecode
-dnl *****************************************************************
- 
- GECODE_LDFLAGS=
- GECODE_LIBS=
- BUILD_GECODE=no
-
- OZ_LIB_GECODE
- AC_SUBST(BUILD_GECODE)
- 
-dnl *****************************************************************
 
 dnl *****************************************************************
 dnl Compiler, Linker, and m4 options
@@ -188,11 +177,8 @@ if test "${GXX}" = yes; then
     M4_S="-s"
     DEPEND="$CXX -MM"
 
-    if test "$BUILD_GECODE" = yes; then
-	OZ_CXX_OPTIONS(-fexceptions,oz_a)
-    else
-	OZ_CXX_OPTIONS(-fno-exceptions,oz_a)
-    fi
+    OZ_CXX_OPTIONS(-fexceptions,oz_a)
+    
 
     CXXAVOID=$oz_a
     CXXFLAGS="$CXXFLAGS $oz_a"
