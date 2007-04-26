@@ -4134,11 +4134,11 @@ OZ_BI_define(BIcatAccessOO,1,1)
     OZ_Term left = oz_left(cat);
     DEREF(left, leftptr);
     if (oz_isDictionary(left) || oz_isArray(left)) {
-      OZ_Term right = oz_safeDeref(oz_right(cat));
-      if (oz_isVarOrRef(right)) {
+      OZ_Return ret = genericDot(left, oz_right(cat), OZ_out(0), TRUE);
+      if (ret == SUSPEND && am.isEmptySuspendVarList()) {
 	oz_suspendOn(oz_right(cat));   // Must explicitly suspend on key
       }
-      return genericDot(left, oz_right(cat), OZ_out(0), TRUE);
+      return ret;
     }
     oz_typeError(0,"Dict#Key, Array#Index");   // not the right pair
   }
@@ -4164,11 +4164,11 @@ OZ_BI_define(BIcatAssignOO,2,0)
     OZ_Term left = oz_left(cat);
     DEREF(left, leftptr);
     if (oz_isDictionary(left) || oz_isArray(left)) {
-      OZ_Term right = oz_safeDeref(oz_right(cat));
-      if (oz_isVarOrRef(right)) {
+      OZ_Return ret = genericSet(left, oz_right(cat), value);
+      if (ret == SUSPEND && am.isEmptySuspendVarList()) {
 	oz_suspendOn(oz_right(cat));   // Must explicitly suspend on key
       }
-      return genericSet(left, oz_right(cat), value);
+      return ret;
     }
     oz_typeError(0,"Dict#Key, Array#Index");   // not the right pair
   }
@@ -4196,11 +4196,11 @@ OZ_BI_define(BIcatExchangeOO,2,1)
     OZ_Term left = oz_left(cat);
     DEREF(left, leftptr);
     if (oz_isDictionary(left) || oz_isArray(left)) {
-      OZ_Term right = oz_safeDeref(oz_right(cat));
-      if (oz_isVarOrRef(right)) {
+      OZ_Return ret = genericExchange(left, oz_right(cat), value, OZ_out(0));
+      if (ret == SUSPEND && am.isEmptySuspendVarList()) {
 	oz_suspendOn(oz_right(cat));   // Must explicitly suspend on key
       }
-      return genericExchange(left, oz_right(cat), value, OZ_out(0));
+      return ret;
     }
     oz_typeError(0,"Dict#Key, Array#Index");   // not the right pair
   }
@@ -4227,11 +4227,11 @@ OZ_BI_define(BIcatAccess,1,1)
     OZ_Term left = oz_left(cat);
     DEREF(left, leftptr);
     if (oz_isDictionary(left) || oz_isArray(left)) {
-      OZ_Term right = oz_safeDeref(oz_right(cat));
-      if (oz_isVarOrRef(right)) {
+      OZ_Return ret = genericDot(left, oz_right(cat), OZ_out(0), TRUE);
+      if (ret == SUSPEND && am.isEmptySuspendVarList()) {
 	oz_suspendOn(oz_right(cat));   // Must explicitly suspend on key
       }
-      return genericDot(left, oz_right(cat), OZ_out(0), TRUE);
+      return ret;
     }
     oz_typeError(0,"Dict#Key, Array#Index");   // not the right pair
   }
@@ -4257,11 +4257,11 @@ OZ_BI_define(BIcatAssign,2,0)
     OZ_Term left = oz_left(cat);
     DEREF(left, leftptr);
     if (oz_isDictionary(left) || oz_isArray(left)) {
-      OZ_Term right = oz_safeDeref(oz_right(cat));
-      if (oz_isVarOrRef(right)) {
+      OZ_Return ret = genericSet(left, oz_right(cat), value);
+      if (ret == SUSPEND && am.isEmptySuspendVarList()) {
 	oz_suspendOn(oz_right(cat));   // Must explicitly suspend on key
       }
-      return genericSet(left, oz_right(cat), value);
+      return ret;
     }
     oz_typeError(0,"Dict#Key, Array#Index");   // not the right pair
   }
@@ -4284,11 +4284,11 @@ OZ_BI_define(BIcatExchange,2,1)
     OZ_Term left = oz_left(cat);
     DEREF(left, leftptr);
     if (oz_isDictionary(left) || oz_isArray(left)) {
-      OZ_Term right = oz_safeDeref(oz_right(cat));
-      if (oz_isVarOrRef(right)) {
+      OZ_Return ret = genericExchange(left, oz_right(cat), value, OZ_out(0));
+      if (ret == SUSPEND && am.isEmptySuspendVarList()) {
 	oz_suspendOn(oz_right(cat));   // Must explicitly suspend on key
       }
-      return genericExchange(left, oz_right(cat), value, OZ_out(0));
+      return ret;
     }
     oz_typeError(0,"Dict#Key, Array#Index");   // not the right pair
   }
