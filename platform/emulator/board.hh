@@ -43,10 +43,9 @@
 #include "susp_queue.hh"
 #include "pointer-marks.hh"
 
-#ifdef BUILD_GECODE
 #include "GeSpace.hh"
 #include "thr_int.hh"
-#endif
+
 
 #define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
 
@@ -430,7 +429,6 @@ public:
 #endif
 
 
-#ifdef BUILD_GECODE
   //GenericSpace declaration
 private:
   GenericSpace *gespace;
@@ -488,11 +486,13 @@ public:
   /**
      \brief Returns a pointer to the actual lateThread.
   */
-  void deleteLateThread(void) { lateThread = NULL; }
 
   Thread * getLateThread(void) { return lateThread; }
-#endif
 
+  /**
+     \brief Put the reference to lateThread to NULL
+  */
+  void deleteLateThread(void) { lateThread = NULL; }
 };
 
 

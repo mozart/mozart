@@ -128,14 +128,12 @@ Bool Board::isStable(void) {
   if (hasRunnableThreads())
     return NO;
 
-#ifndef BUILD_GECODE
   if (oz_isCurrentBoard(this) && !trail.isEmptyChunk())
     return NO;
-#endif
-#ifdef BUILD_GECODE
+
   if (oz_isCurrentBoard(this) && trail.isSpeculating())
     return NO;
-#endif
+
   if (isEmptySuspList())
     return OK;
 

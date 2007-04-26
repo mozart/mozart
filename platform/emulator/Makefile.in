@@ -31,7 +31,6 @@ VPATH=	@srcdir@
 SRCDIR=	@srcdir@
 BUILDDIR = @builddir@
 
-BUILD_GECODE = @BUILD_GECODE@
 
 
 include Makefile.vars
@@ -42,10 +41,11 @@ MODULE_NAMES =							\
 	CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat \
 	Win32 Profile OsTime ZlibIO 
 CLEAN_LIBCP=
-ifeq ($(BUILD_GECODE), yes)
+
+
 MODULE_NAMES += geoz
 CLEAN_LIBCP=cd libcp/int; $(MAKE) clean
-endif
+
 
 
 STATIC_MODULES=		@STATIC_MODULES@
@@ -56,9 +56,8 @@ DYNAMIC_MODULETARGETS=	$(DYNAMIC_MODULES:%=%.so-$(PLATFORM))
 
 LIBS=		$(STATIC_MODULELIBS) @LIBS@
 
-ifeq ($(BUILD_GECODE), yes)
 LIBS += @GECODE_LIBS@
-endif
+
 
 INCS=		-I. -I$(SRCDIR)
 
@@ -69,9 +68,7 @@ OZVERSION=	$(SRCTOP)/OZVERSION
 
 
 
-ifeq ($(BUILD_GECODE), yes)
 SUBDIRS+=libcp/int
-endif
 
 
 # these are the builtin modules: non-sited primitives
@@ -139,16 +136,16 @@ RUNSRCS=\
 	thr_stack.cc thr_class.cc thr_pool.cc \
 	susp_queue.cc thr_int.cc suspendable.cc
 
-ifeq ($(BUILD_GECODE), yes)
+
 RUNSRCS += lateThread.cc GeVar.cc
-endif
+
 
 SPACESRCS=\
 	board.cc distributor.cc
 
-ifeq ($(BUILD_GECODE), yes)
+
 SPACESRCS += GeSpace.cc
-endif
+
 
 MEMSRCS=\
 	g-collect.cc s-clone.cc cmem.cc mem.cc liveness.cc

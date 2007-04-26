@@ -327,8 +327,6 @@ TaggedRef Trail::unwind(Board * b) {
   return s;
 }
 
-#ifdef BUILD_GECODE
-
 TaggedRef Trail::unwindGeVar(Board * b) {
   TaggedRef s = AtomNil;
   
@@ -359,7 +357,7 @@ TaggedRef Trail::unwindGeVar(Board * b) {
   return s;
 }
 
-#endif
+
 
 void Trail::unwindFailed(void) {
 
@@ -494,7 +492,6 @@ void Trail::unwindEqEq(void) {
 }
 
 
-#ifdef BUILD_GECODE
 bool Trail::isSpeculating(void) {
   StackEntry *top = tos-1;
 
@@ -545,4 +542,3 @@ bool Trail::isSpeculating(void) {
   }
 }
 
-#endif

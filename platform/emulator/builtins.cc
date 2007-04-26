@@ -63,9 +63,8 @@
 #include <stdarg.h>
 
 
-#ifdef BUILD_GECODE
 #include "GeVar.hh"
-#endif
+
 
 /********************************************************************
  * Type tests
@@ -1624,14 +1623,12 @@ OZ_Term oz_status(OZ_Term term)
       t->setArg(0, AtomFSet); break;
     case OZ_VAR_OF:
       t->setArg(0, AtomRecord); break;
-#ifdef BUILD_GECODE
     case OZ_VAR_EXT:
       // Check if the variable is a gecode variable
       if (oz_isGeVar(term)) {
 	t->setArg(0,oz_atom("gevar"));
 	break;
       }
-#endif
     default:
       t->setArg(0, AtomOther); break;
     }

@@ -2125,8 +2125,6 @@ void Board::_cacRecurse() {
   }
   cacStack.pushSuspList((SuspList **) &nonMonoSuspList);
 
-#ifdef BUILD_GECODE 
-  //printf("CAC\n");fflush(stdout);
 if (gespace != NULL) {
 #ifdef S_CLONE
     
@@ -2137,18 +2135,14 @@ if (gespace != NULL) {
   //Assert(gespace->isStable());
   
   /*
-    false is used for clone because we want an independent copy of he space.
+    false is used for clone because we want an independent copy of the space.
     true could be used but we have not tested it yet and could not be thread safe.
   */
-  //printf("CAC-CLONE\n");fflush(stdout);
   gespace = static_cast<GenericSpace*>(gespace->clone(false));
-  //printf("CAC-CLONE-FINISHED\n");fflush(stdout);
-  //  printf("CAC:FINISH generic space failed %d \n", gespace->failed());fflush(stdout);
 #endif
   gespace->_cac();
 }
-//printf("CAC-FINISHED\n");fflush(stdout);
-#endif
+
 
 #ifdef CS_PROFILE
 #ifdef G_COLLECT
