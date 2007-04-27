@@ -101,10 +101,25 @@ public:
 
   void unwindEqEq(void);
 
+  /**
+     \brief Moves all constraint variables representation from trail 
+     to scritp. This function only runs when speculation is not taking
+     place.
+  */
+  TaggedRef unwindGeVar(void);
 
+
+  /** 
+      \brief Test whether the space has speculations. Speculation
+      is taking place if:
+      1) There are elements different to constraint variables in the trail.
+         Those elements must be between top and the next trail mark.
+      2) The generic space associated with the board is not stable.
+      3) At least one constraint variable has runnable propagators.
+      4) At least one of the constraint variables in the trail has a 
+         different domain compared to its global representation.
+  */
   bool isSpeculating(void);
-
-  TaggedRef unwindGeVar(Board *);
 
 
 
