@@ -434,7 +434,7 @@ void Board::checkStability(void) {
   if (isStable()) {
 
     if(!trail.isEmptyChunk())
-      setScript(trail.unwindGeVar(this));
+      setScript(trail.unwindGeVar());
 
     pb->decRunnableThreads();
 
