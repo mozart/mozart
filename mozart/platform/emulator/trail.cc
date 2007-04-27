@@ -327,12 +327,10 @@ TaggedRef Trail::unwind(Board * b) {
   return s;
 }
 
-TaggedRef Trail::unwindGeVar(Board * b) {
+TaggedRef Trail::unwindGeVar(void) {
   TaggedRef s = AtomNil;
   
   if(!isEmptyChunk()) {
-    int hasNoRunnable = !b->hasRunnableThreads();
-    
     while(!isEmptyChunk()) {
       switch (getTeType()) {
       case Te_GeVariable: {
@@ -353,7 +351,6 @@ TaggedRef Trail::unwindGeVar(Board * b) {
       }
     }
   }
-  //  popMark();
   return s;
 }
 
@@ -507,7 +504,7 @@ bool Trail::isSpeculating(void) {
       //local variable is a valid value
       if(!oz_isVarOrRef(oz_deref(*var))) { break; }
 
-      if(!oz_isGeVar(*var))  { fflush(stdout); return true; }
+      if(!oz_isGeVar(*var))  { return true; }
 
       TaggedRef tvar = (TaggedRef) ToInt32(* (top-1) );
       OzVariable *v = tagged2Var(tvar);
