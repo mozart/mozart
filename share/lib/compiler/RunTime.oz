@@ -30,11 +30,12 @@ import
    Space('choose')
    RecordC('^' tellSize)
    FD(int dom sum sumC sumCN reified)
-\ifdef BUILD_GECODE
+
+%% To build with gecode support
    System
    GFD
    Property
-\endif
+%% end
    
 export
    Literals
@@ -274,66 +275,43 @@ define
    end
 
    proc {FDInt A B}
-\ifdef BUILD_GECODE
       if {Property.condGet geoz false} then
 	 {GFD.int A B}
       else
 	 {FD.int A B}
       end
-\else
-      {FD.int A B}
-\endif
    end
 
    proc {FDDom A B}
-\ifdef BUILD_GECODE
       if {Property.condGet geoz false} then
 	 {GFD.dom A B}
       else
 	 {FD.dom A B}
       end
-\else
-      {FD.dom A B}
-\endif
-      
    end
 
    proc {FDSum X O D}
-\ifdef BUILD_GECODE      
       if {Property.condGet geoz false} then
 	 {GFD.sum X O D}
       else
 	 {FD.sum X O D}
       end
-\else
-      {FD.sum X O D}
-\endif
    end
 
    proc {FDSumC A X O D}
-\ifdef BUILD_GECODE
       if {Property.condGet geoz false} then
 	 {GFD.sumC A X O D}
       else
 	 {FD.sumC A X O D}
       end
-\else
-      {FD.sumC A X O D}
-\endif
    end
 
    proc {FDSumCN A X O D}
-\ifdef BUILD_GECODE
       if {Property.condGet geoz false} then
-	 {System.show 'A'#A#' X '#X#'D'#D}
 	 {GFD.sumCN A X O D}
-	 {System.show 'despuessss'}
       else
 	 {FD.sumCN A X O D}
       end
-\else
-      {FD.sumCN A X O D}
-\endif
    end
 
    fun {FDReifiedInt A B}
