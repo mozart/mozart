@@ -103,9 +103,8 @@ local
 			      staticvarnames: false
 			      dynamicvarnames: false
 
-\ifdef BUILD_GECODE			      
 			      geoz: true
-\endif			 
+
 			     )
 
    DefaultOptions = options(maxNumberOfErrors: 17
@@ -666,13 +665,12 @@ local
 		      startSubPhase('executing and waiting for completion')}
 		     CompilerStateClass, ExecProtected(P false)
 		  end
-\ifdef BUILD_GECODE		  
+
 		  if CompilerStateClass, getSwitch(geoz $) then
 		     {Property.put geoz true}
 		  else
 		     {Property.put geoz false}
 		  end
-\endif		  
 	       end
 	    end
 	 end
