@@ -56,9 +56,7 @@ prepare
    
    local
       Libs      = ['Application'
-\ifdef BUILD_GECODE
 		   'GFD'
-\endif
 		   'Search' 'FD' 'Schedule' 'FS' 'Combinator'
 		   'RecordC'
 		   'Error' 'ErrorRegistry' 'Finalize' 'Service'

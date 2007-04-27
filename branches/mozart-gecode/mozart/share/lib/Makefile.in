@@ -95,21 +95,12 @@ export OZMAKE_VERBOSE		= no
 SPSRC   = Error ErrorFormatters Finalize Service $(DENYS_SPSRCS)
 OPSRC   = Open ZlibIO
 APSRC   = Application
-CPSRC1  = Search FD FS Combinator RecordC
+CPSRC1  = Search FD FS Combinator RecordC GFD
 CPSRC2  = Schedule ParSearch ParWorker ParLogging
 DPSRC   = Connection Discovery Remote RemoteServer Fault URL DPStatistics DPInit ConnectionFunctor AcceptFunctor ConnectAcceptModule DPControl $(DENYS_DPSRCS)
 WPSRC   = Tk TkTools Tix
 SUPPSRC = Type Narrator Listener ErrorListener DefaultURL ObjectSupport
 MACSRC	= Macro BackquoteMacro LoopMacro
-
-
-BUILD_GECODE = @BUILD_GECODE@
-
-ifeq ($(BUILD_GECODE), yes)
-CPSRC1+=GFD
-endif
-
-
 
 RUNFUNCTORS1 = \
 	$(SPSRC:%=%.ozf) \
@@ -132,10 +123,6 @@ FUNCTORS = $(FUNCTORS1) Init.ozf
 SYSLETS0 = ozc ozl
 SYSLETS = $(SYSLETS0:%=%$(EXE_EXT))
 
-
-ifeq ($(BUILD_GECODE), yes)
-OZCFLAGS += -DBUILD_GECODE
-endif
 
 .PHONY: all
 
