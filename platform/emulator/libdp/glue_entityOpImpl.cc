@@ -355,6 +355,156 @@ distDictionaryPutImpl(OzDictionary *ozD, TaggedRef key, TaggedRef val) {
 
 
 
+/************************* Objects *************************/
+
+// invoke a distributed object with a method meth
+OZ_Return distObjectInvokeImpl(OzObject* obj, TaggedRef meth) {
+  ObjectMediator* med = static_cast<ObjectMediator*>(obj->getMediator());
+
+  // suspend if fault state not ok
+  if (med->getFaultState()) return med->suspendOnFault();
+
+  DssThreadId *thrId = currentThreadId();
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = med->abstractOperation_Read(thrId, pstout);
+  if (pstout != NULL) {
+    Thread* thr = oz_currentThread();
+    TaggedRef t = oz_thread(thr);
+    *pstout = new PstOutContainer(OZ_mkTupleC("invoke", 2, meth, t));
+  }
+
+  switch (cont) {
+  case DSS_PROCEED:   // local case not handled here!
+    Assert(0);
+    return PROCEED;
+  case DSS_SUSPEND:
+    new SuspendedObjectInvoke(med, meth);
+    return BI_REPLACEBICALL;
+  default:
+    OZ_error("Unhandled error in distObjectInvoke");
+    return PROCEED;
+  }
+}
+
+// select an object feature
+OZ_Return
+distObjectGetFeatureImpl(OzObject* obj, TaggedRef key, TaggedRef &res) {
+  ObjectMediator* med = static_cast<ObjectMediator*>(obj->getMediator());
+
+  // suspend if fault state not ok
+  if (med->getFaultState()) return med->suspendOnFault();
+
+  DssThreadId *thrId = currentThreadId();
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = med->abstractOperation_Read(thrId, pstout);
+  if (pstout != NULL)
+    *pstout = new PstOutContainer(OZ_mkTupleC("get", 1, key));
+
+  switch (cont) {
+  case DSS_PROCEED:   // local case not handled here!
+    Assert(0);
+    return PROCEED;
+  case DSS_SUSPEND:
+    res = oz_newVariable();
+    new SuspendedGenericDot(med, key, res);
+    return BI_REPLACEBICALL;
+  default:
+    OZ_error("Unhandled error in distObjectGetFeature");
+    return PROCEED;
+  }
+}
+
+// read an object attribute
+OZ_Return distObjectAccessImpl(OzObject* obj, TaggedRef key, TaggedRef &res) {
+  ObjectMediator* med = static_cast<ObjectMediator*>(obj->getMediator());
+
+  // suspend if fault state not ok
+  if (med->getFaultState()) return med->suspendOnFault();
+
+  DssThreadId *thrId = currentThreadId();
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = med->abstractOperation_Read(thrId, pstout);
+  if (pstout != NULL)
+    *pstout = new PstOutContainer(OZ_mkTupleC("access", 1, key));
+
+  switch (cont) {
+  case DSS_PROCEED:
+    res = obj->getState()->getFeature(key);
+    if (res)
+      return PROCEED;
+    oz_typeError(0,"(valid) Feature");
+  case DSS_SUSPEND:
+    res = oz_newVariable();
+    new SuspendedObjectAccess(med, key, res);
+    return BI_REPLACEBICALL;
+  default:
+    OZ_error("Unhandled error in distObjectAccess");
+    return PROCEED;
+  }
+}
+
+// write an object attribute
+OZ_Return distObjectAssignImpl(OzObject* obj, TaggedRef key, TaggedRef val) {
+  ObjectMediator* med = static_cast<ObjectMediator*>(obj->getMediator());
+
+  // suspend if fault state not ok
+  if (med->getFaultState()) return med->suspendOnFault();
+
+  DssThreadId *thrId = currentThreadId();
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = med->abstractOperation_Write(thrId, pstout);
+  if (pstout != NULL)
+    *pstout = new PstOutContainer(OZ_mkTupleC("assign", 2, key, val));
+
+  switch (cont) {
+  case DSS_PROCEED: {
+    bool ret = obj->getState()->setFeature(key, val);
+    if (ret) return PROCEED;
+    oz_typeError(0,"(valid) Feature");
+  }
+  case DSS_SUSPEND:
+    new SuspendedObjectAssign(med, key, val);
+    return BI_REPLACEBICALL;
+  default:
+    OZ_error("Unhandled error in distObjectAssign");
+    return PROCEED;
+  }
+}
+
+// exchange an object attribute
+OZ_Return distObjectExchangeImpl(OzObject* obj, TaggedRef key,
+				 TaggedRef newVal, TaggedRef &oldVal) {
+  ObjectMediator* med = static_cast<ObjectMediator*>(obj->getMediator());
+
+  // suspend if fault state not ok
+  if (med->getFaultState()) return med->suspendOnFault();
+
+  DssThreadId *thrId = currentThreadId();
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = med->abstractOperation_Write(thrId, pstout);
+  if (pstout != NULL)
+    *pstout = new PstOutContainer(OZ_mkTupleC("exchange", 2, key, newVal));
+
+  switch (cont) {
+  case DSS_PROCEED:
+    oldVal = obj->getState()->getFeature(key);
+    if (oldVal) {
+      obj->getState()->setFeature(key, newVal);
+      return PROCEED;
+    }
+    oz_typeError(0,"(valid) Feature");
+  case DSS_SUSPEND:
+    oldVal = oz_newVariable();
+    new SuspendedObjectExchange(med, key, newVal, oldVal);
+    return BI_REPLACEBICALL;
+  default:
+    OZ_error("Unhandled error in distObjectAssign");
+    return PROCEED;
+  }
+}
+
+
+
 /************************* Variables *************************/
 
 // Variable are somewhat different from the other entities. 

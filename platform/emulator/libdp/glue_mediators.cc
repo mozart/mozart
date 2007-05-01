@@ -685,6 +685,25 @@ AOcallback
 ObjectMediator::callback_Write(DssThreadId*, DssOperationId*,
 			       PstInContainerInterface* operation,
 			       PstOutContainerInterface*& answer) {
+  OzObject* obj = tagged2Object(getEntity());
+  // write operations are: assign, exchange
+  TaggedRef arg = static_cast<PstInContainer*>(operation)->a_term;
+  Assert(OZ_isTuple(arg));
+  if (OZ_label(arg) == oz_atom("assign")) {
+    TaggedRef key = OZ_getArg(arg, 0);
+    TaggedRef val = OZ_getArg(arg, 1);
+    if (obj->getState()->setFeature(key, val)) {
+      answer = new PstOutContainer(oz_nil());
+    }
+  } else if (OZ_label(arg) == oz_atom("exchange")) {
+    TaggedRef key = OZ_getArg(arg, 0);
+    TaggedRef val = OZ_getArg(arg, 1);
+    TaggedRef old = obj->getState()->getFeature(key);
+    if (old) {
+      obj->getState()->setFeature(key, val);
+      answer = new PstOutContainer(old);
+    }
+  }
   return AOCB_FINISH;
 }
 
@@ -692,17 +711,62 @@ AOcallback
 ObjectMediator::callback_Read(DssThreadId*, DssOperationId*,
 			      PstInContainerInterface* operation,
 			      PstOutContainerInterface*& answer) {
+  // read operations are: invoke, access, get
+  TaggedRef arg = static_cast<PstInContainer*>(operation)->a_term;
+  Assert(OZ_isTuple(arg));
+  if (OZ_label(arg) == oz_atom("invoke")) {
+    TaggedRef meth = OZ_getArg(arg, 0);
+    TaggedRef tid  = OZ_getArg(arg, 1);     // a thread id
+    // get a Thread with the given thread id; create it if necessary
+    Thread* thread = oz_ThreadToC(tid);
+    if (!thread) {
+      thread = oz_newThreadSuspended();
+      oz_setThread(tid, thread);
+    }
+    TaggedRef ret  = oz_newVariable();     // return variable
+    // push {RPC Obj [Meth] Ret}
+    RefsArray* refs = RefsArray::make(getEntity(), oz_mklist(meth), ret);
+    thread->pushCall(getRPC(), refs);
+    // wake up thread
+    oz_wakeupThread(thread);
+    answer = new PstOutContainer(ret);
+
+  } else if (OZ_label(arg) == oz_atom("access")) {
+    OzObject* obj = tagged2Object(getEntity());
+    TaggedRef key = OZ_getArg(arg, 0);
+    TaggedRef old = obj->getState()->getFeature(key);
+    if (old) answer = new PstOutContainer(old);
+
+  } else if (OZ_label(arg) == oz_atom("get")) {
+    OzObject* obj = tagged2Object(getEntity());
+    TaggedRef key = OZ_getArg(arg, 0);
+    TaggedRef old = obj->getFeature(key);
+    if (old) answer = new PstOutContainer(old);
+  }
   return AOCB_FINISH;
 }
 
 PstOutContainerInterface*
-ObjectMediator::retrieveEntityRepresentation(){ return NULL; }
+ObjectMediator::retrieveEntityRepresentation() {
+  // the state of an object is composed of: its class, features, lock,
+  // and attributes
+  OzObject* obj = static_cast<OzObject*>(getConst());
+  return new PstOutContainer(obj->getRepresentation());
+}
 
 PstOutContainerInterface*
-ObjectMediator::deinstallEntityRepresentation(){ return NULL; }
+ObjectMediator::deinstallEntityRepresentation() {
+  OzObject* obj = static_cast<OzObject*>(getConst());
+  TaggedRef val = obj->getRepresentation();
+  obj->setState(makeTaggedNULL());
+  return new PstOutContainer(val);
+}
 
 void
-ObjectMediator::installEntityRepresentation(PstInContainerInterface*){;}
+ObjectMediator::installEntityRepresentation(PstInContainerInterface* pstin) {
+  OzObject* obj = static_cast<OzObject*>(getConst());
+  obj->setRepresentation(static_cast<PstInContainer*>(pstin)->a_term);
+}
 
 
 

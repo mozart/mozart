@@ -627,6 +627,14 @@ OZ_BI_define(BIsendMpongPL,5,0)
 
 
 
+/************************* access RPC wrapper *************************/
+
+OZ_BI_define(BIgetRPC,0,1) {
+  OZ_RETURN(getRPC());
+} OZ_BI_end
+
+
+
 /******************** Annotations and faults ********************/
 
 OZ_BI_define(BIsetAnnotation,4,0)

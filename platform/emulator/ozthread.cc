@@ -80,6 +80,7 @@ public:
   OZ_Return eqV(OZ_Term term);
 
   Thread *getThread() { return thread; }
+  void setThread(Thread* t) { thread = t; }
 };
 
 Bool oz_isThread(TaggedRef term)
@@ -103,6 +104,15 @@ TaggedRef oz_thread(Thread *tt)
       tt->setOzThread(ozTh); 
     }
   return ozTh; 
+}
+
+// useful when one creates a thread with a given thread id
+void oz_setThread(TaggedRef term, Thread* tt) {
+  Assert(oz_isThread(term));
+  OzThread* oztt = (OzThread*) tagged2Extension(term);
+  Assert(oztt->getThread() == NULL && tt->getOzThread() == makeTaggedNULL());
+  oztt->setThread(tt);
+  tt->setOzThread(term);
 }
 
 OZ_Return OzThread::eqV(OZ_Term term)

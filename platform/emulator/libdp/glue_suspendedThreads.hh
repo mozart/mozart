@@ -92,6 +92,7 @@ protected:
   void resume();
   void resumeRaise(TaggedRef exc);
   void resumeUnify(TaggedRef a, TaggedRef b);
+  void resumeApply(TaggedRef p, TaggedRef args);
 
 public:
   SuspendedOperation(Mediator*);
@@ -205,6 +206,52 @@ private:
   OZ_Term value;
 public:
   SuspendedDictionaryPut(Mediator*, OZ_Term, OZ_Term);
+  WakeRetVal resumeDoLocal(DssOperationId*);
+  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  bool gCollect();
+};
+
+
+// object operations
+class SuspendedObjectInvoke: public SuspendedOperation {
+private:
+  OZ_Term method;
+public:
+  SuspendedObjectInvoke(Mediator*, OZ_Term);
+  WakeRetVal resumeDoLocal(DssOperationId*);
+  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  bool gCollect();
+};
+
+class SuspendedObjectAccess: public SuspendedOperation {
+private:
+  OZ_Term key;
+  OZ_Term result;     // a variable
+public:
+  SuspendedObjectAccess(Mediator*, OZ_Term, OZ_Term);
+  WakeRetVal resumeDoLocal(DssOperationId*);
+  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  bool gCollect();
+};
+
+class SuspendedObjectAssign: public SuspendedOperation {
+private:
+  OZ_Term key;
+  OZ_Term value;
+public:
+  SuspendedObjectAssign(Mediator*, OZ_Term, OZ_Term);
+  WakeRetVal resumeDoLocal(DssOperationId*);
+  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  bool gCollect();
+};
+
+class SuspendedObjectExchange: public SuspendedOperation {
+private:
+  OZ_Term key;
+  OZ_Term newVal;
+  OZ_Term oldVal;     // a variable
+public:
+  SuspendedObjectExchange(Mediator*, OZ_Term, OZ_Term, OZ_Term);
   WakeRetVal resumeDoLocal(DssOperationId*);
   WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
   bool gCollect();

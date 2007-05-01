@@ -124,6 +124,10 @@ void setDefaultAnnotation(GlueTag type, ProtocolName pn,
 			  AccessArchitecture aa, RCalg rc);
 
 
+// remote procedure call wrapper
+TaggedRef getRPC();
+
+
 
 /*************************** GC **************************/
 void gcMediatorTablePrimary();
