@@ -3812,8 +3812,7 @@ OZ_Return objectAssign(OzObject* obj, TaggedRef fea, TaggedRef val) {
 
   SRecord* rec = obj->getState();
   Assert(rec);
-  TaggedRef t = rec->replaceFeature(fea, val);
-  if (t) return PROCEED;
+  if (rec->setFeature(fea, val)) return PROCEED;
   oz_typeError(0,"(valid) Feature");
 }
 
@@ -3830,8 +3829,7 @@ OZ_Return objectExchange(OzObject* obj, TaggedRef fea,
   TaggedRef t = rec->getFeature(fea);
   if (t) {
     old = t;
-    t = rec->replaceFeature(fea, val);
-    Assert(t);
+    rec->setFeature(fea, val);
     return PROCEED;
   }
   oz_typeError(0,"(valid) Feature");

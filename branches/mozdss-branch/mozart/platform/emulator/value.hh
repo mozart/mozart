@@ -1826,6 +1826,23 @@ public:
     state = s;
   }
 
+  // support for the glue layer
+  OZ_Term getRepresentation(void) {
+    OZ_Term fea = freeFeatures ? freeFeatures : oz_nil();
+    OZ_Term lck = lock ? lock : oz_nil();
+    return OZ_mkTupleC("#", 4, cls, fea, lck, state);
+  }
+  void setRepresentation(OZ_Term t) {
+    SRecord* rec = tagged2SRecord(t);
+    Assert(rec->getTupleWidth() == 4);
+    if (!cls) {   // optimization, in case we already have them
+      setClass(rec->getArg(0));
+      if (!oz_isNil(rec->getArg(1))) setFreeRecord(rec->getArg(1));
+      if (!oz_isNil(rec->getArg(2))) setLock(rec->getArg(2));
+    }
+    setState(rec->getArg(3));
+  }
+
   // properties coming directly from the class
   const char *getPrintName(void);
 

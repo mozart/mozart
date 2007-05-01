@@ -179,9 +179,23 @@ void setDefaultAnnotation(GlueTag type, ProtocolName pn,
 
 
 
+/************************* RPC wrapper *************************/
+
+static TaggedRef rpc_wrapper = makeTaggedNULL();
+
+TaggedRef getRPC() {
+  if (rpc_wrapper == makeTaggedNULL()) {
+    rpc_wrapper = oz_newVariable();
+  }
+  return rpc_wrapper;
+}
+
+
+
 /************************* Interface functions *************************/
 
 void gcMediatorTablePrimary(){
+  oz_gCollectTerm(rpc_wrapper, rpc_wrapper);
   mediatorTable->gcPrimary();
 };
 

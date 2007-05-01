@@ -120,6 +120,13 @@ void SuspendedOperation::resumeUnify(TaggedRef a, TaggedRef b) {
   threadId = NULL;
 }
 
+void SuspendedOperation::resumeApply(TaggedRef p, TaggedRef args) {
+  Assert(ctlVar);
+  ControlVarApply(ctlVar, p, args);
+  releaseThreadId(threadId);
+  threadId = NULL;
+}
+
 bool SuspendedOperation::gc() {
   if (threadId) {
     oz_gCollectTerm(ctlVar, ctlVar); return true;
@@ -448,6 +455,170 @@ bool SuspendedDictionaryPut::gCollect() {
   if (gc()) {
     oz_gCollectTerm(key, key);
     oz_gCollectTerm(value, value);
+    return true;
+  } else
+    return false;
+}
+
+
+
+/************************* SuspendedObjectInvoke *************************/
+
+SuspendedObjectInvoke::SuspendedObjectInvoke(Mediator* med, OZ_Term m) :
+  SuspendedOperation(med), method(m)
+{
+  suspend();
+}
+
+WakeRetVal SuspendedObjectInvoke::resumeDoLocal(DssOperationId*) {
+  // resume by a local call
+  TaggedRef entity = getMediator()->getEntity();
+  resumeApply(entity, oz_mklist(method));
+  return WRV_DONE;
+}
+
+WakeRetVal
+SuspendedObjectInvoke::resumeRemoteDone(PstInContainerInterface* pstin) {
+  PstInContainer* pst = static_cast<PstInContainer*>(pstin);
+  // The result is a control variable, we simply bind ctlVar to result!
+  OZ_Return ret = oz_unify(ctlVar, pst->a_term);
+  // It succeed immediately, since ctlVar is never distributed.
+  Assert(ret == PROCEED);
+  ctlVar = 0;
+  resume();
+  return WRV_DONE;
+}
+
+bool SuspendedObjectInvoke::gCollect(){
+  if (gc()) {
+    oz_gCollectTerm(method, method);
+    return true;
+  } else
+    return false;
+}
+
+
+
+/************************* SuspendedObjectAccess *************************/
+
+SuspendedObjectAccess::SuspendedObjectAccess(Mediator* med,
+					     OZ_Term k, OZ_Term r) :
+  SuspendedOperation(med), key(k), result(r)
+{
+  suspend();
+}
+
+WakeRetVal SuspendedObjectAccess::resumeDoLocal(DssOperationId*) {
+  OzObject* obj = tagged2Object(getMediator()->getEntity());
+  TaggedRef out = obj->getState()->getFeature(key);
+  if (out)
+    resumeUnify(result, out);
+  else
+    resumeRaise(OZ_makeException(E_SYSTEM, E_KERNEL, "object", 2, obj, key));
+  return WRV_DONE;
+}
+
+WakeRetVal
+SuspendedObjectAccess::resumeRemoteDone(PstInContainerInterface* pstin) {
+  if (pstin) {
+    PstInContainer *pst = static_cast<PstInContainer*>(pstin);
+    resumeUnify(result, pst->a_term);
+  } else {
+    TaggedRef entity = getMediator()->getEntity();
+    resumeRaise(OZ_makeException(E_ERROR, E_KERNEL, ".", 2, entity, key));
+  }
+  return WRV_DONE;
+}
+
+bool SuspendedObjectAccess::gCollect(){
+  if (gc()) {
+    oz_gCollectTerm(key, key);
+    oz_gCollectTerm(result, result);
+    return true;
+  } else
+    return false;
+}
+
+
+
+/************************* SuspendedObjectAssign *************************/
+
+SuspendedObjectAssign::SuspendedObjectAssign(Mediator* med,
+					     OZ_Term k, OZ_Term v) :
+  SuspendedOperation(med), key(k), value(v)
+{
+  suspend();
+}
+
+WakeRetVal SuspendedObjectAssign::resumeDoLocal(DssOperationId*) {
+  OzObject* obj = tagged2Object(getMediator()->getEntity());
+  bool out = obj->getState()->setFeature(key, value);
+  if (out)
+    resume();
+  else
+    resumeRaise(OZ_makeException(E_SYSTEM, E_KERNEL, "object", 2, obj, key));
+  return WRV_DONE;
+}
+
+WakeRetVal
+SuspendedObjectAssign::resumeRemoteDone(PstInContainerInterface* pstin) {
+  if (pstin)
+    resume();
+  else
+    resumeRaise(OZ_makeException(E_SYSTEM, E_KERNEL, "object", 2,
+				 getMediator()->getEntity(), key));
+  return WRV_DONE;
+}
+
+bool SuspendedObjectAssign::gCollect(){
+  if (gc()) {
+    oz_gCollectTerm(key, key);
+    oz_gCollectTerm(value, value);
+    return true;
+  } else
+    return false;
+}
+
+
+
+/************************* SuspendedObjectExchange *************************/
+
+SuspendedObjectExchange::SuspendedObjectExchange(Mediator* med, OZ_Term k,
+						 OZ_Term newV, OZ_Term oldV) :
+  SuspendedOperation(med), key(k), newVal(newV), oldVal(oldV)
+{
+  suspend();
+}
+
+WakeRetVal SuspendedObjectExchange::resumeDoLocal(DssOperationId*) {
+  OzObject* obj = tagged2Object(getMediator()->getEntity());
+  TaggedRef out = obj->getState()->getFeature(key);
+  if (out) {
+    obj->getState()->setFeature(key, newVal);
+    resumeUnify(oldVal, out);
+  } else {
+    resumeRaise(OZ_makeException(E_SYSTEM, E_KERNEL, "object", 2, obj, key));
+  }
+  return WRV_DONE;
+}
+
+WakeRetVal
+SuspendedObjectExchange::resumeRemoteDone(PstInContainerInterface* pstin) {
+  if (pstin) {
+    PstInContainer *pst = static_cast<PstInContainer*>(pstin);
+    resumeUnify(oldVal, pst->a_term);
+  } else {
+    TaggedRef entity = getMediator()->getEntity();
+    resumeRaise(OZ_makeException(E_ERROR, E_KERNEL, ".", 2, entity, key));
+  }
+  return WRV_DONE;
+}
+
+bool SuspendedObjectExchange::gCollect(){
+  if (gc()) {
+    oz_gCollectTerm(key, key);
+    oz_gCollectTerm(newVal, newVal);
+    oz_gCollectTerm(oldVal, oldVal);
     return true;
   } else
     return false;
