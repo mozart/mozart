@@ -2718,18 +2718,27 @@ LBLdispatcher:
        if (typ==Co_Object) {
 	 CheckArity(1, makeTaggedConst(predicate));
 	 OzObject *o = (OzObject*) predicate;
-	 if (! o->getClass()->isComplete()) {   // class not available yet
-	   OZ_Return ret = (*distClassGet)(o->getClass());
+	 OzClass* cls = o->getClass();
+	 if (!cls) {   // object incomplete: call distribution
+	   Assert(o->isDistributed());
+	   OZ_Return ret = (*distObjectInvoke)(o, XREGS[0]);
+	   Assert(ret = BI_REPLACEBICALL);
+	   if (isTailCall) { PC=NOCODE; }
+	   Assert(!e->isEmptyPreparedCalls());
+	   goto LBLreplaceBICall;
+	 }
+	 if (!cls->isComplete()) {   // class not available yet
+	   OZ_Return ret = (*distClassGet)(cls);
 	   Assert(ret = SUSPEND);
 	   PushContX(PC);
 	   SUSPENDONVARLIST;
 	 }
-	 Assert(o->getClass()->getFallbackApply());
+	 Assert(cls->getFallbackApply());
 	 Abstraction *def =
-	   tagged2Abstraction(o->getClass()->getFallbackApply());
+	   tagged2Abstraction(cls->getFallbackApply());
 	 /* {Obj Msg} --> {SetSelf Obj} {FallbackApply Class Msg} */
 	 XREGS[1] = XREGS[0];
-	 XREGS[0] = makeTaggedConst(o->getClass());
+	 XREGS[0] = makeTaggedConst(cls);
 	 predArity = 2;
 	 if (!isTailCall) { PushCont(PC); }
 	 ChangeSelf(o);

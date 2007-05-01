@@ -709,6 +709,13 @@ void initEntityOperations(){
   distDictionaryPut = &distDictionaryPutImpl;
   distDictionaryGet = &distDictionaryGetImpl;
 
+  // objects
+  distObjectInvoke = &distObjectInvokeImpl;
+  distObjectGetFeature = &distObjectGetFeatureImpl;
+  distObjectAccess = &distObjectAccessImpl;
+  distObjectAssign = &distObjectAssignImpl;
+  distObjectExchange = &distObjectExchangeImpl;
+
   // variables
   distVarBind = &distVarBindImpl;
   distVarUnify = &distVarUnifyImpl;
