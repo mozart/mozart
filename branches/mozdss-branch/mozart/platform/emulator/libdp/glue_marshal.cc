@@ -178,8 +178,7 @@ void DictionaryMediator::unmarshal(ByteBuffer* bs) {
 
 // objects
 void ObjectMediator::unmarshal(ByteBuffer* bs) {
-  // not done yet
-  if (!hasEntity()) { Assert(0); }
+  if (!hasEntity()) setConst(new OzObject(oz_currentBoard()));
 }
 
 

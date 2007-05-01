@@ -415,11 +415,6 @@ public:
   void traverse(OZ_Term t);
   void resume(Opaque *o);
   void resume();
-
-  //
-private:
-  Bool marshalObjectStub(OZ_Term objTerm, ConstTerm *objConst);
-  Bool marshalFullObject(OZ_Term objTerm, ConstTerm *objConst);
 };
 
 //
@@ -465,11 +460,6 @@ public:
 
   //
   DebugCode(void vHook();)
-
-  //
-private:
-  Bool marshalObjectStub(OZ_Term objTerm, ConstTerm *objConst);
-  Bool marshalFullObject(OZ_Term objTerm, ConstTerm *objConst);
 };
 
 //

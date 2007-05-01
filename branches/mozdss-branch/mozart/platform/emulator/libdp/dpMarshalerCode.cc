@@ -335,137 +335,32 @@ void DPMARSHALERCLASS::processExtension(OZ_Term et)
   }
 }
 
-// private methods;
-inline 
-Bool DPMARSHALERCLASS::marshalObjectStub(OZ_Term term, ConstTerm *objConst)
-{
-  ByteBuffer *bs = (ByteBuffer *) getOpaque();
-
-  printf("Marshal Object stub %s\n", toC(term));
-  //
-  if (bs->availableSpace() >= 
-      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize + 2*MGNameMaxSize) {
-    int index;
-
-    //
-    VISITNODE(term, vIT, bs, index, return(OK));
-
-    //
-    OzObject *o = (OzObject*) objConst;
-    Assert(isObject(o));
-    //
-    if (o->getClass()->isSited()) {
-      // marshal term as an unusable (should eventually be automatic...)
-      marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
-      (void) glue_marshalEntity(term, bs);
-
-    } else {
-      // marshal the object stub
-      marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
-      (void) glue_marshalEntity(term, bs);
-    }
-
-    //
-    Assert(bs->availableSpace() >= DIFMaxSize);
-  } else {
-    suspend(term);
-  }
-  return (TRUE);
-}
-
-//
-inline 
-Bool DPMARSHALERCLASS::marshalFullObject(OZ_Term term, ConstTerm *objConst)
-{
-  ByteBuffer *bs = (ByteBuffer *) getOpaque();
-  printf("MarshalFullObject %s\n", toC(term));
-
-  //
-  if (bs->availableSpace() >= 
-      2*DIFMaxSize + MNumberMaxSize + MGNameMaxSize) {
-    int index;
-#if defined(DBG_TRACE)
-    DBGINIT();
-    fprintf(dbgout, "> tag: %s(%d) = %s\n",
-	    dif_names[DIF_OBJECT].name, DIF_OBJECT, toC(term));
-    fflush(dbgout);
-#endif
-
-    //
-    VISITNODE(term, vIT, bs, index, return(OK));
-
-    marshalDIFindex(bs, DIF_OBJECT, DIF_OBJECT_DEF, index);
-    //
-    OzObject *o = (OzObject*) objConst;
-    Assert(isObject(o));
-    marshalGName(bs, o->getGName1());
-    doToplevel = FALSE;
-
-    //
-    Assert(bs->availableSpace() >= DIFMaxSize);
-  } else {
-#if defined(DBG_TRACE)
-    DBGINIT();
-    fprintf(dbgout, "> tag: %s(%d) on %s\n",
-	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term));
-    fflush(dbgout);
-#endif
-    marshalDIFcounted(bs, DIF_SUSPEND);
-    suspend(term);
-    // 'doToplevel' is NOT reset here, since 'processObject' will be
-    // re-applied when the marshaler is woken up!
-  }
-  return (FALSE);
-}
-
 //
 inline 
 Bool DPMARSHALERCLASS::processObject(OZ_Term term, ConstTerm *objConst)
 {
-/*
-  if (doToplevel)
-    return (marshalFullObject(term, objConst));
-  else
-    return (marshalObjectStub(term, objConst));
-*/
-
-// bmc: Always send the structure of the object. The state is not
-// managed by this procedure, because it depends on the protocol
-// that triggers retreive/install state
-
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
-  printf("Marshaling Object %s\n", toC(term));
-  //
-  if (bs->availableSpace() >= 
-      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize + 2*MGNameMaxSize) {
+  // marshaling a mediator: DIF_GLUE, index, mediator
+  if (bs->availableSpace() >=
+      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize) {
     int index;
-
-    //
     VISITNODE(term, vIT, bs, index, return(OK));
-
-    //
-    OzObject *o = (OzObject*) objConst;
-    Assert(isObject(o));
-    //
-    if (o->getClass()->isSited()) {
-      // marshal term as an unusable (should eventually be automatic...)
-      marshalDIFindex(bs, DIF_OBJECT, DIF_OBJECT_DEF, index);
-      (void) glue_marshalEntity(term, bs);
-
-    } else {
-      // marshal the object stub
-      marshalDIFindex(bs, DIF_OBJECT, DIF_OBJECT_DEF, index);
-      (void) glue_marshalEntity(term, bs);
-    }
-
-    //
+    marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
+    (void) glue_marshalEntity(term, bs);
     Assert(bs->availableSpace() >= DIFMaxSize);
+
   } else {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+      dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term));
+    fflush(dbgout);
+#endif
+    marshalDIFcounted(bs, DIF_SUSPEND);
     suspend(term);
   }
-  return (FALSE);
-
+  return (OK);
 }
 
 //
