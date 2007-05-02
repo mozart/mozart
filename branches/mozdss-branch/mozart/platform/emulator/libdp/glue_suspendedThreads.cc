@@ -645,6 +645,15 @@ WakeRetVal SuspendedGenericDot::resumeDoLocal(DssOperationId*) {
   case RAISE:
     resumeRaise(OZ_makeException(E_ERROR, E_KERNEL, ".", 2, entity, key));
     break;
+  case SUSPEND:
+    // entity is an object, and its class is incomplete
+    Assert(oz_isObject(entity));
+    Assert(! tagged2Object(entity)->getClass()->isComplete());
+    // cancel suspensions, and re-apply 'dot'.  The latter will wait
+    // for the class, and then resume locally.
+    am.emptySuspendVarList();
+    resumeApply(BI_dot, oz_mklist(entity, key, result));
+    break;
   default:
     // should never happen, because the state is local
     Assert(0);
