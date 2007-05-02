@@ -154,6 +154,10 @@
                                    out => [],
                                    BI  => BIsetMsgPriority},
 
+     'getRPC'                =>  { in  => [],
+                                   out => ['value'],
+                                   BI  => BIgetRPC},
+
      'getAnnotation'         =>  { in  => ['value'],
                                    out => ['+int','+int','+int'],
                                    BI  => BIgetAnnotation},

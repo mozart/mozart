@@ -118,6 +118,16 @@ define
       {Show InSettings}
       {Show {Glue.initIPConnection InSettings.port InSettings.ip
 	     InSettings.siteId InSettings.connectProc LP InSettings.dhtId}}
+      
+      %% set RPC wrapper procedure
+      {Glue.getRPC} = proc {$ P Args Ret}
+			 try
+			    {Procedure.apply P Args}
+			    Ret=unit
+			 catch E then
+			    Ret={Value.failed E}
+			 end
+		      end
             
       {Delay 500}
       
