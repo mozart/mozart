@@ -384,7 +384,6 @@ enum LockRet{
 Bool oz_isThread(TaggedRef term);
 Thread *oz_ThreadToC(TaggedRef term);
 OZ_Term oz_thread(Thread *tt);
-void oz_setThread(TaggedRef, Thread*);
 
 // see am.cc
 void handlerUSR1(int);

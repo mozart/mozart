@@ -716,19 +716,15 @@ ObjectMediator::callback_Read(DssThreadId*, DssOperationId*,
   Assert(OZ_isTuple(arg));
   if (OZ_label(arg) == oz_atom("invoke")) {
     TaggedRef meth = OZ_getArg(arg, 0);
-    TaggedRef tid  = OZ_getArg(arg, 1);     // a thread id
-    // get a Thread with the given thread id; create it if necessary
-    Thread* thread = oz_ThreadToC(tid);
-    if (!thread) {
-      thread = oz_newThreadSuspended();
-      oz_setThread(tid, thread);
-    }
-    TaggedRef ret  = oz_newVariable();     // return variable
-    // push {RPC Obj [Meth] Ret}
+    TaggedRef tid  = OZ_getArg(arg, 1);     // the caller's thread id
+    Thread* thread = oz_ThreadToC(tid);     // the corresponding local thread
+    TaggedRef ret  = oz_newVariable();      // return variable
+    Assert(thread);
+    // push {RPC Obj [Meth] Ret} on top of thread
     RefsArray* refs = RefsArray::make(getEntity(), oz_mklist(meth), ret);
     thread->pushCall(getRPC(), refs);
     // wake up thread
-    oz_wakeupThread(thread);
+    if (thread->isSuspended()) oz_wakeupThread(thread);
     answer = new PstOutContainer(ret);
 
   } else if (OZ_label(arg) == oz_atom("access")) {
