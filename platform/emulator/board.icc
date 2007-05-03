@@ -120,7 +120,9 @@ void Board::scheduleNonMono(void) {
  * if "stable" generate a new thread "solve waker"
  * NOTE:
  *   there may be failed board in between which must be simply ignored
- *
+ * geoz-note:
+ *   it is possible to have a stable space and having a non empty trail
+ *   please see (isSpeculating conditions in trail)
  */
 
 inline
@@ -128,8 +130,8 @@ Bool Board::isStable(void) {
   if (hasRunnableThreads())
     return NO;
 
-  if (oz_isCurrentBoard(this) && !trail.isEmptyChunk())
-    return NO;
+  /*  if (oz_isCurrentBoard(this) && !trail.isEmptyChunk())
+      return NO;*/
 
   if (oz_isCurrentBoard(this) && trail.isSpeculating())
     return NO;
