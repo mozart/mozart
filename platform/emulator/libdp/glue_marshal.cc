@@ -184,7 +184,7 @@ void ObjectMediator::unmarshal(ByteBuffer* bs) {
 
 // thread ids
 void OzThreadMediator::unmarshal(ByteBuffer* bs) {
-  if (!hasEntity()) setEntity(oz_thread(oz_newThreadSuspended(1)));
+  if (!hasEntity()) setEntity(oz_thread(oz_newThreadSuspended()));
 }
 
 
