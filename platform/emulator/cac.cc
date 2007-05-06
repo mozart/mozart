@@ -421,6 +421,8 @@ Abstraction * Abstraction::gCollect(int gUsageLen, int * gUsage) {
   if (cacIsCopied()) {
     // Repeat customer, update and gc any newly live fields in the copy.
     to = cacGetCopy();
+    if (!isComplete()) return to;
+    //
     gReg = to->getGRef();
     if (!gUsage) {
       // All previously dead registers are live
@@ -464,14 +466,18 @@ Abstraction * Abstraction::gCollect(int gUsageLen, int * gUsage) {
     return to;
   }
   // First time seen
-  to = (Abstraction *) oz_hrealloc(this, getAllocSize());
+  to = (Abstraction*) oz_hrealloc(this, sizeof(Abstraction));
+  int gSize= pred ? pred->getGSize() : 0;
+  if (gSize > 0) {
+    Assert(globals);
+    to->globals = (TaggedRef*) oz_hrealloc(globals, sizeof(TaggedRef) * gSize);
+  }
   cacCopy(to);
 
   gReg = to->getGRef();
-  int gSize= to->pred->getGSize();
 
   // Void dead registers
-  if (gUsage) {
+  if (gUsage && isComplete()) {
     // *IMPORTANT*: must zero all dead regs before we do *any* gc
     for (int i=gSize; i--; ) {
       if (!(gUsage[i])) {
@@ -508,9 +514,9 @@ Abstraction * Abstraction::gCollect(int gUsageLen, int * gUsage) {
 	oz_cacTerm(gReg[i], gReg[i]);
       }
     }
+  } else { // All registers still live.
+    if (gReg) OZ_cacBlock(gReg,gReg,gSize);
   }
-  else // All registers still live.
-    OZ_cacBlock(gReg,gReg,gSize);
 
   //cause the rest of the closure to be gc'd.
   cacStack.push(to, PTR_CONSTTERM);
@@ -1341,9 +1347,17 @@ void ConstTerm::_cacConstRecurse(void) {
     {
       Abstraction *a = (Abstraction *) this;
 #ifdef G_COLLECT
-      gCollectCode(a->getPred()->getCodeBlock());
+      if (a->getPred()) {
+	gCollectCode(a->getPred()->getCodeBlock());
+      }
 #endif
 #ifdef S_CLONE
+      // raph: ConstTerm::sCloneConstTermInline() did not copy the
+      // array globals.  So we must copy it now.  I really find this
+      // ugly, but I don't want to spend hours rewriting it!
+      Assert(a->isComplete());
+      int sz = a->getPred()->getGSize();
+      a->globals = (TaggedRef*) oz_hrealloc(a->globals, sizeof(TaggedRef) * sz);
       OZ_cacBlock(a->getGRef(),a->getGRef(),
       		  a->getPred()->getGSize());
 #endif
@@ -1613,7 +1627,7 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
   }
 
   case Co_Abstraction: 
-    sz = ((Abstraction *) this)->getAllocSize();
+    sz = sizeof(Abstraction);
     goto const_withhome;
 
   case Co_Chunk:
@@ -1763,6 +1777,7 @@ TaskStack * TaskStack::_cac(void) {
       *CAP = ((RefsArray *) *CAP)->_cac();
     } else { // usual continuation
 #ifdef G_COLLECT
+      Assert(((Abstraction *) *CAP)->isComplete());
       // Void dead G and Y registers if possible
       int gLen = ((Abstraction *) *CAP)->cacGetPred()->getGSize();
       int *gUsage = gUsageVector;

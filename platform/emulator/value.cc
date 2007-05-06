@@ -181,6 +181,10 @@ int oz_fastlength(OZ_Term l) {
  * ConstTerm
  *=================================================================== */
 
+const char *Abstraction::getPrintName() {
+  return getPred() ? getPred()->getPrintName() : "???";
+}
+
 const char *OzClass::getPrintName() 
 { 
   TaggedRef aux = isComplete() ? classGetFeature(NameOoPrintName) : 0;

@@ -2334,33 +2334,50 @@ class Abstraction: public ConstTermWithHome {
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 protected:
-  PrTabEntry *pred;
-  TaggedRef globals[1];
+  PrTabEntry *pred;       // predicate
+  TaggedRef *globals;     // array of global registers
+  int arity : 16;         // arity of abstraction
+  bool complete : 1;      // whether predicate and globals are complete
+
 public:
   OZPRINTLONG
   NO_DEFAULT_CONSTRUCTORS(Abstraction)
 
-  static Abstraction *newAbstraction(PrTabEntry *prd,Board *bb)
+  // regular constructor, where predicate is known
+  Abstraction(Board *bb, PrTabEntry *p) :
+    ConstTermWithHome(bb, Co_Abstraction),
+    pred(p), globals(NULL), arity(p->getArity()), complete(TRUE)
   {
-    Assert(prd->getGSize()>=0);
-    int sz=sizeof(Abstraction)+sizeof(TaggedRef)*(prd->getGSize()-1);
-    Abstraction *ab = (Abstraction *) oz_heapMalloc(sz);
-    ab->ConstTermWithHome::init(bb,Co_Abstraction);
-    ab->pred=prd;
-    DebugCheckT(for (int i=prd->getGSize(); i--; ) ab->globals[i]=0);
-    return ab;
+    Assert(p && p->getGSize() >= 0);
+    if (p->getGSize() > 0) {
+      globals = (TaggedRef*) oz_heapMalloc(sizeof(TaggedRef) * p->getGSize());
+      DebugCheckT(for (int i = p->getGSize(); i--; ) globals[i] = 0);
+    }
   }
 
-  int getAllocSize(void) {
-    return sizeof(Abstraction)+sizeof(TaggedRef)*(pred->getGSize()-1);
+  static Abstraction *newAbstraction(PrTabEntry *prd,Board *bb) {
+    return new Abstraction(bb, prd);
+  }
+
+  // special constructor, where predicate is not known yet
+  Abstraction(Board *bb, int n) :
+    ConstTermWithHome(bb, Co_Abstraction),
+    pred(NULL), globals(NULL), arity(n), complete(FALSE)
+  {}
+
+  bool isComplete(void) { return complete; }
+  void setComplete() {
+    Assert(pred && !complete);
+    Assert(pred->getGSize() == 0 || globals);
+    complete = TRUE;
   }
 
   void initG(int i, TaggedRef val) {
-    Assert(i>=0 && i<getPred()->getGSize());
+    Assert(globals && i>=0 && i<getPred()->getGSize());
     globals[i]=val;
   }
   TaggedRef getG(int i) {
-    Assert(i>=0 && i<cacGetPred()->getGSize());
+    Assert(globals && i>=0 && i<cacGetPred()->getGSize());
     return globals[i];
   }
   TaggedRef *getGRef() { return globals; }
@@ -2375,11 +2392,25 @@ public:
     return pred; 
   }
 
+  // set predicate (use only with second constructor!)
+  void setPred(PrTabEntry *p) {
+    Assert(!pred && p && p->getArity() == arity);
+    pred = p;
+    if (p->getGSize() > 0) {
+      globals = (TaggedRef*) oz_heapMalloc(sizeof(TaggedRef) * p->getGSize());
+      // nullifying globals is necessary for garbage collection
+      for (int i = p->getGSize(); i--; ) globals[i] = 0;
+    }
+  }
+
+  // always safe (even when the predicate is unknown)
+  int getArity() { return arity; }
+
+  // those are not safe: check isComplete() before!
   ProgramCounter getPC() { return getPred()->getPC(); }
-  int getArity()         { return getPred()->getArity(); }
-  SRecordArity getMethodArity()   { return getPred()->getMethodArity(); }
-  const char *getPrintName()   { return getPred()->getPrintName(); }
-  TaggedRef getName()    { return getPred()->getName(); }
+  SRecordArity getMethodArity() { return getPred()->getMethodArity(); }
+  TaggedRef getName() { return getPred()->getName(); }
+  const char *getPrintName();
 
   TaggedRef DBGgetGlobals();
 
