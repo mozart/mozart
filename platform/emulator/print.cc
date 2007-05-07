@@ -1002,7 +1002,7 @@ void OzObject::printLongStream(ostream &stream, int depth, int offset)
   SRecord* state = getState();
   if (state) {
     state->printLongStream(stream,depth,offset);
-  } else if(getRecord(state)) {
+  } else {
     stream << "(distributed)";
   }
 }
