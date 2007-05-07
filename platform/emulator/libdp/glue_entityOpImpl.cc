@@ -378,7 +378,7 @@ OZ_Return distObjectInvokeImpl(OzObject* obj, TaggedRef meth) {
     Assert(0);
     return PROCEED;
   case DSS_SUSPEND:
-    new SuspendedObjectInvoke(med, meth);
+    new SuspendedCall(med, oz_mklist(meth));
     return BI_REPLACEBICALL;
   default:
     OZ_error("Unhandled error in distObjectInvoke");
@@ -689,6 +689,42 @@ distClassGetImpl(OzClass *cls) {
 
 
 
+/************************* Procedures *************************/
+
+// invoke a distributed procedure with a list of arguments
+OZ_Return distProcedureCallImpl(Abstraction* a, TaggedRef args) {
+  // precondition: the procedure is not complete
+  Assert(!a->isComplete());
+  ProcedureMediator* med =
+    static_cast<ProcedureMediator*>(glue_getMediator(makeTaggedConst(a)));
+
+  // suspend if fault state not ok
+  if (med->getFaultState()) return med->suspendOnFault();
+
+  DssThreadId *thrId = currentThreadId();
+  PstOutContainerInterface** pstout;
+  OpRetVal cont = med->abstractOperation_Read(thrId, pstout);
+  if (pstout != NULL) {
+    Thread* thr = oz_currentThread();
+    TaggedRef t = oz_thread(thr);
+    *pstout = new PstOutContainer(OZ_mkTupleC("call", 2, args, t));
+  }
+
+  switch (cont) {
+  case DSS_PROCEED:   // local case not handled here!
+    Assert(0);
+    return PROCEED;
+  case DSS_SUSPEND:
+    new SuspendedCall(med, args);
+    return BI_REPLACEBICALL;
+  default:
+    OZ_error("Unhandled error in distObjectInvoke");
+    return PROCEED;
+  }
+}
+
+
+
 void initEntityOperations(){
   // ports
   distPortSend = &distPortSendImpl;
@@ -726,4 +762,7 @@ void initEntityOperations(){
 
   // classes
   distClassGet = &distClassGetImpl;
+
+  // procedures
+  distProcedureCall = &distProcedureCallImpl;
 }

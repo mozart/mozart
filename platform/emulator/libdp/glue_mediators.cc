@@ -64,6 +64,7 @@ Mediator *glue_newMediator(GlueTag tag) {
   case GLUE_UNUSABLE:   return new UnusableMediator();
   case GLUE_CHUNK:      return new ChunkMediator();
   case GLUE_CLASS:      return new ClassMediator();
+  case GLUE_PROCEDURE:  return new ProcedureMediator();
   default:
     Assert(0); return NULL;
   }
@@ -103,14 +104,15 @@ Mediator *glue_getMediator(TaggedRef entity) {
     ConstTerm *ct = tagged2Const(entity);
 
     switch (ct->getType()) {
-    case Co_Cell:       return getCTWHMediator<CellMediator>(ct);
-    case Co_Object:     return getCTWHMediator<ObjectMediator>(ct);
-    case Co_Port:       return getCTWHMediator<PortMediator>(ct);
-    case Co_Chunk:      return getCTWHMediator<ChunkMediator>(ct);
-    case Co_Array:      return getCTWHMediator<ArrayMediator>(ct);
-    case Co_Dictionary: return getCTWHMediator<DictionaryMediator>(ct);
-    case Co_Lock:       return getCTWHMediator<LockMediator>(ct);
-    case Co_Class:      return getCTWHMediator<ClassMediator>(ct);
+    case Co_Cell:        return getCTWHMediator<CellMediator>(ct);
+    case Co_Object:      return getCTWHMediator<ObjectMediator>(ct);
+    case Co_Port:        return getCTWHMediator<PortMediator>(ct);
+    case Co_Chunk:       return getCTWHMediator<ChunkMediator>(ct);
+    case Co_Array:       return getCTWHMediator<ArrayMediator>(ct);
+    case Co_Dictionary:  return getCTWHMediator<DictionaryMediator>(ct);
+    case Co_Lock:        return getCTWHMediator<LockMediator>(ct);
+    case Co_Class:       return getCTWHMediator<ClassMediator>(ct);
+    case Co_Abstraction: return getCTWHMediator<ProcedureMediator>(ct);
 
     case Co_Builtin:
       if (static_cast<Builtin*>(ct)->isSited())
@@ -949,5 +951,40 @@ ClassMediator::callback_Read(DssThreadId*, DssOperationId*,
 			     PstOutContainerInterface*& answer) {
   // no distributed operation on stationary classes!
   Assert(0);
+  return AOCB_FINISH;
+}
+
+
+
+/************************* ProcedureMediator *************************/
+
+ProcedureMediator::ProcedureMediator() : TokenMediator(GLUE_PROCEDURE) {}
+
+ProcedureMediator::ProcedureMediator(TaggedRef e) :
+  TokenMediator(GLUE_PROCEDURE) {
+  setEntity(e);
+}
+
+AOcallback
+ProcedureMediator::callback_Read(DssThreadId*, DssOperationId*,
+				 PstInContainerInterface* operation,
+				 PstOutContainerInterface*& answer) {
+  // the only read operation is: call
+  TaggedRef op = static_cast<PstInContainer*>(operation)->a_term;
+  Assert(OZ_isTuple(op) &&
+	 OZ_label(op) == oz_atom("call") && OZ_width(op) == 2);
+  //
+  TaggedRef args = OZ_getArg(op, 0);      // list of arguments
+  TaggedRef tid  = OZ_getArg(op, 1);      // the caller's thread id
+  Thread* thread = oz_ThreadToC(tid);     // the corresponding local thread
+  TaggedRef ret  = oz_newVariable();      // return variable
+  Assert(thread);
+  // push {RPC Proc Args Ret} on top of thread
+  RefsArray* refs = RefsArray::make(getEntity(), args, ret);
+  thread->pushCall(getRPC(), refs);
+  // wake up thread
+  if (thread->isSuspended()) oz_wakeupThread(thread);
+  //
+  answer = new PstOutContainer(ret);
   return AOCB_FINISH;
 }

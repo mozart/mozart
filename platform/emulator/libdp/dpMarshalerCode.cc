@@ -899,84 +899,91 @@ Bool DPMARSHALERCLASS::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
-  if (bs->availableSpace() >= 
-      max(2*DIFMaxSize + 7*MNumberMaxSize + MGNameMaxSize,
-	  2*DIFMaxSize + MNumberMaxSize + MOwnHeadMaxSize)) {
-    int index;
+  if (isImmediate() || glue_isImmediate(absTerm)) {
+    // immediate marshaling: DIF_PROC, index, gname, arity, gsize,
+    // maxX, line, column, bytecode size
+    if (bs->availableSpace() < 2*DIFMaxSize + 7*MNumberMaxSize + MGNameMaxSize)
+      goto suspend;
 
+    int index;
     //
     VISITNODE(absTerm, vIT, bs, index, return(OK));
-
     //
     Abstraction *pp = (Abstraction *) absConst;
+    Assert(pp->isComplete());
     PrTabEntry *pred = pp->getPred();
-
     //
-    if (pred->isSited()) {
+    if (pred->isSited()) {   // stupidness check: should not happen
       OZ_error("DPMARSHALERCLASS::processAbstract : MRHTentry\n");
-      //MarshalRHTentry(absTerm, index);
       Assert(bs->availableSpace() >= DIFMaxSize);
       return (OK);		// done - a leaf;
-    } else {
-      //
-#if defined(DBG_TRACE)
-      DBGINIT();
-      fprintf(dbgout, "> tag: %s(%d) = %s\n",
-	      dif_names[DIF_PROC].name, DIF_PROC, toC(absTerm));
-      fflush(dbgout);
-#endif
-
-      //
-      marshalDIFindex(bs, DIF_PROC, DIF_PROC_DEF, index);
-
-      //
-      GName *gname = pp->globalize();
-      Assert(gname);
-      marshalGName(bs, gname);
-      marshalNumber(bs, pp->getArity());
-      ProgramCounter pc = pp->getPC();
-      int gs = pred->getGSize();
-      marshalNumber(bs, gs);
-      marshalNumber(bs, pred->getMaxX());
-      marshalNumber(bs, pred->getLine());
-      marshalNumber(bs, pred->getColumn());
-
-      //
-      ProgramCounter start = pp->getPC() - sizeOf(DEFINITION);
-
-      //
-      XReg reg;
-      int nxt, line, colum;
-      TaggedRef file, predName;
-      CodeArea::getDefinitionArgs(start, reg, nxt, file,
-				  line, colum, predName);
-      //
-      marshalNumber(bs, nxt);	// codesize in ByteCode"s;
-
-      //
-      DPMarshalerCodeAreaDescriptor *desc = 
-	new DPMarshalerCodeAreaDescriptor(start, start + nxt, lIT);
-      traverseBinary(dpMarshalCode, desc);
-
-      //
-      Assert(bs->availableSpace() >= DIFMaxSize);
-      return (NO);
-    } 
-    Assert(0);
-
+    }
     //
-  } else {
 #if defined(DBG_TRACE)
     DBGINIT();
-    fprintf(dbgout, "> tag: %s(%d) on %s\n",
-	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(absTerm));
+    fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	    dif_names[DIF_PROC].name, DIF_PROC, toC(absTerm));
     fflush(dbgout);
 #endif
-    marshalDIFcounted(bs, DIF_SUSPEND);
-    suspend(absTerm);
-    return (OK);
-  } 
+    marshalDIFindex(bs, DIF_PROC, DIF_PROC_DEF, index);
+    //
+    GName *gname = pp->globalize();
+    Assert(gname);
+    marshalGName(bs, gname);
+    marshalNumber(bs, pp->getArity());
+    ProgramCounter pc = pp->getPC();
+    int gs = pred->getGSize();
+    marshalNumber(bs, gs);
+    marshalNumber(bs, pred->getMaxX());
+    marshalNumber(bs, pred->getLine());
+    marshalNumber(bs, pred->getColumn());
+    //
+    ProgramCounter start = pp->getPC() - sizeOf(DEFINITION);
+    //
+    XReg reg;
+    int nxt, line, colum;
+    TaggedRef file, predName;
+    CodeArea::getDefinitionArgs(start, reg, nxt, file,
+				line, colum, predName);
+    //
+    marshalNumber(bs, nxt);	// codesize in ByteCode"s;
+    //
+    DPMarshalerCodeAreaDescriptor *desc = 
+      new DPMarshalerCodeAreaDescriptor(start, start + nxt, lIT);
+    traverseBinary(dpMarshalCode, desc);
+    //
+    Assert(bs->availableSpace() >= DIFMaxSize);
+    return (NO);
+
+  } else {
+    // marshaling a mediator: DIF_GLUE, index, mediator, gname, arity
+    if (bs->availableSpace() <
+	2*DIFMaxSize + 2*MNumberMaxSize + MMediatorMaxSize + MGNameMaxSize)
+      goto suspend;
+
+    int index;
+    //
+    VISITNODE(absTerm, vIT, bs, index, return(OK));
+    //
+    marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
+    //
+    (void) glue_marshalEntity(absTerm, bs);
+    Assert(bs->availableSpace() >= DIFMaxSize);
+    return (OK);     // leaf node
+
+  }
   Assert(0);
+
+ suspend:
+#if defined(DBG_TRACE)
+  DBGINIT();
+  fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	  dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(absTerm));
+  fflush(dbgout);
+#endif
+  marshalDIFcounted(bs, DIF_SUSPEND);
+  suspend(absTerm);
+  return (OK);
 }
 
 //

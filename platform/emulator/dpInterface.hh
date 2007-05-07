@@ -95,6 +95,9 @@ extern OZ_Return (*distChunkGet)(SChunk*, TaggedRef, TaggedRef&);
 // classes
 extern OZ_Return (*distClassGet)(OzClass*);
 
+// procedures (Abstraction)
+extern OZ_Return (*distProcedureCall)(Abstraction*, TaggedRef);
+
 
 
 /******************** Garbage collection routines *********************/

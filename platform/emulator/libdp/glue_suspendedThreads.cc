@@ -462,43 +462,6 @@ bool SuspendedDictionaryPut::gCollect() {
 
 
 
-/************************* SuspendedObjectInvoke *************************/
-
-SuspendedObjectInvoke::SuspendedObjectInvoke(Mediator* med, OZ_Term m) :
-  SuspendedOperation(med), method(m)
-{
-  suspend();
-}
-
-WakeRetVal SuspendedObjectInvoke::resumeDoLocal(DssOperationId*) {
-  // resume by a local call
-  TaggedRef entity = getMediator()->getEntity();
-  resumeApply(entity, oz_mklist(method));
-  return WRV_DONE;
-}
-
-WakeRetVal
-SuspendedObjectInvoke::resumeRemoteDone(PstInContainerInterface* pstin) {
-  PstInContainer* pst = static_cast<PstInContainer*>(pstin);
-  // The result is a control variable, we simply bind ctlVar to result!
-  OZ_Return ret = oz_unify(ctlVar, pst->a_term);
-  // It succeed immediately, since ctlVar is never distributed.
-  Assert(ret == PROCEED);
-  ctlVar = 0;
-  resume();
-  return WRV_DONE;
-}
-
-bool SuspendedObjectInvoke::gCollect(){
-  if (gc()) {
-    oz_gCollectTerm(method, method);
-    return true;
-  } else
-    return false;
-}
-
-
-
 /************************* SuspendedObjectAccess *************************/
 
 SuspendedObjectAccess::SuspendedObjectAccess(Mediator* med,
@@ -677,6 +640,44 @@ bool SuspendedGenericDot::gCollect(){
   if (gc()) {
     oz_gCollectTerm(key, key);
     oz_gCollectTerm(result, result);
+    return true;
+  } else
+    return false;
+}
+
+
+
+/************************* SuspendedCall *************************/
+
+SuspendedCall::SuspendedCall(Mediator* med, OZ_Term list) :
+  SuspendedOperation(med), args(list)
+{
+  Assert(OZ_isList(list, NULL));
+  suspend();
+}
+
+WakeRetVal SuspendedCall::resumeDoLocal(DssOperationId*) {
+  // resume by a local call
+  TaggedRef entity = getMediator()->getEntity();
+  resumeApply(entity, args);
+  return WRV_DONE;
+}
+
+WakeRetVal
+SuspendedCall::resumeRemoteDone(PstInContainerInterface* pstin) {
+  PstInContainer* pst = static_cast<PstInContainer*>(pstin);
+  // The result is a control variable, we simply bind ctlVar to result!
+  OZ_Return ret = oz_unify(ctlVar, pst->a_term);
+  // It succeed immediately, since ctlVar is never distributed.
+  Assert(ret == PROCEED);
+  ctlVar = 0;
+  resume();
+  return WRV_DONE;
+}
+
+bool SuspendedCall::gCollect(){
+  if (gc()) {
+    oz_gCollectTerm(args, args);
     return true;
   } else
     return false;

@@ -3698,7 +3698,7 @@ OZ_BI_define(BIvalueNameVariable,2,0)
 // ---------------------------------------------------------------------------
 
 TaggedRef Abstraction::DBGgetGlobals() {
-  int n = getPred()->getGSize();
+  int n = getPred() ? getPred()->getGSize() : 0;     // not nice...
   OZ_Term t = OZ_tuple(oz_atom("globals"),n);
   for (int i = 0; i < n; i++) {
     OZ_putArg(t,i,getG(i));

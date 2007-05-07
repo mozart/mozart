@@ -261,3 +261,29 @@ void ClassMediator::unmarshal(ByteBuffer* bs) {
     setEntity(value);
   }
 }
+
+
+// procedures
+void ProcedureMediator::marshal(ByteBuffer *bs) {
+  Abstraction* a = tagged2Abstraction(getEntity());
+  GName* gname = a->globalize();
+  Assert(gname);
+  marshalGName(bs, gname);
+  marshalNumber(bs, a->getArity());
+}
+
+void ProcedureMediator::unmarshal(ByteBuffer* bs) {
+  TaggedRef value;
+  GName* gname = unmarshalGName(&value, bs);
+  int arity = unmarshalNumber(bs);
+  if (!hasEntity()) {
+    if (gname) {   // entity does not exist on this site
+      Abstraction* a = new Abstraction(oz_currentBoard(), arity);
+      a->setGName(gname);
+      value = makeTaggedConst(a);
+      addGName(gname, value);
+    }
+    Assert(oz_isAbstraction(value));
+    setEntity(value);
+  }
+}

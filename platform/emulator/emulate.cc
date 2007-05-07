@@ -2671,14 +2671,15 @@ LBLdispatcher:
 
        if (oz_isAbstraction(taggedPredicate)) {
          Abstraction *def = tagged2Abstraction(taggedPredicate);
-	 PrTabEntry *pte = def->getPred();
-         CheckArity(pte->getArity(), taggedPredicate);
-         if (!isTailCall) { PushCont(PC+3); }
-         CallDoChecks(def);
-         JUMPABSOLUTE(pte->getPC());
-       }
-
-       if (!oz_isProcedure(taggedPredicate) && !oz_isObject(taggedPredicate)) {
+	 if (def->isComplete()) {
+	   CheckArity(def->getArity(), taggedPredicate);
+	   if (!isTailCall) { PushCont(PC+3); }
+	   CallDoChecks(def);
+	   JUMPABSOLUTE(def->getPC());
+	 }
+	 // the distributed case is handled below...
+       } else if (!oz_isProcedure(taggedPredicate) &&
+		  !oz_isObject(taggedPredicate)) {
 	 Assert(!oz_isRef(taggedPredicate));
 	 if (oz_isVarOrRef(taggedPredicate)) {
 	   SUSP_PC(predPtr,PC);
@@ -2707,9 +2708,21 @@ LBLdispatcher:
        if (typ==Co_Abstraction) {
 	 Abstraction *def = (Abstraction *) predicate;
 	 CheckArity(def->getArity(), makeTaggedConst(def));
-	 if (!isTailCall) { PushCont(PC); }
-	 CallDoChecks(def);
-	 JUMPABSOLUTE(def->getPC());
+	 if (def->isComplete()) {
+	   if (!isTailCall) { PushCont(PC); }
+	   CallDoChecks(def);
+	   JUMPABSOLUTE(def->getPC());
+	 } else {
+	   // procedure is incomplete: call distribution
+	   TaggedRef args = oz_nil();
+	   for (int i = def->getArity(); i--; ) args = oz_cons(XREGS[i], args);
+	   // all arguments are in list args
+	   OZ_Return ret = distProcedureCall(def, args);
+	   Assert(ret == BI_REPLACEBICALL);
+	   if (isTailCall) { PC=NOCODE; }
+	   Assert(!e->isEmptyPreparedCalls());
+	   goto LBLreplaceBICall;
+	 }
        }
 
 // -----------------------------------------------------------------------
@@ -3189,7 +3202,8 @@ LBLdispatcher:
 
       if (oz_isAbstraction(pred)) {
 	Abstraction *abstr = tagged2Abstraction(pred);
-	if (abstr->getArity() == (tailcallAndArity >> 1)) {
+	if (abstr->isComplete() &&
+	    abstr->getArity() == (tailcallAndArity >> 1)) {
 	  patchToFastCall(abstr,PC,tailcallAndArity&1);
 	  DISPATCH(0);
 	}
@@ -3220,7 +3234,7 @@ LBLdispatcher:
 
       if(oz_isAbstraction(pred)) {
 	Abstraction *abstr = tagged2Abstraction(pred);
-	if (abstr->getArity() == arity) { 
+	if (abstr->isComplete() && abstr->getArity() == arity) { 
 	  patchToFastCall(abstr,PC,tailCall);
 	  DISPATCH(0);
 	}
@@ -3267,6 +3281,7 @@ LBLdispatcher:
 	  predicate = tagged2Const(tagged2OzClass(cls)->getFallbackApply());
 	  goto LBLcall;
 	}
+	Assert(abstr->isComplete());
 	patchToFastCall(abstr,PC,cmi->isTailCall);
 	cmi->dispose();
 	DISPATCH(0);
@@ -3299,11 +3314,13 @@ LBLdispatcher:
 
   Case(PROFILEPROC)
     {
-      PrTabEntry *pred = CAP->getPred();
-      pred->getProfile()->numCalled++;
-      if (pred!=ozstat.currAbstr) {
-	CTS->pushAbstr(ozstat.currAbstr);
-	ozstat.leaveCall(pred);
+      if (CAP->isComplete()) {
+	PrTabEntry *pred = CAP->getPred();
+	pred->getProfile()->numCalled++;
+	if (pred!=ozstat.currAbstr) {
+	  CTS->pushAbstr(ozstat.currAbstr);
+	  ozstat.leaveCall(pred);
+	}
       }
       DISPATCH(1);
     }
