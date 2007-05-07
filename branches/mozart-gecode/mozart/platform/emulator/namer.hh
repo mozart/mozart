@@ -129,13 +129,26 @@ public:
   static T_NAME getName(T_INDEX index) {
     //printf("namer.hh getName _head=%p\n",_head);fflush(stdout);
     for (Namer<T_INDEX, T_NAME> * tmp = _head; tmp; tmp = tmp->_next) {
+      //printf("getName antes %p\n",tmp->_index);fflush(stdout);
       tmp->_index = derefIndexNamer(tmp->_index);
-      //printf("getName %d -- %d -- %s \n",tmp->_index,index,tmp->_name);fflush(stdout);
+      //printf("getName antes %p - \n",tmp->_index);fflush(stdout);
       if (tmp->_index == index) {
 	return tmp->_name;
       }
     }
     return (T_NAME) NULL;
+  }
+
+  void updateName(T_INDEX index_old,T_INDEX index_new ) {
+    //printf("namer.hh getName _head=%p\n",_head);fflush(stdout);
+    for (Namer<T_INDEX, T_NAME> * tmp = _head; tmp; tmp = tmp->_next) {
+      //printf("getName antes %p\n",tmp->_index);fflush(stdout);
+      tmp->_index = derefIndexNamer(tmp->_index);
+      //printf("getName antes %p - \n",tmp->_index);fflush(stdout);
+      if (tmp->_index == index_old) {
+	tmp->_index=index_new;
+      }
+    }    
   }
   static void addName(T_INDEX index, T_NAME name) {
     Assert(index != 0);
@@ -145,8 +158,8 @@ public:
 	return;
 
     _head = new Namer<T_INDEX, T_NAME>(index, name, _head);
-    //printf("addName namer.hh %d %s\n",index,name);fflush(stdout);
-    
+    //printf("addName namer.hh %p %s\n",index,name);fflush(stdout);
+    //printf("adding %s at index %x\n", toStringNamer(name), (int) index);fflush(stdout);
     NEW_NAMER_DEBUG_PRINT(("adding %s at index %x\n", toStringNamer(name), (int) index));
   }
   static void cloneEntry(T_INDEX index_org, T_INDEX index_clone) {
@@ -185,7 +198,7 @@ public:
     }
   }
   void sClone(void) {
-    printf("namer.hh sClone\n");fflush(stdout);
+    //printf("namer.hh sClone\n");fflush(stdout);
     Namer<T_INDEX, T_NAME> * tmp = _head;
 
     while (tmp) {
