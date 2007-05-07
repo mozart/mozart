@@ -2730,8 +2730,10 @@ LBLdispatcher:
 	 if (!cls->isComplete()) {   // class not available yet
 	   OZ_Return ret = (*distClassGet)(cls);
 	   Assert(ret == SUSPEND);
-	   PushContX(PC);
-	   SUSPENDONVARLIST;
+	   if (isTailCall) { PC=NOCODE; }
+	   // recall object once class is ready
+	   am.prepareCall(makeTaggedConst(o), RefsArray::make(XREGS[0]));
+	   goto LBLreplaceBICall;
 	 }
 	 Assert(cls->getFallbackApply());
 	 Abstraction *def =
