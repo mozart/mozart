@@ -204,10 +204,15 @@ OZ_BI_define(BIprocLoc,1,3)
   if (oz_isAbstraction(v)) {
     Abstraction *a = tagged2Abstraction(v);
     PrTabEntry *p = a->getPred();
-
-    OZ_out(0) = p->getFile();
-    OZ_out(1) = OZ_int(p->getLine());
-    OZ_out(2) = OZ_int(p->getColumn());
+    if (p) {
+      OZ_out(0) = p->getFile();
+      OZ_out(1) = OZ_int(p->getLine());
+      OZ_out(2) = OZ_int(p->getColumn());
+    } else {
+      OZ_out(0) = AtomProcedure;
+      OZ_out(1) = AtomDash;
+      OZ_out(2) = AtomDash;
+    }
     return (PROCEED);
   } else if (oz_isBuiltin(v)) {
     OZ_out(0) = AtomBBuiltin;

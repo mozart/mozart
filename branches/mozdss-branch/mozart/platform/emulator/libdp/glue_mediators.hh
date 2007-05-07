@@ -117,6 +117,7 @@ enum GlueTag {
   GLUE_UNUSABLE,       // immutables
   GLUE_CHUNK,
   GLUE_CLASS,
+  GLUE_PROCEDURE,
   GLUE_LAST            // must be last
 };
 
@@ -479,6 +480,20 @@ public:
   virtual void marshal(ByteBuffer*);
   virtual void unmarshal(ByteBuffer*);
   virtual char *getPrintType() { return "class"; }
+};
+
+// mediators for procedures (Abstraction)
+class ProcedureMediator : public TokenMediator {
+public:
+  ProcedureMediator();
+  ProcedureMediator(TaggedRef);
+
+  virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
+				   PstInContainerInterface*,
+				   PstOutContainerInterface*&);
+  virtual void marshal(ByteBuffer*);
+  virtual void unmarshal(ByteBuffer*);
+  virtual char *getPrintType() { return "procedure"; }
 };
 
 #endif

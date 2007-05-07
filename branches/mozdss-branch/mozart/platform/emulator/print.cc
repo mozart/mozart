@@ -1012,20 +1012,24 @@ void Abstraction::printLongStream(ostream &stream, int depth, int offset)
   stream << indent(offset)
 	 << "Abstraction @id"
 	 << this << endl;
-  getPred()->printLongStream(stream,depth,offset);
-  int n = getPred()->getGSize();
-  if (offset == 0) {
-    if (n > 0) {
-      stream <<  "G Regs:";
-      for (int i = 0; i < n; i++) {
-	stream << " G[" << i << "]:\n";
-	ozd_printLongStream(getG(i),stream,depth,offset+2);
+  if (getPred()) {
+    getPred()->printLongStream(stream,depth,offset);
+    int n = getPred()->getGSize();
+    if (isComplete() && offset == 0) {
+      if (n > 0) {
+	stream <<  "G Regs:";
+	for (int i = 0; i < n; i++) {
+	  stream << " G[" << i << "]:\n";
+	  ozd_printLongStream(getG(i),stream,depth,offset+2);
+	}
+      } else {
+	stream << "No G-Regs" << endl;
       }
     } else {
-      stream << "No G-Regs" << endl;
+      stream << indent(offset) << "G Regs: #" << n << endl;
     }
   } else {
-    stream << indent(offset) << "G Regs: #" << n << endl;
+    stream << indent(offset) << "Only a stub (distribution)" << endl;
   }
 }
 

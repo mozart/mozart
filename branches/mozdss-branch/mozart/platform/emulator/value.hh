@@ -2367,7 +2367,7 @@ public:
 
   bool isComplete(void) { return complete; }
   void setComplete() {
-    Assert(pred && !complete);
+    Assert(pred);
     Assert(pred->getGSize() == 0 || globals);
     complete = TRUE;
   }
@@ -2400,6 +2400,8 @@ public:
       globals = (TaggedRef*) oz_heapMalloc(sizeof(TaggedRef) * p->getGSize());
       // nullifying globals is necessary for garbage collection
       for (int i = p->getGSize(); i--; ) globals[i] = 0;
+    } else {
+      setComplete();
     }
   }
 

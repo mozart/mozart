@@ -493,23 +493,34 @@ repeat:
       GetBTFrameArg2(frame, int, gsize);
       DiscardBTFrame(frame);
 
-      //
-      Assert(gname);		// must be an unknown procedure here;
-      OZ_Term procTerm;
-      // kost@ : 'flags' are obviously not used (otherwise something
-      // would not work: flags are not passed as e.g. 'file' is);
-      PrTabEntry *pr = new PrTabEntry(name, mkTupleWidth(arity),
-				      file, line, column,
-				      oz_nil(), maxX);
-      Assert(pc != NOCODE && gsize >= 0);
-      pr->setPC(pc);
-      pr->setGSize(gsize);
+      // the procedure might be (partially or totally) known
+      Assert(gname);
+      OZ_Term procTerm = gname->getValue();
+      Abstraction* pp;
 
-      //
-      Abstraction *pp = Abstraction::newAbstraction(pr, am.currentBoard());
-      procTerm = makeTaggedConst(pp);
-      pp->setGName(gname);
-      overwriteGName(gname, procTerm);
+      if (procTerm) {
+	pp = tagged2Abstraction(procTerm);
+      } else {
+	pp = new Abstraction(am.currentBoard(), arity);
+	procTerm = makeTaggedConst(pp);
+	pp->setGName(gname);
+	overwriteGName(gname, procTerm);
+      }
+
+      // build predicate if not known yet
+      if (!pp->getPred()) {
+	// kost@ : 'flags' are obviously not used (otherwise something
+	// would not work: flags are not passed as e.g. 'file' is);
+	PrTabEntry *pr = new PrTabEntry(name, mkTupleWidth(arity),
+					file, line, column,
+					oz_nil(), maxX);
+	Assert(pc != NOCODE && gsize >= 0);
+	pr->setPC(pc);
+	pr->setGSize(gsize);
+
+	pp->setPred(pr);
+      }
+      Assert(pp->getPred());
 
       //
       if (doMemo) {
@@ -528,6 +539,7 @@ repeat:
 	}
 	break;			// BT_proc:
       } else {
+	Assert(pp->isComplete());
 	value = makeTaggedConst(pp);
 	GetBTTaskTypeNoDecl(frame, type);
 	goto repeat;
@@ -553,6 +565,7 @@ repeat:
       GetBTTaskArg2(frame, int, ind);
       DiscardBTFrame(frame);
       pp->initG(ind, value);
+      pp->setComplete();
       //
       CrazyDebug(incDebugNODES(););
       value = makeTaggedConst(pp);

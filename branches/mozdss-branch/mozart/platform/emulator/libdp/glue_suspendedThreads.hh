@@ -213,16 +213,6 @@ public:
 
 
 // object operations
-class SuspendedObjectInvoke: public SuspendedOperation {
-private:
-  OZ_Term method;
-public:
-  SuspendedObjectInvoke(Mediator*, OZ_Term);
-  WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
-  bool gCollect();
-};
-
 class SuspendedObjectAccess: public SuspendedOperation {
 private:
   OZ_Term key;
@@ -265,6 +255,18 @@ private:
   OZ_Term result;     // a variable
 public:
   SuspendedGenericDot(Mediator*, OZ_Term, OZ_Term);
+  WakeRetVal resumeDoLocal(DssOperationId*);
+  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  bool gCollect();
+};
+
+
+// generic call operation for distributed procedures and objects
+class SuspendedCall : public SuspendedOperation {
+private:
+  OZ_Term args;     // list of arguments
+public:
+  SuspendedCall(Mediator*, OZ_Term);
   WakeRetVal resumeDoLocal(DssOperationId*);
   WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
   bool gCollect();

@@ -585,6 +585,8 @@ VSnapshotBuilder::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
 
   //
   Abstraction *pp = (Abstraction *) absConst;
+  if (!pp->isComplete()) return OK;     // not nice...
+
   PrTabEntry *pred = pp->getPred();
   //
   if (pred->isSited()) {
@@ -1518,6 +1520,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 	int line      = unmarshalNumber(bs);
 	int column    = unmarshalNumber(bs);
 	int codesize  = unmarshalNumber(bs); // in ByteCode"s;
+
+	// in case of an incomplete abstraction, pretend it is unknonw
+	if (!gname && !tagged2Abstraction(value)->isComplete())
+	  gname = tagged2Abstraction(value)->getGName();
 
 	//
 	if (gname) {

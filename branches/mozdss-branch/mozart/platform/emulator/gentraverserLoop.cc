@@ -178,6 +178,7 @@ void TRAVERSERCLASS::doit()
 	case Co_Abstraction:
 	  if (!processAbstraction(t, ct)) {
 	    Abstraction *pp = (Abstraction *) ct;
+	    Assert(pp->isComplete());
 	    int gs = pp->getPred()->getGSize();
 	    //
 	    // in the stream: file, name, registers, code area:

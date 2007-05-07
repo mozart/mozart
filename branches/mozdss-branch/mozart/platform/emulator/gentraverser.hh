@@ -2184,7 +2184,7 @@ public:
     buildValue(procTerm);
     //
     Abstraction *pp = (Abstraction *) tagged2Const(procTerm);
-    Assert(isAbstraction(pp));
+    Assert(isAbstraction(pp) && pp->isComplete());
     int gsize = pp->getPred()->getGSize();
     //
     GetBTFrame(frame);

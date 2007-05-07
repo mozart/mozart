@@ -134,6 +134,12 @@ OZ_Return distClassGetStub(OzClass*) {
   return PROCEED;
 }
 
+// procedures
+OZ_Return distProcedureCallStub(Abstraction*, TaggedRef) {
+  OZD_error("'distProcedureCall' called without DP library?");
+  return PROCEED;
+}
+
 // interface for GC;
 void gCollectMediatorStub(Mediator*) {
   OZD_error("'gCollectMediator' called without DP library?");
@@ -219,6 +225,10 @@ OZ_Return (*distChunkGet)(SChunk*, TaggedRef, TaggedRef&)
 // classes
 OZ_Return (*distClassGet)(OzClass*)
   = distClassGetStub;
+
+// procedures
+OZ_Return (*distProcedureCall)(Abstraction*, TaggedRef)
+  = distProcedureCallStub;
 
 // garbage collection of a mediator
 void (*gCollectMediator)(Mediator*)
