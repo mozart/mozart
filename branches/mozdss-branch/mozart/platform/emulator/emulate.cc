@@ -2722,14 +2722,14 @@ LBLdispatcher:
 	 if (!cls) {   // object incomplete: call distribution
 	   Assert(o->isDistributed());
 	   OZ_Return ret = (*distObjectInvoke)(o, XREGS[0]);
-	   Assert(ret = BI_REPLACEBICALL);
+	   Assert(ret == BI_REPLACEBICALL);
 	   if (isTailCall) { PC=NOCODE; }
 	   Assert(!e->isEmptyPreparedCalls());
 	   goto LBLreplaceBICall;
 	 }
 	 if (!cls->isComplete()) {   // class not available yet
 	   OZ_Return ret = (*distClassGet)(cls);
-	   Assert(ret = SUSPEND);
+	   Assert(ret == SUSPEND);
 	   PushContX(PC);
 	   SUSPENDONVARLIST;
 	 }

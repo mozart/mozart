@@ -586,11 +586,11 @@ void OzObject::printStream(ostream &stream, int depth)
   else
     stream << "nofreefeatures";
   stream << ", State: ";
-  RecOrCell state = getState();
-  if (stateIsCell(state)) {
-    getCell(state)->printStream(stream,depth);
-  } else if(getRecord(state)) {
-    getRecord(state)->printStream(stream,depth);
+  SRecord* state = getState();
+  if (state) {
+    state->printStream(stream,depth);
+  } else {
+    stream << "(distributed)";
   }
   stream << ">";
 }
@@ -999,10 +999,11 @@ void OzObject::printLongStream(ostream &stream, int depth, int offset)
   }
   stream << endl;
   stream << "State: ";
-  if (stateIsCell(state)) {
-    getCell(state)->printLongStream(stream,depth,offset);
+  SRecord* state = getState();
+  if (state) {
+    state->printLongStream(stream,depth,offset);
   } else if(getRecord(state)) {
-    getRecord(state)->printLongStream(stream,depth,offset);
+    stream << "(distributed)";
   }
 }
 
