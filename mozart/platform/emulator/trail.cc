@@ -27,11 +27,17 @@
 #pragma implementation "trail.hh"
 #endif
 
+
 #include "trail.hh"
 #include "var_base.hh"
 #include "var_ext.hh"
 #include "thr_int.hh"
 #include "GeVar.hh"
+#include "namer.hh"
+
+//extern VarNamer varNamer;
+extern void oz_varUpdateName(OZ_Term, OZ_Term );
+
 
 Trail trail;
 
@@ -220,7 +226,6 @@ TaggedRef Trail::unwind(Board * b) {
 	popBind(refPtr, value);
 	Assert(oz_isRef(*refPtr) || !oz_isVar(*refPtr));
 	Assert(oz_isVar(value));
-	
 	s = oz_cons(oz_cons(makeTaggedRef(refPtr),*refPtr),s);
 	
 	TaggedRef vv= *refPtr;
@@ -254,10 +259,10 @@ TaggedRef Trail::unwind(Board * b) {
 	s = oz_cons(oz_cons(makeTaggedRef(refPtr),*refPtr),s);
 	
 	TaggedRef vv= *refPtr;
+	oz_varUpdateName(makeTaggedRef(refPtr),makeTaggedRef(refPtr));
 	DEREF(vv,vvPtr);
 
 	Assert(!oz_isRef(vv));
-
 	unBind(refPtr, value);
 	
 	if(hasNoRunnable && !oz_var_hasSuspAt(*refPtr,b)) {
