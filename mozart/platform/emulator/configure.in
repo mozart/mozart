@@ -43,6 +43,7 @@ AC_INIT(base.hh)
 
 OZ_INIT
 OZ_DENYS_EVENTS
+
 OZ_SITE_PROPERTY
 
 dnl *****************************************************************
@@ -75,6 +76,7 @@ case "$target" in
 	;;
 esac
 AC_SUBST(target)
+
 
 dnl *****************************************************************
 dnl Checks for programs.
@@ -316,6 +318,11 @@ fi
 : ${LD=$CXX}
 AC_SUBST(LD)
 
+case $platform in
+    *darwin)
+	OZ_BUILD_UNIVERSAL
+    ;;
+esac
 
 case $platform in
     sunos*)
@@ -463,7 +470,6 @@ OZ_ENABLE(link-static,[ link system libraries statically],no,
 	,
         AC_MSG_RESULT(no)
 	)
-
 
 dnl *****************************************************************
 dnl Checks for types.

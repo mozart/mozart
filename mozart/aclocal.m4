@@ -1418,6 +1418,19 @@ AC_DEFUN(OZ_DENYS_EVENTS,
    AC_SUBST(DENYS_EVENTS)])
 
 dnl ------------------------------------------------------------------
+dnl OZ_BUILD_UNIVERSAL
+dnl	check for --enable-build-universal
+dnl sets DENYS_EVENTS accordingly
+dnl ------------------------------------------------------------------
+
+AC_DEFUN(OZ_BUILD_UNIVERSAL,
+  [OZ_ENABLE(build-universal,[Build universal binaries for mac os x],no,
+	BUILD_UNIVERSAL=yes,
+	BUILD_UNIVERSAL=no)
+   AC_MSG_RESULT($BUILD_UNIVERSAL)
+   AC_SUBST(BUILD_UNIVERSAL)])
+
+dnl ------------------------------------------------------------------
 dnl OZ_SITE_PROPERTY
 dnl	check for --enable-site-property
 dnl sets SITE_PROPERTY accordingly
