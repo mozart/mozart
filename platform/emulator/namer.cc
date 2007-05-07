@@ -39,20 +39,32 @@ template <> VarNamer * VarNamer::_head = NULL;
 VarNamer varNamer; 
 
 const char * oz_varGetName(OZ_Term v)
-{
-  //printf("namer.cc oz_varGetName %d\n",v);fflush(stdout);
+{  
   const char * name = varNamer.getName(derefIndexNamer(v));
+  //printf("namer.cc oz_varGetName %p %s v=%p\n",derefIndexNamer(v),name);fflush(stdout);
   return (name == (const char *) NULL) ? "_" : name;
 }
 
 void oz_varAddName(OZ_Term v, const char *nm)
 {
   DEREF(v, vptr);
-  //printf("namer.cc 222 oz_varAddName %d  %s\n",v,nm);fflush(stdout);
+  //printf("namer.cc 222 oz_varAddName v=%p  nm=%s vptr=%p vptr2=%p\n",v,nm,vptr,makeTaggedRef(vptr));fflush(stdout);
   Assert(!oz_isRef(v));
   if (!oz_isVarOrRef(v))
     return;
   varNamer.addName(makeTaggedRef(vptr), nm);
+}
+
+void oz_varUpdateName(OZ_Term v_o, OZ_Term v_n)
+{
+  DEREF(v_o, vptr);
+  //printf("namer.cc 222 oz_varAddName v=%p  nm=%s vptr=%p vptr2=%p\n",v,nm,vptr,makeTaggedRef(vptr));fflush(stdout);
+  Assert(!oz_isRef(v_o));
+  //Assert(!oz_isRef(v_n));
+  //  Assert(!oz_isRef(v_o)&&!oz_isRef(v_n));
+  if (!oz_isVarOrRef(v_o))
+    return;
+  varNamer.updateName(makeTaggedRef(vptr), v_n);
 }
 
 Bool isCacMarkedNamer(OZ_Term t) 
