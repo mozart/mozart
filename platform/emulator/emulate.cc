@@ -2715,10 +2715,17 @@ LBLdispatcher:
 	 } else {
 	   // procedure is incomplete: call distribution
 	   TaggedRef args = oz_nil();
-	   for (int i = def->getArity(); i--; ) args = oz_cons(XREGS[i], args);
-	   // all arguments are in list args
+	   for (int i = def->getArity(); i--; ) {
+	     args = oz_cons(XREGS[i], args);
+	   }
 	   OZ_Return ret = distProcedureCall(def, args);
-	   Assert(ret == BI_REPLACEBICALL);
+	   Assert(ret == BI_REPLACEBICALL || ret == SUSPEND);
+	   if (ret == SUSPEND) {
+	     // must be a failure, recall procedure once ready
+	     Assert(!e->isEmptySuspendVarList());
+	     am.prepareCall(makeTaggedConst(def),
+			    RefsArray::make(XREGS, predArity));
+	   }
 	   if (isTailCall) { PC=NOCODE; }
 	   Assert(!e->isEmptyPreparedCalls());
 	   goto LBLreplaceBICall;
@@ -2735,17 +2742,22 @@ LBLdispatcher:
 	 if (!cls) {   // object incomplete: call distribution
 	   Assert(o->isDistributed());
 	   OZ_Return ret = (*distObjectInvoke)(o, XREGS[0]);
-	   Assert(ret == BI_REPLACEBICALL);
+	   Assert(ret == BI_REPLACEBICALL || ret == SUSPEND);
+	   if (ret == SUSPEND) {
+	     // must be a failure, recall procedure once ready
+	     Assert(!e->isEmptySuspendVarList());
+	     am.prepareCall(makeTaggedConst(o), RefsArray::make(XREGS[0]));
+	   }
 	   if (isTailCall) { PC=NOCODE; }
 	   Assert(!e->isEmptyPreparedCalls());
 	   goto LBLreplaceBICall;
 	 }
 	 if (!cls->isComplete()) {   // class not available yet
 	   OZ_Return ret = (*distClassGet)(cls);
-	   Assert(ret == SUSPEND);
-	   if (isTailCall) { PC=NOCODE; }
+	   Assert(ret == SUSPEND && !e->isEmptySuspendVarList());
 	   // recall object once class is ready
 	   am.prepareCall(makeTaggedConst(o), RefsArray::make(XREGS[0]));
+	   if (isTailCall) { PC=NOCODE; }
 	   goto LBLreplaceBICall;
 	 }
 	 Assert(cls->getFallbackApply());
