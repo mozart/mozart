@@ -304,11 +304,8 @@ Mediator::getFaultStream() {
 OZ_Return
 Mediator::suspendOnFault() {
   Assert(faultState);
-  if (oz_currentThread() != NULL) {
-    if (faultCtlVar == 0) faultCtlVar = oz_newVariable(oz_rootBoard());
-    return oz_var_addSusp(tagged2Ref(faultCtlVar), oz_currentThread());
-  }
-  return SUSPEND;
+  if (faultCtlVar == 0) faultCtlVar = oz_newVariable(oz_rootBoard());
+  return oz_addSuspendVarList(faultCtlVar);
 }
 
 void
