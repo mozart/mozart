@@ -298,10 +298,10 @@ public:
   bool isEntailed(void) { 
     Assert(isStable());
     int nondet = vars.getSize() - determined;
-    printf("Nondet: %d\n",nondet);fflush(stdout);
+    /*    printf("Nondet: %d\n",nondet);fflush(stdout);
     printf("foreignProps: %d\n",foreignProps);fflush(stdout);
     printf("Propagators: %d\n",propagators());fflush(stdout);
-    printf("Propagators: %d\n",unifyProps);fflush(stdout);
+    printf("Propagators: %d\n",unifyProps);fflush(stdout);*/
     return (nondet + foreignProps + unifyProps/2) == propagators();
   }
 

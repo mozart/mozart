@@ -431,6 +431,7 @@ public:
     
     if(oz_isGeVar(ref)) {
       OzVariable *var=extVar2Var(oz_getExtVar(oz_deref(ref)));
+      if(var->getBoardInternal() != oz_currentBoard()) return Gecode::ES_FIX;
       SuspList **sl = var->getSuspListRef();
       oz_checkAnySuspensionList(sl, var->getBoardInternal(), pc_all);
     }
