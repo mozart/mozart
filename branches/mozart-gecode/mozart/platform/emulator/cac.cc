@@ -2141,6 +2141,11 @@ if (gespace != NULL) {
   gespace = static_cast<GenericSpace*>(gespace->clone(false));
 #endif
   gespace->_cac();
+#ifdef G_COLLECT
+  if(lateThread){
+    lateThread=static_cast<Thread *>(lateThread->_cacSuspendable());
+  }
+#endif
 }
 
 
