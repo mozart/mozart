@@ -207,15 +207,11 @@ in
 			      '<' {GetCtVarNameAsAtom TermIn}
 			      ':' {GetCtVarConstraintAsAtom TermIn}
 			      '>']}
-\ifdef BUILD_GECODE
 	       else case {Value.status TermIn}
 		    of kinded(gevar) then
 		       TermOut = {VirtualString.toAtom {Value.toVirtualString TermIn 1 1}}
 		    else TermOut = {System.printName TermIn}
 		    end
-\else		  
-	       else TermOut = {System.printName TermIn }
-\endif
 	       end
 
 	       %%

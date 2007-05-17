@@ -27,9 +27,7 @@ import
    CompilerSupport(isBuiltin nameVariable)
    at 'x-oz://boot/CompilerSupport'
    FD
-\ifdef BUILD_GECODE
    GFD
-\endif
    FS
    RecordC
 export
@@ -268,7 +266,7 @@ define
 	    else '<Failed Value>'
 	    end
 	 end
-\ifdef BUILD_GECODE
+
 	 %%GFD Reflection
 	 fun {ReflGFD X InRs NewRs}
 	    NewRs = InRs
@@ -283,7 +281,7 @@ define
 	       Wrapper(Id)
 	    end
 	 end
-\endif
+
 	 %% FD Reflection
 	 fun {ReflFD X InRs NewRs}
 	    NewRs = InRs
@@ -350,9 +348,7 @@ define
 			 of int    then {ReflFD X InRs NewRs}
 			 [] fset   then {ReflFS X InRs NewRs}
 			 [] record then {ReflKindRec X InRs NewRs}
-\ifdef BUILD_GECODE
 			 [] gevar  then  {ReflGFD X InRs NewRs}
-\endif
 			 end
 		      end
 	       RX
@@ -467,9 +463,7 @@ define
 	 [] free2      then Info
 	 [] future     then local X in (!!X)#X end
 	 [] fd         then {FD.int Info}
-\ifdef BUILD_GECODE
 	 [] gfd        then {GFD.int Info}
-\endif
 	 [] fsvar      then case Info of LB#UB then {FS.var.bounds LB UB} end
 	 [] bytestring then {ByteString.make Info}
 	 [] cell       then {Cell.new {UnreflectValue Info}}

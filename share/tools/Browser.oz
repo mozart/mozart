@@ -231,9 +231,7 @@ define
    FDVariableTermObject
    FSetTermObject
    CtVariableTermObject
-\ifdef BUILD_GECODE
    GeVariableTermObject
-\endif
    UnknownTermObject
 
    %%
