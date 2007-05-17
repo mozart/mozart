@@ -1160,9 +1160,7 @@ void AM::gCollect(int msgLevel)
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //                garbage collection is finished here
 
-#ifdef BUILD_GECODE
   gCollectGeSpaces();
-#endif
 
   cachedStack = NULL;
 

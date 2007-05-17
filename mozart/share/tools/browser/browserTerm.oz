@@ -132,9 +132,7 @@ in
 	 of record  then T_Record
 	 [] int     then T_FDVariable
 	 [] fset    then T_FSet
-\ifdef BUILD_GECODE
 	 [] gevar   then T_GeVariable
-\endif
 	 [] other   then
 	    if {IsCtVar Term} then T_CtVariable % TODO TMUELLER 
 	    else T_Variable	% don't know; 
@@ -241,9 +239,7 @@ in
       [] !T_Variable       then VariableTermObject
       [] !T_FDVariable     then FDVariableTermObject
       [] !T_FSet           then FSetTermObject
-\ifdef BUILD_GECODE
       [] !T_GeVariable     then GeVariableTermObject
-\endif
       [] !T_CtVariable     then CtVariableTermObject
       [] !T_Future         then FutureTermObject
       [] !T_Failed         then FailedTermObject

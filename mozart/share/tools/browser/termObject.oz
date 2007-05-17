@@ -3086,8 +3086,6 @@ in
       %%
    end
 
-\ifdef BUILD_GECODE
-   
    %%
    %%
    %% generic constraint variables;
@@ -3129,7 +3127,6 @@ in
       end
       %%
    end
-\endif
    
 %%%
 %%%
