@@ -511,6 +511,15 @@ OZ_BI_define(BIchooseSpace, 1, 1) {
 OZ_BI_define(BIwaitStableSpace, 0, 0) {
   Board * bb = oz_currentBoard();
 
+TaggedRef status = bb->getStatus();
+
+ DEREF(status, status_ptr);
+ Assert(!oz_isRef(status));
+ if (oz_isVarOrRef(status)) {
+   //oz_suspendOn(makeTaggedRef(status_ptr));
+   ((ReadOnly *)tagged2Var(status))->becomeNeeded();
+ }
+
   RefsArray * args = RefsArray::allocate(1,NO);
   args->setArg(0,OZ_out(0));
 
