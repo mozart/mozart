@@ -665,13 +665,9 @@ WakeRetVal SuspendedCall::resumeDoLocal(DssOperationId*) {
 
 WakeRetVal
 SuspendedCall::resumeRemoteDone(PstInContainerInterface* pstin) {
+  // the calling thread synchronizes on the result
   PstInContainer* pst = static_cast<PstInContainer*>(pstin);
-  // The result is a control variable, we simply bind ctlVar to result!
-  OZ_Return ret = oz_unify(ctlVar, pst->a_term);
-  // It succeed immediately, since ctlVar is never distributed.
-  Assert(ret == PROCEED);
-  ctlVar = 0;
-  resume();
+  resumeApply(BI_wait, oz_mklist(pst->a_term));
   return WRV_DONE;
 }
 
