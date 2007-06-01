@@ -26,7 +26,6 @@ functor
 import
    ParSearch(engine: ParallelEngine) at 'x-oz://system/ParSearch.ozf'
    Space
-   
 export
    one:      OneModule
    all:      All
@@ -80,8 +79,10 @@ define
    %% Injection of solution constraints for best solution search
    %%
    proc {Better S O SS}
-      CS={Space.clone SS}
+      CS
    in
+      CS={Space.clone SS}
+      
       {Space.inject S proc {$ X} {O {Space.merge CS} X} end}
    end
    
@@ -429,7 +430,7 @@ define
 	       of failed then SS
 	       [] succeeded then S
 	       [] alternatives(N) then C={Space.clone S} NewSS in
-		  {Space.commit1 S 1} {Space.commit2 C 2 N} 
+		  {Space.commit1 S 1} {Space.commit2 C 2 N}
 		  NewSS={BABNR KF S O SS}
 		  if SS==NewSS then {BABNR KF C O SS}
 		  elseif NewSS==nil then nil

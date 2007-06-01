@@ -151,12 +151,12 @@ public:
   //
   // Parent access
   //
-  Board* getParentInternal(void) {
+  Board* getParentInternal(void) {    
     return parent;
   }
   Board* derefBoard(void) {
     Board *bb;
-    for (bb=this; bb->isCommitted(); bb=bb->getParentInternal()) {}
+    for (bb=this; bb->isCommitted(); bb=bb->getParentInternal()) { }
     return bb;
   }
   Board* getParent(void) {
@@ -444,6 +444,7 @@ public:
       if (gespace == NULL) {
 	//printf("creating new gespace on request\n");fflush(stdout);
     	gespace = new GenericSpace(this);
+	printf("getGenericSpace = %p board = %p\n",gespace,this);fflush(stdout);
 	lateThread = NULL;
       }	
     }
@@ -477,7 +478,7 @@ public:
   void deleteGenericSpace(void) {
     Assert(gespace);
     //printf("deleting generic space is the first?? %d",GeSpaceCollectList);
-    //printf("Deleting genericspace\n");fflush(stdout);
+    printf("Deleting genericspace %p\n",gespace);fflush(stdout);
     delete gespace;
     gespace = NULL;
     lateThread = NULL;

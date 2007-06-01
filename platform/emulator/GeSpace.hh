@@ -213,7 +213,6 @@ private:
   
 
   void makeStable(void);     // assigns trigger into a read-only
-  void makeUnstable(void);   // binds current trigger to unit
 
   /**
    * \brief This variable is used to count how many variables are 
@@ -279,8 +278,11 @@ public:
    * @return A clone of the space
    */
   virtual Space* copy(bool share) {
+    printf("GeSpace.hh copy\n");fflush(stdout);
     return new GenericSpace(*this,share);
   }
+
+  void makeUnstable(void);   // binds current trigger to unit
 
   // return current trigger
   TaggedRef getTrigger(void) { return trigger; }

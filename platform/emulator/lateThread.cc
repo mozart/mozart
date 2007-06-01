@@ -55,21 +55,21 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
      otherwise it is created as a suspended thread and added to the 
      status susp list.
    */
-
-  /*if (!oz_currentBoard()->isRoot()) {  
+  /*  
+  if (!oz_currentBoard()->isRoot()) {  
     // first wait until status is needed
     TaggedRef status = oz_currentBoard()->getStatus();
     DEREF(status, statusPtr); 
     if (!oz_isNeeded(status)) 
       return oz_var_addQuietSusp(statusPtr, oz_currentThread());      
-      }*/
-  
-  
+  }
+  */
+  printf("lateThread antes de status\n");fflush(stdout);  
   if (gs->mstatus() == SS_FAILED) {
     oz_currentBoard()->deleteGenericSpace();
     return FAILED;
   } 
-  printf("lateThread %p is entailed?? %d\n",gs,gs->isEntailed());fflush(stdout);
+
   if (!gs->isEntailed()) {
       TaggedRef t =  gs->getTrigger();
     DEREF(t,t_ptr);
