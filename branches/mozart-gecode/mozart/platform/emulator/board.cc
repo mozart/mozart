@@ -100,7 +100,7 @@ Board::Board()
     status(taggedVoidValue), rootVar(taggedVoidValue),
     script(taggedVoidValue), parent(NULL), flags(BoTag_Root)
 {
-  //printf("BOARD: called constructor\n");fflush(stdout);
+  printf("BOARD: called constructor %p\n",this);fflush(stdout);
   Assert((int) OddGCStep == 0x0 && (int) EvenGCStep == (int) BoTag_EvenGC);
   optVar = makeTaggedVar(new OptVar(this));
   lpq.init();
@@ -115,6 +115,7 @@ Board::Board(Board * p)
     crt(0), suspList(0), nonMonoSuspList(0),
     script(taggedVoidValue), parent(p), flags(0)
 {
+  printf("BOARD: copy constructor %p parent: %p\n",this,p);fflush(stdout);
   Assert(!p->isCommitted());
   status  = oz_newReadOnly(p);
   optVar = makeTaggedVar(new OptVar(this));
@@ -148,8 +149,10 @@ TaggedRef Board::genSuspended(TaggedRef arg) {
 void Board::bindStatus(TaggedRef t) {
   TaggedRef s = getStatus();
   DEREF(s, sPtr);
-  if (oz_isReadOnly(s))
+  if (oz_isReadOnly(s)){
+    printf("bindStatus this=%p\n",this);fflush(stdout);
       oz_bindReadOnly(sPtr, t);      
+  }
 }
 
 void Board::clearStatus() {
@@ -467,6 +470,7 @@ void Board::checkStability(void) {
 
 	if(gespace!=NULL) {
 	  bool testGe = getGenericSpace(true)->isEntailed();
+
  	  bindStatus(genSucceeded( (getSuspCount() == 0 && testGe) ) );
 	}
 	else {
@@ -493,18 +497,20 @@ void Board::checkStability(void) {
 	// Remove lateThread from oldvar susp list.
 	SuspList** suspPtr = tagged2Var(oldVar)->getSuspListRef();
 	SuspList* susp = *suspPtr;
-	while (susp) {
+	//printf("checkStability else lateThread=%p,  en board.cc\n",lateThread);fflush(stdout);
+	while (susp) {	  
+	printf("checkStability else lateThread=%p  sup=%p,  en board.cc\n",lateThread,susp->getSuspendable());fflush(stdout);	  
 	  if (susp->getSuspendable() == lateThread) {
+	    printf("dentro del if,  en board.cc\n");fflush(stdout);
 	    nv->addSuspSVar(susp->getSuspendable());
 	    *suspPtr = susp->getNext();     // drop susp from list
-	    break;
+	    //break;
 	  } else {
 	    suspPtr = (*suspPtr)->getNextRef();
 	  }
 	  susp = *suspPtr;
 	}
       }
-
 
       bindStatus(genSuspended(newVar));
       setStatus(newVar);
@@ -752,6 +758,9 @@ void Board::ensureLateThread(void) {
       lateThread->pushCall(BI_PROP_GEC,NULL);
       TaggedRef st = getStatus();
       DEREF(st, stPtr);
+      Assert(oz_isReadOnly(st));
+
+      printf("ensureLateThread lateThread=%p  this=%p\n",lateThread,this);fflush(stdout);
       oz_var_addQuietSusp(stPtr, lateThread);
     }
     

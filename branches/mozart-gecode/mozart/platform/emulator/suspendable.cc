@@ -46,7 +46,7 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
   oz_BFlag between = oz_isBetween(sb, home);
 
   if (isRunnable()) {
-
+    //printf("Suspendable::_wakeup isRunnable\n");fflush(stdout);
     if (isThread()) {
       return OK;
     } else {
@@ -66,14 +66,16 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
     return NO;
 
   } else {
-
+    //printf("Suspendable::_wakeup isnotRunnable\n");fflush(stdout);
     if (isThread()) {
-      //printf("Suspendable::_wakeup\n");fflush(stdout);
+      //printf("Suspendable::_wakeup isThread %p\n",this);fflush(stdout);
       Thread * t = SuspToThread(this);
 
       switch (between) {
       case B_BETWEEN:
+	//printf("Suspendable::_wakeup antes isThread %p\n",this);fflush(stdout);
 	oz_wakeupThread(t);
+	//printf("Suspendable::_wakeup despues isThread %p\n",this);fflush(stdout);
 	DEBUG_CONSTRAIN_VAR(("Suspendable::_wakeup_thread [t:%p s:%p c:%p]\n",
 			      t, sb, oz_currentBoard()));
 	return OK;
@@ -81,7 +83,9 @@ Bool Suspendable::_wakeup(Board * home, PropCaller calledBy) {
       case B_NOT_BETWEEN:
 	if (calledBy==pc_all) {
 	  // raph: this happens only when making a global variable needed
+	  //printf("Suspendable::_wakeup isThread B_NOT_BETWEEN %p\n",this);fflush(stdout);
 	  oz_wakeupThread(t);
+	  //printf("Suspendable::_wakeup isThread B_NOT_BETWEEN %p\n",this);fflush(stdout);
 	  return OK;
 	}
 	return NO;
@@ -141,19 +145,18 @@ void oz_checkAnySuspensionList(SuspList ** suspList,
 
   SuspList ** p  = suspList;
 
-  SuspList * sl = *suspList;
-
+  SuspList * sl = *suspList;  
 #ifdef COUNT_PROP_INVOCS
   int _len = 0;
 #endif
 
   while (sl) {
-
 #ifdef COUNT_PROP_INVOCS
     _len += 1;
 #endif
 
     SuspList ** n = sl->getNextRef();
+    printf("suspendable.cc Thread=%p\n",sl->getSuspendable());fflush(stdout);
     if (sl->getSuspendable()->_wakeup(home,calledBy)) {
       *p = *n;
       sl->dispose();
@@ -162,9 +165,11 @@ void oz_checkAnySuspensionList(SuspList ** suspList,
       sl = *n;
       p  = n;
     }
+    //printf("end if suspendable.cc\n");
 
 
   }
+  //printf("end suspendable.cc\n");
 
 #ifdef COUNT_PROP_INVOCS
   if (_len) {

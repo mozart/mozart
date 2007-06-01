@@ -114,14 +114,13 @@
 	     procedure: Proc) then
 	 if {Width Vec}>0 then
 	    
-	    proc {Do Xs}	       
+	    proc {Do Xs}
 	       {Space.waitStable}
 	       E|Fs={ChooseAndRetFiltVars Xs Order Fil}
-	       %{System.show aqui1111111111111#E}
+
 	    in
 	       if E\=unit then
 		  V={Select E}
-		  %{System.show aqui2222222#V}		  
 	       in
 		  if Proc\=unit then
 		     {Proc}

@@ -65,6 +65,7 @@ int Board::isAdmissible(void) {
 
 inline
 void Board::addSuspension(Suspendable * susp) {
+  printf("board.icc addSuspension %p\n",susp);fflush(stdout);
   suspList = new SuspList(susp, suspList);
 }
 
@@ -127,21 +128,30 @@ void Board::scheduleNonMono(void) {
 
 inline
 Bool Board::isStable(void) {
-  if (hasRunnableThreads())
+  if (hasRunnableThreads()){
+    printf("isStable 1\n");fflush(stdout);
     return NO;
+}
 
   /*  if (oz_isCurrentBoard(this) && !trail.isEmptyChunk())
       return NO;*/
 
-  if (oz_isCurrentBoard(this) && trail.isSpeculating())
+  if (oz_isCurrentBoard(this) && trail.isSpeculating()){
+    printf("isStable 2\n");fflush(stdout);
     return NO;
+  }
 
   if (isEmptySuspList())
     return OK;
 
   clearSuspList((Thread *) NULL);
 
-  return isEmptySuspList();
+ 
+  Bool tmp = isEmptySuspList();
+
+    printf("isStable 3 %d\n",tmp);fflush(stdout);
+  
+    return tmp;
 }
 
 inline

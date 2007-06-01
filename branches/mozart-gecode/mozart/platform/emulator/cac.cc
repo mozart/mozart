@@ -541,14 +541,17 @@ Board * Board::_cacBoardDo(void) {
 
   if (bb->cacIsMarked())  
     return bb->cacGetFwd();
-
+  
   Board * ret;
   cacReallocStatic(Board,bb,ret,sizeof(Board));
+
+  printf("_cacBoard ret=%p this %p ret->lateThread = %p gespace=%p\n",ret,this,ret->getLateThread(),gespace);fflush(stdout);
 
   // kost@ : the OptVar template has to be already there since it is
   // needed when collecting OptVar"s;
   ret->optVar = makeTaggedVar(new OptVar(ret));
 #ifdef G_COLLECT
+
   ret->nextGCStep();
   // an alive board must be copied at every GC step exactly once:
   Assert(ret->isEqGCStep(oz_getGCStep()));
@@ -2138,7 +2141,10 @@ if (gespace != NULL) {
     false is used for clone because we want an independent copy of the space.
     true could be used but we have not tested it yet and could not be thread safe.
   */
+  //long unsigned int a;
+  printf("cac.cc antes  parent:%p this=%p gespace=%p\n",parent,this,gespace);fflush(stdout);
   gespace = static_cast<GenericSpace*>(gespace->clone(false));
+  printf("cac.cc despues gespace=%p\n",gespace);fflush(stdout);
 #endif
   gespace->_cac();
 #ifdef G_COLLECT
@@ -2146,8 +2152,11 @@ if (gespace != NULL) {
     lateThread=static_cast<Thread *>(lateThread->_cacSuspendable());
   }
 #endif
-}
 
+}
+#ifdef G_COLLECT
+  printf("recoleccion de basura,  cac.cc board-this=%p lateThread=%p\n",this,lateThread);fflush(stdout);
+#endif
 
 #ifdef CS_PROFILE
 #ifdef G_COLLECT

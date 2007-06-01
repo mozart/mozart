@@ -34,7 +34,8 @@ local
    
       proc {ReDo S Is}
 	 case Is of nil then skip
-	 [] I|Ir then {ReDo S Ir} {Space.commit S I}
+	 [] I|Ir then {ReDo S Ir}
+	    {Space.commit S I}
 	 end
       end
 
@@ -119,7 +120,8 @@ local
 
 	 meth !FindSpace(Node $)
 	    FindCopy = case @copy of false then {self.mom FindSpace(self $)}
-		       elseof TaggedCopy then {Space.clone TaggedCopy.1}
+		       elseof TaggedCopy then
+			  {Space.clone TaggedCopy.1}
 		       end
 	 in
 	    if FindCopy==false then false
@@ -129,7 +131,8 @@ local
 		  I={GetIndex @kids Node 1}
 	       in
 		  if I>N then false
-		  else {Space.commit FindCopy I} FindCopy
+		  else
+		     {Space.commit FindCopy I} FindCopy
 		  end
 	       else false
 	       end
@@ -141,7 +144,8 @@ local
 	       S={self.mom FindSpace(self $)}
 	    in
 	       {Wait {Space.ask S}} S
-	    elseof TaggedCopy then {Space.clone TaggedCopy.1}
+	    elseof TaggedCopy then
+	       {Space.clone TaggedCopy.1}
 	    end
 	 end
 	 
@@ -206,7 +210,8 @@ local
 			UseCopy  = case @copy of transient(_) then
 				      copy <- false
 				      CurCopy
-				   else {Space.clone CurCopy}
+				   else
+				      {Space.clone CurCopy}
 				end
 		     else
 			UseCopy  = {Space.clone CurCopy}
@@ -457,7 +462,9 @@ local
 	    S={self.mom FindSpace(self $)}
 	 in
 	    {Wait {Space.ask S}} S
-	 elseof TaggedCopy then {Space.clone TaggedCopy.1}
+	 elseof
+	    TaggedCopy then
+	    {Space.clone TaggedCopy.1}
 	 end
       end
       meth getOriginalSpace($)

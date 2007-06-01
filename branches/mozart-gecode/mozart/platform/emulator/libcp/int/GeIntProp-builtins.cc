@@ -54,7 +54,7 @@ OZ_BI_define(int_eq,3,0)
 } OZ_BI_end
 
 OZ_BI_define(int_rel,4,0) {
-  DeclareGSpace(gesp1);
+  DeclareGSpace(gs);
 
   int consistencyLevel,relType; 
   if(!OZ_isInt(OZ_in(3))) {
@@ -66,15 +66,15 @@ OZ_BI_define(int_rel,4,0) {
     RAISE_EXCEPTION("The second argument has to be a Relation Type: relProp");
   }
   relType=OZ_intToC(OZ_in(1));
-  DeclareGeIntVar(0,v1,gesp1);
-  DeclareGeIntVar(2,v2,gesp1);
+  DeclareGeIntVar(0,v1,gs);
+  DeclareGeIntVar(2,v2,gs);
 
   try {
-    rel(gesp1,v1,(IntRelType)relType,v2,(IntConLevel)consistencyLevel);
+    rel(gs,v1,(IntRelType)relType,v2,(IntConLevel)consistencyLevel);
   } catch (Exception e) {
     RAISE_GE_EXCEPTION(e);
   }  
-  GZ_RETURN(gesp1);
+  GZ_RETURN(gs);
 } OZ_BI_end
 
 
