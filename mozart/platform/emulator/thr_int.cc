@@ -99,29 +99,34 @@ void oz_disposeThread(Thread *tt) {
 
 void oz_wakeupThread(Thread *tt) {
   Assert(tt->isSuspended());
-
+  //printf("oz_wakeupThread1\n");fflush(stdout);
   tt->setRunnable();
-
+  //printf("oz_wakeupThread2\n");fflush(stdout);
   if (am.debugmode() && tt->isTrace())
     debugStreamReady(tt);
-  
+  //printf("oz_wakeupThread3\n");fflush(stdout);
   am.threadsPool.scheduleThread(tt);
-  
+  //printf("oz_wakeupThread4\n");fflush(stdout);
   Board * bb = GETBOARD(tt);
- 
+  //printf("oz_wakeupThread5\n");fflush(stdout);
   if (!bb->isRoot()) {
     
     bb->incRunnableThreads();
-
+    //printf("oz_wakeupThread6\n");fflush(stdout);
     if (tt->isExternal()) {
+      //printf("oz_wakeupThread7\n");fflush(stdout);
       do {
 	bb->clearSuspList(tt);
+	//printf("oz_wakeupThread8 root:%p bb:%p\n",oz_rootBoard(),bb);fflush(stdout);
 	bb = bb->getParent();
+	//printf("oz_wakeupThread10\n");fflush(stdout);
       } while (!bb->isRoot());
+      //printf("oz_wakeupThread9\n");fflush(stdout);
     }
-
+  
     tt->unsetExternal();
     
   }
+  //printf("oz_wakeupThread end\n");fflush(stdout);
 }
 

@@ -53,8 +53,9 @@ OZ_Return ReadOnly::bind(TaggedRef *vPtr, TaggedRef t)
 
 OZ_Return ReadOnly::forceBind(TaggedRef *vPtr, TaggedRef t)
 {
-  if (*vPtr != oz_deref(t))
+  if (*vPtr != oz_deref(t)){
     oz_bindVar(this,vPtr,t);
+  }
   return PROCEED;
 }
 

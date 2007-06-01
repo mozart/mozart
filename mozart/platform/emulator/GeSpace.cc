@@ -72,10 +72,10 @@ inline
 GenericSpace::GenericSpace(GenericSpace& s, bool share) 
     : Space(share, s), vars(this, s.vars, share),      
       board(s.board),
-      determined(s.determined), foreignProps(s.foreignProps),unifyProps(s.unifyProps),
-      trigger(s.trigger), gc_pred(NULL), gc_succ(NULL), gc_marked(false),
+      determined(s.determined), foreignProps(s.foreignProps),unifyProps(s.unifyProps), trigger(s.trigger), gc_pred(NULL), gc_succ(NULL), gc_marked(false),
       allocatedMemory(usedMem())
 {
+  printf("GeSpace.cc copy constructor\n");fflush(stdout);
   registerGeSpace(this);
   GeSpaceAllocatedMem += allocatedMemory;
   //printf("Constructor Copia: %u %p\n",GeSpaceAllocatedMem,this);fflush(stdout);
@@ -114,6 +114,7 @@ bool GenericSpace::isStable(void) {
 
 inline
 void GenericSpace::makeStable(void) { 
+  //printf("makeStable\n");fflush(stdout);
   if (!isStable()) {
     trigger = oz_newReadOnly(board);
   }
@@ -128,7 +129,9 @@ void GenericSpace::makeStable(void) {
 
 inline
 void GenericSpace::makeUnstable(void) {
+  oz_currentBoard()->ensureLateThread();
   Assert(getTrigger() && oz_currentBoard()->getLateThread());
+
   TaggedRef t = getTrigger();
   DEREF(t,t_ptr);
   if (oz_isReadOnly(t)) {
@@ -141,8 +144,10 @@ Gecode::SpaceStatus GenericSpace::mstatus(unsigned long int& pn) {
 
   GeSpaceAllocatedMem = GeSpaceAllocatedMem <= allocatedMemory ?
     0 : GeSpaceAllocatedMem - allocatedMemory;
-  
+  printf("GeSpace.cc mstatus\n");fflush(stdout);
   Gecode::SpaceStatus ret = Gecode::Space::status(pn);
+  printf("GeSpace.cc mstatus var[0]\n");fflush(stdout);
+  //get_GeVar(getVarRef(0))->printDomain();
   allocatedMemory = usedMem();
   GeSpaceAllocatedMem += allocatedMemory;
   makeStable();
@@ -158,7 +163,6 @@ int GenericSpace::newVar(Gecode::VarBase *v, OZ_Term r) {
 
 Gecode::VarBase* GenericSpace::getVar(int n) { 
   Assert(n >= 0 && n<vars.getSize() && &vars.getVar(n));
-  oz_currentBoard()->ensureLateThread();
   makeUnstable();
   return &vars.getVar(n);
 }
@@ -185,8 +189,11 @@ void GenericSpace::gCollect() {
 
 void GenericSpace::sClone() {
   //GEOZ_DEBUG_PRINT(("Called cloning on references\n"));
-  board = board->sCloneBoard();
+  printf("GeSpace.cc sClone\n");fflush(stdout);
+  board = board->sCloneBoard();  
+  printf("GeSpace.cc sClone1\n");fflush(stdout);
   for (int i=0; i<vars.getSize(); i++) OZ_sClone(vars.getRef(i));
+  printf("GeSpace.cc sClone2\n");fflush(stdout);
   OZ_sClone(&trigger);
 }
 

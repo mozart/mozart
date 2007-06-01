@@ -198,13 +198,18 @@ OZ_BI_define(BIaskSpace, 1,1) {
   if (!space->getSpace()->isAdmissible())
     return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
     
-  TaggedRef answer = space->getSpace()->getStatus();
-  
+  TaggedRef answer = space->getSpace()->getStatus(); 
+
+
   DEREF(answer, answer_ptr);
   Assert(!oz_isRef(answer));
   if (oz_isVarOrRef(answer))
     oz_suspendOn(makeTaggedRef(answer_ptr));
   
+  //printf("board-bi.cc ask space=%p\n",space->getSpace());fflush(stdout);
+
+  //printf("board-bi ask gespace = %d\n",space -> getSpace()->getGenericSpace() ->mstatus());fflush(stdout);
+
   OZ_RETURN((oz_isSTuple(answer) && 
 	     oz_eq(tagged2SRecord(answer)->getLabel(), 
 		   AtomSucceeded))
@@ -304,6 +309,7 @@ OZ_BI_define(BIcloneSpace, 1,1) {
   DEREF(status, status_ptr);
 
   Assert(!oz_isRef(status));
+  //printf("dentro de clone board-bi.cc\n");fflush(stdout);
   if (oz_isVarOrRef(status)) 
     oz_suspendOn(makeTaggedRef(status_ptr));
 
@@ -324,6 +330,7 @@ OZ_BI_define(BIcloneSpace, 1,1) {
 
 
 OZ_BI_define(BIcommit1Space, 2, 0) {
+  //printf("commit1\n");fflush(stdout);
   declareSpace;
   oz_declareSmallIntIN(1,n);
 
@@ -353,6 +360,7 @@ OZ_BI_define(BIcommit1Space, 2, 0) {
 
 
 OZ_BI_define(BIcommit2Space, 3,0) {
+  //printf("commit2\n");fflush(stdout);
   declareSpace;
   oz_declareIntIN(1,l);
   oz_declareIntIN(2,r);
@@ -435,7 +443,7 @@ OZ_BI_define(BIcommitSpace, 2,0) {
   } else {
     oz_typeError(1, "Integer or pair of integers");
   }
-
+  //printf("commit board=%p\n",this);fflush(stdout);
   if (!sb->getDistributor())
     return oz_raise(E_ERROR,E_KERNEL,"spaceNoChoice",1,tagged_space);
 
@@ -476,7 +484,7 @@ OZ_BI_define(BIinjectSpace, 2,0)
 
   // inject
   sb->inject(proc);
-    
+  am.threadsPool.printThreads();
   return BI_PREEMPT;
 } OZ_BI_end
 
@@ -509,16 +517,16 @@ OZ_BI_define(BIchooseSpace, 1, 1) {
 
 
 OZ_BI_define(BIwaitStableSpace, 0, 0) {
+
   Board * bb = oz_currentBoard();
-
-TaggedRef status = bb->getStatus();
-
- DEREF(status, status_ptr);
- Assert(!oz_isRef(status));
- if (oz_isVarOrRef(status)) {
-   //oz_suspendOn(makeTaggedRef(status_ptr));
-   ((ReadOnly *)tagged2Var(status))->becomeNeeded();
- }
+  TaggedRef status = bb->getStatus();
+  
+  DEREF(status, status_ptr);
+  Assert(!oz_isRef(status));
+  if (oz_isVarOrRef(status)) 
+    //oz_suspendOn(makeTaggedRef(status_ptr));
+    ((ReadOnly *)tagged2Var(status))->becomeNeeded();
+  
 
   RefsArray * args = RefsArray::allocate(1,NO);
   args->setArg(0,OZ_out(0));
@@ -528,11 +536,14 @@ TaggedRef status = bb->getStatus();
   } else if (bb->getDistributor()) {
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
   } else {
+    
+    
     BaseDistributor * bd = new BaseDistributor(bb,1);
 
     bb->setDistributor(bd);
 
     args->setArg(0,bd->getVar());
+
   }
 
   am.prepareCall(BI_wait, args);

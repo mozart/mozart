@@ -1244,8 +1244,8 @@ void SuspQueue::printStream(ostream &stream, int depth)
 
     int i = 0;
 
-    for (SuspList * sl = last->getNext(); sl != last; sl = sl->getNext()) {
-      stream << "queue[" << i++ << "]=" << flush;
+    for (SuspList * sl = last->getNext(); i< getSize() ; sl = sl->getNext()) {
+      stream << "queue[" << i++ << "]=" << sl->getSuspendable() << flush;
       sl->printStream(stream,depth);
     }
   }

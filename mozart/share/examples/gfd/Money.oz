@@ -51,14 +51,16 @@ proc{Money Root}
    {GFD.rel M GFD.rt.'\\=:' 0 GFD.cl.bnd}
   
    {GFD.distinct  Root GFD.cl.bnd}
-   
+   %{Space.waitStable}
    {GFD.distribute ff Root}
 end
 
 %S = {Space.new Money}
+%{Space.inject S proc{$ R} {Show R} end}
+%{Show {Space.ask S}}
 %{System.show {Space.ask S}}
-%%%{Show {SearchAll Money}}
-{ExploreAll Money}
+{ExploreOne Money}
+%{ExploreAll Money}
 %T <: 3
 %{Browse T}
 %{Show {SearchOne Money}}

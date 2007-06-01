@@ -103,6 +103,12 @@ IntArgs array(0);					\
   early failure detection and checks if the space sp becomes failed
   after propoagator posting.
 */
-#define GZ_RETURN(sp) return sp->failed() ? FAILED : PROCEED
+#define GZ_RETURN(sp)                  \
+  if(sp->failed())                     \
+return FAILED;                     \
+else                                 \
+if(sp->isStable())                 \
+sp->makeUnstable();              \
+return PROCEED;
 
 #endif

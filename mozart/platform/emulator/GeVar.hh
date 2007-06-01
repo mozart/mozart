@@ -77,7 +77,7 @@ public:
   virtual bool hasSameDomain(TaggedRef) = 0;
 
   virtual int varprops(void) = 0;
-
+  virtual void printDomain(void) = 0;
    /// \name Reflection mechanisms
   //@{
 protected:
@@ -187,7 +187,6 @@ public:
 
   virtual int varprops(void) { return hasDomRefl+unifyC+1; }
   
-  virtual void printDomain(void) = 0;
 
   /// \name Variable Display
   //@{
@@ -433,7 +432,8 @@ public:
       OzVariable *var=extVar2Var(oz_getExtVar(oz_deref(ref)));
       if(var->getBoardInternal() != oz_currentBoard()) return Gecode::ES_FIX;
       SuspList **sl = var->getSuspListRef();
-      oz_checkAnySuspensionList(sl, var->getBoardInternal(), pc_all);
+      if(oz_currentBoard()==var->getBoardInternal())
+	oz_checkAnySuspensionList(sl, var->getBoardInternal(), pc_all);
     }
 
     return Gecode::ES_FIX;
