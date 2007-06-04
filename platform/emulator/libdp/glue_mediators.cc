@@ -825,11 +825,13 @@ PstOutContainerInterface *OzVariableMediator::retrieveEntityRepresentation(){
 void
 OzVariableMediator::installEntityRepresentation(PstInContainerInterface* pstin){
   Assert(active);
-  TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
-  TaggedRef* ref = tagged2Ref(getEntity()); // points to the var's tagged ref
-  OzVariable* ov = tagged2Var(*ref);
-  
-  oz_bindLocalVar(ov, ref, arg);
+  // don't install if failed...
+  if (getFaultState() < GLUE_FAULT_LOCAL) {
+    TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
+    TaggedRef* ref = tagged2Ref(getEntity()); // points to the var's tagged ref
+    OzVariable* ov = tagged2Var(*ref);
+    oz_bindLocalVar(ov, ref, arg);
+  }
   makePassive();
 }
 
@@ -837,10 +839,11 @@ AOcallback
 OzVariableMediator::callback_Bind(DssOperationId*,
 				  PstInContainerInterface* pstin) {
   Assert(active);
+  // the variable must be bound on the coordinator's site, even if the
+  // site has made it localFail.
   TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
   TaggedRef* ref = tagged2Ref(getEntity()); // points to the var's tagged ref
   OzVariable* ov = tagged2Var(*ref);
-  
   oz_bindLocalVar(ov, ref, arg);
   makePassive();
   return AOCB_FINISH;
@@ -852,7 +855,7 @@ OzVariableMediator::callback_Append(DssOperationId*,
   // raph: The variable may have been bound at this point.  This can
   // happen when two operations Bind and Append are done concurrently
   // (a "feature" of the dss).  Therefore we check the type first.
-  if (active) {
+  if (active && getFaultState() < GLUE_FAULT_LOCAL) {
     // check pstin
     if (pstin !=  NULL) {
       TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;

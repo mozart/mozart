@@ -88,9 +88,18 @@ MediatorTable::gcPrimary() {
     // Independently of their DGC status, variable mediators must be
     // collected when they have suspensions.  This is because the
     // suspensions themselves do not keep the variable alive.
-    if (med->isActive()) {
+    if (med->isVarType()) {
       TaggedRef t = oz_deref(med->getEntity());
-      if (oz_isVar(t) && !(tagged2Var(t)->isEmptySuspList())) med->gCollect();
+      Assert(oz_isVar(t));
+      if (!tagged2Var(t)->isEmptySuspList()) {
+	// mark only if not permanently failed
+	if (med->getFaultState() <= GLUE_FAULT_TEMP) {
+	  med->gCollect();
+	} else {
+	  // ugly hack: drop the suspension list!
+	  tagged2Var(t)->setSuspList(NULL);
+	}
+      }
     }
   }
   Assert(medList == NULL);

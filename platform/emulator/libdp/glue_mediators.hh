@@ -178,6 +178,10 @@ public:
   /*************** annotate/globalize/localize ***************/
   GlueTag getType() const { return type; }
 
+  bool isVarType() const {   // used in MediatorTable::gcPrimary()
+    return isActive() && (type == GLUE_VARIABLE || type == GLUE_READONLY);
+  }
+
   Annotation getAnnotation() const { return annotation; }
   void setAnnotation(const Annotation& a) { annotation = a; }
   void completeAnnotation();
