@@ -178,10 +178,6 @@ public:
   /*************** annotate/globalize/localize ***************/
   GlueTag getType() const { return type; }
 
-  bool isVarType() const {   // used in MediatorTable::gcPrimary()
-    return isActive() && (type == GLUE_VARIABLE || type == GLUE_READONLY);
-  }
-
   Annotation getAnnotation() const { return annotation; }
   void setAnnotation(const Annotation& a) { annotation = a; }
   void completeAnnotation();
@@ -194,6 +190,7 @@ public:
   void localize();      // localize entity
 
   /*************** garbage collection ***************/
+  virtual void gCollectPrepare();     // preliminary stuff...
   bool isCollected() const { return collected; }
   void gCollect();            // collect mediator (idempotent)
   void checkGCollect();       // collect if entity marked
@@ -391,6 +388,7 @@ public:
   OzVariableMediator(TaggedRef);
   
   virtual void attach();
+  virtual void gCollectPrepare();   // overrides Mediator::gCollectPrepare()
   virtual char *getPrintType() { return "var"; }
 
   virtual AOcallback callback_Bind(DssOperationId *id,
