@@ -86,20 +86,13 @@ MediatorTable::gcPrimary() {
     default: Assert(0);
     }
     // Independently of their DGC status, variable mediators must be
-    // collected when they have suspensions.  This is because the
-    // suspensions themselves do not keep the variable alive.
-    if (med->isVarType()) {
+    // collected when they have suspensions (unless they are
+    // permanently failed).  This is because the suspensions
+    // themselves do not keep the variable alive.
+    if (med->isVarType() && med->getFaultState() <= GLUE_FAULT_TEMP) {
       TaggedRef t = oz_deref(med->getEntity());
       Assert(oz_isVar(t));
-      if (!tagged2Var(t)->isEmptySuspList()) {
-	// mark only if not permanently failed
-	if (med->getFaultState() <= GLUE_FAULT_TEMP) {
-	  med->gCollect();
-	} else {
-	  // ugly hack: drop the suspension list!
-	  tagged2Var(t)->setSuspList(NULL);
-	}
-      }
+      if (!tagged2Var(t)->isEmptySuspList()) med->gCollect();
     }
   }
   Assert(medList == NULL);
