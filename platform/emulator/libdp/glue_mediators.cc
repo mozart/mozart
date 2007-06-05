@@ -152,9 +152,11 @@ Mediator::Mediator(GlueTag t) :
 }
 
 Mediator::~Mediator(){
-  // The coordination proxy is deleted by ~AbstractEntity().
+  // The coordination proxy is deleted by ~AbstractEntity().  Just
+  // close the fault stream with 'nil' (if present).
+  if (faultStream) oz_bindReadOnly(tagged2Ref(faultStream), oz_nil());
+
 #ifdef INTERFACE
-  // Nullify the pointers in debug mode
   next = NULL;
 #endif
 }
@@ -229,15 +231,29 @@ void Mediator::localize() {
   setProxy(NULL);
 }
 
+void Mediator::gCollectPrepare() {
+  // keep the fault stream alive, even if the entity is not; this is
+  // necessary for closing the fault stream (see destructor)
+  oz_gCollectTerm(faultStream, faultStream);
+
+  // threads blocked because of a tempFail must be kept alive;
+  // permanent failures will block those threads forever, so we can
+  // actually drop the control variable in that case
+  if (faultCtlVar) {
+    if (faultState <= GLUE_FAULT_TEMP) {
+      oz_gCollectTerm(faultCtlVar, faultCtlVar);
+    } else {
+      faultCtlVar = makeTaggedNULL();
+    }
+  }
+}
+
 void Mediator::gCollect(){
   if (!collected) {
     collected = TRUE;
-    // collect the entity, its fault stream, ...
+    // collect the entity; its fault stream and control variable are
+    // handled in gCollectPrepare() (see above)
     oz_gCollectTerm(entity, entity);
-    oz_gCollectTerm(faultStream, faultStream);
-    // ... and mark the control var only if the failure can go away
-    if (faultState > GLUE_FAULT_TEMP) faultCtlVar = makeTaggedNULL();
-    oz_gCollectTerm(faultCtlVar, faultCtlVar);
   }
 }
 
@@ -816,6 +832,20 @@ void OzVariableMediator::attach() {
   OzVariable* var = tagged2Var(*tagged2Ref(getEntity()));
   var->setMediator(this);
   attached = true;
+}
+
+void OzVariableMediator::gCollectPrepare() {
+  // Distributed variables must be collected when they have
+  // suspensions (unless they are permanently failed).  This is
+  // because the suspensions themselves do not keep the variable
+  // alive.
+  if (isActive() && faultState <= GLUE_FAULT_TEMP) {
+    TaggedRef* ref = tagged2Ref(getEntity());
+    OzVariable* var = tagged2Var(*ref);
+    if (!var->isEmptySuspList()) gCollect();
+  }
+  // do the common stuff, too
+  Mediator::gCollectPrepare();
 }
 
 PstOutContainerInterface *OzVariableMediator::retrieveEntityRepresentation(){
