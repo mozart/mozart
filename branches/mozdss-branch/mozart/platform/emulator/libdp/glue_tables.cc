@@ -108,11 +108,10 @@ MediatorTable::gcWeak() {
   AHT_HashNodeCnt *node;
   for (node = medTable->getFirst(); node; node = medTable->getNext(node))
     static_cast<Mediator*>(node->getValue())->checkGCollect();
-  
-  // Note. This is incomplete if the fault stream of such a mediator
-  // refers to another entity with a detached mediator.  The latter
-  // needs to be collected as well.  We should recursively collect
-  // those mediators until we reach a fix point.
+
+  // Note.  The latter used to be incomplete, but it is now correct.
+  // The method checkGCollect() does not mark new entities; it only
+  // updates the reference to the entity.  It was not the case before.
 }
 
 // cleanup the table
