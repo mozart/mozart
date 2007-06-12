@@ -545,7 +545,7 @@ Board * Board::_cacBoardDo(void) {
   Board * ret;
   cacReallocStatic(Board,bb,ret,sizeof(Board));
 
-  printf("_cacBoard ret=%p this %p ret->lateThread = %p gespace=%p\n",ret,this,ret->getLateThread(),gespace);fflush(stdout);
+  //printf("_cacBoard ret=%p this %p ret->lateThread = %p gespace=%p\n",ret,this,ret->getLateThread(),gespace);fflush(stdout);
 
   // kost@ : the OptVar template has to be already there since it is
   // needed when collecting OptVar"s;
@@ -2142,21 +2142,21 @@ if (gespace != NULL) {
     true could be used but we have not tested it yet and could not be thread safe.
   */
   //long unsigned int a;
-  printf("cac.cc antes  parent:%p this=%p gespace=%p\n",parent,this,gespace);fflush(stdout);
+  //printf("cac.cc antes  parent:%p this=%p gespace=%p\n",parent,this,gespace);fflush(stdout);
   gespace = static_cast<GenericSpace*>(gespace->clone(false));
-  printf("cac.cc despues gespace=%p\n",gespace);fflush(stdout);
+  //printf("cac.cc despues gespace=%p\n",gespace);fflush(stdout);
 #endif
   gespace->_cac();
-#ifdef G_COLLECT
+  //#ifdef G_COLLECT
   if(lateThread){
     lateThread=static_cast<Thread *>(lateThread->_cacSuspendable());
   }
-#endif
+  //#endif
 
 }
-#ifdef G_COLLECT
-  printf("recoleccion de basura,  cac.cc board-this=%p lateThread=%p\n",this,lateThread);fflush(stdout);
-#endif
+//#ifdef G_COLLECT
+//  printf("recoleccion de basura,  cac.cc board-this=%p lateThread=%p\n",this,lateThread);fflush(stdout);
+  //#endif
 
 #ifdef CS_PROFILE
 #ifdef G_COLLECT
