@@ -103,6 +103,8 @@ public:
     IntVar& lintvar = (static_cast<GeIntVar*>(lgevar))->getIntVarInfo();
     IntVar& rintvar = (static_cast<GeIntVar*>(rgevar))->getIntVarInfo();    
     eq(s,lintvar, rintvar);
+    //Gecode2.0
+    //rel(s,lintvar,IRT_EQ,rintvar);
   }
 
   virtual ModEvent bind(GenericSpace *s, 

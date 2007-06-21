@@ -100,7 +100,7 @@ Board::Board()
     status(taggedVoidValue), rootVar(taggedVoidValue),
     script(taggedVoidValue), parent(NULL), flags(BoTag_Root)
 {
-  printf("BOARD: called constructor %p\n",this);fflush(stdout);
+  //printf("BOARD: called constructor %p\n",this);fflush(stdout);
   Assert((int) OddGCStep == 0x0 && (int) EvenGCStep == (int) BoTag_EvenGC);
   optVar = makeTaggedVar(new OptVar(this));
   lpq.init();
@@ -115,7 +115,7 @@ Board::Board(Board * p)
     crt(0), suspList(0), nonMonoSuspList(0),
     script(taggedVoidValue), parent(p), flags(0)
 {
-  printf("BOARD: copy constructor %p parent: %p\n",this,p);fflush(stdout);
+  //printf("BOARD: copy constructor %p parent: %p\n",this,p);fflush(stdout);
   Assert(!p->isCommitted());
   status  = oz_newReadOnly(p);
   optVar = makeTaggedVar(new OptVar(this));
@@ -150,7 +150,7 @@ void Board::bindStatus(TaggedRef t) {
   TaggedRef s = getStatus();
   DEREF(s, sPtr);
   if (oz_isReadOnly(s)){
-    printf("bindStatus this=%p\n",this);fflush(stdout);
+    //printf("bindStatus this=%p\n",this);fflush(stdout);
       oz_bindReadOnly(sPtr, t);      
   }
 }
@@ -499,9 +499,9 @@ void Board::checkStability(void) {
 	SuspList* susp = *suspPtr;
 	//printf("checkStability else lateThread=%p,  en board.cc\n",lateThread);fflush(stdout);
 	while (susp) {	  
-	printf("checkStability else lateThread=%p  sup=%p,  en board.cc\n",lateThread,susp->getSuspendable());fflush(stdout);	  
+	  //printf("checkStability else lateThread=%p  sup=%p,  en board.cc\n",lateThread,susp->getSuspendable());fflush(stdout);	  
 	  if (susp->getSuspendable() == lateThread) {
-	    printf("dentro del if,  en board.cc\n");fflush(stdout);
+	    //printf("dentro del if,  en board.cc\n");fflush(stdout);
 	    nv->addSuspSVar(susp->getSuspendable());
 	    *suspPtr = susp->getNext();     // drop susp from list
 	    //break;
@@ -741,29 +741,28 @@ void Board::unsetGlobalMarks(void) {
   }
 
 }
- 
-OZ_Return (*OZ_checkSituatedness)(Board *,TaggedRef *);
 
 
 void Board::ensureLateThread(void) {
   Assert(getGenericSpace(true));
   if(!lateThread) {
     if(isRoot()) {
-      //printf("ensure lateThread on toplevel: %p\n",this);fflush(stdout);
       lateThread = oz_newThreadInject(this);
       lateThread->pushCall(BI_PROP_GEC,NULL);
     } else {
-      //printf("ensure lateThread on %p\n",this);fflush(stdout);	
       lateThread = oz_newThreadSuspended(DEFAULT_PRIORITY);
       lateThread->pushCall(BI_PROP_GEC,NULL);
       TaggedRef st = getStatus();
       DEREF(st, stPtr);
       Assert(oz_isReadOnly(st));
 
-      printf("ensureLateThread lateThread=%p  this=%p\n",lateThread,this);fflush(stdout);
       oz_var_addQuietSusp(stPtr, lateThread);
     }
     
   }
 }
+ 
+OZ_Return (*OZ_checkSituatedness)(Board *,TaggedRef *);
+
+
 

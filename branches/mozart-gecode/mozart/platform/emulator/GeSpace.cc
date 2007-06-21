@@ -75,7 +75,7 @@ GenericSpace::GenericSpace(GenericSpace& s, bool share)
       determined(s.determined), foreignProps(s.foreignProps),unifyProps(s.unifyProps), trigger(s.trigger), gc_pred(NULL), gc_succ(NULL), gc_marked(false),
       allocatedMemory(usedMem())
 {
-  printf("GeSpace.cc copy constructor\n");fflush(stdout);
+  //printf("GeSpace.cc copy constructor\n");fflush(stdout);
   registerGeSpace(this);
   GeSpaceAllocatedMem += allocatedMemory;
   //printf("Constructor Copia: %u %p\n",GeSpaceAllocatedMem,this);fflush(stdout);
@@ -84,7 +84,7 @@ GenericSpace::GenericSpace(GenericSpace& s, bool share)
 inline
 GenericSpace::~GenericSpace(void) {
   // Release the memory pointed by variables in vars.
-  printf("deleting generic space %d\n",gscounter);fflush(stdout);
+  //printf("deleting generic space %d\n",gscounter);fflush(stdout);
   if (gc_pred) {
     gc_pred->gc_succ = gc_succ;
   } else {
@@ -127,7 +127,7 @@ void GenericSpace::makeStable(void) {
   */
 }
 
-inline
+
 void GenericSpace::makeUnstable(void) {
   oz_currentBoard()->ensureLateThread();
   Assert(getTrigger() && oz_currentBoard()->getLateThread());
@@ -144,9 +144,9 @@ Gecode::SpaceStatus GenericSpace::mstatus(unsigned long int& pn) {
 
   GeSpaceAllocatedMem = GeSpaceAllocatedMem <= allocatedMemory ?
     0 : GeSpaceAllocatedMem - allocatedMemory;
-  printf("GeSpace.cc mstatus\n");fflush(stdout);
+  //printf("GeSpace.cc mstatus\n");fflush(stdout);
   Gecode::SpaceStatus ret = Gecode::Space::status(pn);
-  printf("GeSpace.cc mstatus var[0]\n");fflush(stdout);
+  //printf("GeSpace.cc mstatus var[0]\n");fflush(stdout);
   //get_GeVar(getVarRef(0))->printDomain();
   allocatedMemory = usedMem();
   GeSpaceAllocatedMem += allocatedMemory;
@@ -189,11 +189,11 @@ void GenericSpace::gCollect() {
 
 void GenericSpace::sClone() {
   //GEOZ_DEBUG_PRINT(("Called cloning on references\n"));
-  printf("GeSpace.cc sClone\n");fflush(stdout);
+  //printf("GeSpace.cc sClone\n");fflush(stdout);
   board = board->sCloneBoard();  
-  printf("GeSpace.cc sClone1\n");fflush(stdout);
+  //printf("GeSpace.cc sClone1\n");fflush(stdout);
   for (int i=0; i<vars.getSize(); i++) OZ_sClone(vars.getRef(i));
-  printf("GeSpace.cc sClone2\n");fflush(stdout);
+  //printf("GeSpace.cc sClone2\n");fflush(stdout);
   OZ_sClone(&trigger);
 }
 
@@ -233,7 +233,7 @@ void gCollectGeSpaces() {
   }
   printf("collecting memory: %d\n",geAlloc);fflush(stdout);
   */
-  printf("Before collect there are %d generic space in memory\n",GenericSpace::gscounter);
+  //printf("Before collect there are %d generic space in memory\n",GenericSpace::gscounter);
   fflush(stdout);
   //  printf("collecting memory used by generic spaces\n");fflush(stdout);
   GenericSpace* cur = GeSpaceCollectList;
@@ -253,6 +253,6 @@ void gCollectGeSpaces() {
     }
   }
   //printf("collected memory for %d of %d spaces\n",i,j);
-  printf("there are %d generic space in memory\n",GenericSpace::gscounter);
+  //printf("there are %d generic space in memory\n",GenericSpace::gscounter);
   fflush(stdout);
 }
