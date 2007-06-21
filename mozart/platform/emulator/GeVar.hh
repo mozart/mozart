@@ -219,7 +219,7 @@ public:
       infinite execution of BIwait built-in when it is used.
   */ 
   OZ_Return addSuspV(TaggedRef*, Suspendable* susp) {
-    printf("addSuspV\n");fflush(stdout);
+    //printf("addSuspV\n");fflush(stdout);
     extVar2Var(this)->addSuspSVar(susp);
     return SUSPEND;
   }

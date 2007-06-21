@@ -45,6 +45,7 @@
 
 #include "GeSpace.hh"
 #include "thr_int.hh"
+//#include "var_base.hh"
 
 
 #define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
@@ -444,7 +445,7 @@ public:
       if (gespace == NULL) {
 	//printf("creating new gespace on request\n");fflush(stdout);
     	gespace = new GenericSpace(this);
-	printf("getGenericSpace = %p board = %p\n",gespace,this);fflush(stdout);
+	//printf("getGenericSpace = %p board = %p\n",gespace,this);fflush(stdout);
 	lateThread = NULL;
       }	
     }
@@ -470,7 +471,9 @@ public:
      | No Propagators |              |            |          |
      ---------------------------------------------------------
  */
-  void ensureLateThread(void);
+
+   void ensureLateThread(void);
+
   
   /**
      \brief Removes the generic space when is no longer needed.
@@ -478,7 +481,7 @@ public:
   void deleteGenericSpace(void) {
     Assert(gespace);
     //printf("deleting generic space is the first?? %d",GeSpaceCollectList);
-    printf("Deleting genericspace %p\n",gespace);fflush(stdout);
+    //printf("Deleting genericspace %p\n",gespace);fflush(stdout);
     delete gespace;
     gespace = NULL;
     lateThread = NULL;

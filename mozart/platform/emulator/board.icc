@@ -46,6 +46,7 @@
 #define inline
 #endif
 
+
 inline
 int Board::isAdmissible(void) {
   Assert(!isCommitted());
@@ -65,7 +66,7 @@ int Board::isAdmissible(void) {
 
 inline
 void Board::addSuspension(Suspendable * susp) {
-  printf("board.icc addSuspension %p\n",susp);fflush(stdout);
+  //printf("board.icc addSuspension %p\n",susp);fflush(stdout);
   suspList = new SuspList(susp, suspList);
 }
 
@@ -129,7 +130,7 @@ void Board::scheduleNonMono(void) {
 inline
 Bool Board::isStable(void) {
   if (hasRunnableThreads()){
-    printf("isStable 1\n");fflush(stdout);
+    //printf("isStable 1\n");fflush(stdout);
     return NO;
 }
 
@@ -137,7 +138,7 @@ Bool Board::isStable(void) {
       return NO;*/
 
   if (oz_isCurrentBoard(this) && trail.isSpeculating()){
-    printf("isStable 2\n");fflush(stdout);
+    //printf("isStable 2\n");fflush(stdout);
     return NO;
   }
 
@@ -149,7 +150,7 @@ Bool Board::isStable(void) {
  
   Bool tmp = isEmptySuspList();
 
-    printf("isStable 3 %d\n",tmp);fflush(stdout);
+    //printf("isStable 3 %d\n",tmp);fflush(stdout);
   
     return tmp;
 }
@@ -204,6 +205,9 @@ TaggedRef Board::genFailed() {
   ozstat.incSolveFailed();
   return AtomFailed;
 }
+
+
+
 
 inline
 Bool oz_isBelow(Board * below, Board * above) {
@@ -388,7 +392,27 @@ Bool Board::cacIsAlive(void) {
   } while (1);
 
 }
+/*
+inline
+void Board::ensureLateThread(void) {
+  Assert(getGenericSpace(true));
+  if(!lateThread) {
+    if(isRoot()) {
+      lateThread = oz_newThreadInject(this);
+      lateThread->pushCall(BI_PROP_GEC,NULL);
+    } else {
+      lateThread = oz_newThreadSuspended(DEFAULT_PRIORITY);
+      lateThread->pushCall(BI_PROP_GEC,NULL);
+      TaggedRef st = getStatus();
+      DEREF(st, stPtr);
+      Assert(oz_isReadOnly(st));
 
+      oz_var_addQuietSusp(stPtr, lateThread);
+    }
+    
+  }
+}
+*/
 
 #ifdef OUTLINE
 #undef inline

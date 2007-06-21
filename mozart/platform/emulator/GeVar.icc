@@ -2,7 +2,7 @@ template <class VarImp, Gecode::PropCond pc>
 inline
 OZ_Return GeVar<VarImp, pc>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
 {
-  printf("unifyV GeVar\n");fflush(stdout);
+  //printf("unifyV GeVar\n");fflush(stdout);
   
   GeVar<VarImp,pc>* lgevar = this;
   GenericSpace* space = extVar2Var(lgevar)->getBoardInternal()->getGenericSpace();
@@ -88,7 +88,7 @@ OZ_Return GeVar<VarImp, pc>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
 template <class VarImp, Gecode::PropCond pc>
 inline
 OZ_Return GeVar<VarImp,pc>::bindV(TaggedRef* vPtr, TaggedRef val) {
-  printf("GeVar::bindV\n"); fflush(stdout);
+  //printf("GeVar::bindV\n"); fflush(stdout);
   if (validV(val)) {
     if(am.inEqEq()) {
       if( !In(val) ) return FAILED;
@@ -159,7 +159,7 @@ void GeVar<VarImp,pc>::ensureDomReflection(void) {
 
 template <class VarImp, Gecode::PropCond pc>
 void GeVar<VarImp,pc>::printStreamV(ostream &out,int depth) {
-  printf("GeVar->printStreamV\n");fflush(stdout);
+  //printf("GeVar->printStreamV\n");fflush(stdout);
   ensureDomReflection();
   toStream(out);
 }

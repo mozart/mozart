@@ -484,7 +484,7 @@ OZ_BI_define(BIinjectSpace, 2,0)
 
   // inject
   sb->inject(proc);
-  am.threadsPool.printThreads();
+  //am.threadsPool.printThreads();
   return BI_PREEMPT;
 } OZ_BI_end
 

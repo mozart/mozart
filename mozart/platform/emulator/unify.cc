@@ -60,7 +60,7 @@ Bool checkHome(TaggedRef *vPtr) {
  */
 void oz_bindGlobalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
 {
-  printf("oz_bindGlobalVar\n");fflush(stdout);
+  //printf("oz_bindGlobalVar\n");fflush(stdout);
   Assert(tagged2Var(*varPtr)==ov);
   Assert(!oz_isLocalVar(ov));
   Assert(am.inEqEq() || checkHome(varPtr));
@@ -75,7 +75,7 @@ void oz_bindGlobalVar2(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
   Assert(!oz_isLocalVar(ov));
   Assert(am.inEqEq() || checkHome(varPtr));
   //printf("oz_bindGlobalVar2 %d\n",varPtr);fflush(stdout);
-  printf("oz_bindGlobalVar2\n");fflush(stdout);
+  //printf("oz_bindGlobalVar2\n");fflush(stdout);
   oz_checkSuspensionList(ov, pc_std_unif);
   oz_checkSuspensionList(tagged2Var(oz_deref(term)), pc_std_unif);
   
@@ -91,7 +91,7 @@ void oz_bindLocalVar(OzVariable *ov, TaggedRef *varPtr, TaggedRef term)
   Assert(tagged2Var(*varPtr)==ov);
   Assert(oz_isLocalVar(ov));
   Assert(!am.inEqEq());
-  printf("oz_bindLocalVar\n");fflush(stdout);
+  //printf("oz_bindLocalVar\n");fflush(stdout);
   oz_checkSuspensionList(ov, pc_std_unif);
   //printf("oz_bindLocalVar despues oz_check\n");fflush(stdout);
   /*  if(ov->getType() == OZ_VAR_EXT) {
@@ -125,7 +125,7 @@ void oz_bind_global(TaggedRef var, TaggedRef term)
   DEREF(var,varPtr);
   if (!oz_isOptVar(var)) {
     OzVariable *ov=tagged2Var(var);
-    printf("oz_bind_global\n");fflush(stdout);
+    //printf("oz_bind_global\n");fflush(stdout);
     oz_checkSuspensionList(ov, pc_all);
     DEREF(term,termPtr);
     Assert(!oz_isRef(term));
