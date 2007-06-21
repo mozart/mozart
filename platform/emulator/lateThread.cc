@@ -31,7 +31,7 @@
 #include "GeSpace.hh"
 
 OZ_BI_define(BI_prop_gec, 0, 0) {
-  printf("Thread %p running at board %p\n",oz_currentThread(), oz_currentBoard());fflush(stdout);
+  //printf("Thread %p running at board %p\n",oz_currentThread(), oz_currentBoard());fflush(stdout);
   
   /* Curren board cannot be failed */
   Assert(!oz_currentBoard()->isFailed());
@@ -64,7 +64,7 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
       return oz_var_addQuietSusp(statusPtr, oz_currentThread());      
   }
   */
-  printf("lateThread antes de status\n");fflush(stdout);  
+  //printf("lateThread antes de status\n");fflush(stdout);  
   if (gs->mstatus() == SS_FAILED) {
     oz_currentBoard()->deleteGenericSpace();
     return FAILED;

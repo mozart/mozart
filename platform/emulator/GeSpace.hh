@@ -208,7 +208,7 @@ private:
      \brief Computes the memory allocated by this space.
   */
   size_t usedMem(void) {
-    return allocated() + cached() + sizeof(*this);
+    return allocated() + sizeof(*this);
   }
   
 
@@ -278,7 +278,7 @@ public:
    * @return A clone of the space
    */
   virtual Space* copy(bool share) {
-    printf("GeSpace.hh copy\n");fflush(stdout);
+    //printf("GeSpace.hh copy\n");fflush(stdout);
     return new GenericSpace(*this,share);
   }
 

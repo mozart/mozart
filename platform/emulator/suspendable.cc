@@ -156,7 +156,7 @@ void oz_checkAnySuspensionList(SuspList ** suspList,
 #endif
 
     SuspList ** n = sl->getNextRef();
-    printf("suspendable.cc Thread=%p\n",sl->getSuspendable());fflush(stdout);
+    //printf("suspendable.cc Thread=%p\n",sl->getSuspendable());fflush(stdout);
     if (sl->getSuspendable()->_wakeup(home,calledBy)) {
       *p = *n;
       sl->dispose();

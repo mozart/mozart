@@ -121,21 +121,16 @@
 
 #define DeclareGeIntVarT2(val,ar,i)				\
 {  TaggedRef x = val;						\
-  printf("DeclareGeIntVarT2\n");fflush(stdout);                         \  
   DEREF(x,x_ptr);						\
   Assert(!oz_isRef(x));						\
   if (oz_isFree(x)) {						\
-    printf("suspending for simple var\n");fflush(stdout);	\
     oz_suspendOn(makeTaggedRef(x_ptr));				\
   }								\
-  printf("resuming for simple var\n");fflush(stdout);		\
   if(OZ_isInt(val)) {						\
     int domain=OZ_intToC(val);					\
-    printf("es entero siempre %d\n",domain);fflush(stdout);	\
     ar[i].init(sp,domain,domain);				\
   }								\
   else if(OZ_isGeIntVar(val)) {					\
-      printf("DeclareGeIntVarT2 -- getIntVar\n");fflush(stdout);\
       ar[i]=get_IntVar(val);					\
   }								\
 }
