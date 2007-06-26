@@ -202,6 +202,7 @@ public:
   /*************** fault handling ***************/
   GlueFaultState getFaultState() const { return faultState; }
   void           setFaultState(GlueFaultState fs);
+  TaggedRef      getFaultStreamTail();
   TaggedRef      getFaultStream();
   OZ_Return      suspendOnFault();     // suspend on control var
 
@@ -390,6 +391,8 @@ public:
   virtual void attach();
   virtual void gCollectPrepare();   // overrides Mediator::gCollectPrepare()
   virtual char *getPrintType() { return "var"; }
+
+  void bind(TaggedRef);     // bind the variable and its fault stream
 
   virtual AOcallback callback_Bind(DssOperationId *id,
 				   PstInContainerInterface* operation); 
