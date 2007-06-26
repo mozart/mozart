@@ -308,13 +308,17 @@ Mediator::setFaultState(GlueFaultState fs) {
 }
 
 TaggedRef
-Mediator::getFaultStream() {
-  // create the fault stream if necessary
-  if (faultStream == 0) {
+Mediator::getFaultStreamTail() {
+  if (!faultStream) {   // lazy creation
     faultStream = oz_newReadOnly(oz_rootBoard());
     abstractOperation_Monitor();
   }
-  return oz_cons(fsToAtom(faultState), faultStream);
+  return faultStream;
+}
+
+TaggedRef
+Mediator::getFaultStream() {
+  return oz_cons(fsToAtom(faultState), getFaultStreamTail());
 }
 
 OZ_Return
@@ -852,17 +856,38 @@ PstOutContainerInterface *OzVariableMediator::retrieveEntityRepresentation(){
   return new PstOutContainer(getEntity());
 }
 
+// bind the variable and its fault stream
+void OzVariableMediator::bind(TaggedRef arg) {
+  arg = oz_safeDeref(arg);
+  makePassive();               // mediator no longer active
+
+  TaggedRef*  ref = tagged2Ref(getEntity());
+  OzVariable* var = tagged2Var(*ref);
+  oz_bindLocalVar(var, ref, arg);
+
+  if (faultStream) {
+    if (oz_isVarOrRef(arg)) {
+      // arg is a variable: bind faultStream to arg's fault stream
+      Mediator* med = glue_getMediator(arg);
+      TaggedRef tail = (faultState == med->getFaultState() ?
+			med->getFaultStreamTail() : med->getFaultStream());
+      oz_bindReadOnly(tagged2Ref(faultStream), tail);
+    } else {
+      // arg is a value: close the fault stream
+      oz_bindReadOnly(tagged2Ref(faultStream), oz_nil());
+    }
+    // don't keep a ref to faultStream (bug when GC binds it to nil!)
+    faultStream = makeTaggedNULL();
+  }
+}
+
 void
 OzVariableMediator::installEntityRepresentation(PstInContainerInterface* pstin){
   Assert(active);
   // don't install if failed...
   if (getFaultState() < GLUE_FAULT_LOCAL) {
-    TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
-    TaggedRef* ref = tagged2Ref(getEntity()); // points to the var's tagged ref
-    OzVariable* ov = tagged2Var(*ref);
-    oz_bindLocalVar(ov, ref, arg);
+    bind(static_cast<PstInContainer*>(pstin)->a_term);
   }
-  makePassive();
 }
 
 AOcallback
@@ -871,11 +896,7 @@ OzVariableMediator::callback_Bind(DssOperationId*,
   Assert(active);
   // the variable must be bound on the coordinator's site, even if the
   // site has made it localFail.
-  TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
-  TaggedRef* ref = tagged2Ref(getEntity()); // points to the var's tagged ref
-  OzVariable* ov = tagged2Var(*ref);
-  oz_bindLocalVar(ov, ref, arg);
-  makePassive();
+  bind(static_cast<PstInContainer*>(pstin)->a_term);
   return AOCB_FINISH;
 }
 
@@ -887,10 +908,8 @@ OzVariableMediator::callback_Append(DssOperationId*,
   // (a "feature" of the dss).  Therefore we check the type first.
   if (active && getFaultState() < GLUE_FAULT_LOCAL) {
     // check pstin
-    if (pstin !=  NULL) {
-      TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
-      Assert(arg == oz_atom("needed"));
-    }
+    Assert(pstin == NULL ||
+	   static_cast<PstInContainer*>(pstin)->a_term  == oz_atom("needed"));
     TaggedRef* ref = tagged2Ref(getEntity()); // points to the tagged ref
     oz_var_makeNeededLocal(ref);
   }

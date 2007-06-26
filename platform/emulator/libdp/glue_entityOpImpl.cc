@@ -527,7 +527,7 @@ OZ_Return distVarBindImpl(OzVariable *ov, TaggedRef *varPtr, TaggedRef val) {
 
   // if not distributed, simply bind locally
   if (!med->isDistributed()) {
-    oz_bindLocalVar(ov, varPtr, val);
+    med->bind(val);
     return PROCEED;
   }
 
@@ -540,7 +540,7 @@ OZ_Return distVarBindImpl(OzVariable *ov, TaggedRef *varPtr, TaggedRef val) {
 
   switch(cont) {
   case DSS_PROCEED: // bind the local entity
-    oz_bindLocalVar(ov, varPtr, val);
+    med->bind(val);
     return PROCEED; 
   case DSS_SKIP: // skip the operation: should not happen
     Assert(0);
