@@ -843,13 +843,15 @@ void OzVariableMediator::gCollectPrepare() {
   // suspensions (unless they are permanently failed).  This is
   // because the suspensions themselves do not keep the variable
   // alive.
-  if (isActive() && faultState <= GLUE_FAULT_TEMP) {
-    TaggedRef* ref = tagged2Ref(getEntity());
-    OzVariable* var = tagged2Var(*ref);
-    if (!var->isEmptySuspList()) gCollect();
+  if (isActive()) {
+    if (faultState <= GLUE_FAULT_TEMP) {
+      TaggedRef* ref = tagged2Ref(getEntity());
+      OzVariable* var = tagged2Var(*ref);
+      if (!var->isEmptySuspList()) gCollect();
+    }
+    // do the common stuff, too
+    Mediator::gCollectPrepare();
   }
-  // do the common stuff, too
-  Mediator::gCollectPrepare();
 }
 
 PstOutContainerInterface *OzVariableMediator::retrieveEntityRepresentation(){
@@ -878,6 +880,11 @@ void OzVariableMediator::bind(TaggedRef arg) {
     }
     // don't keep a ref to faultStream (bug when GC binds it to nil!)
     faultStream = makeTaggedNULL();
+  }
+
+  if (faultCtlVar) {   // wake up blocked threads, if any
+    ControlVarResume(faultCtlVar);
+    faultCtlVar = makeTaggedNULL();
   }
 }
 
