@@ -1668,7 +1668,6 @@ OZ_BI_define(BIstatus,1,1)
 // Builtins ==, \=, ==B and \=B
 // ---------------------------------------------------------------------
 
-inline
 OZ_Return oz_eqeq(TaggedRef Ain,TaggedRef Bin)
 {
   // simulate a shallow guard
