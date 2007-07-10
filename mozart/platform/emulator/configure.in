@@ -121,6 +121,8 @@ fi
 
 AC_PATH_PROG(DEPEND, makedepend, makedepend)
 
+AC_GECODE_PKGCONFIG
+
 OZTOOL_SH="sh `pwd`/oztool.sh"
 AC_SUBST(OZTOOL_SH)
 
@@ -1817,7 +1819,7 @@ dnl *****************************************************************
 
 AC_CONFIG_HEADER(conf-others.h)
 
-AC_OUTPUT(Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile libcp/int/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in $target-oztool:i386-mingw32-oztool.in .gdbinit)
+AC_OUTPUT(Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile libcp-int/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in $target-oztool:i386-mingw32-oztool.in .gdbinit)
 
 errprint(ifdef([OZ_INIT],
  [autoconf succeeded

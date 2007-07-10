@@ -1,10 +1,10 @@
 
-include ../../Makefile.vars
+include ../Makefile.vars
 
 BUILDTOP	= @BUILDTOP@
 VPATH		= @srcdir@
 SRCDIR		= @srcdir@
-INCS		= -I$(SRCDIR) -I. -I$(SRCDIR)/../.. -I../..
+INCS		= -I$(SRCDIR) -I. -I$(SRCDIR)/.. -I..
 
 
 GECODE_LIBS	= `pkg-config --libs "gecode = ${GECODEVERSION}"`
@@ -23,14 +23,13 @@ GFDLIBSRC	= GeIntVar.cc GeIntVar-builtins.cc GeIntProp-builtins.cc GeMozProp-bui
 GFDLIBOBJS	= $(GFDLIBSRC:.cc=.o)
 
 
-FCPDECL		= $(SRCDIR)/../../bidecl.perl
+FCPDECL		= $(SRCDIR)/../bidecl.perl
 
 all:
 
 # NOTE: $(SRCDIR) added to the dependencies, because in ../../Makefile.in the libs
 #       depend also on this dir
-
-../../geoz.so-$(PLATFORM): first $(GFDLIBOBJS)
+../geoz-int.so-$(PLATFORM): first $(GFDLIBOBJS)
 	$(DYNLD) -o $@ $(GFDLIBOBJS) $(LDFLAGS) $(GECODE_LIBS)
 
 %.o: %.cc
@@ -41,10 +40,10 @@ depend:: Makefile $(GFDLIBSRC)
 	$(DEPEND) $(GFDLIBSRC:%=$(SRCDIR)/%) > Makefile.deps
 
 Makefile: Makefile.in
-	(cd ../..; ./config.status)
+	(cd ..; ./config.status)
 
 -include Makefile.deps
-include ../../Makefile.rules
+include ../Makefile.rules
 
 first: $(GENERATED_FILES)
 
@@ -69,4 +68,4 @@ tags:	$(CREATEDFILES)
 	--regex='/OZ_DECLARE[A-Z0-9_]*([ 	]*\([^ 	,)]+\)/\1/' -l c++ \
 	-o $(SRCDIR)/TAGS \
 	$(addprefix $(BUILDDIR)/,$(CREATEDFILES)) \
-	$(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/../../*c $(SRCDIR)/../../*h  
+	$(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/../*c $(SRCDIR)/../*h  

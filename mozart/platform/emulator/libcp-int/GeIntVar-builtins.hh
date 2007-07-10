@@ -131,7 +131,7 @@
     ar[i].init(sp,domain,domain);				\
   }								\
   else if(OZ_isGeIntVar(val)) {					\
-      ar[i]=get_IntVar(val);					\
+          ar[i]=get_IntVar(val);					\
   }								\
 }
 
