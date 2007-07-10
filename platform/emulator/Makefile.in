@@ -40,11 +40,9 @@ MODULE_NAMES =							\
 	Parser \
 	CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat \
 	Win32 Profile OsTime ZlibIO 
-CLEAN_LIBCP=
 
-
-MODULE_NAMES += geoz
-CLEAN_LIBCP=cd libcp/int; $(MAKE) clean
+MODULE_NAMES += geoz-int
+CLEAN_LIBCP=cd libcp-int; $(MAKE) clean
 
 
 
@@ -68,7 +66,7 @@ OZVERSION=	$(SRCTOP)/OZVERSION
 
 
 
-SUBDIRS+=libcp/int
+SUBDIRS+=libcp-int
 
 
 # these are the builtin modules: non-sited primitives
@@ -287,9 +285,9 @@ libVirtualSite.a VirtualSite.so-$(PLATFORM):
 libFDP.a FDP.so-$(PLATFORM) libSchedule.a Schedule.so-$(PLATFORM):
 	cd libfd; $(MAKE) ../$@
 
-.PHONY: geoz.so-$(PLATFORM)
-geoz.so-$(PLATFORM):
-	cd libcp/int; $(MAKE) ../../$@
+.PHONY: geoz-int.so-$(PLATFORM)
+geoz-int.so-$(PLATFORM):
+	cd libcp-int; $(MAKE) ../$@
 
 .PHONY: libFSP.a FSP.so-$(PLATFORM)
 libFSP.a FSP.so-$(PLATFORM):
