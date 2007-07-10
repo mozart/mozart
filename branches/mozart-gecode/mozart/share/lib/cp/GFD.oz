@@ -72,7 +72,7 @@ import
        
        status:  Status
       )
-   at 'x-oz://boot/geoz'
+   at 'x-oz://boot/geoz-int'
 
    System
    Space

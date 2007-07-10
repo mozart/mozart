@@ -68,7 +68,6 @@ OZ_BI_define(int_rel,4,0) {
   relType=OZ_intToC(OZ_in(1));
   DeclareGeIntVar(0,v1,gs);
   DeclareGeIntVar(2,v2,gs);
-
   try {
     rel(gs,v1,(IntRelType)relType,v2,(IntConLevel)consistencyLevel);
   } catch (Exception e) {

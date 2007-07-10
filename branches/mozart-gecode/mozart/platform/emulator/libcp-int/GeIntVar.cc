@@ -104,7 +104,7 @@ TaggedRef GeIntVar::clone(TaggedRef v) {
 
 inline
 bool GeIntVar::hasSameDomain(TaggedRef v) {
-  //printf("GeIntVar.cc hasSameDomain\n");fflush(stdout);
+  printf("GeIntVar.cc hasSameDomain\n");fflush(stdout);
   Assert(OZ_isGeIntVar(v));
   IntVar v1 = get_IntVarInfo(v);
   ViewRanges< IntView > vr1 (v1);

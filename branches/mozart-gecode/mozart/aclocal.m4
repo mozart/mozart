@@ -981,6 +981,32 @@ fi
 ])
 
 dnl ------------------------------------------------------------------
+dnl AC_GECODE_PKGCONFIG
+dnl
+dnl Checks whether pkg-config is installed. This macro was taken from 
+dnl Gecode sources (gecode.m4).
+dnl Copyright: Guido Tack, 2004, 2005
+dnl And was modified.
+dnl ------------------------------------------------------------------
+AC_DEFUN([AC_GECODE_PKGCONFIG],
+	[AC_CHECK_TOOL(PKGCONFIG, pkg-config)
+	 AC_MSG_CHECKING( for pkg-config)
+	 if test "${PKGCONFIG}x" = "x"; then
+	    AC_MSG_RESULT(no)
+	    AC_MSG_ERROR([
+The pkg-config tool is needed to build the system. It can be retrieved
+from:
+http://pkg-config.freedesktop.org
+The latest version at this time is 0.21.
+])
+
+	    AC_SUBST(HAVE_PKGCONFIG, "no")
+	 else
+	    AC_MSG_RESULT(yes)
+	    AC_SUBST(HAVE_PKGCONFIG, "yes")
+	 fi])
+
+dnl ------------------------------------------------------------------
 dnl OZ_NEEDS_FUNC(FUNCTION)
 dnl
 dnl makes sure that FUNCTION is now available, else signals an error.
