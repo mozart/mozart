@@ -37,7 +37,7 @@ import
        'reflect.regretMax':  GetRegretMax
 
        eq:                   Eq
-       rel:                  IntRel       
+       rel:                  Rel       
        linear:               Linear
        linear2:              Linear2
        linearR:              LinearR
@@ -143,7 +143,7 @@ export
    
    %%Propagators
    eq:     Eq
-   rel:    IntRel
+   rel:    Rel
    Linear
    Linear2
    Count

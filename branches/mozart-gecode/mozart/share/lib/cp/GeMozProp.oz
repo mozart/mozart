@@ -145,19 +145,19 @@
    end
 
    proc{Less D1 D2}
-      {IntRel D1 Rt.'<:' D2 Cl.val}
+      {Rel D1 Rt.'<:' D2 Cl.val}
    end
 
    proc{LessEq D1 D2}
-      {IntRel D1 Rt.'=<:' D2 Cl.val}
+      {Rel D1 Rt.'=<:' D2 Cl.val}
    end
 
    proc{Greater D1 D2}
-      {IntRel D1 Rt.'>:' D2 Cl.val}
+      {Rel D1 Rt.'>:' D2 Cl.val}
    end
 
    proc{GreaterEq D1 D2}
-      {IntRel D1 Rt.'>=:' D2 Cl.val}
+      {Rel D1 Rt.'>=:' D2 Cl.val}
    end
 
    %%may be this proc have to change something after we have all gecode propagators implemented
