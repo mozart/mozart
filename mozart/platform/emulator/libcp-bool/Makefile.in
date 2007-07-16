@@ -1,0 +1,71 @@
+
+include ../Makefile.vars
+
+BUILDTOP	= @BUILDTOP@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+INCS		= -I$(SRCDIR) -I. -I$(SRCDIR)/.. -I..
+
+
+GECODE_LIBS	= `pkg-config --libs "gecode = ${GECODEVERSION}"`
+GECODE_INC	= `pkg-config --cflags "gecode = ${GECODEVERSION}"`
+
+
+
+CFLAGS 		= $(INCS) $(GECODE_INC) $(GESPACE_CXXFLAGS) $(CPPFLAGS) 
+
+MODULE_SPEC	= modGeBoolVar.spec
+
+GENERATED_FILES = $(MODULE_SPEC:.spec=-table.cc)
+
+
+GBDLIBSRC	= GeBoolVar.cc GeBoolVar-builtins.cc GeBoolProp-builtins.cc 
+GBDLIBOBJS	= $(GBDLIBSRC:.cc=.o)
+
+
+FCPDECL		= $(SRCDIR)/../bidecl.perl
+
+all:
+
+# NOTE: $(SRCDIR) added to the dependencies, because in ../../Makefile.in the libs
+#       depend also on this dir
+../geoz-bool.so-$(PLATFORM): first $(GBDLIBOBJS)
+	$(DYNLD) -o $@ $(GBDLIBOBJS) $(LDFLAGS) $(GECODE_LIBS)
+
+%.o: %.cc
+	$(CXX) $(OPTIMIZE) $(CFLAGS) -c $< -o $@
+
+
+depend:: Makefile $(GBDLIBSRC)
+	$(DEPEND) $(GBDLIBSRC:%=$(SRCDIR)/%) > Makefile.deps
+
+Makefile: Makefile.in
+	(cd ..; ./config.status)
+
+-include Makefile.deps
+include ../Makefile.rules
+
+first: $(GENERATED_FILES)
+
+%-table.cc: %.spec
+	$(PERL) $(FCPDECL) -file $< -interface > $@ || { rm -f $@; exit 1; }
+
+distclean::
+	-rm -f Makefile makefile $(GENERATED_FILES)
+
+veryclean::
+	-rm -f *.a *.so-$(PLATFORM) TAGS Makefile.deps $(GENERATED_FILES)
+
+cleaner::
+	-rm -f *.a *.so-$(PLATFORM) $(GENERATED_FILES)
+
+
+BUILDDIR=$(shell pwd)
+tags:	$(CREATEDFILES)
+	etags \
+	--regex='/OZ_BI_\(io\)?define([ 	]*\([^ 	,)]+\)/\2/' \
+	--regex='/OZ_C_\(io\)?proc_begin([ 	]*\([^ 	,)]+\)/\2/' \
+	--regex='/OZ_DECLARE[A-Z0-9_]*([ 	]*\([^ 	,)]+\)/\1/' -l c++ \
+	-o $(SRCDIR)/TAGS \
+	$(addprefix $(BUILDDIR)/,$(CREATEDFILES)) \
+	$(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/../*c $(SRCDIR)/../*h  
