@@ -52,7 +52,7 @@ public:
     : Gecode::VariableViewBase<Var>(static_cast<Var*>(v)) {} 
 };
 
-enum GeVarType {T_GeIntVar, T_GeSetVar};
+enum GeVarType {T_GeIntVar, T_GeSetVar, T_GeBoolVar};
 
 /**
    \brief This class is intended to provide access without template
@@ -140,7 +140,7 @@ protected:
     index(gv.index)
   {
     // ensure a valid type of varable.
-    Assert(type >= T_GeIntVar && type <= T_GeSetVar);
+    Assert(type >= T_GeIntVar && type <= T_GeBoolVar);
   }
 
   void incUnifyC(void) { unifyC++; }
@@ -158,7 +158,7 @@ public:
   GeVar(int n, GeVarType t)
     : GeVarBase(oz_currentBoard()), type(t), index(n) 
   {
-    Assert(type >= T_GeIntVar && type <= T_GeSetVar);
+    Assert(type >= T_GeIntVar && type <= T_GeBoolVar);
   }
   //@}
   

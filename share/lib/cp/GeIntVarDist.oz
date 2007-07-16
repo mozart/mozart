@@ -128,10 +128,10 @@
 		  end		  
 		  choice
 		     %{System.show aqui_equal#{IsDet V}#V}			
-		     {IntRel V Rt.'=:' {SelVal V} Cl.bnd}
+		     {Rel V Rt.'=:' {SelVal V} Cl.bnd}
 		  []
 		     %{System.show aqui_different#{IsDet V}#V}
-		     {IntRel V Rt.'\\=:' {SelVal V} Cl.bnd}
+		     {Rel V Rt.'\\=:' {SelVal V} Cl.bnd}
 		  end		  
 		  {Do Fs}
 	       end
