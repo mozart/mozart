@@ -42,7 +42,9 @@ MODULE_NAMES =							\
 	Win32 Profile OsTime ZlibIO 
 
 MODULE_NAMES += geoz-int
+MODULE_NAMES += geoz-bool
 CLEAN_LIBCP=cd libcp-int; $(MAKE) clean
+CLEAN_LIBCP += cd libcp-bool; $(MAKE) clean
 
 
 
@@ -67,7 +69,7 @@ OZVERSION=	$(SRCTOP)/OZVERSION
 
 
 SUBDIRS+=libcp-int
-
+SUBDIRS+=libcp-bool
 
 # these are the builtin modules: non-sited primitives
 # NOTE: update this list also in share/lib/Makefile.in 
@@ -288,6 +290,10 @@ libFDP.a FDP.so-$(PLATFORM) libSchedule.a Schedule.so-$(PLATFORM):
 .PHONY: geoz-int.so-$(PLATFORM)
 geoz-int.so-$(PLATFORM):
 	cd libcp-int; $(MAKE) ../$@
+
+.PHONY: geoz-bool.so-$(PLATFORM)
+geoz-bool.so-$(PLATFORM):
+	cd libcp-bool; $(MAKE) ../$@
 
 .PHONY: libFSP.a FSP.so-$(PLATFORM)
 libFSP.a FSP.so-$(PLATFORM):
