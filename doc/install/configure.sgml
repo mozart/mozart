@@ -71,6 +71,10 @@ install the gdbm package. Some have not yet been ported to Windows.
         <item/By default, the contributions are configured and
 built.  You can completely omit them using <code/--disable-contrib/ or
 <code/oz_enable_contrib=//
+        <entry class=option/<code/--enable-contrib-CONTRIB//
+        <item>Contributions can be enabled/disabled individually. For
+        example, to enable (or disable) the micq contribution (a Mozart Instant Messenger) you can
+        specify <code/--enable-contrib-micq/ (or <code/--disable-contrib-micq/).</item>
       </list>
 </p>
   </section>
