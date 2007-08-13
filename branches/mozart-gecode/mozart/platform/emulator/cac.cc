@@ -2104,6 +2104,17 @@ void SuspQueue::_cac(void) {
 
 }
  
+
+inline 
+BranchQueue *BranchQueue::_cac() {
+  BranchQueue *bq = new BranchQueue();
+  for(node *tmp=first; tmp != NULL; tmp=tmp->next) {
+    OZ_cacBlock( &(tmp->branch), &(tmp->branch), 1 );
+    bq->enqueue(tmp->branch);
+  }
+  return bq;
+}
+
 /****************************************************************************
  * Board collection 
  ****************************************************************************/
@@ -2120,12 +2131,24 @@ void Board::_cacRecurse() {
   lpq._cac();
 
   OZ_cacBlock(&script,&script,3);
+  OZ_cacBlock(&cmtQSync,&cmtQSync,1);
+  OZ_cacBlock(&branching,&branching,1);
+#ifdef S_CLONE
+  Assert(!isWaiting());
+#endif
+  OZ_cacBlock(&stabilityVar,&stabilityVar,1);
 
   cacStack.pushSuspList(&suspList);
   Distributor * d = getDistributor();
   if (d) {
     setDistributor(d->_cac());
   }
+
+  BranchQueue * b = getBranchQueue();
+  if (b) {
+    setBranchQueue(b->_cac());
+  }
+
   cacStack.pushSuspList((SuspList **) &nonMonoSuspList);
 
 if (gespace != NULL) {

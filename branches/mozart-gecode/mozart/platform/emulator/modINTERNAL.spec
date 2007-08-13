@@ -64,6 +64,15 @@
 			      out => [],
 			      BI  => BI_prop_gec},
 
+	 'waitGetChoice' => { in  => ['value'],
+	                      out => [],
+			      BI  => BIwaitGetChoice},
+
+	 'bindCSync' => { in  => ['value'],
+	                      out => [],
+			      BI  => BIbindCSync},
+
+
      'waitStatus'	 => { in  => ['value', 'value'],
 			      out => ['value'],
 			      BI  => BIwaitStatus},

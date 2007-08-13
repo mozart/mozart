@@ -1,5 +1,5 @@
-/*
- *  Main authors:
+/* 
+ *  Main authors: 
  *     Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
  *     Alberto Delgado <adelgado@cic.puj.edu.co>
  *

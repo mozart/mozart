@@ -84,5 +84,17 @@ $module_init_fun_name = "space_init";
                              out => [],
                              BI  => BIwaitNeededSpace},
                  
+     'getChoice'        => { in  => [],
+                             out => ['value'],
+                             BI  => BIgetChoiceSpace},
+
+     'branch'           => { in  => ['+tuple'],
+                             out => [],
+                             BI  => BIbranchSpace},
+
+     'commitB'          => { in  => ['+space','+value'],
+                             out => [],
+                             BI  => BIcommitBSpace},
+
      );
 1;;

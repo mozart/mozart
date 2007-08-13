@@ -2,7 +2,7 @@
  *  Main authors:
  *     Raphael Collet <raph@info.ucl.ac.be>
  *     Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
- *     Alberto Delgado <adelgado@cic.puj.edu.co>
+ *     Alberto Delgado <adelgado@cic.puj.edu.co> 
  *
  *  Contributing authors:
  *     Alejandro Arbelaez <aarbelaez@puj.edu.co>

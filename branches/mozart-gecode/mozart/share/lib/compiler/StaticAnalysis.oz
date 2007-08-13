@@ -79,9 +79,9 @@ export
    variableOccurrence:     SAVariableOccurrence
    token:                  SAToken
 require
-   Space(waitStable)
+   Space(waitStable getChoice branch)
    Search(base)
-   FD(less distinct distribute record sup)
+   FD(less distinct distribute record sup reflect)
    FS(var value include subset reflect monitorIn)
 prepare
    \insert POTypes

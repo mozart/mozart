@@ -41,91 +41,11 @@
  *
  */
 
-inline
-void telleq(Board * bb, const TaggedRef a, const TaggedRef b) {
-  oz_newThreadInject(bb)->pushCall(BI_Unify,RefsArray::make(a,b));
-}
 
 inline
 void bindreadonly(Board * bb, const TaggedRef a, const TaggedRef b) {
   oz_newThreadInject(bb)->pushCall(BI_bindReadOnly,RefsArray::make(a,b));
 }
-
-
-class BaseDistributor : public Distributor {
-protected:
-  int offset, num;
-  TaggedRef var;
-
-public:
-
-  BaseDistributor(Board * bb, const int n) {
-    offset = 0; 
-    num    = n;
-    var    = oz_newVariable(bb);
-  }
-  
-  void dispose(void) {
-    oz_freeListDispose(this, sizeof(BaseDistributor));
-  }
-  
-  TaggedRef getVar(void) {
-    return var;
-  }
-
-  virtual int getAlternatives(void) {
-    return num;
-  }
-
-  virtual int commit(Board * bb, int n) {
-    if (n > offset+num) {
-      return -num;
-    }
-
-    if (num==1 && n==1) {
-      (void) oz_unify(var,makeTaggedSmallInt(1));
-    } else {
-      telleq(bb,var,makeTaggedSmallInt(offset + n));
-    }
-    
-    dispose();
-    return 0;
-  }
-  
-  virtual int commit(Board * bb, int l, int r) {
-    if (r > offset+num) {
-      return -num;
-    }
-
-    offset += l-1;
-    num     = r-l+1;
-    
-    Assert(num>1);
-    return num;
-  }
-  
-  virtual Distributor * gCollect(void) {
-    BaseDistributor * t = 
-      (BaseDistributor *) oz_hrealloc(this,sizeof(BaseDistributor));
-
-    oz_gCollectTerm(var, t->var);
-
-    return (Distributor *) t;
-  }
-
-  virtual Distributor * sClone(void) {
-    BaseDistributor * t = 
-      (BaseDistributor *) oz_hrealloc(this,sizeof(BaseDistributor));
-
-    OZ_sCloneBlock(&var, &(t->var), 1);
-
-    return (Distributor *) t;
-  }
-
-};
-
-
-
 
 // 
 // First class spaces (the builtin interface)
@@ -197,7 +117,8 @@ OZ_BI_define(BIaskSpace, 1,1) {
   
   if (!space->getSpace()->isAdmissible())
     return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
-    
+
+
   TaggedRef answer = space->getSpace()->getStatus(); 
 
 
@@ -206,9 +127,6 @@ OZ_BI_define(BIaskSpace, 1,1) {
   if (oz_isVarOrRef(answer))
     oz_suspendOn(makeTaggedRef(answer_ptr));
   
-  //printf("board-bi.cc ask space=%p\n",space->getSpace());fflush(stdout);
-
-  //printf("board-bi ask gespace = %d\n",space -> getSpace()->getGenericSpace() ->mstatus());fflush(stdout);
 
   OZ_RETURN((oz_isSTuple(answer) && 
 	     oz_eq(tagged2SRecord(answer)->getLabel(), 
@@ -216,7 +134,6 @@ OZ_BI_define(BIaskSpace, 1,1) {
 	    ? AtomSucceeded : answer);
 		  
 } OZ_BI_end
-
 
 OZ_BI_define(BIaskVerboseSpace, 1, 1) {
   declareSpace;
@@ -309,7 +226,7 @@ OZ_BI_define(BIcloneSpace, 1,1) {
   DEREF(status, status_ptr);
 
   Assert(!oz_isRef(status));
-  //printf("dentro de clone board-bi.cc\n");fflush(stdout);
+  
   if (oz_isVarOrRef(status)) 
     oz_suspendOn(makeTaggedRef(status_ptr));
 
@@ -318,7 +235,6 @@ OZ_BI_define(BIcloneSpace, 1,1) {
   Board * copy = (Board *) space->getSpace()->clone();
 
   copy->setParent(CBB);
-
 #ifdef CS_PROFILE
   copy->orig_start = cs_orig_start;
   copy->copy_start = cs_copy_start;
@@ -330,7 +246,7 @@ OZ_BI_define(BIcloneSpace, 1,1) {
 
 
 OZ_BI_define(BIcommit1Space, 2, 0) {
-  //printf("commit1\n");fflush(stdout);
+  //  MOZART_NEVER;
   declareSpace;
   oz_declareSmallIntIN(1,n);
 
@@ -360,7 +276,7 @@ OZ_BI_define(BIcommit1Space, 2, 0) {
 
 
 OZ_BI_define(BIcommit2Space, 3,0) {
-  //printf("commit2\n");fflush(stdout);
+  //MOZART_NEVER;
   declareSpace;
   oz_declareIntIN(1,l);
   oz_declareIntIN(2,r);
@@ -443,15 +359,14 @@ OZ_BI_define(BIcommitSpace, 2,0) {
   } else {
     oz_typeError(1, "Integer or pair of integers");
   }
-  //printf("commit board=%p\n",this);fflush(stdout);
+
   if (!sb->getDistributor())
     return oz_raise(E_ERROR,E_KERNEL,"spaceNoChoice",1,tagged_space);
 
-  return sb->commit(tagged_space, 
+  return sb->commit(tagged_space,
 		    tagged2SmallInt(left),
 		    tagged2SmallInt(right));
 } OZ_BI_end
-
 
 OZ_BI_define(BIinjectSpace, 2,0)
 {
@@ -484,35 +399,8 @@ OZ_BI_define(BIinjectSpace, 2,0)
 
   // inject
   sb->inject(proc);
-  //am.threadsPool.printThreads();
+
   return BI_PREEMPT;
-} OZ_BI_end
-
-
-
-OZ_BI_define(BIchooseSpace, 1, 1) {
-  oz_declareSmallIntIN(0, i);
-
-  Board * bb = oz_currentBoard();
-
-  if (bb->isRoot()) {
-    OZ_out(0) = oz_newVariable(bb);
-  } else if (bb->getDistributor()) {
-    return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
-  } else {
-    BaseDistributor * bd = new BaseDistributor(bb,i);
-
-    bb->setDistributor(bd);
-
-    OZ_out(0) = bd->getVar();
-  }
-
-  RefsArray * args = RefsArray::allocate(1,NO);
-  args->setArg(0,OZ_out(0));
-
-  am.prepareCall(BI_wait, args);
-
-  return BI_REPLACEBICALL;
 } OZ_BI_end
 
 
@@ -520,11 +408,9 @@ OZ_BI_define(BIwaitStableSpace, 0, 0) {
 
   Board * bb = oz_currentBoard();
   TaggedRef status = bb->getStatus();
-  
   DEREF(status, status_ptr);
   Assert(!oz_isRef(status));
   if (oz_isVarOrRef(status)) 
-    //oz_suspendOn(makeTaggedRef(status_ptr));
     ((ReadOnly *)tagged2Var(status))->becomeNeeded();
   
 
@@ -533,19 +419,23 @@ OZ_BI_define(BIwaitStableSpace, 0, 0) {
 
   if (bb->isRoot()) {
     args->setArg(0,oz_newVariable(bb));
+  } else if (bb->hasGetChoice()) {
+    printf("Space....getChoice\n");fflush(stdout);
+    // No concurrent getChoice sanity test.
+    return oz_raise(E_ERROR,E_KERNEL,"spaceGetChoice", 0);
+  }  else if (bb->isWaiting()) {
+    printf("Space....waitStable\n");fflush(stdout);
+    // No concurrent waitStable sanity test.
+    //args->setArg(0,bb->getStabilityVar());
+    return oz_raise(E_ERROR,E_KERNEL,"spaceWaitStable", 0); 
   } else if (bb->getDistributor()) {
+    printf("Space....distributor\n");fflush(stdout);
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
   } else {
-    
-    
-    BaseDistributor * bd = new BaseDistributor(bb,1);
-
-    bb->setDistributor(bd);
-
-    args->setArg(0,bd->getVar());
-
+    bb->setWaiting();
+    args->setArg(0,bb->getStabilityVar());
   }
-
+  
   am.prepareCall(BI_wait, args);
 
   return BI_REPLACEBICALL;
@@ -587,7 +477,107 @@ OZ_BI_define(BIkillSpace, 1, 0) {
     
   return BI_PREEMPT;
 } OZ_BI_end
+
+
+// 0: Space to apply branch to
+// 1: Branching description
+OZ_BI_define(BIbranchSpace,1,0) {
+  Board * bb = oz_currentBoard();
+ 
+  if(bb->isWaiting()) {
+    /*
+      If isWaiting returns true is because some thread
+      is waiting on space stability. In this case this
+      thread must suspends until waitStable has been run.
+      This means that {Space.branch B} will block until
+      {Space.waitStable} has been run.
+    */
+    TaggedRef st = bb->getStabilityVar();
+    DEREF(st,stPtr);
+    oz_suspendOn(makeTaggedRef(stPtr));
+  }
+  Assert(!bb->isWaiting());
   
+  // TODO: must block until the branching description becomes available.
+  TaggedRef bd = OZ_in(0);
+  DEREF(bd, bd_ptr);
+
+  bb->setBranching(bd);
+  return PROCEED;
+}OZ_BI_end
+
+OZ_BI_define(BIcommitBSpace,2,0) {
+  declareSpace;
+
+  // TODO: must block until the branching description becomes available.
+  TaggedRef bd = OZ_in(1);
+  DEREF(bd, bd_ptr);
+
+  if (space->isMarkedMerged())
+    return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
+  
+  if (isFailedSpace)
+    return PROCEED;
+  
+  Board * sb = space->getSpace();
+
+  if (!sb->isAdmissible())
+    return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
+
+  //sb->commitB(bd);
+  RefsArray * args = RefsArray::allocate(1,NO);
+  args->setArg(0,OZ_in(1));
+  oz_newThreadInject(sb)->pushCall(BI_bindCSync,args);
+  sb->clearStatus();
+  return BI_PREEMPT;//BI_REPLACEBICALL;
+}OZ_BI_end
+
+OZ_BI_define(BIgetChoiceSpace,0,1) {
+  Board * bb = oz_currentBoard();
+  //printf("BIgetChoice: \n");fflush(stdout);
+  
+  if (oz_isReadOnly(oz_deref(bb->getCSync()))) {
+    // There is a getChoice already present in the space
+    return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);    
+  }
+
+  bb->getChoice();
+
+  TaggedRef answer = bb->getCSync(); 
+
+  OZ_out(0) = answer;
+  
+  RefsArray * args = RefsArray::allocate(1,NO);
+  args->setArg(0,OZ_out(0));
+
+  am.prepareCall(BI_waitGetChoice, args);
+
+  return BI_REPLACEBICALL;
+}OZ_BI_end
+
+
+OZ_BI_define(BIchooseSpace, 1, 1) {
+  oz_declareSmallIntIN(0, i);
+  
+  OZ_Term l = AtomNil;
+  for (int j=i; j>0; j--)
+    l = oz_cons(oz_int(j),l);
+
+  Board * bb = oz_currentBoard();
+
+  bb->setBranching(l);
+  bb->getChoice();
+
+  OZ_out(0) = bb->getCSync(); 
+
+  RefsArray * args = RefsArray::allocate(1,NO);
+  args->setArg(0,OZ_out(0));
+
+  am.prepareCall(BI_waitGetChoice, args);
+
+  return BI_REPLACEBICALL;
+} OZ_BI_end
+
 
 #ifdef CS_PROFILE
 

@@ -526,6 +526,8 @@ void initBuiltins() {
   BI_varToReadOnly     = string2Builtin("INTERNAL", "varToReadOnly");
   BI_PROP_GEC          = string2Builtin("INTERNAL", "gec_propagate");
 
+  BI_waitGetChoice     = string2Builtin("INTERNAL", "waitGetChoice");
+  BI_bindCSync         = string2Builtin("INTERNAL", "bindCSync");
 
   // to execute boot functor in am.cc
   BI_dot           = string2Builtin("Value", ".");

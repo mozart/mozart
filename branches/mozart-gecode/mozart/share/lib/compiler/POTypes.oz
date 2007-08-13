@@ -44,7 +44,34 @@ local
    end
 
    proc {PartialOrder Ord Def ?Name2Lists ?Name2Index}
+      %% Temporal
+      proc {NaiveDistribute Xs}
+	 V = if {IsList Xs} then {List.toTuple '#' Xs} else Xs end
+	 proc {Distribute L}
+	    case {Space.getChoice}
+	    of I#D  then 
+	       case D of compl(M) then V.I \=: M
+	       [] M then V.I =: M
+	       end
+	       {Distribute L}
+	    [] nil then
+	       case {List.dropWhile L fun {$ I#X} {IsDet X} end}
+	       of nil then
+		  skip
+	       [] L1 then
+		  I#X|_=L1
+		  M={FD.reflect.min X}
+	       in
+		  {Space.branch [I#M I#compl(M)]}
+		  {Distribute L1}
+	       end
+	    end
+	 end
+      in
+	 {Distribute {Record.toListInd V}}
+      end
 
+      %%
       Names = {GetNames Ord}
       N     = {Length Names}
 
@@ -62,7 +89,8 @@ local
 	 {FD.distinct N2I}
 
 	 %% go
-	 {FD.distribute naive N2I}
+	 %{FD.distribute naive N2I}
+	 {NaiveDistribute N2I}
       end
 
       % define mapping names -> bit arrays

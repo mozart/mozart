@@ -95,10 +95,11 @@ void newRelink(OzVariable *globalVar,  OzVariable *localVar, Board *sb)
 
 
 Board::Board() 
-  : suspCount(0), dist(0),
-    crt(0), suspList(0), nonMonoSuspList(0),
-    status(taggedVoidValue), rootVar(taggedVoidValue),
-    script(taggedVoidValue), parent(NULL), flags(BoTag_Root)
+  : suspCount(0), dist(0), cmtQSync(taggedVoidValue), 
+    stabilityVar(taggedVoidValue),crt(0), suspList(0), 
+    nonMonoSuspList(0),status(taggedVoidValue), 
+    rootVar(taggedVoidValue), script(taggedVoidValue), 
+    parent(NULL), flags(BoTag_Root)
 {
   //printf("BOARD: called constructor %p\n",this);fflush(stdout);
   Assert((int) OddGCStep == 0x0 && (int) EvenGCStep == (int) BoTag_EvenGC);
@@ -107,11 +108,13 @@ Board::Board()
   setGCStep(oz_getGCStep());
   gespace = NULL;
   lateThread = NULL;
+  branching = AtomNil;
+  bq = new BranchQueue();
 }
 
 
 Board::Board(Board * p) 
-  : suspCount(0), dist(0),
+  : suspCount(0), dist(0), stabilityVar(taggedVoidValue),
     crt(0), suspList(0), nonMonoSuspList(0),
     script(taggedVoidValue), parent(p), flags(0)
 {
@@ -132,7 +135,9 @@ Board::Board(Board * p)
     gespace = NULL;
     lateThread = NULL;
   }
-
+  branching = AtomNil;
+  cmtQSync = AtomNil;
+  bq = new BranchQueue();
 #ifdef CS_PROFILE
   orig_start  = (int32 *) NULL;
   copy_start  = (int32 *) NULL;
@@ -159,6 +164,21 @@ void Board::clearStatus() {
   if (oz_isReadOnly(oz_deref(getStatus())))
     return;
   status = oz_newReadOnly(getParent());
+}
+
+//inline
+bool Board::isWaiting(void) {
+  //TaggedRef st = getStabilityVar();
+  //return st != taggedVoidValue && st != AtomNil;
+  return oz_isReadOnly(oz_deref(getStabilityVar()));
+}
+
+//inline
+bool Board::hasGetChoice(void) {
+  //oz_isReadOnly(oz_deref(getCSync()));
+  //TaggedRef cs = getCSync();
+  //return cs != taggedVoidValue && cs != AtomNil;
+  return oz_isReadOnly(oz_deref(getCSync()));
 }
 
 
@@ -427,7 +447,7 @@ void Board::clearSuspList(Suspendable * killSusp) {
  */
 
 void Board::checkStability(void) {
-  //  printf("Board::checkStability \n"); fflush(stdout);
+  //printf("Board::checkStability \n"); fflush(stdout);
   Assert(!isRoot() && !isFailed() && !isCommitted());
   Assert(this == oz_currentBoard());
   crt--;
@@ -435,7 +455,7 @@ void Board::checkStability(void) {
   Board * pb = getParent();
   
   if (isStable()) {
-
+    //printf("isStable\n");fflush(stdout);
     if(!trail.isEmptyChunk())
       setScript(trail.unwindGeVar());
 
@@ -447,8 +467,9 @@ void Board::checkStability(void) {
       Distributor * d = getDistributor();
 
       if (d) {
+	Assert(branching==AtomNil);
 	int n = d->getAlternatives();
-      
+
 	if (n == 1) {
 	  if (d->commit(this,1) == 0)
 	    setDistributor(NULL);
@@ -456,27 +477,45 @@ void Board::checkStability(void) {
 	  trail.popMark();
 	  Assert(!oz_onToplevel() || trail.isEmptyChunk());
 	  am.setCurrent(pb, pb->getOptVar());
-	  bindStatus(genAlt(n));
+	  //printf("antes del bind1\n");fflush(stdout);
+	  //bindStatus(genAlt(n));
+	  bindStatus(genBranch());
 	}
 	Assert(!oz_onToplevel() || trail.isEmptyChunk());
       
       } else {
-	// succeeded
-	trail.popMark();
-	Assert(!oz_onToplevel() || trail.isEmptyChunk());
-	am.setCurrent(pb, pb->getOptVar());
-	
-	//	bindStatus(genSucceeded(getSuspCount() == 0));
-
-	if(gespace!=NULL) {
-	  bool testGe = getGenericSpace(true)->isEntailed();
-
- 	  bindStatus(genSucceeded( (getSuspCount() == 0 && testGe) ) );
+	if (isWaiting()) {
+	  // A waitStable is present
+	  TaggedRef st = getStabilityVar();
+	  DEREF(st,stPtr);
+	  oz_bindReadOnly(stPtr,AtomNil);
+	} else if (branching == AtomNil && 
+		   oz_isReadOnly(oz_deref(getCSync()))) {
+	  // A getChoice can be resumed.
+	  bindCSync(AtomNil);
+	} else if (branching != AtomNil) { // Hay distribuidor
+	  Assert(!getDistributor());
+	  //printf("branching: %s\n",OZ_toC(branching,100,100));fflush(stdout);
+	  trail.popMark();
+	  Assert(!oz_onToplevel() || trail.isEmptyChunk());
+	  am.setCurrent(pb, pb->getOptVar());
+	  bindStatus(genBranch());
+	  //printf("branching-despues\n");fflush(stdout);
+	} else {
+	  // succeeded
+	  trail.popMark();
+	  Assert(!oz_onToplevel() || trail.isEmptyChunk());
+	  am.setCurrent(pb, pb->getOptVar());
+	  
+	  if(gespace!=NULL) {
+	    bool testGe = getGenericSpace(true)->isEntailed();
+	    
+	    bindStatus(genSucceeded( (getSuspCount() == 0 && testGe) ) );
+	  }
+	  else {
+	    bindStatus(genSucceeded( getSuspCount() == 0 ) );
+	  }
 	}
-	else {
- 	  bindStatus(genSucceeded( getSuspCount() == 0 ) );
-	}
-	
 	Assert(!oz_onToplevel() || trail.isEmptyChunk());
       }
     }
@@ -520,6 +559,31 @@ void Board::checkStability(void) {
   }
 } 
 
+// Branching
+void Board::clearCSync(void) {
+  if (oz_isReadOnly(oz_deref(getCSync())))
+    return;
+  cmtQSync = oz_newReadOnly(this);
+}
+
+void Board::bindCSync(TaggedRef c) {
+  TaggedRef s = getCSync();
+  if (oz_isReadOnly(oz_deref(s))){
+    Assert(tagged2Var(oz_deref(s))->getBoardInternal() == oz_currentBoard());
+    DEREF(s,sPtr);
+    oz_bindReadOnly(sPtr,c);
+    clearStatus();
+  }
+}
+
+void Board::setWaiting(void) {
+  TaggedRef st = getStabilityVar();
+  Assert(!oz_isReadOnly(oz_deref(st)));
+  stabilityVar = oz_newReadOnly(this);
+}
+
+// must be at board.hh
+
 void Board::fail(void) {
   Board * pb = getParent();
 
@@ -557,7 +621,6 @@ OZ_Return Board::installScript(Bool isMerging)
     TaggedRef x = oz_head(xy);
     //local variable
     TaggedRef y = oz_tail(xy);
-    //printf(" inicio while end %s  this=%p \n",oz_varGetName(x),this);fflush(stdout);    
     xys = oz_deref(oz_tail(xys));
     Assert(!oz_isRef(xys));
     
@@ -742,27 +805,33 @@ void Board::unsetGlobalMarks(void) {
 
 }
 
-
-void Board::ensureLateThread(void) {
-  Assert(getGenericSpace(true));
-  if(!lateThread) {
-    if(isRoot()) {
-      lateThread = oz_newThreadInject(this);
-      lateThread->pushCall(BI_PROP_GEC,NULL);
-    } else {
-      lateThread = oz_newThreadSuspended(DEFAULT_PRIORITY);
-      lateThread->pushCall(BI_PROP_GEC,NULL);
-      TaggedRef st = getStatus();
-      DEREF(st, stPtr);
-      Assert(oz_isReadOnly(st));
-
-      oz_var_addQuietSusp(stPtr, lateThread);
-    }
-    
-  }
+void Board::commitB(TaggedRef c) {
+  /* There is a thread waiting so CQSync must be bind to c.
+     otherwise c must be enqueued
+  */
+  if (hasGetChoice() && !isWaiting()) 
+    bindCSync(c);
+  else 
+    bq->enqueue(c);
 }
- 
+
+void Board::getChoice(void) {
+  /* A getChoice cannot happend if there is another pending
+     getChoice in the space
+  */
+  Assert(!hasGetChoice());
+  clearCSync();  
+  /* If the branching queue is empty then the thread runing getChoice
+     will suspend on CQSync. Otherwise CQSync will be bound to the
+     first element of the queue.
+  */
+  if (!bq->isEmpty()) 
+    bindCSync(bq->dequeue());
+}
+
+void Board::setBranching(TaggedRef b) {
+  branching = b;
+}
+
+
 OZ_Return (*OZ_checkSituatedness)(Board *,TaggedRef *);
-
-
-
