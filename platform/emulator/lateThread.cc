@@ -51,11 +51,10 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
 
   using namespace Gecode;
   /* 
-     As lateThread is only created runable when running at top level, 
+     LateThread is only created runable when running at top level, 
      otherwise it is created as a suspended thread and added to the 
      status susp list.
    */
-  /*  
   if (!oz_currentBoard()->isRoot()) {  
     // first wait until status is needed
     TaggedRef status = oz_currentBoard()->getStatus();
@@ -63,7 +62,7 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
     if (!oz_isNeeded(status)) 
       return oz_var_addQuietSusp(statusPtr, oz_currentThread());      
   }
-  */
+  
   //printf("lateThread antes de status\n");fflush(stdout);  
   if (gs->mstatus() == SS_FAILED) {
     oz_currentBoard()->deleteGenericSpace();

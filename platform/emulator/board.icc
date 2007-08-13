@@ -46,7 +46,6 @@
 #define inline
 #endif
 
-
 inline
 int Board::isAdmissible(void) {
   Assert(!isCommitted());
@@ -96,8 +95,17 @@ TaggedRef Board::genAlt(int noOfClauses) {
 }
 
 inline
+TaggedRef Board::genBranch(void) {
+  SRecord *stuple = SRecord::newSRecord(OZ_atom("branch"), 1);
+  stuple->setArg(0, branching);
+
+  return makeTaggedSRecord(stuple);
+}
+
+
+inline
 void Board::patchAltStatus(int i) {
-  SRecord *stuple = SRecord::newSRecord(AtomAlt, 1);
+  SRecord *stuple = SRecord::newSRecord(OZ_atom("branch"), 1);
   stuple->setArg(0, makeTaggedSmallInt(i));
   status = makeTaggedSRecord(stuple);
 }
@@ -394,6 +402,29 @@ Bool Board::cacIsAlive(void) {
 }
 /*
 inline
+bool Board::isWaiting(void) {
+  //TaggedRef st = getStabilityVar();
+  //return st != taggedVoidValue && st != AtomNil;
+  return oz_isReadOnly(oz_deref(getStabilityVar()));
+}
+
+inline
+bool Board::hasGetChoice(void) {
+  //oz_isReadOnly(oz_deref(getCSync()));
+  //TaggedRef cs = getCSync();
+  //return cs != taggedVoidValue && cs != AtomNil;
+  return oz_isReadOnly(oz_deref(getCSync()));
+}
+*/
+inline
+TaggedRef Board::getStabilityVar(void) {
+  return stabilityVar;
+}
+
+// This prototype is needed to make ensureLateThread an inline func.
+OZ_Return oz_var_addQuietSusp(TaggedRef*, Suspendable *);
+
+inline
 void Board::ensureLateThread(void) {
   Assert(getGenericSpace(true));
   if(!lateThread) {
@@ -406,13 +437,12 @@ void Board::ensureLateThread(void) {
       TaggedRef st = getStatus();
       DEREF(st, stPtr);
       Assert(oz_isReadOnly(st));
-
       oz_var_addQuietSusp(stPtr, lateThread);
     }
     
   }
 }
-*/
+
 
 #ifdef OUTLINE
 #undef inline

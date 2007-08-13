@@ -103,6 +103,10 @@ define
 	       [] alternatives(N) then C={S clone($)} in
 		  {S commit(1)} {C commit(2#N)}
 		  open <- S|C|Sr
+	       [] branch([B]) then {S commit(B)}
+	       [] branch(B|Br) then C={S clone($)} in
+		  {S commit(B)} {C commit2(Br)}
+		  open <- S|C|Sr
 	       end
 	       {self.server explore}
 	    end

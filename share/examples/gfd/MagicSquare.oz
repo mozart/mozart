@@ -22,6 +22,55 @@
 
 declare
 
+fun {SelectSize L}
+   fun {SelectSizeAux L Lst}
+      case L of nil then Lst
+      [] (A#X)|Xs then
+	 if {GFD.reflect.size X} < {GFD.reflect.size Lst.1} then
+	    {SelectSizeAux Xs A#X}
+	 else
+	    {SelectSizeAux Xs Lst}
+	 end
+      end
+   end
+in
+   {SelectSizeAux L L.1}
+end
+
+   
+   
+proc {NaiveDistribute Xs}
+   V = if {IsList Xs} then {List.toTuple '#' Xs} else Xs end
+   proc {Distribute L}
+      case {Space.getChoice}
+      of I#D  then 
+	 case D
+	 of lt(M) then V.I <: M
+	 [] gt(M) then V.I >: M
+	 [] eq(M) then V.I =: M	   
+	 end
+	 {Distribute L}
+      [] nil then
+	 case {List.dropWhile L fun {$ I#X} {IsDet X} end}
+	 of nil then
+	    skip
+	 [] L1 then		  
+	    I#X = {SelectSize L1}
+	    
+		  %I#X|_=L1
+	    M={GFD.reflect.med X}
+	 in
+	    %{Show sel(I#M#Xs)}
+	    {Space.branch [I#eq(M) I#lt(M) I#gt(M) ]}
+	    {Distribute L1}
+	 end
+      end
+   end
+in
+   {Distribute {Record.toListInd V}}
+end
+
+     
 fun {MagicSquare N}
    NN  = N*N
    L1N = {List.number 1 N 1}  % [1 2 3 ... N]
@@ -55,12 +104,14 @@ in
       %%%%%%%NN*(NN+1) div 2 =: N*Sum
       {GFD.sumC [N] [Sum] '=:' NN*(NN+1) div 2}
       %%
-      {GFD.distribute split Square}
+      %{GFD.distribute split Square}
+      {NaiveDistribute Square}
    end
 end
 
 
 %{ExploreOne {MagicSquare 3}}
-{Browse {SearchOne {MagicSquare 6}}}
-
+{Browse {SearchOne {MagicSquare 10}}}
+%{Show {Search.one.depth {MagicSquare 6} 1 _}}
+%S = {Space.new {MagicSquare 3}}
 
