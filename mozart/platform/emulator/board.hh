@@ -44,9 +44,8 @@
 #include "pointer-marks.hh"
 
 #include "GeSpace.hh"
+#include "branch_queue.hh"
 #include "thr_int.hh"
-//#include "var_base.hh"
-
 
 #define GETBOARD(v) ((v)->getBoardInternal()->derefBoard())
 
@@ -331,6 +330,45 @@ public:
   //
 private:
   Distributor * dist;
+  
+  TaggedRef cmtQSync;
+  
+  TaggedRef branching;
+  /**
+    \brief A queue to store all pending branches for this board. Committing
+    branches to this board will store them in this queue and getChoice method
+    will retrieve them.
+    
+  */
+  BranchQueue *bq;
+  
+  /**
+     \brief This variable is to reflect space stability. 
+     It is bound to an atom if the space is stable and
+     to a read only variable if not. All threads suspending 
+     in this variable will be waken up when space stability
+     is detected.
+  */
+  TaggedRef stabilityVar;
+
+  /**
+     \brief Returns the branching queue. This method
+     is used during grabage collection or space 
+     cloning.
+  */
+  BranchQueue * getBranchQueue(void) { 
+    return bq;
+  }
+  
+  /**
+     \brief Sets the branching queue of the board to b.
+     This method is used during grabage collection or 
+     space cloning.
+  */
+  
+  void setBranchQueue(BranchQueue * b) {
+    bq = b;
+  }
 
 public:
   Distributor * getDistributor(void) {
@@ -340,7 +378,34 @@ public:
     dist = d;
   }
   
+  /**
+     \brief Returns the synchronization variable
+  */
+  TaggedRef getCSync(void) {
+    return cmtQSync;
+  }
 
+  /**
+     \brief Sets the branching attribute to b.
+  */
+  void setBranching(TaggedRef b);
+
+  /**
+     \brief Tests whether there is a wait stable
+     running.
+   */
+  bool isWaiting(void);
+
+  void setWaiting(void);
+
+  TaggedRef getStabilityVar(void);
+
+  void clearCSync(void);
+  void bindCSync(TaggedRef);
+  void commitB(TaggedRef);
+  void getChoice(void);
+
+  bool hasGetChoice(void);
   //
   // Operations
   //
@@ -370,7 +435,7 @@ public:
   TaggedRef genAlt(int);
   TaggedRef genFailed(void);
   TaggedRef genSuspended(TaggedRef);
-
+  TaggedRef genBranch(void);
   //
   // Root variable
   //
@@ -472,7 +537,7 @@ public:
      ---------------------------------------------------------
  */
 
-   void ensureLateThread(void);
+  void ensureLateThread(void);
 
   
   /**

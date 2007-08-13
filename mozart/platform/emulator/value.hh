@@ -59,6 +59,8 @@ extern TaggedRef
   BI_varToReadOnly,
   BI_raise,
   BI_PROP_GEC,
+  BI_waitGetChoice,
+  BI_bindCSync,
   __UNUSED_DUMMY_END_MARKER;
 
 extern Builtin *bi_raise, *bi_raiseError;

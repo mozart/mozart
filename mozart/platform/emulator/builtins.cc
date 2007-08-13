@@ -181,6 +181,28 @@ OZ_BI_define(BIwaitStatus,2,1)
 } OZ_BI_end
 
 
+OZ_BI_define(BIwaitGetChoice,1,0) {
+  TaggedRef answer = OZ_in(0);
+  DEREF(answer,answer_ptr);
+ 
+  if(oz_isVar(answer)) {
+    // This thread must wait until answer is bound.
+    oz_suspendOn(makeTaggedRef(answer_ptr));
+  }
+  
+  Board *bb = oz_currentBoard();
+  // Reset branching to not repeat the same branch further.
+  bb->setBranching(AtomNil);
+  return PROCEED;
+} OZ_BI_end
+
+OZ_BI_define(BIbindCSync,1,0) {
+  //printf("hola desde bindCSync\n");fflush(stdout);
+  oz_currentBoard()->commitB(OZ_in(0));
+  return PROCEED;
+} OZ_BI_end
+
+
 #define CheckStatus(var,varstatus,statusAtom)						\
   OzVariable *cv   = tagged2Var(var);							\
   VarStatus status = oz_check_var_status(cv);						\

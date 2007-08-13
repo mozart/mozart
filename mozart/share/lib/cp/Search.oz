@@ -1,4 +1,4 @@
-%%%
+%%
 %%% Authors:
 %%%   Christian Schulte <schulte@ps.uni-sb.de>
 %%%
@@ -26,6 +26,7 @@ functor
 import
    ParSearch(engine: ParallelEngine) at 'x-oz://system/ParSearch.ozf'
    Space
+   System
 export
    one:      OneModule
    all:      All
@@ -66,7 +67,9 @@ define
    local
       proc {ReDo Is C}
 	 case Is of nil then skip
-	 [] I|Ir then {ReDo Ir C} {Space.commit1 C I}
+	 [] I|Ir then
+	    {ReDo Ir C}
+	    {Space.commitB C I}
 	 end
       end
    in
@@ -75,6 +78,16 @@ define
       end
    end
 
+   %%
+   %% A Space.commit2 replacement
+   %%
+   proc {SPCommit2 S BL}
+      {Space.inject S proc {$ _}
+			 {Space.branch BL}
+		      end}
+   end
+
+   
    %%
    %% Injection of solution constraints for best solution search
    %%
@@ -95,10 +108,13 @@ define
 	 case {Space.ask S}
 	 of failed then nil
 	 [] succeeded then S
-	 [] alternatives(N) then C={Space.clone S} in
-	    {Space.commit1 S 1}
+	 [] branch([B]) then
+	    {Space.commitB S B}
+	    {OneDepthNR KF S}
+	 [] branch(B|Br) then C={Space.clone S} in
+	    {Space.commitB S B}
 	    case {OneDepthNR KF S}
-	    of nil then {Space.commit2 C 2 N} {OneDepthNR KF C}
+	    of nil then {SPCommit2 C Br} {OneDepthNR KF C}
 	    elseof O then O
 	    end
 	 end
@@ -107,39 +123,54 @@ define
    end
       
    local
-      fun {AltCopy KF I M S MRD}
-	 if I==M then
-	    {Space.commit1 S I}
+
+      %% KF : killer function. All will work until this var gets det.
+      %% I|M: List of branchings (alternatives).
+      %% S  : Current space.
+      %% MRD: Maximum recomputation distance.
+      fun {AltCopy KF I|M S MRD}
+	 if M==nil then
+	    {Space.commitB S I}
 	    {OneDepthR KF S S nil MRD MRD}
 	 else C={Space.clone S} in
-	    {Space.commit1 C I}
+	    {Space.commitB C I}
 	    case {OneDepthR KF C S [I] 1 MRD}
-	    of nil then {AltCopy KF I+1 M S MRD}
+	    of nil then {AltCopy KF M S MRD}
 	    elseof O then O
 	    end
 	 end
       end
-      
-      fun {Alt KF I M S C As RD MRD}
-	 {Space.commit1 S I}
-	 if I==M then {OneDepthR KF S C I|As RD MRD}
+
+      %% KF : killer function. All will work until this var gets det.
+      %% I|M: List of branchings (alternatives).
+      %% S  : Current space.
+      %% C  : Clone Space.
+      %% As : A reversed list with the alternatives taken to reach S.
+      %% RD : Current recomputation distance.
+      %% MRD: Maximum recomputation distance.
+      fun {Alt KF I|M S C As RD MRD}
+	 {Space.commitB S I}
+	 if M==nil then {OneDepthR KF S C I|As RD MRD}
 	 else
 	    case {OneDepthR KF S C I|As RD MRD}
 	    of nil then S={Recompute C As} in
-	       {Alt KF I+1 M S C As RD MRD}
+	       {Alt KF M S C As RD MRD}
 	    elseof O then O
 	    end
 	 end
       end
+
    in
       fun {OneDepthR KF S C As RD MRD}
 	 if {IsFree KF} then
 	    case {Space.ask S}
 	    of failed    then nil
 	    [] succeeded then S
-	    [] alternatives(M) then
-	       if RD==MRD then {AltCopy KF 1 M S MRD}
-	       else {Alt KF 1 M S C As RD+1 MRD}
+	    [] branch(M) then
+	       if RD==MRD then
+		  {AltCopy KF M S MRD}
+	       else
+		  {Alt KF M S C As RD+1 MRD}
 	       end
 	    end
 	 else nil
@@ -157,28 +188,41 @@ define
       end
    
       local
-	 fun {AltCopy KF I M S CD MRD CO}
-	    if I==M then
-	       {Space.commit1 S I}
+	 %% KF : killer function. All will work until this var gets det.
+	 %% I|M: List of branchings (alternatives).
+	 %% S  : Current space.
+	 %% CD : Go as deep as CD spaces looking for a solution.
+	 %% MRD: Maximum recomputation distance.
+	 fun {AltCopy KF I|M S CD MRD CO}
+	    if M==nil then
+	       {Space.commitB S I}
 	       {OneBoundR KF S S nil CD MRD MRD CO}
 	    else
 	       C={Space.clone S}
-	       {Space.commit1 C I}
+	       {Space.commitB C I}
 	       O={OneBoundR KF C S [I] CD 1 MRD CO}
 	    in
 	       if {Space.is O} then O
-	       else {AltCopy KF I+1 M S CD MRD O}
+	       else {AltCopy KF M S CD MRD O}
 	       end
 	    end
 	 end
 	 
-	 fun {Alt KF I M S C As CD RD MRD CO}
-	    {Space.commit1 S I}
-	    if I==M then {OneBoundR KF S C I|As CD RD MRD CO}
+	 %% KF   : Killer funtion. All will work until this var gets det.
+	 %% I|M: List of branchings (alternatives).
+	 %% S  : Current space.
+	 %% C  : Clone Space.
+	 %% As : A reversed list with the alternatives taken to reach S.
+	 %% CD : Go as deep as CD spaces looking for a solution.
+	 %% RD : Current recomputation distance.
+	 %% MRD: Maximum recomputation distance.
+	 fun {Alt KF I|M S C As CD RD MRD CO}
+	    {Space.commitB S I}
+	    if M==nil then {OneBoundR KF S C I|As CD RD MRD CO}
 	    else O={OneBoundR KF S C I|As CD RD MRD CO} in
 	       if {Space.is O} then O
 	       else S={Recompute C As} in
-		  {Alt KF I+1 M S C As CD RD MRD O}
+		  {Alt KF M S C As CD RD MRD O}
 	       end
 	    end
 	 end
@@ -188,10 +232,10 @@ define
 	       case {Space.ask S}
 	       of failed    then CO
 	       [] succeeded then S
-	       [] alternatives(M) then
+	       [] branch(M) then
 		  if CD=<0 then cut
-		  elseif RD==MRD then {AltCopy KF 1 M S CD-1 MRD CO}
-		  else {Alt KF 1 M S C As CD-1 RD+1 MRD CO}
+		  elseif RD==MRD then {AltCopy KF M S CD-1 MRD CO}
+		  else {Alt KF M S C As CD-1 RD+1 MRD CO}
 		  end
 	       end
 	    else nil
@@ -229,12 +273,12 @@ define
 	       of failed then skip
 	       [] succeeded then
 		  raise succeeded(S) end
-	       [] alternatives(N) then
+	       [] branch(B|Bs) then
 		  if D==0 then
-		     {Space.commit1 S 1} {Probe S 0 KF}
+		     {Space.commitB S B} {Probe S 0 KF}
 		  else C={Space.clone S} in
-		     {Space.commit2 S 2 N} {Probe S D-1 KF}
-		     {Space.commit1 C 1}   {Probe C D KF}
+		     {SPCommit2 S Bs} {Probe S D-1 KF}
+		     {Space.commitB C B} {Probe C D KF}
 		  end
 	       end
 	    end
@@ -339,14 +383,21 @@ define
    %% The all solution search module
    %%
    local
-	 
+      %% KF   :  killer function. All will work until this var gets det.
+      %% S    :  Current space for search.
+      %% W    :  Function to apply on each soultion when it is found.
+      %% Or   :  Current list of found solutions.
+      %% Os   :  Return param. (list of solutions).
       proc {AllNR KF S W Or Os}
 	 if {IsFree KF} then
 	    case {Space.ask S}
 	    of failed then Os=Or
 	    [] succeeded then Os={W S}|Or
-	    [] alternatives(N) then C={Space.clone S} Ot in
-	       {Space.commit1 S 1} {Space.commit2 C 2 N}
+	    [] branch([B]) then
+	       {Space.commitB S B}
+	       Os = {AllNR KF S W Or}
+	    [] branch(B|Br) then C={Space.clone S} Ot in
+	       {Space.commitB S B} {SPCommit2 C Br}
 	       Os={AllNR KF S W Ot}
 	       Ot={AllNR KF C W Or}
 	    end
@@ -355,24 +406,40 @@ define
       end
 
       local
-	 proc {AltCopy KF I M S MRD W Or Os}
-	    if I==M then
-	       {Space.commit1 S I}
+	 %% KF   :  killer function. All will work until this var gets det.
+	 %% I|M  :  List of branchings (alternatives).
+	 %% S    :  Current space.
+	 %% W    :  Function to apply on each soultion when it is found.
+	 %% Or   :  Current list of found solutions.
+	 %% Os   :  Return param. (list of solutions).
+	 proc {AltCopy KF I|M S MRD W Or Os}
+	    if M==nil then
+	       {Space.commitB S I}
 	       {AllR KF S S nil MRD MRD W Or Os}
 	    else C={Space.clone S} Ot in
-	       {Space.commit1 C I}
+	       {Space.commitB C I}
 	       Os={AllR KF C S [I] 1 MRD W Ot}
-	       Ot={AltCopy KF I+1 M S MRD W Or}
+	       Ot={AltCopy KF M S MRD W Or}
 	    end
 	 end
-	 
-	 proc {Alt KF I M S C As RD MRD W Or Os}
-	    {Space.commit1 S I}
-	    if I==M then
+
+	 %% KF   :  killer function. All will work until this var gets det.
+	 %% I|M  :  List of branchings (alternatives).
+	 %% S    :  Current space.
+	 %% C    :  Clone
+	 %% As   :  Recomputation list.
+	 %% RD   :  Recomputation distance.
+	 %% MRD  :  Max. recomputation distance
+	 %% W    :  Function to apply on each soultion when it is found.
+	 %% Or   :  Current list of found solutions.
+	 %% Os   :  Return param. (list of solutions).
+	 proc {Alt KF I|M S C As RD MRD W Or Os}
+	    {Space.commitB S I}
+	    if M==nil then
 	       {AllR KF S C I|As RD MRD W Or Os}
 	    else Ot NewS={Recompute C As} in
 	       Os={AllR KF S C I|As RD MRD W Ot}
-	       Ot={Alt KF I+1 M NewS C As RD MRD W Or}
+	       Ot={Alt KF M NewS C As RD MRD W Or}
 	    end
 	 end
       in
@@ -381,9 +448,9 @@ define
 	       case {Space.ask S}
 	       of failed    then Or
 	       [] succeeded then {W S}|Or
-	       [] alternatives(M) then
-		  if RD==MRD then {AltCopy KF 1 M S MRD W Or}
-		  else {Alt KF 1 M S C As RD+1 MRD W Or}
+	       [] branch(M) then
+		  if RD==MRD then {AltCopy KF M S MRD W Or}
+		  else {Alt KF M S C As RD+1 MRD W Or}
 		  end
 	       end
 	    else Or
@@ -424,13 +491,20 @@ define
    local
 
       local
+	 %% KF : killer function. All will work until this var gets det.
+	 %% S  : Current search space
+	 %% O  : Optimization procedure
+	 %% SS : Best solution found so far
 	 fun {BABNR KF S O SS}
 	    if {IsFree KF} then
 	       case {Space.ask S}
 	       of failed then SS
 	       [] succeeded then S
-	       [] alternatives(N) then C={Space.clone S} NewSS in
-		  {Space.commit1 S 1} {Space.commit2 C 2 N}
+	       [] branch([B]) then
+		  {Space.commitB S B}
+		  {BABNR KF S O SS}
+	       [] branch(B|Bs) then C={Space.clone S} NewSS in
+		  {Space.commitB S B} {SPCommit2 C Bs}
 		  NewSS={BABNR KF S O SS}
 		  if SS==NewSS then {BABNR KF C O SS}
 		  elseif NewSS==nil then nil
@@ -440,38 +514,37 @@ define
 	    else nil
 	    end
 	 end
-
 	 local
-	    fun {AltCopy KF I M S MRD O SS}
-	       if I==M then
-		  {Space.commit1 S I}
+	    fun {AltCopy KF I|M S MRD O SS}
+	       if M==nil then
+		  {Space.commitB S I}
 		  {BABR KF S S nil MRD MRD O SS}
 	       else C={Space.clone S} NewSS in
-		  {Space.commit1 C I}
+		  {Space.commitB C I}
 		  NewSS = {BABR KF C S [I] 1 MRD O SS}
 		  if NewSS==SS then
-		     {AltCopy KF I+1 M S MRD O SS}
+		     {AltCopy KF M S MRD O SS}
 		  elseif NewSS==nil then nil
 		  else
-		     {Space.commit2 S I+1 M}
+		     {SPCommit2 S M}% {Space.commit2 S I+1 M}
 		     {Better S O NewSS}
 		     {BABR KF S S nil MRD MRD O NewSS}
 		  end
 	       end
 	    end
 	 
-	    fun {Alt KF I M S C As RD MRD O SS}
-	       {Space.commit1 S I}
-	       if I==M then
+	    fun {Alt KF I|M S C As RD MRD O SS}
+	       {Space.commitB S I}
+	       if M==nil then
 		  {BABR KF S C I|As RD MRD O SS}
 	       else
 		  NewSS = {BABR KF S C I|As RD MRD O SS}
 	       in
 		  if NewSS==SS then
-		     {Alt KF I+1 M {Recompute C As} C As RD MRD O SS}
+		     {Alt KF M {Recompute C As} C As RD MRD O SS}
 		  elseif NewSS==nil then nil
 		  else NewS={Recompute C As} in
-		     {Space.commit2 NewS I+1 M}
+		     {SPCommit2 NewS M}%{Space.commit2 NewS I+1 M}
 		     {Better NewS O NewSS}
 		     {BABR KF NewS NewS nil MRD MRD O NewSS}
 		  end
@@ -483,9 +556,9 @@ define
 		  case {Space.ask S}
 		  of failed    then SS
 		  [] succeeded then S
-		  [] alternatives(M) then
-		     if RD==MRD then {AltCopy KF 1 M S MRD O SS}
-		     else {Alt KF 1 M S C As RD+1 MRD O SS}
+		  [] branch(M) then
+		     if RD==MRD then {AltCopy KF M S MRD O SS}
+		     else {Alt KF M S C As RD+1 MRD O SS}
 		     end
 		  end
 	       else nil
@@ -579,9 +652,10 @@ define
    local
 
       local
+	 %%S is a list with all possibles branches in the current level
 	 proc {Recompute S|Sr C}
 	    if {Space.is S} then C={Space.clone S}
-	    else {Recompute Sr C} {Space.commit1 C S.1}
+	    else {Recompute Sr C} {Space.commitB C (S.1).1}
 	    end
 	 end
 
@@ -628,24 +702,26 @@ define
 	    meth push(M)
 	       if self.mrd==@rd then
 		  rd    <- 1
-		  stack <- 1#M#@sol|{Space.clone @cur}|@stack
+		  stack <- M#@sol|{Space.clone @cur}|@stack
 	       else
 		  rd    <- @rd + 1
-		  stack <- 1#M#@sol|@stack
+		  stack <- M#@sol|@stack
 	       end
 	    end
 	 
 	    meth backtrack
 	       case @stack of nil then cur <- false
-	       [] S1|Sr then 
+	       [] S1|Sr then
 		  case S1
-		  of I#M#Sol then
-		     if I==M then
-			stack <- Sr rd <- @rd - 1
+		  of I#Sol then
+		     if I.2 == nil then
+			stack <- Sr rd <- @rd -1
 			ReClass,backtrack
-		     else NextI=I+1 S2|Srr=Sr in
-			if M==NextI andthen {Space.is S2} then
-			   {Space.commit1 S2 M}
+		     else
+			NextI = I.2 S2|Srr=Sr in
+			%%NextI has one element
+			if NextI \= nil andthen NextI.2 == nil andthen {Space.is S2} then
+			   {Space.commitB S2 NextI.1}
 			   stack <- Srr
 			   rd    <- self.mrd
 			   cur   <- S2
@@ -653,17 +729,18 @@ define
 			      {Better S2 self.order @sol}
 			   end
 			elseif @sol==Sol then
-			   stack <- NextI#M#Sol|Sr
+			   stack <- NextI#Sol|Sr
 			   cur   <- {Recompute @stack}
 			else
 			   cur   <- {Recompute Sr}
-			   {Space.commit2 @cur NextI M}
+			   {SPCommit2 @cur NextI}
 			   {Better @cur self.order @sol}
 			   rd    <- self.mrd
 			   stack <- Sr
 			end
 		     end
-		  else stack <- Sr ReClass,backtrack
+		  else
+		     stack <- Sr ReClass,backtrack
 		  end
 	       end
 	    end
@@ -672,7 +749,7 @@ define
       in
 
 	 class All from ReClass prop final
-	    meth explore(S)
+	    meth explore(S)	      
 	       C = @cur
 	    in
 	       if @isStopped then S=stopped
@@ -680,11 +757,11 @@ define
 	       else
 		  case {Space.ask C} 
 		  of failed then
-		     All,backtrack All,explore(S)
+		     All,backtrack  All,explore(S)
 		  [] succeeded then
 		     S=C backtrack <- true
-		  [] alternatives(M) then
-		     All,push(M) {Space.commit1 C 1} All,explore(S)
+		  [] branch(M) then
+		     All,push(M) {Space.commitB C M.1} All,explore(S)
 		  end
 	       end
 	    end
@@ -702,8 +779,8 @@ define
 		     Best,backtrack Best,explore(S)
 		  [] succeeded then
 		     S=C sol<-C backtrack<-true
-		  [] alternatives(M) then
-		     ReClass,push(M) {Space.commit1 C 1} Best,explore(S)
+		  [] branch(M) then
+		     ReClass,push(M) {Space.commitB C M.1} Best,explore(S)
 		  end
 	       end
 	    end

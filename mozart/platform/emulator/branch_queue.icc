@@ -1,0 +1,29 @@
+inline
+bool BranchQueue::isEmpty(void) { 
+	return first == NULL;
+}
+
+inline
+void BranchQueue::enqueue(TaggedRef e) {
+  node *newNode = new node(e);
+  if(isEmpty()) {
+    first = newNode;
+    last = newNode;
+  }
+  else {
+    if(last != NULL)
+      last->next=newNode;
+    last=newNode;
+  }
+}
+
+inline
+TaggedRef BranchQueue::dequeue(void) {
+  Assert(first!=NULL);
+  TaggedRef ret = first->getBranch();
+  node *newFirst = first->next;
+  oz_freeListDispose(first,sizeof(node));
+  first=newFirst;
+  return ret;
+}
+

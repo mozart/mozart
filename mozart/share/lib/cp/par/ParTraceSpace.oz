@@ -25,7 +25,7 @@ functor
 
 import
    Space
-   
+   %System
 export
    plain: PlainSpace
    best:  BestSpace
@@ -38,7 +38,7 @@ define
 	 case Fs of nil then NHs=Hs
 	 [] F|Fr then
 	    NHs=F|{DoUpdate S Fr Hs}
-	    {Space.commit S F}
+	    {Space.commitB S F}
 	 end
       end
       
@@ -83,11 +83,14 @@ define
 	 end
 	 
 	 meth commit(I)
+	    %%{System.show 'commitTEST'(I)}
 	    future <- case I of N#M then
 			 if N==M then N else I end
 		      else I
 		   end|@future
 	 end
+
+	 meth commit2(I) {Space.inject @space proc{$ _} {Space.branch I} end} end
 	 
 	 meth externalize($)
 	    {Append @future @history}
@@ -111,7 +114,7 @@ define
 	    NHs=F|{DoUpdate S O Fr Hs}
 	    case F
 	    of commit(I)     then
-	       {Space.commit S I}
+	       {Space.commitB S I}
 	    [] constrain(Sol) then
 	       {Space.ask S _}
 	       {Space.inject S proc {$ R}
@@ -171,11 +174,14 @@ define
 	 end
 	 
 	 meth commit(I)
+	    %%{System.show 'commit'(I)}
 	    future <- commit(case I of N#M then
 				if N==M then N else I end
 			     else I
 			     end)|@future
 	 end
+
+	 meth commit2(I) {Space.inject @space proc{$ _} {Space.branch I} end} end
 	 
 	 meth externalize($)
 	    {Append @future @history}

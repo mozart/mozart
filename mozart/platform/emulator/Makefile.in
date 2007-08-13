@@ -137,7 +137,7 @@ RUNSRCS=\
 	susp_queue.cc thr_int.cc suspendable.cc
 
 
-RUNSRCS += lateThread.cc GeVar.cc
+RUNSRCS += lateThread.cc GeVar.cc branch_queue.cc
 
 
 SPACESRCS=\
