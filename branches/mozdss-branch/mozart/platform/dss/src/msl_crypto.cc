@@ -105,14 +105,16 @@ namespace _msl_internal{ //Start namespace
     };
 
   // MEMORY: Don't forget to clear random state when exiting
+#ifdef CRYPTO_ENABLED
     const  int N_LIMBS = 32;
     static mpz_t s_rand_limbs;
-    static gmp_randstate_t s_state;
     static mpz_t s_cipher;
     static mpz_t s_plain;
     static mpz_t s_a;
     static mpz_t s_b;
     static mpz_t s_v;
+#endif
+    static gmp_randstate_t s_state;
     
   }
 
@@ -132,6 +134,7 @@ namespace _msl_internal{ //Start namespace
     gmp_randinit_default(s_state);
     gmp_randseed_ui(s_state,seed);
 
+#ifdef CRYPTO_ENABLED
     mpz_init2(s_rand_limbs, N_LIMBS*LIMB_BITS);
     mpz_urandomb(s_rand_limbs, s_state, N_LIMBS*LIMB_BITS);
 
@@ -146,28 +149,37 @@ namespace _msl_internal{ //Start namespace
     mpz_init2(s_plain ,CIPHER_BLOCK_BITS);
     mpz_urandomb(s_plain , s_state, CIPHER_BLOCK_BITS);
     s_plain->_mp_size = PLAIN_BLOCK_BYTES  / LIMB_BYTES;
+#else
+    srandom(seed);
+#endif
   }
 
   void
   free_crypto_mem(){
-    mpz_clear(s_rand_limbs);
     gmp_randclear(s_state);
+#ifdef CRYPTO_ENABLED
+    mpz_clear(s_rand_limbs);
     mpz_clear(s_cipher);
     mpz_clear(s_plain);
     mpz_clear(s_v);
     mpz_clear(s_b);
     mpz_clear(s_a);
+#endif
   }
 
 
 
   u32
   random_u32(){
+#ifdef CRYPTO_ENABLED
     static int pos = 0;
     pos = (pos+1) % N_LIMBS;
     // get a new random vector when pos gets back to value 0
     if (pos == 0) mpz_urandomb(s_rand_limbs, s_state, N_LIMBS*LIMB_BITS);
-    return static_cast<u32>(s_rand_limbs->_mp_d[pos]);
+    return static_cast<u32>(mpz_getlimbn(s_rand_limbs, pos));
+#else
+    return random();
+#endif
   }
 
 
