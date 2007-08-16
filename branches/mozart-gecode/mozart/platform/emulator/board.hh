@@ -331,9 +331,22 @@ public:
 private:
   Distributor * dist;
   
+  /**
+  	\brief This variable is used for commit <-> getChoice synchronization. It 
+	has three possible states:
+	*) taggedVoidValue -> Initialization in the constructor.
+	*) AtomNil -> The next getChoice statement will return nil.
+	*) ReadOnly variable -> there is a suspended thread in a getChoice statement
+  */
   TaggedRef cmtQSync;
   
+  /**
+  	\brief Branching definition for this board. Old versions of mozart stored 
+	this information in the alternatives attribute of the distributor. Now this 
+	information does not consist only of numbers but anything the user wants.
+  */
   TaggedRef branching;
+  
   /**
     \brief A queue to store all pending branches for this board. Committing
     branches to this board will store them in this queue and getChoice method
@@ -343,11 +356,10 @@ private:
   BranchQueue *bq;
   
   /**
-     \brief This variable is to reflect space stability. 
-     It is bound to an atom if the space is stable and
-     to a read only variable if not. All threads suspending 
-     in this variable will be waken up when space stability
-     is detected.
+     \brief This variable is to reflect space stability. It is bound to an atom 
+	 if the space is stable and to a read only variable if not. All threads 
+	 suspending in this variable will be waken up when space stability is 
+	 detected.
   */
   TaggedRef stabilityVar;
 
@@ -391,7 +403,7 @@ public:
   void setBranching(TaggedRef b);
 
   /**
-     \brief Tests whether there is a wait stable
+     \brief Tests whether there is a waitStable present
      running.
    */
   bool isWaiting(void);
@@ -399,13 +411,38 @@ public:
   void setWaiting(void);
 
   TaggedRef getStabilityVar(void);
-
+  
+  /**
+  	\brief Convert cmtQSync to a read only variable.
+  */
   void clearCSync(void);
-  void bindCSync(TaggedRef);
-  void commitB(TaggedRef);
+  
+  /**
+  	\brief Binds cmtQSync to c. This method will wake up all threads suspending
+	on this variable (threads with possible getChoice's). For locality reasons 
+	this method cannot be called when this!=oz_currentBoard().
+  */
+  void bindCSync(TaggedRef c);
+  
+  /**
+  	\brief Commit a branching description b to this board. If there is a pending
+	getChoice, synchronization variable is bound to c, otherwise c is enqueed in
+	in bq.
+  */
+  void commitB(TaggedRef b);
+  
+  /**
+  	\brief Registers a getChoice in the space. An assertion is raised if there is
+	currently another getChoice. This method returns the synchronization variable
+	(cmtQSync).
+  */
   void getChoice(void);
 
+  /**
+  	\brief Tests whether this space has a getChoice or not.
+  */
   bool hasGetChoice(void);
+  
   //
   // Operations
   //
