@@ -141,18 +141,13 @@ void GenericSpace::makeUnstable(void) {
 
 Gecode::SpaceStatus GenericSpace::mstatus(unsigned long int& pn) {
   //printf("Status: Allocated Memory before status:  %u  - %u in space %p\n", allocatedMemory,GeSpaceAllocatedMem,this);fflush(stdout);
-
   GeSpaceAllocatedMem = GeSpaceAllocatedMem <= allocatedMemory ?
     0 : GeSpaceAllocatedMem - allocatedMemory;
-  //printf("GeSpace.cc mstatus\n");fflush(stdout);
   Gecode::SpaceStatus ret = Gecode::Space::status(pn);
-  //printf("GeSpace.cc mstatus var[0]\n");fflush(stdout);
-  //get_GeVar(getVarRef(0))->printDomain();
   allocatedMemory = usedMem();
   GeSpaceAllocatedMem += allocatedMemory;
   makeStable();
   //  printf("Status: Memory changed... %u in space %p\n", GeSpaceAllocatedMem,this);fflush(stdout);
-
   return ret;
 }
 

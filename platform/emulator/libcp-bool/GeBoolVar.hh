@@ -58,10 +58,6 @@ public:
     IntVar *tmp = new IntVar(*vv);
     return (*tmp);
   }
-
-  virtual void printDomain(void) {
-    IntVar tmp = getBoolVarInfo();
-  }
   
   /**
      \brief Put in out a text representation of the variable.
