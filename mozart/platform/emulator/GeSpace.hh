@@ -3,25 +3,29 @@
  *     Raphael Collet <raph@info.ucl.ac.be>
  *     Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
  *     Alberto Delgado <adelgado@cic.puj.edu.co> 
+ *     Alejandro Arbelaez (aarbelaez@cic.puj.edu.co)
  *
  *  Contributing authors:
- *     Alejandro Arbelaez <aarbelaez@puj.edu.co>
  *
  *  Copyright:
- *     Gustavo Gutierrez, 2006
- *     Alberto Delgado, 2006
+ *    Alberto Delgado, 2006-2007
+ *    Alejandro Arbelaez, 2006-2007
+ *    Gustavo Gutierrez, 2006-2007
+ *    Raphael Collet, 2006-2007
  *
- *  Last modified:
- *     $Date$
- *     $Revision$
- *
- *  This file is part of GeOz, a module for integrating gecode 
- *  constraint system to Mozart: 
- *     http://home.gna.org/geoz
- *
- *  See the file "LICENSE" for information on usage and
- *  redistribution of this file, and for a
- *     DISCLAIMER OF ALL WARRANTIES.
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
  *
  */
 
@@ -211,8 +215,11 @@ private:
     return allocated() + sizeof(*this);
   }
   
-
-  void makeStable(void);     // assigns trigger into a read-only
+  /**
+  	\brief Sets stability of this space. This is done by binding trigger to a 
+	read only variable.
+  */
+  void makeStable(void);
 
   /**
    * \brief This variable is used to count how many variables are 
@@ -235,8 +242,6 @@ private:
    * have been posted in the space. 
    */
   unsigned int unifyProps;
-
-  static unsigned long int unused_uli;
 
   /// \name Reference access
   //@{  
@@ -287,8 +292,14 @@ public:
   // return current trigger
   TaggedRef getTrigger(void) { return trigger; }
 
-  bool isSolved(void) { 
-    return determined == (vars.getSize()); }
+  /**
+  	\brief Tests whether the space is a solution space.
+  */
+  bool isSolved(void) { return determined == (vars.getSize()); }
+  
+  /**
+  	\brief Increment the counter of determined variables in the space
+  */
   void incDetermined(void) { determined++; }
 
   /**
@@ -296,20 +307,36 @@ public:
      
   */
   bool isStable();
-
+  
+  /**
+  	\brief Tests if the space is entailed. A space is entailed if the number of
+	non determined variables plus the number of foreignProps (reflections) plus
+	the number of unifications is the number of propagators. Since unification
+	happens between two variables, the number of propagators enforcing unifications
+	have to be divided by two.
+  */
   bool isEntailed(void) { 
     Assert(isStable());
     int nondet = vars.getSize() - determined;
-    /*    printf("Nondet: %d\n",nondet);fflush(stdout);
+    /*printf("Nondet: %d\n",nondet);fflush(stdout);
     printf("foreignProps: %d\n",foreignProps);fflush(stdout);
     printf("Propagators: %d\n",propagators());fflush(stdout);
     printf("Propagators: %d\n",unifyProps);fflush(stdout);*/
     return (nondet + foreignProps + unifyProps/2) == propagators();
   }
 
+  /**
+  	\brief Foreign propagators help to reflect changes in variables to mozart.
+	Those include domain reflection and variable binding.
+  */
   void incForeignProps(void) { foreignProps++; }
   void decForeignProps(int d = 1) { foreignProps -= d; }
 
+  /**
+  	\brief Every time a unification between two constraint variables takes place,
+	a propagator is used to enforce *equality* (in the sense of the underlying 
+	constraint system). 
+  */
   void incUnifyProps(void) { unifyProps+=2; }
   void decUnifyProps(int d = 1) { unifyProps -= d; }
  
@@ -364,18 +391,12 @@ public:
   OZ_Term getVarRef(int n) { return *vars.getRef(n); }
   //@}
 
-  /// Space stability information
-  //@{
-  /**
-     \brief Mark the space as unstable
-  */
-  void setBoard(Board* b);
-  //@}
-
+ 
   /** 
-      \brief Wraps the status function of the Space class to add stability attribute support.
+      \brief Wraps the status function of the Space class to perform memory 
+	  counting and stability operations
   */
-  Gecode::SpaceStatus mstatus(unsigned long int& pn=unused_uli);
+  Gecode::SpaceStatus mstatus(void);
   
 
   /// Garbage collection and space cloning for references

@@ -5,6 +5,9 @@
  *    Christian Schulte <schulte@ps.uni-sb.de>
  * 
  *  Contributors:
+ *    Alberto Delgado (adelgado@cic.puj.edu.co)
+ *    Alejandro Arbelaez (aarbelaez@cic.puj.edu.co)
+ *    Gustavo Gutierrez (ggutierrez@cic.puj.edu.co)
  * 
  *  Copyright:
  *    Kostja Popow, 1997-1999
