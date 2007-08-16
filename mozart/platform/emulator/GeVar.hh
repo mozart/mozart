@@ -77,8 +77,8 @@ public:
   virtual bool hasSameDomain(TaggedRef) = 0;
 
   virtual int varprops(void) = 0;
-  virtual void printDomain(void) = 0;
-   /// \name Reflection mechanisms
+
+  /// \name Reflection mechanisms
   //@{
 protected:
   
@@ -90,7 +90,7 @@ protected:
   */
   bool hasDomRefl;
  /**
-   \brief Counter for the number of unifications in that this variable 
+   \brief Counter for the number of unifications in which this variable 
    is involved. 
   */
   unsigned int unifyC;
