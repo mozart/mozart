@@ -166,18 +166,18 @@ void Board::clearStatus() {
   status = oz_newReadOnly(getParent());
 }
 
+/**
+ Those functions (isWaiting and hasGetChoice) should be inlined
+ the problem is that oz_isReadInly is not defined at board.icc.
+ using BoardTags is a possible solution.
+*/
 //inline
 bool Board::isWaiting(void) {
-  //TaggedRef st = getStabilityVar();
-  //return st != taggedVoidValue && st != AtomNil;
   return oz_isReadOnly(oz_deref(getStabilityVar()));
 }
 
 //inline
 bool Board::hasGetChoice(void) {
-  //oz_isReadOnly(oz_deref(getCSync()));
-  //TaggedRef cs = getCSync();
-  //return cs != taggedVoidValue && cs != AtomNil;
   return oz_isReadOnly(oz_deref(getCSync()));
 }
 
