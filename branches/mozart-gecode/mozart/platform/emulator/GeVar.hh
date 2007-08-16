@@ -15,9 +15,9 @@
  *     $Date$
  *     $Revision$
  *
- *  This file is part of GeOz, a module for integrating gecode 
- *  constraint system to Mozart: 
- *     http://home.gna.org/geoz
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
  *
  *  See the file "LICENSE" for information on usage and
  *  redistribution of this file, and for a

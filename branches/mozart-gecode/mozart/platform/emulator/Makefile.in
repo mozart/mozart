@@ -2,10 +2,15 @@
 #    Michael Mehl (mehl@dfki.de)
 # 
 #  Contributors:
-#    optional, Contributor's name (Contributor's email address)
+#    Alberto Delgado (adelgado@cic.puj.edu.co)
+#    Alejandro Arbelaez (aarbelaez@cic.puj.edu.co)
+#    Gustavo Gutierrez (ggutierrez@cic.puj.edu.co)
 # 
 #  Copyright:
 #    Michael Mehl, 1998
+#    Alberto Delgado, 2006-2007
+#    Alejandro Arbelaez, 2006-2007
+#    Gustavo Gutierrez, 2006-2007
 # 
 #  Last change:
 #    $Date$ by $Author$
@@ -41,8 +46,8 @@ MODULE_NAMES =							\
 	CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat \
 	Win32 Profile OsTime ZlibIO 
 
-MODULE_NAMES += geoz-int
-MODULE_NAMES += geoz-bool
+MODULE_NAMES += geoz-int geoz-bool
+
 CLEAN_LIBCP=cd libcp-int; $(MAKE) clean
 CLEAN_LIBCP += cd libcp-bool; $(MAKE) clean
 
