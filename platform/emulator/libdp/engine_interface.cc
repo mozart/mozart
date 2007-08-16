@@ -50,10 +50,10 @@
 #define HEART_BEAT_RATE 32
 
 Bool glueInitialized = FALSE; 
-MAP* glue_dss_connection;
-DSS_Object* dss;
-ComService* glue_com_connection; 
-GlueIoFactoryClass* glue_ioFactory;
+MAP* glue_dss_connection           = NULL;
+DSS_Object* dss                    = NULL;
+ComService* glue_com_connection    = NULL; 
+GlueIoFactoryClass* glue_ioFactory = NULL;
 
 // GC Routines
 // 

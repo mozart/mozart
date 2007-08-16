@@ -243,7 +243,8 @@ void gCollectGASreps(){
   while((*ptr) != NULL)
     {
       Glue_SiteRep *tmp = *ptr; 
-      if(tmp->m_getOzSite() == (OZ_Term) 0)
+      // raph: we must keep the representation of this site!
+      if (tmp != thisGSite && tmp->m_getOzSite() == (OZ_Term) 0)
 	{
 	  *ptr = tmp->m_getNext(); 
 	  delete tmp; 

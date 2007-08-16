@@ -33,7 +33,7 @@
 
 #define SHARED_BYTE_AREA_SIZE 16384
 static BYTE shared_byte_area[SHARED_BYTE_AREA_SIZE];
-DPMarshalers* DPM_Repository;
+DPMarshalers* DPM_Repository = NULL;
 
 static PstContainer *g_PstContainers = NULL; 
 
