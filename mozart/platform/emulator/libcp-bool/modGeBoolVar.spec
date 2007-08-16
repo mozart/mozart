@@ -1,3 +1,26 @@
+###
+### Authors:
+###   Alberto Delgado <adelgado@cic.puj.edu.co> 
+###
+### Copyright:
+###   Alberto Delgado, 2006-2007
+###
+### Last change:
+###   $Date$ by $Author$
+###   $Revision$
+###
+### This file is part of Mozart, an implementation 
+### of Oz 3:
+###    http://www.mozart-oz.org
+###
+### See the file "LICENSE" or
+###    http://www.mozart-oz.org/LICENSE.html
+### for information on usage and redistribution 
+### of this file, and for a DISCLAIMER OF ALL 
+### WARRANTIES.
+###
+
+
 $module_init_fun_name = "module_init_geboolvar";
 
 $module_init_fun      = "oz_init_module";
