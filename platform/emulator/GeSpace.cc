@@ -1,26 +1,31 @@
-/* 
- *  Main authors: 
+/*
+ *  Main authors:
+ *     Raphael Collet <raph@info.ucl.ac.be>
  *     Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
- *     Alberto Delgado <adelgado@cic.puj.edu.co>
+ *     Alberto Delgado <adelgado@cic.puj.edu.co> 
+ *     Alejandro Arbelaez (aarbelaez@cic.puj.edu.co)
  *
  *  Contributing authors:
- *     
  *
  *  Copyright:
- *     Gustavo Gutierrez, 2006
- *     Alberto Delgado, 2006
+ *    Alberto Delgado, 2006-2007
+ *    Alejandro Arbelaez, 2006-2007
+ *    Gustavo Gutierrez, 2006-2007
+ *    Raphael Collet, 2006-2007
  *
- *  Last modified:
- *     $Date$
- *     $Revision$
- *
- *  This file is part of GeOz, a module for integrating gecode 
- *  constraint system to Mozart: 
- *     http://home.gna.org/geoz
- *
- *  See the file "LICENSE" for information on usage and
- *  redistribution of this file, and for a
- *     DISCLAIMER OF ALL WARRANTIES.
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
  *
  */
 
@@ -40,20 +45,17 @@ VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share) {
     if (oz_isExtVar(dt)) {
       // ensures that refs[i] is a gecode contrain variable 
       Assert(oz_getExtVar(dt)->getIdV() == OZ_EVAR_GEVAR);
-      //      vars.push_back(static_cast<GeVar<void>*>(oz_getExtVar(dt))->clone());      
       vars.push_back(static_cast<GeVarBase*>(oz_getExtVar(dt))->clone());
     } else {
-      /*
-	When vars[i] has been bound to a value, refs[i] no longer points to a GeVar but
-	to a some structure in the heap (depending on the domain specific representation).
-	In this way, vars[i] should never be used after that.
+		/* When vars[i] has been bound to a value, refs[i] no longer points to a
+		   GeVar but to a some structure in the heap (depending on the domain 
+		   specific representation). In this way, vars[i] should never be used 
+		   after that.
       */
       vars.push_back(static_cast<VarBase*>(NULL));
     }
   }
 }
-
-unsigned long int GenericSpace::unused_uli;
 
 int GenericSpace::gscounter = 0;
 
@@ -70,15 +72,13 @@ GenericSpace::GenericSpace(Board* b)
 
 inline
 GenericSpace::GenericSpace(GenericSpace& s, bool share) 
-    : Space(share, s), vars(this, s.vars, share),      
-      board(s.board),
-      determined(s.determined), foreignProps(s.foreignProps),unifyProps(s.unifyProps), trigger(s.trigger), gc_pred(NULL), gc_succ(NULL), gc_marked(false),
-      allocatedMemory(usedMem())
+    : Space(share, s), vars(this, s.vars, share), board(s.board), 
+	determined(s.determined), foreignProps(s.foreignProps), 
+	unifyProps(s.unifyProps), trigger(s.trigger), gc_pred(NULL), gc_succ(NULL),
+	gc_marked(false), allocatedMemory(usedMem())
 {
-  //printf("GeSpace.cc copy constructor\n");fflush(stdout);
   registerGeSpace(this);
   GeSpaceAllocatedMem += allocatedMemory;
-  //printf("Constructor Copia: %u %p\n",GeSpaceAllocatedMem,this);fflush(stdout);
 }
 
 inline
@@ -99,11 +99,6 @@ GenericSpace::~GenericSpace(void) {
 
   GeSpaceAllocatedMem = GeSpaceAllocatedMem <= allocatedMemory ?
     0 : GeSpaceAllocatedMem - allocatedMemory;
-}
-
-inline
-void GenericSpace::setBoard(Board* b) {
-  board = b;
 }
 
 //inline
@@ -139,11 +134,11 @@ void GenericSpace::makeUnstable(void) {
   }
 }
 
-Gecode::SpaceStatus GenericSpace::mstatus(unsigned long int& pn) {
+Gecode::SpaceStatus GenericSpace::mstatus(void) {
   //printf("Status: Allocated Memory before status:  %u  - %u in space %p\n", allocatedMemory,GeSpaceAllocatedMem,this);fflush(stdout);
   GeSpaceAllocatedMem = GeSpaceAllocatedMem <= allocatedMemory ?
     0 : GeSpaceAllocatedMem - allocatedMemory;
-  Gecode::SpaceStatus ret = Gecode::Space::status(pn);
+  Gecode::SpaceStatus ret = Gecode::Space::status();
   allocatedMemory = usedMem();
   GeSpaceAllocatedMem += allocatedMemory;
   makeStable();
