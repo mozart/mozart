@@ -1,106 +1,103 @@
-/*
- *  Main authors:
- *     Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
- *     Alberto Delgado <adelgado@cic.puj.edu.co>
- *
- *  Contributing authors:
- *     Alejandro Arbelaez <aarbelaez@puj.edu.co>
- *
- *  Copyright:
- *     Gustavo Gutierrez, 2006
- *     Alberto Delgado, 2006
- *
- *  Last modified:
- *     $Date$
- *     $Revision$
- *
- *  This file is part of GeOz, a module for integrating gecode 
- *  constraint system to Mozart: 
- *     http://home.gna.org/geoz
- *
- *  See the file "LICENSE" for information on usage and
- *  redistribution of this file, and for a
- *     DISCLAIMER OF ALL WARRANTIES.
- *
- */
+%%%
+%%% Authors:
+%%%     Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
+%%%     Alberto Delgado <adelgado@cic.puj.edu.co>
+%%%     Alejandro Arbelaez <aarbelaez@puj.edu.co>
+%%%
+%%% Copyright:
+%%%     Gustavo Gutierrez, 2006
+%%%     Alberto Delgado, 2006
+%%%     Alejandro Arbelaez, 2006
+%%%
+%%% Last change:
+%%%   $Date: 2006-10-19T01:44:35.108050Z $ by $Author: ggutierrez $
+%%%   $Revision: 2 $
+%%%
+%%% This file is part of Mozart, an implementation
+%%% of Oz 3
+%%%    http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%    http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
 
 functor
+
+require
+   CpSupport(vectorToType:   VectorToType
+	     vectorToList:   VectorToList
+	     vectorToTuple:  VectorToTuple
+	     %vectorMap:      VectorMap
+	     %expand:         Expand
+	     %formatOrigin:   FormatOrigin
+	    )
+   
 import
-   GFD(int: IntVar
-       isVar: IsVar
-       'reflect.min':        GetMin
-       'reflect.max':        GetMax
-       'reflect.size':       GetSize
-       'reflect.med':        GetMed
-       'reflect.width':      GetWidth
-       'reflect.regretMin':  GetRegretMin
-       'reflect.regretMax':  GetRegretMax
-
-       eq:                   Eq
-       rel:                  Rel       
-       linear:               Linear
-       linear2:              Linear2
-       linearR:              LinearR
-       linearCR:             LinearCR
-       count:                Count
-       distinct:             Distinct
-       distinct2:            Distinct2
-       mult:                 Mult
-       bool_and: 	     Bool_and
-       int_Gabs:             Abs       
-       int_sortedness:       Int_sortedness
-
-       %%Mozart Propagators
-       int_inf:              Int_inf
-       int_sup:              Int_sup
-       int_watch_min:        Int_watch_min
-       int_watch_max:        Int_watch_max
-       int_watch_size:       Int_watch_size
-       int_nextLarger:       Int_nextLarger
-       int_nextSmaller:      Int_nextSmaller
-       int_domlist:          Int_domlist
-       int_dom:              Int_dom
-       int_sumCN:            Int_sumCN
-       int_disjoint:         Int_disjoint
-       int_reified_int:      Int_reified_int
-       bool_Gand:            Bool_Gand
-       bool_Gor:             Bool_Gor
-       bool_Gxor:            Bool_Gxor
-       bool_Gnot:            Bool_Gnot
-       bool_Gimp:            Bool_Gimp
-       bool_Geqv:            Bool_Geqv
-       
-       status:  Status
-      )
-   at 'x-oz://boot/geoz-int'
-
-   System
+   GFD at 'x-oz://boot/geoz-int'
    Space
+prepare
+   %%This record must reflect the IntRelType in gecode/int.hh
+   Rt = '#'('=:':0     %Equality
+	    '\\=:':1    %Disequality
+	    '=<:':2    %Less or equal
+	    '<:':3     %Less
+	    '>=:':4    %Greater or equal
+	    '>:':5     %Greater
+	   )
+   %%This record must reflect the IntConLevel
+   Cl = '#'(
+	   val: 0   %Value consistency
+	   bnd: 1   %Bounds consistency
+	   dom: 2   %Domain consistency
+	   def: 3   %The default consistency for a constraint
+	   )
+
 export
-   %%Declaration
-   int:   IntVar
-   %%   dom:   IntVarList
-   dom:   GFDDom
+   %% Telling domains
+   int   : FdInt
+   dom   : FdDom
+   decl  : FdDecl
+   list  : FdList
+   tuple : FdTuple
+   record: FdRecord
 
-   dom1:    CreateDomainList
+   %% Reflection
+   reflect : FdReflect
+
+   %% Watching Domains
+   watch   : FdWatch
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Clasify!!!!%%%%%%%%%%%%%
    
-%    IntVarTuple
-    IntVarList
-
-   is:    IsVar
+   %% Propagators
+   eq:                   Eq
+   rel:                  Rel       
+   linear:               Linear
+   linear2:              Linear2
+   linearR:              LinearR
+   linearCR:             LinearCR
+   count:                Count
+   distinct2:            Distinct2
+   mult:                 Mult
+   bool_and: 	         Bool_and
+   int_Gabs:             Abs       
+   int_sortedness:       Int_sortedness
    
-   %%Access
-   Reflect
-
-   %% Relation types for propagators
-   Rt
-   %% Consistency levels for propagators
-   Cl
-
-   %% Miscellaneous
-   inf:             Inf
-   sup:             Sup
-   decl:            Decl
+   %%Mozart Propagators (backward compatibility))
+   int_sumCN:            Int_sumCN
+   int_disjoint:         Int_disjoint
+   %int_reified_int:      Int_reified_int
+   bool_Gand:            Bool_Gand
+   bool_Gor:             Bool_Gor
+   bool_Gxor:            Bool_Gxor
+   bool_Gnot:            Bool_Gnot
+   bool_Gimp:            Bool_Gimp
+   bool_Geqv:            Bool_Geqv
 
    %%Miscellaneous propagators
    plus:            Plus
@@ -138,19 +135,10 @@ export
    atMost:          AtMost
    atLeast:         AtLeast
    exactly:         Exactly
-
+   
    
    
    %%Propagators
-   eq:     Eq
-   rel:    Rel
-   Linear
-   Linear2
-   Count
-%%   Distinct
-%%   Distinct2   
-   Mult
-   Bool_and
    Abs
    sortedness: Int_sortedness
 
@@ -163,109 +151,153 @@ export
    Imp
    Equi   
 
-   Watch
-   
-   %%Branching
-   %ValSel VarSel
-   %%%distribute:     IntVarDistribute
-   Distribute
-   %intBranch:Distribute   
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-   %%Space
-   Status
+   %% Distribution
+   distribute : FdDistribute
+   %% Miscelaneus
+   inf : FdInf
+   sup : FdSup
+   is  : FdIs
 
-   tuple: GTuple
+   %% Relation types
+   rt: Rt
 
+   %% Consistency levels
+   cl: Cl
 define
 
-   Reflect = reflect(min:  GetMin
-		     max:  GetMax
-		     size: GetSize
-		     med:   GetMed
-		     width: GetWidth
-		     regret_min: GetRegretMin
-		     regret_max: GetRegretMax
-		     nextLarger:_
-		     nextSmaller:_
-		     domList:_
-		     dom:_		     
-		    )		     
-   
-   %%This record must reflect the IntRelType in gecode/int.hh
-   Rt = '#'('=:':0     %Equality
-	    '\\=:':1    %Disequality
-	    '=<:':2    %Less or equal
-	    '<:':3     %Less
-	    '>=:':4    %Greater or equal
-	    '>:':5     %Greater
-	   )
-   %%This record must reflect the IntConLevel
-   Cl = '#'(
-	   val: 0   %Value consistency
-	   bnd: 1   %Bounds consistency
-	   dom: 2   %Domain consistency
-	   def: 3   %The default consistency for a constraint
-	   )
-
-   Reified = reified(sum:_ sumC:_ sumCN:_ int:_)
-
-   %%misc defines: VectorToTuple, VectorToType, VectorToList ....
-   \insert misc
-   \insert GeMozProp
-
-   proc{CreateDomainTuple N Dom Root}
-      if N > 0 then Root.N = {IntVar Dom} {CreateDomainTuple N-1 Dom Root} end
-   end
-
-   proc{CreateDomainRecord As Dom Root}
-      case As of nil then skip
-      [] A | Ar then Root.A = {IntVar Dom} {CreateDomainRecord Ar Dom Root}
+   %% Telling domains
+   FdInt = GFD.int
+   local
+      
+      proc {ListDom Xs Dom}
+	 case Xs of nil then skip
+	 [] X|Xr then {FdInt Dom X} {ListDom Xr Dom}
+	 end
       end
-   end
-   
-   %%Create GeIntVar with domain Dom per each element of the list
-   proc{CreateDomainList Dom Root}
-      case Root of
-	 X|Xs then
-	 X = {IntVar Dom}
-	 {CreateDomainList Dom Xs}
-      [] nil then skip
+      
+      proc {TupleDom N T Dom}
+	 if N>0 then {FdInt Dom T.N} {TupleDom N-1 T Dom} end
       end
-   end   
-
-
-   proc{GFDDom Dom Root}
-      case {VectorToType Root}
-      of list then   {CreateDomainList Dom Root}
-      [] tuple then  {CreateDomainTuple {Width Root} Dom Root}
-      [] record then {CreateDomainRecord {Arity Root} Dom Root}
+      
+      proc {RecordDom As R Dom}
+	 case As of nil then skip
+	 [] A|Ar then {FdInt Dom R.A} {RecordDom Ar R Dom}
+	 end
       end
-   end
-   
-   %%Declares a list of GFD vars
-   fun{IntVarList N Desc}
-      Lst = {List.make N}
+      
    in
-      {List.map Lst fun{$ X} X = {IntVar Desc} end}
-   end
+      fun {FdDecl}
+	 {FdInt {GFD.inf}#{GFD.sup}}
+      end
+      
+      proc {FdDom Dom Vec}
+	 case {VectorToType Vec}
+	 of list   then {ListDom Vec Dom}
+	 [] tuple  then {TupleDom {Width Vec} Vec Dom}
+	 [] record then {RecordDom {Arity Vec} Vec Dom}
+	 end
+      end
 
-   proc{GTuple T N Desc Seq}
-      Seq = {Tuple.make T N}
-      for I in 1..N do
-	 Seq.I = {IntVar Desc}
+      fun {FdList N Dom}
+	 if N>0 then {FdInt Dom}|{FdList N-1 Dom}
+	 else nil
+	 end
+      end
+
+      proc {FdTuple L N Dom ?T}
+	 T={MakeTuple L N} {TupleDom N T Dom}
+      end
+
+      proc {FdRecord L As Dom ?R}
+	 R={MakeRecord L As} {RecordDom As R Dom}
       end
    end
-    %%Declares a list of GFD vars
-%     fun{IntVarTuple S N Desc}
-%        Tpl = {Tuple.make '#' N}
-%     in
-%        {Record.map Tpl fun{$ X} X = {IntVar S Desc} end}
-%     end
+
+   %% Reflection
+   FdReflect = reflect(min    : GFD.'reflect.min'
+		       max    : GFD.'reflect.max'
+		       size   : GFD.'reflect.size'  %% cardinality
+		       dom    : GFD.'reflect.dom'
+		       domList: GFD.'reflect.domList'
+		       nextSmaller : GFD.'reflect.nextSmaller'
+		       nextLarger : GFD.'reflect.nextLarger'
+		       med    : GFD.'reflect.med'   %% median of domain
+		       %% distance between maximum and minimum
+		       width  : GFD.'reflect.width' 
+		       %% regret of domain minimum (distance to next larger value).
+		       regret_min : GFD.'reflect.regretMin'
+		       %% regret of domain maximum (distance to next smaller value). 
+		       regret_max : GFD.'reflect.regretMax'
+		      )
+
+   %% Watching variables
+   %% Not tested yet!!
+   local
+      fun{WatchDomain P}
+	 proc{$ D1 D2 B} BTmp in
+	    BTmp = {FdInt 0#1}
+	    {Wait D2}
+	    {P D1 BTmp D2}
+	    {Wait BTmp}
+	    if BTmp == 1 then B = true else B = false end
+	 end
+      end
+      WatchMin = {WatchDomain GFD.'watch.max'}
+      WatchMax = {WatchDomain GFD.'watch.min'}
+      WatchSize = {WatchDomain GFD.'watch.size'}
+   in
+      FdWatch = watch(size: WatchSize 
+		      min : WatchMin
+		      max : WatchMax)
+   end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Clasify!!!!%%%%%%%%%%%%%
+   Eq = GFD.'eq'
+   Rel = GFD.'rel'       
+   Linear = GFD.'linear'
+   Linear2 = GFD.'linear2'
+   LinearR = GFD.'linearR'
+   LinearCR = GFD.'linearCR'
+   
+   Count = GFD.'count'
+   Distinct= GFD.'distinct'
+   Distinct2 = GFD.'distinct2'
+   Mult=   GFD.'mult'
+   Bool_and = GFD.'bool_and'
+   Abs = GFD.'int_Gabs'
+   Int_sortedness = GFD.'int_sortedness'
+   
+   %%Mozart Propagators (backward compatibility))
+   
+   Int_sumCN =   GFD.int_sumCN
+   Int_disjoint =   GFD.int_disjoint
+   %Int_reified_int =   GFD.int_reified_int
+   Bool_Gand =   GFD.bool_Gand
+   Bool_Gor =   GFD.bool_Gor
+   Bool_Gxor =   GFD.bool_Gxor
+   Bool_Gnot =   GFD.bool_Gnot
+   Bool_Gimp =   GFD.bool_Gimp
+   Bool_Geqv =   GFD.bool_Geqv
+
+   %% Backward compatibility propagators
+   \insert GeMozProp.oz
+   
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   
+   %% Miscelaneus
+   FdInf = {GFD.inf}
+   FdSup = {GFD.sup}
+   FdIs  = GFD.is
 
    local
       \insert GeIntVarDist
    in
-      Distribute = IntVarDistribute
+      FdDistribute = IntVarDistribute
    end
-
+   
 end
