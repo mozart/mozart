@@ -3,6 +3,7 @@
  *     Raphael Collet <raph@info.ucl.ac.be>
  *     Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
  *     Alberto Delgado <adelgado@cic.puj.edu.co>
+ *     Alejandro Arbelaez (aarbelaez@cic.puj.edu.co)
  *
  *  Contributing authors:
  *
@@ -10,14 +11,16 @@
  *     Raphael Collet, 2006
  *     Gustavo Gutierrez, 2006
  *     Alberto Delgado, 2006
+ *     Alejandro Arbelaez, 2006
  *
  *  Last modified:
  *     $Date$
  *     $Revision$
  *
- *  This file is part of GeOz, a module for integrating gecode 
- *  constraint system to Mozart: 
- *     http://home.gna.org/geoz
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ *
  *
  *  See the file "LICENSE" for information on usage and
  *  redistribution of this file, and for a
@@ -63,7 +66,7 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
       return oz_var_addQuietSusp(statusPtr, oz_currentThread());      
   }
   
-  //printf("lateThread antes de status\n");fflush(stdout);  
+  //printf("lateThread before run propagation\n");fflush(stdout);  
   if (gs->mstatus() == SS_FAILED) {
     oz_currentBoard()->deleteGenericSpace();
     return FAILED;

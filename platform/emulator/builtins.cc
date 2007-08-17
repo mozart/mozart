@@ -12,7 +12,10 @@
  *    Leif Kornstaedt (kornstae@ps.uni-sb.de)
  *    Fred Spiessens (fsp@info.ucl.ac.be)
  *    Raphael Collet (raph@info.ucl.ac.be)
- * 
+ *    Alberto Delgado (adelgado@cic.puj.edu.co)
+ *    Alejandro Arbelaez (aarbelaez@cic.puj.edu.co)
+ *    Gustavo Gutierrez (ggutierrez@cic.puj.edu.co)
+ *
  *  Copyright:
  *    Michael Mehl, 1997,1998
  *    Kostja Popow, 1997
@@ -197,7 +200,6 @@ OZ_BI_define(BIwaitGetChoice,1,0) {
 } OZ_BI_end
 
 OZ_BI_define(BIbindCSync,1,0) {
-  //printf("hola desde bindCSync\n");fflush(stdout);
   oz_currentBoard()->commitB(OZ_in(0));
   return PROCEED;
 } OZ_BI_end
