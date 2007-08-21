@@ -1,28 +1,25 @@
-/*
- *  Main authors:
- *     Alejandro Arbelaez <aarbelaez@puj.edu.co>
- *     
- *
- *  Contributing authors:
- *		   
- *
- *  Copyright:
- *     Alejandro Arbelaez, 2006
- *     
- *
- *  Last modified:
- *     $Date$
- *     $Revision$
- *
- *  This file is part of GeOz, a module for integrating gecode 
- *  constraint system to Mozart: 
- *     http://home.gna.org/geoz
- *
- *  See the file "LICENSE" for information on usage and
- *  redistribution of this file, and for a
- *     DISCLAIMER OF ALL WARRANTIES.
- *
- */
+%%%
+%%% Authors:
+%%%     Alejandro Arbelaez <aarbelaez@puj.edu.co>
+%%%
+%%% Copyright:
+%%%     Alejandro Arbelaez, 2006
+%%%
+%%% Last change:
+%%%   $Date: 2006-10-19T01:44:35.108050Z $ by $Author: ggutierrez $
+%%%   $Revision: 2 $
+%%%
+%%% This file is part of Mozart, an implementation
+%%% of Oz 3
+%%%    http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%    http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
 declare
 
 
@@ -33,7 +30,7 @@ proc{Alpha Root}
 in
    Root = [A B C D E F G H I J K L M
 	   N O P Q R S T U V W X Y Z]
-   {GFD.dom1 1#26 Root}
+   {GFD.dom 1#26 Root}
    {GFD.linear [B A L L E T] GFD.rt.'=:' 45 GFD.cl.val}
    {GFD.linear [C E L L O] GFD.rt.'=:' 43 GFD.cl.val}
    {GFD.linear [C O N C E R T] GFD.rt.'=:' 74 GFD.cl.val}
