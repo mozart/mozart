@@ -1,57 +1,31 @@
-/*
- *  Main authors:
- *     Alejandro Arbelaez: <aarbelaez@puj.edu.co>
- *
- *
- *  Contributing authors:
- *
- *
- *  Copyright:
- *     Alejandro Arbelaez, 2006
- *
- *  Last modified:
- *     $Date$
- *     $Revision$
- *
- *  This file is part of GeOz, a module for integrating gecode 
- *  constraint system to Mozart: 
- *     http://home.gna.org/geoz
- *
- *  See the file "LICENSE" for information on usage and
- *  redistribution of this file, and for a
- *     DISCLAIMER OF ALL WARRANTIES.
- *
- */
+%%%
+%%% Authors:
+%%%     Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
+%%%     Alberto Delgado <adelgado@cic.puj.edu.co>
+%%%     Alejandro Arbelaez <aarbelaez@puj.edu.co>
+%%%
+%%% Copyright:
+%%%     Gustavo Gutierrez, 2006
+%%%     Alberto Delgado, 2006
+%%%     Alejandro Arbelaez, 2006
+%%%
+%%% Last change:
+%%%   $Date: 2006-10-19T01:44:35.108050Z $ by $Author: ggutierrez $
+%%%   $Revision: 2 $
+%%%
+%%% This file is part of Mozart, an implementation
+%%% of Oz 3
+%%%    http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%    http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
 
 declare
 
-
-fun {SOne Script}
-  try {EOne {Space.new Script}} nil
-  catch solution(S) then [{Space.merge S}] end
-end
-
-proc{Print S} {Space.inject S proc{$ R} {Browse 'SS'#R} end} end
-
-proc {EOne S}
-  case {Space.ask S}
-  of succeeded then {Print S} raise solution(S) end
-  [] failed then skip
-  [] branch([A B]) then C={Space.clone S} in
-     {Space.commitB S A} {EOne S}
-     {Space.commitB C B} {EOne C}
-  end
-end
-
-fun{EAll S}
-   case {Space.ask S}
-   of succeeded then [{Space.merge S}]
-   [] failed then nil
-   [] branch([A B]) then C = {Space.clone S} in
-      {Space.commitB S A} {Space.commitB C B}
-      {Append {EAll S} {EAll C}}
-   end    
-end
 
 %% a naive distributor that takes advantage of batch recomputation
 proc {NaiveDistribute Xs}
@@ -96,7 +70,7 @@ fun{Queens N}
       C2 = {List.number ~1 ~N ~1}
       D
    in
-      Root = {GFD.intVarList N 1#N}
+      Root = {GFD.list N 1#N}
       D = {List.toTuple '#' Root}
       {GFD.distinct Root GFD.cl.val}
       {GFD.distinctOffset Root C1}
@@ -107,10 +81,6 @@ fun{Queens N}
       %{NaiveDistribute Root}
    end
 end
-
-%{Show 'Queens'#{SOne {Queens 9}}}
-%{Inspect 'QueensAll'#{EAll {Space.new {Queens 6}}}}
-%{Show 'QueensAll'#{EAll {Space.new {Queens 6}}}}
 
 S = {New Search.object script({Queens 9} rcd:4)}
 {Show {S last($)}}

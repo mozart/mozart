@@ -1,30 +1,26 @@
-/*
- *  Main authors:
- *     Alejandro Arbelaez <aarbelaez@puj.edu.co>
- *     
- *
- *  Contributing authors:
- *     Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
- *     
- *
- *  Copyright:
- *     Alejandro Arbelaez
- *     
- *
- *  Last modified:
- *     $Date$
- *     $Revision$
- *
- *  This file is part of GeOz, a module for integrating gecode 
- *  constraint system to Mozart: 
- *     http://home.gna.org/geoz
- *
- *  See the file "LICENSE" for information on usage and
- *  redistribution of this file, and for a
- *     DISCLAIMER OF ALL WARRANTIES.
- *
- */
-
+%%%
+%%% Authors:
+%%%     Alejandro Arbelaez <aarbelaez@puj.edu.co>
+%%%
+%%% Copyright:
+%%%     Gustavo Gutierrez, 2006
+%%%     Alberto Delgado, 2006
+%%%     Alejandro Arbelaez, 2006
+%%%
+%%% Last change:
+%%%   $Date: 2006-10-19T01:44:35.108050Z $ by $Author: ggutierrez $
+%%%   $Revision: 2 $
+%%%
+%%% This file is part of Mozart, an implementation
+%%% of Oz 3
+%%%    http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%    http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
 
 declare
 
@@ -43,4 +39,4 @@ fun{MagicSequence N}
    end
 end
 
-{ExploreOne {MagicSequence 10}}
+{Show {SearchOne {MagicSequence 10}}}

@@ -52,12 +52,11 @@ in
 end
 
 proc {Better O N}
-   %O.dm >: N.dm
-%   {Show O.dm#N.dm}
+   %%O.dm >: N.dm
+   %%{Show O.dm#N.dm}
    {GFD.rel O.dm GFD.rt.'>:' N.dm GFD.cl.val}
 end
 
-%{ExploreBest {MakeGolomb 9} Better}
 %{Show {SearchBest {MakeGolomb 7} Better}}
 {Show {SearchOne {MakeGolomb 7}}}
 

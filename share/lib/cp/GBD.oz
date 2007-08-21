@@ -1,31 +1,40 @@
-/*
- *  Main authors:
- *     Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
- *     Alberto Delgado <adelgado@cic.puj.edu.co>
- *
- *  Contributing authors:
- *     Alejandro Arbelaez <aarbelaez@puj.edu.co>
- *
- *  Copyright:
- *     Gustavo Gutierrez, 2006
- *     Alberto Delgado, 2006
- *
- *  Last modified:
- *     $Date$
- *     $Revision$
- *
- *  This file is part of GeOz, a module for integrating gecode 
- *  constraint system to Mozart: 
- *     http://home.gna.org/geoz
- *
- *  See the file "LICENSE" for information on usage and
- *  redistribution of this file, and for a
- *     DISCLAIMER OF ALL WARRANTIES.
- *
- */
+%%%
+%%% Authors:
+%%%     Alberto Delgado <adelgado@cic.puj.edu.co>
+%%%
+%%% Copyright:
+%%%     Alberto Delgado, 2006
+%%%
+%%% Last change:
+%%%   $Date: 2006-10-19T01:44:35.108050Z $ by $Author: ggutierrez $
+%%%   $Revision: 2 $
+%%%
+%%% This file is part of Mozart, an implementation
+%%% of Oz 3
+%%%    http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%    http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
+
+%%%
+%%% Boolean variables have an independent implementation from integer
+%%% variables in gecode 2.0. That version of gecode has not been released
+%%% so far but we made both integers and bollen veriables independent in mozart
+%%% from now. To distribute these variables use GFD.distribute.
 
 functor
+require
+      CpSupport(vectorToType:   VectorToType
+	     vectorToList:   VectorToList
+	     vectorToTuple:  VectorToTuple)
+
 import
+   
    GBD(bool: BoolVar
        isVar: IsVar
        'reflect.size':       GetSize
@@ -43,11 +52,28 @@ import
        linear:       Linear                     
       )
    at 'x-oz://boot/geoz-bool'
-
    System
    Space
+
+prepare
+   Cl = '#'(
+	   val: 0   %Value consistency
+	   bnd: 1   %Bounds consistency
+	   dom: 2   %Domain consistency
+	   def: 3   %The default consistency for a constraint
+	   )
+
+   %%This record must reflect the IntRelType in gecode/int.hh
+   Rt = '#'('=:':0     %Equality
+	    '\\=:':1    %Disequality
+	    '=<:':2    %Less or equal
+	    '<:':3     %Less
+	    '>=:':4    %Greater or equal
+	    '>:':5     %Greater
+	   )
+
 export
-   %%Declaration
+   %% Telling domains
    bool:   BoolVar
    dom:    GBDDom
 
@@ -84,7 +110,7 @@ export
    %%Branching
    %ValSel VarSel
    %%%distribute:     IntVarDistribute
-   Distribute
+   %Distribute
    %intBranch:Distribute   
 
    %%Space
@@ -98,26 +124,8 @@ define
 		    )		     
    
    %%This record must reflect the ConLevel
-   Cl = '#'(
-	   val: 0   %Value consistency
-	   bnd: 1   %Bounds consistency
-	   dom: 2   %Domain consistency
-	   def: 3   %The default consistency for a constraint
-	   )
-
-   %%This record must reflect the IntRelType in gecode/int.hh
-   Rt = '#'('=:':0     %Equality
-	    '\\=:':1    %Disequality
-	    '=<:':2    %Less or equal
-	    '<:':3     %Less
-	    '>=:':4    %Greater or equal
-	    '>:':5     %Greater
-	   )
 
    
-   %%misc defines: VectorToTuple, VectorToType, VectorToList ....
-   \insert misc
-
    fun{Decl}
       {BoolVar 0#1}
    end
@@ -165,10 +173,10 @@ define
       end
    end
 
-   local
-      \insert GeIntVarDist
-   in
-      Distribute = IntVarDistribute
-   end
+%   local
+%      \insert GeIntVarDist
+%   in
+%   Distribute = skip %IntVarDistribute
+%   end
 
 end
