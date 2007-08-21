@@ -110,8 +110,6 @@ in
 end
 
 
-%{ExploreOne {MagicSquare 3}}
-{Browse {SearchOne {MagicSquare 10}}}
+{Show {SearchOne {MagicSquare 5}}}
 %{Show {Search.one.depth {MagicSquare 6} 1 _}}
-%S = {Space.new {MagicSquare 3}}
 

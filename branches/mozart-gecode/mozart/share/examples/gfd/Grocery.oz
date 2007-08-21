@@ -33,7 +33,6 @@
 %%% Question: What were the prices of the
 %%% four items?
 
-\switch +geoz
 declare
 proc {Grocery Root}
    A#B#C#D = Root
