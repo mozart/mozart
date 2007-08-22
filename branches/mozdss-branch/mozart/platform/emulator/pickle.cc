@@ -212,6 +212,14 @@ Bool Pickler::processObject(OZ_Term term, ConstTerm *objConst)
 
 //
 inline 
+Bool Pickler::processObjectState(OZ_Term term, ConstTerm *objConst)
+{
+  OZ_error("Pickler::processObjectState is called!");
+  return (TRUE);
+}
+
+//
+inline 
 void Pickler::processLock(OZ_Term term, ConstTerm *lockConst)
 {
   OZ_error("Pickler::processLock is called!");
@@ -550,6 +558,13 @@ void ResourceExcavator::processExtension(OZ_Term et)
 }
 inline 
 Bool ResourceExcavator::processObject(OZ_Term objTerm, ConstTerm *objConst)
+{
+  VisitNodeTrav(objTerm, vIT, return(TRUE));
+  addResource(objTerm);
+  return (TRUE);
+}
+inline 
+Bool ResourceExcavator::processObjectState(OZ_Term objTerm, ConstTerm *objConst)
 {
   VisitNodeTrav(objTerm, vIT, return(TRUE));
   addResource(objTerm);

@@ -220,7 +220,7 @@ void TRAVERSERCLASS::doit()
 
 	    //
 	    //bmc: I should not put the state yet.
-	    put(makeTaggedSRecord(o->getState()));
+	    put(o->getStateTerm());
 
 	    //
 	    if (o->getLock())
@@ -230,6 +230,15 @@ void TRAVERSERCLASS::doit()
 	    continue;
 	  }
 	  break;
+
+	case Co_ObjectState: {
+	  if (!processObjectState(t, ct)) {
+	    ObjectState *s = (ObjectState *) ct;
+	    t = s->getValueTerm();
+	    continue;
+	  }
+	  break;
+	}
 
 	case Co_Lock:
 	  processLock(t, ct);

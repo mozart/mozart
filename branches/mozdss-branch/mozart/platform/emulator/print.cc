@@ -579,20 +579,12 @@ void Abstraction::printStream(ostream &stream, int depth)
 
 void OzObject::printStream(ostream &stream, int depth)
 {
-  stream << "<O:" << getPrintName()
-         << ", ";
-  if (getFreeRecord())
-    getFreeRecord()->printStream(stream,depth);
-  else
-    stream << "nofreefeatures";
-  stream << ", State: ";
-  SRecord* state = getState();
-  if (state) {
-    state->printStream(stream,depth);
-  } else {
-    stream << "(distributed)";
-  }
-  stream << ">";
+  stream << "O:" << getPrintName();
+}
+
+void ObjectState::printStream(ostream &stream, int depth)
+{
+  stream << "Object state";
 }
 
 void OzClass::printStream(ostream &stream, int depth)
@@ -691,6 +683,9 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
   case Co_Object:
     ((OzObject *) this)->printLongStream(stream,depth,offset);
     break;
+  case Co_ObjectState:
+    ((ObjectState *) this)->printLongStream(stream,depth,offset);
+    break;
   case Co_Class:
     ((OzClass *) this)->printLongStream(stream,depth,offset);
     break;
@@ -755,6 +750,8 @@ void ConstTerm::printStream(ostream &stream, int depth)
   case Co_Abstraction: ((Abstraction *) this)->printStream(stream,depth);
     break;
   case Co_Object:      ((OzObject *) this)->printStream(stream,depth);
+    break;
+  case Co_ObjectState: ((ObjectState *) this)->printStream(stream,depth);
     break;
   case Co_Class:       ((OzClass *) this)->printStream(stream,depth);
     break;
@@ -999,7 +996,17 @@ void OzObject::printLongStream(ostream &stream, int depth, int offset)
   }
   stream << endl;
   stream << "State: ";
-  SRecord* state = getState();
+  ObjectState* state = getState();
+  if (state) {
+    state->printLongStream(stream,depth,offset);
+  } else {
+    stream << "(distributed)";
+  }
+}
+
+void ObjectState::printLongStream(ostream &stream, int depth, int offset)
+{
+  SRecord* state = getValue();
   if (state) {
     state->printLongStream(stream,depth,offset);
   } else {

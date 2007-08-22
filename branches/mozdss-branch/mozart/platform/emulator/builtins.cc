@@ -669,10 +669,10 @@ OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
       return PROCEED;
     case Co_Object: {
       OzObject* obj = tagged2Object(t);
-      OzClass* cls = obj->getClass();
-      if (!cls)   // object is a stub: call distribution
+      if (!obj->isComplete())   // object is a stub: call distribution
 	return (*distObjectGetFeature)(obj, f, tf);
       //
+      OzClass* cls = obj->getClass();
       if (!cls->isComplete())   // class is necessary: call distribution
 	return (*distClassGet)(cls);
       //
@@ -3789,12 +3789,13 @@ inline
 OZ_Return objectAccess(OzObject* obj, TaggedRef fea, TaggedRef &res) {
   Assert(!oz_isVar(fea));
 
-  if (obj->isDistributed())
-    return (*distObjectAccess)(obj, fea, res);
+  Assert(obj->isComplete());
+  ObjectState* state = obj->getState();
 
-  SRecord* rec = obj->getState();
-  Assert(rec);
-  TaggedRef t = rec->getFeature(fea);
+  if (state->isDistributed())
+    return (*distObjectAccess)(state, fea, res);
+
+  TaggedRef t = state->getFeature(fea);
   if (t) {
     res = t;
     return PROCEED;
@@ -3806,12 +3807,13 @@ inline
 OZ_Return objectAssign(OzObject* obj, TaggedRef fea, TaggedRef val) {
   Assert(!oz_isVar(fea));
 
-  if (obj->isDistributed())
-    return (*distObjectAssign)(obj, fea, val);
+  Assert(obj->isComplete());
+  ObjectState* state = obj->getState();
 
-  SRecord* rec = obj->getState();
-  Assert(rec);
-  if (rec->setFeature(fea, val)) return PROCEED;
+  if (state->isDistributed())
+    return (*distObjectAssign)(state, fea, val);
+
+  if (state->setFeature(fea, val)) return PROCEED;
   oz_typeError(0,"(valid) Feature");
 }
 
@@ -3820,15 +3822,16 @@ OZ_Return objectExchange(OzObject* obj, TaggedRef fea,
 			 TaggedRef val, TaggedRef& old) {
   Assert(!oz_isVar(fea));
 
-  if (obj->isDistributed())
-    return (*distObjectExchange)(obj, fea, val, old);
+  Assert(obj->isComplete());
+  ObjectState* state = obj->getState();
 
-  SRecord* rec = obj->getState();
-  Assert(rec);
-  TaggedRef t = rec->getFeature(fea);
+  if (state->isDistributed())
+    return (*distObjectExchange)(state, fea, val, old);
+
+  TaggedRef t = state->getFeature(fea);
   if (t) {
     old = t;
-    rec->setFeature(fea, val);
+    state->setFeature(fea, val);
     return PROCEED;
   }
   oz_typeError(0,"(valid) Feature");
@@ -3974,8 +3977,12 @@ OZ_Return getClassInline(TaggedRef t, TaggedRef &out)
   if (!oz_isObject(t)) {
     oz_typeError(0,"Object");
   }
-  out = makeTaggedConst(tagged2Object(t)->getClass());
-  return PROCEED;
+  OzClass* cls = tagged2Object(t)->getClass();
+  if (cls && cls->isComplete()) {
+    out = makeTaggedConst(cls);
+    return PROCEED;
+  }
+  return oz_raise(E_SYSTEM, E_KERNEL, "class of object unknown", 0);
 }
 
 OZ_DECLAREBI_USEINLINEFUN1(BIgetClass,getClassInline)

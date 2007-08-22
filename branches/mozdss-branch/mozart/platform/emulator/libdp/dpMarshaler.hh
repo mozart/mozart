@@ -301,15 +301,9 @@ protected:
   // delegated to the Glue layer.  This is used to send the contents
   // of an immutable, instead of its identity only.
   bool immediate;
-
-  //
-  // Support for lazy protocols: when 'doToplevel' is set to TRUE, a
-  // complete representation of the first object (etc.?) is generated,
-  // as opposed to its stub.
-  Bool doToplevel;
   //
 public:
-  DPMarshaler() : doToplevel(FALSE), immediate(false) {
+  DPMarshaler() : immediate(false) {
     lIT = new AddressHashTableO1Reset(LocationsITInitSize);
     vIT = new MarshalerDict(ValuesITInitSize);
     expVars = (OzValuePatch *) 0;
@@ -370,12 +364,6 @@ public:
   // completely
   bool isImmediate() const { return immediate; }
   void setImmediate(bool b = true) { immediate = b; }
-
-  //
-  // Support for lazy protocols: next marshaling will generate a full
-  // representation of a top-level object (as opposed to its stub);
-  void genFullToplevel() { doToplevel = TRUE; }
-  Bool isFullToplevel() { return (doToplevel); }
   //
   MarshalerDict *getVIT() { return (vIT); }
 };
@@ -393,6 +381,7 @@ public:
   void processBigInt(OZ_Term biTerm);
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
   Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
+  Bool processObjectState(OZ_Term stateTerm, ConstTerm *stateConst);
   void processLock(OZ_Term lockTerm, ConstTerm *lockConst);
   Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
   void processPort(OZ_Term portTerm, ConstTerm *portConst);
@@ -435,6 +424,7 @@ public:
   void processBigInt(OZ_Term biTerm);
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
   Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
+  Bool processObjectState(OZ_Term stateTerm, ConstTerm *stateConst);
   void processLock(OZ_Term lockTerm, ConstTerm *lockConst);
   Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
   void processPort(OZ_Term portTerm, ConstTerm *portConst);
@@ -552,7 +542,7 @@ private:
   MarshalerDict *vIT;		// shared with the dpMarshaler;
   OzValuePatch *expVars;
   //
-  Bool doToplevel;
+  Bool immediate;
 
   //
 private:
@@ -565,13 +555,13 @@ public:
   VSnapshotBuilder() {
     DebugCode(vIT = (MarshalerDict *) -1;);
     DebugCode(expVars = (OzValuePatch *) -1;);
-    DebugCode(doToplevel = (Bool) -1;);
+    DebugCode(immediate = (Bool) -1;);
   }
 
   //
   void init(DPMarshaler *dpm) {
     vIT = dpm->getVIT();
-    doToplevel = dpm->isFullToplevel();
+    immediate = dpm->isImmediate();
     expVars = dpm->getExpVars();
     copyStack(dpm);
   }
@@ -579,7 +569,7 @@ public:
   void initEager(DPMarshaler *dpm, OZ_Term t) {
     dest = destIn;
     vIT = dpm->getVIT();
-    doToplevel = dpm->isFullToplevel();
+    immediate = dpm->isImmediate();
     expVars = (OzValuePatch *) 0;
     put(t);
   }
@@ -588,8 +578,7 @@ public:
   void reset() {
     GenTraverser::reset();
     DebugCode(vIT = (MarshalerDict *) -1;);
-    DebugCode(doToplevel = (Bool) -1;);
-    DebugCode(doToplevel = (Bool) -1;);
+    DebugCode(immediate = (Bool) -1;);
   }
   ~VSnapshotBuilder() { reset(); }
 
@@ -615,6 +604,7 @@ public:
   Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
   Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
   Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
+  Bool processObjectState(OZ_Term stateTerm, ConstTerm *stateConst);
   Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
   Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
   Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);

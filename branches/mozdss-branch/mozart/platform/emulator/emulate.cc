@@ -74,6 +74,7 @@ inline
 Abstraction *getSendMethod(OzObject *obj, TaggedRef label, SRecordArity arity, 
 			   InlineCache *cache)
 {
+  Assert(obj->isComplete());
   Assert(oz_isFeature(label));
   return cache->lookup(obj->getClass(),label,arity);
 }
@@ -2235,10 +2236,11 @@ LBLdispatcher:
     {
       TaggedRef fea = getLiteralArg(PC+1);
       OzObject *self = e->getSelf();
-      Assert(self);
+      Assert(self && self->isComplete());
+      ObjectState* state = self->getState();
 
-      if (self->isDistributed()) {     // call distribution layer
-	OZ_Return res = distObjectAccess(self, fea, XPC(2));
+      if (state->isDistributed()) {     // call distribution layer
+	OZ_Return res = distObjectAccess(state, fea, XPC(2));
 	switch(res) {
 	case PROCEED: {
 	  DISPATCH(5);
@@ -2259,7 +2261,7 @@ LBLdispatcher:
 	}
       }
       // handle local case
-      SRecord* rec = self->getState();
+      SRecord* rec = state->getValue();
       Assert(rec);
       int index = ((InlineCache*)(PC+3))->lookup(rec,fea);
       if (index>=0) {
@@ -2274,7 +2276,8 @@ LBLdispatcher:
     {      
       TaggedRef fea = getLiteralArg(PC+1);
       OzObject *self = e->getSelf();
-      Assert(self);
+      Assert(self && self->isComplete());
+      ObjectState* state = self->getState();
 
       // situatedness check
       if (!e->isCurrentRoot() && !oz_isCurrentBoard(GETBOARD(self))) {
@@ -2282,8 +2285,8 @@ LBLdispatcher:
 	RAISE_THREAD;
       }
 
-      if (self->isDistributed()) {     // call distribution layer
-	OZ_Return res = distObjectAssign(self, fea, XPC(2));
+      if (state->isDistributed()) {     // call distribution layer
+	OZ_Return res = distObjectAssign(state, fea, XPC(2));
 	switch(res) {
 	case PROCEED: {
 	  DISPATCH(5);
@@ -2304,7 +2307,7 @@ LBLdispatcher:
 	}
       }
       // handle local case
-      SRecord *rec = self->getState();
+      SRecord* rec = state->getValue();
       Assert(rec);
       int index = ((InlineCache*)(PC+3))->lookup(rec,fea);
       if (index>=0) {
@@ -2614,7 +2617,10 @@ LBLdispatcher:
 
     DEREF(object,objectPtr);
     if (oz_isObject(object)) {
-      OzObject *obj      = tagged2Object(object);
+      OzObject *obj = tagged2Object(object);
+      if (!obj->isComplete()) {
+	goto bombSend;
+      }
       Abstraction *def = getSendMethod(obj,label,arity,(InlineCache*)(PC+4));
       if (def == NULL) {
 	goto bombSend;
@@ -2738,8 +2744,7 @@ LBLdispatcher:
        if (typ==Co_Object) {
 	 CheckArity(1, makeTaggedConst(predicate));
 	 OzObject *o = (OzObject*) predicate;
-	 OzClass* cls = o->getClass();
-	 if (!cls) {   // object incomplete: call distribution
+	 if (!o->isComplete()) {   // object incomplete: call distribution
 	   Assert(o->isDistributed());
 	   OZ_Return ret = (*distObjectInvoke)(o, XREGS[0]);
 	   Assert(ret == BI_REPLACEBICALL || ret == SUSPEND);
@@ -2752,6 +2757,7 @@ LBLdispatcher:
 	   Assert(!e->isEmptyPreparedCalls());
 	   goto LBLreplaceBICall;
 	 }
+	 OzClass* cls = o->getClass();
 	 if (!cls->isComplete()) {   // class not available yet
 	   OZ_Return ret = (*distClassGet)(cls);
 	   Assert(ret == SUSPEND && !e->isEmptySuspendVarList());

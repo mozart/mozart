@@ -526,6 +526,7 @@ enum TypeOfConst {
   // NOTE: update the builtins: subtree and chunkArity, when adding
   //       new chunks
   Co_Object,
+  Co_ObjectState,
   Co_Port,
   Co_Chunk,
   Co_Array,
@@ -1765,11 +1766,54 @@ OzClass *tagged2OzClass(TaggedRef term)
  * Object
  */
 
-// raph: Objects are now distributed with a mediator.  And the lazy
-// serialization of an object's class is now independent from the
-// object.  Therefore, objects no longer use GNames.  Moreover, the
-// state of the object is now handled by the object's mediator (no
-// more RecOrCell).
+// raph: Objects are distributed with two mediators: one for the
+// object itself, and one for its state.  The object is considered an
+// immutable, and its state only is mutable.  The state of an object
+// looks like a chunk with mutable fields.
+
+class ObjectState : public ConstTermWithHome {
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
+private:
+  TaggedRef value;     // must be a record (possibly with no field)
+public:
+  OZPRINTLONG
+  NO_DEFAULT_CONSTRUCTORS(ObjectState)
+  ObjectState(Board *b, TaggedRef v)
+    : ConstTermWithHome(b, Co_ObjectState), value(v)
+  {
+    Assert(v==0||oz_isRecord(v));
+    Assert(b);
+  };
+
+  TaggedRef getValueTerm() { return value; }
+  SRecord* getValue() { return value ? tagged2SRecord(value) : NULL; }
+  void setValue(TaggedRef v) {
+    Assert(v == makeTaggedNULL() || oz_isRecord(v));
+    value = v;
+  }
+
+  TaggedRef getFeature(TaggedRef fea) { return OZ_subtree(value,fea); }
+  Bool setFeature(TaggedRef fea, TaggedRef val) {
+    return tagged2SRecord(value)->setFeature(fea, val);
+  }
+  TaggedRef getArityList() { return value ? ::getArityList(value) : oz_nil(); }
+  int getWidth () { return ::getWidth(value); }
+};
+
+inline
+Bool oz_isObjectState(TaggedRef t) {
+  return oz_isConst(t) && tagged2Const(t)->getType() == Co_ObjectState;
+}
+
+inline
+ObjectState* tagged2ObjectState(TaggedRef t) {
+  Assert(oz_isObjectState(t));
+  return (ObjectState*) tagged2Const(t);
+}
+
+// Objects no longer use a GName.  The object is serialized by its
+// mediator.
 
 class OzObject: public ConstTermWithHome {
   friend void ConstTerm::gCollectConstRecurse(void);
@@ -1815,31 +1859,35 @@ public:
     freeFeatures = r; 
   }
 
-  SRecord* getState(void) {
-    return state == makeTaggedNULL() ? NULL : tagged2SRecord(state);
+  TaggedRef getStateTerm(void) { return state; }
+  ObjectState* getState(void) {
+    return state == makeTaggedNULL() ? NULL : tagged2ObjectState(state);
   }
-  void setState(SRecord *sr) { 
-    state = sr ? makeTaggedSRecord(sr) : makeTaggedNULL();
+  void setState(ObjectState *s) {
+    state = s ? makeTaggedConst(s) : makeTaggedNULL();
   }
   void setState(OZ_Term s) {
-    Assert(s == makeTaggedNULL() || oz_isSRecord(s));
+    Assert(s == makeTaggedNULL() || oz_isObjectState(s));
     state = s;
   }
 
   // support for the glue layer
+  Bool isComplete() {
+    return cls != makeTaggedNULL();
+  }
   OZ_Term getRepresentation(void) {
+    Assert(isComplete());
     OZ_Term fea = freeFeatures ? freeFeatures : oz_nil();
     OZ_Term lck = lock ? lock : oz_nil();
     return OZ_mkTupleC("#", 4, cls, fea, lck, state);
   }
   void setRepresentation(OZ_Term t) {
+    Assert(!isComplete());
     SRecord* rec = tagged2SRecord(t);
     Assert(rec->getTupleWidth() == 4);
-    if (!cls) {   // optimization, in case we already have them
-      setClass(rec->getArg(0));
-      if (!oz_isNil(rec->getArg(1))) setFreeRecord(rec->getArg(1));
-      if (!oz_isNil(rec->getArg(2))) setLock(rec->getArg(2));
-    }
+    setClass(rec->getArg(0));
+    if (!oz_isNil(rec->getArg(1))) setFreeRecord(rec->getArg(1));
+    if (!oz_isNil(rec->getArg(2))) setLock(rec->getArg(2));
     setState(rec->getArg(3));
   }
 
@@ -1894,10 +1942,10 @@ public:
   OzObject(Board *bb, SRecord *s, OzClass *ac, SRecord *feat, OzLock *lck)
     : ConstTermWithHome(bb, Co_Object)
   {
-    setFreeRecord(feat);
     setClass(ac);
-    setState(s);
+    setFreeRecord(feat);
     setLock(lck);
+    setState(new ObjectState(bb, makeTaggedSRecord(s)));
   }
 
   // raph: this is the constructor to be used by the builder

@@ -255,6 +255,7 @@ int ConstTerm::checkSituatedness(void) {
   case Co_Dictionary:
   case Co_Class: 
   case Co_Object: 
+  case Co_ObjectState:
   case Co_Cell:
   case Co_Port:  
   case Co_Space:

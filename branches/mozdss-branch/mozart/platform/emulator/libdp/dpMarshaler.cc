@@ -432,12 +432,13 @@ inline
 Bool VSnapshotBuilder::processObject(OZ_Term objTerm, ConstTerm *objConst)
 {
   VisitNodeTrav(objTerm, vIT, return(TRUE));
-  if (doToplevel) {
-    doToplevel = FALSE;
-    return (FALSE);
-  } else {
-    return (TRUE);
-  }
+  return (TRUE);
+}
+inline 
+Bool VSnapshotBuilder::processObjectState(OZ_Term objTerm, ConstTerm *objConst)
+{
+  VisitNodeTrav(objTerm, vIT, return(TRUE));
+  return (TRUE);
 }
 inline 
 void VSnapshotBuilder::processNoGood(OZ_Term resTerm)

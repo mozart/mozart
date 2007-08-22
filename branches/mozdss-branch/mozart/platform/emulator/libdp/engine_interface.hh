@@ -55,7 +55,7 @@ Annotation makeAnnotation(ProtocolName pn, AccessArchitecture aa, RCalg rc) {
   return annot;
 }
 
-void setAnnotation(TaggedRef, const Annotation&);
+void setAnnotation(TaggedRef, Annotation);
 Annotation getAnnotation(TaggedRef);
 
 

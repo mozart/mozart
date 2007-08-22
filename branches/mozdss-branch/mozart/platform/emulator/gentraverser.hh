@@ -607,6 +607,7 @@ protected:
   Bool processFSETValue(OZ_Term fsetvalueTerm);
   // composite OzConst"s;
   Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
+  Bool processObjectState(OZ_Term stateTerm, ConstTerm *stateConst);
   Bool processDictionary(OZ_Term dictTerm, ConstTerm *dictConst);
   Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
   Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);

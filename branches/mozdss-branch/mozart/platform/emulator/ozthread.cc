@@ -23,6 +23,7 @@
 
 #include "builtins.hh"
 #include "board.hh"
+#include "thr_int.hh"
 
 Suspendable * (*suspendableSCloneSuspendableDynamic)(Suspendable *);
 
@@ -80,6 +81,14 @@ public:
   OZ_Return eqV(OZ_Term term);
 
   Thread *getThread() { return thread; }
+  Thread *getAliveThread() {
+    if (thread->isDead()) {
+      thread->setOzThread(makeTaggedNULL());
+      thread = oz_newThreadSuspended();
+      thread->setOzThread(makeTaggedExtension(this));
+    }
+    return thread;
+  }
 };
 
 Bool oz_isThread(TaggedRef term)
@@ -92,6 +101,12 @@ Thread *oz_ThreadToC(TaggedRef term)
 {
   Assert(oz_isThread(term));
   return ((OzThread *) tagged2Extension(term))->getThread();
+}
+
+Thread *oz_ThreadToAliveC(TaggedRef term)
+{
+  Assert(oz_isThread(term));
+  return ((OzThread *) tagged2Extension(term))->getAliveThread();
 }
 
 TaggedRef oz_thread(Thread *tt)
