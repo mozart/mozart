@@ -181,6 +181,12 @@ void ObjectMediator::unmarshal(ByteBuffer* bs) {
   if (!hasEntity()) setConst(new OzObject(oz_currentBoard()));
 }
 
+// object states
+void ObjectStateMediator::unmarshal(ByteBuffer* bs) {
+  if (!hasEntity())
+    setConst(new ObjectState(oz_currentBoard(), makeTaggedNULL()));
+}
+
 
 // thread ids
 void OzThreadMediator::unmarshal(ByteBuffer* bs) {

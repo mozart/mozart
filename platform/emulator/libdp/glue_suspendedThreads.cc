@@ -472,12 +472,12 @@ SuspendedObjectAccess::SuspendedObjectAccess(Mediator* med,
 }
 
 WakeRetVal SuspendedObjectAccess::resumeDoLocal(DssOperationId*) {
-  OzObject* obj = tagged2Object(getMediator()->getEntity());
-  TaggedRef out = obj->getState()->getFeature(key);
+  TaggedRef entity = getMediator()->getEntity();
+  TaggedRef out = tagged2ObjectState(entity)->getFeature(key);
   if (out)
     resumeUnify(result, out);
   else
-    resumeRaise(OZ_makeException(E_SYSTEM, E_KERNEL, "object", 2, obj, key));
+    resumeRaise(OZ_makeException(E_SYSTEM, E_KERNEL, "object", 2, entity, key));
   return WRV_DONE;
 }
 
@@ -514,12 +514,12 @@ SuspendedObjectAssign::SuspendedObjectAssign(Mediator* med,
 }
 
 WakeRetVal SuspendedObjectAssign::resumeDoLocal(DssOperationId*) {
-  OzObject* obj = tagged2Object(getMediator()->getEntity());
-  bool out = obj->getState()->setFeature(key, value);
+  TaggedRef entity = getMediator()->getEntity();
+  bool out = tagged2ObjectState(entity)->setFeature(key, value);
   if (out)
     resume();
   else
-    resumeRaise(OZ_makeException(E_SYSTEM, E_KERNEL, "object", 2, obj, key));
+    resumeRaise(OZ_makeException(E_SYSTEM, E_KERNEL, "object", 2, entity, key));
   return WRV_DONE;
 }
 
@@ -554,13 +554,13 @@ SuspendedObjectExchange::SuspendedObjectExchange(Mediator* med, OZ_Term k,
 }
 
 WakeRetVal SuspendedObjectExchange::resumeDoLocal(DssOperationId*) {
-  OzObject* obj = tagged2Object(getMediator()->getEntity());
-  TaggedRef out = obj->getState()->getFeature(key);
+  TaggedRef entity = getMediator()->getEntity();
+  TaggedRef out = tagged2ObjectState(entity)->getFeature(key);
   if (out) {
-    obj->getState()->setFeature(key, newVal);
+    tagged2ObjectState(entity)->setFeature(key, newVal);
     resumeUnify(oldVal, out);
   } else {
-    resumeRaise(OZ_makeException(E_SYSTEM, E_KERNEL, "object", 2, obj, key));
+    resumeRaise(OZ_makeException(E_SYSTEM, E_KERNEL, "object", 2, entity, key));
   }
   return WRV_DONE;
 }

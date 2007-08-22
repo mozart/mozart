@@ -1320,6 +1320,13 @@ void ConstTerm::_cacConstRecurse(void) {
       break;
     }
 
+  case Co_ObjectState:
+    {
+      ObjectState* s = (ObjectState*) this;
+      oz_cacTerm(s->value, s->value);
+      break;
+    }
+
   case Co_Space:
     {
       Space *s = (Space *) this;
@@ -1541,6 +1548,10 @@ ConstTerm * ConstTerm::gCollectConstTermInline(void) {
     sz = sizeof(OzObject);
     goto const_withhome;
 
+  case Co_ObjectState: 
+    sz = sizeof(ObjectState);
+    goto const_withhome;
+
   case Co_Space:
     sz = sizeof(Space);
     goto const_withhome;
@@ -1660,6 +1671,10 @@ ConstTerm *ConstTerm::sCloneConstTermInline(void) {
 
   case Co_Object: 
     sz = sizeof(OzObject);
+    goto const_withhome;
+
+  case Co_ObjectState: 
+    sz = sizeof(ObjectState);
     goto const_withhome;
 
   case Co_Space:

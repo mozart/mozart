@@ -91,6 +91,7 @@ public:
   Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
   Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
   Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
+  Bool processObjectState(OZ_Term objTerm, ConstTerm *objConst);
   Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
   Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
   Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
@@ -165,6 +166,7 @@ public:
   Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
   Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
   Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
+  Bool processObjectState(OZ_Term objTerm, ConstTerm *objConst);
   Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
   Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
   Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);

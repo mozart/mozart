@@ -75,15 +75,16 @@ OZ_Return distObjectGetFeatureStub(OzObject*, TaggedRef, TaggedRef&) {
   OZD_error("'distObjectGetFeature' called without DP library?");
   return PROCEED;
 }
-OZ_Return distObjectAccessStub(OzObject*, TaggedRef, TaggedRef&) {
+OZ_Return distObjectAccessStub(ObjectState*, TaggedRef, TaggedRef&) {
   OZD_error("'distObjectAccess' called without DP library?");
   return PROCEED;
 }
-OZ_Return distObjectAssignStub(OzObject*, TaggedRef, TaggedRef) {
+OZ_Return distObjectAssignStub(ObjectState*, TaggedRef, TaggedRef) {
   OZD_error("'distObjectAssign' called without DP library?");
   return PROCEED;
 }
-OZ_Return distObjectExchangeStub(OzObject*, TaggedRef, TaggedRef, TaggedRef&) {
+OZ_Return distObjectExchangeStub(ObjectState*, TaggedRef,
+				      TaggedRef, TaggedRef&) {
   OZD_error("'distObjectExchange' called without DP library?");
   return PROCEED;
 }
@@ -191,11 +192,11 @@ OZ_Return (*distObjectInvoke)(OzObject*, TaggedRef)
   = distObjectInvokeStub;
 OZ_Return (*distObjectGetFeature)(OzObject*, TaggedRef, TaggedRef&)
   = distObjectGetFeatureStub;
-OZ_Return (*distObjectAccess)(OzObject*, TaggedRef, TaggedRef&)
+OZ_Return (*distObjectAccess)(ObjectState*, TaggedRef, TaggedRef&)
   = distObjectAccessStub;
-OZ_Return (*distObjectAssign)(OzObject*, TaggedRef, TaggedRef)
+OZ_Return (*distObjectAssign)(ObjectState*, TaggedRef, TaggedRef)
   = distObjectAssignStub;
-OZ_Return (*distObjectExchange)(OzObject*, TaggedRef, TaggedRef, TaggedRef&)
+OZ_Return (*distObjectExchange)(ObjectState*, TaggedRef, TaggedRef, TaggedRef&)
   = distObjectExchangeStub;
 
 // arrays

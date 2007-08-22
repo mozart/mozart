@@ -337,6 +337,7 @@ class CompStream;
 
 class OzClass;
 class OzObject;
+class ObjectState;
 
 class OzDictionary;
 
@@ -383,6 +384,7 @@ enum LockRet{
 // see ozthread.cc
 Bool oz_isThread(TaggedRef term);
 Thread *oz_ThreadToC(TaggedRef term);
+Thread *oz_ThreadToAliveC(TaggedRef term);
 OZ_Term oz_thread(Thread *tt);
 
 // see am.cc

@@ -108,7 +108,7 @@ enum GlueTag {
   GLUE_PORT,           // mutables
   GLUE_CELL,
   GLUE_LOCK,
-  GLUE_OBJECT,
+  GLUE_OBJECTSTATE,
   GLUE_ARRAY,
   GLUE_DICTIONARY,
   GLUE_THREAD,
@@ -117,6 +117,7 @@ enum GlueTag {
   GLUE_UNUSABLE,       // immutables
   GLUE_CHUNK,
   GLUE_CLASS,
+  GLUE_OBJECT,
   GLUE_PROCEDURE,
   GLUE_LAST            // must be last
 };
@@ -343,10 +344,26 @@ public:
 
 
 // mediators for Oz objects
-class ObjectMediator: public ConstMediator, public MutableAbstractEntity {
+class ObjectMediator: public ConstMediator, public ImmutableAbstractEntity {
 public:
   ObjectMediator();
   ObjectMediator(TaggedRef);
+
+  virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
+				   PstInContainerInterface*,
+				   PstOutContainerInterface*&);
+  virtual PstOutContainerInterface *retrieveEntityRepresentation();
+  virtual void installEntityRepresentation(PstInContainerInterface*); 
+  virtual void unmarshal(ByteBuffer*);
+  virtual char *getPrintType() { return "object"; }
+};
+
+
+// mediators for objects' state
+class ObjectStateMediator: public ConstMediator, public MutableAbstractEntity {
+public:
+  ObjectStateMediator();
+  ObjectStateMediator(TaggedRef);
 
   virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
 				    PstInContainerInterface*,
@@ -358,7 +375,7 @@ public:
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
   virtual void unmarshal(ByteBuffer*);
-  virtual char *getPrintType() { return "object"; }
+  virtual char *getPrintType() { return "object state"; }
 };
 
 

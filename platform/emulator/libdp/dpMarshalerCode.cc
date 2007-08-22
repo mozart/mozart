@@ -365,6 +365,34 @@ Bool DPMARSHALERCLASS::processObject(OZ_Term term, ConstTerm *objConst)
 
 //
 inline 
+Bool DPMARSHALERCLASS::processObjectState(OZ_Term term, ConstTerm *stateConst)
+{
+  ByteBuffer *bs = (ByteBuffer *) getOpaque();
+
+  // marshaling a mediator: DIF_GLUE, index, mediator
+  if (bs->availableSpace() >=
+      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize) {
+    int index;
+    VISITNODE(term, vIT, bs, index, return(OK));
+    marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
+    (void) glue_marshalEntity(term, bs);
+    Assert(bs->availableSpace() >= DIFMaxSize);
+
+  } else {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+      dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term));
+    fflush(dbgout);
+#endif
+    marshalDIFcounted(bs, DIF_SUSPEND);
+    suspend(term);
+  }
+  return (OK);
+}
+
+//
+inline 
 void DPMARSHALERCLASS::processLock(OZ_Term term, ConstTerm *lockConst)
 {
   ByteBuffer *bs = (ByteBuffer *) getOpaque();

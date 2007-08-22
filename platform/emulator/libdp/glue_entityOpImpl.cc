@@ -415,8 +415,10 @@ distObjectGetFeatureImpl(OzObject* obj, TaggedRef key, TaggedRef &res) {
 }
 
 // read an object attribute
-OZ_Return distObjectAccessImpl(OzObject* obj, TaggedRef key, TaggedRef &res) {
-  ObjectMediator* med = static_cast<ObjectMediator*>(obj->getMediator());
+OZ_Return distObjectAccessImpl(ObjectState* state,
+			       TaggedRef key, TaggedRef &res) {
+  ObjectStateMediator* med =
+    static_cast<ObjectStateMediator*>(state->getMediator());
 
   // suspend if fault state not ok
   if (med->getFaultState()) return med->suspendOnFault();
@@ -429,7 +431,7 @@ OZ_Return distObjectAccessImpl(OzObject* obj, TaggedRef key, TaggedRef &res) {
 
   switch (cont) {
   case DSS_PROCEED:
-    res = obj->getState()->getFeature(key);
+    res = state->getFeature(key);
     if (res)
       return PROCEED;
     oz_typeError(0,"(valid) Feature");
@@ -444,8 +446,10 @@ OZ_Return distObjectAccessImpl(OzObject* obj, TaggedRef key, TaggedRef &res) {
 }
 
 // write an object attribute
-OZ_Return distObjectAssignImpl(OzObject* obj, TaggedRef key, TaggedRef val) {
-  ObjectMediator* med = static_cast<ObjectMediator*>(obj->getMediator());
+OZ_Return distObjectAssignImpl(ObjectState* state,
+			       TaggedRef key, TaggedRef val) {
+  ObjectStateMediator* med =
+    static_cast<ObjectStateMediator*>(state->getMediator());
 
   // suspend if fault state not ok
   if (med->getFaultState()) return med->suspendOnFault();
@@ -458,7 +462,7 @@ OZ_Return distObjectAssignImpl(OzObject* obj, TaggedRef key, TaggedRef val) {
 
   switch (cont) {
   case DSS_PROCEED: {
-    bool ret = obj->getState()->setFeature(key, val);
+    bool ret = state->setFeature(key, val);
     if (ret) return PROCEED;
     oz_typeError(0,"(valid) Feature");
   }
@@ -472,9 +476,10 @@ OZ_Return distObjectAssignImpl(OzObject* obj, TaggedRef key, TaggedRef val) {
 }
 
 // exchange an object attribute
-OZ_Return distObjectExchangeImpl(OzObject* obj, TaggedRef key,
+OZ_Return distObjectExchangeImpl(ObjectState* state, TaggedRef key,
 				 TaggedRef newVal, TaggedRef &oldVal) {
-  ObjectMediator* med = static_cast<ObjectMediator*>(obj->getMediator());
+  ObjectStateMediator* med =
+    static_cast<ObjectStateMediator*>(state->getMediator());
 
   // suspend if fault state not ok
   if (med->getFaultState()) return med->suspendOnFault();
@@ -487,9 +492,9 @@ OZ_Return distObjectExchangeImpl(OzObject* obj, TaggedRef key,
 
   switch (cont) {
   case DSS_PROCEED:
-    oldVal = obj->getState()->getFeature(key);
+    oldVal = state->getFeature(key);
     if (oldVal) {
-      obj->getState()->setFeature(key, newVal);
+      state->setFeature(key, newVal);
       return PROCEED;
     }
     oz_typeError(0,"(valid) Feature");

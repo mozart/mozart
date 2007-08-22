@@ -118,9 +118,15 @@ void gcGlueFinalImpl()
 
 /************************* Annotations *************************/
 
-void setAnnotation(TaggedRef entity, const Annotation& a) {
+void setAnnotation(TaggedRef entity, Annotation a) {
   // take the mediator of entity, and store annotation
   entity = oz_safeDeref(entity);
+  if (oz_isObject(entity) && a.pn != PN_SIMPLE_CHANNEL) {
+    // set the annotation to the state
+    glue_getMediator(tagged2Object(entity)->getStateTerm())->setAnnotation(a);
+    // the protocol annotation was only valid for the state
+    a.pn = PN_NO_PROTOCOL;
+  }
   glue_getMediator(entity)->setAnnotation(a);
 }
 
@@ -181,7 +187,8 @@ void initDP(int port, int ip, const char *siteId, int primKey)
   setDefaultAnnotation(GLUE_PORT,       PN_SIMPLE_CHANNEL,  aa, rc);
   setDefaultAnnotation(GLUE_CELL,       PN_MIGRATORY_STATE, aa, rc);
   setDefaultAnnotation(GLUE_LOCK,       PN_MIGRATORY_STATE, aa, rc);
-  setDefaultAnnotation(GLUE_OBJECT,     PN_MIGRATORY_STATE, aa, rc);
+  setDefaultAnnotation(GLUE_OBJECT,     PN_IMMUTABLE_EAGER, aa, rc);
+  setDefaultAnnotation(GLUE_OBJECTSTATE, PN_MIGRATORY_STATE, aa, rc);
   setDefaultAnnotation(GLUE_ARRAY,      PN_SIMPLE_CHANNEL,  aa, rc);
   setDefaultAnnotation(GLUE_DICTIONARY, PN_SIMPLE_CHANNEL,  aa, rc);
   setDefaultAnnotation(GLUE_THREAD,     PN_SIMPLE_CHANNEL,  aa, rc);

@@ -56,6 +56,7 @@ Mediator *glue_newMediator(GlueTag tag) {
   case GLUE_CELL:       return new CellMediator();
   case GLUE_LOCK:       return new LockMediator();
   case GLUE_OBJECT:     return new ObjectMediator();
+  case GLUE_OBJECTSTATE: return new ObjectStateMediator();
   case GLUE_ARRAY:      return new ArrayMediator();
   case GLUE_DICTIONARY: return new DictionaryMediator();
   case GLUE_THREAD:     return new OzThreadMediator();
@@ -106,6 +107,7 @@ Mediator *glue_getMediator(TaggedRef entity) {
     switch (ct->getType()) {
     case Co_Cell:        return getCTWHMediator<CellMediator>(ct);
     case Co_Object:      return getCTWHMediator<ObjectMediator>(ct);
+    case Co_ObjectState: return getCTWHMediator<ObjectStateMediator>(ct);
     case Co_Port:        return getCTWHMediator<PortMediator>(ct);
     case Co_Chunk:       return getCTWHMediator<ChunkMediator>(ct);
     case Co_Array:       return getCTWHMediator<ArrayMediator>(ct);
@@ -701,42 +703,16 @@ ObjectMediator::ObjectMediator(TaggedRef e) : ConstMediator(GLUE_OBJECT) {
 }
 
 AOcallback
-ObjectMediator::callback_Write(DssThreadId*, DssOperationId*,
-			       PstInContainerInterface* operation,
-			       PstOutContainerInterface*& answer) {
-  OzObject* obj = tagged2Object(getEntity());
-  // write operations are: assign, exchange
-  TaggedRef arg = static_cast<PstInContainer*>(operation)->a_term;
-  Assert(OZ_isTuple(arg));
-  if (OZ_label(arg) == oz_atom("assign")) {
-    TaggedRef key = OZ_getArg(arg, 0);
-    TaggedRef val = OZ_getArg(arg, 1);
-    if (obj->getState()->setFeature(key, val)) {
-      answer = new PstOutContainer(oz_nil());
-    }
-  } else if (OZ_label(arg) == oz_atom("exchange")) {
-    TaggedRef key = OZ_getArg(arg, 0);
-    TaggedRef val = OZ_getArg(arg, 1);
-    TaggedRef old = obj->getState()->getFeature(key);
-    if (old) {
-      obj->getState()->setFeature(key, val);
-      answer = new PstOutContainer(old);
-    }
-  }
-  return AOCB_FINISH;
-}
-
-AOcallback
 ObjectMediator::callback_Read(DssThreadId*, DssOperationId*,
 			      PstInContainerInterface* operation,
 			      PstOutContainerInterface*& answer) {
-  // read operations are: invoke, access, get
+  // read operations are: invoke, get
   TaggedRef arg = static_cast<PstInContainer*>(operation)->a_term;
   Assert(OZ_isTuple(arg));
   if (OZ_label(arg) == oz_atom("invoke")) {
     TaggedRef meth = OZ_getArg(arg, 0);
     TaggedRef tid  = OZ_getArg(arg, 1);     // the caller's thread id
-    Thread* thread = oz_ThreadToC(tid);     // the corresponding local thread
+    Thread* thread = oz_ThreadToAliveC(tid); // the corresponding local thread
     TaggedRef ret  = oz_newVariable();      // return variable
     Assert(thread);
     // push {RPC Obj [Meth] Ret} on top of thread
@@ -745,12 +721,6 @@ ObjectMediator::callback_Read(DssThreadId*, DssOperationId*,
     // wake up thread
     if (thread->isSuspended()) oz_wakeupThread(thread);
     answer = new PstOutContainer(ret);
-
-  } else if (OZ_label(arg) == oz_atom("access")) {
-    OzObject* obj = tagged2Object(getEntity());
-    TaggedRef key = OZ_getArg(arg, 0);
-    TaggedRef old = obj->getState()->getFeature(key);
-    if (old) answer = new PstOutContainer(old);
 
   } else if (OZ_label(arg) == oz_atom("get")) {
     OzObject* obj = tagged2Object(getEntity());
@@ -769,18 +739,85 @@ ObjectMediator::retrieveEntityRepresentation() {
   return new PstOutContainer(obj->getRepresentation());
 }
 
-PstOutContainerInterface*
-ObjectMediator::deinstallEntityRepresentation() {
+void
+ObjectMediator::installEntityRepresentation(PstInContainerInterface* pstin) {
   OzObject* obj = static_cast<OzObject*>(getConst());
-  TaggedRef val = obj->getRepresentation();
-  obj->setState(makeTaggedNULL());
+  if (!obj->isComplete())
+    obj->setRepresentation(static_cast<PstInContainer*>(pstin)->a_term);
+}
+
+
+
+/************************* ObjectStateMediator *************************/
+
+ObjectStateMediator::ObjectStateMediator() : ConstMediator(GLUE_OBJECTSTATE) {}
+
+ObjectStateMediator::ObjectStateMediator(TaggedRef e) :
+  ConstMediator(GLUE_OBJECTSTATE) {
+  setEntity(e);
+}
+
+AOcallback
+ObjectStateMediator::callback_Write(DssThreadId*, DssOperationId*,
+			       PstInContainerInterface* operation,
+			       PstOutContainerInterface*& answer) {
+  ObjectState* state = tagged2ObjectState(getEntity());
+  // write operations are: assign, exchange
+  TaggedRef arg = static_cast<PstInContainer*>(operation)->a_term;
+  Assert(OZ_isTuple(arg));
+  if (OZ_label(arg) == oz_atom("assign")) {
+    TaggedRef key = OZ_getArg(arg, 0);
+    TaggedRef val = OZ_getArg(arg, 1);
+    if (state->setFeature(key, val)) {
+      answer = new PstOutContainer(oz_nil());
+    }
+  } else if (OZ_label(arg) == oz_atom("exchange")) {
+    TaggedRef key = OZ_getArg(arg, 0);
+    TaggedRef val = OZ_getArg(arg, 1);
+    TaggedRef old = state->getFeature(key);
+    if (old) {
+      state->setFeature(key, val);
+      answer = new PstOutContainer(old);
+    }
+  }
+  return AOCB_FINISH;
+}
+
+AOcallback
+ObjectStateMediator::callback_Read(DssThreadId*, DssOperationId*,
+			      PstInContainerInterface* operation,
+			      PstOutContainerInterface*& answer) {
+  ObjectState* state = tagged2ObjectState(getEntity());
+  // read operations are: access
+  TaggedRef arg = static_cast<PstInContainer*>(operation)->a_term;
+  Assert(OZ_isTuple(arg));
+  if (OZ_label(arg) == oz_atom("access")) {
+    TaggedRef key = OZ_getArg(arg, 0);
+    TaggedRef val = state->getFeature(key);
+    if (val) answer = new PstOutContainer(val);
+  }
+  return AOCB_FINISH;
+}
+
+PstOutContainerInterface*
+ObjectStateMediator::retrieveEntityRepresentation() {
+  // an object state contains a record
+  ObjectState* state = tagged2ObjectState(getEntity());
+  return new PstOutContainer(state->getValueTerm());
+}
+
+PstOutContainerInterface*
+ObjectStateMediator::deinstallEntityRepresentation() {
+  ObjectState* state = tagged2ObjectState(getEntity());
+  TaggedRef val = state->getValueTerm();
+  state->setValue(makeTaggedNULL());
   return new PstOutContainer(val);
 }
 
 void
-ObjectMediator::installEntityRepresentation(PstInContainerInterface* pstin) {
-  OzObject* obj = static_cast<OzObject*>(getConst());
-  obj->setRepresentation(static_cast<PstInContainer*>(pstin)->a_term);
+ObjectStateMediator::installEntityRepresentation(PstInContainerInterface* pstin) {
+  ObjectState* state = tagged2ObjectState(getEntity());
+  state->setValue(static_cast<PstInContainer*>(pstin)->a_term);
 }
 
 
@@ -1032,7 +1069,7 @@ ProcedureMediator::callback_Read(DssThreadId*, DssOperationId*,
   //
   TaggedRef args = OZ_getArg(op, 0);      // list of arguments
   TaggedRef tid  = OZ_getArg(op, 1);      // the caller's thread id
-  Thread* thread = oz_ThreadToC(tid);     // the corresponding local thread
+  Thread* thread = oz_ThreadToAliveC(tid); // the corresponding local thread
   TaggedRef ret  = oz_newVariable();      // return variable
   Assert(thread);
   // push {RPC Proc Args Ret} on top of thread
