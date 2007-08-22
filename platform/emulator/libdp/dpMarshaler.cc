@@ -505,7 +505,6 @@ Bool VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
     }
   } else if (oz_isFree(v) || oz_isReadOnly(v)) {
     // globalize the variable if needed, and patch it
-    printf("--- raph: patching var\n");
     glue_globalizeEntity(vrt);
     expVars = new DistributedVarPatch(vrt, expVars);
 
@@ -1383,7 +1382,6 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
     // Unmmarshaling stateless dictionaries.
     case DIF_DICT_DEF:
       {
-        printf("unmarshaling a DICT_DEF\n"); //bmc
         int refTag = unmarshalRefTag(bs);
         int size   = unmarshalNumber(bs);
         Assert(oz_onToplevel());
@@ -1397,7 +1395,6 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 
     case DIF_DICT:
       {
-        printf("unmarshaling a DICT\n"); //bmc
         int size   = unmarshalNumber(bs);
         Assert(oz_onToplevel());
         b->buildDictionary(size);
