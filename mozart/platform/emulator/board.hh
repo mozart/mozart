@@ -575,9 +575,12 @@ public:
      | No Const Vars  |     False    |   False    | Succeded |
      | No Propagators |              |            |          |
      ---------------------------------------------------------
+	 
+	 The return value indicates if there was already a thread present
+	 in the space or not.
  */
 
-  void ensureLateThread(void);
+  bool ensureLateThread(void);
 
   
   /**
@@ -593,7 +596,7 @@ public:
   }
   
   /**
-     \brief Returns a pointer to the actual lateThread.
+     \brief Returns a pointer to the current lateThread.
   */
 
   Thread * getLateThread(void) { return lateThread; }

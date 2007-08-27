@@ -60,13 +60,12 @@ VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share) {
 int GenericSpace::gscounter = 0;
 
 GenericSpace::GenericSpace(Board* b) 
-  : vars(), board(b), determined(0), foreignProps(0),
+  : vars(), board(b), determined(0), foreignProps(0), trigger(true),
     unifyProps(0),gc_pred(NULL), gc_succ(NULL), gc_marked(false),
     allocatedMemory(usedMem())
 {
-  trigger = oz_newReadOnly(board);  
-  registerGeSpace(this);
-  GeSpaceAllocatedMem += allocatedMemory;
+	registerGeSpace(this);
+	GeSpaceAllocatedMem += allocatedMemory;
   //printf("Constructor: %u %p\n",GeSpaceAllocatedMem,this);fflush(stdout);
 }
 
@@ -101,37 +100,40 @@ GenericSpace::~GenericSpace(void) {
     0 : GeSpaceAllocatedMem - allocatedMemory;
 }
 
-//inline
+inline
 bool GenericSpace::isStable(void) {
-  Assert(getTrigger());
-  return oz_isReadOnly(oz_deref(getTrigger()));
+  return trigger;
 }
 
 inline
 void GenericSpace::makeStable(void) { 
   //printf("makeStable\n");fflush(stdout);
-  if (!isStable()) {
-    trigger = oz_newReadOnly(board);
-  }
-  /*
-    Assert(getTrigger());
-    if (oz_isReadOnly(oz_deref(getTrigger()))) {
-    return;
-    }
-    trigger = oz_newReadOnly(board);
-  */
+  if (!isStable())
+	trigger = true;
 }
 
 
 void GenericSpace::makeUnstable(void) {
-  oz_currentBoard()->ensureLateThread();
-  Assert(getTrigger() && oz_currentBoard()->getLateThread());
-
-  TaggedRef t = getTrigger();
-  DEREF(t,t_ptr);
-  if (oz_isReadOnly(t)) {
-    oz_bindReadOnly(t_ptr,NameUnit);
-  }
+	if (trigger) {
+		Board *cb = oz_currentBoard();
+		bool exist = cb->ensureLateThread();
+		TaggedRef status = cb->getStatus();
+		DEREF(status, statusPtr); 
+		if(oz_isReadOnly(status)) {
+			oz_var_addQuietSusp(statusPtr, cb->getLateThread()); 
+			trigger = false;
+		}
+		/* Still pending what happen with makeUnstable if cb is the
+		   top level space?.
+		*/
+		/*else {
+			Assert(cb->isRoot());
+			if (exist) {
+				oz_var_addQuietSusp(statusPtr, cb->getLateThread());
+				am.threadsPool.rescheduleThread(cb->getLateThread());
+			}
+		}*/
+	}
 }
 
 Gecode::SpaceStatus GenericSpace::mstatus(void) {
@@ -173,7 +175,7 @@ void GenericSpace::gCollect() {
   //GEOZ_DEBUG_PRINT(("Called collection on references\n"));
   board = board->gCollectBoard();
   for (int i=0; i<vars.getSize(); i++) OZ_gCollect(vars.getRef(i));
-  OZ_gCollect(&trigger);
+  //OZ_gCollect(&trigger);
   gc_marked = true;
 }
 
@@ -184,7 +186,7 @@ void GenericSpace::sClone() {
   //printf("GeSpace.cc sClone1\n");fflush(stdout);
   for (int i=0; i<vars.getSize(); i++) OZ_sClone(vars.getRef(i));
   //printf("GeSpace.cc sClone2\n");fflush(stdout);
-  OZ_sClone(&trigger);
+  //OZ_sClone(&trigger);
 }
 
 void registerGeSpace(GenericSpace* gs) {
@@ -209,7 +211,6 @@ void registerGeSpace(GenericSpace* gs) {
     printf("uno mas %d\n",i);fflush(stdout);
   }
   */
-    //GeSpaceAllocateMem += sizeof(GenericSpace) + gs->
 }
 
 // delete unmarked objects
