@@ -461,7 +461,6 @@ void checkGlobalVar(OZ_Term v) {
   }
 }
 
-
 template <class VarImp, Gecode::PropCond pc>
 inline
 GeVar<VarImp,pc>* get_GeVar(OZ_Term v, bool cgv = true) {

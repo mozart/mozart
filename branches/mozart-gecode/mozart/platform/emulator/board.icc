@@ -424,8 +424,9 @@ TaggedRef Board::getStabilityVar(void) {
 // This prototype is needed to make ensureLateThread an inline func.
 OZ_Return oz_var_addQuietSusp(TaggedRef*, Suspendable *);
 
+
 inline
-void Board::ensureLateThread(void) {
+bool Board::ensureLateThread(void) {
   Assert(getGenericSpace(true));
   if(!lateThread) {
     if(isRoot()) {
@@ -439,8 +440,9 @@ void Board::ensureLateThread(void) {
       Assert(oz_isReadOnly(st));
       oz_var_addQuietSusp(stPtr, lateThread);
     }
-    
+	return false;
   }
+  return true;
 }
 
 
