@@ -35,53 +35,47 @@
 
 OZ_BI_define(BI_prop_gec, 0, 0) {
   //printf("Thread %p running at board %p\n",oz_currentThread(), oz_currentBoard());fflush(stdout);
-  
+  using namespace Gecode;
+  Board *cb = oz_currentBoard();
   /* Curren board cannot be failed */
-  Assert(!oz_currentBoard()->isFailed());
+  Assert(!cb->isFailed());
   /* Current board must contains a not NULL generic space*/
-  GenericSpace *gs = oz_currentBoard()->getGenericSpace(true);
+  GenericSpace *gs = cb->getGenericSpace(true);
   Assert(gs);  
   
-  /* The generic space could not be failed, if it does then the execution
-     of lateThread will result in an failure.
+  /*
+  	The generic space could not be failed, if it does then the execution
+    of lateThread will result in an failure.
   */
   if (gs->failed()) { return FAILED; }
 
-  TaggedRef status = oz_currentBoard()->getStatus();
+  /*
+  	This thread only runs when the status variable was needed,
+	LateThread is only created runable when running at top level, 
+	otherwise it is created as a suspended thread and added to the 
+	status susp list.
+  */
+  TaggedRef status = cb->getStatus();
   DEREF(status, statusPtr); 
-  //Assert(oz_isNeeded(status) || oz_currentBoard()->isRoot());
-    
-
-  using namespace Gecode;
-  /* 
-     LateThread is only created runable when running at top level, 
-     otherwise it is created as a suspended thread and added to the 
-     status susp list.
-   */
-  if (!oz_currentBoard()->isRoot()) {  
-    // first wait until status is needed
-    TaggedRef status = oz_currentBoard()->getStatus();
-    DEREF(status, statusPtr); 
-    if (!oz_isNeeded(status)) 
-      return oz_var_addQuietSusp(statusPtr, oz_currentThread());      
-  }
-  
+  Assert(oz_isNeeded(status) || cb->isRoot());
+   
   //printf("lateThread before run propagation\n");fflush(stdout);  
   if (gs->mstatus() == SS_FAILED) {
-    oz_currentBoard()->deleteGenericSpace();
+    cb->deleteGenericSpace();
     return FAILED;
   } 
 
-  if (!gs->isEntailed()) {
-      TaggedRef t =  gs->getTrigger();
-    DEREF(t,t_ptr);
-    return oz_var_addSusp(t_ptr, oz_currentThread());
-  }
+  /*
+  	After propagation the generic space is stable, if it is not 
+	entailed, this thread must suspend.
+  */
+  if (!gs->isEntailed())
+	return SUSPEND;
   
   // no variable left in gs, delete it and vanish
   if(gs->isSolved())
-    oz_currentBoard()->deleteGenericSpace();
-  oz_currentBoard()->deleteLateThread();
+    cb->deleteGenericSpace();
+  cb->deleteLateThread();
   return PROCEED;
 } OZ_BI_end
    

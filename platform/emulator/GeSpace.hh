@@ -178,18 +178,20 @@ private:
   VarRefArray vars;     /// Array container for variables
 
   
-  /** Space stability is used to reflect the fact that there could be 
-      pending work to do. It is for example, a new propagator was posted
-      in the space but no call to status() has been performed so far. Other
-      things that can make a space to become unstable are unification or 
-      bindings events from mozart.
+  /** 
+  	Space stability is used to reflect the fact that there is pending work to 
+  	do. It is for example, a new propagator was posted in this space but no call
+	to mstatus() has been performed so far. Other things that can make a space 
+	to become unstable are unification or bindings events from mozart.
   */
-  TaggedRef trigger; /// Reflect space stability
-
-  /* Invariant: trigger is an unbound read-only while the GenericSpace
-     remains stable.  It is bound to unit as soon as the space becomes
-     unstable and needs to be run.  An Oz thread suspending on trigger
-     will therefore be woken up when the space becomes unstable.
+  bool trigger;
+  
+  /* 
+  	Invariant: trigger is true while the GenericSpace remains stable.  It is
+	assigned to false as soon as the space becomes unstable and lateThread is
+	added to the status suspension list. If at top level space (?).  The Oz 
+	thread suspending on status will therefore be woken up when the space 
+	becomes unstable.
   */
 
   /*
@@ -289,9 +291,9 @@ public:
 
   void makeUnstable(void);   // binds current trigger to unit
 
-  // return current trigger
-  TaggedRef getTrigger(void) { return trigger; }
-
+  // return current trigger value
+  bool getTrigger(void) { return trigger; }
+  
   /**
   	\brief Tests whether the space is a solution space.
   */
