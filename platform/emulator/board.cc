@@ -130,9 +130,9 @@ Board::Board(Board * p)
   lpq.init();
   if(p->gespace != NULL) {
     gespace = new GenericSpace(this);
-    if(p->getLateThread())
-      ensureLateThread();
-    else
+    if(p->getLateThread()) {
+      //ensureLateThread();
+    } else
       lateThread = NULL;
   } else {
     gespace = NULL;
@@ -450,116 +450,123 @@ void Board::clearSuspList(Suspendable * killSusp) {
  */
 
 void Board::checkStability(void) {
-  //printf("Board::checkStability \n"); fflush(stdout);
-  Assert(!isRoot() && !isFailed() && !isCommitted());
-  Assert(this == oz_currentBoard());
-  crt--;
+	//printf("Board::checkStability \n"); fflush(stdout);
+	Assert(!isRoot() && !isFailed() && !isCommitted());
+	Assert(this == oz_currentBoard());
+	crt--;
   
-  Board * pb = getParent();
+	Board * pb = getParent();
   
-  if (isStable()) {
+	if (isStable()) {
     //printf("isStable\n");fflush(stdout);
-    if(!trail.isEmptyChunk())
-      setScript(trail.unwindGeVar());
+    	if(!trail.isEmptyChunk())
+			setScript(trail.unwindGeVar());
 
-    pb->decRunnableThreads();
+		pb->decRunnableThreads();
 
-    if (getNonMono()) {
-      scheduleNonMono();
-    } else {
-      Distributor * d = getDistributor();
+		if (getNonMono()) {
+			scheduleNonMono();
+		} else {
+			Distributor * d = getDistributor();
 
-      if (d) {
-	Assert(branching==AtomNil);
-	int n = d->getAlternatives();
-
-	if (n == 1) {
-	  if (d->commit(this,1) == 0)
-	    setDistributor(NULL);
-	} else {
-	  trail.popMark();
-	  Assert(!oz_onToplevel() || trail.isEmptyChunk());
-	  am.setCurrent(pb, pb->getOptVar());
-	  //printf("antes del bind1\n");fflush(stdout);
-	  //bindStatus(genAlt(n));
-	  bindStatus(genBranch());
-	}
-	Assert(!oz_onToplevel() || trail.isEmptyChunk());
-      
-      } else {
-	if (isWaiting()) {
-	  // A waitStable is present
-	  TaggedRef st = getStabilityVar();
-	  DEREF(st,stPtr);
-	  oz_bindReadOnly(stPtr,AtomNil);
-	} else if (branching == AtomNil && 
-		   oz_isReadOnly(oz_deref(getCSync()))) {
-	  // A getChoice can be resumed.
-	  bindCSync(AtomNil);
-	} else if (branching != AtomNil) { // Hay distribuidor
-	  Assert(!getDistributor());
-	  //printf("branching: %s\n",OZ_toC(branching,100,100));fflush(stdout);
-	  trail.popMark();
-	  Assert(!oz_onToplevel() || trail.isEmptyChunk());
-	  am.setCurrent(pb, pb->getOptVar());
-	  bindStatus(genBranch());
-	  //printf("branching-despues\n");fflush(stdout);
-	} else {
-	  // succeeded
-	  trail.popMark();
-	  Assert(!oz_onToplevel() || trail.isEmptyChunk());
-	  am.setCurrent(pb, pb->getOptVar());
 	  
-	  if(gespace!=NULL) {
-	    bool testGe = getGenericSpace(true)->isEntailed();
-	    
-	    bindStatus(genSucceeded( (getSuspCount() == 0 && testGe) ) );
-	  }
-	  else {
-	    bindStatus(genSucceeded( getSuspCount() == 0 ) );
-	  }
-	}
-	Assert(!oz_onToplevel() || trail.isEmptyChunk());
-      }
-    }
-  } else {
-    int n = crt;
-    setScript(trail.unwind(this));
-    Assert(!oz_onToplevel() || trail.isEmptyChunk());
-    am.setCurrent(pb, pb->getOptVar());
-  
-    if (n == 0) {
-      // No runnable threads: suspended      
-      TaggedRef newVar = oz_newReadOnly(pb);
-      
-      if (getGenericSpace(true)){
-	OzVariable* nv = tagged2Var(oz_deref(newVar));
-	TaggedRef oldVar = getStatus();
-	DEREF(oldVar, oldVarPtr);
-	// Remove lateThread from oldvar susp list.
-	SuspList** suspPtr = tagged2Var(oldVar)->getSuspListRef();
-	SuspList* susp = *suspPtr;
-	//printf("checkStability else lateThread=%p,  en board.cc\n",lateThread);fflush(stdout);
-	while (susp) {	  
-	  //printf("checkStability else lateThread=%p  sup=%p,  en board.cc\n",lateThread,susp->getSuspendable());fflush(stdout);	  
-	  if (susp->getSuspendable() == lateThread) {
-	    //printf("dentro del if,  en board.cc\n");fflush(stdout);
-	    nv->addSuspSVar(susp->getSuspendable());
-	    *suspPtr = susp->getNext();     // drop susp from list
-	    //break;
-	  } else {
-	    suspPtr = (*suspPtr)->getNextRef();
-	  }
-	  susp = *suspPtr;
-	}
-      }
+			if (d) {
+				Assert(branching==AtomNil);
+				int n = d->getAlternatives();
 
-      bindStatus(genSuspended(newVar));
-      setStatus(newVar);
-      pb->decRunnableThreads();
-    }
-    Assert(!oz_onToplevel() || trail.isEmptyChunk());    
-  }
+				if (n == 1) {
+					if (d->commit(this,1) == 0)
+						setDistributor(NULL);
+				} else {
+					trail.popMark();
+					Assert(!oz_onToplevel() || trail.isEmptyChunk());
+					am.setCurrent(pb, pb->getOptVar());
+					//printf("antes del bind1\n");fflush(stdout);
+					//bindStatus(genAlt(n));
+					bindStatus(genBranch());
+				}
+				Assert(!oz_onToplevel() || trail.isEmptyChunk());
+      
+			} else {
+				if (isWaiting()) {
+					// A waitStable is present
+					TaggedRef st = getStabilityVar();
+					DEREF(st,stPtr);
+					oz_bindReadOnly(stPtr,AtomNil);
+				} else if (branching == AtomNil && oz_isReadOnly(oz_deref(getCSync()))) {
+					// A getChoice can be resumed.
+					bindCSync(AtomNil);
+				} else if (branching != AtomNil && OZ_tail(branching) == AtomNil && oz_isReadOnly(oz_deref(getCSync()))) {
+					/* When there is only one alternative left, an optimization 
+						is to commit it in the space from here and no wait until
+						a separate thread do that..
+					*/
+					//printf("commit optimization\n");fflush(stdout);
+					bindCSync(OZ_head(branching));
+					branching = AtomNil;
+				} else if (branching != AtomNil) { // Hay distribuidor
+					Assert(!getDistributor());
+					//printf("branching: %s\n",OZ_toC(branching,100,100));fflush(stdout);
+					trail.popMark();
+					Assert(!oz_onToplevel() || trail.isEmptyChunk());
+					am.setCurrent(pb, pb->getOptVar());
+					bindStatus(genBranch());
+					//printf("branching-despues\n");fflush(stdout);
+				}  else {
+					// succeeded
+					trail.popMark();
+					Assert(!oz_onToplevel() || trail.isEmptyChunk());
+					am.setCurrent(pb, pb->getOptVar());
+	  
+					if(gespace!=NULL) {
+						bool testGe = getGenericSpace(true)->isEntailed();
+	    
+						bindStatus(genSucceeded( (getSuspCount() == 0 && testGe) ) );
+					}
+					else {
+						bindStatus(genSucceeded( getSuspCount() == 0 ) );
+					}
+				}
+				Assert(!oz_onToplevel() || trail.isEmptyChunk());
+			}
+		}
+	} else {
+		int n = crt;
+		setScript(trail.unwind(this));
+		Assert(!oz_onToplevel() || trail.isEmptyChunk());
+		am.setCurrent(pb, pb->getOptVar());
+  
+		if (n == 0) {
+			// No runnable threads: suspended      
+			TaggedRef newVar = oz_newReadOnly(pb);
+			
+			if (getGenericSpace(true)){
+				OzVariable* nv = tagged2Var(oz_deref(newVar));
+				TaggedRef oldVar = getStatus();
+				DEREF(oldVar, oldVarPtr);
+				// Remove lateThread from oldvar susp list.
+				SuspList** suspPtr = tagged2Var(oldVar)->getSuspListRef();
+				SuspList* susp = *suspPtr;
+				//printf("checkStability else lateThread=%p,  en board.cc\n",lateThread);fflush(stdout);
+				while (susp) {	  
+					//printf("checkStability else lateThread=%p  sup=%p,  en board.cc\n",lateThread,susp->getSuspendable());fflush(stdout);	  
+					if (susp->getSuspendable() == lateThread) {
+						//printf("dentro del if,  en board.cc\n");fflush(stdout);
+						nv->addSuspSVar(susp->getSuspendable());
+						*suspPtr = susp->getNext();     // drop susp from list
+					} else {
+						suspPtr = (*suspPtr)->getNextRef();
+					}
+					susp = *suspPtr;
+				}
+			}
+
+			bindStatus(genSuspended(newVar));
+			setStatus(newVar);
+			pb->decRunnableThreads();
+		}
+		Assert(!oz_onToplevel() || trail.isEmptyChunk());    
+	}
 } 
 
 // Branching
@@ -834,6 +841,10 @@ void Board::getChoice(void) {
 
 void Board::setBranching(TaggedRef b) {
   branching = b;
+}
+
+TaggedRef Board::getBranching(void) {
+	return branching;
 }
 
 
