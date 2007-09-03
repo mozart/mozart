@@ -58,7 +58,7 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
   TaggedRef status = cb->getStatus();
   DEREF(status, statusPtr); 
   Assert(oz_isNeeded(status) || cb->isRoot());
-   
+  Assert(!gs->isStable()); 
   //printf("lateThread before run propagation\n");fflush(stdout);  
   if (gs->mstatus() == SS_FAILED) {
     cb->deleteGenericSpace();
