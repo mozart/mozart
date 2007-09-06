@@ -286,7 +286,7 @@ Now we can link our module into &Oz; by executing:
 
 <code display proglang=oz>
 declare
-[Goodies]={Module.link ['./goodies.so{native}']} 
+[Goodies]={Module.link ['./getenv.so{native}']} 
 </code>
 
 This will lazily load the module upon first access and bind
