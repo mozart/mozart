@@ -405,6 +405,12 @@ public:
   */
   void setBranching(TaggedRef b);
 
+    /**
+     \brief Sets the branching attribute to b.
+  */
+  TaggedRef getBranching(void);
+
+  
   /**
      \brief Tests whether there is a waitStable present
      running.
