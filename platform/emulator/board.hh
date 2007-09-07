@@ -414,7 +414,7 @@ public:
   	\brief Replaces the status value, when it represents a branching desc., 
 	by a new branching description nbd.
   */
-  void Board::patchBranchStatus(TaggedRef nbd); 
+  void patchBranchStatus(TaggedRef nbd); 
   
   /**
      \brief Tests whether there is a waitStable present
