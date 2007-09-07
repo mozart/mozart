@@ -495,13 +495,14 @@ void Board::checkStability(void) {
 					oz_bindReadOnly(stPtr,AtomNil);
 				} else if (branching == AtomNil && oz_isReadOnly(oz_deref(getCSync()))) {
 					// A getChoice can be resumed.
+					//printf("CS->commit brnching nil\n");fflush(stdout);
 					bindCSync(AtomNil);
 				} else if (branching != AtomNil && OZ_tail(branching) == AtomNil && oz_isReadOnly(oz_deref(getCSync()))) {
 					/* When there is only one alternative left, an optimization 
 						is to commit it in the space from here and no wait until
 						a separate thread do that..
 					*/
-					//printf("commit optimization\n");fflush(stdout);
+					//printf("CS->commit optimization\n");fflush(stdout);
 					bindCSync(OZ_head(branching));
 					branching = AtomNil;
 				} else if (branching != AtomNil) { // Hay distribuidor
@@ -511,7 +512,6 @@ void Board::checkStability(void) {
 					Assert(!oz_onToplevel() || trail.isEmptyChunk());
 					am.setCurrent(pb, pb->getOptVar());
 					bindStatus(genBranch());
-					//printf("branching-despues\n");fflush(stdout);
 				}  else {
 					// succeeded
 					trail.popMark();

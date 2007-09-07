@@ -30,16 +30,20 @@ declare
 %% a naive distributor that takes advantage of batch recomputation
 proc {NaiveDistribute Xs}
   V = if {IsList Xs} then {List.toTuple '#' Xs} else Xs end
-  proc {Distribute L}
-     case {Space.getChoice}
-     of I#D  then
-	%{Show 'I#D'#I#D}
+   proc {Distribute L}
+      Tmp = {Space.getChoice}
+   in
+      %{Show [resultado getChoice Tmp]}
+     case Tmp
+     of I#D then
+	%{Show [there are bd to apply I#D]}
 	case D
 	of compl(M) then V.I \=: M
 	[] M then V.I =: M
 	end
 	{Distribute L}
      [] nil then
+	%{Show [a new branch will be computed]}
         case {List.dropWhile L fun {$ I#X} {IsDet X} end}
         of nil then
 	   skip
@@ -56,13 +60,6 @@ proc {NaiveDistribute Xs}
 in
   {Distribute {Record.toListInd V}}
 end
-
-proc{Foo R} A B in R = [A B]
-   R:::0#2
-   {GFD.distinct R GFD.cl.dom}
-   {NaiveDistribute R}
-end
-
 
 fun{Queens N}
    proc{$ Root}
@@ -82,5 +79,39 @@ fun{Queens N}
    end
 end
 
-S = {New Search.object script({Queens 9} rcd:4)}
-{Show {S last($)}}
+%S = {New Search.object script({Queens 9} rcd:4)}
+%{Show {S last($)}}
+
+%{Show {SearchAll {Queens 6}}}
+
+
+
+proc {AllNR KF S W Or Os}
+   if {IsFree KF} then
+      case {Space.ask S}
+      of failed then Os=Or
+      [] succeeded then Os={W S}|Or
+      [] branch([B]) then
+	 {Space.commitB S B}
+	 Os = {AllNR KF S W Or}
+      [] branch(B|Br) then C={Space.clone S} Ot in
+	 {Space.commitB S B}
+	 {Space.commitB2 C Br}
+	 Os={AllNR KF S W Ot}
+	 Ot={AllNR KF C W Or}
+      end
+   else Os=Or
+   end
+end
+
+  
+
+proc{Foo Root}
+   X Y
+in
+   Root = [X]
+   X::0#1 %Y::0#1
+   {NaiveDistribute Root}
+end
+
+{Show {AllNR _ {Space.new  Foo} Space.merge nil}}

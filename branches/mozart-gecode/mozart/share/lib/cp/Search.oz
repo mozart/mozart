@@ -78,15 +78,6 @@ define
       end
    end
 
-   %%
-   %% A Space.commit2 replacement
-   %%
-   proc {SPCommit2 S BL}
-      {Space.inject S proc {$ _}
-			 {Space.branch BL}
-		      end}
-   end
-
    
    %%
    %% Injection of solution constraints for best solution search
@@ -114,7 +105,7 @@ define
 	 [] branch(B|Br) then C={Space.clone S} in
 	    {Space.commitB S B}
 	    case {OneDepthNR KF S}
-	    of nil then {SPCommit2 C Br} {OneDepthNR KF C}
+	    of nil then {Space.commitB2 C Br} {OneDepthNR KF C}
 	    elseof O then O
 	    end
 	 end
@@ -277,7 +268,7 @@ define
 		  if D==0 then
 		     {Space.commitB S B} {Probe S 0 KF}
 		  else C={Space.clone S} in
-		     {SPCommit2 S Bs} {Probe S D-1 KF}
+		     {Space.commitB2 S Bs} {Probe S D-1 KF}
 		     {Space.commitB C B} {Probe C D KF}
 		  end
 	       end
@@ -397,7 +388,7 @@ define
 	       {Space.commitB S B}
 	       Os = {AllNR KF S W Or}
 	    [] branch(B|Br) then C={Space.clone S} Ot in
-	       {Space.commitB S B} {SPCommit2 C Br}
+	       {Space.commitB S B} {Space.commitB2 C Br}
 	       Os={AllNR KF S W Ot}
 	       Ot={AllNR KF C W Or}
 	    end
@@ -504,7 +495,7 @@ define
 		  {Space.commitB S B}
 		  {BABNR KF S O SS}
 	       [] branch(B|Bs) then C={Space.clone S} NewSS in
-		  {Space.commitB S B} {SPCommit2 C Bs}
+		  {Space.commitB S B} {Space.commitB2 C Bs}
 		  NewSS={BABNR KF S O SS}
 		  if SS==NewSS then {BABNR KF C O SS}
 		  elseif NewSS==nil then nil
@@ -526,7 +517,7 @@ define
 		     {AltCopy KF M S MRD O SS}
 		  elseif NewSS==nil then nil
 		  else
-		     {SPCommit2 S M}% {Space.commit2 S I+1 M}
+		     {Space.commitB2 S M}% {Space.commit2 S I+1 M}
 		     {Better S O NewSS}
 		     {BABR KF S S nil MRD MRD O NewSS}
 		  end
@@ -544,7 +535,7 @@ define
 		     {Alt KF M {Recompute C As} C As RD MRD O SS}
 		  elseif NewSS==nil then nil
 		  else NewS={Recompute C As} in
-		     {SPCommit2 NewS M}%{Space.commit2 NewS I+1 M}
+		     {Space.commitB2 NewS M}%{Space.commit2 NewS I+1 M}
 		     {Better NewS O NewSS}
 		     {BABR KF NewS NewS nil MRD MRD O NewSS}
 		  end
@@ -733,7 +724,7 @@ define
 			   cur   <- {Recompute @stack}
 			else
 			   cur   <- {Recompute Sr}
-			   {SPCommit2 @cur NextI}
+			   {Space.commitB2 @cur NextI}
 			   {Better @cur self.order @sol}
 			   rd    <- self.mrd
 			   stack <- Sr

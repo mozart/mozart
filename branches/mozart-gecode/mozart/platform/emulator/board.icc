@@ -110,6 +110,15 @@ void Board::patchAltStatus(int i) {
   status = makeTaggedSRecord(stuple);
 }
 
+inline
+void Board::patchBranchStatus(TaggedRef nbd) {
+  Assert(!oz_isReadOnly(oz_deref(getStatus())));
+  SRecord *stuple = SRecord::newSRecord(OZ_atom("branch"), 1);
+  stuple->setArg(0, nbd);
+  status = makeTaggedSRecord(stuple);
+}
+
+
 /*
  * Non monotonic propagators
  *
