@@ -121,7 +121,6 @@ OZ_BI_define(BIaskSpace, 1,1) {
 
   TaggedRef answer = space->getSpace()->getStatus(); 
 
-
   DEREF(answer, answer_ptr);
   Assert(!oz_isRef(answer));
   if (oz_isVarOrRef(answer))
@@ -478,9 +477,58 @@ OZ_BI_define(BIkillSpace, 1, 0) {
   return BI_PREEMPT;
 } OZ_BI_end
 
-
 // 0: Space to apply branch to
 // 1: Branching description
+OZ_BI_define(BIcommitB2Space,2,0) {
+	/*
+		This builtin sets the branching attribute of the board to a desired 
+		value. It does not require to install the space so stability is not 
+		affected. This is a replacement for commit2 operation if called with the
+		all alternatives but the one used in commitB
+	*/
+	declareSpace;
+	
+	if (space->isMarkedMerged())
+		return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
+  
+	if (isFailedSpace)
+		return PROCEED;
+  
+	Board * bb = space->getSpace();
+	
+	if (!bb->isAdmissible())
+		return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
+	
+	if(bb->isWaiting()) {
+		/*
+			If isWaiting returns true is because some thread
+			is waiting on space stability. In this case this
+			thread must suspends until waitStable has been run.
+			This means that {Space.branch B} will block until
+			{Space.waitStable} has been run.
+		*/
+		TaggedRef st = bb->getStabilityVar();
+		DEREF(st,stPtr);
+		oz_suspendOn(makeTaggedRef(stPtr));
+	}
+	Assert(!bb->isWaiting());
+
+	if (!bb->hasGetChoice())
+    	return oz_raise(E_ERROR,E_KERNEL,"spaceNoChoice",1,tagged_space);
+	
+	// TODO: must block until the branching description becomes available.
+	TaggedRef bd = OZ_in(1);
+	DEREF(bd, bd_ptr);
+
+	Assert(OZ_isCons(bd));
+	bb->setBranching(bd);
+	bb->patchBranchStatus(bd);
+	
+	return PROCEED;	
+}OZ_BI_end
+
+
+// 0: Branching description
 OZ_BI_define(BIbranchSpace,1,0) {
   Board * bb = oz_currentBoard();
  
@@ -524,12 +572,13 @@ OZ_BI_define(BIcommitBSpace,2,0) {
   if (!sb->isAdmissible())
     return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
 
-  //sb->commitB(bd);
+
   RefsArray * args = RefsArray::allocate(1,NO);
   args->setArg(0,OZ_in(1));
+  // *** (overhead??) ***
   oz_newThreadInject(sb)->pushCall(BI_bindCSync,args);
   sb->clearStatus();
-  return BI_PREEMPT;//BI_REPLACEBICALL;
+  return BI_PREEMPT;
 }OZ_BI_end
 
 OZ_BI_define(BIgetChoiceSpace,0,1) {
