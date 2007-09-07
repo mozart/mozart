@@ -195,7 +195,7 @@ OZ_BI_define(BIwaitGetChoice,1,0) {
   
   Board *bb = oz_currentBoard();
   // Reset branching to not repeat the same branch further.
-  bb->setBranching(AtomNil);
+   bb->setBranching(AtomNil);
   return PROCEED;
 } OZ_BI_end
 

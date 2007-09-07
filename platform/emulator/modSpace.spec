@@ -96,5 +96,9 @@ $module_init_fun_name = "space_init";
                              out => [],
                              BI  => BIcommitBSpace},
 
+	'commitB2'          => { in  => ['+space','+value'],
+                             out => [],
+                             BI  => BIcommitB2Space},
+
      );
 1;;
