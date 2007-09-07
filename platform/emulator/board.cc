@@ -816,7 +816,9 @@ void Board::unsetGlobalMarks(void) {
 }
 
 void Board::commitB(TaggedRef c) {
-  /* There is a thread waiting so CQSync must be bind to c.
+	// 	this method is called from the BI_bindCSync builtin
+	
+  /* If there is a thread waiting so CQSync must be bind to c.
      otherwise c must be enqueued
   */
   if (hasGetChoice() && !isWaiting()) 

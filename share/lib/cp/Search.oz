@@ -99,9 +99,9 @@ define
 	 case {Space.ask S}
 	 of failed then nil
 	 [] succeeded then S
-	 [] branch([B]) then
-	    {Space.commitB S B}
-	    {OneDepthNR KF S}
+% 	 [] branch([B]) then
+% 	    {Space.commitB S B}
+% 	    {OneDepthNR KF S}
 	 [] branch(B|Br) then C={Space.clone S} in
 	    {Space.commitB S B}
 	    case {OneDepthNR KF S}
@@ -384,9 +384,9 @@ define
 	    case {Space.ask S}
 	    of failed then Os=Or
 	    [] succeeded then Os={W S}|Or
-	    [] branch([B]) then
-	       {Space.commitB S B}
-	       Os = {AllNR KF S W Or}
+% 	    [] branch([B]) then
+% 	       {Space.commitB S B}
+% 	       Os = {AllNR KF S W Or}
 	    [] branch(B|Br) then C={Space.clone S} Ot in
 	       {Space.commitB S B} {Space.commitB2 C Br}
 	       Os={AllNR KF S W Ot}
@@ -491,9 +491,9 @@ define
 	       case {Space.ask S}
 	       of failed then SS
 	       [] succeeded then S
-	       [] branch([B]) then
-		  {Space.commitB S B}
-		  {BABNR KF S O SS}
+% 	       [] branch([B]) then
+% 		  {Space.commitB S B}
+% 		  {BABNR KF S O SS}
 	       [] branch(B|Bs) then C={Space.clone S} NewSS in
 		  {Space.commitB S B} {Space.commitB2 C Bs}
 		  NewSS={BABNR KF S O SS}

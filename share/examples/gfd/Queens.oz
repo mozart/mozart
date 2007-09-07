@@ -92,6 +92,7 @@ proc {AllNR KF S W Or Os}
       of failed then Os=Or
       [] succeeded then Os={W S}|Or
       [] branch([B]) then
+	 {Show [no deberia estar aqui]}
 	 {Space.commitB S B}
 	 Os = {AllNR KF S W Or}
       [] branch(B|Br) then C={Space.clone S} Ot in
@@ -109,8 +110,8 @@ end
 proc{Foo Root}
    X Y
 in
-   Root = [X]
-   X::0#1 %Y::0#1
+   Root = [X Y]
+   X::0#1 Y::0#1
    {NaiveDistribute Root}
 end
 
