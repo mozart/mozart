@@ -521,6 +521,25 @@ OZ_BI_define(BIcommitB2Space,2,0) {
 	DEREF(bd, bd_ptr);
 
 	Assert(OZ_isCons(bd));
+	
+	/* If there is only one element in the list, this operation can be replaced
+	    by the normal commit operation. This means not to change the status
+		value but do a real commit operation causing bb installation.
+			
+		Not always installation of bb is desired. (TODO:think,discuss)
+	*/
+	if (OZ_tail(bd)==AtomNil) {
+		//printf("From commitB2 but doing the same as commitB\n");fflush(stdout);
+		bd = OZ_head(bd);
+		
+		RefsArray * args = RefsArray::allocate(1,NO);
+		args->setArg(0,bd);
+		// *** (overhead??) ***
+		oz_newThreadInject(bb)->pushCall(BI_bindCSync,args);
+		bb->clearStatus();
+		return BI_PREEMPT;
+	}
+	
 	bb->setBranching(bd);
 	bb->patchBranchStatus(bd);
 	
