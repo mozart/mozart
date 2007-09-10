@@ -516,12 +516,15 @@ OZ_BI_define(BIcommitB2Space,2,0) {
 	if (!bb->hasGetChoice())
     	return oz_raise(E_ERROR,E_KERNEL,"spaceNoChoice",1,tagged_space);
 	
-	// TODO: must block until the branching description becomes available.
 	TaggedRef bd = OZ_in(1);
 	DEREF(bd, bd_ptr);
-
-	Assert(OZ_isCons(bd));
+	Assert(!oz_isRef(bd));
+	if (oz_isVarOrRef(bd)) 
+		oz_suspendOn(makeTaggedRef(bd_ptr));
+	if (!oz_isCons(bd))
+		oz_typeError(1,"List of branching descriptions");
 	
+
 	/* If there is only one element in the list, this operation can be replaced
 	    by the normal commit operation. This means not to change the status
 		value but do a real commit operation causing bb installation.
@@ -565,10 +568,12 @@ OZ_BI_define(BIbranchSpace,1,0) {
   }
   Assert(!bb->isWaiting());
   
-  // TODO: must block until the branching description becomes available.
   TaggedRef bd = OZ_in(0);
   DEREF(bd, bd_ptr);
-
+  Assert(!oz_isRef(bd));
+	if (oz_isVarOrRef(bd)) 
+		oz_suspendOn(makeTaggedRef(bd_ptr));
+	
   bb->setBranching(bd);
   return PROCEED;
 }OZ_BI_end
@@ -576,10 +581,13 @@ OZ_BI_define(BIbranchSpace,1,0) {
 OZ_BI_define(BIcommitBSpace,2,0) {
   declareSpace;
 
-  // TODO: must block until the branching description becomes available.
   TaggedRef bd = OZ_in(1);
   DEREF(bd, bd_ptr);
-
+  Assert(!oz_isRef(bd));
+	if (oz_isVarOrRef(bd)) 
+		oz_suspendOn(makeTaggedRef(bd_ptr));
+	
+  
   if (space->isMarkedMerged())
     return oz_raise(E_ERROR,E_KERNEL,"spaceMerged",1,tagged_space);
   
