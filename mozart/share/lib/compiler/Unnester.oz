@@ -619,12 +619,12 @@ define
 	 in
 	    Unnester, UnnestFDExpression(FE1 ?GFrontEq1 ?NewFE1)
 	    Unnester, UnnestFDExpression(FE2 ?GFrontEq2 ?NewFE2)
-	    Unnester, AddImport('x-oz://system/FD.ozf' ?FD)
+	    Unnester, AddImport('x-oz://system/GFD.ozf' ?FD)
 	    FS = {MakeFdCompareStatement Op NewFE1 NewFE2 C FD}
 	    GFrontEq1|GFrontEq2|Unnester, UnnestStatement(FS $)
 	 [] fFdIn(Op FE1 FE2 C) then FS in
 	    %% note: reverse arguments!
-	    case Unnester, AddImport('x-oz://system/FD.ozf' $)
+	    case Unnester, AddImport('x-oz://system/GFD.ozf' $)
 	    of unit then
 	       FS = fOpApplyStatement(case Op of '::' then 'FD.int'
 				      [] ':::' then 'FD.dom'
@@ -1279,12 +1279,12 @@ define
 	 in
 	    Unnester, UnnestFDExpression(FE1 ?GFrontEq1 ?NewFE1)
 	    Unnester, UnnestFDExpression(FE2 ?GFrontEq2 ?NewFE2)
-	    Unnester, AddImport('x-oz://system/FD.ozf' ?FD)
+	    Unnester, AddImport('x-oz://system/GFD.ozf' ?FD)
 	    FS = {MakeFdCompareExpression Op NewFE1 NewFE2 C fOcc(ToGV) FD}
 	    GFrontEq1|GFrontEq2|Unnester, UnnestStatement(FS $)
 	 [] fFdIn(Op FE1 FE2 C) then FS in
 	    %% note: reverse arguments!
-	    case Unnester, AddImport('x-oz://system/FD.ozf' $)
+	    case Unnester, AddImport('x-oz://system/GFD.ozf' $)
 	    of unit then
 	       FS = fOpApplyStatement(case Op of '::' then 'FD.reified.int'
 				      [] ':::' then 'FD.reified.dom'
