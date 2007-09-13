@@ -591,7 +591,7 @@ public:
 	 in the space or not.
  */
 
-  bool ensureLateThread(void);
+  void ensureLateThread(void);
 
   
   /**

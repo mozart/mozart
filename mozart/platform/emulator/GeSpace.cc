@@ -116,23 +116,10 @@ void GenericSpace::makeStable(void) {
 void GenericSpace::makeUnstable(void) {
 	if (trigger) {
 		Board *cb = oz_currentBoard();
-		bool exist = cb->ensureLateThread();
+		trigger = false;
+		cb->ensureLateThread();
 		TaggedRef status = cb->getStatus();
 		DEREF(status, statusPtr); 
-		if(oz_isReadOnly(status)) {
-			oz_var_addQuietSusp(statusPtr, cb->getLateThread()); 
-			trigger = false;
-		}
-		/* Still pending what happen with makeUnstable if cb is the
-		   top level space?.
-		*/
-		/*else {
-			Assert(cb->isRoot());
-			if (exist) {
-				oz_var_addQuietSusp(statusPtr, cb->getLateThread());
-				am.threadsPool.rescheduleThread(cb->getLateThread());
-			}
-		}*/
 	}
 }
 

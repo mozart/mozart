@@ -116,4 +116,15 @@ if(sp->isStable())                 \
 sp->makeUnstable();              \
 return PROCEED;
 
+
+#define OZ_TOC(arg,type,var,check,conv,msg) \
+	type var;                                                      \
+	if (!check(OZ_in(arg)))                                 \
+		RAISE_EXCEPTION(msg);                     \
+	var=conv(OZ_in(arg));
+
+#define DeclareInt(arg,var,msg) \
+	OZ_TOC(arg,int,var,OZ_isInt,OZ_intToC,msg)
+
 #endif
+

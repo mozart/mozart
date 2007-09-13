@@ -39,10 +39,8 @@ using namespace Gecode::Int;
 OZ_BI_define(int_eq,3,0) 
 {
   DeclareGSpace(gs);
-  int consistencyLevel, relType;
   
-  if(!OZ_isInt(OZ_in(2))) RAISE_EXCEPTION("The last variable must be the consistency level: ");
-  consistencyLevel = OZ_intToC(OZ_in(2));
+  DeclareInt(2,consistencyLevel,"The last value must be the consistency level: eqProp");
   
   DeclareGeIntVar(0,v1,gs);
   DeclareGeIntVar(1,v2,gs);
@@ -58,17 +56,9 @@ OZ_BI_define(int_eq,3,0)
 
 OZ_BI_define(int_rel,4,0) {
   DeclareGSpace(gs);
+  DeclareInt(3,consistencyLevel,"The last value must be the consistency level: relProp");
+  DeclareInt(1,relType,"The second argument has to be a Relation Type: relProp");
 
-  int consistencyLevel,relType; 
-  if(!OZ_isInt(OZ_in(3))) {
-    RAISE_EXCEPTION("The last value must be the consistency level: relProp");
-  }
-  consistencyLevel=OZ_intToC(OZ_in(3));
-  
-  if(!OZ_isInt(OZ_in(1))) {
-    RAISE_EXCEPTION("The second argument has to be a Relation Type: relProp");
-  }
-  relType=OZ_intToC(OZ_in(1));
   DeclareGeIntVar(0,v1,gs);
   DeclareGeIntVar(2,v2,gs);
   try {
@@ -84,15 +74,13 @@ OZ_BI_define(int_dist,2,0)
  {
    DeclareGSpace(sp);
    DECLARE_INTVARARRAY(sp,var,0);   
-   OZ_declareInt(1,conlevel);
+   DeclareInt(1,conLevel,"The last value must be the consistency level: distProp");
    try {
-     distinct(sp,var,(IntConLevel)conlevel);
-     unsigned int a;
-     GZ_RETURN(sp);
+     distinct(sp,var,(IntConLevel)conLevel);
    } catch(Exception e){
      RAISE_GE_EXCEPTION(e);
    }
-   
+   GZ_RETURN(sp);
  } OZ_BI_end
 
 
@@ -101,9 +89,9 @@ OZ_BI_define(int_dist,2,0)
    DeclareGSpace(sp);
    DECLARE_INTARGS(arguments,0);
    DECLARE_INTVARARRAY(sp,var,1);
-   OZ_declareInt(2,conlevel);
+   DeclareInt(2,conLevel,"The last value must be the consistency level: distProp");
    try {
-     distinct(sp,arguments,var,(IntConLevel)conlevel);
+     distinct(sp,arguments,var,(IntConLevel)conLevel);
      unsigned int a;
      GZ_RETURN(sp);
    } catch(Exception e){
