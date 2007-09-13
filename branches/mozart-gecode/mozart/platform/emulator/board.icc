@@ -433,7 +433,7 @@ TaggedRef Board::getStabilityVar(void) {
 // This prototype is needed to make ensureLateThread an inline func.
 OZ_Return oz_var_addQuietSusp(TaggedRef*, Suspendable *);
 
-
+/*
 inline
 bool Board::ensureLateThread(void) {
   Assert(getGenericSpace(true));
@@ -453,7 +453,45 @@ bool Board::ensureLateThread(void) {
   }
   return true;
 }
-
+*/
+inline
+void Board::ensureLateThread(void) {
+  Assert(getGenericSpace(true));
+  TaggedRef st = getStatus();
+  DEREF(st,st_ptr);
+  bool gs_stable = getGenericSpace(true)->isStable();
+  bool st_needed = oz_isNeeded(st);
+  if (!lateThread) {
+	  if (st_needed) {
+		  if (!gs_stable) {
+				  //Add a runnable lateThread
+				  lateThread = oz_newThreadInject(this);
+				  lateThread->pushCall(BI_PROP_GEC,NULL);
+		  } else {
+			  Assert(false);
+		  }
+	  } else {
+		  if (!gs_stable) {
+				//Add a suspended thread in status
+				lateThread = oz_newThreadSuspended(DEFAULT_PRIORITY);
+				lateThread->pushCall(BI_PROP_GEC,NULL);
+				oz_var_addQuietSusp(st_ptr, lateThread);
+		  } else {
+			  Assert(false);
+		  }
+	  }
+  } else {
+	  if (!gs_stable) {
+		  if (st_needed) {
+			  oz_wakeupThread(lateThread);
+		  } else {
+			  oz_var_addQuietSusp(st_ptr, lateThread);
+		  }
+	  } else {
+		  Assert(false);
+	  }
+  }
+}
 
 #ifdef OUTLINE
 #undef inline
