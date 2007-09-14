@@ -119,12 +119,27 @@ return PROCEED;
 
 #define OZ_TOC(arg,type,var,check,conv,msg) \
 	type var;                                                      \
-	if (!check(OZ_in(arg)))                                 \
-		RAISE_EXCEPTION(msg);                     \
-	var=conv(OZ_in(arg));
+	{\
+		if (!check(OZ_in(arg)))                                 \
+			RAISE_EXCEPTION(msg);                     \
+		var=conv(OZ_in(arg));\
+	}
 
 #define DeclareInt(arg,var,msg) \
 	OZ_TOC(arg,int,var,OZ_isInt,OZ_intToC,msg)
 
+#define ConLevel(arg,var) \
+	IntConLevel var;\ 
+	{\
+		OZ_TOC(arg,int,__vv,OZ_isInt,OZ_intToC,"Expected consistency level"); \
+		var = (IntConLevel)__vv;\
+	}
 #endif
+
+#define RelType(arg,var) \
+	IntRelType var;\ 
+	{\
+		OZ_TOC(arg,int,__vv,OZ_isInt,OZ_intToC,"Expected relation type") ;\
+		var = (IntRelType)__vv;\
+	}
 

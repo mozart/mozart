@@ -244,7 +244,7 @@ OZ_BI_define(int_disjointC,5,0)
 OZ_BI_define(int_sumCN,4,0)
 {
   DECLARE_INTARGS(x0,0);
-  OZ_declareInt(2,relType);
+  RelType(2,relType);
   //  IntVar Res;
 
   DeclareGSpace(sp);
@@ -258,7 +258,7 @@ OZ_BI_define(int_sumCN,4,0)
 
   IntVarArray Arreglo(sp,tamD, Limits::Int::int_min,Limits::Int::int_max);
 
-  linear(sp,x0,Arreglo,(IntRelType)relType,Res,ICL_VAL);
+  linear(sp,x0,Arreglo,relType,Res,ICL_VAL);
 
   for(int i=0;i<tamD;i++) {
     int tamD2;
@@ -300,10 +300,10 @@ OZ_BI_define(bool_Gand,4,0)
   DeclareGeIntVar(0,v0,sp);
   DeclareGeIntVar(1,v1,sp);
   DeclareGeIntVar(2,v2,sp);
-  OZ_declareInt(3,conLevel);
+  ConLevel(3,conLevel);
   
   try {
-    bool_and(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),(IntConLevel)conLevel);
+    bool_and(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),conLevel);
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -317,10 +317,10 @@ OZ_BI_define(bool_Gor,4,0)
   DeclareGeIntVar(0,v0,sp);
   DeclareGeIntVar(1,v1,sp);
   DeclareGeIntVar(2,v2,sp);
-  OZ_declareInt(3,conLevel);
+  ConLevel(3,conLevel);
   
   try {
-    bool_or(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),(IntConLevel)conLevel);
+    bool_or(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),conLevel);
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -335,10 +335,10 @@ OZ_BI_define(bool_Gxor,4,0)
   DeclareGeIntVar(0,v0,sp);
   DeclareGeIntVar(1,v1,sp);
   DeclareGeIntVar(2,v2,sp);
-  OZ_declareInt(3,conLevel);
+  ConLevel(3,conLevel);
   
   try {
-    bool_xor(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),(IntConLevel)conLevel);
+    bool_xor(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),conLevel);
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -353,10 +353,10 @@ OZ_BI_define(bool_Gnot,3,0)
   DeclareGSpace(sp);
   DeclareGeIntVar(0,v0,sp);
   DeclareGeIntVar(1,v1,sp);
-  OZ_declareInt(2,conLevel);
+  ConLevel(2,conLevel);
   
   try {
-    bool_not(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),(IntConLevel)conLevel);
+    bool_not(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),conLevel);
   }
   catch(Exception e) {
     //    return OZ_raiseC("prop: bool_not",0);
@@ -371,10 +371,10 @@ OZ_BI_define(bool_Gimp,4,0)
   DeclareGeIntVar(0,v0,sp);
   DeclareGeIntVar(1,v1,sp);
   DeclareGeIntVar(2,v2,sp);
-  OZ_declareInt(3,conLevel);
+  ConLevel(3,conLevel);
 
   try {
-    bool_imp(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),(IntConLevel)conLevel);
+    bool_imp(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),conLevel);
     return PROCEED;
   }
   catch(Exception e) {
@@ -389,10 +389,10 @@ OZ_BI_define(bool_Geqv,4,0)
   DeclareGeIntVar(0,v0,sp);
   DeclareGeIntVar(1,v1,sp);
   DeclareGeIntVar(2,v2,sp);
-  OZ_declareInt(3,conLevel);
+  ConLevel(3,conLevel);
   
   try {
-    bool_eqv(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),(IntConLevel)conLevel);
+    bool_eqv(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),conLevel);
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
