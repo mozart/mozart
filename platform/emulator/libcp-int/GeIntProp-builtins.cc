@@ -56,13 +56,13 @@ OZ_BI_define(int_eq,3,0)
 
 OZ_BI_define(int_rel,4,0) {
   DeclareGSpace(gs);
-  DeclareInt(3,consistencyLevel,"The last value must be the consistency level: relProp");
-  DeclareInt(1,relType,"The second argument has to be a Relation Type: relProp");
+  ConLevel(3,consistencyLevel);
+  RelType(1,relType);
 
   DeclareGeIntVar(0,v1,gs);
   DeclareGeIntVar(2,v2,gs);
   try {
-    rel(gs,v1,(IntRelType)relType,v2,(IntConLevel)consistencyLevel);
+    rel(gs,v1,relType,v2,consistencyLevel);
   } catch (Exception e) {
     RAISE_GE_EXCEPTION(e);
   }  
@@ -108,11 +108,11 @@ OZ_BI_define(int_dist,2,0)
  {
    DeclareGSpace(sp);
    DECLARE_INTVARARRAY(sp,x1,0);
-   OZ_declareInt(1,x2);
-   OZ_declareInt(3,x4);	   
+   RelType(1,x2);
+   ConLevel(3,x4);	   
    if(!OZ_isInt(OZ_deref(OZ_in(2)))) {
      try{
-       linear(sp,x1,(IntRelType)x2,get_IntVar(OZ_in(2)),(IntConLevel)x4);
+       linear(sp,x1,x2,get_IntVar(OZ_in(2)),x4);
      } catch(Exception e){
        RAISE_GE_EXCEPTION(e);
      }
@@ -120,7 +120,7 @@ OZ_BI_define(int_dist,2,0)
    else{
      OZ_declareInt(2,x3);
      try{
-       linear(sp,x1,(IntRelType)x2,x3,(IntConLevel)x4);
+       linear(sp,x1,x2,x3,x4);
      } catch(Exception e){
        RAISE_GE_EXCEPTION(e);
      }
@@ -134,12 +134,11 @@ OZ_BI_define(int_dist,2,0)
    DeclareGSpace(sp);
    DECLARE_INTARGS(arguments,0);
    DECLARE_INTVARARRAY(sp,array_var,1);
-   OZ_declareInt(2,rel);
-   OZ_declareInt(4,con);
-
+   RelType(2,rel);
+   ConLevel(4,con);
    if(!OZ_isInt(OZ_deref(OZ_in(3)))) {
      try{
-       linear(sp,arguments,array_var,(IntRelType)rel,get_IntVar(OZ_in(3)),(IntConLevel)con);
+       linear(sp,arguments,array_var,rel,get_IntVar(OZ_in(3)),con);
      } catch(Exception e){
        RAISE_GE_EXCEPTION(e);
      }
@@ -147,7 +146,7 @@ OZ_BI_define(int_dist,2,0)
    else {
      OZ_declareInt(3,val);
      try{
-       linear(sp,arguments,array_var,(IntRelType)rel,val,(IntConLevel)con);
+       linear(sp,arguments,array_var,rel,val,con);
      } catch(Exception e){
        RAISE_GE_EXCEPTION(e);
      }
@@ -160,14 +159,14 @@ OZ_BI_define(int_linearR,5,0)
   DeclareGSpace(sp);
   DECLARE_INTVARARRAY(sp,array_var,0);
 
-  OZ_declareInt(1,relType);
-  OZ_declareInt(4,conLevel);
+  RelType(1,relType);
+  ConLevel(4,conLevel);
 
   DeclareGeIntVar(2,v2,sp);
   DeclareGeIntVar(3,v3,sp);
 
   try{
-    linear(sp,array_var,(IntRelType)relType,v2,static_cast<BoolVar>(v3),(IntConLevel)conLevel);
+    linear(sp,array_var,relType,v2,static_cast<BoolVar>(v3),conLevel);
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -184,14 +183,14 @@ OZ_BI_define(int_linearCR,6,0)
   DECLARE_INTARGS(array_arg,0);
   DECLARE_INTVARARRAY(sp,array_var,1);
   
-  OZ_declareInt(2,relType);
-  OZ_declareInt(5,conLevel);
+  RelType(2,relType);
+  ConLevel(5,conLevel);
   
   DeclareGeIntVar(3,v3,sp);
   DeclareGeIntVar(4,v4,sp);
 
   try{
-    linear(sp,array_arg,array_var,(IntRelType)relType,v3,static_cast<BoolVar>(v4),(IntConLevel)conLevel);
+    linear(sp,array_arg,array_var,relType,v3,static_cast<BoolVar>(v4),conLevel);
   }
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
@@ -206,8 +205,8 @@ OZ_BI_define(int_count,5,0)
   DeclareGSpace(sp);
   DECLARE_INTVARARRAY(sp,arreglo,0);
   IntVar x1,x3;
-  OZ_declareInt(2,rl);
-  OZ_declareInt(4,cl);
+  RelType(2,rl);
+  ConLevel(4,cl);
   
   if(OZ_isGeIntVar(OZ_deref(OZ_in(1))))
     x1 = get_IntVar(OZ_in(1));
@@ -229,7 +228,7 @@ OZ_BI_define(int_count,5,0)
   else
     RAISE_EXCEPTION("The threeth argument must be either Int or GeIntVar");
   try {
-    count(sp,arreglo,x1,(IntRelType)rl,x3,(IntConLevel)cl);
+    count(sp,arreglo,x1,rl,x3,cl);
   }
   catch(Exception e) {
    RAISE_GE_EXCEPTION(e);
