@@ -137,7 +137,7 @@
   }								\
 }
 
-#define DECLARE_INTVARARRAY(sp,array,tIn)  		\
+#define DECLARE_INTVARARRAY(tIn,array,sp)  		\
 IntVarArray array;					\
 {							\
   int sz;						\
