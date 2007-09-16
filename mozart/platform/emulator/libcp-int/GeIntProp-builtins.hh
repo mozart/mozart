@@ -60,7 +60,7 @@
 
 
 
-#define DECLARE_INTARGS(array,tIn)			\
+#define DECLARE_INTARGS(tIn,array)			\
 IntArgs array(0);					\
 {							\
   int sz;						\
