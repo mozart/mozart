@@ -302,4 +302,7 @@ OZ_BI_define(int_sortedness,3,0)
   GZ_RETURN(sp);
 } OZ_BI_end
 
+// Include the propagators wrapper functions generated automatically.
+#include "FDPBuiltins.cc"
+
 #endif
