@@ -119,8 +119,9 @@ grammar GecHeaders;
 	}
 	void head(String name) {
 		String signature = new String(pref.substring(0,pref.length()-1));
+		String builtinCall = new String(name+"_"+signature);
 		String c = new String();
-		c += "OZ_BI_define(" + name + "_" + signature + ","+param_count+",0) {\n\t";
+		c += "OZ_BI_define(" + builtinCall + ","+param_count+",0) {\n\t";
 		c += declareBlock;
 		c += postProp(name);
 		c += "\n}OZ_BI_end\n\n";
@@ -130,16 +131,17 @@ grammar GecHeaders;
 	
 	void spec(String name) {
 		String signature = new String(pref.substring(0,pref.length()-1));
+		String builtinCall = new String(name+"_"+signature);
 		String s = new String();
 		if (post_count != 0)
 			s += ",\n\n";
-		s += "'"+name+"_"+signature+"'=> { in => [";
+		s += "'"+builtinCall+"'=> { in => [";
 		for (int i=0; i<call.size(); i++) {
 			if (i==0)
 				s += "'+value'";
 			s += ",'+value'";
 		}
-		s += "],\n\t\t out=>[],\n\t\t bi => "+name+pref+"}";
+		s += "],\n\t\t out=>[],\n\t\t bi => "+builtinCall+"}";
 		//System.out.println(s);
 		write_spec(s);
 	}
