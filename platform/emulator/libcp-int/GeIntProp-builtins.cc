@@ -87,7 +87,7 @@ OZ_BI_define(int_dist,2,0)
  OZ_BI_define(int_dist2,3,0)
  {
    DeclareGSpace(sp);
-   DECLARE_INTARGS(arguments,0);
+   DECLARE_INTARGS(0,arguments);
    DECLARE_INTVARARRAY(1,var,sp);
    DeclareInt(2,conLevel,"The last value must be the consistency level: distProp");
    try {
@@ -132,7 +132,7 @@ OZ_BI_define(int_dist,2,0)
  OZ_BI_define(int_linear2,5,0)
  {
    DeclareGSpace(sp);
-   DECLARE_INTARGS(arguments,0);
+   DECLARE_INTARGS(0,arguments);
    DECLARE_INTVARARRAY(1,array_var,sp);
    RelType(2,rel);
    ConLevel(4,con);
@@ -180,7 +180,7 @@ OZ_BI_define(int_linearCR,6,0)
 {
 
   DeclareGSpace(sp);
-  DECLARE_INTARGS(array_arg,0);
+  DECLARE_INTARGS(0,array_arg);
   DECLARE_INTVARARRAY(1,array_var,sp);
   
   RelType(2,relType);

@@ -41,7 +41,7 @@
  * @param ds The domain description int terms of list and tuples
  * @param arg Position at OZ_in array
  */
-#define	DECLARE_INT_SET(ds,arg)					\
+#define	DECLARE_INT_SET(arg,ds)					\
   OZ_declareDetTerm(arg,_t);					\
   OZ_Term l = (OZ_isCons(_t) ? _t : OZ_cons(_t, OZ_nil()));	\
   int length = OZ_length(l);					\
@@ -136,6 +136,13 @@
           ar[i]=get_IntVar(val);					\
   }								\
 }
+
+#define DeclareBoolVar(p,v,sp) \
+	BoolVar v;\
+	{\
+		DeclareGeIntVar(p,iv,sp);\
+		v = static_cast<BoolVar>(iv);\
+	}
 
 #define DECLARE_INTVARARRAY(tIn,array,sp)  		\
 IntVarArray array;					\

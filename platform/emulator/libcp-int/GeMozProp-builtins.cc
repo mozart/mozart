@@ -243,7 +243,7 @@ OZ_BI_define(int_disjointC,5,0)
 
 OZ_BI_define(int_sumCN,4,0)
 {
-  DECLARE_INTARGS(x0,0);
+  DECLARE_INTARGS(0,x0);
   RelType(2,relType);
   //  IntVar Res;
 
