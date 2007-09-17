@@ -375,7 +375,7 @@ case $platform in
         fi
         CPPFLAGS="-DWINDOWS_EMULATOR $oz_a $CPPFLAGS"
     ;;
-    *rhapsody | *darwin)
+    rhapsody* | darwin*)
         AC_DEFINE(RHAPSODY)
         EMULDFLAGS="-Wl,-keep_private_externs"
         TOOLLDCMD="$CC -dynamic -bundle -flat_namespace -undefined suppress"

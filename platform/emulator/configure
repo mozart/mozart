@@ -3688,7 +3688,7 @@ EOF
         fi
         CPPFLAGS="-DWINDOWS_EMULATOR $oz_a $CPPFLAGS"
     ;;
-    *rhapsody | *darwin)
+    rhapsody* | darwin*)
         cat >> confdefs.h <<\EOF
 #define RHAPSODY 1
 EOF
