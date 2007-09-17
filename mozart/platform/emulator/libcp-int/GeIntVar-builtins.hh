@@ -64,7 +64,8 @@
   Gecode::IntSet ds(_pairs, length);
 
 
-#define DeclareGSpace(sp) GenericSpace *sp = oz_currentBoard()->getGenericSpace();
+#define DeclareGSpace(sp) \
+	GenericSpace *sp = oz_currentBoard()->getGenericSpace()
 
 #define DeclareGeIntVar2(p,v,sp)					\
   IntVar v;                                                             \
@@ -112,7 +113,7 @@
   IntVar v;								\
   if(OZ_isInt(OZ_in(p))) {						\
     OZ_declareInt(p,domain);						\
-    IntVar _tmp(sp,domain,domain);					\
+    IntVar _tmp( (sp) ,domain,domain);					\
     v=_tmp;								\
   }									\
   else if(OZ_isGeIntVar(OZ_in(p))) {					\
@@ -121,7 +122,7 @@
   else RAISE_EXCEPTION("The variables must be either GeIntVar or int");
 
 
-#define DeclareGeIntVarT2(val,ar,i)				\
+#define DeclareGeIntVarT2(val,ar,i,sp)				\
 {  TaggedRef x = val;						\
   DEREF(x,x_ptr);						\
   Assert(!oz_isRef(x));						\
@@ -151,22 +152,22 @@ IntVarArray array;					\
   OZ_Term t = OZ_deref(OZ_in(tIn));                     \
   if(OZ_isLiteral(t)) {					\
     sz=0;						\
-    Gecode::IntVarArray _array((Gecode::Space*)sp,sz);		\
+    Gecode::IntVarArray _array((Gecode::Space*) sp ,sz);		\
     array=_array;					\
   }							\
   else if(OZ_isCons(t)) {				\
     sz = OZ_length(t);					\
-    Gecode::IntVarArray _array((Gecode::Space*)sp,sz);	\
+    Gecode::IntVarArray _array((Gecode::Space*) sp ,sz);	\
     for(int i=0; OZ_isCons(t); t=OZ_tail(t),i++){	\
-      DeclareGeIntVarT2(OZ_deref(OZ_head(t)),_array,i); \
+      DeclareGeIntVarT2(OZ_deref(OZ_head(t)),_array,i,sp); \
     }                                                   \
     array=_array;					\
   }							\
   else if(OZ_isTuple(t)) {				\
     sz=OZ_width(t);					\
-    Gecode::IntVarArray _array((Gecode::Space*)sp,sz);	\
+    Gecode::IntVarArray _array((Gecode::Space*) sp ,sz);	\
     for(int i=0;i<sz;i++) {				\
-      DeclareGeIntVarT2(OZ_getArg(t,i),_array,i);	\
+      DeclareGeIntVarT2(OZ_getArg(t,i),_array,i,sp);	\
     }							\
     array=_array;                                       \
   }							\
@@ -174,9 +175,9 @@ IntVarArray array;					\
     assert(OZ_isRecord(t));				\
     OZ_Term al = OZ_arityList(t);			\
     sz = OZ_width(t);					\
-    Gecode::IntVarArray _array((Gecode::Space*)sp,sz);          \
+    Gecode::IntVarArray _array((Gecode::Space*) sp ,sz);          \
     for(int i=0; OZ_isCons(al); al=OZ_tail(al),i++) {	\
-      DeclareGeIntVarT2(OZ_subtree(t,OZ_head(al)),_array,i);\
+      DeclareGeIntVarT2(OZ_subtree(t,OZ_head(al)),_array,i,sp);\
     }							\
     array=_array;                                       \
     }							\
