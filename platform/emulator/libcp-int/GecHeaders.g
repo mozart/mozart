@@ -99,7 +99,7 @@ grammar GecHeaders;
 		String s = new String("__"+name);
 		call.addElement(s);
 		String sblock = new String();
-		int pos = param_count;
+		int pos = param_count-1;
 		if (need_space) {
 			sblock += prefix+pos+", __"+name+", "+space_name+");\n\t";
 			//System.out.println(sblock);
@@ -121,7 +121,7 @@ grammar GecHeaders;
 		String signature = new String(pref.substring(0,pref.length()-1));
 		String builtinCall = new String(name+"_"+signature);
 		String c = new String();
-		c += "OZ_BI_define(" + builtinCall + ","+param_count+",0) {\n\t";
+		c += "OZ_BI_define(" + builtinCall + ","+(param_count-1)+",0) {\n\t";
 		c += declareBlock;
 		c += postProp(name);
 		c += "\n}OZ_BI_end\n\n";
@@ -133,6 +133,9 @@ grammar GecHeaders;
 		String signature = new String(pref.substring(0,pref.length()-1));
 		String builtinCall = new String(name+"_"+signature);
 		String s = new String();
+		
+		// remove the space from the call
+		call.remove(0);
 		if (post_count != 0)
 			s += ",\n\n";
 		s += "'"+builtinCall+"'=> { in => [";
