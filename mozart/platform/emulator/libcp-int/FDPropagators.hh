@@ -29,17 +29,55 @@
 	This file contains the rototypes of the gecode porpagators post 
 	functions.
 */
- 
+
+// Linear constraints
+/// Post propagator for \f$\sum_{i=0}^{|x|-1}x_i\sim_r c\f$
 void 	Gecode::linear (Space *sp, const IntVarArgs &x, IntRelType r, int c, IntConLevel=ICL_DEF);
+
+/// Post propagator for \f$\sum_{i=0}^{|x|-1}x_i\sim_r y\f$
 void 	Gecode::linear (Space *sp, const IntVarArgs &x, IntRelType r, IntVar y, IntConLevel=ICL_DEF);
+
+/// Post propagator for \f$\left(\sum_{i=0}^{|x|-1}x_i\sim_r c\right)\Leftrightarrow b\f$
 void 	Gecode::linear (Space *sp, const IntVarArgs &x, IntRelType r, int c, BoolVar b, IntConLevel=ICL_DEF);
+
+ /// Post propagator for \f$\left(\sum_{i=0}^{|x|-1}x_i\sim_r y\right)\Leftrightarrow b\f$
 void 	Gecode::linear (Space *sp, const IntVarArgs &x, IntRelType r, IntVar y, BoolVar b, IntConLevel=ICL_DEF);
+
+ /** \brief Post propagator for \f$\sum_{i=0}^{|x|-1}a_i\cdot x_i\sim_r c\f$
+   *
+   *  Throws an exception of type Int::ArgumentSizeMismatch, if
+   *  \a a and \a x are of different size.
+   */
 void 	Gecode::linear (Space *sp, const IntArgs &a, const IntVarArgs &x, IntRelType r, int c, IntConLevel=ICL_DEF);
+
+ /** \brief Post propagator for \f$\sum_{i=0}^{|x|-1}a_i\cdot x_i\sim_r y\f$
+   *
+   *  Throws an exception of type Int::ArgumentSizeMismatch, if
+   *  \a a and \a x are of different size.
+   */
 void 	Gecode::linear (Space *sp, const IntArgs &a, const IntVarArgs &x, IntRelType r, IntVar y, IntConLevel=ICL_DEF);
+
+ /** \brief Post propagator for \f$\left(\sum_{i=0}^{|x|-1}a_i\cdot x_i\sim_r c\right)\Leftrightarrow b\f$
+   *
+   *  Throws an exception of type Int::ArgumentSizeMismatch, if
+   *  \a a and \a x are of different size.
+   */
 void 	Gecode::linear (Space *sp, const IntArgs &a, const IntVarArgs &x, IntRelType r, int c, BoolVar b, IntConLevel=ICL_DEF);
+
+ /** \brief Post propagator for \f$\left(\sum_{i=0}^{|x|-1}a_i\cdot x_i\sim_r y\right)\Leftrightarrow b\f$
+   *
+   *  Throws an exception of type Int::ArgumentSizeMismatch, if
+   *  \a a and \a x are of different size.
+   */
 void 	Gecode::linear (Space *sp, const IntArgs &a, const IntVarArgs &x, IntRelType r, IntVar y, BoolVar b, IntConLevel=ICL_DEF);
+
+
+/// Post propagator for \f$\sum_{i=0}^{|x|-1}x_i\sim_r c\f$
 void 	Gecode::linear (Space *sp, const BoolVarArgs &x, IntRelType r, int c, IntConLevel=ICL_DEF);
+
+/// Post propagator for \f$\sum_{i=0}^{|x|-1}x_i\sim_r y\f$
 void 	Gecode::linear (Space *sp, const BoolVarArgs &x, IntRelType r, IntVar y, IntConLevel=ICL_DEF);
+// end of linear constraints
 
 /*
 void 	Gecode::cumulatives (Space *sp, const IntVarArgs &machine, const IntVarArgs &start, const IntVarArgs &duration, const IntVarArgs &end, const IntVarArgs &height, const IntArgs &limit, bool at_most, IntConLevel icl=ICL_DEF);
