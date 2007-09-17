@@ -277,6 +277,116 @@ $module_name          = "GFD";
 		 bi => count_IVA_IV_IRT_IV_ICL}
 ,
 
+'gcc_IVA_IA_InS_InS_InS_InS_InS_ICL'=> { in => ['+value','+value','+value','+value','+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => gcc_IVA_IA_InS_InS_InS_InS_InS_ICL}
+,
+
+'gcc_IVA_IA_InS_InS_InS_InS_ICL'=> { in => ['+value','+value','+value','+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => gcc_IVA_IA_InS_InS_InS_InS_ICL}
+,
+
+'gcc_IVA_InS_InS_ICL'=> { in => ['+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => gcc_IVA_InS_InS_ICL}
+,
+
+'gcc_IVA_InS_ICL'=> { in => ['+value','+value','+value','+value'],
+		 out=>[],
+		 bi => gcc_IVA_InS_ICL}
+,
+
+'gcc_IVA_IVA_InS_InS_ICL'=> { in => ['+value','+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => gcc_IVA_IVA_InS_InS_ICL}
+,
+
+'gcc_IVA_IA_IVA_InS_InS_InS_BlS_InS_InS_ICL'=> { in => ['+value','+value','+value','+value','+value','+value','+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => gcc_IVA_IA_IVA_InS_InS_InS_BlS_InS_InS_ICL}
+,
+
+'gcc_IVA_IA_IVA_InS_InS_BlS_InS_InS_ICL'=> { in => ['+value','+value','+value','+value','+value','+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => gcc_IVA_IA_IVA_InS_InS_BlS_InS_InS_ICL}
+,
+
+'dom_IV_InS_InS_ICL'=> { in => ['+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => dom_IV_InS_InS_ICL}
+,
+
+'dom_IVA_InS_InS_ICL'=> { in => ['+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => dom_IVA_InS_InS_ICL}
+,
+
+'dom_IV_InS_InS_BV_ICL'=> { in => ['+value','+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => dom_IV_InS_InS_BV_ICL}
+,
+
+'bool_not_BV_BV_ICL'=> { in => ['+value','+value','+value','+value'],
+		 out=>[],
+		 bi => bool_not_BV_BV_ICL}
+,
+
+'bool_eq_BV_BV_ICL'=> { in => ['+value','+value','+value','+value'],
+		 out=>[],
+		 bi => bool_eq_BV_BV_ICL}
+,
+
+'bool_and_BV_BV_BV_ICL'=> { in => ['+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => bool_and_BV_BV_BV_ICL}
+,
+
+'bool_and_BV_BV_Bl_ICL'=> { in => ['+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => bool_and_BV_BV_Bl_ICL}
+,
+
+'bool_or_BV_BV_BV_ICL'=> { in => ['+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => bool_or_BV_BV_BV_ICL}
+,
+
+'bool_or_BV_BV_Bl_ICL'=> { in => ['+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => bool_or_BV_BV_Bl_ICL}
+,
+
+'bool_imp_BV_BV_BV_ICL'=> { in => ['+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => bool_imp_BV_BV_BV_ICL}
+,
+
+'bool_imp_BV_BV_Bl_ICL'=> { in => ['+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => bool_imp_BV_BV_Bl_ICL}
+,
+
+'bool_eqv_BV_BV_BV_ICL'=> { in => ['+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => bool_eqv_BV_BV_BV_ICL}
+,
+
+'bool_eqv_BV_BV_Bl_ICL'=> { in => ['+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => bool_eqv_BV_BV_Bl_ICL}
+,
+
+'bool_xor_BV_BV_BV_ICL'=> { in => ['+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => bool_xor_BV_BV_BV_ICL}
+,
+
+'bool_xor_BV_BV_Bl_ICL'=> { in => ['+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => bool_xor_BV_BV_Bl_ICL}
+,
+
 'sortedness_IVA_IVA_ICL'=> { in => ['+value','+value','+value','+value'],
 		 out=>[],
 		 bi => sortedness_IVA_IVA_ICL}
@@ -350,4 +460,5 @@ $module_name          = "GFD";
 'mult_IV_IV_IV_ICL'=> { in => ['+value','+value','+value','+value','+value'],
 		 out=>[],
 		 bi => mult_IV_IV_IV_ICL}
+		 
  );
