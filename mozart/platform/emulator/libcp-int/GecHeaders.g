@@ -207,19 +207,21 @@ basicType returns [String value]
 gecType returns [String value]
 	:	'Space'				{$value = new String("DeclareGSpace(");}
 	|	'IntVar'			{pref+= "IV_";$value = new String("DeclareGeIntVar(");need_space=true;}
-	|	'IntVarArgs'		{pref+= "IVA_";$value = new String("DECLARE_INTVARARRAY(");need_space=true;} 
+	|	'IntVarArgs'		{pref+= "IVA_";$value = new String("DECLARE_INTVARARGS(");need_space=true;} 
 	|	'IntArgs'			{pref+= "IA_";$value = new String("DECLARE_INTARGS(");need_space=false;} 
 	|	'IntRelType'		{pref+= "IRT_";$value = new String("RelType(");need_space=false;} 
 	|	'IntSet'			{pref+= "IV_";$value = new String("DeclareIntSet(");need_space=true;}
 	|	'IntConLevel'		{pref+= "ICL_";$value = new String("ConLevel(");need_space=false;}
 	|	'DFA'				{pref+= "DFA_";$value = new String("DECLARE_DFA(");need_space=false;}
 	|	'BoolVar'			{pref+= "BV_";$value = new String("DeclareBoolVar(");need_space=true;}
-	|	'BoolVarArgs'		{pref+= "BVA_";$value = new String("DECLARE_INTVARARRAY(");need_space=true;} 
+	|	'BoolVarArgs'		{pref+= "BVA_";$value = new String("DECLARE_INTVARARGS(");need_space=true;} 
 	;
 
 cType returns [String value]
 	:	'int'				{pref+= "In_";$value = new String("DeclareGeIntVar(");need_space=true;}
+	|	'intS'				{pref+= "InS_";$value = new String("OZ_declareInt(");need_space=false;}
 	|	'bool'				{pref+= "Bl_";$value = new String("DeclareBoolVar(");need_space=true;}
+	|	'boolS'				{pref+= "BlS_";$value = new String("OZ_declareInt(");need_space=false;}
 	|	'void'				{$value = new String("Should never happend(");need_space=false;}
 	;
 
