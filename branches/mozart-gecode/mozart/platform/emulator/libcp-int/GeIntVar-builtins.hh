@@ -138,6 +138,23 @@
   }								\
 }
 
+#define DeclareGeIntVarT3(val,ar,i,sp)				\
+{  TaggedRef x = val;						\
+  DEREF(x,x_ptr);						\
+  Assert(!oz_isRef(x));						\
+  if (oz_isFree(x)) {						\
+    oz_suspendOn(makeTaggedRef(x_ptr));				\
+  }								\
+  if(OZ_isInt(val)) {						\
+    int domain=OZ_intToC(val);					\
+	Gecode::IntVar v(sp,domain,domain);\
+	ar[i] = v;				\
+  }								\
+  else if(OZ_isGeIntVar(val)) {					\
+          ar[i]=get_IntVar(val);					\
+  }								\
+}
+
 #define DeclareBoolVar(p,v,sp) \
 	BoolVar v;\
 	{\
@@ -178,6 +195,92 @@ IntVarArray array;					\
     Gecode::IntVarArray _array((Gecode::Space*) sp ,sz);          \
     for(int i=0; OZ_isCons(al); al=OZ_tail(al),i++) {	\
       DeclareGeIntVarT2(OZ_subtree(t,OZ_head(al)),_array,i,sp);\
+    }							\
+    array=_array;                                       \
+    }							\
+}
+
+#define DECLARE_INTVARARGS(tIn,array,sp)  		\
+int __x##tIn = 0; \
+{ \
+	OZ_Term t = OZ_deref(OZ_in(tIn));                     \
+	__x##tIn =  OZ_isLiteral(t) ? 0 : OZ_isCons(t) ? OZ_length(t) : OZ_width(t); \
+} \
+IntVarArgs array(__x##tIn);					\
+{							\
+  int sz;						\
+  OZ_Term t = OZ_deref(OZ_in(tIn));                     \
+  if(OZ_isLiteral(t)) {					\
+    sz=0;						\
+    Gecode::IntVarArgs _array(sz);		\
+    array=_array;					\
+  }							\
+  else if(OZ_isCons(t)) {				\
+    sz = OZ_length(t);					\
+    Gecode::IntVarArgs _array(sz);	\
+    for(int i=0; OZ_isCons(t); t=OZ_tail(t),i++){	\
+      DeclareGeIntVarT3(OZ_deref(OZ_head(t)),_array,i,sp); \
+    }                                                   \
+    array=_array;					\
+  }							\
+  else if(OZ_isTuple(t)) {				\
+    sz=OZ_width(t);					\
+    Gecode::IntVarArgs _array(sz);	\
+    for(int i=0;i<sz;i++) {				\
+      DeclareGeIntVarT3(OZ_getArg(t,i),_array,i,sp);	\
+    }							\
+    array=_array;                                       \
+  }							\
+  else {						\
+    assert(OZ_isRecord(t));				\
+    OZ_Term al = OZ_arityList(t);			\
+    sz = OZ_width(t);					\
+    Gecode::IntVarArgs _array(sz);          \
+    for(int i=0; OZ_isCons(al); al=OZ_tail(al),i++) {	\
+      DeclareGeIntVarT3(OZ_subtree(t,OZ_head(al)),_array,i,sp);\
+    }							\
+    array=_array;                                       \
+    }							\
+}
+
+#define DECLARE_BOOLVARARGS(tIn,array,sp)  		\
+int __x##tIn = 0; \
+{ \
+	OZ_Term t = OZ_deref(OZ_in(tIn));                     \
+	__x##tIn =  OZ_isLiteral(t) ? 0 : OZ_isCons(t) ? OZ_length(t) : OZ_width(t); \
+} \
+BoolVarArgs array(__x##tIn);					\
+{							\
+  int sz;						\
+  OZ_Term t = OZ_deref(OZ_in(tIn));                     \
+  if(OZ_isLiteral(t)) {					\
+    sz=0;						\
+    Gecode::BoolVarArgs _array(sz);		\
+    array=_array;					\
+  }							\
+  else if(OZ_isCons(t)) {				\
+    sz = OZ_length(t);					\
+    Gecode::BoolVarArgs _array(sz);	\
+    for(int i=0; OZ_isCons(t); t=OZ_tail(t),i++){	\
+      DeclareGeIntVarT3(OZ_deref(OZ_head(t)),_array,i,sp); \
+    }                                                   \
+    array=_array;					\
+  }							\
+  else if(OZ_isTuple(t)) {				\
+    sz=OZ_width(t);					\
+    Gecode::BoolVarArgs _array(sz);	\
+    for(int i=0;i<sz;i++) {				\
+      DeclareGeIntVarT3(OZ_getArg(t,i),_array,i,sp);	\
+    }							\
+    array=_array;                                       \
+  }							\
+  else {						\
+    assert(OZ_isRecord(t));				\
+    OZ_Term al = OZ_arityList(t);			\
+    sz = OZ_width(t);					\
+    Gecode::BoolVarArgs _array(sz);          \
+    for(int i=0; OZ_isCons(al); al=OZ_tail(al),i++) {	\
+      DeclareGeIntVarT3(OZ_subtree(t,OZ_head(al)),_array,i,sp);\
     }							\
     array=_array;                                       \
     }							\
