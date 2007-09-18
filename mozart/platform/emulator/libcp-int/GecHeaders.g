@@ -224,7 +224,7 @@ cType returns [String value]
 	:	'int'				{pref+= "In_";$value = new String("DeclareGeIntVar(");need_space=true;}
 	|	'intS'				{pref+= "InS_";$value = new String("OZ_declareInt(");need_space=false;}
 	|	'bool'				{pref+= "Bl_";$value = new String("DeclareBoolVar(");need_space=true;}
-	|	'boolS'				{pref+= "BlS_";$value = new String("OZ_declareInt(");need_space=false;}
+	|	'boolS'				{pref+= "BlS_";$value = new String("DeclareBool(");need_space=false;}
 	|	'void'				{$value = new String("Should never happend(");need_space=false;}
 	;
 
