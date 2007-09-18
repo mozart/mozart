@@ -28,8 +28,6 @@ OTOOL=/usr/bin/otool -L
 NAME=Mozart
 VERSION=1.3.2
 
-SOURCE_DIR=.
-
 APP=$(NAME).app
 EXT_LIBS=$(APP)/Contents/Resources/ext_libs
 EXEC=$(APP)/Contents/Resources/platform/darwin-i386/emulator.exe
@@ -60,6 +58,8 @@ ICN=appIcon.icns
 BBIN=Mozart.sh
 
 SOURCE_FILES=$(APP)
+OZHOME_FILES=README LICENSE.rtf LICENSE.html
+OZHOME_DIRS= examples
 
 TEMPLATE_DMG=template.dmg
 
@@ -90,14 +90,22 @@ $(TEMPLATE_DMG).bz2:
 $(WC_DMG): $(TEMPLATE_DMG)
         cp $< $@
 
-$(MASTER_DMG): $(WC_DMG) $(addprefix $(SOURCE_DIR)/,$(SOURCE_FILES))
+$(MASTER_DMG): $(WC_DMG) $(SOURCE_FILES)
         @echo
         @echo --------------------- Creating Disk Image --------------------
         mkdir -p $(WC_DIR)
         hdiutil attach "$(WC_DMG)" -noautoopen -quiet -mountpoint "$(WC_DIR)"
         for i in $(SOURCE_FILES); do  \
                 rm -rf "$(WC_DIR)/$$i"; \
-                ditto -rsrc "$(SOURCE_DIR)/$$i" "$(WC_DIR)/$$i"; \
+                ditto -rsrc "$$i" "$(WC_DIR)/$$i"; \
+        done
+        for i in $(OZHOME_FILES); do  \
+                rm -rf "$(WC_DIR)/$$i"; \
+                ditto -rsrc "$(MOZ_HOME)/$$i" "$(WC_DIR)"; \
+        done
+        for i in $(OZHOME_DIRS); do  \
+                rm -rf "$(WC_DIR)/$$i"; \
+                ditto -rsrc "$(MOZ_HOME)/$$i" "$(WC_DIR)/$$i"; \
         done
         WC_DEV=`hdiutil info | grep "$(WC_DIR)" | grep "Apple_HFS" | awk '{print $$1}'` && \
         hdiutil detach $$WC_DEV -quiet -force
@@ -139,7 +147,7 @@ bundskel:
 
 .PHONY: clean veryclean
 clean:
-        -rm -rf $(TEMPLATE_DMG) $(MASTER_DMG) $(WC_DMG)
+        -rm -rf $(TEMPLATE_DMG) $(MASTER_DMG) $(WC_DMG)  $(TEMPLATE_DMG).bz2
 
 veryclean: clean
         -rm -rf Mozart.app
