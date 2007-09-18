@@ -162,6 +162,20 @@
 		v = static_cast<BoolVar>(iv);\
 	}
 
+#define DeclareBool(p, v) \
+bool v;\
+{  TaggedRef x = OZ_in(p);						\
+  DEREF(x,x_ptr);						\
+  Assert(!oz_isRef(x));						\
+  if (oz_isFree(x)) {						\
+    oz_suspendOn(makeTaggedRef(x_ptr));				\
+  }\	
+  if (!OZ_isBool(v))\
+	   RAISE_EXCEPTION("Error, expected atom");	\
+  v = OZ_isTrue(x) ? true : false; \
+}
+
+
 #define DECLARE_INTVARARRAY(tIn,array,sp)  		\
 IntVarArray array;					\
 {							\

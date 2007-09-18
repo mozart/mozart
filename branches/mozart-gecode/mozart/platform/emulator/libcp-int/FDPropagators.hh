@@ -79,16 +79,16 @@ void 	Gecode::linear (Space *sp, const BoolVarArgs &x, IntRelType r, int c, IntC
 void 	Gecode::linear (Space *sp, const BoolVarArgs &x, IntRelType r, IntVar y, IntConLevel=ICL_DEF);
 // end of linear constraints
 
-/*
-void 	Gecode::cumulatives (Space *sp, const IntVarArgs &machine, const IntVarArgs &start, const IntVarArgs &duration, const IntVarArgs &end, const IntVarArgs &height, const IntArgs &limit, bool at_most, IntConLevel icl=ICL_DEF);
-void 	Gecode::cumulatives (Space *sp, const IntArgs &machine, const IntVarArgs &start, const IntVarArgs &duration, const IntVarArgs &end, const IntVarArgs &height, const IntArgs &limit, bool at_most, IntConLevel icl=ICL_DEF);
-void 	Gecode::cumulatives (Space *sp, const IntVarArgs &machine, const IntVarArgs &start, const IntArgs &duration, const IntVarArgs &end, const IntVarArgs &height, const IntArgs &limit, bool at_most, IntConLevel icl=ICL_DEF);
-void 	Gecode::cumulatives (Space *sp, const IntArgs &machine, const IntVarArgs &start, const IntArgs &duration, const IntVarArgs &end, const IntVarArgs &height, const IntArgs &limit, bool at_most, IntConLevel icl=ICL_DEF);
-void 	Gecode::cumulatives (Space *sp, const IntVarArgs &machine, const IntVarArgs &start, const IntVarArgs &duration, const IntVarArgs &end, const IntArgs &height, const IntArgs &limit, bool at_most, IntConLevel icl=ICL_DEF);
-void 	Gecode::cumulatives (Space *sp, const IntArgs &machine, const IntVarArgs &start, const IntVarArgs &duration, const IntVarArgs &end, const IntArgs &height, const IntArgs &limit, bool at_most, IntConLevel icl=ICL_DEF);
-void 	Gecode::cumulatives (Space *sp, const IntVarArgs &machine, const IntVarArgs &start, const IntArgs &duration, const IntVarArgs &end, const IntArgs &height, const IntArgs &limit, bool at_most, IntConLevel icl=ICL_DEF);
-void 	Gecode::cumulatives (Space *sp, const IntArgs &machine, const IntVarArgs &start, const IntArgs &duration, const IntVarArgs &end, const IntArgs &height, const IntArgs &limit, bool at_most, IntConLevel icl=ICL_DEF);
-*/
+
+void 	Gecode::cumulatives (Space *sp, const IntVarArgs &machine, const IntVarArgs &start, const IntVarArgs &duration, const IntVarArgs &end, const IntVarArgs &height, const IntArgs &limit, boolS at_most, IntConLevel icl=ICL_DEF);
+void 	Gecode::cumulatives (Space *sp, const IntArgs &machine, const IntVarArgs &start, const IntVarArgs &duration, const IntVarArgs &end, const IntVarArgs &height, const IntArgs &limit, boolS at_most, IntConLevel icl=ICL_DEF);
+void 	Gecode::cumulatives (Space *sp, const IntVarArgs &machine, const IntVarArgs &start, const IntArgs &duration, const IntVarArgs &end, const IntVarArgs &height, const IntArgs &limit, boolS at_most, IntConLevel icl=ICL_DEF);
+void 	Gecode::cumulatives (Space *sp, const IntArgs &machine, const IntVarArgs &start, const IntArgs &duration, const IntVarArgs &end, const IntVarArgs &height, const IntArgs &limit, boolS at_most, IntConLevel icl=ICL_DEF);
+void 	Gecode::cumulatives (Space *sp, const IntVarArgs &machine, const IntVarArgs &start, const IntVarArgs &duration, const IntVarArgs &end, const IntArgs &height, const IntArgs &limit, boolS at_most, IntConLevel icl=ICL_DEF);
+void 	Gecode::cumulatives (Space *sp, const IntArgs &machine, const IntVarArgs &start, const IntVarArgs &duration, const IntVarArgs &end, const IntArgs &height, const IntArgs &limit, boolS at_most, IntConLevel icl=ICL_DEF);
+void 	Gecode::cumulatives (Space *sp, const IntVarArgs &machine, const IntVarArgs &start, const IntArgs &duration, const IntVarArgs &end, const IntArgs &height, const IntArgs &limit, boolS at_most, IntConLevel icl=ICL_DEF);
+void 	Gecode::cumulatives (Space *sp, const IntArgs &machine, const IntVarArgs &start, const IntArgs &duration, const IntVarArgs &end, const IntArgs &height, const IntArgs &limit, boolS at_most, IntConLevel icl=ICL_DEF);
+
 
 void 	Gecode::eq (Space *home, IntVar x0, IntVar x1, IntConLevel icl=ICL_DEF);
 void 	Gecode::eq (Space *home, IntVar x, int n, IntConLevel=ICL_DEF);
@@ -111,7 +111,7 @@ void 	Gecode::gcc (Space *home, const IntVarArgs &x, const IntVarArgs &c, intS m
 void 	Gecode::gcc (Space *home, const IntVarArgs &x, const IntArgs &v, const IntVarArgs &c, intS m, intS unspec_low, intS unspec_up, boolS all, intS min, intS max, IntConLevel icl);
 void 	Gecode::gcc (Space *home, const IntVarArgs &x, const IntArgs &v, const IntVarArgs &c, intS m, intS unspec, boolS all, intS min, intS max, IntConLevel icl);
 
-//void 	Gecode::channel (Space *home, const IntVarArgs &x, const IntVarArgs &y, IntConLevel icl=ICL_DEF);
+void 	Gecode::channel (Space *home, const IntVarArgs &x, const IntVarArgs &y, IntConLevel icl=ICL_DEF);
 
 
 void 	Gecode::dom (Space *home, IntVar x, intS l, intS m, IntConLevel=ICL_DEF);
@@ -148,8 +148,8 @@ void 	Gecode::sortedness (Space *home, const IntVarArgs &x, const IntVarArgs &y,
 void 	Gecode::distinct (Space *home, const IntVarArgs &x, IntConLevel icl=ICL_DEF);
 void 	Gecode::distinct (Space *home, const IntArgs &n, const IntVarArgs &x, IntConLevel icl=ICL_DEF);
 
-//void 	Gecode::element (Space *home, const IntArgs &n, IntVar x0, IntVar x1, IntConLevel=ICL_DEF);
-//void 	Gecode::element (Space *home, const IntVarArgs &x, IntVar y0, IntVar y1, IntConLevel icl=ICL_DEF);
+void 	Gecode::element (Space *home, const IntArgs &n, IntVar x0, IntVar x1, IntConLevel=ICL_DEF);
+void 	Gecode::element (Space *home, const IntVarArgs &x, IntVar y0, IntVar y1, IntConLevel icl=ICL_DEF);
 
 
 void 	Gecode::rel (Space *home, IntVar x0, IntRelType r, IntVar x1, IntConLevel icl=ICL_DEF);

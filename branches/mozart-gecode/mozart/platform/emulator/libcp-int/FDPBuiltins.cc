@@ -166,6 +166,166 @@ OZ_BI_define(linear_BVA_IRT_IV_ICL,4,0) {
 }OZ_BI_end
 
 
+OZ_BI_define(cumulatives_IVA_IVA_IVA_IVA_IVA_IA_BlS_ICL,8,0) {
+	DeclareGSpace(sp);
+	DECLARE_INTVARARGS(0, __machine, sp);
+	DECLARE_INTVARARGS(1, __start, sp);
+	DECLARE_INTVARARGS(2, __duration, sp);
+	DECLARE_INTVARARGS(3, __end, sp);
+	DECLARE_INTVARARGS(4, __height, sp);
+	DECLARE_INTARGS(5, __limit);
+	DeclareBool(6, __at_most);
+	ConLevel(7, __icl);
+	try{
+		cumulatives(sp,__machine,__start,__duration,__end,__height,__limit,__at_most,__icl);
+	} catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	GZ_RETURN(sp);
+
+}OZ_BI_end
+
+
+OZ_BI_define(cumulatives_IA_IVA_IVA_IVA_IVA_IA_BlS_ICL,8,0) {
+	DeclareGSpace(sp);
+	DECLARE_INTARGS(0, __machine);
+	DECLARE_INTVARARGS(1, __start, sp);
+	DECLARE_INTVARARGS(2, __duration, sp);
+	DECLARE_INTVARARGS(3, __end, sp);
+	DECLARE_INTVARARGS(4, __height, sp);
+	DECLARE_INTARGS(5, __limit);
+	DeclareBool(6, __at_most);
+	ConLevel(7, __icl);
+	try{
+		cumulatives(sp,__machine,__start,__duration,__end,__height,__limit,__at_most,__icl);
+	} catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	GZ_RETURN(sp);
+
+}OZ_BI_end
+
+
+OZ_BI_define(cumulatives_IVA_IVA_IA_IVA_IVA_IA_BlS_ICL,8,0) {
+	DeclareGSpace(sp);
+	DECLARE_INTVARARGS(0, __machine, sp);
+	DECLARE_INTVARARGS(1, __start, sp);
+	DECLARE_INTARGS(2, __duration);
+	DECLARE_INTVARARGS(3, __end, sp);
+	DECLARE_INTVARARGS(4, __height, sp);
+	DECLARE_INTARGS(5, __limit);
+	DeclareBool(6, __at_most);
+	ConLevel(7, __icl);
+	try{
+		cumulatives(sp,__machine,__start,__duration,__end,__height,__limit,__at_most,__icl);
+	} catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	GZ_RETURN(sp);
+
+}OZ_BI_end
+
+
+OZ_BI_define(cumulatives_IA_IVA_IA_IVA_IVA_IA_BlS_ICL,8,0) {
+	DeclareGSpace(sp);
+	DECLARE_INTARGS(0, __machine);
+	DECLARE_INTVARARGS(1, __start, sp);
+	DECLARE_INTARGS(2, __duration);
+	DECLARE_INTVARARGS(3, __end, sp);
+	DECLARE_INTVARARGS(4, __height, sp);
+	DECLARE_INTARGS(5, __limit);
+	DeclareBool(6, __at_most);
+	ConLevel(7, __icl);
+	try{
+		cumulatives(sp,__machine,__start,__duration,__end,__height,__limit,__at_most,__icl);
+	} catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	GZ_RETURN(sp);
+
+}OZ_BI_end
+
+
+OZ_BI_define(cumulatives_IVA_IVA_IVA_IVA_IA_IA_BlS_ICL,8,0) {
+	DeclareGSpace(sp);
+	DECLARE_INTVARARGS(0, __machine, sp);
+	DECLARE_INTVARARGS(1, __start, sp);
+	DECLARE_INTVARARGS(2, __duration, sp);
+	DECLARE_INTVARARGS(3, __end, sp);
+	DECLARE_INTARGS(4, __height);
+	DECLARE_INTARGS(5, __limit);
+	DeclareBool(6, __at_most);
+	ConLevel(7, __icl);
+	try{
+		cumulatives(sp,__machine,__start,__duration,__end,__height,__limit,__at_most,__icl);
+	} catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	GZ_RETURN(sp);
+
+}OZ_BI_end
+
+
+OZ_BI_define(cumulatives_IA_IVA_IVA_IVA_IA_IA_BlS_ICL,8,0) {
+	DeclareGSpace(sp);
+	DECLARE_INTARGS(0, __machine);
+	DECLARE_INTVARARGS(1, __start, sp);
+	DECLARE_INTVARARGS(2, __duration, sp);
+	DECLARE_INTVARARGS(3, __end, sp);
+	DECLARE_INTARGS(4, __height);
+	DECLARE_INTARGS(5, __limit);
+	DeclareBool(6, __at_most);
+	ConLevel(7, __icl);
+	try{
+		cumulatives(sp,__machine,__start,__duration,__end,__height,__limit,__at_most,__icl);
+	} catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	GZ_RETURN(sp);
+
+}OZ_BI_end
+
+
+OZ_BI_define(cumulatives_IVA_IVA_IA_IVA_IA_IA_BlS_ICL,8,0) {
+	DeclareGSpace(sp);
+	DECLARE_INTVARARGS(0, __machine, sp);
+	DECLARE_INTVARARGS(1, __start, sp);
+	DECLARE_INTARGS(2, __duration);
+	DECLARE_INTVARARGS(3, __end, sp);
+	DECLARE_INTARGS(4, __height);
+	DECLARE_INTARGS(5, __limit);
+	DeclareBool(6, __at_most);
+	ConLevel(7, __icl);
+	try{
+		cumulatives(sp,__machine,__start,__duration,__end,__height,__limit,__at_most,__icl);
+	} catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	GZ_RETURN(sp);
+
+}OZ_BI_end
+
+
+OZ_BI_define(cumulatives_IA_IVA_IA_IVA_IA_IA_BlS_ICL,8,0) {
+	DeclareGSpace(sp);
+	DECLARE_INTARGS(0, __machine);
+	DECLARE_INTVARARGS(1, __start, sp);
+	DECLARE_INTARGS(2, __duration);
+	DECLARE_INTVARARGS(3, __end, sp);
+	DECLARE_INTARGS(4, __height);
+	DECLARE_INTARGS(5, __limit);
+	DeclareBool(6, __at_most);
+	ConLevel(7, __icl);
+	try{
+		cumulatives(sp,__machine,__start,__duration,__end,__height,__limit,__at_most,__icl);
+	} catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	GZ_RETURN(sp);
+
+}OZ_BI_end
+
+
 OZ_BI_define(eq_IV_IV_ICL,3,0) {
 	DeclareGSpace(home);
 	DeclareGeIntVar(0, __x0, home);
@@ -405,7 +565,7 @@ OZ_BI_define(gcc_IVA_IA_IVA_InS_InS_InS_BlS_InS_InS_ICL,10,0) {
 	OZ_declareInt(3, __m);
 	OZ_declareInt(4, __unspec_low);
 	OZ_declareInt(5, __unspec_up);
-	OZ_declareInt(6, __all);
+	DeclareBool(6, __all);
 	OZ_declareInt(7, __min);
 	OZ_declareInt(8, __max);
 	ConLevel(9, __icl);
@@ -426,12 +586,27 @@ OZ_BI_define(gcc_IVA_IA_IVA_InS_InS_BlS_InS_InS_ICL,9,0) {
 	DECLARE_INTVARARGS(2, __c, home);
 	OZ_declareInt(3, __m);
 	OZ_declareInt(4, __unspec);
-	OZ_declareInt(5, __all);
+	DeclareBool(5, __all);
 	OZ_declareInt(6, __min);
 	OZ_declareInt(7, __max);
 	ConLevel(8, __icl);
 	try{
 		gcc(home,__x,__v,__c,__m,__unspec,__all,__min,__max,__icl);
+	} catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	GZ_RETURN(home);
+
+}OZ_BI_end
+
+
+OZ_BI_define(channel_IVA_IVA_ICL,3,0) {
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	DECLARE_INTVARARGS(1, __y, home);
+	ConLevel(2, __icl);
+	try{
+		channel(home,__x,__y,__icl);
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
@@ -777,6 +952,38 @@ OZ_BI_define(distinct_IA_IVA_ICL,3,0) {
 	ConLevel(2, __icl);
 	try{
 		distinct(home,__n,__x,__icl);
+	} catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	GZ_RETURN(home);
+
+}OZ_BI_end
+
+
+OZ_BI_define(element_IA_IV_IV_ICL,4,0) {
+	DeclareGSpace(home);
+	DECLARE_INTARGS(0, __n);
+	DeclareGeIntVar(1, __x0, home);
+	DeclareGeIntVar(2, __x1, home);
+	ConLevel(3, __ICL_DEF);
+	try{
+		element(home,__n,__x0,__x1,__ICL_DEF);
+	} catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	GZ_RETURN(home);
+
+}OZ_BI_end
+
+
+OZ_BI_define(element_IVA_IV_IV_ICL,4,0) {
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	DeclareGeIntVar(1, __y0, home);
+	DeclareGeIntVar(2, __y1, home);
+	ConLevel(3, __icl);
+	try{
+		element(home,__x,__y0,__y1,__icl);
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
