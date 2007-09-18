@@ -40,7 +40,7 @@ EXEC=$(APP)/Contents/Resources/platform/darwin-i386/emulator.exe
 ##
 MOZ_HOME=/Users/ggutierrez/Work/moz
 ## Directories of mozart installation to be bundled.
-MOZ_DIRS= platform bin cache share
+MOZ_DIRS= platform bin cache share include
 # External libraries thet mozart uses (i.e. gmp)
 MOZ_LIBS_DIR=ext_libs
 
@@ -82,7 +82,7 @@ $(TEMPLATE_DMG).bz2:
         @echo
         @echo --------------------- Generating empty template --------------------
         mkdir template
-        hdiutil create -size  100m "$(TEMPLATE_DMG)" -srcfolder template -format UDRW -volname "$(NAME)" -quiet
+        hdiutil create -size  30m "$(TEMPLATE_DMG)" -srcfolder template -format UDRW -volname "$(NAME)" -quiet
         rmdir template
         bzip2 "$(TEMPLATE_DMG)"
         @echo
@@ -113,8 +113,10 @@ fixpaths:
         @echo
         @echo --------------------- Fixing libgmp --------------------
 
-        $(INTOOL) -change /sw/lib/libgmp.3.dylib \
+        $(INTOOL) -change /opt/local/lib/libgmp.3.dylib \
         @executable_path/../../../Frameworks/libgmp.3.dylib  $(EXEC)
+        $(INTOOL) -change /opt/local/lib/libz.1.dylib \
+        @executable_path/../../../Frameworks/libz.1.dylib  $(EXEC)
         @echo
         @echo --------------------- Path results --------------------
         $(OTOOL) $(EXEC)
