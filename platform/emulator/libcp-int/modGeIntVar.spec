@@ -232,6 +232,46 @@ $module_name          = "GFD";
 		 bi => linear_BVA_IRT_IV_ICL}
 ,
 
+'cumulatives_IVA_IVA_IVA_IVA_IVA_IA_BlS_ICL'=> { in => ['+value','+value','+value','+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => cumulatives_IVA_IVA_IVA_IVA_IVA_IA_BlS_ICL}
+,
+
+'cumulatives_IA_IVA_IVA_IVA_IVA_IA_BlS_ICL'=> { in => ['+value','+value','+value','+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => cumulatives_IA_IVA_IVA_IVA_IVA_IA_BlS_ICL}
+,
+
+'cumulatives_IVA_IVA_IA_IVA_IVA_IA_BlS_ICL'=> { in => ['+value','+value','+value','+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => cumulatives_IVA_IVA_IA_IVA_IVA_IA_BlS_ICL}
+,
+
+'cumulatives_IA_IVA_IA_IVA_IVA_IA_BlS_ICL'=> { in => ['+value','+value','+value','+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => cumulatives_IA_IVA_IA_IVA_IVA_IA_BlS_ICL}
+,
+
+'cumulatives_IVA_IVA_IVA_IVA_IA_IA_BlS_ICL'=> { in => ['+value','+value','+value','+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => cumulatives_IVA_IVA_IVA_IVA_IA_IA_BlS_ICL}
+,
+
+'cumulatives_IA_IVA_IVA_IVA_IA_IA_BlS_ICL'=> { in => ['+value','+value','+value','+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => cumulatives_IA_IVA_IVA_IVA_IA_IA_BlS_ICL}
+,
+
+'cumulatives_IVA_IVA_IA_IVA_IA_IA_BlS_ICL'=> { in => ['+value','+value','+value','+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => cumulatives_IVA_IVA_IA_IVA_IA_IA_BlS_ICL}
+,
+
+'cumulatives_IA_IVA_IA_IVA_IA_IA_BlS_ICL'=> { in => ['+value','+value','+value','+value','+value','+value','+value','+value'],
+		 out=>[],
+		 bi => cumulatives_IA_IVA_IA_IVA_IA_IA_BlS_ICL}
+,
+
 'eq_IV_IV_ICL'=> { in => ['+value','+value','+value'],
 		 out=>[],
 		 bi => eq_IV_IV_ICL}
@@ -310,6 +350,11 @@ $module_name          = "GFD";
 'gcc_IVA_IA_IVA_InS_InS_BlS_InS_InS_ICL'=> { in => ['+value','+value','+value','+value','+value','+value','+value','+value','+value'],
 		 out=>[],
 		 bi => gcc_IVA_IA_IVA_InS_InS_BlS_InS_InS_ICL}
+,
+
+'channel_IVA_IVA_ICL'=> { in => ['+value','+value','+value'],
+		 out=>[],
+		 bi => channel_IVA_IVA_ICL}
 ,
 
 'dom_IV_InS_InS_ICL'=> { in => ['+value','+value','+value','+value'],
@@ -420,6 +465,16 @@ $module_name          = "GFD";
 'distinct_IA_IVA_ICL'=> { in => ['+value','+value','+value'],
 		 out=>[],
 		 bi => distinct_IA_IVA_ICL}
+,
+
+'element_IA_IV_IV_ICL'=> { in => ['+value','+value','+value','+value'],
+		 out=>[],
+		 bi => element_IA_IV_IV_ICL}
+,
+
+'element_IVA_IV_IV_ICL'=> { in => ['+value','+value','+value','+value'],
+		 out=>[],
+		 bi => element_IVA_IV_IV_ICL}
 ,
 
 'rel_IV_IRT_IV_ICL'=> { in => ['+value','+value','+value','+value'],
