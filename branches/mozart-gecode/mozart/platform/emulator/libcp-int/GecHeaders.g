@@ -213,7 +213,7 @@ gecType returns [String value]
 	|	'IntVarArgs'		{pref+= "IVA_";$value = new String("DECLARE_INTVARARGS(");need_space=true;} 
 	|	'IntArgs'			{pref+= "IA_";$value = new String("DECLARE_INTARGS(");need_space=false;} 
 	|	'IntRelType'		{pref+= "IRT_";$value = new String("RelType(");need_space=false;} 
-	|	'IntSet'			{pref+= "IV_";$value = new String("DeclareIntSet(");need_space=true;}
+	|	'IntSet'			{pref+= "IV_";$value = new String("DECLARE_INT_SET(");need_space=false;}
 	|	'IntConLevel'		{pref+= "ICL_";$value = new String("ConLevel(");need_space=false;}
 	|	'DFA'				{pref+= "DFA_";$value = new String("DECLARE_DFA(");need_space=false;}
 	|	'BoolVar'			{pref+= "BV_";$value = new String("DeclareBoolVar(");need_space=true;}
