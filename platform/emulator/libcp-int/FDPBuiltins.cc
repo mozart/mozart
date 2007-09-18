@@ -472,6 +472,36 @@ OZ_BI_define(dom_IVA_InS_InS_ICL,4,0) {
 }OZ_BI_end
 
 
+OZ_BI_define(dom_IV_IV_ICL,3,0) {
+	DeclareGSpace(home);
+	DeclareGeIntVar(0, __x, home);
+	DECLARE_INT_SET(1, __s);
+	ConLevel(2, __ICL_DEF);
+	try{
+		dom(home,__x,__s,__ICL_DEF);
+	} catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	GZ_RETURN(home);
+
+}OZ_BI_end
+
+
+OZ_BI_define(dom_IVA_IV_ICL,3,0) {
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	DECLARE_INT_SET(1, __s);
+	ConLevel(2, __ICL_DEF);
+	try{
+		dom(home,__x,__s,__ICL_DEF);
+	} catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	GZ_RETURN(home);
+
+}OZ_BI_end
+
+
 OZ_BI_define(dom_IV_InS_InS_BV_ICL,5,0) {
 	DeclareGSpace(home);
 	DeclareGeIntVar(0, __x, home);
@@ -481,6 +511,22 @@ OZ_BI_define(dom_IV_InS_InS_BV_ICL,5,0) {
 	ConLevel(4, __ICL_DEF);
 	try{
 		dom(home,__x,__l,__m,__b,__ICL_DEF);
+	} catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	GZ_RETURN(home);
+
+}OZ_BI_end
+
+
+OZ_BI_define(dom_IV_IV_BV_ICL,4,0) {
+	DeclareGSpace(home);
+	DeclareGeIntVar(0, __x, home);
+	DECLARE_INT_SET(1, __s);
+	DeclareBoolVar(2, __b, home);
+	ConLevel(3, __ICL_DEF);
+	try{
+		dom(home,__x,__s,__b,__ICL_DEF);
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}

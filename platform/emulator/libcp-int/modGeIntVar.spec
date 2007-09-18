@@ -322,9 +322,24 @@ $module_name          = "GFD";
 		 bi => dom_IVA_InS_InS_ICL}
 ,
 
+'dom_IV_IV_ICL'=> { in => ['+value','+value','+value'],
+		 out=>[],
+		 bi => dom_IV_IV_ICL}
+,
+
+'dom_IVA_IV_ICL'=> { in => ['+value','+value','+value'],
+		 out=>[],
+		 bi => dom_IVA_IV_ICL}
+,
+
 'dom_IV_InS_InS_BV_ICL'=> { in => ['+value','+value','+value','+value','+value'],
 		 out=>[],
 		 bi => dom_IV_InS_InS_BV_ICL}
+,
+
+'dom_IV_IV_BV_ICL'=> { in => ['+value','+value','+value','+value'],
+		 out=>[],
+		 bi => dom_IV_IV_BV_ICL}
 ,
 
 'bool_not_BV_BV_ICL'=> { in => ['+value','+value','+value'],

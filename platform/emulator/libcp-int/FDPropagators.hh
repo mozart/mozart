@@ -116,10 +116,10 @@ void 	Gecode::gcc (Space *home, const IntVarArgs &x, const IntArgs &v, const Int
 
 void 	Gecode::dom (Space *home, IntVar x, intS l, intS m, IntConLevel=ICL_DEF);
 void 	Gecode::dom (Space *home, IntVarArgs &x, intS l, intS m, IntConLevel=ICL_DEF);
-//void 	Gecode::dom (Space *home, IntVar x, const IntSet &s, IntConLevel=ICL_DEF);
-//void 	Gecode::dom (Space *home, IntVarArgs &x, const IntSet &s, IntConLevel=ICL_DEF);
+void 	Gecode::dom (Space *home, IntVar x, const IntSet &s, IntConLevel=ICL_DEF);
+void 	Gecode::dom (Space *home, IntVarArgs &x, const IntSet &s, IntConLevel=ICL_DEF);
 void 	Gecode::dom (Space *home, IntVar x, intS l, intS m, BoolVar b, IntConLevel=ICL_DEF);
-//void 	Gecode::dom (Space *home, IntVar x, const IntSet &s, BoolVar b, IntConLevel=ICL_DEF);
+void 	Gecode::dom (Space *home, IntVar x, const IntSet &s, BoolVar b, IntConLevel=ICL_DEF);
 
 
 void 	Gecode::bool_not (Space *home, BoolVar b0, BoolVar b1, IntConLevel=ICL_DEF);
