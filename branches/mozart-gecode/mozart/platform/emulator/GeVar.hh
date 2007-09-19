@@ -362,17 +362,16 @@ public:
   virtual OZ_Term getVarRef(GenericSpace* s) {
     return s->getVarRef(index); 
   }
- 
-  // this propagator should never fail
+
   Gecode::ExecStatus propagate(Gecode::Space* s){
     //printf("Variable determined by gecode....%d\n",index);fflush(stdout);
-
+    
 
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
 
     if (!oz_isGeVar(ref))
-      return  Gecode::ES_SUBSUMED;
-
+      return  Gecode::ES_SUBSUMED(this,sizeof(*this));
+    
    
     //GeVar<VarImp> *gv = get_GeVar<VarImp>(ref);
     
@@ -381,19 +380,22 @@ public:
 
     GeVarBase *gv = get_GeVar(ref);
     OZ_Term val = gv->getVal();
+    
+    //OZ_Return ret = OZ_unify(ref, val);
+    //if (ret == FAILED) return Gecode::ES_FAILED;
 
-    /*    gs->incDetermined();
-    if (gv->hasDomReflector()) {
-      //printf("decrementing space dom reflection\n");fflush(stdout);
+    DEREF(ref,refPtr);
+    oz_bindLocalVar(tagged2Var(ref), refPtr, val);
+
+    if(gv->hasDomReflector()) {
       gs->decForeignProps();
     }
-    gs->decUnifyProps(gv->getUnifyC());    */
+    gs->incDetermined();
+    gs->decUnifyProps(gv->getUnifyC());
+   
+    return Gecode::ES_SUBSUMED(this,sizeof(*this));
+  } 
 
-    OZ_Return ret = OZ_unify(ref, val);
-    if (ret == FAILED) return Gecode::ES_FAILED;
-    
-    return Gecode::ES_SUBSUMED;
-  }
 };
 
 /*
