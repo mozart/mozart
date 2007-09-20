@@ -30,9 +30,6 @@ require
    CpSupport(vectorToType:   VectorToType
 	     vectorToList:   VectorToList
 	     vectorToTuple:  VectorToTuple
-	     %vectorMap:      VectorMap
-	     %expand:         Expand
-	     %formatOrigin:   FormatOrigin
 	    )
    
 import
@@ -166,6 +163,9 @@ export
 
    %% Consistency levels
    cl: Cl
+
+   %% Temporal:
+   'prop' : Prop
 define
 
    %% Telling domains
@@ -254,6 +254,10 @@ define
 		      max : WatchMax)
    end
 
+%%% Direct access to the module
+   Prop = GFD
+%%%
+   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Clasify!!!!%%%%%%%%%%%%%
    Eq = GFD.'eq'

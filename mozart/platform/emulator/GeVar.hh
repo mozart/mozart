@@ -369,9 +369,10 @@ public:
 
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
 
-    if (!oz_isGeVar(ref))
-      return  Gecode::ES_SUBSUMED(this,sizeof(*this));
-    
+    if (!oz_isGeVar(ref)) {
+		return  Gecode::ES_SUBSUMED;
+      //return  Gecode::ES_SUBSUMED(this,sizeof(*this));
+    }
    
     //GeVar<VarImp> *gv = get_GeVar<VarImp>(ref);
     
@@ -381,9 +382,6 @@ public:
     GeVarBase *gv = get_GeVar(ref);
     OZ_Term val = gv->getVal();
     
-    //OZ_Return ret = OZ_unify(ref, val);
-    //if (ret == FAILED) return Gecode::ES_FAILED;
-
     DEREF(ref,refPtr);
     oz_bindLocalVar(tagged2Var(ref), refPtr, val);
 
@@ -393,7 +391,8 @@ public:
     gs->incDetermined();
     gs->decUnifyProps(gv->getUnifyC());
    
-    return Gecode::ES_SUBSUMED(this,sizeof(*this));
+    //return Gecode::ES_SUBSUMED(this,sizeof(*this));
+	return Gecode::ES_SUBSUMED;
   } 
 
 };
