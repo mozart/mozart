@@ -430,30 +430,10 @@ TaggedRef Board::getStabilityVar(void) {
   return stabilityVar;
 }
 
-// This prototype is needed to make ensureLateThread an inline func.
+// These prototypes are needed to inline ensureLateThread.
 OZ_Return oz_var_addQuietSusp(TaggedRef*, Suspendable *);
+int oz_isNeeded(TaggedRef);
 
-/*
-inline
-bool Board::ensureLateThread(void) {
-  Assert(getGenericSpace(true));
-  if(!lateThread) {
-    if(isRoot()) {
-      lateThread = oz_newThreadInject(this);
-      lateThread->pushCall(BI_PROP_GEC,NULL);
-    } else {
-      lateThread = oz_newThreadSuspended(DEFAULT_PRIORITY);
-      lateThread->pushCall(BI_PROP_GEC,NULL);
-      TaggedRef st = getStatus();
-      DEREF(st, stPtr);
-      Assert(oz_isReadOnly(st));
-      oz_var_addQuietSusp(stPtr, lateThread);
-    }
-	return false;
-  }
-  return true;
-}
-*/
 inline
 void Board::ensureLateThread(void) {
   Assert(getGenericSpace(true));
