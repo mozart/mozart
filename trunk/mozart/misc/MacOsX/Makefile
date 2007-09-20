@@ -57,7 +57,7 @@ InfPL=Info.plist
 ICN=appIcon.icns
 BBIN=Mozart.sh
 
-SOURCE_FILES=$(APP)
+SOURCE_FILES=$(APP) Mozart.chm Chmox.app
 OZHOME_FILES=README LICENSE.rtf LICENSE.html
 OZHOME_DIRS= examples
 
