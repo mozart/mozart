@@ -187,4 +187,8 @@ inline IntVar& get_IntVarInfo(OZ_Term v) {
 }
 
 void module_init_geintvar(void);
+
+// Init the the module containing the propagators
+//void module_init_geintVarProp(void);
+void GFDProp(void);
 #endif
