@@ -1,19 +1,19 @@
 #!/bin/sh
 
 OZHOME=$1/Contents/Resources/
-CD="CocoaDialog.app/Contents/MacOS/CocoaDialog"
+CD="$1/Contents/Resources/CocoaDialog.app/Contents/MacOS/CocoaDialog"
 home=`cd ~ && pwd`
 
 
 if [ -e "$home/.emacs" ]; then
 #       if [ grep -q "(require )" ]; "$home/.emacs" then
-                `$1/Contents/Resources/$CD ok-msgbox --no-cancel --title ".emacs present" --text "Emacs configuration file is present." --informative-text "this may cause problems with mozart"`
+                `$CD ok-msgbox --no-cancel --title ".emacs present" --text "Emacs configuration file is present." --informative-text "this may cause problems with mozart"`
 #       fi
 
 fi
 
 if [ -ne "/Applications/Aquamacs Emacs.app" ]; then
-        `$1/Contents/Resources/$CD ok-msgbox --no-cancel --title "Aquamacs not found" --text "This application is needed to run Mozart" --informative-text "You can download it from http://aquamacs.org/"`
+        `$CD ok-msgbox --no-cancel --title "Aquamacs not found" --text "This application is needed to run Mozart" --informative-text "You can download it from http://aquamacs.org/"`
         exit
 fi
 

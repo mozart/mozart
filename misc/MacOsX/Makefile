@@ -19,6 +19,15 @@
 # http://el-tramo.be/about
 #
 
+###
+# Variables for external tools and directories.
+###
+
+## Cocoa dialog : download it from http://cocoadialog.sourceforge.net/
+CD=/Users/ggutierrez/Desktop/CocoaDialog.app
+
+##Mozart documentation folder (html)
+MOZ_DOC_HTML=/Users/ggutierrez/doc
 
 ################################################################################
 # Customizable variables
@@ -30,7 +39,7 @@ VERSION=1.3.2
 
 APP=$(NAME).app
 EXT_LIBS=$(APP)/Contents/Resources/ext_libs
-EXEC=$(APP)/Contents/Resources/platform/darwin-i386/emulator.exe
+EXEC=$(APP)/Contents/Resources/platform/i486-darwin/emulator.exe
 
 
 ##
@@ -40,7 +49,7 @@ MOZ_HOME=/Users/ggutierrez/Work/moz
 ## Directories of mozart installation to be bundled.
 MOZ_DIRS= platform bin cache share include
 # External libraries thet mozart uses (i.e. gmp)
-MOZ_LIBS_DIR=ext_libs
+MOZ_LIBS_DIR=/Users/ggutierrez/Work/ext_libs
 
 
 ##
@@ -57,7 +66,7 @@ InfPL=Info.plist
 ICN=appIcon.icns
 BBIN=Mozart.sh
 
-SOURCE_FILES=$(APP) Mozart.chm Chmox.app
+SOURCE_FILES=$(APP)
 OZHOME_FILES=README LICENSE.rtf LICENSE.html
 OZHOME_DIRS= examples
 
@@ -82,7 +91,7 @@ $(TEMPLATE_DMG).bz2:
         @echo
         @echo --------------------- Generating empty template --------------------
         mkdir template
-        hdiutil create -size  30m "$(TEMPLATE_DMG)" -srcfolder template -format UDRW -volname "$(NAME)" -quiet
+        hdiutil create -size  40m "$(TEMPLATE_DMG)" -srcfolder template -format UDRW -volname "$(NAME)" -quiet
         rmdir template
         bzip2 "$(TEMPLATE_DMG)"
         @echo
@@ -107,6 +116,10 @@ $(MASTER_DMG): $(WC_DMG) $(SOURCE_FILES)
                 rm -rf "$(WC_DIR)/$$i"; \
                 ditto -rsrc "$(MOZ_HOME)/$$i" "$(WC_DIR)/$$i"; \
         done
+
+        rm -rf "$(WC_DIR)/doc"
+        ditto -rsrc "$(MOZ_DOC_HTML)" "$(WC_DIR)/doc/";
+
         WC_DEV=`hdiutil info | grep "$(WC_DIR)" | grep "Apple_HFS" | awk '{print $$1}'` && \
         hdiutil detach $$WC_DEV -quiet -force
         rm -f "$(MASTER_DMG)"
@@ -138,12 +151,16 @@ bundskel:
         @echo --------------------- Copying the skel --------------------
         cp -R skel/Mozart.app .
         @echo
-        @echo --------------------- Populating the bundle ---------------
+        @echo --------------------- Populating the bundle with mozart dirs ------------
         for i in $(MOZ_DIRS); do  \
                 cp -R $(MOZ_HOME)/$$i $(BRSRCS); \
         done
+        @echo --------------------- Populating the bundle with CocoaDialog ------------
+        cp -R $(CD) $(BRSRCS)
         @echo --------------------- Done. ---------------
+        @echo --------------------- Populating the bundle with External Libs ------------
         cp $(MOZ_LIBS_DIR)/* $(BFRWRKS)/
+        @echo --------------------- Done. ---------------
 
 .PHONY: clean veryclean
 clean:
