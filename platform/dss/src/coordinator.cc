@@ -333,14 +333,19 @@ namespace _dss_internal{ //Start namespace
 
   void 
   CoordinatorTable::m_gcResources(){
-    dssLog(DLL_BEHAVIOR,"******************** MANAGER TABLE: GC Resources (%d) ********************\n");
-    for(NetIdNode *n = m_getNext(NULL) ; n != NULL; n = m_getNext(n)) {
-      Coordinator *me = static_cast<Coordinator *>(n);
-      if (me->m_getProxy() == NULL && me->m_getDssDGCStatus() == DSS_GC_LOCALIZE){ // Ok this one is a "single" manager, check it
-	dssLog(DLL_DEBUG,"MANAGER TABLE: Cleaning up single manager %p",me);
-	delete me;
-      } else
-	me->m_makeGCpreps();
+    dssLog(DLL_BEHAVIOR,"******************** COORDINATOR TABLE: GC Resources (%d) ********************\n");
+    for (NetIdNode *n = m_getNext(NULL) ; n;) {
+      Coordinator *c = static_cast<Coordinator*>(n);
+      n = m_getNext(n);
+      // n points on the next element; this allows to delete c now
+      if (c->m_getProxy() == NULL &&
+	  c->m_getDssDGCStatus() == DSS_GC_LOCALIZE) {
+	// Ok this one is a "single" manager, check it
+	dssLog(DLL_DEBUG,"COORDINATOR TABLE: removing coordinator %p", c);
+	delete c;     // c removes itself from the table!
+      } else {
+	c->m_makeGCpreps();
+      }
     }
   }
   
@@ -355,11 +360,11 @@ namespace _dss_internal{ //Start namespace
 #ifdef DSS_LOG
   void
   CoordinatorTable::log_print_content(){
-    dssLog(DLL_PRINT,"************************* MANAGER TABLE ************************");
+    dssLog(DLL_PRINT,"************************* COORDINATOR TABLE ************************");
     for(NetIdNode *n = m_getNext(NULL) ; n != NULL; n = m_getNext(n)) {
       dssLog(DLL_PRINT,"%p %s",n,static_cast<Coordinator *>(n)->m_stringrep());
     }
-    dssLog(DLL_PRINT,"********************** MANAGER TABLE - DONE ********************");
+    dssLog(DLL_PRINT,"********************** COORDINATOR TABLE - DONE ********************");
   }
 #endif
   
@@ -379,8 +384,8 @@ namespace _dss_internal{ //Start namespace
   
   void
   ProxyTable::m_gcResources(){
+    dssLog(DLL_BEHAVIOR,"******************** PROXY TABLE - GC Resources () *********************");
     for(NetIdNode *n = m_getNext(NULL) ; n != NULL; n = m_getNext(n)) {
-      dssLog(DLL_BEHAVIOR,"******************** PROXY TABLE - GC RESOURCES () *********************");
       Proxy *pe = static_cast<Proxy *>(n);
 #ifdef DEBUG_CHECK
       dssLog(DLL_DEBUG,"PROXY %p %s",pe,pe->m_stringrep());
