@@ -192,19 +192,19 @@
 //
 
 BucketHashNode *BucketHashTable::htGetNext(BucketHashNode *n){
-  int indx = 0; 
-  if (n != NULL){
-    if(n->getNext() != NULL)
-      return n->getNext(); 
-    // start looking "after" the node n.
-    indx = ((n->getPrimKey() + 1) % tableSize); 
+  int index = 0;
+  if (n != NULL) {
+    // return successor in bucket if there is one
+    if (n->getNext() != NULL) return n->getNext();
+    // otherwise look in the table "after" node n
+    index = n->getPrimKey() % tableSize + 1;
   }
-  
-  // Iterate until an non empty bucket is found
-  for(; indx < tableSize ; indx++)
-    if (table[indx] != NULL) return table[indx]; 
-
-  // table is exhausted, return NULL. 
-  return NULL; 
+  // iterate until a nonempty bucket is found
+  while (index < tableSize) {
+    if (table[index] != NULL) return table[index];
+    index++;
+  }
+  // table is exhausted, return NULL
+  return NULL;
 }
       
