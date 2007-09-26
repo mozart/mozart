@@ -29,7 +29,7 @@
 
 
 #include "GeBoolVar-builtins.hh"
-#include "../libcp-int/GeIntVar.hh"
+#include "../libcp-int/GeIntProp-builtins.hh"
 #include "gecode/int.hh"
 
 										
@@ -37,6 +37,7 @@
 // array: the resulting IntArgs
 // s: the space
 // t: possition in OZ_in
+/*
 #define DECLARE_INTARGS1(array,t)						\
 	OZ_declareTerm(t,_termTmp_args);							\
 	int __length_args=1;									\
@@ -54,14 +55,13 @@
 			}								\
 		}									\
 	}										\
-
-
+*/
+/*
 
 #define DECLARE_INTARGS(array,tIn)			\
 IntArgs array(0);					\
 {							\
   int sz;						\
-  /*OZ_Term t = OZ_deref(OZ_in(tIn));*/			\
   OZ_declareTerm(tIn,t);                                \
   if(OZ_isLiteral(t)) {					\
     sz = 0;						\
@@ -71,20 +71,16 @@ IntArgs array(0);					\
   else if(OZ_isCons(t)) {				\
     sz = OZ_length(t);					\
     IntArgs _array(sz);					\
-    /*t = OZ_hallocOzTerms(sz);*/			\
     for(int i=0; OZ_isCons(t); t=OZ_tail(t)) 		\
       _array[i++] = OZ_intToC(OZ_head(t));		\
-    /*t[i++] = OZ_head(t);*/				\
     array=_array;					\
   }							\
   else if(OZ_isTuple(t)) {				\
     sz=OZ_width(t);					\
     IntArgs _array(sz);					\
-    /*t = OZ_hallocOzTerms(sz);*/			\
     for(int i=0; i < sz; i++) {				\
       OZ_Term _tmp = OZ_getArg(t,i);			\
       _array[i] = OZ_intToC(_tmp);			\
-      /*v[i] = OZ_getArg(t,i);*/			\
     }							\
     array=_array;					\
   }							\
@@ -98,5 +94,5 @@ IntArgs array(0);					\
     array=_array;                                       \
   }                                                     \
 }
-
+*/
 #endif
