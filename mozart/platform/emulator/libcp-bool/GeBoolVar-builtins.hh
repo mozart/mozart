@@ -39,7 +39,7 @@
     v=_tmp;								\
   }									\
   else if(OZ_isGeBoolVar(OZ_in(p))) {					\
-    v = get_BoolVar(OZ_in(p));						\   
+    v = get_BoolVar(OZ_in(p));						\
   }									\
   else RAISE_EXCEPTION("The variables must be either GeIntVar or int");
 

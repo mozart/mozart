@@ -157,7 +157,6 @@ bool OZ_isGeIntVar(OZ_Term v) {
   return false;
 }
 
-// get the GeIntVar inside the OZ_Term v
 /**
    \brief Retrieves a GeIntVar from an OZ_Term. cgv parameter indicates
    if checking for globality needs to be performed.

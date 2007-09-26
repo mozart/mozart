@@ -37,31 +37,6 @@
 using namespace Gecode;
 using namespace Gecode::Int;
 
-/** 
- * \brief Returns the Max number that gecode can representate
- * 
- * @param 0 Max integer in c++
- */
-
-OZ_BI_define(int_sup,0,1)
-{
-  OZ_RETURN_INT(Limits::Int::int_max);
-} 
-OZ_BI_end
-
-/** 
- * \brief Returns the Min number that gecode can representate
- * 
- * @param 0 Min integer in c++
- */
-
-OZ_BI_define(int_inf,0,1)
-{
-  OZ_RETURN_INT(Limits::Int::int_min);
-} 
-OZ_BI_end
-
-
 /**
  * \brief the same that FD.watch.min in mozart
  * @param 0 A reference to the variable
