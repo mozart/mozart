@@ -32,28 +32,28 @@ using namespace Gecode;
 using namespace Gecode::Int;
 
 // A GeBoolVar interfaces an IntVar inside a GenericSpace.
-class GeBoolVar : public GeVar<IntVarImp,PC_INT_DOM> {
+class GeBoolVar : public GeVar<BoolVarImp,PC_INT_DOM> {
 protected:
   /// copy constructor
   GeBoolVar(GeBoolVar& gv) :
-    GeVar<IntVarImp,PC_INT_DOM>(gv) {}
+    GeVar<BoolVarImp,PC_INT_DOM>(gv) {}
 
 public:
   GeBoolVar(int index) :
-    GeVar<IntVarImp,PC_INT_DOM>(index,T_GeBoolVar) {}
+    GeVar<BoolVarImp,PC_INT_DOM>(index,T_GeBoolVar) {}
 
-  IntVar& getBoolVar(void) {
-    GeView<Int::IntVarImp> iv(getGSpace()->getVar(index));
-    Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
-    IntVar *tmp = new IntVar(*vv);
+  BoolVar& getBoolVar(void) {
+    GeView<Int::BoolVarImp> iv(getGSpace()->getVar(index));
+    Int::BoolView *vv = reinterpret_cast<Int::BoolView*>(&iv);
+    BoolVar *tmp = new BoolVar(*vv);
     return (*tmp);
   }
 
   // the returned reference should be constant
-  IntVar& getBoolVarInfo() {
-    GeView<Int::IntVarImp> iv(getGSpace()->getVarInfo(index));
-    Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
-    IntVar *tmp = new IntVar(*vv);
+  BoolVar& getBoolVarInfo() {
+    GeView<Int::BoolVarImp> iv(getGSpace()->getVarInfo(index));
+    Int::BoolView *vv = reinterpret_cast<Int::BoolView*>(&iv);
+    BoolVar *tmp = new BoolVar(*vv);
     return (*tmp);
   }
   
@@ -91,43 +91,42 @@ public:
   virtual TaggedRef newVar(void);
 
   virtual void propagator(GenericSpace *s, 
-			  GeVar<IntVarImp,PC_INT_DOM> *lgevar,
-			  GeVar<IntVarImp,PC_INT_DOM> *rgevar) {
-    IntVar& lintvar = (static_cast<GeBoolVar*>(lgevar))->getBoolVarInfo();
-    IntVar& rintvar = (static_cast<GeBoolVar*>(rgevar))->getBoolVarInfo();    
-    eq(s,lintvar, rintvar);
-    //Gecode2.0
-    //rel(s,lintvar,IRT_EQ,rintvar);
+			  GeVar<BoolVarImp,PC_INT_DOM> *lgevar,
+			  GeVar<BoolVarImp,PC_INT_DOM> *rgevar) {
+    BoolVar& lbvar = (static_cast<GeBoolVar*>(lgevar))->getBoolVarInfo();
+    BoolVar& rbvar = (static_cast<GeBoolVar*>(rgevar))->getBoolVarInfo();    
+    rel(s,lbvar,IRT_EQ,rbvar);
   }
 
   virtual ModEvent bind(GenericSpace *s, 
-			GeVar<IntVarImp,PC_INT_DOM> *v, 
+			GeVar<BoolVarImp,PC_INT_DOM> *v, 
 			OZ_Term val) {
     int n = OZ_intToC(val);
-    return Int::IntView(getBoolVarInfo()).eq(s,n);
+    return Int::BoolView(getBoolVarInfo()).eq(s,n);
   }
 
   virtual Bool validV(OZ_Term v);
     
   // reflection mechanism 
   virtual bool assigned(void) {
-    GeView<Int::IntVarImp> iv(getGSpace()->getVarInfo(index));
-    Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
+    GeView<Int::BoolVarImp> iv(getGSpace()->getVarInfo(index));
+    Int::BoolView *vv = reinterpret_cast<Int::BoolView*>(&iv);
     return vv->assigned();
   }
   
   virtual OZ_Term getVal(void) {
-    GeView<Int::IntVarImp> iv(getGSpace()->getVarInfo(index));
-    Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
+    GeView<Int::BoolVarImp> iv(getGSpace()->getVarInfo(index));
+    Int::BoolView *vv = reinterpret_cast<Int::BoolView*>(&iv);
     return OZ_int(vv->val());
   }
 
 };
 
 
-inline OZ_Term new_GeBoolVar(const IntSet& dom) {
+inline 
+OZ_Term new_GeBoolVar(int min, int max) {
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
-  IntVar x(sp,dom);
+  BoolVar x(sp,min,max);
   GeBoolVar *nv = new GeBoolVar(sp->getVarsSize());
   OzVariable* ov   = extVar2Var(nv);
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
@@ -145,8 +144,8 @@ inline
 bool OZ_isGeBoolVar(OZ_Term v) { 
   OZ_Term v_local = OZ_deref(v);
   if (oz_isGeVar(v_local)) {
-    GeVar<Int::IntVarImp,PC_INT_DOM> *gv = 
-      static_cast< GeVar <Int::IntVarImp,PC_INT_DOM > * >(oz_getExtVar(v_local));
+    GeVar<Int::BoolVarImp,PC_INT_DOM> *gv = 
+      static_cast< GeVar <Int::BoolVarImp,PC_INT_DOM > * >(oz_getExtVar(v_local));
     return gv->getType() == T_GeBoolVar;
   }
   return false;
@@ -160,7 +159,7 @@ bool OZ_isGeBoolVar(OZ_Term v) {
 inline
 GeBoolVar* get_GeBoolVar(OZ_Term v, bool cgv = true) {
   Assert(OZ_isGeBoolVar(v));
-  return static_cast<GeBoolVar*>(get_GeVar<IntVarImp,PC_INT_DOM>(v,cgv));
+  return static_cast<GeBoolVar*>(get_GeVar<BoolVarImp,PC_INT_DOM>(v,cgv));
 }
 
 /**
@@ -168,7 +167,7 @@ GeBoolVar* get_GeBoolVar(OZ_Term v, bool cgv = true) {
    space stability. A call to this method will make the gecode
    space unstable.
 */
-inline IntVar& get_BoolVar(OZ_Term v) {
+inline BoolVar& get_BoolVar(OZ_Term v) {
     return get_GeBoolVar(v)->getBoolVar();
 }
 
@@ -177,7 +176,7 @@ inline IntVar& get_BoolVar(OZ_Term v) {
    space stability. A call to this method will not make the gecode
    space unstable.
 */
-inline IntVar& get_BoolVarInfo(OZ_Term v) {
+inline BoolVar& get_BoolVarInfo(OZ_Term v) {
   return get_GeBoolVar(v,false)->getBoolVarInfo();
 }
 

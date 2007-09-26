@@ -41,10 +41,11 @@ using namespace Gecode::Int;
  * @param 1 Domain description
  * @param 2 The new variable
  */
-OZ_BI_define(new_boolvar,1,1)
+OZ_BI_define(new_boolvar,2,1)
 {
-  DECLARE_BOOL_SET(dom,0);   // the domain of the BoolVar
-  OZ_RETURN(new_GeBoolVar(dom));
+  OZ_declareInt(0,lower);
+  OZ_declareInt(1,upper);
+  OZ_RETURN(new_GeBoolVar(lower,upper));
 }
 OZ_BI_end
 

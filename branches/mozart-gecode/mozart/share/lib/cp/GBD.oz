@@ -95,16 +95,16 @@ export
 
    %% propagators
    
-   conj       :Bool_and
-   conjA      :Bool_and_arr
-   disj       :Bool_or
-   disjA      :Bool_or_arr
-   xor        :Bool_xor
-   notB       :Bool_not
-   imp        :Bool_imp
-   equi       :Bool_eqv
-   rel        :Rel
-   linear     :Linear
+ %   conj       :Bool_and
+%    conjA      :Bool_and_arr
+%    disj       :Bool_or
+%    disjA      :Bool_or_arr
+%    xor        :Bool_xor
+%    notB       :Bool_not
+%    imp        :Bool_imp
+%    equi       :Bool_eqv
+%    rel        :Rel
+%    linear     :Linear
    %Watch
    
    %%Branching
