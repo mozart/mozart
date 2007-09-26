@@ -42,7 +42,8 @@ GECODE_INC	= `pkg-config --cflags "gecode = ${GECODEVERSION}"`
 
 CFLAGS 		= $(INCS) $(GECODE_INC) $(GESPACE_CXXFLAGS) $(CPPFLAGS) 
 
-MODULE_SPEC	= modGeIntVar.spec modGeIntVarProp.spec
+MODULE_SPEC	= modGeIntVar.spec 
+##modGeIntVarProp.spec
 
 GENERATED_FILES = $(MODULE_SPEC:.spec=-table.cc)
 

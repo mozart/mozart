@@ -32,4 +32,8 @@
         GenericSpace *s = extVar2Var(arg)->getBoardInternal->getGenericSpace();   \
 	CHECK_SPACE(s) 
 
+	
+#define DeclareGSpace(sp) \
+	GenericSpace *sp = oz_currentBoard()->getGenericSpace()
+
 #endif

@@ -86,7 +86,7 @@ bool GeIntVar::intersect(TaggedRef x) {
   IntVar& liv = get_IntVarInfo(x);
   IntView vw(liv);
   //Ask Alejandro about the use of getGSpace() instead of oz_currentBoard()
-  return (vw.inter(oz_currentBoard()->getGenericSpace(),gvr)==ME_GEN_FAILED ? false: true);
+  return (vw.inter_r(oz_currentBoard()->getGenericSpace(),gvr)==ME_GEN_FAILED ? false: true);
 }
 
 //(this) is the global variable
@@ -162,5 +162,5 @@ void GFDProp(void){ }
 
 #define STATICALLY_INCLUDED
 #include "modGeIntVar-table.cc"
-#include "modGeIntVarProp-table.cc"
+//#include "modGeIntVarProp-table.cc"
 

@@ -113,10 +113,6 @@ $module_name          = "GFD";
 	                      out => [],
 			      bi  => int_mult},
     
-    'bool_and'           => { in  => ['+value','+value','+value','+value'],
-	                      out => [],
-			      bi  => bool_and},
-
     'linear'		 => { in  => ['+value','int', '+value', 'int'],
 			     out => [],
 			     bi  => int_linear},
@@ -157,27 +153,4 @@ $module_name          = "GFD";
 	                      out => [],
 			      bi  => int_disjoint},
 
-    'bool_Gand'          => { in  => ['+value','+value','+value','int'],
-	                      out => [],
-			      bi  => bool_Gand},
-
-    'bool_Gor'          => { in  => ['+value','+value','+value','int'],
-	                     out => [],
-			     bi  => bool_Gor},
-
-    'bool_Gxor'         => { in  => ['+value','+value','+value','int'],
-	                     out => [],
-			     bi  => bool_Gxor},
-
-    'bool_Gnot'          => { in  => ['+value','+value','int'],
-	                      out => [],
-			      bi  => bool_Gnot},
-
-    'bool_Gimp'          => { in  => ['+value','+value','+value','int'],
-	                      out => [],
-			      bi  => bool_Gimp},
-
-    'bool_Geqv'          => { in  => ['+value','+value','+value','int'],
-	                      out => [],
-			      bi  => bool_Geqv},
  );
