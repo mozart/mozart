@@ -34,6 +34,7 @@
 #include "GeIntVar.hh"
 #include "GeSpace-builtins.hh"
 #include "builtins.hh"
+#include "../libcp-bool/GeBoolVar-builtins.hh"
 
 /** 
  * \brief Declares a Gecode::Int::IntSet from an Oz domain description
@@ -62,10 +63,6 @@
     }								\
   }								\
   Gecode::IntSet ds(_pairs, length);
-
-
-#define DeclareGSpace(sp) \
-	GenericSpace *sp = oz_currentBoard()->getGenericSpace()
 
 #define DeclareGeIntVar2(p,v,sp)					\
   IntVar v;                                                             \
@@ -154,13 +151,6 @@
           ar[i]=get_IntVar(val);					\
   }								\
 }
-
-#define DeclareBoolVar(p,v,sp) \
-	BoolVar v;\
-	{\
-		DeclareGeIntVar(p,iv,sp);\
-		v = static_cast<BoolVar>(iv);\
-	}
 
 #define DeclareBool(p, v) \
 bool v;\

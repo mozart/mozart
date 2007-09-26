@@ -99,6 +99,7 @@ public:
   Gecode::ExecStatus propagate(Gecode::Space *s);
 };
 
+/*
 class DisjointCProp: public Gecode::TernaryPropagator<Gecode::Int::IntView, PC_INT_DOM >
 {
 private:
@@ -119,7 +120,7 @@ public:
   
   Gecode::ExecStatus propagate(Gecode::Space *s);
 };
-
+*/
 //-------------------------------------------------------------------------------------
 
 class ReifiedIntProp: public Gecode::ReUnaryPropagator<Gecode::Int::IntView, PC_INT_DOM, Gecode::Int::BoolView>
@@ -143,11 +144,11 @@ public:
 
 //-------------------------------------------------------------------------------------
 
-void WatchMin(Gecode::Space *s, IntVar a, BoolVar b, int Num);
-void WatchMax(Gecode::Space *s, Gecode::IntVar a, Gecode::BoolVar b, int Num);
-void WatchSize(Gecode::Space *s, IntVar a, BoolVar b, int Num);
+void WatchMin(Gecode::Space *s, IntVar a, IntVar b, int Num);
+void WatchMax(Gecode::Space *s, Gecode::IntVar a, Gecode::IntVar b, int Num);
+void WatchSize(Gecode::Space *s, IntVar a, IntVar b, int Num);
 void Disjoint(Gecode::Space *s, IntVar D1, int I1, IntVar D2, int I2);
 void DisjointC(Gecode::Space *s, IntVar D1, int I1, IntVar D2, int I2, BoolVar D3);
-void ReifiedInt(Gecode::Space *s, Gecode::IntVar x, Gecode::BoolVar b, const Gecode::IntSet d);
+void ReifiedInt(Gecode::Space *s, Gecode::IntVar x, Gecode::IntVar b, const Gecode::IntSet d);
 
 #endif

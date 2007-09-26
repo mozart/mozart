@@ -81,20 +81,20 @@ export
    count:                Count
    distinct2:            Distinct2
    mult:                 Mult
-   bool_and: 	         Bool_and
+   %%bool_and: 	         Bool_and
    int_Gabs:             Abs       
    int_sortedness:       Int_sortedness
    
    %%Mozart Propagators (backward compatibility))
    int_sumCN:            Int_sumCN
-   int_disjoint:         Int_disjoint
+  % int_disjoint:         Int_disjoint
    %int_reified_int:      Int_reified_int
-   bool_Gand:            Bool_Gand
-   bool_Gor:             Bool_Gor
-   bool_Gxor:            Bool_Gxor
-   bool_Gnot:            Bool_Gnot
-   bool_Gimp:            Bool_Gimp
-   bool_Geqv:            Bool_Geqv
+ %   bool_Gand:            Bool_Gand
+%    bool_Gor:             Bool_Gor
+%    bool_Gxor:            Bool_Gxor
+%    bool_Gnot:            Bool_Gnot
+%    bool_Gimp:            Bool_Gimp
+%    bool_Geqv:            Bool_Geqv
 
    %%Miscellaneous propagators
    plus:            Plus
@@ -108,7 +108,7 @@ export
    lessEq:          LessEq
    greater:         Greater
    greaterEq:       GreaterEq
-   disjoint:        Disjoint 
+%   disjoint:        Disjoint 
    disjointC:       DisjointC
 
 
@@ -141,12 +141,12 @@ export
 
 
    %% 0/1 propagators
-   Conj
-   Disj
-   Xor
-   Not
-   Imp
-   Equi   
+%   Conj
+%    Disj
+%    Xor
+%    Not
+%    Imp
+%    Equi   
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -271,21 +271,21 @@ define
    Distinct= GFD.'distinct'
    Distinct2 = GFD.'distinct2'
    Mult=   GFD.'mult'
-   Bool_and = GFD.'bool_and'
+   %%Bool_and = GFD.'bool_and'
    Abs = GFD.'int_Gabs'
    Int_sortedness = GFD.'int_sortedness'
    
    %%Mozart Propagators (backward compatibility))
    
    Int_sumCN =   GFD.int_sumCN
-   Int_disjoint =   GFD.int_disjoint
+   %Int_disjoint =   GFD.int_disjoint
    %Int_reified_int =   GFD.int_reified_int
-   Bool_Gand =   GFD.bool_Gand
-   Bool_Gor =   GFD.bool_Gor
-   Bool_Gxor =   GFD.bool_Gxor
-   Bool_Gnot =   GFD.bool_Gnot
-   Bool_Gimp =   GFD.bool_Gimp
-   Bool_Geqv =   GFD.bool_Geqv
+  %  Bool_Gand =   GFD.bool_Gand
+%    Bool_Gor =   GFD.bool_Gor
+%    Bool_Gxor =   GFD.bool_Gxor
+%    Bool_Gnot =   GFD.bool_Gnot
+%    Bool_Gimp =   GFD.bool_Gimp
+%    Bool_Geqv =   GFD.bool_Geqv
 
    %% Backward compatibility propagators
    \insert GeMozProp.oz
