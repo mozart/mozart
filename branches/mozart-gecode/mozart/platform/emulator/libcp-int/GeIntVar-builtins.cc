@@ -62,6 +62,32 @@ OZ_BI_define(intvar_is,1,1)
 }
 OZ_BI_end
 
+
+/** 
+ * \brief Returns the Max number that gecode can representate
+ * 
+ * @param 0 Max integer in c++
+ */
+
+OZ_BI_define(int_sup,0,1)
+{
+  OZ_RETURN_INT(Limits::Int::int_max);
+} 
+OZ_BI_end
+
+/** 
+ * \brief Returns the Min number that gecode can representate
+ * 
+ * @param 0 Min integer in c++
+ */
+
+OZ_BI_define(int_inf,0,1)
+{
+  OZ_RETURN_INT(Limits::Int::int_min);
+} 
+OZ_BI_end
+
+
 /** 
  * \brief Returns the minimum elemen in the domain
  * 
