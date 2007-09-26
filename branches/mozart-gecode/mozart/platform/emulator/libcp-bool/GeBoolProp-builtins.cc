@@ -46,7 +46,7 @@ OZ_BI_define(bool_not,3,0)
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
   }
-  GZ_RETURN(sp);
+  CHECK_POST(sp);
 
 } OZ_BI_end
 
@@ -64,7 +64,7 @@ OZ_BI_define(bool_eq,3,0)
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
   }
-  GZ_RETURN(sp);
+  CHECK_POST(sp);
 
 } OZ_BI_end
 
@@ -88,7 +88,7 @@ OZ_BI_define(bool_and,4,0)
     RAISE_GE_EXCEPTION(e);
   }
   */
-  GZ_RETURN(sp);
+  CHECK_POST(sp);
 
 } OZ_BI_end
 
@@ -112,7 +112,7 @@ OZ_BI_define(bool_and_arr,3,0)
     RAISE_GE_EXCEPTION(e);
   }
   */
-  GZ_RETURN(sp);
+  CHECK_POST(sp);
 
 } OZ_BI_end
 
@@ -138,7 +138,7 @@ OZ_BI_define(bool_or,4,0)
     RAISE_GE_EXCEPTION(e);
   }
   */
-  GZ_RETURN(sp);
+  CHECK_POST(sp);
 
 } OZ_BI_end
 
@@ -162,7 +162,7 @@ OZ_BI_define(bool_or_arr,3,0)
     RAISE_GE_EXCEPTION(e);
   }
   */
-  GZ_RETURN(sp);
+  CHECK_POST(sp);
 
 } OZ_BI_end
 
@@ -188,7 +188,7 @@ OZ_BI_define(bool_imp,4,0)
     RAISE_GE_EXCEPTION(e);
   }
   */
-  GZ_RETURN(sp);
+  CHECK_POST(sp);
 
 } OZ_BI_end
 
@@ -211,7 +211,7 @@ OZ_BI_define(bool_eqv,4,0)
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
   }*/
-  GZ_RETURN(sp);
+  CHECK_POST(sp);
 
 } OZ_BI_end
 
@@ -235,7 +235,7 @@ OZ_BI_define(bool_xor,4,0)
     RAISE_GE_EXCEPTION(e);
   }
   */
-  GZ_RETURN(sp);
+  CHECK_POST(sp);
 
 } OZ_BI_end
 
@@ -262,7 +262,7 @@ OZ_BI_define(bool_rel,4,0) {
     RAISE_GE_EXCEPTION(e);
   } */
   
-  GZ_RETURN(gs);
+  CHECK_POST(gs);
 } OZ_BI_end
 
 OZ_BI_define(bool_linear,4,0)
@@ -288,7 +288,7 @@ OZ_BI_define(bool_linear,4,0)
     }
    }
    */
-  GZ_RETURN(sp);       
+  CHECK_POST(sp);       
 } OZ_BI_end
 
 

@@ -114,7 +114,7 @@ grammar GecHeaders;
 		String c = new String("try{\n\t\t"+name+"("+space_name);
 		for (int i = 0; i < call.size (); i++)
             	c += ","+call.elementAt(i);
-        c += ");\n\t} catch(Exception e){\n\t\tRAISE_GE_EXCEPTION(e);\n\t}\n\tGZ_RETURN("+space_name+");\n";
+        c += ");\n\t} catch(Exception e){\n\t\tRAISE_GE_EXCEPTION(e);\n\t}\n\tCHECK_POST("+space_name+");\n";
         return c; //System.out.println(c);
 	}
 	void head(String name) {
