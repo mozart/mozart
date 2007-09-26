@@ -31,8 +31,6 @@
 #include "GeSpace-builtins.hh"
 #include "builtins.hh"
 
-#define DeclareGSpace(sp) GenericSpace *sp = oz_currentBoard()->getGenericSpace();
-
 #define DeclareGeBoolVar2(p,v,sp)					\
   IntVar v;                                                             \
   if(OZ_isInt(OZ_in(p))) {						\

@@ -102,7 +102,7 @@ public:
 			  GeVar<IntVarImp,PC_INT_DOM> *rgevar) {
     IntVar& lintvar = (static_cast<GeIntVar*>(lgevar))->getIntVarInfo();
     IntVar& rintvar = (static_cast<GeIntVar*>(rgevar))->getIntVarInfo();    
-    eq(s,lintvar, rintvar);
+    rel(s,lintvar,IRT_EQ, rintvar);
   }
 
   virtual ModEvent bind(GenericSpace *s, 

@@ -46,7 +46,7 @@ OZ_BI_define(int_eq,3,0)
   DeclareGeIntVar(1,v2,gs);
   
   try{
-    eq(gs,v1,v2,(IntConLevel)consistencyLevel);
+    rel(gs,v1,IRT_EQ,v2,(IntConLevel)consistencyLevel);
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -163,10 +163,10 @@ OZ_BI_define(int_linearR,5,0)
   ConLevel(4,conLevel);
 
   DeclareGeIntVar(2,v2,sp);
-  DeclareGeIntVar(3,v3,sp);
+  DeclareGeBoolVar(3,v3,sp);
 
   try{
-    linear(sp,array_var,relType,v2,static_cast<BoolVar>(v3),conLevel);
+    linear(sp,array_var,relType,v2,v3,conLevel);
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -187,10 +187,10 @@ OZ_BI_define(int_linearCR,6,0)
   ConLevel(5,conLevel);
   
   DeclareGeIntVar(3,v3,sp);
-  DeclareGeIntVar(4,v4,sp);
+  DeclareGeBoolVar(4,v4,sp);
 
   try{
-    linear(sp,array_arg,array_var,relType,v3,static_cast<BoolVar>(v4),conLevel);
+    linear(sp,array_arg,array_var,relType,v3,v4,conLevel);
   }
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
@@ -268,6 +268,7 @@ OZ_BI_define(int_Gabs,3,0)
     
 } OZ_BI_end
 
+/*
 OZ_BI_define(bool_and,4,0)
 {
   DeclareGSpace(sp);
@@ -285,7 +286,7 @@ OZ_BI_define(bool_and,4,0)
   GZ_RETURN(sp);
 
 } OZ_BI_end
-
+*/
 OZ_BI_define(int_sortedness,3,0)
 {
   DeclareGSpace(sp);
@@ -294,7 +295,7 @@ OZ_BI_define(int_sortedness,3,0)
   OZ_declareInt(2,conLevel);
 
   try{
-    sortedness(sp,a1,a2,(IntConLevel)conLevel);
+    sorted(sp,a1,a2,(IntConLevel)conLevel);
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -303,6 +304,6 @@ OZ_BI_define(int_sortedness,3,0)
 } OZ_BI_end
 
 // Include the propagators wrapper functions generated automatically.
-#include "FDPBuiltins.cc"
+//#include "FDPBuiltins.cc"
 
 #endif

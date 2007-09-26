@@ -46,9 +46,8 @@ MODULE_NAMES =							\
 	CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat \
 	Win32 Profile OsTime ZlibIO 
 
-MODULE_NAMES += geoz-bool 
-##geoz-int 
-## 
+MODULE_NAMES += geoz-bool geoz-int 
+
 
 CLEAN_LIBCP=cd libcp-int; $(MAKE) clean
 CLEAN_LIBCP += cd libcp-bool; $(MAKE) clean
