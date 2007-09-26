@@ -37,16 +37,18 @@
 using namespace Gecode;
 using namespace Gecode::Int;
 
+typedef GeVar<IntVarImp,PC_INT_DOM> GeVar_Int;
+
 // A GeIntVar interfaces an IntVar inside a GenericSpace.
-class GeIntVar : public GeVar<IntVarImp,PC_INT_DOM> {
+class GeIntVar : public GeVar_Int {
 protected:
   /// copy constructor
   GeIntVar(GeIntVar& gv) :
-    GeVar<IntVarImp,PC_INT_DOM>(gv) {}
+    GeVar_Int(gv) {}
 
 public:
   GeIntVar(int index) :
-    GeVar<IntVarImp,PC_INT_DOM>(index,T_GeIntVar) {}
+    GeVar_Int(index,T_GeIntVar) {}
 
   IntVar& getIntVar(void) {
     GeView<Int::IntVarImp> iv(getGSpace()->getVar(index));
@@ -98,15 +100,15 @@ public:
   virtual TaggedRef newVar(void);
 
   virtual void propagator(GenericSpace *s, 
-			  GeVar<IntVarImp,PC_INT_DOM> *lgevar,
-			  GeVar<IntVarImp,PC_INT_DOM> *rgevar) {
+			  GeVar_Int *lgevar,
+			  GeVar_Int *rgevar) {
     IntVar& lintvar = (static_cast<GeIntVar*>(lgevar))->getIntVarInfo();
     IntVar& rintvar = (static_cast<GeIntVar*>(rgevar))->getIntVarInfo();    
     rel(s,lintvar,IRT_EQ, rintvar);
   }
 
   virtual ModEvent bind(GenericSpace *s, 
-			GeVar<IntVarImp,PC_INT_DOM> *v, 
+			GeVar_Int *v, 
 			OZ_Term val) {
     int n = OZ_intToC(val);
     return Int::IntView(getIntVarInfo()).eq(s,n);
