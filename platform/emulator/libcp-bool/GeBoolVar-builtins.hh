@@ -31,36 +31,6 @@
 #include "GeSpace-builtins.hh"
 #include "builtins.hh"
 
-/** 
- * \brief Declares a Gecode::Int::IntSet from an Oz domain description
- * 
- * @param ds The domain description int terms of list and tuples
- * @param arg Position at OZ_in array
- */
-
-#define	DECLARE_BOOL_SET(ds,arg)					\
-  OZ_declareDetTerm(arg,_t);					\
-  OZ_Term l = (OZ_isCons(_t) ? _t : OZ_cons(_t, OZ_nil()));	\
-  int length = OZ_length(l);					\
-  int _pairs[length][2];					\
-								\
-  for (int i = 0; OZ_isCons(l); l=OZ_tail(l), i++) {		\
-    OZ_Term _val = OZ_head(l);					\
-    if (OZ_isInt(_val)) {					\
-      _pairs[i][0] = OZ_intToC(_val);				\
-      _pairs[i][1] = OZ_intToC(_val);				\
-    }								\
-    else if (OZ_isTuple(_val)) {				\
-      _pairs[i][0] = OZ_intToC(OZ_getArg(_val,0));		\
-      _pairs[i][1] = OZ_intToC(OZ_getArg(_val,1));		\
-    }								\
-    else {							\
-      RAISE_EXCEPTION("Error, domain type unknown");		\
-    }								\
-  }								\
-  Gecode::IntSet ds(_pairs,length);
-
-
 #define DeclareGSpace(sp) GenericSpace *sp = oz_currentBoard()->getGenericSpace();
 
 #define DeclareGeBoolVar2(p,v,sp)					\
@@ -80,7 +50,7 @@
   It must be used from functions that no require further propagation.
 */
 #define DeclareGeBoolVar1(p,v)					\
-  IntVar v;							\
+  BoolVar v;							\
   { TaggedRef x = OZ_in(p);					\
     DEREF(x,x_ptr);						\
     Assert(!oz_isRef(x));					\
@@ -89,9 +59,8 @@
     }								\
     if (OZ_isInt(x)) {						\
       OZ_declareInt(p,domain);					\
-      IntVar _tmp(oz_currentBoard()->getGenericSpace(),		\
+      v.init(oz_currentBoard()->getGenericSpace(),		\
 		  domain, domain);				\
-      v=_tmp;							\
     }								\
     else if(OZ_isGeBoolVar(x)) {					\
       v = get_BoolVarInfo(x);					\
@@ -106,11 +75,10 @@
     if (oz_isFree(x)) {							\
       oz_suspendOn(makeTaggedRef(x_ptr));				\
     }}									\
-  IntVar v;								\
+  BoolVar v;								\
   if(OZ_isInt(OZ_in(p))) {						\
     OZ_declareInt(p,domain);						\
-    IntVar _tmp(sp,domain,domain);					\
-    v=_tmp;								\
+    v.init(sp,domain,domain);					\
   }									\
   else if(OZ_isGeBoolVar(OZ_in(p))) {					\
     v = get_BoolVar(OZ_in(p));						\

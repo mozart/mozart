@@ -33,7 +33,7 @@ $module_name          = "GBD";
  # Built-ins
  #
  
-    'bool'		=> { in  => ['+value'],
+    'bool'		=> { in  => ['+value','+value'],
 			     out => ['int'],
 			     bi  => new_boolvar,
                              fcp => ignore},
