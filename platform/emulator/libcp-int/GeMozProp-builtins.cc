@@ -275,7 +275,7 @@ OZ_BI_define(bool_Gand,4,0)
   DeclareGeIntVar(0,v0,sp);
   DeclareGeIntVar(1,v1,sp);
   DeclareGeIntVar(2,v2,sp);
-  ConLevel(3,conLevel);
+  DeclareIntConLevel(3,conLevel);
   /*
   try {
     bool_and(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),conLevel);
@@ -292,7 +292,7 @@ OZ_BI_define(bool_Gor,4,0)
   DeclareGeIntVar(0,v0,sp);
   DeclareGeIntVar(1,v1,sp);
   DeclareGeIntVar(2,v2,sp);
-  ConLevel(3,conLevel);
+  DeclareIntConLevel(3,conLevel);
   /*
   try {
     bool_or(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),conLevel);
@@ -310,7 +310,7 @@ OZ_BI_define(bool_Gxor,4,0)
   DeclareGeIntVar(0,v0,sp);
   DeclareGeIntVar(1,v1,sp);
   DeclareGeIntVar(2,v2,sp);
-  ConLevel(3,conLevel);
+  DeclareIntConLevel(3,conLevel);
   /*
   try {
     bool_xor(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),conLevel);
@@ -328,7 +328,7 @@ OZ_BI_define(bool_Gnot,3,0)
   DeclareGSpace(sp);
   DeclareGeIntVar(0,v0,sp);
   DeclareGeIntVar(1,v1,sp);
-  ConLevel(2,conLevel);
+  DeclareIntConLevel(2,conLevel);
   /*
   try {
     bool_not(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),conLevel);
@@ -346,7 +346,7 @@ OZ_BI_define(bool_Gimp,4,0)
   DeclareGeIntVar(0,v0,sp);
   DeclareGeIntVar(1,v1,sp);
   DeclareGeIntVar(2,v2,sp);
-  ConLevel(3,conLevel);
+  DeclareIntConLevel(3,conLevel);
 /*
   try {
     bool_imp(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),conLevel);
@@ -365,7 +365,7 @@ OZ_BI_define(bool_Geqv,4,0)
   DeclareGeIntVar(0,v0,sp);
   DeclareGeIntVar(1,v1,sp);
   DeclareGeIntVar(2,v2,sp);
-  ConLevel(3,conLevel);
+  DeclareIntConLevel(3,conLevel);
   /*
   try {
     bool_eqv(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),conLevel);
