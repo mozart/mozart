@@ -74,20 +74,20 @@ OZ_BI_define(bool_and,4,0)
   DeclareGSpace(sp);
   DeclareGeBoolVar(0,v1,sp);
   DeclareGeBoolVar(1,v2,sp);    
-  OZ_declareInt(3,ConLevel);
- /*
+  DeclareIntConLevel(3,ConLevel);
+ 
   try{
     if(OZ_isInt(OZ_in(2)))
-      bool_and(sp,static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),OZ_intToC(OZ_in(2)),(IntConLevel)ConLevel);
+		rel(sp,v1,BOT_AND,v2,OZ_intToC(OZ_in(2)),ConLevel);
     else{
       DeclareGeBoolVar(2,v3,sp);
-      bool_and(sp,static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),static_cast<BoolVar>(v3),(IntConLevel)ConLevel);
+	  rel(sp,v1,BOT_AND,v2,v3,ConLevel);
     }
   }
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
   }
-  */
+  
   CHECK_POST(sp);
 
 } OZ_BI_end
@@ -124,20 +124,19 @@ OZ_BI_define(bool_or,4,0)
   DeclareGSpace(sp);
   DeclareGeBoolVar(0,v1,sp);
   DeclareGeBoolVar(1,v2,sp);    
-  OZ_declareInt(3,ConLevel);
- /*
+  DeclareIntConLevel(3,ConLevel);
+ 
   try{
     if(OZ_isInt(OZ_in(2)))
-      bool_or(sp,static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),OZ_intToC(OZ_in(2)),(IntConLevel)ConLevel);
-    else{
+		rel(sp,v1,BOT_OR,v2,OZ_intToC(OZ_in(2)),ConLevel);
+	else{
       DeclareGeBoolVar(2,v3,sp);
-      bool_or(sp,static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),static_cast<BoolVar>(v3),(IntConLevel)ConLevel);
+	  rel(sp,v1,BOT_OR,v2,v3,ConLevel);
     }
   }
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
   }
-  */
   CHECK_POST(sp);
 
 } OZ_BI_end
@@ -174,20 +173,20 @@ OZ_BI_define(bool_imp,4,0)
   DeclareGSpace(sp);
   DeclareGeBoolVar(0,v1,sp);
   DeclareGeBoolVar(1,v2,sp);    
-  OZ_declareInt(3,ConLevel);
- /*
+  DeclareIntConLevel(3,ConLevel);
+ 
   try{
     if(OZ_isInt(OZ_in(2)))
-      bool_imp(sp,static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),OZ_intToC(OZ_in(2)),(IntConLevel)ConLevel);
+		rel(sp,v1,BOT_IMP,v2,OZ_intToC(OZ_in(2)),ConLevel);
     else{
       DeclareGeBoolVar(2,v3,sp);
-      bool_imp(sp,static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),static_cast<BoolVar>(v3),(IntConLevel)ConLevel);
+      rel(sp,v1,BOT_IMP,v2,v3,ConLevel);
     }
   }
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
   }
-  */
+  
   CHECK_POST(sp);
 
 } OZ_BI_end
@@ -198,19 +197,19 @@ OZ_BI_define(bool_eqv,4,0)
   DeclareGSpace(sp);
   DeclareGeBoolVar(0,v1,sp);
   DeclareGeBoolVar(1,v2,sp);    
-  OZ_declareInt(3,ConLevel);
- /*
+  DeclareIntConLevel(3,ConLevel);
+ 
   try{
     if(OZ_isInt(OZ_in(2)))
-      bool_eqv(sp,static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),OZ_intToC(OZ_in(2)),(IntConLevel)ConLevel);
-    else{
+      rel(sp,v1,BOT_EQV,v2,OZ_intToC(OZ_in(2)),ConLevel);
+  else{
       DeclareGeBoolVar(2,v3,sp);
-      bool_eqv(sp,static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),static_cast<BoolVar>(v3),(IntConLevel)ConLevel);
+      rel(sp,v1,BOT_EQV,v2,v3,ConLevel);
     }
   }
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
-  }*/
+  }
   CHECK_POST(sp);
 
 } OZ_BI_end
@@ -221,20 +220,20 @@ OZ_BI_define(bool_xor,4,0)
   DeclareGSpace(sp);
   DeclareGeBoolVar(0,v1,sp);
   DeclareGeBoolVar(1,v2,sp);    
-  OZ_declareInt(3,ConLevel);
- /*
+  DeclareIntConLevel(3,ConLevel);
+ 
   try{
     if(OZ_isInt(OZ_in(2)))
-      bool_xor(sp,static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),OZ_intToC(OZ_in(2)),(IntConLevel)ConLevel);
+		rel(sp,v1,BOT_XOR,v2,OZ_intToC(OZ_in(2)),ConLevel);
     else{
       DeclareGeBoolVar(2,v3,sp);
-      bool_xor(sp,static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),static_cast<BoolVar>(v3),(IntConLevel)ConLevel);
+	  rel(sp,v1,BOT_XOR,v2,v3,ConLevel);
     }
   }
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
   }
-  */
+  
   CHECK_POST(sp);
 
 } OZ_BI_end
