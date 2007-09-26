@@ -56,7 +56,7 @@ OZ_BI_define(int_eq,3,0)
 
 OZ_BI_define(int_rel,4,0) {
   DeclareGSpace(gs);
-  ConLevel(3,consistencyLevel);
+  DeclareIntConLevel(3,consistencyLevel);
   RelType(1,relType);
 
   DeclareGeIntVar(0,v1,gs);
@@ -109,7 +109,7 @@ OZ_BI_define(int_dist,2,0)
    DeclareGSpace(sp);
    DECLARE_INTVARARRAY(0,x1,sp);
    RelType(1,x2);
-   ConLevel(3,x4);	   
+   DeclareIntConLevel(3,x4);	   
    if(!OZ_isInt(OZ_deref(OZ_in(2)))) {
      try{
        linear(sp,x1,x2,get_IntVar(OZ_in(2)),x4);
@@ -135,7 +135,7 @@ OZ_BI_define(int_dist,2,0)
    DECLARE_INTARGS(0,arguments);
    DECLARE_INTVARARRAY(1,array_var,sp);
    RelType(2,rel);
-   ConLevel(4,con);
+   DeclareIntConLevel(4,con);
    if(!OZ_isInt(OZ_deref(OZ_in(3)))) {
      try{
        linear(sp,arguments,array_var,rel,get_IntVar(OZ_in(3)),con);
@@ -160,7 +160,7 @@ OZ_BI_define(int_linearR,5,0)
   DECLARE_INTVARARRAY(0,array_var,sp);
 
   RelType(1,relType);
-  ConLevel(4,conLevel);
+  DeclareIntConLevel(4,conLevel);
 
   DeclareGeIntVar(2,v2,sp);
   DeclareGeBoolVar(3,v3,sp);
@@ -184,7 +184,7 @@ OZ_BI_define(int_linearCR,6,0)
   DECLARE_INTVARARRAY(1,array_var,sp);
   
   RelType(2,relType);
-  ConLevel(5,conLevel);
+  DeclareIntConLevel(5,conLevel);
   
   DeclareGeIntVar(3,v3,sp);
   DeclareGeBoolVar(4,v4,sp);
@@ -206,7 +206,7 @@ OZ_BI_define(int_count,5,0)
   DECLARE_INTVARARRAY(0,arreglo,sp);
   IntVar x1,x3;
   RelType(2,rl);
-  ConLevel(4,cl);
+  DeclareIntConLevel(4,cl);
   
   if(OZ_isGeIntVar(OZ_deref(OZ_in(1))))
     x1 = get_IntVar(OZ_in(1));
