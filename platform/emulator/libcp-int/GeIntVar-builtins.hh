@@ -72,7 +72,7 @@
     v=_tmp;								\
   }									\
   else if(OZ_isGeIntVar(OZ_in(p))) {					\
-    v = get_IntVar(OZ_in(p));						\   
+    v = get_IntVar(OZ_in(p));						\
   }									\
   else RAISE_EXCEPTION("The variables must be either GeIntVar or int");
 
@@ -159,7 +159,7 @@ bool v;\
   Assert(!oz_isRef(x));						\
   if (oz_isFree(x)) {						\
     oz_suspendOn(makeTaggedRef(x_ptr));				\
-  }\	
+  }\
   if (!OZ_isBool(v))\
 	   RAISE_EXCEPTION("Error, expected atom");	\
   v = OZ_isTrue(x) ? true : false; \

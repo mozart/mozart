@@ -129,7 +129,7 @@ return PROCEED;
 	OZ_TOC(arg,int,var,OZ_isInt,OZ_intToC,msg)
 
 #define ConLevel(arg,var) \
-	IntConLevel var;\ 
+	IntConLevel var;\
 	{\
 		OZ_TOC(arg,int,__vv,OZ_isInt,OZ_intToC,"Expected consistency level"); \
 		var = (IntConLevel)__vv;\
@@ -137,7 +137,7 @@ return PROCEED;
 #endif
 
 #define RelType(arg,var) \
-	IntRelType var;\ 
+	IntRelType var;\
 	{\
 		OZ_TOC(arg,int,__vv,OZ_isInt,OZ_intToC,"Expected relation type") ;\
 		var = (IntRelType)__vv;\
