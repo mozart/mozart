@@ -99,18 +99,4 @@ IntArgs array(0);					\
   }                                                     \
 }
 
-/*
-  Some propagators are "run" on posting (e.g. <) and no wait 
-  for a status method call. The following macro is intended for
-  early failure detection and checks if the space sp becomes failed
-  after propoagator posting.
-*/
-#define GZ_RETURN(sp)                  \
-  if(sp->failed())                     \
-return FAILED;                     \
-else                                 \
-if(sp->isStable())                 \
-sp->makeUnstable();              \
-return PROCEED;
-
 #endif

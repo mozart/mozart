@@ -9,7 +9,7 @@ OZ_BI_define(linear_IVA_IRT_In_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(sp);
+	CHECK_POST(sp);
 
 }OZ_BI_end
 
@@ -25,7 +25,7 @@ OZ_BI_define(linear_IVA_IRT_IV_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(sp);
+	CHECK_POST(sp);
 
 }OZ_BI_end
 
@@ -42,7 +42,7 @@ OZ_BI_define(linear_IVA_IRT_In_BV_ICL,5,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(sp);
+	CHECK_POST(sp);
 
 }OZ_BI_end
 
@@ -59,7 +59,7 @@ OZ_BI_define(linear_IVA_IRT_IV_BV_ICL,5,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(sp);
+	CHECK_POST(sp);
 
 }OZ_BI_end
 
@@ -76,7 +76,7 @@ OZ_BI_define(linear_IA_IVA_IRT_In_ICL,5,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(sp);
+	CHECK_POST(sp);
 
 }OZ_BI_end
 
@@ -93,7 +93,7 @@ OZ_BI_define(linear_IA_IVA_IRT_IV_ICL,5,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(sp);
+	CHECK_POST(sp);
 
 }OZ_BI_end
 
@@ -111,7 +111,7 @@ OZ_BI_define(linear_IA_IVA_IRT_In_BV_ICL,6,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(sp);
+	CHECK_POST(sp);
 
 }OZ_BI_end
 
@@ -129,7 +129,7 @@ OZ_BI_define(linear_IA_IVA_IRT_IV_BV_ICL,6,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(sp);
+	CHECK_POST(sp);
 
 }OZ_BI_end
 
@@ -145,7 +145,7 @@ OZ_BI_define(linear_BVA_IRT_In_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(sp);
+	CHECK_POST(sp);
 
 }OZ_BI_end
 
@@ -161,7 +161,7 @@ OZ_BI_define(linear_BVA_IRT_IV_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(sp);
+	CHECK_POST(sp);
 
 }OZ_BI_end
 
@@ -181,7 +181,7 @@ OZ_BI_define(cumulatives_IVA_IVA_IVA_IVA_IVA_IA_BlS_ICL,8,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(sp);
+	CHECK_POST(sp);
 
 }OZ_BI_end
 
@@ -201,7 +201,7 @@ OZ_BI_define(cumulatives_IA_IVA_IVA_IVA_IVA_IA_BlS_ICL,8,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(sp);
+	CHECK_POST(sp);
 
 }OZ_BI_end
 
@@ -221,7 +221,7 @@ OZ_BI_define(cumulatives_IVA_IVA_IA_IVA_IVA_IA_BlS_ICL,8,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(sp);
+	CHECK_POST(sp);
 
 }OZ_BI_end
 
@@ -241,7 +241,7 @@ OZ_BI_define(cumulatives_IA_IVA_IA_IVA_IVA_IA_BlS_ICL,8,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(sp);
+	CHECK_POST(sp);
 
 }OZ_BI_end
 
@@ -261,7 +261,7 @@ OZ_BI_define(cumulatives_IVA_IVA_IVA_IVA_IA_IA_BlS_ICL,8,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(sp);
+	CHECK_POST(sp);
 
 }OZ_BI_end
 
@@ -281,7 +281,7 @@ OZ_BI_define(cumulatives_IA_IVA_IVA_IVA_IA_IA_BlS_ICL,8,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(sp);
+	CHECK_POST(sp);
 
 }OZ_BI_end
 
@@ -301,7 +301,7 @@ OZ_BI_define(cumulatives_IVA_IVA_IA_IVA_IA_IA_BlS_ICL,8,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(sp);
+	CHECK_POST(sp);
 
 }OZ_BI_end
 
@@ -321,7 +321,7 @@ OZ_BI_define(cumulatives_IA_IVA_IA_IVA_IA_IA_BlS_ICL,8,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(sp);
+	CHECK_POST(sp);
 
 }OZ_BI_end
 
@@ -336,7 +336,7 @@ OZ_BI_define(eq_IV_IV_ICL,3,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -351,7 +351,7 @@ OZ_BI_define(eq_IV_In_ICL,3,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -367,7 +367,7 @@ OZ_BI_define(eq_IV_IV_BV_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -383,7 +383,7 @@ OZ_BI_define(eq_IV_In_BV_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -397,7 +397,7 @@ OZ_BI_define(eq_IVA_ICL,2,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -414,7 +414,7 @@ OZ_BI_define(count_IVA_In_IRT_In_ICL,5,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -431,7 +431,7 @@ OZ_BI_define(count_IVA_IV_IRT_In_ICL,5,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -448,7 +448,7 @@ OZ_BI_define(count_IVA_In_IRT_IV_ICL,5,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -465,7 +465,7 @@ OZ_BI_define(count_IVA_IV_IRT_IV_ICL,5,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -485,7 +485,7 @@ OZ_BI_define(gcc_IVA_IA_InS_InS_InS_InS_InS_ICL,8,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -504,7 +504,7 @@ OZ_BI_define(gcc_IVA_IA_InS_InS_InS_InS_ICL,7,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -520,7 +520,7 @@ OZ_BI_define(gcc_IVA_InS_InS_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -535,7 +535,7 @@ OZ_BI_define(gcc_IVA_InS_ICL,3,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -552,7 +552,7 @@ OZ_BI_define(gcc_IVA_IVA_InS_InS_ICL,5,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -574,7 +574,7 @@ OZ_BI_define(gcc_IVA_IA_IVA_InS_InS_InS_BlS_InS_InS_ICL,10,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -595,7 +595,7 @@ OZ_BI_define(gcc_IVA_IA_IVA_InS_InS_BlS_InS_InS_ICL,9,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -610,7 +610,7 @@ OZ_BI_define(channel_IVA_IVA_ICL,3,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -626,7 +626,7 @@ OZ_BI_define(dom_IV_InS_InS_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -642,7 +642,7 @@ OZ_BI_define(dom_IVA_InS_InS_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -657,7 +657,7 @@ OZ_BI_define(dom_IV_IV_ICL,3,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -672,7 +672,7 @@ OZ_BI_define(dom_IVA_IV_ICL,3,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -689,7 +689,7 @@ OZ_BI_define(dom_IV_InS_InS_BV_ICL,5,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -705,7 +705,7 @@ OZ_BI_define(dom_IV_IV_BV_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -720,7 +720,7 @@ OZ_BI_define(bool_not_BV_BV_ICL,3,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -735,7 +735,7 @@ OZ_BI_define(bool_eq_BV_BV_ICL,3,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -751,7 +751,7 @@ OZ_BI_define(bool_and_BV_BV_BV_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -767,7 +767,7 @@ OZ_BI_define(bool_and_BV_BV_Bl_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -783,7 +783,7 @@ OZ_BI_define(bool_or_BV_BV_BV_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -799,7 +799,7 @@ OZ_BI_define(bool_or_BV_BV_Bl_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -815,7 +815,7 @@ OZ_BI_define(bool_imp_BV_BV_BV_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -831,7 +831,7 @@ OZ_BI_define(bool_imp_BV_BV_Bl_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -847,7 +847,7 @@ OZ_BI_define(bool_eqv_BV_BV_BV_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -863,7 +863,7 @@ OZ_BI_define(bool_eqv_BV_BV_Bl_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -879,7 +879,7 @@ OZ_BI_define(bool_xor_BV_BV_BV_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -895,7 +895,7 @@ OZ_BI_define(bool_xor_BV_BV_Bl_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -910,7 +910,7 @@ OZ_BI_define(sortedness_IVA_IVA_ICL,3,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -926,7 +926,7 @@ OZ_BI_define(sortedness_IVA_IVA_IVA_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -940,7 +940,7 @@ OZ_BI_define(distinct_IVA_ICL,2,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -955,7 +955,7 @@ OZ_BI_define(distinct_IA_IVA_ICL,3,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -971,7 +971,7 @@ OZ_BI_define(element_IA_IV_IV_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -987,7 +987,7 @@ OZ_BI_define(element_IVA_IV_IV_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -1003,7 +1003,7 @@ OZ_BI_define(rel_IV_IRT_IV_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -1019,7 +1019,7 @@ OZ_BI_define(rel_IV_IRT_In_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -1036,7 +1036,7 @@ OZ_BI_define(rel_IV_IRT_IV_BV_ICL,5,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -1053,7 +1053,7 @@ OZ_BI_define(rel_IV_IRT_In_BV_ICL,5,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -1069,7 +1069,7 @@ OZ_BI_define(rel_IVA_IRT_IVA_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -1085,7 +1085,7 @@ OZ_BI_define(min_IV_IV_IV_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -1100,7 +1100,7 @@ OZ_BI_define(min_IVA_IV_ICL,3,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -1116,7 +1116,7 @@ OZ_BI_define(max_IV_IV_IV_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -1131,7 +1131,7 @@ OZ_BI_define(max_IVA_IV_ICL,3,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -1146,7 +1146,7 @@ OZ_BI_define(abs_IV_IV_ICL,3,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
@@ -1162,7 +1162,7 @@ OZ_BI_define(mult_IV_IV_IV_ICL,4,0) {
 	} catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
-	GZ_RETURN(home);
+	CHECK_POST(home);
 
 }OZ_BI_end
 
