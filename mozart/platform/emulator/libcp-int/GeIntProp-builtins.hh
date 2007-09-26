@@ -113,7 +113,7 @@ IntArgs array(0);					\
 #define DeclareInt(arg,var,msg) \
 	OZ_TOC(arg,int,var,OZ_isInt,OZ_intToC,msg)
 
-#define ConLevel(arg,var) \
+#define DeclareIntConLevel(arg,var) \
 	IntConLevel var;\
 	{\
 		OZ_TOC(arg,int,__vv,OZ_isInt,OZ_intToC,"Expected consistency level"); \
