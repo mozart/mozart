@@ -32,6 +32,25 @@
 using namespace Gecode;
 using namespace Gecode::Int;
 
+OZ_BI_define(bool_rel_BV_BT_BV_BV,4,0)
+{
+  DeclareGSpace(sp);
+  DeclareGeBoolVar(0,v1,sp);
+  DeclareBoolOpType(1,bt);
+  DeclareGeBoolVar(2,v2,sp);
+  DeclareGeBoolVar(3,v3,sp);
+ 
+  try{
+ 		rel(sp,v1,bt,v2,v3);
+  }
+  catch(Exception e){
+    RAISE_GE_EXCEPTION(e);
+  }
+  
+  CHECK_POST(sp);
+
+} OZ_BI_end
+
 
 
 OZ_BI_define(bool_not,3,0)
@@ -68,7 +87,7 @@ OZ_BI_define(bool_eq,3,0)
 
 } OZ_BI_end
 
-
+/*
 OZ_BI_define(bool_and,4,0)
 {
   DeclareGSpace(sp);
@@ -91,14 +110,14 @@ OZ_BI_define(bool_and,4,0)
   CHECK_POST(sp);
 
 } OZ_BI_end
-
+*/
 
 OZ_BI_define(bool_and_arr,3,0)
 {
   DeclareGSpace(sp);  
   DECLARE_BOOLVARARRAY(sp,v12,0);
   BoolVarArgs v1(v12);                             
-  OZ_declareInt(2,ConLevel);
+  DeclareIntConLevel(2,ConLevel);
  /*
   try{
     if(OZ_isInt(OZ_in(1)))
@@ -118,7 +137,7 @@ OZ_BI_define(bool_and_arr,3,0)
 
 
 
-
+/*
 OZ_BI_define(bool_or,4,0)
 {
   DeclareGSpace(sp);
@@ -140,7 +159,7 @@ OZ_BI_define(bool_or,4,0)
   CHECK_POST(sp);
 
 } OZ_BI_end
-
+*/
 
 OZ_BI_define(bool_or_arr,3,0)
 {
@@ -167,7 +186,7 @@ OZ_BI_define(bool_or_arr,3,0)
 
 
 
-
+/*
 OZ_BI_define(bool_imp,4,0)
 {
   DeclareGSpace(sp);
@@ -190,8 +209,9 @@ OZ_BI_define(bool_imp,4,0)
   CHECK_POST(sp);
 
 } OZ_BI_end
+*/
 
-
+/*
 OZ_BI_define(bool_eqv,4,0)
 {
   DeclareGSpace(sp);
@@ -213,8 +233,8 @@ OZ_BI_define(bool_eqv,4,0)
   CHECK_POST(sp);
 
 } OZ_BI_end
-
-
+*/
+/*
 OZ_BI_define(bool_xor,4,0)
 {
   DeclareGSpace(sp);
@@ -237,6 +257,7 @@ OZ_BI_define(bool_xor,4,0)
   CHECK_POST(sp);
 
 } OZ_BI_end
+*/
 
 OZ_BI_define(bool_rel,4,0) {
   DeclareGSpace(gs);

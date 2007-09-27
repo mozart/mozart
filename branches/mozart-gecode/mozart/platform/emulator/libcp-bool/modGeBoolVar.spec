@@ -56,6 +56,10 @@ $module_name          = "GBD";
 			      bi  => boolvar_getSize},
 
 
+## Relation propagators
+	'rel_BV_BT_BV_BV' => {in => ['+value','+value','+value','+value'],
+											out => [],
+											bi => bool_rel_BV_BT_BV_BV},
 ##Propagators
 
     'not'		 => { in  => ['+value','+value', 'int'],
@@ -64,33 +68,16 @@ $module_name          = "GBD";
     'eq'		 => { in  => ['+value','+value', 'int'],
 			     out => [],
 			     bi  => bool_eq},
-    'and'		 => { in  => ['+value','+value', '+value', 'int'],
-			     out => [],
-			     bi  => bool_and},
     'andA'		 => { in  => ['+value','+value','int'],
 			     out => [],
 			     bi  => bool_and_arr},
-    'or'		 => { in  => ['+value','+value', '+value', 'int'],
-			     out => [],
-			     bi  => bool_or},
     'orA'		 => { in  => ['+value','+value','int'],
 			     out => [],
 			     bi  => bool_or_arr},
-    'imp'		 => { in  => ['+value','+value', '+value', 'int'],
-			     out => [],
-			     bi  => bool_imp},
-    'eqv'		 => { in  => ['+value','+value', '+value', 'int'],
-			     out => [],
-			     bi  => bool_eqv},
-    'xor'		 => { in  => ['+value','+value', '+value', 'int'],
-			     out => [],
-			     bi  => bool_xor},
     'rel'		 => { in  => ['+value','int', '+value', 'int'],
 			     out => [],
 			     bi  => bool_rel},
     'linear'		 => { in  => ['+value','int', '+value', 'int'],
 			     out => [],
 			     bi  => bool_linear},
-
-
  );
