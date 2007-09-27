@@ -40,14 +40,11 @@ import
        'reflect.size':       GetSize
        'reflect.min':        GetMin
        'reflect.max':        GetMax
-       and: 	     Bool_and
+       'rel_BV_BT_BV_BV':    VarRel
+
        andA: 	     Bool_and_arr       
-       'or': 	     Bool_or
        orA: 	     Bool_or_arr              
-       xor:          Bool_xor
        'not':        Bool_not
-       imp:          Bool_imp
-       eqv:          Bool_eqv
        rel:          Rel
        linear:       Linear                     
       )
@@ -72,6 +69,8 @@ prepare
 	    '>:':5     %Greater
 	   )
 
+   BOT = '#'('and': 0 'or':1 'imp':2 'eqv':3 'xor':4)
+   
 export
    %% Telling domains
    bool:   BoolVar
@@ -88,21 +87,24 @@ export
    %% Consistency levels for propagators
    cl:    Cl
 
+   %% Integer relation types
    rt:    Rt
+
+   %% Boolean operations
+   bo:    BOT
    
    %% Miscellaneous
    decl:            Decl
 
    %% propagators
+
+   %% Variable Variable Boolean relation propagator
+   varRel:  VarRel
+
    
- %   conj       :Bool_and
 %    conjA      :Bool_and_arr
-%    disj       :Bool_or
 %    disjA      :Bool_or_arr
-%    xor        :Bool_xor
 %    notB       :Bool_not
-%    imp        :Bool_imp
-%    equi       :Bool_eqv
 %    rel        :Rel
 %    linear     :Linear
    %Watch
@@ -127,7 +129,7 @@ define
 
    
    fun{Decl}
-      {BoolVar 0#1}
+      {BoolVar 0 1}
    end
    
    proc{CreateDomainTuple N Dom Root}

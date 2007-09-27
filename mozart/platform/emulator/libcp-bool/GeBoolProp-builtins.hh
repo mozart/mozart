@@ -95,4 +95,19 @@ IntArgs array(0);					\
   }                                                     \
 }
 */
+
+#define DeclareBoolOpType(arg,var)\
+	BoolOpType var;\
+	{\
+		OZ_declareInt(arg,op);\
+		switch(op) {\
+		case 0: var = BOT_AND; break;\
+		case 1: var = BOT_OR; break;\
+		case 2: var = BOT_IMP; break;\
+		case 3: var = BOT_EQV; break;\
+		case 4: var = BOT_XOR; break;\
+		default: RAISE_EXCEPTION("Expecting atom with a lgical operation: and, or, imp, eqv, xor"); break;\
+	}}	
+	
+
 #endif
