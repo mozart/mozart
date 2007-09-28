@@ -61,6 +61,7 @@ namespace _dss_internal{ //Start namespace
     for (GlobalName* gn = getFirst(); gn; gn = getNext(gn)) {
       gn->m_getGUIdSite()->m_makeGCpreps();
     }
+    checkSize();
   }
 
 } //end namespace

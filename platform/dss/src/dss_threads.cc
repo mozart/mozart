@@ -84,6 +84,7 @@ namespace _dss_internal{ //Start namespace
     for (GlobalThread* t = getFirst(); t; t = getNext(t)) {
       t->m_makeGCpreps();
     }
+    checkSize();
   }
 
 

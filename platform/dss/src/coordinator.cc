@@ -350,6 +350,7 @@ namespace _dss_internal{ //Start namespace
 	c->m_makeGCpreps();
       }
     }
+    checkSize();
   }
 
   void
@@ -395,6 +396,7 @@ namespace _dss_internal{ //Start namespace
       p->m_getGUIdSite()->m_makeGCpreps();
       p->m_makeGCpreps();
     }
+    checkSize();
   }
 
 #ifdef DSS_LOG
