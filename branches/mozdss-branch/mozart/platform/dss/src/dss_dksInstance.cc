@@ -122,6 +122,7 @@ namespace  _dss_internal{
     for (DksInstance* n = getFirst() ; n; n = getNext(n)) {
       n->m_gcResources();
     }
+    checkSize();
   }
   void 
   DksInstanceHT::m_siteStateChane(DSite* s, const DSiteState& state){

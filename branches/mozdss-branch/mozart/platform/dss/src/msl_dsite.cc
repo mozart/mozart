@@ -517,6 +517,8 @@ namespace _msl_internal{ //Start namespace
 	remove(cur); delete cur;
       }
     }
+
+    checkSize();
   }
 
 
