@@ -4,7 +4,7 @@
  *   Erik Klintskog 
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -32,20 +32,21 @@
 #pragma interface
 #endif
 
-
 #include "dssBase.hh"
 #include "dss_msgLayerInterface.hh"
 #include "dss_netId.hh"
+
 namespace _dss_internal{ //Start namespace
   
   class GlobalThreadTable; 
   
-  class GlobalThread: public NetIdNode, public DssThreadId {
+  class GlobalThread : public NetIdNode, public BucketHashNode<GlobalThread>,
+		       public DssThreadId {
     friend class GlobalThreadTable;
+  private:
     GlobalThreadTable* a_exit;
 
-  private:
-    GlobalThread(const GlobalThread&):NetIdNode(), a_exit(NULL){}
+    GlobalThread(const GlobalThread&);
     GlobalThread& operator=(const GlobalThread&){ return *this; }
 
   public:
@@ -55,15 +56,15 @@ namespace _dss_internal{ //Start namespace
 
     GlobalThread(NetIdentity ni, GlobalThreadTable* const ext); 
     GlobalThread(GlobalThreadTable* const ext); 
-    ~GlobalThread(){ DebugCode(a_allocated--); }
-    
-    inline WakeRetVal resumeDoLocal(DssOperationId* id){
+    ~GlobalThread() { DebugCode(a_allocated--); }
+
+    WakeRetVal resumeDoLocal(DssOperationId* id){
       return getThreadMediator()->resumeDoLocal(id);
     }
-    inline WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin){
+    WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin){
       return getThreadMediator()->resumeRemoteDone(pstin); 
     }
-    inline WakeRetVal resumeFailed() {
+    WakeRetVal resumeFailed() {
       return getThreadMediator()->resumeFailed();
     }
     virtual void dispose();
@@ -71,25 +72,22 @@ namespace _dss_internal{ //Start namespace
   };
   
   
-  class GlobalThreadTable:private NetIdHT {
+  class GlobalThreadTable : public NetIdHT, public BucketHashTable<GlobalThread> {
   public:
-    GlobalThreadTable(const int& sz, DSS_Environment* env):
-      NetIdHT(sz, env){}
+    GlobalThreadTable(const int& sz, DSS_Environment* env) :
+      NetIdHT(env), BucketHashTable<GlobalThread>(sz) {}
     
-    //inline void m_del(const unsigned int& id1, DSite* const id2) { htSubPkSk(id1,reinterpret_cast<u32>(id2)); }
-    inline void m_del(GlobalThread* const th){ m_removeNetId(th); }
-    
-    inline GlobalThread *m_find(NetIdentity ni){
-      return reinterpret_cast<GlobalThread*>(m_findNetId(ni));
+    GlobalThread *m_find(NetIdentity ni) {
+      return lookup(ni.hashCode(), ni);
     }
-    void m_gcResources();
-    
-    GlobalThread* insertDistThread(NetIdentity); 
+    GlobalThread* insertDistThread(NetIdentity);
     GlobalThread* createDistThread(); 
+
+    void m_gcResources();
   };
 
   GlobalThread *gf_popThreadIdVal(::MsgContainer*, DSS_Environment* );
   void  gf_pushThreadIdVal(::MsgContainer*, GlobalThread*);
-
 }  
+
 #endif

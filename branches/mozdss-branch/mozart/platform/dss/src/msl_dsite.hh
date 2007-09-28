@@ -3,6 +3,7 @@
  *    Per Brand (perbrand@sics.se)
  * 
  *  Contributors:
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Per Brand, 1998
@@ -33,15 +34,12 @@
 #include "bucketHashTable.hh"
 #include "dss_comService.hh" 
 #include "msl_crypto.hh"
+#include "msl_dct.hh"
+
 namespace _msl_internal{ //Start namespace
 
-
-
-  class DssSimpleDacDct; 
-  class MsgnLayerEnv; 
+  // must be declared (because msl_comObj.hh includes this file)
   class ComObj; 
-  class DssSimpleWriteBuffer; 
-  class DssSimpleReadBuffer;
   
   /*
    * SEC-TODO: DSites should store their marshaled representation of
@@ -53,39 +51,42 @@ namespace _msl_internal{ //Start namespace
    *
    */
 
-  class Site: public BucketHashNode, public ::DSite{
+  class Site : public DSite, public BucketHashNode<Site> {
     friend class SiteHT;
   public:
 #ifdef DEBUG_CHECK
     static int a_allocated;
 #endif
     static int sm_getMRsize();
-  private:
-    RSA_public*    a_key; // cannot be const since we have to unmarshal data before init
-    MsgnLayerEnv*  a_msgnLayerEnv; 
-    ComObj*        a_comObj;
-    CsSiteInterface*        a_csSite;
-    DSiteState     a_state;
-    u32            a_version;
-    BYTE*          a_MarshaledRepresentation;
-    int            a_MRlength;
-    bool           a_secChannel;
-    bool           a_isRemote;
-    bool           a_isGcMarked;
 
-    // not to be used
-    Site(const Site&):
-      BucketHashNode(0,0), a_key(NULL), a_msgnLayerEnv(NULL), a_comObj(NULL),
-      a_csSite(NULL), a_state(DSite_OK), a_version(0), a_MarshaledRepresentation(NULL),
-      a_MRlength(0), a_secChannel(false), a_isRemote(false), a_isGcMarked(false){}
-    Site& operator=(const Site&){ return *this; };
+  private:
+    u32              a_shortId;     // used for hash
+    RSA_public*      a_key;
+    MsgnLayerEnv*    a_msgnLayerEnv; 
+    ComObj*          a_comObj;
+    CsSiteInterface* a_csSite;
+    DSiteState       a_state;
+    u32              a_version;
+    BYTE*            a_MarshaledRepresentation;
+    int              a_MRlength;
+    bool             a_secChannel;
+    bool             a_isRemote;
+    bool             a_isGcMarked;
+
+    // not used
+    Site(const Site&);
+    Site& operator=(const Site&) { return *this; }
 
   public:
-
-    Site(const u32& pk, RSA_private* const key, MsgnLayerEnv* const env, bool sec);
-    Site(const u32& pk, RSA_public*  const key, MsgnLayerEnv* const env, bool sec,
-	  const u32& ver, BYTE* const MRstr, const int& MRlen);
+    Site(const u32&, RSA_private* const key, MsgnLayerEnv* const env, bool sec);
+    Site(const u32&, RSA_public*  const key, MsgnLayerEnv* const env, bool sec,
+	 const u32& ver, BYTE* const MRstr, const int& MRlen);
     virtual ~Site();
+
+    // hash table stuff
+    unsigned int hashCode() const { return a_shortId; }
+    bool hashMatch(const RSA_public &k) const { return *a_key == k; }
+    bool hashMatch(BYTE* const &) const;
 
     // ********* SIGNING / VERIFY - ENCRYPT /DECRYPT ***********
     //
@@ -155,32 +156,33 @@ namespace _msl_internal{ //Start namespace
     virtual CsSiteInterface* m_getCsSiteRep();
   };
 
-  class SiteHT: public BucketHashTable{
+
+
+  class SiteHT : public BucketHashTable<Site> {
   private:
 #ifdef DEBUG_CHECK
     bool has_mySite;
 #endif
     MsgnLayerEnv* a_msgnLayerEnv;
+
   public: 
     SiteHT(const int& size, MsgnLayerEnv* const env);
     ~SiteHT(){}
 
     Site* m_unmarshalSite(DssReadBuffer *buf);
-    inline Site* m_findDigest(const u32& pk, BYTE* const buf);
-    inline Site* m_findSiteKey(const u32&, const RSA_public&);
-
-    inline void   m_insert(const unsigned int& id1, Site *site){ htAdd(id1, site); }
+    Site* m_findDigest(const u32&, BYTE* const buf);
+    Site* m_findSiteKey(const u32&, const RSA_public&);
+    void m_insert(Site *site) { insert(site); }
     
     // Called after gc, when all used Sites have been marked. 
     void gcSiteTable();
-
 
 #ifdef DSS_LOG
     void log_print_content();
 #endif
   
   private: // just for the darn compiler
-    SiteHT(const SiteHT&):BucketHashTable(0), a_msgnLayerEnv(NULL){;}
+    SiteHT(const SiteHT&);
     SiteHT& operator=(const SiteHT&){ return *this;}
   };
   

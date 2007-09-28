@@ -49,11 +49,25 @@ namespace _dss_internal{
     virtual LargeMessage* m_transferService() = 0; 
     virtual int m_getType() = 0; 
   };
+
+  class BackboneServiceNode: public NetIdNode,
+			     public BucketHashNode<BackboneServiceNode> {
+  public: 
+    BackboneService* a_srv; 
+    BackboneServiceNode(NetIdentity ni,BackboneService* srv ): 
+      NetIdNode(ni), BucketHashNode<BackboneServiceNode>(), a_srv(srv){;}
+  };
+
+  class BackboneServiceTable : public NetIdHT, public BucketHashTable<BackboneServiceNode> {
+  public:
+    BackboneServiceTable(const int &sz, DSS_Environment* env) :
+      NetIdHT(env), BucketHashTable<BackboneServiceNode>(sz) {}
+  };
   
 
   class DksBackbone: public DKS_userClass, public DSS_Environment_Base{
   private: 
-    NetIdHT     *a_serviceHT;
+    BackboneServiceTable a_serviceHT;
   public: 
     DksInstance *a_instance; 
     
@@ -80,6 +94,8 @@ namespace _dss_internal{
     virtual void pushDksBcMessage(MsgContainer*, DksBcMessage*); 
     virtual DksBcMessage *popDksBcMessage(MsgContainer*); 
     MACRO_NO_DEFAULT_EQUALITY(DksBackbone);
+
+  private:
     DksBackbone(const DksBackbone&); 
 };
   

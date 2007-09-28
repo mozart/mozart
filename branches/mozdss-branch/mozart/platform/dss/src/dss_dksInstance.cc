@@ -1,10 +1,9 @@
 /*
  *  Authors:
  *    Erik Klintskog (erik@sics.se)
- *
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Erik Klintskog, 1998
@@ -38,26 +37,29 @@ namespace  _dss_internal{
   //***************** Class DksIntance *****************
 
  
-  DksInstance::DksInstance(int N, int K, int F,  DKS_userClass* usr, DSS_Environment* env):
-    DKSNode(N, K, F,env->a_myDSite->m_getShortId() % N, env->a_myDSite, usr ),
-    NetIdNode(),
+  DksInstance::DksInstance(int N, int K, int F, DKS_userClass* usr,
+			   DSS_Environment* env) :
+    DKSNode(N, K, F,env->a_myDSite->m_getShortId() % N, env->a_myDSite, usr),
+    NetIdNode(), BucketHashNode<DksInstance>(),
     DSS_Environment_Base(env)
   {
     // Insert the DKS instance in the HT, it can now be reached by messages 
     // and has allso been given a unique identity( a net identity).
-    env->a_dksInstHT->m_addNetId(this); 
+    env->a_dksInstHT->m_addNetIdentity(this); 
+    env->a_dksInstHT->insert(this);
     
     printf("creating DKS %d\n", N); 
   }
   
-  DksInstance::DksInstance(int N, int K, int F, NetIdentity ni , DSite* entry ,DSS_Environment* env):
+  DksInstance::DksInstance(int N, int K, int F, NetIdentity ni,
+			   DSite* entry, DSS_Environment* env):
     DKSNode(N, K, F,env->a_myDSite->m_getShortId() % N, env->a_myDSite),
-    NetIdNode(ni),
+    NetIdNode(ni), BucketHashNode<DksInstance>(),
     DSS_Environment_Base(env),
     a_joins(entry) 
   {
     // Inserts the DKS in the HT, the identity of the DKS is definedby its creator(passed in the ni arg). 
-    env->a_dksInstHT->m_insertNetId(this);
+    env->a_dksInstHT->insert(this);
   }
 
 
@@ -91,28 +93,25 @@ namespace  _dss_internal{
   bool
   DksInstanceHT::m_unmarshalDksInstance(DssReadBuffer* bb,   DksInstance* &inst){
     printf("Unmarshaling dksInstance\n"); 
-    NetIdentity ni = gf_unmarshalNetIdentity(bb, m_getEnvironment()); 
-    NetIdNode *no = m_findNetId(ni);
+    NetIdentity ni = gf_unmarshalNetIdentity(bb, m_getEnvironment());
+    inst = lookup(ni.hashCode(), ni);
     int N = ::gf_UnmarshalNumber(bb); 
     int K = ::gf_UnmarshalNumber(bb); 
     int F = ::gf_UnmarshalNumber(bb); 
     DSite *entry = m_getEnvironment()->a_msgnLayer->m_UnmarshalDSite(bb); 
     printf("====>   Done\n"); 
-    if (no != NULL){
-      inst = static_cast<DksInstance*>(no); 
-      return true; 
-    }
+    if (inst) return true;
     inst = new DksInstance(N, K, F, ni,entry, m_getEnvironment()); 
     return false; 
   }
   
   void 
   DksInstanceHT::m_redirectMessage(MsgContainer* msgC, DSite* sender){
-    NetIdentity ni =  gf_popNetIdentity(msgC); 
-    NetIdNode* nid = m_findNetId(ni);
-    if(nid != NULL){
-      static_cast<DksInstance*>(nid)->msgReceived(msgC, sender); 
-    }else{
+    NetIdentity ni =  gf_popNetIdentity(msgC);
+    DksInstance* inst = lookup(ni.hashCode(), ni);
+    if (inst){
+      inst->msgReceived(msgC, sender); 
+    } else {
       printf("DKS ring not found!\n");
       Assert(0); 
     }
@@ -120,21 +119,18 @@ namespace  _dss_internal{
 
   void 
   DksInstanceHT::m_gcResources(){
-    for(NetIdNode *n = m_getNext(NULL) ; n != NULL; n = m_getNext(n)) {
-      static_cast<DksInstance*>(n)->m_gcResources();
+    for (DksInstance* n = getFirst() ; n; n = getNext(n)) {
+      n->m_gcResources();
     }
   }
   void 
   DksInstanceHT::m_siteStateChane(DSite* s, const DSiteState& state){
-    for(NetIdNode *n = m_getNext(NULL) ; n != NULL; n = m_getNext(n)) {
-      static_cast<DksInstance*>(n)->nodeFailed(s, state, NULL); 
+    for (DksInstance* n = getFirst() ; n; n = getNext(n)) {
+      n->nodeFailed(s, state, NULL); 
     }
   }
-
   
   DksInstanceHT::DksInstanceHT(int sz, DSS_Environment* env):
-    NetIdHT(sz, env)    
-  {;}
-  
-  
+    NetIdHT(env), BucketHashTable<DksInstance>(sz)
+  {}
 }

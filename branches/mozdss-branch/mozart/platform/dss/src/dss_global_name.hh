@@ -3,7 +3,7 @@
  *    Per Sahlin (sahlin@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Per Sahlin, 2004
@@ -33,49 +33,43 @@
 #include "dss_classes.hh"
 #include "bucketHashTable.hh"
 #include "dssBase.hh"
+#include "dss_netId.hh"
+
 namespace _dss_internal{ //Start namespace
 
-  class GlobalName: public GlobalNameInterface, protected BucketHashNode {
+  class GlobalNameTable;
+
+  class GlobalName: public GlobalNameInterface, public NetIdNode,
+		    public BucketHashNode<GlobalName> {
     friend class GlobalNameTable;
   private:
-    unsigned int a_pk; // Primary key
-    unsigned int a_sk; // Secondary key
+    GlobalNameTable* table;
   public:
-    GlobalName(const unsigned int& pk, const unsigned int& sk, void* ref): 
-      //      NamedImmutableInterface(pk, sk, ref),
-      GlobalNameInterface(ref), BucketHashNode(pk, sk), a_pk(pk), a_sk(sk) {;}
-    
+    GlobalName(GlobalNameTable* t, NetIdentity const &ni, void* ref) :
+      GlobalNameInterface(ref), NetIdNode(ni), BucketHashNode<GlobalName>(), table(t) {}
     ~GlobalName();
+
     virtual void marshal(DssWriteBuffer* bb);
-    
   };
 
-  class GlobalNameTable: protected BucketHashTable, private DSS_Environment_Base{    
-  private:
-    unsigned int a_index;
+
+  class GlobalNameTable: public NetIdHT, public BucketHashTable<GlobalName> {
   public:
     GlobalNameTable(const int& sz, DSS_Environment* const env):
-      BucketHashTable(sz), DSS_Environment_Base(env),a_index(0) {}
+      NetIdHT(env), BucketHashTable<GlobalName>(sz) {}
+    ~GlobalNameTable() {}
+    
+    GlobalName* m_find(NetIdentity const &ni) {
+      return lookup(ni.hashCode(), ni);
+    }
+    void m_insert(GlobalName* const &gn) { insert(gn); }
+    void m_remove(GlobalName* const &gn) { remove(gn); }
 
-    ~GlobalNameTable();
-    
-    inline unsigned int getNextId() {return a_index++;}
-    
-    inline void m_add(GlobalName* const ni){
-      htAdd(ni->getPrimKey(), ni);
-    }
-    
-    inline GlobalName* m_find(GlobalName* const ni){
-      return static_cast<GlobalName *>(htFindPkSk(ni->getPrimKey(),
-						  ni->getSecKey()));
-    }
-    inline GlobalName* m_find(const unsigned int& id, const unsigned int& id2){
-      return static_cast<GlobalName *>(htFindPkSk(id, id2));
-    }
+    GlobalName* m_unmarshal(DssReadBuffer* bb);
+    GlobalName* m_create(void*);
 
-    inline void m_del(GlobalName* const nim)
-    { htSubEn(nim); }
-    
+    void m_gcResources();
   };
 } 
+
 #endif

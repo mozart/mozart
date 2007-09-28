@@ -181,7 +181,7 @@ namespace _msl_internal{
     a_routeIds(0),
     a_ipIsbehindFW(false)
   {
-    a_siteHT = new SiteHT(100, this); 
+    a_siteHT = new SiteHT(32, this); 
     a_interRouter = new InterRouter(this); 
     
     // Environment initialized and functions bound
@@ -195,7 +195,7 @@ namespace _msl_internal{
     int pk = gf_char2integer(&p[5]);
     a_mySite = new Site(pk, key, this, sec);
     dssLog(DLL_IMPORTANT,"SITE: (%p) - Making myDSite", a_mySite);
-    a_siteHT->m_insert(pk, a_mySite);
+    a_siteHT->m_insert(a_mySite);
     
     CsSiteInterface *sa = csc->connectSelfReps(msl, static_cast<DSite*>(a_mySite));
     a_mySite->m_setCsSite(sa);
