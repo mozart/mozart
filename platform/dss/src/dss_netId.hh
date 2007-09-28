@@ -3,7 +3,7 @@
  *    Erik Klintskog, 2003
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Erik KLintskog, 2002
@@ -24,116 +24,91 @@
  *
  */
 
-
-
 #ifndef __DSS_NETID_HH
 #define __DSS_NETID_HH
-
 
 #ifdef INTERFACE  
 #pragma interface
 #endif
 
-
 #include "bucketHashTable.hh"
 #include "dssBase.hh"
-class DSite;
+#include "dss_comService.hh"
 
 namespace _dss_internal{ 
 
+  // The DSS makes heavy use of globaly unique net identitiers, called
+  // NetIds.  A net identity is guaranteed to be unique since it
+  // consists of the process the identity was creeated at, and a
+  // number unique to that process.
+  // 
+  // NetIds are sent over the network, mostly for identifying entities
+  // (can be any thing form an abstract entity to a DKS instance).
+  // Thus finding the entity efficiently is important.  Components
+  // with NetIds are thus stored in hash tables for quick finding.
 
-  // *********** Forwards to avoid inclusion of so so many files
-  
-  class NetIdHT;  
+  class NetIdentity {
+  public:
+    DSite* site;
+    u32    index;
 
+    NetIdentity() : site(NULL), index(0) {}
+    NetIdentity(DSite *s, u32 i) : site(s), index(i) {}
+    NetIdentity(const NetIdentity& n) : site(n.site), index(n.index) {}
 
-  class NetIdentity
-  {
-  public: 
-    DSite *a_site; 
-    u32    a_indx; 
-    NetIdentity(DSite *s, u32 i):a_site(s), a_indx(i){;}
-    NetIdentity():a_site(NULL), a_indx(0){;}
-    bool operator<(const NetIdentity ni){
-      return (a_indx !=  ni.a_indx)?(a_indx < ni.a_indx ):(*(a_site) < *(ni.a_site));
+    // good hashcodes
+    unsigned int hashCode() const { return site->m_getShortId() ^ index; }
+    bool hashMatch(DSite* const &s) const { return site == s; }
+
+    bool operator< (const NetIdentity &ni) {
+      return index < ni.index || (index < ni.index && *site < *(ni.site));
     }
-    
-    NetIdentity(const NetIdentity& n):a_site(n.a_site), a_indx(n.a_indx){;}
-    NetIdentity& operator=(const NetIdentity& n){ a_site =n.a_site; a_indx = n.a_indx;  return *this;}
+    NetIdentity& operator=(const NetIdentity& n) {
+      site = n.site; index = n.index; return *this;
+    }
+    bool operator== (const NetIdentity &n) {
+      return index == n.index && site == n.site;
+    }
   };
 
-  // The DSS makes heavy use of globaly unique netidentitied, called NetIds
-  // A netwidentity is guaranteed to be uniqiue since it consiste out of the 
-  // process the identity was creeated at and a number unique to that process. 
-  // 
-  // NetIds are sent over the network mostly when identfying entities(can be any thing 
-  // form an abstract entity to a DKS instance). Thus finding the entity efficiently 
-  // is important. NetIds are thus stored in hashstables for quick finding.
 
-  
-  class NetIdNode:protected BucketHashNode{
-    friend class NetIdHT;  
+  // base class of components with a NetIdentity
+  class NetIdNode {
+    friend class NetIdHT;
+  private:
+    NetIdentity netid;     // key in hash table
+
   public: 
-    inline ::DSite   *m_getGUIdSite() { return reinterpret_cast<DSite *>(getSecKey());}
+    NetIdNode(DSite* const s, const unsigned int& id) : netid(s, id) {}
+    NetIdNode(NetIdentity ni) : netid(ni) {}
+    NetIdNode() : netid() {}
 
-    NetIdNode(DSite* const s, const unsigned int& mi):
-      BucketHashNode(mi,reinterpret_cast<u32>(s))
-    {;}
+    unsigned int hashCode() const { return netid.hashCode(); }
+    bool hashMatch(const NetIdentity &n) { return netid == n; }
+    
+    DSite *m_getGUIdSite() { return netid.site; }
+    NetIdentity m_getNetId() { return netid; }
 
-    NetIdNode(NetIdentity ni):BucketHashNode(ni.a_indx ,reinterpret_cast<u32>(ni.a_site))
-    {;}
-    
-    NetIdNode():BucketHashNode(0,0){;}
-    
-    NetIdentity m_getNetId(){ 
-      DSite *s = reinterpret_cast<DSite *>(getSecKey());
-      u32    i = static_cast<unsigned int>(getPrimKey());
-      return NetIdentity(s, i); 
-    }
-  private: 
-    
-  private: // Unsued functionality 
-    NetIdNode(const NetIdNode&):BucketHashNode(0,0){;}
+  private:
+    NetIdNode(const NetIdNode&);
     NetIdNode& operator=(const NetIdNode&){ return *this;}
   };
-  
 
-  // The Hashtable class that holds all the NedId nodes. 
-  
-  class NetIdHT: private BucketHashTable, public DSS_Environment_Base{
-     u32 a_nxtId;
-   public:
-    NetIdHT(int sz, DSS_Environment* env):BucketHashTable(sz),DSS_Environment_Base(env), a_nxtId(0){;}
 
-    // The call returns the NedIdNode with the NetIdentity ni. 
-    // If none is found, the call returns NULL. 
-    inline NetIdNode* m_findNetId(NetIdentity ni){
-      return static_cast<NetIdNode*>(htFindPkSk(ni.a_indx,reinterpret_cast<u32>(ni.a_site)));
+  // base class of hash tables that hold NetIdNodes
+  class NetIdHT : public DSS_Environment_Base {
+  private:
+    u32 a_nextId;
+
+  public:
+    NetIdHT(DSS_Environment* env) : DSS_Environment_Base(env), a_nextId(0) {}
+
+    // create a new NetIdentity (unique for a given category of NetIdNodes)
+    NetIdentity m_createNetIdentity() {
+      return NetIdentity(m_getEnvironment()->a_myDSite, a_nextId++);
     }
-    
-    inline NetIdentity m_createNetIdentity(){
-      return NetIdentity( m_getEnvironment()->a_myDSite, a_nxtId ++); 
-    }
-      
-    inline void m_removeNetId(NetIdNode* n){
-      htSubPkSk(n->getPrimKey(), n->getSecKey());
-    }
-    
-    // Used when a net id node allready has an identity
-    inline void m_insertNetId(NetIdNode* n){
-      htAdd(n->getPrimKey(), n); 
-    }
-    
-    inline void m_addNetId(NetIdNode* n){
-      NetIdentity ni = m_createNetIdentity(); 
-      u32 pk = ni.a_indx; 
-      u32 sk = reinterpret_cast<u32>(ni.a_site); 
-      n->setKeys(pk, sk); 
-      htAdd(pk, n); 
-    }
-    
-    NetIdNode* m_getNext(NetIdNode* n){
-      return static_cast<NetIdNode*>(htGetNext(n)); 
+    void m_addNetIdentity(NetIdNode* const &n) {
+      n->netid = m_createNetIdentity();
     }
   };
 
@@ -143,4 +118,5 @@ namespace _dss_internal{
   void gf_pushNetIdentity(MsgContainer*, NetIdentity ni);
   NetIdentity  gf_popNetIdentity(MsgContainer*);
 }
+
 #endif

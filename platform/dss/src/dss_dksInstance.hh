@@ -3,6 +3,7 @@
  *    Erik Klintskog
  * 
  *  Contributors:
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  * 
@@ -36,7 +37,8 @@
 namespace _dss_internal{
   
 
-  class DksInstance:public DKSNode, public NetIdNode,public DSS_Environment_Base{
+  class DksInstance : public DKSNode, public NetIdNode,
+		      public BucketHashNode<DksInstance>, public DSS_Environment_Base{
   private: 
     DSite* a_joins; 
   public: 
@@ -49,7 +51,7 @@ namespace _dss_internal{
     MACRO_NO_DEFAULT_CONSTRUCTORS(DksInstance);
   };
 
-  class DksInstanceHT: public NetIdHT{
+  class DksInstanceHT: public NetIdHT, public BucketHashTable<DksInstance> {
   public: 
     DksInstanceHT(int sz, DSS_Environment*); 
 

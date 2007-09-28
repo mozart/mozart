@@ -4,6 +4,7 @@
  * 
  *  Contributors:
  *    Konstantin Popov <kost@sics.se>
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Per Brand, 1998   
@@ -40,9 +41,8 @@
 #include "msl_crypto.hh"
 #include "dss_enums.hh"
 #include "dss_comService.hh"
+
 namespace _msl_internal{ //Start namespace
-
-
 
   enum SiteMarshalTag{
     DMT_SITE_PERM = 0x01,
@@ -67,8 +67,9 @@ namespace _msl_internal{ //Start namespace
   int Site::a_allocated=0;
 #endif
 
-  Site::Site(const u32& pk, RSA_private* const key, MsgnLayerEnv* const env, bool sec):
-    BucketHashNode(pk , reinterpret_cast<u32>(key)),
+  Site::Site(const u32& id, RSA_private* const key,
+	     MsgnLayerEnv* const env, bool sec):
+    a_shortId(id),
     a_key(key),
     a_msgnLayerEnv(env),
     a_comObj(NULL),
@@ -79,15 +80,14 @@ namespace _msl_internal{ //Start namespace
     a_MRlength(-1),
     a_secChannel(sec),
     a_isRemote(false),
-    a_isGcMarked(false){
-    //printf("Site created:%s\n", m_stringrep());
+    a_isGcMarked(false)
+  {
     DebugCode(a_allocated++);
   }
 
-
-  Site::Site(const u32& pk, RSA_public* const key, MsgnLayerEnv* const env, 
-	       bool sec, const u32& ver, BYTE* const MRstr, const int& MRlen):
-    BucketHashNode(pk , reinterpret_cast<u32>(key)),
+  Site::Site(const u32& id, RSA_public* const key, MsgnLayerEnv* const env, 
+	     bool sec, const u32& ver, BYTE* const MRstr, const int& MRlen):
+    a_shortId(id),
     a_key(key),
     a_msgnLayerEnv(env),
     a_comObj(NULL),
@@ -98,12 +98,11 @@ namespace _msl_internal{ //Start namespace
     a_MRlength(MRlen),
     a_secChannel(sec),
     a_isRemote(true),
-    a_isGcMarked(false){
+    a_isGcMarked(false)
+  {
     dssLog(DLL_ALL,"REMOTE SITE: created %p",this);
-    //printf("Site unmarshaled:%s\n", m_stringrep());
     DebugCode(a_allocated++);
   }
-
 
   Site::~Site(){
     delete a_key;
@@ -111,6 +110,8 @@ namespace _msl_internal{ //Start namespace
     delete [] a_MarshaledRepresentation;
     DebugCode(a_allocated--);
   }
+
+  /************************* encryption stuff *************************/
 
   void
   Site::m_encrypt(int& retLen, BYTE*& retBuf, const int& inLen, BYTE* const inBuf){
@@ -132,7 +133,6 @@ namespace _msl_internal{ //Start namespace
     delete [] plain;
     return new DssSimpleDacDct(retlen,cipher); // write
   }
-  
   
   bool
   Site::m_decrypt(int& retlen, BYTE*& retBuf,const int& inlen, BYTE* const inBuf){
@@ -156,7 +156,8 @@ namespace _msl_internal{ //Start namespace
     return (ok) ? new DssSimpleReadBuffer(retbuf, retlen) : NULL;
   }
 
- 
+  /************************* specific stuff *************************/
+
   char *Site::m_stringrep() {
     static char buf[140];
     sprintf(buf,"name (%p): ",static_cast<void*>(this));
@@ -166,7 +167,6 @@ namespace _msl_internal{ //Start namespace
       sprintf((begin + i),"%02x",p[i]);
     return buf;
   }
-
 
   bool Site::m_canBeFreed(){
     if(a_isGcMarked) {
@@ -192,8 +192,6 @@ namespace _msl_internal{ //Start namespace
     return true;
   }
 
-
-
   bool Site::m_sendMsg(MsgCnt* msgC){
     if (a_isRemote == false){ //condition changed	
       a_msgnLayerEnv->m_loopBack(msgC);
@@ -211,14 +209,20 @@ namespace _msl_internal{ //Start namespace
     return true; 
   }
 
+  /************************* DSite interface *************************/
+
+  bool Site::m_sendMsg(::MsgContainer* msg){
+    MsgCnt *msgC = static_cast<MsgCnt*>(msg);
+    return m_sendMsg(msgC);  
+  }
+
   unsigned int Site::m_getShortId(){
-    return getPrimKey();
+    return a_shortId;
   }
 
   void Site::m_connectionEstablished(VirtualChannelInterface* channel){
     a_comObj->handover(channel);
   }
-
 
   void Site::m_stateChange(DSiteState stat){
     switch(stat){
@@ -286,19 +290,18 @@ namespace _msl_internal{ //Start namespace
     }
   }
 
+  /************************* site table lookup *************************/
 
-  inline Site* SiteHT::m_findSiteKey(const u32& pk, const RSA_public& key){
-    Site* ans = static_cast<Site*>(htFindPk(pk));
-    while(ans && !(*(ans->a_key) == key)) ans = static_cast<Site*>(ans->next);
-    return ans;
+  Site* SiteHT::m_findSiteKey(const u32& id, const RSA_public& key){
+    return lookup(id, key);
   }
 
+  bool Site::hashMatch(BYTE* const &buf) const {
+    return memcmp(a_MarshaledRepresentation + 4, buf, CIPHER_BLOCK_BYTES) == 0;
+  }
 
-  inline Site* SiteHT::m_findDigest(const u32& pk, BYTE* const buf){
-    Site* ans = static_cast<Site*>(htFindPk(pk));
-    while(ans && (memcmp((ans->a_MarshaledRepresentation + 4), buf, CIPHER_BLOCK_BYTES) != 0))
-      ans = static_cast<Site*>(ans->next);
-    return ans;
+  Site* SiteHT::m_findDigest(const u32& id, BYTE* const buf){
+    return lookup(id, buf);
   }
 
 
@@ -344,7 +347,7 @@ namespace _msl_internal{ //Start namespace
     
     DebugCode(int rLen =) a_key->encrypt_text(start + 4, digest, PLAIN_BLOCK_BYTES - 4);
     Assert(rLen == CIPHER_BLOCK_BYTES);
-    gf_integer2char(start,getPrimKey());
+    gf_integer2char(start, a_shortId);
     //printf("pk:%x\n",getPrimKey());
 
     // ********* DONE, save in MarshaledRepr *********
@@ -383,37 +386,25 @@ namespace _msl_internal{ //Start namespace
     
   // ************************* Site lookup table ************************
   
-
   SiteHT::SiteHT(const int& size,   MsgnLayerEnv* const env ):
-    BucketHashTable(size),
+    BucketHashTable<Site>(size),
 #ifdef DEBUG_CHECK
     has_mySite(false), 
 #endif
-  a_msgnLayerEnv(env){}
-
+    a_msgnLayerEnv(env) {}
 
   //! this record must still be completed with the other flags 
   ConnectivityStatus Site::m_getChannelStatus(){
     ConnectivityStatus conStatus = CS_NONE;
-	
     if (a_comObj != NULL) { 
       if (a_comObj->isConnected())
 	conStatus |= CS_COMMUNICATING;
-      
       if (a_comObj->getTransportMedium() == TM_TCP)
 	conStatus |= CS_CHANNEL;
       else if (a_comObj->getTransportMedium() == TM_ROUTE) 
 	conStatus |= CS_CIRCUIT;
     }
-
     return conStatus;
-  }
-
-  
-  bool
-  Site::m_sendMsg(::MsgContainer* msg){
-    MsgCnt *msgC = static_cast<MsgCnt*>(msg);
-    return m_sendMsg(msgC);  
   }
 
   Site* SiteHT::m_unmarshalSite(DssReadBuffer *buf){
@@ -488,7 +479,7 @@ namespace _msl_internal{ //Start namespace
 	  } else {
 	    found = new Site(pk, key, a_msgnLayerEnv, sec, version, marshaled_representation, len);
 	    //printf("found new site:%p\n",static_cast<void*>(found));
-	    m_insert(pk, found);
+	    insert(found);
 	    // should check here too
 	    CsSiteInterface *cs = a_msgnLayerEnv->a_comService->unmarshalCsSite(found, &dsrb);
 	    if(cs)
@@ -512,61 +503,30 @@ namespace _msl_internal{ //Start namespace
   }
   
 
+  void SiteHT::gcSiteTable() {
+    // we have first to gc all msgs stored in the comobjects
+    for (Site* s = getFirst(); s; s = getNext(s)) {
+      if (s->m_getComObj()) s->m_getComObj()->m_makeGCpreps();
+    }
 
-  void SiteHT::gcSiteTable()
-  {
-    // We have first to gc all msgs stored in the 
-    // comobjects 
-    int limit = getSize();
-
-    for(int ctr1 = 0; ctr1<limit;ctr1++)
-      {
-	for(Site *t =  static_cast<Site *>(getBucket(ctr1));
-	    t; t = static_cast<Site *>(t->getNext()))
-	  if(t->m_getComObj())
-	    t->m_getComObj()->m_makeGCpreps();
+    // now we check and delete unmarked sites
+    for (Site* s = getFirst(); s;) {
+      Site* cur = s;
+      s = getNext(s);
+      if (cur->m_canBeFreed()) {
+	remove(cur); delete cur;
       }
-    for(int ctr2 = 0; ctr2<limit;ctr2++)
-      {
-        BucketHashNode **s = getBucketPtr(ctr2);
-	Site *t =  static_cast<Site *>(getBucket(ctr2));
-	while(*s)
-	  {
-	    t = static_cast<Site*>(t->getNext());
-	    Site *site = static_cast<Site*>(*s);
-	    if(site->m_canBeFreed())
-	      {
-		(*s) = (*s)->getNext();
-		htSubEn(static_cast<BucketHashNode*>(site)); 
-	      }
-	    else
-	      {
-		s= ((*s)->getNextPtr());
-	      }
-	  }
-      }
+    }
   }
 
 
   // We rely on the DSS_LOG to print the contenct
 #ifdef DSS_LOG
   void SiteHT::log_print_content(){
-    int limit = getSize();
-    for(int ctr = 0; ctr<limit;ctr++)
-      {
-	dssLog(DLL_PRINT,"Entry %d:",ctr);
-	Site *s = static_cast<Site *>(getBucket(ctr));
-	while(s)
-	  {
-	    dssLog(DLL_PRINT,"\t%d:%d=>%s",s->getPrimKey(), s->getSecKey(),s->m_stringrep());
-	    s= static_cast<Site *>(s->getNext());
-	  }
-      }
+    for (Site* s = getFirst(); s; s = getNext(s)) {
+      dssLog(DLL_PRINT,"\t%d:%p=>%s", s->a_shortId, s->a_key, s->m_stringrep());
+    }
   }
 #endif
 
-
 } //End namespace
-
-
-

@@ -3,7 +3,7 @@
  *    Zacharias El Banna, 2002 (zeb@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Zacharias El Banna, 2002
@@ -51,15 +51,14 @@ namespace _dss_internal{ //Start namespace
   // The AS-Node
   //
 
-  AS_Node::~AS_Node(){}
-
-  AS_Node::AS_Node(const AccessArchitecture& a, DSS_Environment* const env):
+  AS_Node::AS_Node(const AccessArchitecture& a,
+		   DSS_Environment* const env):
     NetIdNode(),
     DSS_Environment_Base(env),
     a_aa(a){
     // Created Resolver base node
   }
-    
+
   AS_Node::AS_Node(NetIdentity ni, const AccessArchitecture& a,
 		   DSS_Environment* const env):
     NetIdNode(ni),
@@ -67,25 +66,29 @@ namespace _dss_internal{ //Start namespace
     a_aa(a){
     // Created Resolver base node
   }
-  
-  ::MsgContainer *
-  AS_Node::m_createASMsg(const MessageType& mt){
-    ::MsgContainer *msgC = m_getEnvironment()->a_msgnLayer->createAppSendMsgContainer();
+
+  ::MsgContainer* AS_Node::m_createASMsg(const MessageType& mt) {
+    MsgContainer *msgC =
+      m_getEnvironment()->a_msgnLayer->createAppSendMsgContainer();
     msgC->pushIntVal(mt); 
-    gf_pushNetIdentity(msgC, m_getNetId());
+    gf_pushNetIdentity(msgC, this->m_getNetId());
     return msgC;
   }
+
   // ****************************** Coordinator ***********************************'
   
   Coordinator::Coordinator(const AccessArchitecture& a,
-			   ProtocolManager* const p, DSS_Environment* const env):AS_Node(a,env), a_proxy(NULL), a_prot(p){
+			   ProtocolManager* const p,
+			   DSS_Environment* const env)
+    : AS_Node(a, env), BucketHashNode<Coordinator>(), a_proxy(NULL), a_prot(p) {
     DebugCode(a_allocated++);
     m_getEnvironment()->a_coordinatorTable->m_add(this);
   }
 
-
   Coordinator::Coordinator(NetIdentity ni, const AccessArchitecture& a,
-			   ProtocolManager* const p, DSS_Environment* const env):AS_Node(ni, a,env), a_proxy(NULL), a_prot(p){
+			   ProtocolManager* const p,
+			   DSS_Environment* const env)
+    : AS_Node(ni, a,env), BucketHashNode<Coordinator>(), a_proxy(NULL), a_prot(p) {
     DebugCode(a_allocated++);
     m_getEnvironment()->a_coordinatorTable->m_insert(this);
   }
@@ -148,7 +151,7 @@ namespace _dss_internal{ //Start namespace
   
   Proxy::Proxy(NetIdentity ni, const AccessArchitecture& a,
 	       ProtocolProxy* const prot, DSS_Environment* const env) :
-    AS_Node(ni,a,env), a_ps(PROXY_STATUS_UNSET),
+    AS_Node(ni,a,env), BucketHashNode<Proxy>(), a_ps(PROXY_STATUS_UNSET),
     a_currentFS(FS_ALL_OK), a_registeredFS(0),
     a_prot(prot), a_remoteRef(NULL),
     a_coordinator(NULL), a_abstractEntity(NULL)
@@ -305,20 +308,20 @@ namespace _dss_internal{ //Start namespace
   
   ::MsgContainer*
   Proxy::m_createCoordProtMsg(){
-    return m_createASMsg(M_PROXY_COORD_PROTOCOL);
+    return this->m_createASMsg(M_PROXY_COORD_PROTOCOL);
   }
   ::MsgContainer* 
   Proxy::m_createProxyProtMsg(){
-    return m_createASMsg(M_PROXY_PROXY_PROTOCOL);
+    return this->m_createASMsg(M_PROXY_PROXY_PROTOCOL);
   }
   
   ::MsgContainer * 
   Proxy::m_createCoordRefMsg(){
-    return m_createASMsg(M_PROXY_COORD_REF);
+    return this->m_createASMsg(M_PROXY_COORD_REF);
   }
   ::MsgContainer * 
   Proxy::m_createProxyRefMsg(){
-    return m_createASMsg(M_PROXY_PROXY_REF);
+    return this->m_createASMsg(M_PROXY_PROXY_REF);
   }
   
   
@@ -333,10 +336,10 @@ namespace _dss_internal{ //Start namespace
 
   void 
   CoordinatorTable::m_gcResources(){
-    dssLog(DLL_BEHAVIOR,"******************** COORDINATOR TABLE: GC Resources (%d) ********************\n");
-    for (NetIdNode *n = m_getNext(NULL) ; n;) {
-      Coordinator *c = static_cast<Coordinator*>(n);
-      n = m_getNext(n);
+    dssLog(DLL_BEHAVIOR, "***** COORDINATOR TABLE: GC Resources (%d) *****\n");
+    for (Coordinator* n = getFirst(); n;) {
+      Coordinator* c = n;
+      n = getNext(n);
       // n points on the next element; this allows to delete c now
       if (c->m_getProxy() == NULL &&
 	  c->m_getDssDGCStatus() == DSS_GC_LOCALIZE) {
@@ -348,26 +351,25 @@ namespace _dss_internal{ //Start namespace
       }
     }
   }
-  
+
   void
-  CoordinatorTable::m_siteStateChange(DSite *s, const DSiteState& newState)
-  {
-    for(NetIdNode *n = m_getNext(NULL) ; n != NULL; n = m_getNext(n)) {
-      static_cast<Coordinator *>(n)->m_siteStateChange(s,newState);
+  CoordinatorTable::m_siteStateChange(DSite *s, const DSiteState& newState) {
+    for (Coordinator* c = getFirst() ; c; c = getNext(c)) {
+      c->m_siteStateChange(s,newState);
     }
   }
-  
+
 #ifdef DSS_LOG
   void
   CoordinatorTable::log_print_content(){
-    dssLog(DLL_PRINT,"************************* COORDINATOR TABLE ************************");
-    for(NetIdNode *n = m_getNext(NULL) ; n != NULL; n = m_getNext(n)) {
-      dssLog(DLL_PRINT,"%p %s",n,static_cast<Coordinator *>(n)->m_stringrep());
+    dssLog(DLL_PRINT,"********** COORDINATOR TABLE **********");
+    for (Coordinator* c = getFirst() ; c; c = getNext(c)) {
+      dssLog(DLL_PRINT,"%p %s", c, c->m_stringrep());
     }
-    dssLog(DLL_PRINT,"********************** COORDINATOR TABLE - DONE ********************");
+    dssLog(DLL_PRINT,"********** END OF COORDINATOR TABLE  **********");
   }
 #endif
-  
+
   // ***************************** ProxyTable *************************************
   // *
   // * - Gc is a single step and realized in proxy entries
@@ -376,35 +378,33 @@ namespace _dss_internal{ //Start namespace
   
   void
   ProxyTable::m_siteStateChange(DSite *s, const DSiteState& newState){
-    for(NetIdNode *n = m_getNext(NULL) ; n != NULL; n = m_getNext(n)) {
-      static_cast<Proxy *>(n)->m_siteStateChange(s,newState); 
+    for (Proxy* p = getFirst() ; p; p = getNext(p)) {
+      p->m_siteStateChange(s,newState); 
     }
   }
-  
   
   void
   ProxyTable::m_gcResources(){
-    dssLog(DLL_BEHAVIOR,"******************** PROXY TABLE - GC Resources () *********************");
-    for(NetIdNode *n = m_getNext(NULL) ; n != NULL; n = m_getNext(n)) {
-      Proxy *pe = static_cast<Proxy *>(n);
+    dssLog(DLL_BEHAVIOR,"***** PROXY TABLE - GC Resources () *****");
+    for (Proxy* p = getFirst() ; p; p = getNext(p)) {
 #ifdef DEBUG_CHECK
-      dssLog(DLL_DEBUG,"PROXY %p %s",pe,pe->m_stringrep());
+      dssLog(DLL_DEBUG,"PROXY %p %s", p, p->m_stringrep());
 #else
-      dssLog(DLL_DEBUG,"PROXY %p",pe);
+      dssLog(DLL_DEBUG,"PROXY %p", p);
 #endif
-      pe->m_getGUIdSite()->m_makeGCpreps();
-      pe->m_makeGCpreps();
+      p->m_getGUIdSite()->m_makeGCpreps();
+      p->m_makeGCpreps();
     }
   }
-  
+
 #ifdef DSS_LOG
   void
   ProxyTable::log_print_content(){
-    for(NetIdNode *n = m_getNext(NULL) ; n != NULL; n = m_getNext(n)) {
-      dssLog(DLL_PRINT,"************************** PROXY TABLE () *************************");
-      dssLog(DLL_PRINT,"%p %s",n,static_cast<Proxy *>(n)->m_stringrep());
+    dssLog(DLL_PRINT,"********** PROXY TABLE () **********");
+    for (Proxy* p = getFirst() ; p; p = getNext(p)) {
+      dssLog(DLL_PRINT,"%p %s", p, p->m_stringrep());
     }
-    dssLog(DLL_PRINT,"*********************** PROXY TABLE - DONE *********************");
+    dssLog(DLL_PRINT,"********** END OF PROXY TABLE () **********");
   }
 #endif
 

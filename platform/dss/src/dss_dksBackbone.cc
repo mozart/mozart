@@ -37,19 +37,10 @@ namespace _dss_internal{
 #define DBB_RANGE ((1<<16) - 1)
   
 
-  
-  class DksBackboneId2Srvc: public NetIdNode{
-  public: 
-    BackboneService* a_srv; 
-    DksBackboneId2Srvc(NetIdentity ni,BackboneService* srv ): 
-      NetIdNode(ni), a_srv(srv){;}
-  };
-  
-  
   // ********************** MISC ********************************************
 
   int lf_hashNetIdentity(NetIdentity ni){
-    return (ni.a_site->m_getShortId() + ni.a_indx) % DBB_RANGE;  
+    return (ni.site->m_getShortId() + ni.index) % DBB_RANGE;  
   }
   
   bool lf_keyInInterval(int key, int start, int stop, int n){
@@ -60,7 +51,7 @@ namespace _dss_internal{
   }
 
 
-  void  lf_transferBackboneService(DksBackboneId2Srvc *db, LargeMessage *lm){
+  void  lf_transferBackboneService(BackboneServiceNode *db, LargeMessage *lm){
     lm->pushNetId(db->m_getNetId()); 
     lm->pushInt(db->a_srv->m_getType()); 
     lm->pushLM(db->a_srv->m_transferService()); 
@@ -101,20 +92,15 @@ namespace _dss_internal{
   
 
   DksBackbone::DksBackbone(DSS_Environment* env):
-    DSS_Environment_Base(env), a_serviceHT(new NetIdHT(100, env)), 
+    DSS_Environment_Base(env), a_serviceHT(100, env), 
     a_instance(NULL){
     ;
   }
   DksBackbone::DksBackbone(DksInstance *instance, DSS_Environment* env):
-    DSS_Environment_Base(env),a_serviceHT(new NetIdHT(100, env)), 
+    DSS_Environment_Base(env), a_serviceHT(100, env), 
     a_instance(instance){
     ;
   }
-  
-  // This is just for the darn compiler to stop whining
-  DksBackbone::DksBackbone(const DksBackbone&):
-    DSS_Environment_Base(NULL), a_serviceHT(NULL), a_instance(NULL)
-  {Assert(0); }
 
   void DksBackbone::m_sendToService(NetIdentity ni, LargeMessage* lm){
     int hsh =  lf_hashNetIdentity(ni);  
@@ -125,10 +111,10 @@ namespace _dss_internal{
     lm_msg->pushLM(lm); 
     if(a_instance->m_route(hsh, new DksBackboneMessage(lm_msg)) == DRR_DO_LOCAL){
       printf("doing it local\n"); 
-      NetIdNode *nin = a_serviceHT->m_findNetId(ni);
+      BackboneServiceNode *nin = a_serviceHT.lookup(ni.hashCode(), ni);
       if(nin){
 	printf("found service\n");
-	BackboneService *bs = static_cast<DksBackboneId2Srvc*>(nin)->a_srv;
+	BackboneService *bs = nin->a_srv;
 	lm_msg->popInt(); 
 	lm_msg->popNetId(); 
 	bs->m_messageReceived(lm_msg->popLM(), m_getEnvironment());   
@@ -150,8 +136,8 @@ namespace _dss_internal{
     printf("Inserting %d -- ", hsh); 
     if(a_instance->m_route(hsh, new DksBackboneMessage(lm_msg)) == DRR_DO_LOCAL){
       printf("local \n"); 
-      DksBackboneId2Srvc* srv = new DksBackboneId2Srvc(ni, bs); 
-      a_serviceHT->m_insertNetId(srv); 
+      BackboneServiceNode* srv = new BackboneServiceNode(ni, bs); 
+      a_serviceHT.insert(srv); 
     }
     else{
       printf("remote\n"); 
@@ -165,10 +151,10 @@ namespace _dss_internal{
     switch(static_cast<BbMsgType>(lm_msg->popInt())){
     case  DBMT_SERVICE_MSG:{
       NetIdentity ni = lm_msg->popNetId(); 
-      NetIdNode *nin = a_serviceHT->m_findNetId(ni);
+      BackboneServiceNode *nin = a_serviceHT.lookup(ni.hashCode(), ni);
       LargeMessage *lm = lm_msg->popLM(); 
       if(nin){
-	BackboneService *bs = static_cast<DksBackboneId2Srvc*>(nin)->a_srv;
+	BackboneService *bs = nin->a_srv;
 	bs->m_messageReceived(lm, m_getEnvironment()); 
       }
       else{
@@ -202,8 +188,8 @@ namespace _dss_internal{
     switch(type){
     case BST_MOBILE_COORDINATOR:{
       BackboneService *bs = gf_createMcBackbineST(ser_lm); 
-      DksBackboneId2Srvc* srv = new DksBackboneId2Srvc(ni, bs); 
-      a_serviceHT->m_insertNetId(srv); 
+      BackboneServiceNode* srv = new BackboneServiceNode(ni, bs); 
+      a_serviceHT.insert(srv); 
       break; 
     }
     default: 
@@ -213,10 +199,9 @@ namespace _dss_internal{
    
   DksMessage* DksBackbone::m_divideResp(int start, int stop, int n){
     printf("Dividing -- drop [%d -- %d]\n", start, stop); 
-    SimpleList<DksBackboneId2Srvc*> found;
-    for(NetIdNode *node = a_serviceHT->m_getNext(NULL) ; node != NULL; node = a_serviceHT->m_getNext(node)) {
-      DksBackboneId2Srvc* bs = static_cast<DksBackboneId2Srvc*>(node); 
-
+    SimpleList<BackboneServiceNode*> found;
+    BackboneServiceNode* bs;
+    for (bs = a_serviceHT.getFirst() ; bs; bs = a_serviceHT.getNext(bs)) {
       if(lf_keyInInterval(lf_hashNetIdentity(bs->m_getNetId()), start, stop, n)){
 	found.push(bs);
 	printf("node %d is a droper\n", lf_hashNetIdentity(bs->m_getNetId())); 
@@ -227,8 +212,8 @@ namespace _dss_internal{
   
     LargeMessage *lm = new LargeMessage(); 
     while (!found.isEmpty()) {
-      DksBackboneId2Srvc *db = found.pop();
-      a_serviceHT->m_removeNetId(db);
+      BackboneServiceNode *db = found.pop();
+      a_serviceHT.remove(db);
       lm->pushNetId(db->m_getNetId());
       lm->pushInt(db->a_srv->m_getType()); 
       lm->pushLM(db->a_srv->m_transferService()); 

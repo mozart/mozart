@@ -202,8 +202,6 @@ namespace _dss_internal{
   
   void
   DSS_Environment::m_gcDssResources(){
-    printf("***************************** => GC\n"); 
-    
     // Scans all tables and components and marks up resources
     
     // For resources connected to managers
@@ -215,6 +213,10 @@ namespace _dss_internal{
     a_proxyTable->m_gcResources();
     
     a_dksInstHT->m_gcResources();
+
+    a_threadTable->m_gcResources();
+
+    a_nameTable->m_gcResources();
     
     a_msgnLayer->m_gcResources();
   }
@@ -320,18 +322,13 @@ namespace _dss_internal{
 
 
   bool
-  DSS_Environment::m_orderEntities(AbstractEntity* const ae_first,
-				   AbstractEntity* const ae_second){
-  // *** Sort on dsite first and then number ***
-
-  // Get the AS_Node through dynamic casting, this is necessary since
-  // there is no straight inheritance line
-  AS_Node* asn1 = dynamic_cast<AS_Node*>(ae_first->getCoordinatorAssistant());
-  AS_Node* asn2 = dynamic_cast<AS_Node*>(ae_second->getCoordinatorAssistant());
-  Assert(asn1);
-  Assert(asn2);
-  return asn1->m_getNetId() < asn2->m_getNetId();
-}
+  DSS_Environment::m_orderEntities(AbstractEntity* const ae1,
+				   AbstractEntity* const ae2){
+    // use the order defined on NetIds
+    Proxy* p1 = static_cast<Proxy*>(ae1->getCoordinatorAssistant());
+    Proxy* p2 = static_cast<Proxy*>(ae2->getCoordinatorAssistant());
+    return p1->m_getNetId() < p2->m_getNetId();
+  }
 
   
   
@@ -452,25 +449,12 @@ bool DSS_Object::m_orderEntities(AbstractEntity* const ae_first,
 // NEW IO interface
 
 
-GlobalNameInterface* DSS_Object::getName(void* ref){
-  return new GlobalName((reinterpret_cast<u32>(_a_env->a_myDSite)),
-			_a_env->a_nameTable->getNextId(), 
-			ref);
-}
-  
-GlobalNameInterface* DSS_Object::findName(GlobalNameInterface* ni) {
-  return _a_env->a_nameTable->m_find(static_cast<GlobalName*>(ni));
-}
-
-
-void DSS_Object::addName(GlobalNameInterface * ni) {
-  _a_env->a_nameTable->m_add(static_cast<GlobalName*>(ni));
+GlobalNameInterface* DSS_Object::createName(void* ref){
+  return _a_env->a_nameTable->m_create(ref);
 }
 
 GlobalNameInterface* DSS_Object::unmarshalName(DssReadBuffer* buf){
-  unsigned int pk = gf_UnmarshalNumber(buf);
-  unsigned int sk = gf_UnmarshalNumber(buf);
-  return new GlobalName(pk, sk, NULL);
+  return _a_env->a_nameTable->m_unmarshal(buf);
 }
 
 

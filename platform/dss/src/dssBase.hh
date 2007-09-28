@@ -87,7 +87,6 @@ namespace _dss_internal{ //Start namespace
   class ProtocolProxy;
   class DssReadByteBuffer;
   class DssWriteByteBuffer;
-  class AS_Node;
   class Proxy;
   class ProxyTable;
   class CoordinatorTable; 

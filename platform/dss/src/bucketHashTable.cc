@@ -32,6 +32,7 @@
 #include <math.h>
 #include <stdlib.h>
 
+/******* deprecated
 
   // ********************************************************************** 
   //      BUCKET HASH TABLE                                                 
@@ -208,3 +209,4 @@ BucketHashNode *BucketHashTable::htGetNext(BucketHashNode *n){
   return NULL;
 }
       
+*/

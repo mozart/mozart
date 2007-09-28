@@ -3,7 +3,7 @@
  *    Per Sahlin (sahlin@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Per Sahlin, 2004
@@ -29,21 +29,38 @@
 
 #include "msl_serialize.hh"
 #include "dss_global_name.hh"
+
 namespace _dss_internal{ //Start namespace
   
-  GlobalName::~GlobalName() {
-   }
-  
   void GlobalName::marshal(DssWriteBuffer* bb){
-    gf_MarshalNumber(bb, a_pk);
-    gf_MarshalNumber(bb, a_sk);
+    gf_marshalNetIdentity(bb, m_getNetId());
   }
 
-
-  GlobalNameTable::~GlobalNameTable() {
-    
+  GlobalName::~GlobalName() {
+    table->remove(this);     // remove itself from table
   }
 
-  
+  GlobalName* GlobalNameTable::m_unmarshal(DssReadBuffer* bb) {
+    NetIdentity ni = gf_unmarshalNetIdentity(bb, m_getEnvironment());
+    GlobalName* gn = lookup(ni.hashCode(), ni);
+    if (gn == NULL) {
+      gn = new GlobalName(this, ni, NULL);
+      insert(gn);
+    }
+    return gn;
+  }
+
+  GlobalName* GlobalNameTable::m_create(void* ref) {
+    NetIdentity ni = m_createNetIdentity();
+    GlobalName* gn = new GlobalName(this, ni, ref);
+    insert(gn);
+    return gn;
+  }
+
+  void GlobalNameTable::m_gcResources() {
+    for (GlobalName* gn = getFirst(); gn; gn = getNext(gn)) {
+      gn->m_getGUIdSite()->m_makeGCpreps();
+    }
+  }
 
 } //end namespace

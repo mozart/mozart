@@ -3,7 +3,7 @@
  *    Erik Klintskog
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Erik Klintskog, 2002
@@ -32,6 +32,7 @@
 #include "dssBase.hh"
 #include "msl_serialize.hh"
 #include "dss_msgLayerInterface.hh"
+
 namespace _dss_internal{ //Start namespace
   
 #ifdef DEBUG_CHECK
@@ -39,23 +40,24 @@ namespace _dss_internal{ //Start namespace
 #endif
   
   GlobalThread::GlobalThread(NetIdentity ni, GlobalThreadTable* const ext):
-    NetIdNode(ni),
+    NetIdNode(ni), BucketHashNode<GlobalThread>(),
     DssThreadId(), 
-    a_exit(ext){
+    a_exit(ext)
+  {
     DebugCode(a_allocated++);
   }
 
-
   GlobalThread::GlobalThread(GlobalThreadTable* const ext):
-    NetIdNode(),
+    NetIdNode(), BucketHashNode<GlobalThread>(),
     DssThreadId(), 
-    a_exit(ext){
+    a_exit(ext)
+  {
     DebugCode(a_allocated++);
   }
   
   void
   GlobalThread::dispose(){
-    a_exit->m_del(this); // remove from table and deletes too
+    a_exit->remove(this);   // remove from table and deletes too
     delete this; 
   }
   
@@ -64,32 +66,39 @@ namespace _dss_internal{ //Start namespace
     m_getGUIdSite()->m_makeGCpreps();
   }
 
+  /************************* GlobalThreadTable *************************/
 
   GlobalThread*
   GlobalThreadTable::insertDistThread(NetIdentity ni){
     GlobalThread* thr = new GlobalThread(ni, this); 
-    m_insertNetId(thr); 
+    insert(thr); 
     return thr; 
   }  
 
   GlobalThread*
   GlobalThreadTable::createDistThread(){
-    GlobalThread* thr = new GlobalThread(this); 
-    m_addNetId(thr); 
-    return thr; 
-  }  
+    return insertDistThread(m_createNetIdentity()); 
+  }
+
+  void GlobalThreadTable::m_gcResources() {
+    for (GlobalThread* t = getFirst(); t; t = getNext(t)) {
+      t->m_makeGCpreps();
+    }
+  }
+
+
 
   GlobalThread *gf_popThreadIdVal(::MsgContainer *msg, DSS_Environment* env){
     NetIdentity ni = gf_popNetIdentity(msg); 
-    GlobalThread *thread = env->a_threadTable->m_find(ni); 
+    GlobalThread *thread = env->a_threadTable->m_find(ni);
     if(thread == NULL){
       thread = env->a_threadTable->insertDistThread(ni);
     }
     return thread;
   }
-  
+
   void  gf_pushThreadIdVal(::MsgContainer* msg, GlobalThread* th){
     gf_pushNetIdentity(msg, th->m_getNetId()); 
   }
-  
+
 }// End Namespace

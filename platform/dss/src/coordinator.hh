@@ -2,8 +2,9 @@
  *  Authors:
  *    Zacharias El Banna, 2002
  *    Erik Klintskog,     2004
+ *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Zacharias El Banna, 2002
@@ -60,21 +61,19 @@ namespace _dss_internal{ //Start namespace
   // AS is an abstract base-class 
   //
   // 
-  
+
   class AS_Node: public NetIdNode, public DSS_Environment_Base {
   public:
     const AccessArchitecture a_aa:20;
-  protected:
-    ::MsgContainer *m_createASMsg(const MessageType& mt);
-  public:
 
-    AS_Node(NetIdentity ni, const AccessArchitecture& a, DSS_Environment* const env);
+    AS_Node(NetIdentity ni, const AccessArchitecture& a,
+	    DSS_Environment* const env);
     AS_Node(const AccessArchitecture& a, DSS_Environment* const env);
     
-    virtual ~AS_Node()=0;
+    virtual ~AS_Node() {}
     
-    inline AccessArchitecture m_getASname(){ return a_aa; }
-    
+    AccessArchitecture m_getASname(){ return a_aa; }
+    ::MsgContainer *m_createASMsg(const MessageType& mt);
   };
 
 
@@ -84,7 +83,7 @@ namespace _dss_internal{ //Start namespace
   // Coordinator is an abstract base-class
   //
 
-  class Coordinator: public AS_Node {
+  class Coordinator : public AS_Node, public BucketHashNode<Coordinator> {
     friend class CoordinatorTable;
   protected:
     Proxy*                 a_proxy;
@@ -92,10 +91,12 @@ namespace _dss_internal{ //Start namespace
   public:
     ProtocolManager*       a_prot;
     HomeReference*         a_homeRef; 
+
   private:
     Coordinator& operator=(const Coordinator&){ return *this; }
     Coordinator();
     Coordinator(const Coordinator&); 
+
   public:
 #ifdef DEBUG_CHECK
     static int a_allocated;
@@ -104,13 +105,12 @@ namespace _dss_internal{ //Start namespace
     // ************* CONSTRUCTORS *******************
     Coordinator(const AccessArchitecture& a,
 		ProtocolManager* const prot, DSS_Environment* const env);
-
     Coordinator(NetIdentity ni, const AccessArchitecture& a,
 		ProtocolManager* const prot, DSS_Environment* const env);
     virtual ~Coordinator();
     
-    // Called when the a proxy is created for the coordinator(connects the coordinator to 
-    // possible home proxy)
+    // Called when the a proxy is created for the coordinator(connects
+    // the coordinator to possible home proxy)
     virtual void    m_initProxy(Proxy *)=0;
     
     inline Proxy *m_getProxy() const { return a_proxy; }
@@ -173,7 +173,8 @@ namespace _dss_internal{ //Start namespace
   // endpoint for the Glue through CoordinatorAssistant
   //
 
-  class Proxy: public AS_Node, public ::CoordinatorAssistant{
+  class Proxy : public AS_Node, public BucketHashNode<Proxy>,
+		public CoordinatorAssistant {
     friend class ProxyTable;
     friend class ProxyProtocol;
   public:
@@ -310,22 +311,18 @@ namespace _dss_internal{ //Start namespace
   };
 
 
-  // ******************************** CoordinatorTable *********************************
-  // *                                                                             *
-  // *******************************************************************************
+  // ************************* CoordinatorTable *************************
   
-  class CoordinatorTable:private NetIdHT {
+  class CoordinatorTable : public NetIdHT, public BucketHashTable<Coordinator> {
   public:
     CoordinatorTable(const int& sz, DSS_Environment* env):
-      NetIdHT(sz, env){}
+      NetIdHT(env), BucketHashTable<Coordinator>(sz) {}
     
-    inline void m_insert(Coordinator* man) {m_insertNetId(man); }
-    inline void m_add(Coordinator*  man){ m_addNetId(man); }
-    inline void m_del(Coordinator* man) { m_removeNetId(man); }
+    void m_insert(Coordinator* man) { insert(man); }
+    void m_add(Coordinator*  man) { m_addNetIdentity(man); insert(man); }
+    void m_del(Coordinator* man) { remove(man); }
 
-    inline Coordinator *m_find(NetIdentity ni){
-      return static_cast<Coordinator *>(m_findNetId(ni));
-    }
+    Coordinator *m_find(NetIdentity ni) { return lookup(ni.hashCode(), ni); }
     
     void m_siteStateChange(DSite *, const DSiteState&);
     // ******************  GC ***********************
@@ -337,21 +334,17 @@ namespace _dss_internal{ //Start namespace
   };
   
 
-  // ******************************* ProxyTable ************************************
-  // *                                                                             *
-  // *******************************************************************************
+  // ************************* ProxyTable *************************
   
-  class ProxyTable:private NetIdHT{
+  class ProxyTable : public NetIdHT, public BucketHashTable<Proxy> {
   public:
     ProxyTable(const int& sz, DSS_Environment* env):
-      NetIdHT(sz, env){}
+      NetIdHT(env), BucketHashTable<Proxy>(sz) {}
     
-    inline void m_insert(Proxy* pxy) {m_insertNetId(pxy); }
-    inline void m_remove(Proxy* const pxy) { m_removeNetId(pxy);  }
+    void m_insert(Proxy* pxy) { insert(pxy); }
+    void m_remove(Proxy* const pxy) { remove(pxy); }
 
-    inline Proxy *m_find(NetIdentity ni){
-      return static_cast<Proxy *>(m_findNetId(ni));
-    }
+    Proxy *m_find(NetIdentity ni) { return lookup(ni.hashCode(), ni); }
     
     void m_siteStateChange(DSite *, const DSiteState&);
     // ******************  GC ***********************
