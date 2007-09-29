@@ -101,6 +101,16 @@ export
    %% Variable Variable Boolean relation propagator
    varRel:  VarRel
 
+   %% boolean relations
+   and: And
+   'or': Or
+   xor: Xor
+   imp: Imp
+   eqv: Eqv
+
+   %% some aliases
+   disj: And
+   conj: Or
    
 %    conjA      :Bool_and_arr
 %    disjA      :Bool_or_arr
@@ -175,10 +185,26 @@ define
       end
    end
 
-%   local
-%      \insert GeIntVarDist
-%   in
-%   Distribute = skip %IntVarDistribute
-%   end
 
+   %% Bolean relations (ropagators)
+   proc {And X Y Z}
+      {VarRel X BOT.and Y Z}
+   end
+
+   proc {Or X Y Z}
+      {VarRel X BOT.'or' Y Z}
+   end
+
+   proc {Xor X Y Z}
+      {VarRel X BOT.xor Y Z}
+   end
+
+   proc {Imp X Y Z}
+      {VarRel X BOT.imp Y Z}
+   end
+
+   proc {Eqv X Y Z}
+      {VarRel X BOT.eqv Y Z}
+   end
+   
 end
