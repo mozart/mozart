@@ -109,8 +109,8 @@ export
    eqv: Eqv
 
    %% some aliases
-   disj: And
-   conj: Or
+   disj: Or
+   conj: And
    
 %    conjA      :Bool_and_arr
 %    disjA      :Bool_or_arr
