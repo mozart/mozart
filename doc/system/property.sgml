@@ -581,7 +581,8 @@
                 <Tr><Th/<<'openbsd-i486'>>/  <Th/<<'openbsd'>>/ <Th/<<'i486'>>/</Tr>
                 <Tr><Th/<<'openbsd-sparc>>/  <Th/<<'openbsd'>>/ <Th/<<'sparc>>/</Tr>
                 <Tr><Th/<<'osf1-alpha'>>/    <Th/<<'osf1'>>/ <Th/<<'alpha'>>/</Tr>
-                <Tr><Th/<<'powermac-darwin'>>/    <Th/<<'powermac'>>/ <Th/<<'darwin'>>/</Tr>
+                <Tr><Th/<<'darwin-powermac'>>/    <Th/<<'darwin'>>/ <Th/<<'powermac'>>/</Tr>
+                <Tr><Th/<<'darwin-i386'>>/    <Th/<<'darwin'>>/ <Th/<<'i386'>>/</Tr>
                 <Tr><Th/<<'solaris-i486'>>/  <Th/<<'solaris'>>/ <Th/<<'i486'>>/</Tr>
                 <Tr><Th/<<'solaris-sparc'>>/ <Th/<<'solaris'>>/ <Th/<<'sparc'>>/</Tr>
                 <Tr><Th/<<'sunos-sparc'>>/   <Th/<<'sunos'>>/   <Th/<<'sparc'>>/</Tr>
