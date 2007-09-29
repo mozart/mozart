@@ -1,21 +1,47 @@
-#!/bin/sh
+#!/bin/bash
 
 OZHOME=$1/Contents/Resources/
 CD="$1/Contents/Resources/CocoaDialog.app/Contents/MacOS/CocoaDialog"
+#CD="Mozart.app/Contents/Resources/CocoaDialog.app/Contents/MacOS/CocoaDialog"
+
 home=`cd ~ && pwd`
 
+firstTime()
+{
+    rv="0"
+    if [ ! -e "$home/.mozartapp" ]; then
+        rv=`$CD yesno-msgbox --no-cancel --title "Mozart" --text "This is the first time you run mozart." --informative-text "Command lines tools will be added to your PATH. To use it please open a new terminal." `
+        if [ "$rv" == "1" ]; then
+            `echo "export PATH=\$PATH:$OZHOME/bin" >> $home/.profile`
+        else
+            `echo "OZHOME=$OZHOME" > $home/.mozartapp `
+        fi
+    fi
+}
 
-if [ -e "$home/.emacs" ]; then
-#       if [ grep -q "(require )" ]; "$home/.emacs" then
-                `$CD ok-msgbox --no-cancel --title ".emacs present" --text "Emacs configuration file is present." --informative-text "this may cause problems with mozart"`
-#       fi
+detectEmacsConf()
+{
+    if [ -e "$home/.emacs" ]; then
+        has_oz=`grep "(require 'oz)" $home/.emacs`
+        echo $has_oz
+        if [ ! "$has_oz"x == "x" ]; then
+            `$CD ok-msgbox --no-cancel --title ".emacs present" --text "Emacs configuration file is present." --informative-text "this file contains a line (require 'oz) and may cause problems"`
+        fi
+    fi
+}
 
-fi
-
-if [ -ne "/Applications/Aquamacs Emacs.app" ]; then
+detectAquamacs()
+{
+    if [ ! -e "/Applications/Aquamacs Emacs.app" ]; then
         `$CD ok-msgbox --no-cancel --title "Aquamacs not found" --text "This application is needed to run Mozart" --informative-text "You can download it from http://aquamacs.org/"`
-        exit
-fi
+        exit 2
+    fi
+}
+
+firstTime
+detectEmacsConf
+detectAquamacs
+
 
 ######################################################################
 # you should not edit below this line
