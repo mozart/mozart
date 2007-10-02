@@ -236,7 +236,7 @@ IntVarArgs array(__x##tIn);					\
     array=_array;                                       \
   }							\
   else {						\
-    assert(OZ_isRecord(t));				\
+    Assert(OZ_isRecord(t));				\
     OZ_Term al = OZ_arityList(t);			\
     sz = OZ_width(t);					\
     Gecode::IntVarArgs _array(sz);          \
@@ -279,7 +279,7 @@ BoolVarArgs array(__x##tIn);					\
     array=_array;                                       \
   }							\
   else {						\
-    assert(OZ_isRecord(t));				\
+    Assert(OZ_isRecord(t));				\
     OZ_Term al = OZ_arityList(t);			\
     sz = OZ_width(t);					\
     Gecode::BoolVarArgs _array(sz);          \

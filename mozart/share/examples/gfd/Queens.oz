@@ -26,40 +26,37 @@
 
 declare
 
+GenSelVar = map(naive: fun {$ _ _} false end )
+GenSelFil = map(undet: fun {$ X} {GFD.reflect.size X}>1 end)
+SelVal = map(min: GFD.reflect.min)
 
-%% a naive distributor that takes advantage of batch recomputation
-proc {NaiveDistribute Xs}
+proc {Distribute generic(selvar:Var filter:Fil value:Val) Xs}
   V = if {IsList Xs} then {List.toTuple '#' Xs} else Xs end
    proc {Distribute L}
-      Tmp = {Space.getChoice}
-   in
-      %{Show [resultado getChoice Tmp]}
-     case Tmp
+     case {Space.getChoice}
      of I#D then
-	%{Show [there are bd to apply I#D]}
 	case D
 	of compl(M) then V.I \=: M
 	[] M then V.I =: M
 	end
 	{Distribute L}
      [] nil then
-	%{Show [a new branch will be computed]}
-        case {List.dropWhile L fun {$ I#X} {IsDet X} end}
-        of nil then
-	   skip
-        [] L1 then
-	   I#X|_=L1
-	   %{Inspect 'I'#I}
-           M={GFD.reflect.min X}
-        in
-           {Space.branch [I#M I#compl(M)]}
-           {Distribute L1}
+	LFil = {List.filter L fun {$ I#X} {Fil X} end}
+     in
+	if LFil \= nil then
+	   LSel = {List.foldL LFil fun {$ I#X Acc} if {Var X Acc} then Acc else I#X end end LFil.1}
+	   I#X = LSel
+           M={Val X}
+	in
+	   {Space.branch [I#M I#compl(M)]}
+           {Distribute LFil}
         end
      end
   end
 in
   {Distribute {Record.toListInd V}}
 end
+
 
 fun{Queens N}
    proc{$ Root}
@@ -73,46 +70,9 @@ fun{Queens N}
       {GFD.distinctOffset Root C1}
       {GFD.distinctOffset Root C2}
       
-      %{Distribute D VarNone ValMin}
-      {GFD.distribute naive Root}
-      %{NaiveDistribute Root}
+      %{GFD.distribute naive Root}
+      {Distribute generic(selvar:GenSelVar.naive filter:GenSelFil.undet value:SelVal.min) Root}
    end
 end
 
-%S = {New Search.object script({Queens 9} rcd:4)}
-%{Show {S last($)}}
-
-%{Show {SearchAll {Queens 6}}}
-
-
-
-proc {AllNR KF S W Or Os}
-   if {IsFree KF} then
-      case {Space.ask S}
-      of failed then Os=Or
-      [] succeeded then Os={W S}|Or
-      [] branch([B]) then
-	 {Show [no deberia estar aqui]}
-	 {Space.commitB S B}
-	 Os = {AllNR KF S W Or}
-      [] branch(B|Br) then C={Space.clone S} Ot in
-	 {Space.commitB S B}
-	 {Space.commitB2 C Br}
-	 Os={AllNR KF S W Ot}
-	 Ot={AllNR KF C W Or}
-      end
-   else Os=Or
-   end
-end
-
-  
-
-proc{Foo Root}
-   X Y
-in
-   Root = [X Y]
-   X::0#1 Y::0#1
-   {NaiveDistribute Root}
-end
-
-{Show {AllNR _ {Space.new  Foo} Space.merge nil}}
+{Show {SearchAll {Queens 5}}}
