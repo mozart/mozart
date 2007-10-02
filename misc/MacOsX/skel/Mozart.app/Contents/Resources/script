@@ -10,12 +10,11 @@ firstTime()
 {
     rv="0"
     if [ ! -e "$home/.mozartapp" ]; then
-        rv=`$CD yesno-msgbox --no-cancel --title "Mozart" --text "This is the first time you run mozart." --informative-text "Command lines tools will be added to your PATH. To use it please open a new terminal." `
-        if [ "$rv" == "1" ]; then
-            `echo "export PATH=\$PATH:$OZHOME/bin" >> $home/.profile`
-        else
+                rv=`$CD yesno-msgbox --no-cancel --title "Mozart" --text "This is the first time you run mozart." --informative-text "Command lines tools will be added to your PATH. To use it please open a new terminal." `
+                if [ "$rv" == "1" ]; then
+                `echo "export PATH=\$PATH:$OZHOME/bin" >> $home/.profile`
+                fi
             `echo "OZHOME=$OZHOME" > $home/.mozartapp `
-        fi
     fi
 }
 

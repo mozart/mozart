@@ -39,7 +39,7 @@ VERSION=1.3.2
 
 APP=$(NAME).app
 EXT_LIBS=$(APP)/Contents/Resources/ext_libs
-EXEC=$(APP)/Contents/Resources/platform/i486-darwin/emulator.exe
+EXEC=$(APP)/Contents/Resources/platform/darwin-i386/emulator.exe
 
 
 ##
