@@ -132,14 +132,12 @@ private:
 protected:
   int index;        /// The index inside the corresponding GenericSpace
 
- 
-   
   /// Copy constructor
   GeVar(GeVar& gv) : 
     GeVarBase(extVar2Var(&gv)->getBoardInternal()), type(gv.type), 
     index(gv.index)
   {
-    // ensure a valid type of varable.
+    // ensure a valid type of variable.
     Assert(type >= T_GeIntVar && type <= T_GeBoolVar);
   }
 
@@ -219,7 +217,6 @@ public:
       infinite execution of BIwait built-in when it is used.
   */ 
   OZ_Return addSuspV(TaggedRef*, Suspendable* susp) {
-    //printf("addSuspV\n");fflush(stdout);
     extVar2Var(this)->addSuspSVar(susp);
     return SUSPEND;
   }
@@ -279,15 +276,6 @@ public:
 
   /// \name Reflection mechanisms
   //@{
-protected:
-  
-  /**
-     \brief Test whether the variable has a domain reflection propagator.
-     This propagator reflects any domain change in mozart. It is useful
-     when a variable is browsed or inspected. It is also neede to wake up the
-     supervisor thread if variable is not local to the space.
-  */
-  //bool hasDomRefl;
 public:
   /** 
       \brief Tests whether this GeVar represents an assigned variable.
@@ -314,8 +302,8 @@ public:
 */
 inline
 bool oz_isGeVar(OzVariable *v) {
-  if ( v->getType() != OZ_VAR_EXT ) return false;
-  return var2ExtVar(v)->getIdV() == OZ_EVAR_GEVAR;
+	return v->getType() != OZ_VAR_EXT ?  false :
+					var2ExtVar(v)->getIdV() == OZ_EVAR_GEVAR;
 }
 
 /**
@@ -364,9 +352,7 @@ public:
   }
 
   Gecode::ExecStatus propagate(Gecode::Space* s){
-    //printf("Variable determined by gecode....%d\n",index);fflush(stdout);
     
-
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
 
     if (!oz_isGeVar(ref))
@@ -416,12 +402,10 @@ public:
   virtual OZ_Term getVarRef(GenericSpace* s) {return s->getVarRef(index); }
 
   // this propagator should never fail nor subsume
-  Gecode::ExecStatus propagate(Gecode::Space* s) {
-    // printf("Variable inspected from mozart ....%d\n",index);fflush(stdout);    
+  Gecode::ExecStatus propagate(Gecode::Space* s) {  
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
    
     Assert(oz_isVarOrRef(ref));	
-    //OzVariable *var=extVar2Var(oz_getExtVar(oz_deref(ref)));
     
     if(oz_isGeVar(ref)) {
       OzVariable *var=extVar2Var(oz_getExtVar(oz_deref(ref)));
@@ -439,8 +423,6 @@ public:
 
 inline
 void checkGlobalVar(OZ_Term v) {
-  // Why this comparison is made with ints?
-  //cout<<"Inicio check: "<<oz_isInt(v)<<endl; fflush(stdout);
   Assert(oz_isGeVar(v));
   ExtVar *ev = oz_getExtVar(oz_deref(v));
   if (!oz_isLocalVar(ev)) {

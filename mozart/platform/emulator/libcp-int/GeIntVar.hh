@@ -153,7 +153,7 @@ bool OZ_isGeIntVar(OZ_Term v) {
   OZ_Term v_local = OZ_deref(v);
   if (oz_isGeVar(v_local)) {
     GeVar<Int::IntVarImp,PC_INT_DOM> *gv = 
-      static_cast< GeVar <Int::IntVarImp,PC_INT_DOM > * >(oz_getExtVar(v_local));
+      static_cast< GeVar_Int * >(oz_getExtVar(v_local));
     return gv->getType() == T_GeIntVar;
   }
   return false;
