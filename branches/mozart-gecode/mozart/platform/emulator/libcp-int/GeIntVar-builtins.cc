@@ -137,8 +137,9 @@ OZ_BI_end
 OZ_BI_define(int_dom,1,1)
 {
   if(!OZ_isGeIntVar(OZ_deref(OZ_in(0))))
-    RAISE_EXCEPTION("The variable must be a GeIntVar");
+    OZ_typeError(0,"IntVar");
   IntVar Tmp = get_IntVar(OZ_in(0));
+  
   IntVarRanges TmpRange(Tmp);
   int TotalRangs = 0;
   
@@ -165,7 +166,7 @@ OZ_BI_end
 OZ_BI_define(int_domList,1,1)
 {
   if(!OZ_isGeIntVar(OZ_deref(OZ_in(0))))
-    RAISE_EXCEPTION("The variables must be a GeIntVar");
+    OZ_typeError(0,"IntVar");
   IntVar Tmp = get_IntVar(OZ_in(0));
   IntVarRanges TmpRange(Tmp);
   OZ_Term TmpArray[Tmp.size()];
@@ -187,7 +188,7 @@ OZ_BI_end
 OZ_BI_define(int_nextLarger,2,1)
 {
   if(!OZ_isGeIntVar(OZ_deref(OZ_in(0))))
-    RAISE_EXCEPTION("The variables must be a GeIntVar");
+    OZ_typeError(0,"IntVar");
   int Val = OZ_intToC(OZ_in(1));
   IntVar Tmp = get_IntVar(OZ_in(0));
   IntVarRanges TmpRange(Tmp);
@@ -198,7 +199,7 @@ OZ_BI_define(int_nextLarger,2,1)
     if(TmpRange.min() > Val)
       OZ_RETURN_INT(TmpRange.min());
   }
-  RAISE_EXCEPTION("The domain does not have a next larger value input");
+  return OZ_typeError(0,"The domain does not have a next larger value input");
 
 } 
 OZ_BI_end
@@ -212,13 +213,13 @@ OZ_BI_end
 OZ_BI_define(int_nextSmaller,2,1)
 {
   if(!OZ_isGeIntVar(OZ_deref(OZ_in(0))))
-    RAISE_EXCEPTION("The variables must be a GeIntVar");
+    OZ_typeError(0,"IntVar");
   int Val = OZ_intToC(OZ_in(1));
   IntVar Tmp = get_IntVar(OZ_in(0));
   IntVarRanges TmpRange(Tmp);
   int Min = Gecode::Limits::Int::int_max;
   if(Tmp.min() >= Val)
-    RAISE_EXCEPTION("Input value is smaller that domain of input variable");
+    return OZ_typeError(0,"Input value is smaller that domain of input variable");
   for(;TmpRange(); ++TmpRange) {
     if(TmpRange.min() >= Val)
       OZ_RETURN_INT(Min);
@@ -227,8 +228,7 @@ OZ_BI_define(int_nextSmaller,2,1)
     if(TmpRange.max() < Val)
       Min = TmpRange.max();
   }
-  
-  RAISE_EXCEPTION("Unexpected error please communicate this bug to autors");
+  Assert(false);
 } 
 OZ_BI_end
 

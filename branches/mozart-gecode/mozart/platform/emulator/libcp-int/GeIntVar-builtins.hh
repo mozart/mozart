@@ -59,7 +59,7 @@
       _pairs[i][1] = OZ_intToC(OZ_getArg(_val,1));		\
     }								\
     else {							\
-      RAISE_EXCEPTION("Error, domain type unknown");		\
+      return OZ_typeError(arg,"domain type unknown");		\
     }								\
   }								\
   Gecode::IntSet ds(_pairs, length);
@@ -74,7 +74,7 @@
   else if(OZ_isGeIntVar(OZ_in(p))) {					\
     v = get_IntVar(OZ_in(p));						\
   }									\
-  else RAISE_EXCEPTION("The variables must be either GeIntVar or int");
+  else return OZ_typeError(p,"IntVar or Int"); 
 
 /*
   This macro declares a variable without comprising space stability.
@@ -97,7 +97,7 @@
     else if(OZ_isGeIntVar(x)) {					\
       v = get_IntVarInfo(x);					\
     } else							\
-      RAISE_EXCEPTION("Type error: Expected IntVar");		\
+      return OZ_typeError(p,"IntVar");		\
   }
 
 #define DeclareGeIntVar(p,v,sp)					        \
@@ -116,7 +116,7 @@
   else if(OZ_isGeIntVar(OZ_in(p))) {					\
     v = get_IntVar(OZ_in(p));						\
   }									\
-  else RAISE_EXCEPTION("The variables must be either GeIntVar or int");
+  else return OZ_typeError(p,"IntVar or Int");	
 
 
 #define DeclareGeIntVarT2(val,ar,i,sp)				\
@@ -161,7 +161,7 @@ bool v;\
     oz_suspendOn(makeTaggedRef(x_ptr));				\
   }\
   if (!OZ_isBool(v))\
-	   RAISE_EXCEPTION("Error, expected atom");	\
+	   return OZ_typeError(p,"atom");		\
   v = OZ_isTrue(x) ? true : false; \
 }
 

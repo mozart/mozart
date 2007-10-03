@@ -264,12 +264,12 @@ OZ_BI_define(bool_rel,4,0) {
 
   int consistencyLevel,relType; 
   if(!OZ_isInt(OZ_in(3))) {
-    RAISE_EXCEPTION("The last value must be the consistency level: relProp");
+    return OZ_typeError(3,"The value must be a consistency level");
   }
   consistencyLevel=OZ_intToC(OZ_in(3));
   
   if(!OZ_isInt(OZ_in(1))) {
-    RAISE_EXCEPTION("The second argument has to be a Relation Type: relProp");
+    return OZ_typeError(1,"Argument has to be a Relation Type");
   }
   relType=OZ_intToC(OZ_in(1));
   DeclareGeBoolVar(0,v1,gs);
