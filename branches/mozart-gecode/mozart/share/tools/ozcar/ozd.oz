@@ -108,9 +108,10 @@ define
 	 {E enqueue(mergeEnv(OPIEnv.full))}
 	 if Args.opi then
 	    OZVERSION = {Property.get 'oz.version'}
+		GECVERSION = {Property.get 'oz.gecode_version'}
 	    DATE      = {Property.get 'oz.date'}
 	 in
-	    {System.printError ('Mozart Engine '#OZVERSION#' ('#DATE#
+	    {System.printError ('Mozart Engine '#OZVERSION#' with Gecode '#GECVERSION#' ('#DATE#
 				') playing Oz 3\n\n')}
 	    File = {New Open.file init(name: stdout flags: [write])}
 	 else Port in

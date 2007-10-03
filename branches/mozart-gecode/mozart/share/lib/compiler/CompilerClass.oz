@@ -369,9 +369,10 @@ local
       end
       meth newListener(P)
 	 OZVERSION = {Property.get 'oz.version'}
+	 GECVERSION = {Property.get 'oz.gecode_version'}
 	 OZDATE    = {Property.get 'oz.date'}
       in
-	 {Send P info('Mozart Compiler '#OZVERSION#' ('#OZDATE#')'#
+	 {Send P info('Mozart Compiler '#OZVERSION#' with Gecode '#GECVERSION#' ('#OZDATE#')'#
 		      ' playing Oz 3\n\n')}
 	 {Send P switches(@switches)}
 	 {Send P maxNumberOfErrors(@options.maxNumberOfErrors)}

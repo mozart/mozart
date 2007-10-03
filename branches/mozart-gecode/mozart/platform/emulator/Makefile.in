@@ -456,6 +456,7 @@ $(BINDIR) $(INCDIR):
 version.cc: version.sed $(filter-out version.cc,$(ALLSRCS))
 	sed -e "s/HEREGOESDATE/@OZBUILDDATE@/" \
 	     -e "s/OZPLATFORM/$(PLATFORM)/" \
+		 -e "s/GECVERSION/${GECODEVERSION}/"\
 	     $(SRCDIR)/version.sed > version.cc
 
 depend:: version.cc $(ALLSRCS)
