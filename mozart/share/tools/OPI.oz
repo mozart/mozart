@@ -45,10 +45,11 @@ define
 
    local
       OZVERSION = {Property.get 'oz.version'}
+	  GECVERSION = {Property.get 'oz.gecode_version'}
       OZDATE    = {Property.get 'oz.date'}
    in
       {System.printError
-       'Mozart Engine '#OZVERSION#' ('#OZDATE#') playing Oz 3\n\n'}
+       'Mozart Engine '#OZVERSION#' with Gecode '#GECVERSION#' ('#OZDATE#') playing Oz 3\n\n'}
    end
 
    {Property.put 'oz.standalone' false}

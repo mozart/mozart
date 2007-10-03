@@ -28,5 +28,6 @@
 #include "config.h"
 
 char *AMVersion = OZVERSION;
+char *AMGecVersion = "GECVERSION";
 char *AMDate = "HEREGOESDATE";
 char *ozplatform = "OZPLATFORM";

@@ -46,7 +46,7 @@
 
 #include <stdarg.h>
 
-extern char *AMVersion, *AMDate;
+extern char *AMVersion, *AMGecVersion, *AMDate;
 
 // "ozplatform" (defined in version.cc) has the form <osname-cpu>, 
 extern char *ozplatform;
@@ -143,6 +143,7 @@ enum EmulatorPropertyIndex {
   PROP_OZ_CONFIGURE_HOME,
   PROP_OZ_EMULATOR_HOME,
   PROP_OZ_VERSION,
+  PROP_OZ_GEC_VERSION,
   PROP_OZ_DATE,
   // DISTRIBUTION
   PROP_DISTRIBUTION_VIRTUALSITES,
@@ -468,6 +469,7 @@ OZ_Term GetEmulatorProperty(EmulatorPropertyIndex prop) {
   CASE_ATOM(PROP_OZ_CONFIGURE_HOME,OZ_CONFIGURE_PREFIX);
   CASE_ATOM(PROP_OZ_EMULATOR_HOME,ozconf.emuhome);
   CASE_ATOM(PROP_OZ_VERSION,AMVersion);
+  CASE_ATOM(PROP_OZ_GEC_VERSION,AMGecVersion);
   CASE_ATOM(PROP_OZ_DATE,AMDate);
   // DISTRIBUTION
 #ifdef VIRTUALSITES
@@ -1228,6 +1230,7 @@ static const struct prop_entry prop_entries[] = {
   {"oz.emulator.home",PROP_OZ_EMULATOR_HOME},
   {"oz.version",PROP_OZ_VERSION},
   {"oz.date",PROP_OZ_DATE},
+  {"oz.gecode_version",PROP_OZ_GEC_VERSION},
   // Suspending on SimpleVars raises an exception
   {"oz.style.useFutures",PROP_OZ_STYLE_USE_FUTURES},
   // Distribution
