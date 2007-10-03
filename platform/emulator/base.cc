@@ -52,7 +52,7 @@ void prefixWarning()
   prefixError();
 }
 
-extern char *AMVersion, *AMDate, *ozplatform;
+extern char *AMVersion, *AMGecVersion, *AMDate, *ozplatform;
 
 void OZ_error(OZ_CONST char *format, ...)
 {
@@ -78,7 +78,7 @@ void OZ_error(OZ_CONST char *format, ...)
 	  "*** version:  %s\n"
 	  "*** platform: %s\n"
 	  "*** date:     %s\n\n",
-	  AMVersion,ozplatform,AMDate
+	  AMVersion,AMGecVersion,ozplatform,AMDate
 #endif
 	   );
   vfprintf(stderr,format,ap);
