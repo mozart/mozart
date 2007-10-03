@@ -216,7 +216,7 @@ OZ_BI_define(int_count,5,0)
     x1 = tmp;
   }
   else
-    RAISE_EXCEPTION("The second argument must be either Int or GeIntVar");
+    return OZ_typeError(1,"The second argument must be either Int or GeIntVar");
   
   if(OZ_isGeIntVar(OZ_deref(OZ_in(3))))
     x3 = get_IntVar(OZ_in(3));
@@ -226,7 +226,7 @@ OZ_BI_define(int_count,5,0)
     x3 = tmp;
   }
   else
-    RAISE_EXCEPTION("The threeth argument must be either Int or GeIntVar");
+    return OZ_typeError(3,"The threeth argument must be either Int or GeIntVar");
   try {
     count(sp,arreglo,x1,rl,x3,cl);
   }

@@ -2,8 +2,6 @@
 #ifndef __GEOZ_MISC_HH__
 #define __GEOZ_MISC_HH__
 
-#define RAISE_EXCEPTION(s)			\
-	return OZ_raiseC(s,0);
 
 #define RAISE_GE_EXCEPTION(e)			\
   return OZ_raiseC((char*)e.what(),0);

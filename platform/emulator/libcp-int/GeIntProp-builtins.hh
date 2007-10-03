@@ -106,7 +106,7 @@ IntArgs array(0);					\
 	type var;                                                      \
 	{\
 		if (!check(OZ_in(arg)))                                 \
-			RAISE_EXCEPTION(msg);                     \
+			return OZ_typeError(arg,msg);                     \
 		var=conv(OZ_in(arg));\
 	}
 

@@ -106,7 +106,7 @@ IntArgs array(0);					\
 		case 2: var = BOT_IMP; break;\
 		case 3: var = BOT_EQV; break;\
 		case 4: var = BOT_XOR; break;\
-		default: RAISE_EXCEPTION("Expecting atom with a lgical operation: and, or, imp, eqv, xor"); break;\
+		default: return OZ_typeError(arg,"Expecting atom with a lgical operation: and, or, imp, eqv, xor");\
 	}}	
 	
 
