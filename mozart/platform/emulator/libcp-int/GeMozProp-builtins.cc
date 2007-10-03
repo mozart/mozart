@@ -259,7 +259,7 @@ OZ_BI_define(int_sumCN,4,0)
 	int domain = OZ_intToC(Vec2[j]);
 	Tmpj.init(sp,domain,domain);
       }
-      else RAISE_EXCEPTION("Elements inside of OZ_vector must be GeIntVar or Int: sumCN");
+      else OZ_typeError(0,"Elements inside of OZ_vector must be GeIntVar or Int: sumCN");
       mult(sp,ArregloTmp[j-1],Tmpj,ArregloTmp[j],ICL_VAL);
     }
   }

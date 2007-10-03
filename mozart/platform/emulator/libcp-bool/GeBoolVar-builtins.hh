@@ -41,7 +41,7 @@
   else if(OZ_isGeBoolVar(OZ_in(p))) {					\
     v = get_BoolVar(OZ_in(p));						\
   }									\
-  else RAISE_EXCEPTION("The variables must be either GeIntVar or int");
+  else return OZ_typeError(p,"IntVar or Int");
 
 /*
   This macro declares a variable without comprising space stability.
@@ -63,7 +63,7 @@
     else if(OZ_isGeBoolVar(x)) {					\
       v = get_BoolVarInfo(x);					\
     } else							\
-      RAISE_EXCEPTION("Type error: Expected IntVar");		\
+      return OZ_typeError(p,"IntVar");		\
   }
 
 #define DeclareGeBoolVar(p,v,sp)					        \
@@ -81,7 +81,7 @@
   else if(OZ_isGeBoolVar(OZ_in(p))) {					\
     v = get_BoolVar(OZ_in(p));						\
   }									\
-  else RAISE_EXCEPTION("The variables must be either GeBoolVar or int");
+  else return OZ_typeError(p,"BoolVar or Int");
 
 
 #define DeclareGeBoolVarT2(val,ar,i)				\
