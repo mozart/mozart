@@ -10,10 +10,8 @@ firstTime()
 {
     rv="0"
     if [ ! -e "$home/.mozartapp" ]; then
-                rv=`$CD yesno-msgbox --no-cancel --title "Mozart" --text "This is the first time you run mozart." --informative-text "Command lines tools will be added to your PATH. To use it please open a new terminal." `
-                if [ "$rv" == "1" ]; then
+                `$CD ok-msgbox --no-cancel  --icon info --timeout 20 --title "Mozart" --text "This is the first time you run Mozart." --informative-text "Command lines tools (e.g., ozc, ozmake, oztool) will be added to your PATH. You can use these commands from a terminal." `
                 `echo "export PATH=\$PATH:$OZHOME/bin" >> $home/.profile`
-                fi
             `echo "OZHOME=$OZHOME" > $home/.mozartapp `
     fi
 }
@@ -24,7 +22,7 @@ detectEmacsConf()
         has_oz=`grep "(require 'oz)" $home/.emacs`
         echo $has_oz
         if [ ! "$has_oz"x == "x" ]; then
-            `$CD ok-msgbox --no-cancel --title ".emacs present" --text "Emacs configuration file is present." --informative-text "this file contains a line (require 'oz) and may cause problems"`
+            `$CD ok-msgbox --no-cancel --icon info --timeout 20 --title ".emacs present" --text "Emacs configuration file is present." --informative-text "this file contains a line (require 'oz) and may cause problems"`
         fi
     fi
 }
@@ -32,7 +30,7 @@ detectEmacsConf()
 detectAquamacs()
 {
     if [ ! -e "/Applications/Aquamacs Emacs.app" ]; then
-        `$CD ok-msgbox --no-cancel --title "Aquamacs not found" --text "This application is needed to run Mozart" --informative-text "You can download it from http://aquamacs.org/"`
+        `$CD ok-msgbox --no-cancel --icon info --timeout 20 --title "Aquamacs not found" --text "This application is needed to run Mozart" --informative-text "You can download it from http://aquamacs.org/"`
         exit 2
     fi
 }
