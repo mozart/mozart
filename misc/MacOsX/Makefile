@@ -26,8 +26,20 @@
 ## Cocoa dialog : download it from http://cocoadialog.sourceforge.net/
 CD=/Users/ggutierrez/Desktop/CocoaDialog.app
 
+
+##
+# Mozart Install
+##
+MOZ_HOME=/Users/ggutierrez/Work/moz132
+## Directories of mozart installation to be bundled.
+MOZ_DIRS= platform bin cache share include
+
+
 ##Mozart documentation folder (html)
 MOZ_DOC_HTML=/Users/ggutierrez/doc
+
+##Mozart standard library documentation dir (html)
+MOZ_STDLIB_HTML=$(MOZ_HOME)/doc
 
 ################################################################################
 # Customizable variables
@@ -39,15 +51,9 @@ VERSION=1.3.2
 
 APP=$(NAME).app
 EXT_LIBS=$(APP)/Contents/Resources/ext_libs
-EXEC=$(APP)/Contents/Resources/platform/darwin-i386/emulator.exe
+EXEC=$(APP)/Contents/Resources/platform/i486-darwin/emulator.exe
 
 
-##
-# Mozart Install
-##
-MOZ_HOME=/Users/ggutierrez/Work/moz
-## Directories of mozart installation to be bundled.
-MOZ_DIRS= platform bin cache share include
 # External libraries thet mozart uses (i.e. gmp)
 MOZ_LIBS_DIR=/Users/ggutierrez/Work/ext_libs
 
@@ -119,6 +125,10 @@ $(MASTER_DMG): $(WC_DMG) $(SOURCE_FILES)
 	
 	rm -rf "$(WC_DIR)/doc"
 	ditto -rsrc "$(MOZ_DOC_HTML)" "$(WC_DIR)/doc/"; 
+	
+	rm -rf "$(WC_DIR)/stdlib-doc"
+	ditto -rsrc "$(MOZ_STDLIB_HTML)/mozart-ozmake" "$(WC_DIR)/stdlib-doc/mozart-ozmake";
+	ditto -rsrc "$(MOZ_STDLIB_HTML)/mozart-stdlib" "$(WC_DIR)/stdlib-doc/mozart-stdlib";
 	
 	WC_DEV=`hdiutil info | grep "$(WC_DIR)" | grep "Apple_HFS" | awk '{print $$1}'` && \
 	hdiutil detach $$WC_DEV -quiet -force
