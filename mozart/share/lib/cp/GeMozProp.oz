@@ -154,31 +154,3 @@ end
 Reified.int = _ 
 
 
-%% 0/1 Propagators
-% proc{Conj D1 D2 D3}
-%    {Bool_Gand D1 D2 D3 Cl.val}
-% end
-
-% proc{Disj D1 D2 D3}
-%    {Bool_Gor D1 D2 D3 Cl.val}
-% end
-
-% proc{Xor D1 D2 D3}
-%    {Bool_Gxor D1 D2 D3 Cl.val}
-% end
-
-% proc{Not D1 D2}
-%    {Bool_Gnot D1 D2 Cl.val}
-% end
-
-% proc{Imp D1 D2 D3}
-%    {Bool_Gimp D1 D2 D3 Cl.val}
-% end
-
-% proc{Equi D1 D2 D3}
-%    {Bool_Geqv D1 D2 D3 Cl.val}
-% end
-
-   
-   
-%%end

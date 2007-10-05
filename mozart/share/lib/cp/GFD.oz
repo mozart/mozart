@@ -89,12 +89,6 @@ export
    int_sumCN:            Int_sumCN
   % int_disjoint:         Int_disjoint
    %int_reified_int:      Int_reified_int
- %   bool_Gand:            Bool_Gand
-%    bool_Gor:             Bool_Gor
-%    bool_Gxor:            Bool_Gxor
-%    bool_Gnot:            Bool_Gnot
-%    bool_Gimp:            Bool_Gimp
-%    bool_Geqv:            Bool_Geqv
 
    %%Miscellaneous propagators
    plus:            Plus
@@ -138,15 +132,6 @@ export
    %%Propagators
    Abs
    sortedness: Int_sortedness
-
-
-   %% 0/1 propagators
-%   Conj
-%    Disj
-%    Xor
-%    Not
-%    Imp
-%    Equi   
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -280,12 +265,6 @@ define
    Int_sumCN =   GFD.int_sumCN
    %Int_disjoint =   GFD.int_disjoint
    %Int_reified_int =   GFD.int_reified_int
-  %  Bool_Gand =   GFD.bool_Gand
-%    Bool_Gor =   GFD.bool_Gor
-%    Bool_Gxor =   GFD.bool_Gxor
-%    Bool_Gnot =   GFD.bool_Gnot
-%    Bool_Gimp =   GFD.bool_Gimp
-%    Bool_Geqv =   GFD.bool_Geqv
 
    %% Backward compatibility propagators
    \insert GeMozProp.oz
