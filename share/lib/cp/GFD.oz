@@ -52,6 +52,11 @@ prepare
 	   dom: 2   %Domain consistency
 	   def: 3   %The default consistency for a constraint
 	   )
+   IA = '#'(
+	   min: 0  %Select smallest value.
+	   med: 1  %Select median value.
+	   max: 2  %Select maximum value.
+	   )
 
 export
    %% Telling domains
@@ -128,7 +133,8 @@ export
    atLeast:         AtLeast
    exactly:         Exactly
    
-   
+   %% Assignment propagators
+   assign: Assign
    
    %%Propagators
    Abs
@@ -150,6 +156,8 @@ export
    %% Consistency levels
    cl: Cl
 
+   %% Integer assignment
+   ia: IA
    %% Temporal:
    'prop' : Prop
 define
@@ -275,6 +283,9 @@ define
    Int_sumCN =   GFD.int_sumCN
    %Int_disjoint =   GFD.int_disjoint
    %Int_reified_int =   GFD.int_reified_int
+
+   %% Assignment propagators
+   Assign = GFD.'assign'
 
    %% Backward compatibility propagators
    \insert GeMozProp.oz

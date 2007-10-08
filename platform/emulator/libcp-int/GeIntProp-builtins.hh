@@ -128,3 +128,13 @@ IntArgs array(0);					\
 		var = (IntRelType)__vv;\
 	}
 
+#define DeclareIntAssignType(arg,var)\
+	IntAssign var;\
+	{\
+		OZ_declareInt(arg,op);\
+		switch(op) {\
+		case 0: var = INT_ASSIGN_MIN; break;\
+		case 1: var = INT_ASSIGN_MED; break;\
+		case 2: var = INT_ASSIGN_MAX; break;\
+		default: return OZ_typeError(arg,"Expecting atom with an integer assign type: min, med, max");\
+	}}	
