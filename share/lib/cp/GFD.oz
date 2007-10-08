@@ -35,6 +35,7 @@ require
 import
    GFD at 'x-oz://boot/geoz-int'
    Space
+   System
 prepare
    %%This record must reflect the IntRelType in gecode/int.hh
    Rt = '#'('=:':0     %Equality
@@ -202,24 +203,31 @@ define
    end
 
    %% Reflection
-   FdReflect = reflect(min    : GFD.'reflect.min'
-		       max    : GFD.'reflect.max'
-		       size   : GFD.'reflect.size'  %% cardinality
-		       dom    : GFD.'reflect.dom'
-		       domList: GFD.'reflect.domList'
-		       nextSmaller : GFD.'reflect.nextSmaller'
-		       nextLarger : GFD.'reflect.nextLarger'
-		       med    : GFD.'reflect.med'   %% median of domain
-		       %% distance between maximum and minimum
-		       width  : GFD.'reflect.width' 
-		       %% regret of domain minimum (distance to next larger value).
-		       regret_min : GFD.'reflect.regretMin'
-		       %% regret of domain maximum (distance to next smaller value). 
-		       regret_max : GFD.'reflect.regretMax'
-		       %% number of propagators associated with the variable
-		       nbProp: GFD.'reflect.nbProp'
-		      )
-
+   local
+      fun {NBSusps X}
+	 {GFD.'reflect.nbProp' X} + {System.nbSusps X}
+      end
+   in
+      FdReflect = reflect(min    : GFD.'reflect.min'
+			  max    : GFD.'reflect.max'
+			  size   : GFD.'reflect.size'  %% cardinality
+			  dom    : GFD.'reflect.dom'
+			  domList: GFD.'reflect.domList'
+			  nextSmaller : GFD.'reflect.nextSmaller'
+			  nextLarger : GFD.'reflect.nextLarger'
+			  med    : GFD.'reflect.med'   %% median of domain
+			  %% distance between maximum and minimum
+			  width  : GFD.'reflect.width' 
+			  %% regret of domain minimum (distance to next larger value).
+			  regret_min : GFD.'reflect.regretMin'
+			  %% regret of domain maximum (distance to next smaller value). 
+			  regret_max : GFD.'reflect.regretMax'
+			  %% number of propagators associated with the variable
+			  nbProp: GFD.'reflect.nbProp'
+			  %% number of suspendables associated with the variables
+			  nbSusps: NBSusps 
+			 )
+   end
    %% Watching variables
    %% Not tested yet!!
    local
