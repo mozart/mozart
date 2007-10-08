@@ -303,6 +303,23 @@ OZ_BI_define(int_sortedness,3,0)
   CHECK_POST(sp);
 } OZ_BI_end
 
+OZ_BI_define(int_assign,2,0)
+{
+	printf("hola\n");fflush(stdout);
+  DeclareGSpace(sp);
+  DECLARE_INTVARARRAY(0,a,sp);
+  DeclareIntAssignType(1,at);
+  
+  try{
+    assign(sp,a,at);
+  }
+  catch(Exception e) {
+    RAISE_GE_EXCEPTION(e);
+  }
+  CHECK_POST(sp);
+} OZ_BI_end
+
+
 // Include the propagators wrapper functions generated automatically.
 //#include "FDPBuiltins.cc"
 
