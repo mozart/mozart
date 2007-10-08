@@ -305,7 +305,6 @@ OZ_BI_define(int_sortedness,3,0)
 
 OZ_BI_define(int_assign,2,0)
 {
-	printf("hola\n");fflush(stdout);
   DeclareGSpace(sp);
   DECLARE_INTVARARRAY(0,a,sp);
   DeclareIntAssignType(1,at);
