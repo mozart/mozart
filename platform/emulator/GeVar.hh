@@ -183,6 +183,11 @@ public:
     return gs;
   }
 
+  /**
+  	\brief Returns the number of foreign propagators associated with a 
+  	variable. The extra 1 is because of every variable has a val reflector 
+  	associated with the variable.
+  */
   virtual int varprops(void) { return hasDomRefl+unifyC+1; }
   
 

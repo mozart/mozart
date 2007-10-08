@@ -57,8 +57,11 @@ $module_name          = "GFD";
 	                      out => ['int'],
 			      bi  => int_nextSmaller},
 
+	'reflect.nbProp'    => { in  => ['+value'],
+	                      out => ['int'],
+			      bi  => intvar_propSusp},
+			      
 ## Still missing:
-## -nbSusps -> degree
 ## -mid
     'reflect.med' 		=> { in  => ['*int'],
 	                 out => ['+int'],
