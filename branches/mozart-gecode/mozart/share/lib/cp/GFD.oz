@@ -216,6 +216,8 @@ define
 		       regret_min : GFD.'reflect.regretMin'
 		       %% regret of domain maximum (distance to next smaller value). 
 		       regret_max : GFD.'reflect.regretMax'
+		       %% number of propagators associated with the variable
+		       nbProp: GFD.'reflect.nbProp'
 		      )
 
    %% Watching variables

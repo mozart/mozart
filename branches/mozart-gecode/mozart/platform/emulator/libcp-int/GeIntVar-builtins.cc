@@ -286,5 +286,19 @@ OZ_BI_define(intvar_getRegretMax,1,1)
 }
 OZ_BI_end
 
+/** 
+ * \brief Returns the number of propagators associated with this variable
+ * 
+ * @param OZ_in(0) A reference to the variable 
+ * @param OZ_out(0) Number of associated propagators
+ */
+OZ_BI_define(intvar_propSusp,1,1)
+{
+  DeclareGeIntVar1(0,v);
+  GeVarBase *gv = get_GeVar(OZ_in(0));
+  OZ_RETURN_INT(v.degree()-gv->varprops());
+}
+OZ_BI_end
+
 
 #endif
