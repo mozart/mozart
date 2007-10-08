@@ -155,5 +155,9 @@ $module_name          = "GFD";
     'int_disjoint'       => { in  => ['+value','+value','int','+value'],
 	                      out => [],
 			      bi  => int_disjoint},
+###
 
+	'assign'    => { in  => ['+value','int'],
+	                      out => [],
+			      bi  => int_assign},
  );
