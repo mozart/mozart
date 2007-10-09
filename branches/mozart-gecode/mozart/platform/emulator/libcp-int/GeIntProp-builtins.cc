@@ -73,7 +73,7 @@ OZ_BI_define(int_rel,4,0) {
 OZ_BI_define(int_dist,2,0)
  {
    DeclareGSpace(sp);
-   DECLARE_INTVARARRAY(0,var,sp);   
+   DECLARE_INTVARARGS(0,var,sp);   
    DeclareInt(1,conLevel,"The last value must be the consistency level: distProp");
    try {
      distinct(sp,var,(IntConLevel)conLevel);
@@ -88,7 +88,7 @@ OZ_BI_define(int_dist,2,0)
  {
    DeclareGSpace(sp);
    DECLARE_INTARGS(0,arguments);
-   DECLARE_INTVARARRAY(1,var,sp);
+   DECLARE_INTVARARGS(1,var,sp);
    DeclareInt(2,conLevel,"The last value must be the consistency level: distProp");
    try {
      distinct(sp,arguments,var,(IntConLevel)conLevel);
@@ -107,7 +107,7 @@ OZ_BI_define(int_dist,2,0)
  OZ_BI_define(int_linear,4,0)
  {
    DeclareGSpace(sp);
-   DECLARE_INTVARARRAY(0,x1,sp);
+   DECLARE_INTVARARGS(0,x1,sp);
    RelType(1,x2);
    DeclareIntConLevel(3,x4);	   
    if(!OZ_isInt(OZ_deref(OZ_in(2)))) {
@@ -133,7 +133,7 @@ OZ_BI_define(int_dist,2,0)
  {
    DeclareGSpace(sp);
    DECLARE_INTARGS(0,arguments);
-   DECLARE_INTVARARRAY(1,array_var,sp);
+   DECLARE_INTVARARGS(1,array_var,sp);
    RelType(2,rel);
    DeclareIntConLevel(4,con);
    if(!OZ_isInt(OZ_deref(OZ_in(3)))) {
@@ -157,7 +157,7 @@ OZ_BI_define(int_dist,2,0)
 OZ_BI_define(int_linearR,5,0)
 {
   DeclareGSpace(sp);
-  DECLARE_INTVARARRAY(0,array_var,sp);
+  DECLARE_INTVARARGS(0,array_var,sp);
 
   RelType(1,relType);
   DeclareIntConLevel(4,conLevel);
@@ -181,7 +181,7 @@ OZ_BI_define(int_linearCR,6,0)
 
   DeclareGSpace(sp);
   DECLARE_INTARGS(0,array_arg);
-  DECLARE_INTVARARRAY(1,array_var,sp);
+  DECLARE_INTVARARGS(1,array_var,sp);
   
   RelType(2,relType);
   DeclareIntConLevel(5,conLevel);
@@ -203,7 +203,7 @@ OZ_BI_define(int_linearCR,6,0)
 OZ_BI_define(int_count,5,0)
 {
   DeclareGSpace(sp);
-  DECLARE_INTVARARRAY(0,arreglo,sp);
+  DECLARE_INTVARARGS(0,arreglo,sp);
   IntVar x1,x3;
   RelType(2,rl);
   DeclareIntConLevel(4,cl);
@@ -290,8 +290,8 @@ OZ_BI_define(bool_and,4,0)
 OZ_BI_define(int_sortedness,3,0)
 {
   DeclareGSpace(sp);
-  DECLARE_INTVARARRAY(0,a1,sp);
-  DECLARE_INTVARARRAY(1,a2,sp);
+  DECLARE_INTVARARGS(0,a1,sp);
+  DECLARE_INTVARARGS(1,a2,sp);
   OZ_declareInt(2,conLevel);
 
   try{
@@ -306,7 +306,7 @@ OZ_BI_define(int_sortedness,3,0)
 OZ_BI_define(int_assign,2,0)
 {
   DeclareGSpace(sp);
-  DECLARE_INTVARARRAY(0,a,sp);
+  DECLARE_INTVARARGS(0,a,sp);
   DeclareIntAssignType(1,at);
   
   try{
