@@ -33,7 +33,7 @@ $module_name          = "GBD";
  # Built-ins
  #
  
-    'bool'		=> { in  => ['+value','+value'],
+    'bool'		=> { in  => ['+value'],
 			     out => ['int'],
 			     bi  => new_boolvar,
                              fcp => ignore},
@@ -58,26 +58,28 @@ $module_name          = "GBD";
 
 ## Relation propagators
 	'rel_BV_BT_BV_BV' => {in => ['+value','+value','+value','+value'],
-											out => [],
-											bi => bool_rel_BV_BT_BV_BV},
+	    out => [],
+	    bi => bool_rel_BV_BT_BV_BV},
+
 ##Propagators
 
     'not'		 => { in  => ['+value','+value', 'int'],
 			     out => [],
 			     bi  => bool_not},
-    'eq'		 => { in  => ['+value','+value', 'int'],
-			     out => [],
-			     bi  => bool_eq},
-    'andA'		 => { in  => ['+value','+value','int'],
-			     out => [],
-			     bi  => bool_and_arr},
-    'orA'		 => { in  => ['+value','+value','int'],
-			     out => [],
-			     bi  => bool_or_arr},
-    'rel'		 => { in  => ['+value','int', '+value', 'int'],
-			     out => [],
-			     bi  => bool_rel},
-    'linear'		 => { in  => ['+value','int', '+value', 'int'],
-			     out => [],
-			     bi  => bool_linear},
+
+##    'eq'		 => { in  => ['+value','+value', 'int'],
+##			     out => [],
+##			     bi  => bool_eq},
+##  'andA'		 => { in  => ['+value','+value','int'],
+##			     out => [],
+##			     bi  => bool_and_arr},
+##    'orA'		 => { in  => ['+value','+value','int'],
+##			     out => [],
+##			     bi  => bool_or_arr},
+##    'rel'		 => { in  => ['+value','int', '+value', 'int'],
+##			     out => [],
+##			     bi  => bool_rel},
+##    'linear'		 => { in  => ['+value','int', '+value', 'int'],
+##			     out => [],
+##			     bi  => bool_linear},
  );
