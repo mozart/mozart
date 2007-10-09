@@ -41,11 +41,33 @@ using namespace Gecode::Int;
  * @param 1 Domain description
  * @param 2 The new variable
  */
-OZ_BI_define(new_boolvar,2,1)
+OZ_BI_define(new_boolvar,1,1)
 {
-  OZ_declareInt(0,lower);
-  OZ_declareInt(1,upper);
-  OZ_RETURN(new_GeBoolVar(lower,upper));
+  int l, u;
+  OZ_declareDetTerm(0,dom);
+  
+  if (OZ_isTuple(dom)) {
+	OZ_Term lower = OZ_getArg(dom,0);
+	OZ_Term upper = OZ_getArg(dom,1);
+  
+	if (!OZ_isInt(lower) || !OZ_isInt(upper))
+		return OZ_typeError(0,"Only integer values are allowed in bool var creation.");
+	l = OZ_intToC(lower);
+	u = OZ_intToC(upper);
+  
+	// Only 0/1 values are allowed when declaring a bool var.
+	if (l > 1 || l < 0 || u > 1 || u < 0) 
+		return OZ_typeError(0,"Invalid value to create a bool var.");
+  } else if (OZ_isInt(dom)) {
+	l = OZ_intToC(dom);
+	if (l > 1 || l < 0) 
+		return OZ_typeError(0,"Invalid value to create a bool var.");
+	u = l;
+  } else {
+	return OZ_typeError(0, "Unknown domain specification for a boolean variable.");
+  }
+  
+  OZ_RETURN(new_GeBoolVar(l,u));
 }
 OZ_BI_end
 
