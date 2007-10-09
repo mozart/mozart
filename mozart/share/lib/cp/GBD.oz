@@ -37,9 +37,11 @@ import
    
    GBD(bool: BoolVar
        isVar: IsVar
-       'reflect.size':       GetSize
-       'reflect.min':        GetMin
-       'reflect.max':        GetMax
+
+       'reflect.size':       Size
+       'reflect.zero':       Zero
+       'reflect.one':        One
+
        'rel_BV_BT_BV_BV':    VarRel
        'not':                Bool_not
 
@@ -132,9 +134,9 @@ export
    
 define
 
-   Reflect = reflect(size: GetSize
-		     min: GetMin
-		     max: GetMax
+   Reflect = reflect(size: Size
+		     zero: Zero
+		     one:  One
 		     dom:_		     
 		    )		     
    
