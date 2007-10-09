@@ -37,7 +37,6 @@ using namespace Gecode::Int;
 /** 
  * \brief Creates a new IntVar variable 
  * 
- * @param 0 The space
  * @param 1 Domain description
  * @param 2 The new variable
  */
@@ -96,30 +95,30 @@ OZ_BI_define(boolvar_getSize,1,1)
 OZ_BI_end
 
 /** 
- * \brief Returns the minimum elemen in the domain
+ * \brief Returns true if the variable has only one domain element and this is 0.
  * 
- * @param intvar_getMin 
+ * @param intvar_getZero
  * @param 0 A reference to the variable 
  * @param 1 The minimum of the domain 
  */
-OZ_BI_define(boolvar_getMin,1,1)
+OZ_BI_define(boolvar_getZero,1,1)
 {
   DeclareGeBoolVar1(0,v);
-  OZ_RETURN_INT(v.min());
+  OZ_RETURN_BOOL(v.zero());
 }
 OZ_BI_end
 
 /** 
  * \brief Returns the maximum elemen in the domain
  * 
- * @param intvar_getMin 
+ * @param intvar_getOne
  * @param 0 A reference to the variable 
  * @param 1 The maximum of the domain 
  */
-OZ_BI_define(boolvar_getMax,1,1)
+OZ_BI_define(boolvar_getOne,1,1)
 {
   DeclareGeBoolVar1(0,v);
-  OZ_RETURN_INT(v.max());
+  OZ_RETURN_BOOL(v.one());
 }
 OZ_BI_end
 
