@@ -41,10 +41,11 @@ import
        'reflect.min':        GetMin
        'reflect.max':        GetMax
        'rel_BV_BT_BV_BV':    VarRel
+       'not':                Bool_not
 
        andA: 	     Bool_and_arr       
        orA: 	     Bool_or_arr              
-       'not':        Bool_not
+    
        rel:          Rel
        linear:       Linear                     
       )
@@ -74,11 +75,12 @@ prepare
 export
    %% Telling domains
    bool:   BoolVar
+   decl:   Decl
    dom:    GBDDom
+   list:   BoolVarList
+   tuple:  BoolVarTuple
 
-      
-   BoolVarList
-
+   %% Testing
    is:    IsVar
    
    %%Access
@@ -94,7 +96,7 @@ export
    bo:    BOT
    
    %% Miscellaneous
-   decl:            Decl
+ 
 
    %% propagators
 
@@ -109,12 +111,13 @@ export
    eqv: Eqv
 
    %% some aliases
-   disj: Or
-   conj: And
+   disj:    Or
+   conj:    And
+   'not':   Bool_not
+
    
 %    conjA      :Bool_and_arr
 %    disjA      :Bool_or_arr
-%    notB       :Bool_not
 %    rel        :Rel
 %    linear     :Linear
    %Watch
@@ -139,35 +142,38 @@ define
 
    
    fun{Decl}
-      {BoolVar 0 1}
-   end
-   
-   proc{CreateDomainTuple N Dom Root}
-      if N > 0 then Root.N = {BoolVar Dom} {CreateDomainTuple N-1 Dom Root} end
+      {BoolVar 0#1}
    end
 
-   proc{CreateDomainRecord As Dom Root}
-      case As of nil then skip
-      [] A | Ar then Root.A = {BoolVar Dom} {CreateDomainRecord Ar Dom Root}
+   local
+      proc{CreateDomainTuple N Dom Root}
+	 if N > 0 then
+	    Root.N = {BoolVar Dom} {CreateDomainTuple N-1 Dom Root} end
       end
-   end
-   
-   %%Create GeBoolVar with domain Dom per each element of the list
-   proc{CreateDomainList Dom Root}
-      case Root of
-	 X|Xs then
-	 X = {BoolVar Dom}
-	 {CreateDomainList Dom Xs}
-      [] nil then skip
+
+      proc{CreateDomainRecord As Dom Root}
+	 case As of nil then skip
+	 [] A | Ar then
+	    Root.A = {BoolVar Dom} {CreateDomainRecord Ar Dom Root}
+	 end
       end
-   end   
+   
+      proc{CreateDomainList Dom Root}
+	 case Root of
+	    X|Xs then
+	    X = {BoolVar Dom}
+	    {CreateDomainList Dom Xs}
+	 [] nil then skip
+	 end
+      end
+   in
 
-
-   proc{GBDDom Dom Root}
-      case {VectorToType Root}
-      of list then   {CreateDomainList Dom Root}
-      [] tuple then  {CreateDomainTuple {Width Root} Dom Root}
-      [] record then {CreateDomainRecord {Arity Root} Dom Root}
+      proc{GBDDom Dom Root}
+	 case {VectorToType Root}
+	 of list then   {CreateDomainList Dom Root}
+	 [] tuple then  {CreateDomainTuple {Width Root} Dom Root}
+	 [] record then {CreateDomainRecord {Arity Root} Dom Root}
+	 end
       end
    end
    
@@ -178,7 +184,7 @@ define
       {List.map Lst fun{$ X} X = {BoolVar Desc} end}
    end
 
-   proc{GTuple T N Desc Seq}
+   proc{BoolVarTuple T N Desc Seq}
       Seq = {Tuple.make T N}
       for I in 1..N do
 	 Seq.I = {BoolVar Desc}
