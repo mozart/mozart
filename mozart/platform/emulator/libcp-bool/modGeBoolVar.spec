@@ -43,13 +43,13 @@ $module_name          = "GBD";
 			     bi  => boolvar_is,
                              fcp => ignore},
 
-    'reflect.min'        => { in  => ['*int'],
+    'reflect.zero'        => { in  => ['*int'],
 			      out => ['+int'],
-			      bi  => boolvar_getMin},
+			      bi  => boolvar_getZero},
     
-    'reflect.max'        => { in  => ['*int'],
+    'reflect.one'        => { in  => ['*int'],
 			      out => ['+int'],
-			      bi  => boolvar_getMax},
+			      bi  => boolvar_getOne},
 
     'reflect.size'       => { in  => ['*int'],
 			      out => ['+int'],
