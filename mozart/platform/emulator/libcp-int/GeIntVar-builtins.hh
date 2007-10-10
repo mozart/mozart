@@ -64,17 +64,17 @@
   }								\
   Gecode::IntSet ds(_pairs, length);
 
-#define DeclareGeIntVar2(p,v,sp)					\
-  IntVar v;                                                             \
-  if(OZ_isInt(OZ_in(p))) {						\
-    OZ_declareInt(p,domain);						\
-    IntVar _tmp(sp,domain,domain);					\
-    v=_tmp;								\
-  }									\
-  else if(OZ_isGeIntVar(OZ_in(p))) {					\
-    v = get_IntVar(OZ_in(p));						\
-  }									\
-  else return OZ_typeError(p,"IntVar or Int"); 
+
+#define declareTerm(trm,varName) \
+	TaggedRef varName = (trm);\
+	{\
+		DEREF(varName,varName_ptr);\
+		Assert(!oz_isRef(varName));\
+		if (oz_isFree(varName)) {\
+			oz_suspendOn(makeTaggedRef(varName_ptr));\
+		}}
+		
+#define declareInTerm(pos,varName) declareTerm(OZ_in(pos),varName)
 
 /*
   This macro declares a variable without comprising space stability.
@@ -82,66 +82,44 @@
 */
 #define DeclareGeIntVar1(p,v)					\
   IntVar v;							\
-  { TaggedRef x = OZ_in(p);					\
-    DEREF(x,x_ptr);						\
-    Assert(!oz_isRef(x));					\
-    if (oz_isFree(x)) {						\
-      oz_suspendOn(makeTaggedRef(x_ptr));			\
-    }								\
-    if (OZ_isInt(x)) {						\
+  {\
+	 declareInTerm(p,v##x);\
+    if (OZ_isInt(v##x)) {						\
       OZ_declareInt(p,domain);					\
       IntVar _tmp(oz_currentBoard()->getGenericSpace(),		\
 		  domain, domain);				\
       v=_tmp;							\
     }								\
-    else if(OZ_isGeIntVar(x)) {					\
-      v = get_IntVarInfo(x);					\
+    else if(OZ_isGeIntVar(v##x)) {					\
+      v = get_IntVarInfo(v##x);					\
     } else							\
       return OZ_typeError(p,"IntVar");		\
   }
+  
+/**
+	Macros for variable declaration inside propagators posting
+	built-ins. Space stability is affected as a side effect.
+*/
+#define DeclareGeIntVar(p,v,sp)\
+  declareInTerm(p,v##x);\
+  IntVar v;\
+  {\
+  if(OZ_isInt(v##x)) {\
+    OZ_declareInt(p,domain);\
+    IntVar _tmp( (sp) ,domain,domain);\
+    v=_tmp;\
+  }\
+  else if(OZ_isGeIntVar(v##x)) {\
+    v = get_IntVar(OZ_in(p));\
+  }\
+  else return OZ_typeError(p,"IntVar or Int");\
+  }
 
-#define DeclareGeIntVar(p,v,sp)					        \
-  {  TaggedRef x = OZ_in(p);						\
-    DEREF(x,x_ptr);							\
-    Assert(!oz_isRef(x));						\
-    if (oz_isFree(x)) {							\
-      oz_suspendOn(makeTaggedRef(x_ptr));				\
-    }}									\
-  IntVar v;								\
-  if(OZ_isInt(OZ_in(p))) {						\
-    OZ_declareInt(p,domain);						\
-    IntVar _tmp( (sp) ,domain,domain);					\
-    v=_tmp;								\
-  }									\
-  else if(OZ_isGeIntVar(OZ_in(p))) {					\
-    v = get_IntVar(OZ_in(p));						\
-  }									\
-  else return OZ_typeError(p,"IntVar or Int");	
-
-
-#define DeclareGeIntVarT2(val,ar,i,sp)				\
-{  TaggedRef x = val;						\
-  DEREF(x,x_ptr);						\
-  Assert(!oz_isRef(x));						\
-  if (oz_isFree(x)) {						\
-    oz_suspendOn(makeTaggedRef(x_ptr));				\
-  }								\
-  if(OZ_isInt(val)) {						\
-    int domain=OZ_intToC(val);					\
-    ar[i].init(sp,domain,domain);				\
-  }								\
-  else if(OZ_isGeIntVar(val)) {					\
-          ar[i]=get_IntVar(val);					\
-  }								\
-}
-
-#define DeclareGeIntVarT3(val,ar,i,sp)				\
-{  TaggedRef x = val;						\
-  DEREF(x,x_ptr);						\
-  Assert(!oz_isRef(x));						\
-  if (oz_isFree(x)) {						\
-    oz_suspendOn(makeTaggedRef(x_ptr));				\
-  }								\
+/**
+	Declares a GeInVar inside a var array. Space stability is affected as a side effect. 
+*/
+#define DeclareGeIntVarVA(val,ar,i,sp)				\
+{  declareTerm(val,x);							\
   if(OZ_isInt(val)) {						\
     int domain=OZ_intToC(val);					\
 	Gecode::IntVar v(sp,domain,domain);\
@@ -154,17 +132,12 @@
 
 #define DeclareBool(p, v) \
 bool v;\
-{  TaggedRef x = OZ_in(p);						\
-  DEREF(x,x_ptr);						\
-  Assert(!oz_isRef(x));						\
-  if (oz_isFree(x)) {						\
-    oz_suspendOn(makeTaggedRef(x_ptr));				\
-  }\
-  if (!OZ_isBool(v))\
+declareInTerm(p,v##x);\
+if (!OZ_isBool(v##x))\
 	   return OZ_typeError(p,"atom");		\
-  v = OZ_isTrue(x) ? true : false; \
+  v = OZ_isTrue(v##x) ? true : false; \
 }
 
-#define DECLARE_INTVARARGS(tIn,array,sp) DECLARE_VARARGS(tIn,array,sp,IntVarArgs,DeclareGeIntVarT3)
+#define DECLARE_INTVARARGS(tIn,array,sp) DECLARE_VARARGS(tIn,array,sp,IntVarArgs,DeclareGeIntVarVA)
 
 #endif
