@@ -236,6 +236,39 @@ OZ_BI_define(rel_BV_IRT_In_ICL_PK,5,0)
 	CHECK_POST(home);
 }OZ_BI_end
 
+OZ_BI_define(rel_BVA_IRT_BVA_ICL_PK,5,0)
+{
+	DeclareGSpace(home);
+	DECLARE_BOOLVARARGS(0, __x, home);
+	RelType(1, __r);
+	DECLARE_BOOLVARARGS(2, __y, home);
+	DeclareIntConLevel(3, __ICL_DEF);
+	DeclarePropKind(4, __PK_DEF);
+	try{
+		Gecode::rel(home, __x, __r, __y, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(rel_BVA_IRT_ICL_PK,4,0)
+{
+	DeclareGSpace(home);
+	DECLARE_BOOLVARARGS(0, __x, home);
+	RelType(1, __r);
+	DeclareIntConLevel(2, __ICL_DEF);
+	DeclarePropKind(3, __PK_DEF);
+	try{
+		Gecode::rel(home, __x, __r, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
 OZ_BI_define(rel_BV_BOT_BV_BV_ICL_PK,6,0)
 {
 	DeclareGSpace(home);
@@ -272,6 +305,166 @@ OZ_BI_define(rel_BV_BOT_BV_In_ICL_PK,6,0)
 	CHECK_POST(home);
 }OZ_BI_end
 
+OZ_BI_define(rel_BVA_BOT_BV_ICL_PK,5,0)
+{
+	DeclareGSpace(home);
+	DECLARE_BOOLVARARGS(0, __x, home);
+	DeclareBoolOpType(1, __o);
+	DeclareGeBoolVar(2, __y, home);
+	DeclareIntConLevel(3, __ICL_DEF);
+	DeclarePropKind(4, __PK_DEF);
+	try{
+		Gecode::rel(home, __x, __o, __y, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(rel_BVA_BOT_In_ICL_PK,5,0)
+{
+	DeclareGSpace(home);
+	DECLARE_BOOLVARARGS(0, __x, home);
+	DeclareBoolOpType(1, __o);
+	OZ_declareInt(2, __n);
+	DeclareIntConLevel(3, __ICL_DEF);
+	DeclarePropKind(4, __PK_DEF);
+	try{
+		Gecode::rel(home, __x, __o, __n, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(element_IA_IV_IV_In_ICL_PK,6,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTARGS(0, __n);
+	DeclareGeIntVar(1, __x0, home);
+	DeclareGeIntVar(2, __x1, home);
+	OZ_declareInt(3, __offset);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
+	try{
+		Gecode::element(home, __n, __x0, __x1, __offset, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(element_IA_IV_BV_In_ICL_PK,6,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTARGS(0, __n);
+	DeclareGeIntVar(1, __x0, home);
+	DeclareGeBoolVar(2, __x1, home);
+	OZ_declareInt(3, __offset);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
+	try{
+		Gecode::element(home, __n, __x0, __x1, __offset, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(element_IA_IV_In_In_ICL_PK,6,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTARGS(0, __n);
+	DeclareGeIntVar(1, __x0, home);
+	OZ_declareInt(2, __x1);
+	OZ_declareInt(3, __offset);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
+	try{
+		Gecode::element(home, __n, __x0, __x1, __offset, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(element_IVA_IV_IV_In_ICL_PK,6,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	DeclareGeIntVar(1, __y0, home);
+	DeclareGeIntVar(2, __y1, home);
+	OZ_declareInt(3, __offset);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
+	try{
+		Gecode::element(home, __x, __y0, __y1, __offset, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(element_IVA_IV_In_In_ICL_PK,6,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	DeclareGeIntVar(1, __y0, home);
+	OZ_declareInt(2, __y1);
+	OZ_declareInt(3, __offset);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
+	try{
+		Gecode::element(home, __x, __y0, __y1, __offset, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(element_BVA_IV_BV_In_ICL_PK,6,0)
+{
+	DeclareGSpace(home);
+	DECLARE_BOOLVARARGS(0, __x, home);
+	DeclareGeIntVar(1, __y0, home);
+	DeclareGeBoolVar(2, __y1, home);
+	OZ_declareInt(3, __offset);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
+	try{
+		Gecode::element(home, __x, __y0, __y1, __offset, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(element_BVA_IV_In_In_ICL_PK,6,0)
+{
+	DeclareGSpace(home);
+	DECLARE_BOOLVARARGS(0, __x, home);
+	DeclareGeIntVar(1, __y0, home);
+	OZ_declareInt(2, __y1);
+	OZ_declareInt(3, __offset);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
+	try{
+		Gecode::element(home, __x, __y0, __y1, __offset, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
 OZ_BI_define(distinct_IVA_ICL_PK,3,0)
 {
 	DeclareGSpace(home);
@@ -280,6 +473,22 @@ OZ_BI_define(distinct_IVA_ICL_PK,3,0)
 	DeclarePropKind(2, __PK_DEF);
 	try{
 		Gecode::distinct(home, __x, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(distinct_IA_IVA_ICL_PK,4,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTARGS(0, __n);
+	DECLARE_INTVARARGS(1, __x, home);
+	DeclareIntConLevel(2, __ICL_DEF);
+	DeclarePropKind(3, __PK_DEF);
+	try{
+		Gecode::distinct(home, __n, __x, __ICL_DEF, __PK_DEF);
 	}
 	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
@@ -328,6 +537,38 @@ OZ_BI_define(channel_IV_BV_ICL_PK,4,0)
 	DeclarePropKind(3, __PK_DEF);
 	try{
 		Gecode::channel(home, __x0, __x1, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(channel_BVA_IV_In_ICL_PK,5,0)
+{
+	DeclareGSpace(home);
+	DECLARE_BOOLVARARGS(0, __x, home);
+	DeclareGeIntVar(1, __y, home);
+	OZ_declareInt(2, __o);
+	DeclareIntConLevel(3, __ICL_DEF);
+	DeclarePropKind(4, __PK_DEF);
+	try{
+		Gecode::channel(home, __x, __y, __o, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(circuit_IVA_ICL_PK,3,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	DeclareIntConLevel(1, __ICL_DEF);
+	DeclarePropKind(2, __PK_DEF);
+	try{
+		Gecode::circuit(home, __x, __ICL_DEF, __PK_DEF);
 	}
 	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
@@ -387,6 +628,24 @@ OZ_BI_define(count_IVA_IV_IRT_In_ICL_PK,6,0)
 	CHECK_POST(home);
 }OZ_BI_end
 
+OZ_BI_define(count_IVA_IA_IRT_In_ICL_PK,6,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	DECLARE_INTARGS(1, __y);
+	RelType(2, __r);
+	OZ_declareInt(3, __m);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
+	try{
+		Gecode::count(home, __x, __y, __r, __m, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
 OZ_BI_define(count_IVA_In_IRT_IV_ICL_PK,6,0)
 {
 	DeclareGSpace(home);
@@ -410,6 +669,24 @@ OZ_BI_define(count_IVA_IV_IRT_IV_ICL_PK,6,0)
 	DeclareGSpace(home);
 	DECLARE_INTVARARGS(0, __x, home);
 	DeclareGeIntVar(1, __y, home);
+	RelType(2, __r);
+	DeclareGeIntVar(3, __z, home);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
+	try{
+		Gecode::count(home, __x, __y, __r, __z, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(count_IVA_IA_IRT_IV_ICL_PK,6,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	DECLARE_INTARGS(1, __y);
 	RelType(2, __r);
 	DeclareGeIntVar(3, __z, home);
 	DeclareIntConLevel(4, __ICL_DEF);
