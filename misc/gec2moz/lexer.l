@@ -35,6 +35,8 @@
 	
 %}
 
+%x comment
+
 %%
 
 
@@ -71,8 +73,18 @@ const		{return(TCONST);}
 
 [a-zA-Z'_'][a-zA-Z'_'0-9]*	{strcpy(yylval.vlex,yytext);return(TID);}
 
+
+"/*"         BEGIN(comment);
+
+<comment>[^*\n]*        /* eat anything that's not a '*' */
+<comment>"*"+[^*/\n]*   /* eat up '*'s not followed by '/'s */
+<comment>\n             ++nro_lineas;
+<comment>"*"+"/"        BEGIN(INITIAL);
+
+
+
 [ \t]+				/* obvia espacios en blanco */
-[\n]				{nro_lineas++;}
+[\n(\r\n)]				{nro_lineas++;}
 .					{printf(" Linea %d : Caracter desconocido  %s\n", nro_lineas, yytext);}
 
 %%
