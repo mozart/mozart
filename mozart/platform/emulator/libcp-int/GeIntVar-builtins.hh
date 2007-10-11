@@ -34,7 +34,9 @@
 #include "GeIntVar.hh"
 #include "GeSpace-builtins.hh"
 #include "builtins.hh"
+// think: just one include
 #include "../libcp-bool/GeBoolVar-builtins.hh"
+#include "../libcp-bool/GeBoolProp-builtins.hh"
 
 /** 
  * \brief Declares a Gecode::Int::IntSet from an Oz domain description

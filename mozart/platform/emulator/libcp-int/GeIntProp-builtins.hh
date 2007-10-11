@@ -119,7 +119,15 @@ IntArgs array(0);					\
 		OZ_TOC(arg,int,__vv,OZ_isInt,OZ_intToC,"Expected consistency level"); \
 		var = (IntConLevel)__vv;\
 	}
-#endif
+
+
+#define DeclarePropKind(arg,var) \
+	PropKind var;\
+	{\
+		OZ_TOC(arg,int,__vv,OZ_isInt,OZ_intToC,"Expected propagator kind"); \
+		var = (PropKind)__vv;\
+	}
+
 
 #define RelType(arg,var) \
 	IntRelType var;\
@@ -138,3 +146,5 @@ IntArgs array(0);					\
 		case 2: var = INT_ASSIGN_MAX; break;\
 		default: return OZ_typeError(arg,"Expecting atom with an integer assign type: min, med, max");\
 	}}	
+	
+#endif
