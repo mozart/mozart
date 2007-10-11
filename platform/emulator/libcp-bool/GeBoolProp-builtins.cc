@@ -115,8 +115,7 @@ OZ_BI_define(bool_and,4,0)
 OZ_BI_define(bool_and_arr,3,0)
 {
   DeclareGSpace(sp);  
-  DECLARE_BOOLVARARRAY(sp,v12,0);
-  BoolVarArgs v1(v12);                             
+  DECLARE_BOOLVARARGS(0,v12,sp);                           
   DeclareIntConLevel(2,ConLevel);
  /*
   try{
@@ -164,8 +163,7 @@ OZ_BI_define(bool_or,4,0)
 OZ_BI_define(bool_or_arr,3,0)
 {
   DeclareGSpace(sp);  
-  DECLARE_BOOLVARARRAY(sp,v12,0);
-  BoolVarArgs v1(v12);                             
+  DECLARE_BOOLVARARGS(0,v12,sp); 
   OZ_declareInt(2,ConLevel);
  /*
   try{
@@ -288,7 +286,7 @@ OZ_BI_define(bool_rel,4,0) {
 OZ_BI_define(bool_linear,4,0)
 {
   DeclareGSpace(sp);
-  DECLARE_BOOLVARARRAY(sp,x1,0);
+  DECLARE_BOOLVARARGS(0,x1,sp);
   OZ_declareInt(1,x2);
   OZ_declareInt(3,x4);	   
   /*
