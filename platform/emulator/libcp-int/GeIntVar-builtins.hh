@@ -67,20 +67,10 @@
   Gecode::IntSet ds(_pairs, length);
 
 
-#define declareTerm(trm,varName) \
-	TaggedRef varName = (trm);\
-	{\
-		DEREF(varName,varName_ptr);\
-		Assert(!oz_isRef(varName));\
-		if (oz_isFree(varName)) {\
-			oz_suspendOn(makeTaggedRef(varName_ptr));\
-		}}
-		
-#define declareInTerm(pos,varName) declareTerm(OZ_in(pos),varName)
-
-/*
-  This macro declares a variable without comprising space stability.
-  It must be used from functions that no require further propagation.
+/**
+	Declares a veriable form OZ_Term argument at position p in the input to be an IntVar 
+	variable. This declaration does not affect space stability so it can not be used in 
+	propagator's built ins.
 */
 #define DeclareGeIntVar1(p,v)					\
   IntVar v;							\
@@ -118,7 +108,7 @@
   }
 
 /**
-	Declares a GeInVar inside a var array. Space stability is affected as a side effect. 
+	Declares a GeIntVar inside a var array. Space stability is affected as a side effect. 
 */
 #define DeclareGeIntVarVA(val,ar,i,sp)				\
 {  declareTerm(val,x);							\
@@ -131,7 +121,7 @@
           ar[i]=get_IntVar(val);					\
   }								\
 }
-
+/*
 #define DeclareBool(p, v) \
 bool v;\
 declareInTerm(p,v##x);\
@@ -139,7 +129,7 @@ if (!OZ_isBool(v##x))\
 	   return OZ_typeError(p,"atom");		\
   v = OZ_isTrue(v##x) ? true : false; \
 }
-
+*/
 #define DECLARE_INTVARARGS(tIn,array,sp) DECLARE_VARARGS(tIn,array,sp,IntVarArgs,DeclareGeIntVarVA)
 
 #endif
