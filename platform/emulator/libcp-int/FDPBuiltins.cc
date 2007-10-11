@@ -1,1169 +1,610 @@
-OZ_BI_define(linear_IVA_IRT_In_ICL,4,0) {
-	DeclareGSpace(sp);
-	DECLARE_INTVARARGS(0, __x, sp);
-	RelType(1, __r);
-	DeclareGeIntVar(2, __c, sp);
-	DeclareIntDeclareIntConLevel(3, __ICL_DEF);
-	try{
-		linear(sp,__x,__r,__c,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(sp);
-
-}OZ_BI_end
-
-
-OZ_BI_define(linear_IVA_IRT_IV_ICL,4,0) {
-	DeclareGSpace(sp);
-	DECLARE_INTVARARGS(0, __x, sp);
-	RelType(1, __r);
-	DeclareGeIntVar(2, __y, sp);
-	DeclareIntDeclareIntConLevel(3, __ICL_DEF);
-	try{
-		linear(sp,__x,__r,__y,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(sp);
-
-}OZ_BI_end
-
-
-OZ_BI_define(linear_IVA_IRT_In_BV_ICL,5,0) {
-	DeclareGSpace(sp);
-	DECLARE_INTVARARGS(0, __x, sp);
-	RelType(1, __r);
-	DeclareGeIntVar(2, __c, sp);
-	DeclareBoolVar(3, __b, sp);
-	DeclareIntDeclareIntConLevel(4, __ICL_DEF);
-	try{
-		linear(sp,__x,__r,__c,__b,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(sp);
-
-}OZ_BI_end
-
-
-OZ_BI_define(linear_IVA_IRT_IV_BV_ICL,5,0) {
-	DeclareGSpace(sp);
-	DECLARE_INTVARARGS(0, __x, sp);
-	RelType(1, __r);
-	DeclareGeIntVar(2, __y, sp);
-	DeclareBoolVar(3, __b, sp);
-	DeclareIntDeclareIntConLevel(4, __ICL_DEF);
-	try{
-		linear(sp,__x,__r,__y,__b,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(sp);
-
-}OZ_BI_end
-
-
-OZ_BI_define(linear_IA_IVA_IRT_In_ICL,5,0) {
-	DeclareGSpace(sp);
-	DECLARE_INTARGS(0, __a);
-	DECLARE_INTVARARGS(1, __x, sp);
-	RelType(2, __r);
-	DeclareGeIntVar(3, __c, sp);
-	DeclareIntDeclareIntConLevel(4, __ICL_DEF);
-	try{
-		linear(sp,__a,__x,__r,__c,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(sp);
-
-}OZ_BI_end
-
-
-OZ_BI_define(linear_IA_IVA_IRT_IV_ICL,5,0) {
-	DeclareGSpace(sp);
-	DECLARE_INTARGS(0, __a);
-	DECLARE_INTVARARGS(1, __x, sp);
-	RelType(2, __r);
-	DeclareGeIntVar(3, __y, sp);
-	DeclareIntDeclareIntConLevel(4, __ICL_DEF);
-	try{
-		linear(sp,__a,__x,__r,__y,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(sp);
-
-}OZ_BI_end
-
-
-OZ_BI_define(linear_IA_IVA_IRT_In_BV_ICL,6,0) {
-	DeclareGSpace(sp);
-	DECLARE_INTARGS(0, __a);
-	DECLARE_INTVARARGS(1, __x, sp);
-	RelType(2, __r);
-	DeclareGeIntVar(3, __c, sp);
-	DeclareBoolVar(4, __b, sp);
-	DeclareIntConLevel(5, __ICL_DEF);
-	try{
-		linear(sp,__a,__x,__r,__c,__b,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(sp);
-
-}OZ_BI_end
-
-
-OZ_BI_define(linear_IA_IVA_IRT_IV_BV_ICL,6,0) {
-	DeclareGSpace(sp);
-	DECLARE_INTARGS(0, __a);
-	DECLARE_INTVARARGS(1, __x, sp);
-	RelType(2, __r);
-	DeclareGeIntVar(3, __y, sp);
-	DeclareBoolVar(4, __b, sp);
-	DeclareIntConLevel(5, __ICL_DEF);
-	try{
-		linear(sp,__a,__x,__r,__y,__b,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(sp);
-
-}OZ_BI_end
-
-
-OZ_BI_define(linear_BVA_IRT_In_ICL,4,0) {
-	DeclareGSpace(sp);
-	DECLARE_INTVARARGS(0, __x, sp);
-	RelType(1, __r);
-	DeclareGeIntVar(2, __c, sp);
-	DeclareIntConLevel(3, __ICL_DEF);
-	try{
-		linear(sp,__x,__r,__c,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(sp);
-
-}OZ_BI_end
-
-
-OZ_BI_define(linear_BVA_IRT_IV_ICL,4,0) {
-	DeclareGSpace(sp);
-	DECLARE_INTVARARGS(0, __x, sp);
-	RelType(1, __r);
-	DeclareGeIntVar(2, __y, sp);
-	DeclareIntConLevel(3, __ICL_DEF);
-	try{
-		linear(sp,__x,__r,__y,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(sp);
-
-}OZ_BI_end
-
-
-OZ_BI_define(cumulatives_IVA_IVA_IVA_IVA_IVA_IA_BlS_ICL,8,0) {
-	DeclareGSpace(sp);
-	DECLARE_INTVARARGS(0, __machine, sp);
-	DECLARE_INTVARARGS(1, __start, sp);
-	DECLARE_INTVARARGS(2, __duration, sp);
-	DECLARE_INTVARARGS(3, __end, sp);
-	DECLARE_INTVARARGS(4, __height, sp);
-	DECLARE_INTARGS(5, __limit);
-	DeclareBool(6, __at_most);
-	DeclareIntConLevel(7, __icl);
-	try{
-		cumulatives(sp,__machine,__start,__duration,__end,__height,__limit,__at_most,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(sp);
-
-}OZ_BI_end
-
-
-OZ_BI_define(cumulatives_IA_IVA_IVA_IVA_IVA_IA_BlS_ICL,8,0) {
-	DeclareGSpace(sp);
-	DECLARE_INTARGS(0, __machine);
-	DECLARE_INTVARARGS(1, __start, sp);
-	DECLARE_INTVARARGS(2, __duration, sp);
-	DECLARE_INTVARARGS(3, __end, sp);
-	DECLARE_INTVARARGS(4, __height, sp);
-	DECLARE_INTARGS(5, __limit);
-	DeclareBool(6, __at_most);
-	DeclareIntConLevel(7, __icl);
-	try{
-		cumulatives(sp,__machine,__start,__duration,__end,__height,__limit,__at_most,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(sp);
-
-}OZ_BI_end
-
-
-OZ_BI_define(cumulatives_IVA_IVA_IA_IVA_IVA_IA_BlS_ICL,8,0) {
-	DeclareGSpace(sp);
-	DECLARE_INTVARARGS(0, __machine, sp);
-	DECLARE_INTVARARGS(1, __start, sp);
-	DECLARE_INTARGS(2, __duration);
-	DECLARE_INTVARARGS(3, __end, sp);
-	DECLARE_INTVARARGS(4, __height, sp);
-	DECLARE_INTARGS(5, __limit);
-	DeclareBool(6, __at_most);
-	DeclareIntConLevel(7, __icl);
-	try{
-		cumulatives(sp,__machine,__start,__duration,__end,__height,__limit,__at_most,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(sp);
-
-}OZ_BI_end
-
-
-OZ_BI_define(cumulatives_IA_IVA_IA_IVA_IVA_IA_BlS_ICL,8,0) {
-	DeclareGSpace(sp);
-	DECLARE_INTARGS(0, __machine);
-	DECLARE_INTVARARGS(1, __start, sp);
-	DECLARE_INTARGS(2, __duration);
-	DECLARE_INTVARARGS(3, __end, sp);
-	DECLARE_INTVARARGS(4, __height, sp);
-	DECLARE_INTARGS(5, __limit);
-	DeclareBool(6, __at_most);
-	DeclareIntConLevel(7, __icl);
-	try{
-		cumulatives(sp,__machine,__start,__duration,__end,__height,__limit,__at_most,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(sp);
-
-}OZ_BI_end
-
-
-OZ_BI_define(cumulatives_IVA_IVA_IVA_IVA_IA_IA_BlS_ICL,8,0) {
-	DeclareGSpace(sp);
-	DECLARE_INTVARARGS(0, __machine, sp);
-	DECLARE_INTVARARGS(1, __start, sp);
-	DECLARE_INTVARARGS(2, __duration, sp);
-	DECLARE_INTVARARGS(3, __end, sp);
-	DECLARE_INTARGS(4, __height);
-	DECLARE_INTARGS(5, __limit);
-	DeclareBool(6, __at_most);
-	DeclareIntConLevel(7, __icl);
-	try{
-		cumulatives(sp,__machine,__start,__duration,__end,__height,__limit,__at_most,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(sp);
-
-}OZ_BI_end
-
-
-OZ_BI_define(cumulatives_IA_IVA_IVA_IVA_IA_IA_BlS_ICL,8,0) {
-	DeclareGSpace(sp);
-	DECLARE_INTARGS(0, __machine);
-	DECLARE_INTVARARGS(1, __start, sp);
-	DECLARE_INTVARARGS(2, __duration, sp);
-	DECLARE_INTVARARGS(3, __end, sp);
-	DECLARE_INTARGS(4, __height);
-	DECLARE_INTARGS(5, __limit);
-	DeclareBool(6, __at_most);
-	DeclareIntConLevel(7, __icl);
-	try{
-		cumulatives(sp,__machine,__start,__duration,__end,__height,__limit,__at_most,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(sp);
-
-}OZ_BI_end
-
-
-OZ_BI_define(cumulatives_IVA_IVA_IA_IVA_IA_IA_BlS_ICL,8,0) {
-	DeclareGSpace(sp);
-	DECLARE_INTVARARGS(0, __machine, sp);
-	DECLARE_INTVARARGS(1, __start, sp);
-	DECLARE_INTARGS(2, __duration);
-	DECLARE_INTVARARGS(3, __end, sp);
-	DECLARE_INTARGS(4, __height);
-	DECLARE_INTARGS(5, __limit);
-	DeclareBool(6, __at_most);
-	DeclareIntConLevel(7, __icl);
-	try{
-		cumulatives(sp,__machine,__start,__duration,__end,__height,__limit,__at_most,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(sp);
-
-}OZ_BI_end
-
-
-OZ_BI_define(cumulatives_IA_IVA_IA_IVA_IA_IA_BlS_ICL,8,0) {
-	DeclareGSpace(sp);
-	DECLARE_INTARGS(0, __machine);
-	DECLARE_INTVARARGS(1, __start, sp);
-	DECLARE_INTARGS(2, __duration);
-	DECLARE_INTVARARGS(3, __end, sp);
-	DECLARE_INTARGS(4, __height);
-	DECLARE_INTARGS(5, __limit);
-	DeclareBool(6, __at_most);
-	DeclareIntConLevel(7, __icl);
-	try{
-		cumulatives(sp,__machine,__start,__duration,__end,__height,__limit,__at_most,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(sp);
-
-}OZ_BI_end
-
-
-OZ_BI_define(eq_IV_IV_ICL,3,0) {
-	DeclareGSpace(home);
-	DeclareGeIntVar(0, __x0, home);
-	DeclareGeIntVar(1, __x1, home);
-	DeclareIntConLevel(2, __icl);
-	try{
-		eq(home,__x0,__x1,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(eq_IV_In_ICL,3,0) {
-	DeclareGSpace(home);
-	DeclareGeIntVar(0, __x, home);
-	DeclareGeIntVar(1, __n, home);
-	DeclareIntConLevel(2, __ICL_DEF);
-	try{
-		eq(home,__x,__n,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(eq_IV_IV_BV_ICL,4,0) {
-	DeclareGSpace(home);
-	DeclareGeIntVar(0, __x0, home);
-	DeclareGeIntVar(1, __x1, home);
-	DeclareBoolVar(2, __b, home);
-	DeclareIntConLevel(3, __icl);
-	try{
-		eq(home,__x0,__x1,__b,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(eq_IV_In_BV_ICL,4,0) {
-	DeclareGSpace(home);
-	DeclareGeIntVar(0, __x, home);
-	DeclareGeIntVar(1, __n, home);
-	DeclareBoolVar(2, __b, home);
-	DeclareIntConLevel(3, __icl);
-	try{
-		eq(home,__x,__n,__b,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(eq_IVA_ICL,2,0) {
-	DeclareGSpace(home);
-	DECLARE_INTVARARGS(0, __x, home);
-	DeclareIntConLevel(1, __icl);
-	try{
-		eq(home,__x,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(count_IVA_In_IRT_In_ICL,5,0) {
-	DeclareGSpace(home);
-	DECLARE_INTVARARGS(0, __x, home);
-	DeclareGeIntVar(1, __n, home);
-	RelType(2, __r);
-	DeclareGeIntVar(3, __m, home);
-	DeclareIntConLevel(4, __icl);
-	try{
-		count(home,__x,__n,__r,__m,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(count_IVA_IV_IRT_In_ICL,5,0) {
-	DeclareGSpace(home);
-	DECLARE_INTVARARGS(0, __x, home);
-	DeclareGeIntVar(1, __y, home);
-	RelType(2, __r);
-	DeclareGeIntVar(3, __m, home);
-	DeclareIntConLevel(4, __icl);
-	try{
-		count(home,__x,__y,__r,__m,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(count_IVA_In_IRT_IV_ICL,5,0) {
-	DeclareGSpace(home);
-	DECLARE_INTVARARGS(0, __x, home);
-	DeclareGeIntVar(1, __n, home);
-	RelType(2, __r);
-	DeclareGeIntVar(3, __z, home);
-	DeclareIntConLevel(4, __icl);
-	try{
-		count(home,__x,__n,__r,__z,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(count_IVA_IV_IRT_IV_ICL,5,0) {
-	DeclareGSpace(home);
-	DECLARE_INTVARARGS(0, __x, home);
-	DeclareGeIntVar(1, __y, home);
-	RelType(2, __r);
-	DeclareGeIntVar(3, __z, home);
-	DeclareIntConLevel(4, __icl);
-	try{
-		count(home,__x,__y,__r,__z,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(gcc_IVA_IA_InS_InS_InS_InS_InS_ICL,8,0) {
-	DeclareGSpace(home);
-	DECLARE_INTVARARGS(0, __x, home);
-	DECLARE_INTARGS(1, __c);
-	OZ_declareInt(2, __m);
-	OZ_declareInt(3, __unspec_low);
-	OZ_declareInt(4, __unspec_up);
-	OZ_declareInt(5, __min);
-	OZ_declareInt(6, __max);
-	DeclareIntConLevel(7, __icl);
-	try{
-		gcc(home,__x,__c,__m,__unspec_low,__unspec_up,__min,__max,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(gcc_IVA_IA_InS_InS_InS_InS_ICL,7,0) {
-	DeclareGSpace(home);
-	DECLARE_INTVARARGS(0, __x, home);
-	DECLARE_INTARGS(1, __c);
-	OZ_declareInt(2, __m);
-	OZ_declareInt(3, __unspec);
-	OZ_declareInt(4, __min);
-	OZ_declareInt(5, __max);
-	DeclareIntConLevel(6, __icl);
-	try{
-		gcc(home,__x,__c,__m,__unspec,__min,__max,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(gcc_IVA_InS_InS_ICL,4,0) {
-	DeclareGSpace(home);
-	DECLARE_INTVARARGS(0, __x, home);
-	OZ_declareInt(1, __lb);
-	OZ_declareInt(2, __ub);
-	DeclareIntConLevel(3, __icl);
-	try{
-		gcc(home,__x,__lb,__ub,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(gcc_IVA_InS_ICL,3,0) {
-	DeclareGSpace(home);
-	DECLARE_INTVARARGS(0, __x, home);
-	OZ_declareInt(1, __ub);
-	DeclareIntConLevel(2, __icl);
-	try{
-		gcc(home,__x,__ub,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(gcc_IVA_IVA_InS_InS_ICL,5,0) {
-	DeclareGSpace(home);
-	DECLARE_INTVARARGS(0, __x, home);
-	DECLARE_INTVARARGS(1, __c, home);
-	OZ_declareInt(2, __min);
-	OZ_declareInt(3, __max);
-	DeclareIntConLevel(4, __icl);
-	try{
-		gcc(home,__x,__c,__min,__max,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(gcc_IVA_IA_IVA_InS_InS_InS_BlS_InS_InS_ICL,10,0) {
-	DeclareGSpace(home);
-	DECLARE_INTVARARGS(0, __x, home);
-	DECLARE_INTARGS(1, __v);
-	DECLARE_INTVARARGS(2, __c, home);
-	OZ_declareInt(3, __m);
-	OZ_declareInt(4, __unspec_low);
-	OZ_declareInt(5, __unspec_up);
-	DeclareBool(6, __all);
-	OZ_declareInt(7, __min);
-	OZ_declareInt(8, __max);
-	DeclareIntConLevel(9, __icl);
-	try{
-		gcc(home,__x,__v,__c,__m,__unspec_low,__unspec_up,__all,__min,__max,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(gcc_IVA_IA_IVA_InS_InS_BlS_InS_InS_ICL,9,0) {
-	DeclareGSpace(home);
-	DECLARE_INTVARARGS(0, __x, home);
-	DECLARE_INTARGS(1, __v);
-	DECLARE_INTVARARGS(2, __c, home);
-	OZ_declareInt(3, __m);
-	OZ_declareInt(4, __unspec);
-	DeclareBool(5, __all);
-	OZ_declareInt(6, __min);
-	OZ_declareInt(7, __max);
-	DeclareIntConLevel(8, __icl);
-	try{
-		gcc(home,__x,__v,__c,__m,__unspec,__all,__min,__max,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(channel_IVA_IVA_ICL,3,0) {
-	DeclareGSpace(home);
-	DECLARE_INTVARARGS(0, __x, home);
-	DECLARE_INTVARARGS(1, __y, home);
-	DeclareIntConLevel(2, __icl);
-	try{
-		channel(home,__x,__y,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(dom_IV_InS_InS_ICL,4,0) {
+OZ_BI_define(dom_IV_In_In_ICL_PK,5,0)
+{
 	DeclareGSpace(home);
 	DeclareGeIntVar(0, __x, home);
 	OZ_declareInt(1, __l);
 	OZ_declareInt(2, __m);
 	DeclareIntConLevel(3, __ICL_DEF);
+	DeclarePropKind(4, __PK_DEF);
 	try{
-		dom(home,__x,__l,__m,__ICL_DEF);
-	} catch(Exception e){
+		Gecode::dom(home, __x, __l, __m, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
 	CHECK_POST(home);
-
 }OZ_BI_end
 
-
-OZ_BI_define(dom_IVA_InS_InS_ICL,4,0) {
+OZ_BI_define(dom_IVA_In_In_ICL_PK,5,0)
+{
 	DeclareGSpace(home);
 	DECLARE_INTVARARGS(0, __x, home);
 	OZ_declareInt(1, __l);
 	OZ_declareInt(2, __m);
 	DeclareIntConLevel(3, __ICL_DEF);
+	DeclarePropKind(4, __PK_DEF);
 	try{
-		dom(home,__x,__l,__m,__ICL_DEF);
-	} catch(Exception e){
+		Gecode::dom(home, __x, __l, __m, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
 	CHECK_POST(home);
-
 }OZ_BI_end
 
-
-OZ_BI_define(dom_IV_IV_ICL,3,0) {
+OZ_BI_define(dom_IV_IS_ICL_PK,4,0)
+{
 	DeclareGSpace(home);
 	DeclareGeIntVar(0, __x, home);
 	DECLARE_INT_SET(1, __s);
 	DeclareIntConLevel(2, __ICL_DEF);
+	DeclarePropKind(3, __PK_DEF);
 	try{
-		dom(home,__x,__s,__ICL_DEF);
-	} catch(Exception e){
+		Gecode::dom(home, __x, __s, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
 	CHECK_POST(home);
-
 }OZ_BI_end
 
-
-OZ_BI_define(dom_IVA_IV_ICL,3,0) {
+OZ_BI_define(dom_IVA_IS_ICL_PK,4,0)
+{
 	DeclareGSpace(home);
 	DECLARE_INTVARARGS(0, __x, home);
 	DECLARE_INT_SET(1, __s);
 	DeclareIntConLevel(2, __ICL_DEF);
+	DeclarePropKind(3, __PK_DEF);
 	try{
-		dom(home,__x,__s,__ICL_DEF);
-	} catch(Exception e){
+		Gecode::dom(home, __x, __s, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
 	CHECK_POST(home);
-
 }OZ_BI_end
 
-
-OZ_BI_define(dom_IV_InS_InS_BV_ICL,5,0) {
+OZ_BI_define(dom_IV_In_In_BV_ICL_PK,6,0)
+{
 	DeclareGSpace(home);
 	DeclareGeIntVar(0, __x, home);
 	OZ_declareInt(1, __l);
 	OZ_declareInt(2, __m);
-	DeclareBoolVar(3, __b, home);
+	DeclareGeBoolVar(3, __b, home);
 	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
 	try{
-		dom(home,__x,__l,__m,__b,__ICL_DEF);
-	} catch(Exception e){
+		Gecode::dom(home, __x, __l, __m, __b, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
 	CHECK_POST(home);
-
 }OZ_BI_end
 
-
-OZ_BI_define(dom_IV_IV_BV_ICL,4,0) {
+OZ_BI_define(dom_IV_IS_BV_ICL_PK,5,0)
+{
 	DeclareGSpace(home);
 	DeclareGeIntVar(0, __x, home);
 	DECLARE_INT_SET(1, __s);
-	DeclareBoolVar(2, __b, home);
+	DeclareGeBoolVar(2, __b, home);
 	DeclareIntConLevel(3, __ICL_DEF);
+	DeclarePropKind(4, __PK_DEF);
 	try{
-		dom(home,__x,__s,__b,__ICL_DEF);
-	} catch(Exception e){
+		Gecode::dom(home, __x, __s, __b, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
 	CHECK_POST(home);
-
 }OZ_BI_end
 
-
-OZ_BI_define(bool_not_BV_BV_ICL,3,0) {
-	DeclareGSpace(home);
-	DeclareBoolVar(0, __b0, home);
-	DeclareBoolVar(1, __b1, home);
-	DeclareIntConLevel(2, __ICL_DEF);
-	try{
-		bool_not(home,__b0,__b1,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(bool_eq_BV_BV_ICL,3,0) {
-	DeclareGSpace(home);
-	DeclareBoolVar(0, __b0, home);
-	DeclareBoolVar(1, __b1, home);
-	DeclareIntConLevel(2, __ICL_DEF);
-	try{
-		bool_eq(home,__b0,__b1,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(bool_and_BV_BV_BV_ICL,4,0) {
-	DeclareGSpace(home);
-	DeclareBoolVar(0, __b0, home);
-	DeclareBoolVar(1, __b1, home);
-	DeclareBoolVar(2, __b2, home);
-	DeclareIntConLevel(3, __ICL_DEF);
-	try{
-		bool_and(home,__b0,__b1,__b2,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(bool_and_BV_BV_Bl_ICL,4,0) {
-	DeclareGSpace(home);
-	DeclareBoolVar(0, __b0, home);
-	DeclareBoolVar(1, __b1, home);
-	DeclareBoolVar(2, __b2, home);
-	DeclareIntConLevel(3, __ICL_DEF);
-	try{
-		bool_and(home,__b0,__b1,__b2,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(bool_or_BV_BV_BV_ICL,4,0) {
-	DeclareGSpace(home);
-	DeclareBoolVar(0, __b0, home);
-	DeclareBoolVar(1, __b1, home);
-	DeclareBoolVar(2, __b2, home);
-	DeclareIntConLevel(3, __ICL_DEF);
-	try{
-		bool_or(home,__b0,__b1,__b2,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(bool_or_BV_BV_Bl_ICL,4,0) {
-	DeclareGSpace(home);
-	DeclareBoolVar(0, __b0, home);
-	DeclareBoolVar(1, __b1, home);
-	DeclareBoolVar(2, __b2, home);
-	DeclareIntConLevel(3, __ICL_DEF);
-	try{
-		bool_or(home,__b0,__b1,__b2,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(bool_imp_BV_BV_BV_ICL,4,0) {
-	DeclareGSpace(home);
-	DeclareBoolVar(0, __b0, home);
-	DeclareBoolVar(1, __b1, home);
-	DeclareBoolVar(2, __b2, home);
-	DeclareIntConLevel(3, __ICL_DEF);
-	try{
-		bool_imp(home,__b0,__b1,__b2,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(bool_imp_BV_BV_Bl_ICL,4,0) {
-	DeclareGSpace(home);
-	DeclareBoolVar(0, __b0, home);
-	DeclareBoolVar(1, __b1, home);
-	DeclareBoolVar(2, __b2, home);
-	DeclareIntConLevel(3, __ICL_DEF);
-	try{
-		bool_imp(home,__b0,__b1,__b2,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(bool_eqv_BV_BV_BV_ICL,4,0) {
-	DeclareGSpace(home);
-	DeclareBoolVar(0, __b0, home);
-	DeclareBoolVar(1, __b1, home);
-	DeclareBoolVar(2, __b2, home);
-	DeclareIntConLevel(3, __ICL_DEF);
-	try{
-		bool_eqv(home,__b0,__b1,__b2,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(bool_eqv_BV_BV_Bl_ICL,4,0) {
-	DeclareGSpace(home);
-	DeclareBoolVar(0, __b0, home);
-	DeclareBoolVar(1, __b1, home);
-	DeclareBoolVar(2, __b2, home);
-	DeclareIntConLevel(3, __ICL_DEF);
-	try{
-		bool_eqv(home,__b0,__b1,__b2,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(bool_xor_BV_BV_BV_ICL,4,0) {
-	DeclareGSpace(home);
-	DeclareBoolVar(0, __b0, home);
-	DeclareBoolVar(1, __b1, home);
-	DeclareBoolVar(2, __b2, home);
-	DeclareIntConLevel(3, __ICL_DEF);
-	try{
-		bool_xor(home,__b0,__b1,__b2,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(bool_xor_BV_BV_Bl_ICL,4,0) {
-	DeclareGSpace(home);
-	DeclareBoolVar(0, __b0, home);
-	DeclareBoolVar(1, __b1, home);
-	DeclareBoolVar(2, __b2, home);
-	DeclareIntConLevel(3, __ICL_DEF);
-	try{
-		bool_xor(home,__b0,__b1,__b2,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(sortedness_IVA_IVA_ICL,3,0) {
-	DeclareGSpace(home);
-	DECLARE_INTVARARGS(0, __x, home);
-	DECLARE_INTVARARGS(1, __y, home);
-	DeclareIntConLevel(2, __icl);
-	try{
-		sortedness(home,__x,__y,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(sortedness_IVA_IVA_IVA_ICL,4,0) {
-	DeclareGSpace(home);
-	DECLARE_INTVARARGS(0, __x, home);
-	DECLARE_INTVARARGS(1, __y, home);
-	DECLARE_INTVARARGS(2, __z, home);
-	DeclareIntConLevel(3, __icl);
-	try{
-		sortedness(home,__x,__y,__z,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(distinct_IVA_ICL,2,0) {
-	DeclareGSpace(home);
-	DECLARE_INTVARARGS(0, __x, home);
-	DeclareIntConLevel(1, __icl);
-	try{
-		distinct(home,__x,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(distinct_IA_IVA_ICL,3,0) {
-	DeclareGSpace(home);
-	DECLARE_INTARGS(0, __n);
-	DECLARE_INTVARARGS(1, __x, home);
-	DeclareIntConLevel(2, __icl);
-	try{
-		distinct(home,__n,__x,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(element_IA_IV_IV_ICL,4,0) {
-	DeclareGSpace(home);
-	DECLARE_INTARGS(0, __n);
-	DeclareGeIntVar(1, __x0, home);
-	DeclareGeIntVar(2, __x1, home);
-	DeclareIntConLevel(3, __ICL_DEF);
-	try{
-		element(home,__n,__x0,__x1,__ICL_DEF);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(element_IVA_IV_IV_ICL,4,0) {
-	DeclareGSpace(home);
-	DECLARE_INTVARARGS(0, __x, home);
-	DeclareGeIntVar(1, __y0, home);
-	DeclareGeIntVar(2, __y1, home);
-	DeclareIntConLevel(3, __icl);
-	try{
-		element(home,__x,__y0,__y1,__icl);
-	} catch(Exception e){
-		RAISE_GE_EXCEPTION(e);
-	}
-	CHECK_POST(home);
-
-}OZ_BI_end
-
-
-OZ_BI_define(rel_IV_IRT_IV_ICL,4,0) {
+OZ_BI_define(rel_IV_IRT_IV_ICL_PK,5,0)
+{
 	DeclareGSpace(home);
 	DeclareGeIntVar(0, __x0, home);
 	RelType(1, __r);
 	DeclareGeIntVar(2, __x1, home);
-	DeclareIntConLevel(3, __icl);
+	DeclareIntConLevel(3, __ICL_DEF);
+	DeclarePropKind(4, __PK_DEF);
 	try{
-		rel(home,__x0,__r,__x1,__icl);
-	} catch(Exception e){
+		Gecode::rel(home, __x0, __r, __x1, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
 	CHECK_POST(home);
-
 }OZ_BI_end
 
-
-OZ_BI_define(rel_IV_IRT_In_ICL,4,0) {
+OZ_BI_define(rel_IV_IRT_In_ICL_PK,5,0)
+{
 	DeclareGSpace(home);
 	DeclareGeIntVar(0, __x, home);
 	RelType(1, __r);
-	DeclareGeIntVar(2, __c, home);
-	DeclareIntConLevel(3, __icl);
+	OZ_declareInt(2, __c);
+	DeclareIntConLevel(3, __ICL_DEF);
+	DeclarePropKind(4, __PK_DEF);
 	try{
-		rel(home,__x,__r,__c,__icl);
-	} catch(Exception e){
+		Gecode::rel(home, __x, __r, __c, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
 	CHECK_POST(home);
-
 }OZ_BI_end
 
-
-OZ_BI_define(rel_IV_IRT_IV_BV_ICL,5,0) {
+OZ_BI_define(rel_IV_IRT_IV_BV_ICL_PK,6,0)
+{
 	DeclareGSpace(home);
 	DeclareGeIntVar(0, __x0, home);
 	RelType(1, __r);
 	DeclareGeIntVar(2, __x1, home);
-	DeclareBoolVar(3, __b, home);
-	DeclareIntConLevel(4, __icl);
+	DeclareGeBoolVar(3, __b, home);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
 	try{
-		rel(home,__x0,__r,__x1,__b,__icl);
-	} catch(Exception e){
+		Gecode::rel(home, __x0, __r, __x1, __b, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
 	CHECK_POST(home);
-
 }OZ_BI_end
 
-
-OZ_BI_define(rel_IV_IRT_In_BV_ICL,5,0) {
+OZ_BI_define(rel_IV_IRT_In_BV_ICL_PK,6,0)
+{
 	DeclareGSpace(home);
 	DeclareGeIntVar(0, __x, home);
 	RelType(1, __r);
-	DeclareGeIntVar(2, __c, home);
-	DeclareBoolVar(3, __b, home);
-	DeclareIntConLevel(4, __icl);
+	OZ_declareInt(2, __c);
+	DeclareGeBoolVar(3, __b, home);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
 	try{
-		rel(home,__x,__r,__c,__b,__icl);
-	} catch(Exception e){
+		Gecode::rel(home, __x, __r, __c, __b, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
 	CHECK_POST(home);
-
 }OZ_BI_end
 
+OZ_BI_define(rel_IVA_IRT_ICL_PK,4,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	RelType(1, __r);
+	DeclareIntConLevel(2, __ICL_DEF);
+	DeclarePropKind(3, __PK_DEF);
+	try{
+		Gecode::rel(home, __x, __r, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
 
-OZ_BI_define(rel_IVA_IRT_IVA_ICL,4,0) {
+OZ_BI_define(rel_IVA_IRT_IVA_ICL_PK,5,0)
+{
 	DeclareGSpace(home);
 	DECLARE_INTVARARGS(0, __x, home);
 	RelType(1, __r);
 	DECLARE_INTVARARGS(2, __y, home);
-	DeclareIntConLevel(3, __icl);
+	DeclareIntConLevel(3, __ICL_DEF);
+	DeclarePropKind(4, __PK_DEF);
 	try{
-		rel(home,__x,__r,__y,__icl);
-	} catch(Exception e){
+		Gecode::rel(home, __x, __r, __y, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
 	CHECK_POST(home);
-
 }OZ_BI_end
 
+OZ_BI_define(rel_BV_IRT_BV_ICL_PK,5,0)
+{
+	DeclareGSpace(home);
+	DeclareGeBoolVar(0, __x0, home);
+	RelType(1, __r);
+	DeclareGeBoolVar(2, __x1, home);
+	DeclareIntConLevel(3, __ICL_DEF);
+	DeclarePropKind(4, __PK_DEF);
+	try{
+		Gecode::rel(home, __x0, __r, __x1, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
 
-OZ_BI_define(min_IV_IV_IV_ICL,4,0) {
+OZ_BI_define(rel_BV_IRT_In_ICL_PK,5,0)
+{
+	DeclareGSpace(home);
+	DeclareGeBoolVar(0, __x, home);
+	RelType(1, __r);
+	OZ_declareInt(2, __n);
+	DeclareIntConLevel(3, __ICL_DEF);
+	DeclarePropKind(4, __PK_DEF);
+	try{
+		Gecode::rel(home, __x, __r, __n, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(rel_BV_BOT_BV_BV_ICL_PK,6,0)
+{
+	DeclareGSpace(home);
+	DeclareGeBoolVar(0, __x0, home);
+	DeclareBoolOpType(1, __o);
+	DeclareGeBoolVar(2, __x1, home);
+	DeclareGeBoolVar(3, __x2, home);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
+	try{
+		Gecode::rel(home, __x0, __o, __x1, __x2, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(rel_BV_BOT_BV_In_ICL_PK,6,0)
+{
+	DeclareGSpace(home);
+	DeclareGeBoolVar(0, __x0, home);
+	DeclareBoolOpType(1, __o);
+	DeclareGeBoolVar(2, __x1, home);
+	OZ_declareInt(3, __n);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
+	try{
+		Gecode::rel(home, __x0, __o, __x1, __n, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(distinct_IVA_ICL_PK,3,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	DeclareIntConLevel(1, __ICL_DEF);
+	DeclarePropKind(2, __PK_DEF);
+	try{
+		Gecode::distinct(home, __x, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(channel_IVA_IVA_ICL_PK,4,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	DECLARE_INTVARARGS(1, __y, home);
+	DeclareIntConLevel(2, __ICL_DEF);
+	DeclarePropKind(3, __PK_DEF);
+	try{
+		Gecode::channel(home, __x, __y, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(channel_BV_IV_ICL_PK,4,0)
+{
+	DeclareGSpace(home);
+	DeclareGeBoolVar(0, __x0, home);
+	DeclareGeIntVar(1, __x1, home);
+	DeclareIntConLevel(2, __ICL_DEF);
+	DeclarePropKind(3, __PK_DEF);
+	try{
+		Gecode::channel(home, __x0, __x1, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(channel_IV_BV_ICL_PK,4,0)
+{
+	DeclareGSpace(home);
+	DeclareGeIntVar(0, __x0, home);
+	DeclareGeBoolVar(1, __x1, home);
+	DeclareIntConLevel(2, __ICL_DEF);
+	DeclarePropKind(3, __PK_DEF);
+	try{
+		Gecode::channel(home, __x0, __x1, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(sorted_IVA_IVA_ICL_PK,4,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	DECLARE_INTVARARGS(1, __y, home);
+	DeclareIntConLevel(2, __ICL_DEF);
+	DeclarePropKind(3, __PK_DEF);
+	try{
+		Gecode::sorted(home, __x, __y, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(count_IVA_In_IRT_In_ICL_PK,6,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	OZ_declareInt(1, __n);
+	RelType(2, __r);
+	OZ_declareInt(3, __m);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
+	try{
+		Gecode::count(home, __x, __n, __r, __m, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(count_IVA_IV_IRT_In_ICL_PK,6,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	DeclareGeIntVar(1, __y, home);
+	RelType(2, __r);
+	OZ_declareInt(3, __m);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
+	try{
+		Gecode::count(home, __x, __y, __r, __m, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(count_IVA_In_IRT_IV_ICL_PK,6,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	OZ_declareInt(1, __n);
+	RelType(2, __r);
+	DeclareGeIntVar(3, __z, home);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
+	try{
+		Gecode::count(home, __x, __n, __r, __z, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(count_IVA_IV_IRT_IV_ICL_PK,6,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	DeclareGeIntVar(1, __y, home);
+	RelType(2, __r);
+	DeclareGeIntVar(3, __z, home);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
+	try{
+		Gecode::count(home, __x, __y, __r, __z, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(count_IVA_IVA_ICL_PK,4,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	DECLARE_INTVARARGS(1, __c, home);
+	DeclareIntConLevel(2, __ICL_DEF);
+	DeclarePropKind(3, __PK_DEF);
+	try{
+		Gecode::count(home, __x, __c, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(min_IV_IV_IV_ICL_PK,5,0)
+{
 	DeclareGSpace(home);
 	DeclareGeIntVar(0, __x0, home);
 	DeclareGeIntVar(1, __x1, home);
 	DeclareGeIntVar(2, __x2, home);
 	DeclareIntConLevel(3, __ICL_DEF);
+	DeclarePropKind(4, __PK_DEF);
 	try{
-		min(home,__x0,__x1,__x2,__ICL_DEF);
-	} catch(Exception e){
+		Gecode::min(home, __x0, __x1, __x2, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
 	CHECK_POST(home);
-
 }OZ_BI_end
 
-
-OZ_BI_define(min_IVA_IV_ICL,3,0) {
+OZ_BI_define(min_IVA_IV_ICL_PK,4,0)
+{
 	DeclareGSpace(home);
 	DECLARE_INTVARARGS(0, __x, home);
 	DeclareGeIntVar(1, __y, home);
 	DeclareIntConLevel(2, __ICL_DEF);
+	DeclarePropKind(3, __PK_DEF);
 	try{
-		min(home,__x,__y,__ICL_DEF);
-	} catch(Exception e){
+		Gecode::min(home, __x, __y, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
 	CHECK_POST(home);
-
 }OZ_BI_end
 
-
-OZ_BI_define(max_IV_IV_IV_ICL,4,0) {
+OZ_BI_define(max_IV_IV_IV_ICL_PK,5,0)
+{
 	DeclareGSpace(home);
 	DeclareGeIntVar(0, __x0, home);
 	DeclareGeIntVar(1, __x1, home);
 	DeclareGeIntVar(2, __x2, home);
 	DeclareIntConLevel(3, __ICL_DEF);
+	DeclarePropKind(4, __PK_DEF);
 	try{
-		max(home,__x0,__x1,__x2,__ICL_DEF);
-	} catch(Exception e){
+		Gecode::max(home, __x0, __x1, __x2, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
 	CHECK_POST(home);
-
 }OZ_BI_end
 
-
-OZ_BI_define(max_IVA_IV_ICL,3,0) {
+OZ_BI_define(max_IVA_IV_ICL_PK,4,0)
+{
 	DeclareGSpace(home);
 	DECLARE_INTVARARGS(0, __x, home);
 	DeclareGeIntVar(1, __y, home);
 	DeclareIntConLevel(2, __ICL_DEF);
+	DeclarePropKind(3, __PK_DEF);
 	try{
-		max(home,__x,__y,__ICL_DEF);
-	} catch(Exception e){
+		Gecode::max(home, __x, __y, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
 	CHECK_POST(home);
-
 }OZ_BI_end
 
-
-OZ_BI_define(abs_IV_IV_ICL,3,0) {
+OZ_BI_define(abs_IV_IV_ICL_PK,4,0)
+{
 	DeclareGSpace(home);
 	DeclareGeIntVar(0, __x0, home);
 	DeclareGeIntVar(1, __x1, home);
 	DeclareIntConLevel(2, __ICL_DEF);
+	DeclarePropKind(3, __PK_DEF);
 	try{
-		abs(home,__x0,__x1,__ICL_DEF);
-	} catch(Exception e){
+		Gecode::abs(home, __x0, __x1, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
 	CHECK_POST(home);
-
 }OZ_BI_end
 
-
-OZ_BI_define(mult_IV_IV_IV_ICL,4,0) {
+OZ_BI_define(mult_IV_IV_IV_ICL_PK,5,0)
+{
 	DeclareGSpace(home);
 	DeclareGeIntVar(0, __x0, home);
 	DeclareGeIntVar(1, __x1, home);
 	DeclareGeIntVar(2, __x2, home);
 	DeclareIntConLevel(3, __ICL_DEF);
+	DeclarePropKind(4, __PK_DEF);
 	try{
-		mult(home,__x0,__x1,__x2,__ICL_DEF);
-	} catch(Exception e){
+		Gecode::mult(home, __x0, __x1, __x2, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
 	}
 	CHECK_POST(home);
-
 }OZ_BI_end
 
+OZ_BI_define(linear_IVA_IRT_In_ICL_PK,5,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	RelType(1, __r);
+	OZ_declareInt(2, __c);
+	DeclareIntConLevel(3, __ICL_DEF);
+	DeclarePropKind(4, __PK_DEF);
+	try{
+		Gecode::linear(home, __x, __r, __c, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(linear_IVA_IRT_IV_ICL_PK,5,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	RelType(1, __r);
+	DeclareGeIntVar(2, __y, home);
+	DeclareIntConLevel(3, __ICL_DEF);
+	DeclarePropKind(4, __PK_DEF);
+	try{
+		Gecode::linear(home, __x, __r, __y, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(linear_IVA_IRT_In_BV_ICL_PK,6,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	RelType(1, __r);
+	OZ_declareInt(2, __c);
+	DeclareGeBoolVar(3, __b, home);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
+	try{
+		Gecode::linear(home, __x, __r, __c, __b, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(linear_IVA_IRT_IV_BV_ICL_PK,6,0)
+{
+	DeclareGSpace(home);
+	DECLARE_INTVARARGS(0, __x, home);
+	RelType(1, __r);
+	DeclareGeIntVar(2, __y, home);
+	DeclareGeBoolVar(3, __b, home);
+	DeclareIntConLevel(4, __ICL_DEF);
+	DeclarePropKind(5, __PK_DEF);
+	try{
+		Gecode::linear(home, __x, __r, __y, __b, __ICL_DEF, __PK_DEF);
+	}
+	catch(Exception e){
+		RAISE_GE_EXCEPTION(e);
+	}
+	CHECK_POST(home);
+}OZ_BI_end
 

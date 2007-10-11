@@ -320,6 +320,6 @@ OZ_BI_define(int_assign,2,0)
 
 
 // Include the propagators wrapper functions generated automatically.
-//#include "FDPBuiltins.cc"
+#include "FDPBuiltins.cc"
 
 #endif
