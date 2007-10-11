@@ -453,4 +453,27 @@ GeVar<VarImp,pc>* get_GeVar(OZ_Term v, bool cgv = true) {
   return static_cast<GeVar<VarImp,pc>*>(ev);
 }
 
+
+/*
+	Some useful macros used by each constraint system to declare variables from OZ_Term's
+*/
+/* trm is or will be bind to a constraint variable. This macro is used to wait for the variable
+	if it is not defined yet (e.g. a free var).
+*/
+#define declareTerm(trm,varName) \
+	TaggedRef varName = (trm);\
+	{\
+		DEREF(varName,varName_ptr);\
+		Assert(!oz_isRef(varName));\
+		if (oz_isFree(varName)) {\
+			oz_suspendOn(makeTaggedRef(varName_ptr));\
+		}}
+
+/**
+	Waits until variable at position pos is defined and then declares it as an OZ_Term
+*/
+#define declareInTerm(pos,varName) declareTerm(OZ_in(pos),varName)
+
+
+
 #endif
