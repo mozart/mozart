@@ -144,6 +144,21 @@ inline OZ_Term new_GeIntVar(const IntSet& dom) {
   return ref;
 }
 
+inline OZ_Term new_GeIntVarCompl(const IntSet& dom) {
+  GenericSpace *sp = oz_currentBoard()->getGenericSpace();
+  IntVar x(sp,dom);
+  ViewRanges<IntView> xvr(x);
+  IntVar xcompl(sp, Gecode::Limits::Int::int_min, Gecode::Limits::Int::int_max);
+  IntView xcv(xcompl);
+  xcv.minus_r(sp, xvr);
+  GeIntVar *nv     = new GeIntVar(sp->getVarsSize());
+  OzVariable *ov   = extVar2Var(nv);
+  OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
+  int index        = sp->newVar(static_cast<VarBase*>(xcompl.variable()), ref);
+  nv->ensureValReflection();
+  return ref;
+}
+
 /**
    \brief Checks if the OZ_Term v represents a integer constraint
    variable in the store.
