@@ -42,10 +42,9 @@
  * \brief Declares a Gecode::Int::IntSet from an Oz domain description
  * 
  * @param ds The domain description int terms of list and tuples
- * @param arg Position at OZ_in array
+ * @param _t Mozart domain specification
  */
-#define	DECLARE_INT_SET(arg,ds)					\
-  OZ_declareDetTerm(arg,_t);					\
+#define	DECLARE_INT_SET(_t,ds)					\
   OZ_Term l = (OZ_isCons(_t) ? _t : OZ_cons(_t, OZ_nil()));	\
   int length = OZ_length(l);					\
   int _pairs[length][2];					\
@@ -61,7 +60,7 @@
       _pairs[i][1] = OZ_intToC(OZ_getArg(_val,1));		\
     }								\
     else {							\
-      return OZ_typeError(arg,"domain type unknown");		\
+      return OZ_typeError(0,"domain type unknown");		\
     }								\
   }								\
   Gecode::IntSet ds(_pairs, length);

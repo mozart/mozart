@@ -47,7 +47,12 @@ using namespace Gecode::Int;
  */
 OZ_BI_define(new_intvar,1,1)
 {
-  DECLARE_INT_SET(0,dom);   // the domain of the IntVar
+  OZ_declareDetTerm(0,arg);
+  if(OZ_label(arg) == AtomCompl) {
+    DECLARE_INT_SET(OZ_getArg(arg,0), dom);
+    OZ_RETURN(new_GeIntVarCompl(dom));
+  }
+  DECLARE_INT_SET(arg,dom);   // the domain of the IntVar
   OZ_RETURN(new_GeIntVar(dom));
 }
 OZ_BI_end
