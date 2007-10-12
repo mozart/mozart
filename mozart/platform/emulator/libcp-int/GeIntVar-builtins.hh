@@ -131,4 +131,39 @@ if (!OZ_isBool(v##x))\
 */
 #define DECLARE_INTVARARGS(tIn,array,sp) DECLARE_VARARGS(tIn,array,sp,IntVarArgs,DeclareGeIntVarVA)
 
+inline
+Gecode::DFA::Transition TransitionS(TaggedRef tm) {
+  Gecode::DFA::Transition t;
+  t.i_state = OZ_getArg(tm,0);
+  t.o_state = OZ_getArg(tm,1);
+  t.symbol  = OZ_getArg(tm,2);
+  return t;
+}
+
+/*
+inline
+Gecode::Support::DynamicArray<Gecode::DFA::Transition> TransitionL(TaggedRef tr) {
+//Gecode::DFA::Transition TransitionL(TaggedRef tr) {
+//void TransitionL(TaggedRef tr) {
+  int size = OZ_width(tr);
+  Gecode::DFA::Transition tl[size];
+  Gecode::Support::DynamicArray<Gecode::DFA::Transition> tl2(size);
+  OZ_Term al = OZ_arityList(tr);
+  for(int i=0; OZ_isCons(al); al=OZ_tail(al)) {
+    tl[i] = TransitionS(OZ_subtree(tr,OZ_head(al)));
+  }
+  return tl2;
+  } */
+// tr new Transition array
+// tl Mozart Descripcion of the DFA (TaggedRef)
+#define DeclareDFA(tr, tl)				\
+  Gecode::DFA::Transition tl[OZ_width(tr)];		\
+  {							\
+    OZ_Term al = OZ_arityList(tr);			\
+    for(int i=0; OZ_isCons(al); al=OZ_tail(al)) {	\
+      tl[i] = TransitionS(OZ_subtree(tr, OZ_head(al))); \
+    }							\
+  }
+
+
 #endif
