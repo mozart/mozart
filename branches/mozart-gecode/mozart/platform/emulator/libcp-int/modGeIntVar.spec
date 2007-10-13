@@ -160,4 +160,8 @@ $module_name          = "GFD";
 	'assign'    => { in  => ['+value','int'],
 	                      out => [],
 			      bi  => int_assign},
+
+	'int_ext'    => { in  => ['+value','+value'],
+	                      out => [],
+			      bi  => int_ext},
  );

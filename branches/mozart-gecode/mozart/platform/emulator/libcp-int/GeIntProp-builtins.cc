@@ -319,6 +319,40 @@ OZ_BI_define(int_assign,2,0)
 } OZ_BI_end
 
 
+OZ_BI_define(int_ext,2,0) 
+{
+  DeclareGSpace(sp);
+  DECLARE_INTVARARGS(0,ar1,sp);
+  /*OZ_Term _t = OZ_in(1);
+  OZ_Term inputl = OZ_arityList(_t);
+  OZ_Term inputs = OZ_subtree(_t, OZ_head(inputl));
+  int istate     = OZ_intToC(inputs);
+  OZ_Term tl    = OZ_subtree(_t, OZ_head(OZ_tail(inputl)));
+  Gecode::DFA::Transition trans[OZ_length(tl)];
+  int sizel = OZ_length(tl);
+  for(int i=0; OZ_isCons(tl); tl=OZ_tail(tl)) {
+  //for(int i=0; i < sizel; tl=OZ_tail(tl)) {
+    TransitionS(trans[i++], OZ_head(tl));
+  }
+  OZ_Term fstates = OZ_subtree(_t, OZ_head(OZ_tail(OZ_tail(inputl))));
+  fstates = oz_deref(fstates);
+  int fl[OZ_length(fstates)];
+  sizel = OZ_length(fstates);
+  for(int i=0; OZ_isCons(fstates); fstates=OZ_tail(fstates)) {
+    fl[i++] = OZ_intToC(OZ_head(fstates));
+  }
+  Gecode::DFA dfa(istate, trans, fl);
+  */
+  DeclareDFA(dfa, 1);
+  try {
+    extensional(sp, ar1, dfa);
+  }
+  catch(Exception e) {
+    RAISE_GE_EXCEPTION(e);
+  }
+  CHECK_POST(sp);
+} OZ_BI_end
+
 // Include the propagators wrapper functions generated automatically.
 #include "FDPBuiltins.cc"
 
