@@ -135,7 +135,8 @@ export
    
    %% Assignment propagators
    assign: Assign
-   
+
+   int_ext: Int_ext
    %%Propagators
    Abs
    sortedness: Int_sortedness
@@ -287,6 +288,7 @@ define
    %% Assignment propagators
    Assign = GFD.'assign'
 
+   Int_ext = GFD.'int_ext'
    %% Backward compatibility propagators
    \insert GeMozProp.oz
    
