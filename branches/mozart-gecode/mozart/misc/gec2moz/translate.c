@@ -46,6 +46,21 @@ string Get_FName(pg C, mapss Initials){
   return tmp;
 }
 
+void Imprimir(vector<pg> Code){
+	FILE * file = fopen("salidita2.txt","w");
+	for(int i=0;i<(int)Code.size();i++){
+		fprintf(file,"%s%s (",Code[i]->nspace,Code[i]->nppg);
+		for(int j=0;j<(int)Code[i]->parlist->size();j++){
+			char * aux = strtok(getE(Code[i]->parlist,j)->var,"DC1");
+			fprintf(file,"%s, ",aux );
+			cout << getE(Code[i]->parlist,j)->var << strlen(getE(Code[i]->parlist,j)->var);
+			
+		}
+		fprintf(file,")\n");
+	}
+	fclose(file);
+}
+
 void CGen(const char *outFile, vector<pg> Code, mapss Check, mapss Dec, mapss Space, mapss Initials,const char *mifn,const char *mn){
   fstream file(outFile,ios::out);
   fstream filespec("test.spec",ios::out);
@@ -150,6 +165,7 @@ int main (int argc,char *argv[]){
       yyparse();
       fclose(yyin);
       CGen(argv[2],C,Check,Dec,Space,Initials,argv[3],argv[4]);
+		Imprimir(C);
 	}
     else cout << "Couldn't read input file." << endl; 
   } 

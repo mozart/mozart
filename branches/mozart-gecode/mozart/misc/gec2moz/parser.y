@@ -52,7 +52,7 @@
 
 // Tokens definition
 %union{
-       char vlex[50];
+       char vlex[1000];
        st Code;
 	   
 }
@@ -188,21 +188,28 @@ EXP:	TID								{
 											$$.Par = (sp)malloc(sizeof(struct spar));
 											$$.Par->var = (char*)malloc(sizeof(char)*strlen($1));
 											strcpy($$.Par->var,$1);
+											$$.Par->vdef = NULL;
 										}
 		|TAST TID						{
 											$$.Par = (sp)malloc(sizeof(struct spar));
 											$$.Par->var = (char*)malloc(sizeof(char)*strlen($2));
 											strcpy($$.Par->var,$2);
+											$$.Par->vdef = NULL;
+											
 										}
 		|TAMP TID						{
 											$$.Par = (sp)malloc(sizeof(struct spar));
 											$$.Par->var = (char*)malloc(sizeof(char)*strlen($2));
 											strcpy($$.Par->var,$2);
+											$$.Par->vdef = NULL;
+											
 										}
 		|TIGUAL TID						{
 											$$.Par = (sp)malloc(sizeof(struct spar));
 											$$.Par->vdef = (char*)malloc(sizeof(char)*strlen($2));
 											strcpy($$.Par->vdef,$2);
+											
+											
 										}
 		|TID TIGUAL TID					{
 											$$.Par = (sp)malloc(sizeof(struct spar));
@@ -210,6 +217,7 @@ EXP:	TID								{
 											$$.Par->vdef = (char*)malloc(sizeof(char)*strlen($3));
 											strcpy($$.Par->var,$1);
 											strcpy($$.Par->vdef,$3);
+											
 										}
 		|TID TIGUAL TINTEGER			{
 											$$.Par = (sp)malloc(sizeof(struct spar));
@@ -217,6 +225,7 @@ EXP:	TID								{
 											$$.Par->vdef = (char*)malloc(sizeof(char)*strlen($3));
 											strcpy($$.Par->var,$1);
 											strcpy($$.Par->vdef,$3);
+											
 										}
 		|TAST TID TIGUAL TID			{
 											$$.Par = (sp)malloc(sizeof(struct spar));
@@ -224,6 +233,7 @@ EXP:	TID								{
 											$$.Par->vdef = (char*)malloc(sizeof(char)*strlen($4));
 											strcpy($$.Par->var,$2);
 											strcpy($$.Par->vdef,$4);
+											
 										}
 		|TAST TID TIGUAL TINTEGER		{
 											$$.Par = (sp)malloc(sizeof(struct spar));
@@ -231,6 +241,7 @@ EXP:	TID								{
 											$$.Par->vdef = (char*)malloc(sizeof(char)*strlen($4));
 											strcpy($$.Par->var,$2);
 											strcpy($$.Par->vdef,$4);
+											
 										}	
 		  
 
