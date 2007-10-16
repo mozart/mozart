@@ -142,7 +142,7 @@ if (!OZ_isBool(v##x))\
   }
 
 /*	Declares a DFA with the argument pos */
-#define DeclareDFA(dfa, pos)						\
+#define DeclareDFA(pos, dfa)						\
   OZ_Term _t = OZ_in(pos);						\
   OZ_Term _inputl = OZ_arityList(_t);					\
   OZ_Term _inputs = OZ_subtree(_t, OZ_head(_inputl));			\
