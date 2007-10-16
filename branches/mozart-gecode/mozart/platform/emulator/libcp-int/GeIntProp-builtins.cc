@@ -343,7 +343,7 @@ OZ_BI_define(int_ext,2,0)
   }
   Gecode::DFA dfa(istate, trans, fl);
   */
-  DeclareDFA(dfa, 1);
+  DeclareDFA(1,dfa);
   try {
     extensional(sp, ar1, dfa);
   }
