@@ -175,9 +175,54 @@ $module_name      		  = "GFDProp";
 	bi => circuit_IVA_ICL_PK}
 ,
 
+'cumulatives_IVA_IVA_IVA_IVA_IVA_IA_Bl_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => cumulatives_IVA_IVA_IVA_IVA_IVA_IA_Bl_ICL_PK}
+,
+
+'cumulatives_IA_IVA_IVA_IVA_IVA_IA_Bl_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => cumulatives_IA_IVA_IVA_IVA_IVA_IA_Bl_ICL_PK}
+,
+
+'cumulatives_IVA_IVA_IA_IVA_IVA_IA_Bl_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => cumulatives_IVA_IVA_IA_IVA_IVA_IA_Bl_ICL_PK}
+,
+
+'cumulatives_IA_IVA_IA_IVA_IVA_IA_Bl_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => cumulatives_IA_IVA_IA_IVA_IVA_IA_Bl_ICL_PK}
+,
+
+'cumulatives_IVA_IVA_IVA_IVA_IA_IA_Bl_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => cumulatives_IVA_IVA_IVA_IVA_IA_IA_Bl_ICL_PK}
+,
+
+'cumulatives_IA_IVA_IVA_IVA_IA_IA_Bl_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => cumulatives_IA_IVA_IVA_IVA_IA_IA_Bl_ICL_PK}
+,
+
+'cumulatives_IVA_IVA_IA_IVA_IA_IA_Bl_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => cumulatives_IVA_IVA_IA_IVA_IA_IA_Bl_ICL_PK}
+,
+
+'cumulatives_IA_IVA_IA_IVA_IA_IA_Bl_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => cumulatives_IA_IVA_IA_IVA_IA_IA_Bl_ICL_PK}
+,
+
 'sorted_IVA_IVA_ICL_PK' => { in => ['+value', '+value', '+value', '+value'],
 	out=>[],
 	bi => sorted_IVA_IVA_ICL_PK}
+,
+
+'sorted_IVA_IVA_IVA_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => sorted_IVA_IVA_IVA_ICL_PK}
 ,
 
 'count_IVA_In_IRT_In_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
@@ -213,6 +258,11 @@ $module_name      		  = "GFDProp";
 'count_IVA_IVA_ICL_PK' => { in => ['+value', '+value', '+value', '+value'],
 	out=>[],
 	bi => count_IVA_IVA_ICL_PK}
+,
+
+'count_IVA_IS_IA_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => count_IVA_IS_IA_ICL_PK}
 ,
 
 'min_IV_IV_IV_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value'],
@@ -263,5 +313,45 @@ $module_name      		  = "GFDProp";
 'linear_IVA_IRT_IV_BV_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
 	out=>[],
 	bi => linear_IVA_IRT_IV_BV_ICL_PK}
+,
+
+'linear_IA_IVA_IRT_In_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => linear_IA_IVA_IRT_In_ICL_PK}
+,
+
+'linear_IA_IVA_IRT_IV_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => linear_IA_IVA_IRT_IV_ICL_PK}
+,
+
+'linear_IA_IVA_IRT_In_BV_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => linear_IA_IVA_IRT_In_BV_ICL_PK}
+,
+
+'linear_IA_IVA_IRT_IV_BV_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => linear_IA_IVA_IRT_IV_BV_ICL_PK}
+,
+
+'linear_BVA_IRT_In_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => linear_BVA_IRT_In_ICL_PK}
+,
+
+'linear_BVA_IRT_IV_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => linear_BVA_IRT_IV_ICL_PK}
+,
+
+'linear_IA_BVA_IRT_In_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => linear_IA_BVA_IRT_In_ICL_PK}
+,
+
+'linear_IA_BVA_IRT_IV_ICL_PK' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => linear_IA_BVA_IRT_IV_ICL_PK}
 
 );

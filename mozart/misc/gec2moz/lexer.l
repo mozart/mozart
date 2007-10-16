@@ -84,7 +84,7 @@ const		{return(TCONST);}
 
 
 [ \t]+				/* obvia espacios en blanco */
-[\n(\r\n)]				{nro_lineas++;}
+[\n]				{nro_lineas++;}
 .					{printf(" Linea %d : Caracter desconocido  %s\n", nro_lineas, yytext);}
 
 %%
