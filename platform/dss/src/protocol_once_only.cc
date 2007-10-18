@@ -52,6 +52,11 @@ namespace _dss_internal{ //Start namespace
   //    |-----OO_BIND---->|                 |
   //    |<--OO_REDIRECT---|---OO_REDIRECT-->|   (sent to all proxies)
   //
+  // or: if P is the home proxy, it binds the transient immediately
+  //    P                 M                 P'
+  //    |----OO_BOUND---->|                 |
+  //    |                 |---OO_REDIRECT-->|   (sent to all proxies)
+  //
   // Proxy P sends an update (transient not bound yet):
   //    P                       M                       P'
   //    |---OO_UPDATE_REQUEST-->|                       |
@@ -75,6 +80,7 @@ namespace _dss_internal{ //Start namespace
   //
   // Message formats (optional parameters are between square brackets):
   //    OO_BIND AbsOp Pst [GlobalThread]
+  //    OO_BOUND
   //    OO_REDIRECT Pst
   //    OO_UPDATE_REQUEST AbsOp Pst [GlobalThread]
   //    OO_UPDATE AbsOp Pst [GlobalThread]
@@ -84,6 +90,7 @@ namespace _dss_internal{ //Start namespace
     // proxy to its manager, and so on.
     enum OO_msg_names{
       OO_BIND,           // PM: try to bind the once only Manager
+      OO_BOUND,          // PM: transient bound, notify manager
       OO_REDIRECT,       // MP: tell the binding to proxies
       OO_GETSTATUS,      // PM: get the status (bound or not) of a Manager
       OO_RECEIVESTATUS,  // MP: answer to a getstatus
@@ -165,6 +172,14 @@ namespace _dss_internal{ //Start namespace
       while (!a_proxies.isEmpty()) sendRedirect(a_proxies.pop());
       break;
     }
+    case OO_BOUND: {
+      // the home proxy has already bound the transient; send
+      // OO_REDIRECT to all remote proxies
+      setStatus(TRANS_STATUS_BOUND);
+      deregisterProxy(a_coordinator->m_getEnvironment()->a_myDSite);
+      while (!a_proxies.isEmpty()) sendRedirect(a_proxies.pop());
+      break;
+    }
     case OO_UPDATE_REQUEST: {
       if (isPermFail() || getStatus() == TRANS_STATUS_BOUND) break;
       int aop = msg->popIntVal();
@@ -213,6 +228,12 @@ namespace _dss_internal{ //Start namespace
     if (isPermFail()) return DSS_RAISE;
     switch (getStatus()) {
     case TRANS_STATUS_FREE:
+      if (a_proxy->m_isHomeProxy()) {
+	// the home proxy binds the transient immediately
+	sendToManager(OO_BOUND);
+	setStatus(TRANS_STATUS_BOUND);
+	return DSS_PROCEED;
+      }
       // send an OO_BIND message to the manager
       if (th_id) sendToManager(OO_BIND, aop, UnboundPst(msg), th_id);
       else sendToManager(OO_BIND, aop, UnboundPst(msg));
