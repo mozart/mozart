@@ -547,8 +547,7 @@ OZ_Return distVarBindImpl(OzVariable *ov, TaggedRef *varPtr, TaggedRef val) {
   case DSS_PROCEED: // bind the local entity
     med->bind(val);
     return PROCEED; 
-  case DSS_SKIP: // skip the operation: should not happen
-    Assert(0);
+  case DSS_SKIP: // the binding is done
     return PROCEED;
   case DSS_SUSPEND: { // suspend operation (no explicit resume)
     // use quiet suspension here (avoid extra distributed operations),
