@@ -175,7 +175,7 @@ namespace _dss_internal{ //Start namespace
     case OO_BOUND: {
       // the home proxy has already bound the transient; send
       // OO_REDIRECT to all remote proxies
-      setStatus(TRANS_STATUS_BOUND);
+      Assert(getStatus() == TRANS_STATUS_BOUND);
       deregisterProxy(a_coordinator->m_getEnvironment()->a_myDSite);
       while (!a_proxies.isEmpty()) sendRedirect(a_proxies.pop());
       break;
@@ -232,6 +232,8 @@ namespace _dss_internal{ //Start namespace
 	// the home proxy binds the transient immediately
 	sendToManager(OO_BOUND);
 	setStatus(TRANS_STATUS_BOUND);
+	// prevent the manager from accepting other bindings
+	a_proxy->a_coordinator->a_prot->setStatus(TRANS_STATUS_BOUND);
 	return DSS_PROCEED;
       }
       // send an OO_BIND message to the manager
