@@ -24,8 +24,13 @@
 ###
 
 ###
+# Platypus is required to build the application bundle. Please download it from:
+# http://www.sveinbjorn.org/platypus and install the command lines tools. Then, set the
+# following variable accordingly.
+
 # Platpus commanline tool
 PLAT=/usr/local/bin/platypus
+
 ## Cocoa dialog : download it from http://cocoadialog.sourceforge.net/
 CD=/Users/ggutierrez/Desktop/CocoaDialog.app
 
@@ -57,7 +62,7 @@ EXT_LIBS=$(APP)/Contents/Resources/ext_libs
 EXEC=$(APP)/Contents/Resources/platform/i486-darwin/emulator.exe
 
 ## Platypus call
-PLATCALL=$(PLAT) -a '$(NAME)' -t 'Shell' -o 'None' -u 'Gustavo Gutierrez' -i 'appIcon.icns'  -V '$(VERSION)' -s '????' -I 'org.Mozart' 'script' '$(APP)'
+PLATCALL=$(PLAT) -a '$(NAME)' -t 'Shell' -o 'None' -u 'Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>' -i 'appIcon.icns'  -V '$(VERSION)' -s '????' -I 'org.Mozart' 'script' '$(APP)'
 
 
 # External libraries thet mozart uses (i.e. gmp)
