@@ -23,6 +23,9 @@
 # Variables for external tools and directories.
 ###
 
+###
+# Platpus commanline tool
+PLAT=/usr/local/bin/platypus
 ## Cocoa dialog : download it from http://cocoadialog.sourceforge.net/
 CD=/Users/ggutierrez/Desktop/CocoaDialog.app
 
@@ -52,6 +55,9 @@ VERSION=1.3.2
 APP=$(NAME).app
 EXT_LIBS=$(APP)/Contents/Resources/ext_libs
 EXEC=$(APP)/Contents/Resources/platform/i486-darwin/emulator.exe
+
+## Platypus call
+PLATCALL=$(PLAT) -a '$(NAME)' -t 'Shell' -o 'None' -u 'Gustavo Gutierrez' -i 'appIcon.icns'  -V '$(VERSION)' -s '????' -I 'org.Mozart' 'script' '$(APP)'
 
 
 # External libraries thet mozart uses (i.e. gmp)
@@ -157,10 +163,7 @@ fixpaths:
 #Create a bundle from skel
 ##
 bundskel:
-        @echo
-        @echo --------------------- Copying the skel --------------------
-        cp -R skel/Mozart.app .
-        @echo
+        $(shell $(PLATCALL))
         @echo --------------------- Populating the bundle with mozart dirs ------------
         for i in $(MOZ_DIRS); do  \
                 cp -R $(MOZ_HOME)/$$i $(BRSRCS); \
@@ -169,6 +172,7 @@ bundskel:
         cp -R $(CD) $(BRSRCS)
         @echo --------------------- Done. ---------------
         @echo --------------------- Populating the bundle with External Libs ------------
+        mkdir -p $(BFRWRKS)/
         cp $(MOZ_LIBS_DIR)/* $(BFRWRKS)/
         @echo --------------------- Done. ---------------
 
