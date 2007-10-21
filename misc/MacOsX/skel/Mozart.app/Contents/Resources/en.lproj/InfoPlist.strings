@@ -1,4 +1,0 @@
-CFBundleName = "Mozart";
-CFBundleShortVersionString = "1.4.0";
-CFBundleGetInfoString = "Mozart version 1.4.0 Copyright 2007 Gustavo Gutierrez";
-NSHumanReadableCopyright = "Copyright 2007 Gustavo Gutierrez.";
