@@ -1,25 +1,24 @@
 #!/bin/bash
 
-OZHOME=$1/Contents/Resources/
+OZHOME=$1/Contents/Resources
 CD="$1/Contents/Resources/CocoaDialog.app/Contents/MacOS/CocoaDialog"
 #CD="Mozart.app/Contents/Resources/CocoaDialog.app/Contents/MacOS/CocoaDialog"
-
-home=`cd ~ && pwd`
 
 firstTime()
 {
     rv="0"
-    if [ ! -e "$home/.mozartapp" ]; then
+    if [ ! -e "$HOME/.mozartapp" ]; then
                 `$CD ok-msgbox --no-cancel  --icon info --timeout 20 --title "Mozart" --text "This is the first time you run Mozart." --informative-text "Command lines tools (e.g., ozc, ozmake, oztool) will be added to your PATH. You can use these commands from a terminal." `
-                `echo "export PATH=\$PATH:$OZHOME/bin" >> $home/.profile`
-            `echo "OZHOME=$OZHOME" > $home/.mozartapp `
+#               `echo "export PATH=\$PATH:$OZHOME/bin" >> $HOME/.profile`
+                `echo "export PATH=$OZHOME/bin:"'$PATH' >> $HOME/.profile`
+            `echo "OZHOME=$OZHOME" > $HOME/.mozartapp `
     fi
 }
 
 detectEmacsConf()
 {
-    if [ -e "$home/.emacs" ]; then
-        has_oz=`grep "(require 'oz)" $home/.emacs`
+    if [ -e "$HOME/.emacs" ]; then
+        has_oz=`grep "(require 'oz)" $HOME/.emacs`
         echo $has_oz
         if [ ! "$has_oz"x == "x" ]; then
             `$CD ok-msgbox --no-cancel --icon info --timeout 20 --title ".emacs present" --text "Emacs configuration file is present." --informative-text "this file contains a line (require 'oz) and may cause problems"`
