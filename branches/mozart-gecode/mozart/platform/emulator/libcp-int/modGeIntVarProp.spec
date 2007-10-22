@@ -1,6 +1,6 @@
-$module_init_fun_name      = "GFDProp";
+$module_init_fun_name      = "geivp_init";
 
-$module_name      		  = "GFDProp";
+$boot_module_name      		  = "GFDProp";
 
 %builtins_all = 
 (
