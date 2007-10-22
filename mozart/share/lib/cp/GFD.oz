@@ -57,6 +57,12 @@ prepare
 	   med: 1  %Select median value.
 	   max: 2  %Select maximum value.
 	   )
+   
+   Pk = '#'(
+	   def:   0  %Make a default decision
+	   speed: 1  %Prefer speed over memory consumption
+	   memory:2  %Prefer little memory over speed
+	   )
 
 export
    %% Telling domains
@@ -157,6 +163,9 @@ export
    %% Consistency levels
    cl: Cl
 
+   %% Propagation kind
+   pk: Pk
+   
    %% Integer assignment
    ia: IA
    %% Temporal:

@@ -1,8 +1,8 @@
-$module_init_fun_name = "module_init_geintvar";
+###$module_init_fun_name = "module_init_geintvar";
 
-$module_init_fun      = "oz_init_module";
+###$module_init_fun      = "oz_init_module";
 
-$module_name          = "GFD";
+###$module_name          = "GFD";
 
 %builtins_all = 
 (
