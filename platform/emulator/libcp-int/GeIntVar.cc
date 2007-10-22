@@ -157,10 +157,14 @@ void GeIntVar::toStream(ostream &out) {
 }
   
 
-void module_init_geintvar(void){ }
-void GFDProp(void){ }
-
+//void module_init_geintvar(void){ }
+//void GFDProp(void){ }
+/*
 #define STATICALLY_INCLUDED
 #include "modGeIntVar-table.cc"
-//#include "modGeIntVarProp-table.cc"
+#include "modGeIntVarProp-table.cc"
+*/
 
+#ifndef MODULES_LINK_STATIC
+#include "modGeIntVar-table.cc"
+#endif
