@@ -84,7 +84,7 @@ ICN=appIcon.icns
 BBIN=Mozart.sh
 
 SOURCE_FILES=$(APP)
-OZHOME_FILES=README LICENSE.rtf LICENSE.html
+OZHOME_FILES=
 OZHOME_DIRS= examples
 
 TEMPLATE_DMG=template.dmg
@@ -108,7 +108,7 @@ $(TEMPLATE_DMG).bz2:
         @echo
         @echo --------------------- Generating empty template --------------------
         mkdir template
-        hdiutil create -size  40m "$(TEMPLATE_DMG)" -srcfolder template -format UDRW -volname "$(NAME)" -quiet
+        hdiutil create -size  100m "$(TEMPLATE_DMG)" -srcfolder template -format UDRW -volname "$(NAME)" -quiet
         rmdir template
         bzip2 "$(TEMPLATE_DMG)"
         @echo
@@ -129,23 +129,25 @@ $(MASTER_DMG): $(WC_DMG) $(SOURCE_FILES)
                 rm -rf "$(WC_DIR)/$$i"; \
                 ditto -rsrc "$(MOZ_HOME)/$$i" "$(WC_DIR)"; \
         done
-        for i in $(OZHOME_DIRS); do  \
-                rm -rf "$(WC_DIR)/$$i"; \
-                ditto -rsrc "$(MOZ_HOME)/$$i" "$(WC_DIR)/$$i"; \
-        done
 
-        rm -rf "$(WC_DIR)/doc"
-        ditto -rsrc "$(MOZ_DOC_HTML)" "$(WC_DIR)/doc/";
+        rm -rf "$(WC_DIR)/Examples"; \
+        ditto -rsrc "$(MOZ_HOME)/examples" "$(WC_DIR)/Examples"; \
 
-        rm -rf "$(WC_DIR)/stdlib-doc"
-        ditto -rsrc "$(MOZ_STDLIB_HTML)/mozart-ozmake" "$(WC_DIR)/stdlib-doc/mozart-ozmake";
-        ditto -rsrc "$(MOZ_STDLIB_HTML)/mozart-stdlib" "$(WC_DIR)/stdlib-doc/mozart-stdlib";
+        rm -rf "$(WC_DIR)/Doc"
+        ditto -rsrc "$(MOZ_DOC_HTML)" "$(WC_DIR)/Doc/mozart";
+
+        rm -rf "$(WC_DIR)/Doc/stdlib-doc"
+        ditto -rsrc "$(MOZ_STDLIB_HTML)/mozart-ozmake" "$(WC_DIR)/Doc/stdlib-doc/mozart-ozmake";
+        ditto -rsrc "$(MOZ_STDLIB_HTML)/mozart-stdlib" "$(WC_DIR)/Doc/stdlib-doc/mozart-stdlib";
 
         WC_DEV=`hdiutil info | grep "$(WC_DIR)" | grep "Apple_HFS" | awk '{print $$1}'` && \
         hdiutil detach $$WC_DEV -quiet -force
         rm -f "$(MASTER_DMG)"
-        hdiutil convert "$(WC_DMG)" -quiet -format UDZO -imagekey zlib-level=9 -o "$@"
+        hdiutil convert "$(WC_DMG)" -quiet  -format UDZO -imagekey zlib-level=9 -o "$@"
         rm -rf $(WC_DIR)
+        hdiutil unflatten "$@"
+        /Developer/Tools/Rez Carbon.r license.r -a -o "$@"
+        hdiutil flatten "$@"
         @echo
 
 ##
@@ -183,7 +185,7 @@ bundskel:
 
 .PHONY: clean veryclean
 clean:
-        -rm -rf $(TEMPLATE_DMG) $(MASTER_DMG) $(WC_DMG)  $(TEMPLATE_DMG).bz2
+        -rm -rf $(TEMPLATE_DMG) $(MASTER_DMG) $(WC_DMG)
 
 veryclean: clean
         -rm -rf Mozart.app
