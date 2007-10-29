@@ -46,11 +46,14 @@ MODULE_NAMES =							\
 	CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat \
 	Win32 Profile OsTime ZlibIO 
 
-MODULE_NAMES += geoz-bool geoz-int 
+
+MODULE_NAMES += geoz-int geoz-bool geoz-set
+
 
 
 CLEAN_LIBCP=cd libcp-int; $(MAKE) clean
 CLEAN_LIBCP += cd libcp-bool; $(MAKE) clean
+CLEAN_LIBCP += cd libcp-set; $(MAKE) clean
 
 
 
@@ -76,6 +79,8 @@ OZVERSION=	$(SRCTOP)/OZVERSION
 
 SUBDIRS+=libcp-int
 SUBDIRS+=libcp-bool
+SUBDIRS+=libcp-set
+
 
 # these are the builtin modules: non-sited primitives
 # NOTE: update this list also in share/lib/Makefile.in 
@@ -300,6 +305,10 @@ geoz-int.so-$(PLATFORM):
 .PHONY: geoz-bool.so-$(PLATFORM)
 geoz-bool.so-$(PLATFORM):
 	cd libcp-bool; $(MAKE) ../$@
+
+.PHONY: geoz-set.so-$(PLATFORM)
+geoz-set.so-$(PLATFORM):
+	cd libcp-set; $(MAKE) ../$@
 
 .PHONY: libFSP.a FSP.so-$(PLATFORM)
 libFSP.a FSP.so-$(PLATFORM):
