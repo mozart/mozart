@@ -85,6 +85,9 @@ bool GeIntVar::intersect(TaggedRef x) {
 
   IntVar& liv = get_IntVarInfo(x);
   IntView vw(liv);
+  IntView tmp2(gv);
+
+  printf("GeIntVar.cc min1=%d - max1=%d -- min2=%d - max2=%d\n",vw.min(), vw.max(),tmp2.min(),tmp2.max());fflush(stdout);  
   //Ask Alejandro about the use of getGSpace() instead of oz_currentBoard()
   return (vw.inter_r(oz_currentBoard()->getGenericSpace(),gvr)==ME_GEN_FAILED ? false: true);
 }

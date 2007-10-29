@@ -151,6 +151,9 @@
 			      bi  => int_sumCN},
 
     ##reified_int
+    'int_reified'       => { in  => ['+value','+value','+value'],
+	                      out => [],
+			      bi  => int_reified},
     
     'int_disjoint'       => { in  => ['+value','+value','int','+value'],
 	                      out => [],

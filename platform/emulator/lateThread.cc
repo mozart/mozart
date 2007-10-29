@@ -73,8 +73,9 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
 	return SUSPEND;
   
   // no variable left in gs, delete it and vanish
-  if(gs->isSolved())
-    cb->deleteGenericSpace();
+  if(gs->isSolved()) {   
+      cb->deleteGenericSpace();
+  }
   cb->deleteLateThread();
   return PROCEED;
 } OZ_BI_end

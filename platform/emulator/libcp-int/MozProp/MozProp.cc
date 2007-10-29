@@ -68,6 +68,7 @@ Gecode::ExecStatus DisjointProp::propagate(Gecode::Space *s) {
   int xl = x0.min(), xu = x0.max();
   int yl = x1.min(), yu = x1.max();
   
+
   if(xu + xd <= yl) return Gecode::ES_SUBSUMED(this,s);
   if(yu + yd <= xl) return Gecode::ES_SUBSUMED(this,s);
   
@@ -75,16 +76,14 @@ Gecode::ExecStatus DisjointProp::propagate(Gecode::Space *s) {
     /*GECODE_AUTOARRAY(Gecode::Int::Linear::Term, t, 2);
     t[0].a = 1; t[1].a = -1;
     t[0].x = x0; t[1].x = x1;
-    Gecode::Int::Linear::post(s,t,2,Gecode::IRT_GQ,yd);
-	*/
+    Gecode::Int::Linear::post(s,t,2,Gecode::IRT_GQ,yd);*/
     return Gecode::ES_SUBSUMED(this,s);
   }
   if(yl + yd > xu) {
     /*GECODE_AUTOARRAY(Gecode::Int::Linear::Term,t,2);
     t[0].a = -1; t[1].a = 1;
     t[0].x = x0; t[1].x = x1;
-    Gecode::Int::Linear::post(s,t,2,Gecode::IRT_GQ,xd);
-	*/
+    Gecode::Int::Linear::post(s,t,2,Gecode::IRT_GQ,xd);*/
     return Gecode::ES_SUBSUMED(this,s);
   }
   
@@ -198,6 +197,7 @@ Gecode::ExecStatus ReifiedIntProp::propagate(Gecode::Space *s) {
  * @param Num int
  */
 
+
 //void WatchMax(Gecode::Space *s, Gecode::IntVar a, Gecode::BoolVar b, int Num) {
 void WatchMax(Gecode::Space *s, Gecode::IntVar a, Gecode::IntVar b, int Num) {
   if(s->failed()) return;
@@ -212,6 +212,7 @@ void WatchMax(Gecode::Space *s, Gecode::IntVar a, Gecode::IntVar b, int Num) {
  * @param Num int
  */
 
+
 //void WatchMin(Gecode::Space *s, IntVar a, BoolVar b, int Num) {
 void WatchMin(Gecode::Space *s, IntVar a, IntVar b, int Num) {  
 	if(s->failed()) return;
@@ -225,9 +226,11 @@ void WatchMin(Gecode::Space *s, IntVar a, IntVar b, int Num) {
  * @param b BoolVar
  * @param Num int
  */
+
 //void WatchSize(Gecode::Space *s, IntVar a, BoolVar b, int Num) {
 void WatchSize(Gecode::Space *s, IntVar a, IntVar b, int Num) {
-if(s->failed()) return;
+  if(s->failed()) return;
+
   (void) new(s) WatchSizeProp(s,a,b,Num);
 }
 
@@ -253,11 +256,13 @@ void Disjoint(Gecode::Space *s, IntVar D1, int I1, IntVar D2, int I2) {
  * @param I2 int 
  * @param D3 BoolVar
  */
+
 /*
  void DisjointC(Gecode::Space *s, IntVar D1, int I1, IntVar D2, int I2, BoolVar D3) {
+
   if(s->failed()) return;
   (void) new(s) DisjointCProp(s,D1,D2,D3,I2,I2);
-}
+  }
 */
 /**
  * \brief Create a propagator that when x \in d implique  b = 1 other case b = 0

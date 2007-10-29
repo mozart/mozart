@@ -32,6 +32,8 @@
 
 #include "value.hh"
 #include "GeIntVar.hh"
+//#include "../libcp-bool/GeBoolVar.hh"
+#include "../libcp-bool/GeBoolVar-builtins.hh"
 #include "GeSpace-builtins.hh"
 #include "builtins.hh"
 // think: just one include
