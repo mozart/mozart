@@ -102,6 +102,7 @@ export
   % int_disjoint:         Int_disjoint
    %int_reified_int:      Int_reified_int
 
+
    %%Miscellaneous propagators
    plus:            Plus
    plusD:           PlusD
@@ -299,6 +300,12 @@ define
 
    Int_ext = GFD.'int_ext'
    %% Backward compatibility propagators
+
+
+   
+
+
+   
    \insert GeMozProp.oz
    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

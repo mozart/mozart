@@ -49,7 +49,7 @@ OZ_Return GeVar<VarImp, pc>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
   }
   
   
-  { 
+  {
     GeVar<VarImp,pc>* rgevar = static_cast<GeVar<VarImp,pc>*>(get_GeVar(*rPtr));
     //GeVarBase *rgevar = get_GeVar(*rPtr);
     if(am.inEqEq()) {
@@ -68,7 +68,6 @@ OZ_Return GeVar<VarImp, pc>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
       if(!oz_isLocalVar(extVar2Var(rgevar))){
 	if(!(rgevar->intersect(makeTaggedRef(lPtr))))
 	  return FAILED;
-	////printf("local, no local \n");fflush(stdout);
 	oz_bindGlobalVar2(extVar2Var(rgevar), rPtr, makeTaggedRef(lPtr));	
 	disposeS();
       }else{
@@ -76,9 +75,10 @@ OZ_Return GeVar<VarImp, pc>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
 	  // "this" is local.  The binding cannot go upwards, so...    
 	  //Assert(oz_isLocalVar(extVar2Var(rgeintvar)));
 	  //I don't think this assert is correct,  other can be a global var
-	  //printf("local, local \n");fflush(stdout);
+	//printf("local, local \n");fflush(stdout);
 	if(!(rgevar->intersect(makeTaggedRef(lPtr))))
 	  return FAILED;
+	
 	oz_bindLocalVar(extVar2Var(this), lPtr, makeTaggedRef(rPtr));
 	propagator(space,lgevar,rgevar);
 	lgevar->incUnifyC();
@@ -106,6 +106,7 @@ OZ_Return GeVar<VarImp, pc>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
   
  PROP:
   //wakeup space propagators to inmediatly update all related variables
+  //printf("GeVar.icc antes de status \n");fflush(stdout);
   if(space->status() == Gecode::SS_FAILED) {
     extVar2Var(this)->getBoardInternal()->setFailed();
     return FAILED;
@@ -117,7 +118,6 @@ OZ_Return GeVar<VarImp, pc>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
 template <class VarImp, Gecode::PropCond pc>
 inline
 OZ_Return GeVar<VarImp,pc>::bindV(TaggedRef* vPtr, TaggedRef val) {
-  //printf("GeVar::bindV\n"); fflush(stdout);
   if (validV(val)) {
     if(am.inEqEq()) {
       if( !In(val) ) return FAILED;
@@ -132,24 +132,21 @@ OZ_Return GeVar<VarImp,pc>::bindV(TaggedRef* vPtr, TaggedRef val) {
       //printf("variable local\n"); fflush(stdout);
       // first bind the variable in Mozart
       oz_bindLocalVar(extVar2Var(this), vPtr, val);
-
+      	
       GenericSpace* s =  extVar2Var(this)->getBoardInternal()->getGenericSpace();
-
+      	
       Gecode::ModEvent me = bind(s,this,val);
       Assert(!Gecode::me_failed(me));
-      
       if(s->status() == Gecode::SS_FAILED) {
 	extVar2Var(this)->getBoardInternal()->setFailed();
 	return FAILED;
       }
-
       //local propagators
       if(hasDomReflector()) {
-	s->decForeignProps();
+      	s->decForeignProps();
       }
       s->incDetermined();
       s->decUnifyProps(getUnifyC());
-
       return PROCEED;
   
     } else {

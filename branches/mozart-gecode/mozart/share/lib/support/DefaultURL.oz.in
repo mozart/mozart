@@ -58,6 +58,7 @@ prepare
       Libs      = ['Application'
 		   'GFD'
 		   'GBD'
+		   'GFS'
 		   'Search' 'FD' 'Schedule' 'FS' 'Combinator'
 		   'RecordC'
 		   'Error' 'ErrorRegistry' 'Finalize' 'Service'

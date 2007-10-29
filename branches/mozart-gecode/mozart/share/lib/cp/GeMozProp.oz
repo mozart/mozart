@@ -151,6 +151,6 @@ end
 %%   Reified.int = IntR
 
 %%Pending ....
-Reified.int = _ 
+Reified.int = GFD.int_reified 
 
 

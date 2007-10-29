@@ -31,7 +31,9 @@
 using namespace Gecode;
 using namespace Gecode::Int;
 
+
 typedef GeVar<BoolVarImp,PC_INT_DOM> GeVar_Bool;
+
 
 // A GeBoolVar interfaces an IntVar inside a GenericSpace.
 class GeBoolVar : public GeVar_Bool {
@@ -40,22 +42,28 @@ protected:
   GeBoolVar(GeBoolVar& gv) :
     GeVar_Bool(gv) {}
 
+
 public:
   GeBoolVar(int index) :
     GeVar_Bool(index,T_GeBoolVar) {}
+
+
 
   BoolVar& getBoolVar(void) {
     GeView<Int::BoolVarImp> iv(getGSpace()->getVar(index));
     Int::BoolView *vv = reinterpret_cast<Int::BoolView*>(&iv);
     BoolVar *tmp = new BoolVar(*vv);
+
     return (*tmp);
   }
 
   // the returned reference should be constant
+
   BoolVar& getBoolVarInfo() {
     GeView<Int::BoolVarImp> iv(getGSpace()->getVarInfo(index));
     Int::BoolView *vv = reinterpret_cast<Int::BoolView*>(&iv);
     BoolVar *tmp = new BoolVar(*vv);
+
     return (*tmp);
   }
   
@@ -93,6 +101,7 @@ public:
   virtual TaggedRef newVar(void);
 
   virtual void propagator(GenericSpace *s, 
+
 			  GeVar_Bool *lgevar,
 			  GeVar_Bool *rgevar) {
     BoolVar& lbvar = (static_cast<GeBoolVar*>(lgevar))->getBoolVarInfo();
@@ -101,22 +110,28 @@ public:
   }
 
   virtual ModEvent bind(GenericSpace *s, 
+
 			GeVar_Bool *v, 
 			OZ_Term val) {
     int n = OZ_intToC(val);
+
     return Int::BoolView(getBoolVarInfo()).eq(s,n);
+
   }
 
   virtual Bool validV(OZ_Term v);
     
   // reflection mechanism 
   virtual bool assigned(void) {
+
     GeView<Int::BoolVarImp> iv(getGSpace()->getVarInfo(index));
     Int::BoolView *vv = reinterpret_cast<Int::BoolView*>(&iv);
+
     return vv->assigned();
   }
   
   virtual OZ_Term getVal(void) {
+
     GeView<Int::BoolVarImp> iv(getGSpace()->getVarInfo(index));
     Int::BoolView *vv = reinterpret_cast<Int::BoolView*>(&iv);
     return OZ_int(vv->val());
@@ -128,6 +143,7 @@ public:
 inline 
 OZ_Term new_GeBoolVar(int min, int max) {
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
+
   BoolVar x(sp,min,max);
   GeBoolVar *nv = new GeBoolVar(sp->getVarsSize());
   OzVariable* ov   = extVar2Var(nv);
@@ -146,6 +162,7 @@ inline
 bool OZ_isGeBoolVar(OZ_Term v) { 
   OZ_Term v_local = OZ_deref(v);
   if (oz_isGeVar(v_local)) {
+
     GeVar<Int::BoolVarImp,PC_INT_DOM> *gv = 
       static_cast< GeVar_Bool * >(oz_getExtVar(v_local));
     return gv->getType() == T_GeBoolVar;

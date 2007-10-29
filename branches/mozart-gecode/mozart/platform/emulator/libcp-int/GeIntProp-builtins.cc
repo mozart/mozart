@@ -164,13 +164,13 @@ OZ_BI_define(int_linearR,5,0)
 
   DeclareGeIntVar(2,v2,sp);
   DeclareGeBoolVar(3,v3,sp);
-
+  /*
   try{
     linear(sp,array_var,relType,v2,v3,conLevel);
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
-  }
+    }*/
   CHECK_POST(sp);
     
 } OZ_BI_end
@@ -188,13 +188,13 @@ OZ_BI_define(int_linearCR,6,0)
   
   DeclareGeIntVar(3,v3,sp);
   DeclareGeBoolVar(4,v4,sp);
-
+  /*
   try{
     linear(sp,array_arg,array_var,relType,v3,v4,conLevel);
   }
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
-  }
+    }*/
   CHECK_POST(sp);
 
 } OZ_BI_end
@@ -276,13 +276,13 @@ OZ_BI_define(bool_and,4,0)
   DeclareGeIntVar(1,v2,sp);
   DeclareGeIntVar(2,v3,sp);
   OZ_declareInt(3,ConLevel);
- 
+   
   try{
     mult(sp,static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),static_cast<BoolVar>(v3),(IntConLevel)ConLevel);
   }
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
-  }
+    }
   CHECK_POST(sp);
 
 } OZ_BI_end
@@ -295,7 +295,9 @@ OZ_BI_define(int_sortedness,3,0)
   OZ_declareInt(2,conLevel);
 
   try{
+
     sorted(sp,a1,a2,(IntConLevel)conLevel);
+
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -318,6 +320,22 @@ OZ_BI_define(int_assign,2,0)
   CHECK_POST(sp);
 } OZ_BI_end
 
+OZ_BI_define(int_reified,3,0)
+{
+  DeclareGSpace(sp);
+  DeclareGeIntVar(0,v0,sp);
+  DECLARE_INT_SET(1,dom);
+  DeclareGeBoolVar(2,b0,sp);
+  
+  
+  try{
+    Gecode::dom(sp,v0,dom,b0);
+  }
+  catch(Exception e) {
+    RAISE_GE_EXCEPTION(e);
+  }
+  CHECK_POST(sp);
+} OZ_BI_end
 
 OZ_BI_define(int_ext,2,0) 
 {
@@ -352,6 +370,7 @@ OZ_BI_define(int_ext,2,0)
   }
   CHECK_POST(sp);
 } OZ_BI_end
+
 
 // Include the propagators wrapper functions generated automatically.
 #include "FDPBuiltins.cc"

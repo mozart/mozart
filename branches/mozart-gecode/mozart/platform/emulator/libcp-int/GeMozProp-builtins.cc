@@ -55,7 +55,9 @@ OZ_BI_define(int_watch_min,3,0)
 
   OZ_declareInt(2,v3);
   try {
+
     WatchMin(sp,v1,v2,v3);
+
   }
   catch(Exception e) {
     //return OZ_raiseC("prop: watch size",0);
@@ -82,7 +84,9 @@ OZ_BI_define(int_watch_max,3,0)
 
   OZ_declareInt(2,v3);
   try {
+
     WatchMax(sp,v1,v2,v3);
+
     return PROCEED;
   }
   catch(Exception e) {
@@ -107,7 +111,9 @@ OZ_BI_define(int_watch_size,3,0)
 
   OZ_declareInt(2,v3);
   try {
+
     WatchSize(sp,v1,v2,v3);
+
     return PROCEED;
   }
   catch(Exception e) {
@@ -161,14 +167,18 @@ OZ_BI_define(int_disjointC,5,0)
   GenericSpace *sp;
   DeclareGeIntVar(0,v1,sp);
   DeclareGeIntVar(2,v3,sp);
-  DeclareGeBoolVar(4,v5,sp);
-/*
+
+  DeclareGeIntVar(4,v5,sp);
+
+  /*
   try{
     DisjointC(sp,v1,i2,v3,i4,v5);    
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
-  }*/
+
+    }*/
+
   return PROCEED;
 
 } OZ_BI_end
@@ -250,6 +260,9 @@ OZ_BI_define(int_sumCN,4,0)
     else ValVec2 = get_IntVar(OZ_deref(val));
 
     rel(sp,ArregloTmp[0],IRT_EQ,ValVec2,ICL_VAL);
+
+    rel(sp,ArregloTmp[0],IRT_EQ,ValVec2,ICL_VAL);
+
     for(int j=1;j<tamD2;j++) {
       IntVar Tmpj;
       if(OZ_isGeIntVar(Vec2[j])) {
@@ -275,6 +288,7 @@ OZ_BI_define(bool_Gand,4,0)
   DeclareGeIntVar(0,v0,sp);
   DeclareGeIntVar(1,v1,sp);
   DeclareGeIntVar(2,v2,sp);
+
   DeclareIntConLevel(3,conLevel);
   /*
   try {
@@ -282,7 +296,8 @@ OZ_BI_define(bool_Gand,4,0)
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
-  }*/
+    }*/
+
   return PROCEED;  
 } OZ_BI_end
 
@@ -299,7 +314,8 @@ OZ_BI_define(bool_Gor,4,0)
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
-  }*/
+ }*/
+
   return PROCEED;    
 } OZ_BI_end
 
@@ -317,7 +333,8 @@ OZ_BI_define(bool_Gxor,4,0)
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
-  }*/
+    }*/
+
   return PROCEED;
 
 } OZ_BI_end
@@ -336,7 +353,8 @@ OZ_BI_define(bool_Gnot,3,0)
   catch(Exception e) {
     //    return OZ_raiseC("prop: bool_not",0);
     RAISE_GE_EXCEPTION(e);
-  }*/
+    }*/
+
   return PROCEED;
 } OZ_BI_end
 
@@ -348,14 +366,15 @@ OZ_BI_define(bool_Gimp,4,0)
   DeclareGeIntVar(2,v2,sp);
   DeclareIntConLevel(3,conLevel);
 /*
+
   try {
     bool_imp(sp,static_cast<BoolVar>(v0),static_cast<BoolVar>(v1),static_cast<BoolVar>(v2),conLevel);
     return PROCEED;
   }
   catch(Exception e) {
     return OZ_raiseC("prop: bool_imp",0);
-  }
-  */
+    }*/
+  return PROCEED;
 } OZ_BI_end
 
 
@@ -372,7 +391,7 @@ OZ_BI_define(bool_Geqv,4,0)
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
-  }*/
+    }*/
   return PROCEED;
 
 } OZ_BI_end

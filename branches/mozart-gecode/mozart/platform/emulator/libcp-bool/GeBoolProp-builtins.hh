@@ -31,7 +31,7 @@
 #include "GeBoolVar-builtins.hh"
 #include "../libcp-int/GeIntProp-builtins.hh"
 #include "gecode/int.hh"
-
+#include "gecode/int/bool.hh"
 										
 #define DeclareBoolOpType(arg,var)\
 	BoolOpType var;\

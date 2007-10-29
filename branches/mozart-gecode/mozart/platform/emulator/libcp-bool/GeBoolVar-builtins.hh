@@ -74,6 +74,7 @@
   else return OZ_typeError(p,"BoolVar or Int");\
   }
 
+
 /**
 	Declares a GeBoolVar inside a var array. Space stability is affected as a side effect. 
 */

@@ -100,7 +100,7 @@ GenericSpace::~GenericSpace(void) {
     0 : GeSpaceAllocatedMem - allocatedMemory;
 }
 
-inline
+//inline
 bool GenericSpace::isStable(void) {
   return trigger;
 }

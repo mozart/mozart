@@ -28,8 +28,10 @@
 
 #include "gecode/kernel.hh"
 #include "gecode/int.hh"
+#include "gecode/set.hh"
 #include "gecode/int/linear.hh"
 #include "gecode/int/rel.hh"
+
 
 using namespace Gecode;
 using namespace Gecode::Int;
@@ -98,7 +100,7 @@ public:
 
   Gecode::ExecStatus propagate(Gecode::Space *s);
 };
-
+/*
 /*
 class DisjointCProp: public Gecode::TernaryPropagator<Gecode::Int::IntView, PC_INT_DOM >
 {
