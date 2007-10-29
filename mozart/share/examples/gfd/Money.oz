@@ -22,7 +22,7 @@
 
 declare
 
-T = {GFD.int  0#9}
+%T = {GFD.int  0#9}
 
 proc{Money Root}
     S E N D
@@ -30,6 +30,7 @@ proc{Money Root}
     RootVal
  in
    Root =  [S E N D M O R Y]
+   
    RootVal = [1000 100 10 1 1000 100 10 1 ~10000 ~1000 ~100 ~10 ~1]
    Root:::0#9
    {GFD.linear2  RootVal
@@ -46,3 +47,37 @@ proc{Money Root}
 end
 
 {Show {SearchOne Money}}
+
+proc {SPCommit2 S BL}
+   {Show spcommit2}
+   {Space.inject S proc {$ _}
+		      {Space.branch BL}
+		   end}
+end
+
+
+fun {OneDepthNR S}
+   case {Space.ask S}
+   of failed then {Show faillll} nil
+   [] succeeded then {Show succeeded} S
+   [] branch([B]) then
+      {Show commit1}
+      {Space.commitB S B}
+      {OneDepthNR S}
+   [] branch(B|Br) then C={Space.clone S} in
+      {Space.commitB S B}
+      {Show B}
+      {Show Br}
+      case {OneDepthNR S}
+      of nil then {SPCommit2 C Br} {OneDepthNR C}
+      elseof O then O
+      end
+   end
+end
+
+
+%S={Space.new Money}
+%W = {OneDepthNR S}
+
+
+

@@ -357,12 +357,14 @@ public:
   }
 
   Gecode::ExecStatus propagate(Gecode::Space* s){
-    
+
+
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
 
     if (!oz_isGeVar(ref))
-      return  Gecode::ES_SUBSUMED(this,sizeof(*this));
+       return Gecode::ES_SUBSUMED(this,sizeof(*this));
     
+
     GenericSpace *gs = static_cast<GenericSpace*>(s);
 
     GeVarBase *gv = get_GeVar(ref);

@@ -520,7 +520,6 @@ void Board::checkStability(void) {
 	  
 					if(gespace!=NULL) {
 						bool testGe = getGenericSpace(true)->isEntailed();
-	    
 						bindStatus(genSucceeded( (getSuspCount() == 0 && testGe) ) );
 					}
 					else {

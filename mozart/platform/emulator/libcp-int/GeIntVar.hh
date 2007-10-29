@@ -104,13 +104,16 @@ public:
 			  GeVar_Int *rgevar) {
     IntVar& lintvar = (static_cast<GeIntVar*>(lgevar))->getIntVarInfo();
     IntVar& rintvar = (static_cast<GeIntVar*>(rgevar))->getIntVarInfo();    
+
     rel(s,lintvar,IRT_EQ, rintvar);
+
   }
 
   virtual ModEvent bind(GenericSpace *s, 
 			GeVar_Int *v, 
 			OZ_Term val) {
     int n = OZ_intToC(val);
+    Int::IntView W(getIntVarInfo());
     return Int::IntView(getIntVarInfo()).eq(s,n);
   }
 
