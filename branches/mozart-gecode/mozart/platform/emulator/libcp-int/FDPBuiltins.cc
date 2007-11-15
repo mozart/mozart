@@ -332,7 +332,7 @@ OZ_BI_define(rel_BVA_BOT_BV_ICL_PK,5,0)
 	DeclareIntConLevel(3, __ICL_DEF);
 	DeclarePropKind(4, __PK_DEF);
 	try{
-		Gecode::rel(home, __x, __o, __y, __ICL_DEF, __PK_DEF);
+	     Gecode::rel(home, __o, __x, __y, __ICL_DEF, __PK_DEF);
 	}
 	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
@@ -349,7 +349,7 @@ OZ_BI_define(rel_BVA_BOT_In_ICL_PK,5,0)
 	DeclareIntConLevel(3, __ICL_DEF);
 	DeclarePropKind(4, __PK_DEF);
 	try{
-		Gecode::rel(home, __x, __o, __n, __ICL_DEF, __PK_DEF);
+		Gecode::rel(home,__o, __x,  __n, __ICL_DEF, __PK_DEF);
 	}
 	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
