@@ -41,7 +41,13 @@ export
    is   : IsVar
    sup  : Sup
    inf  : Inf
-
+   compl : Compl
+   complIn : ComplIn
+   include : Include
+   exclude : Exclude
+   carVal  : CardVal
+   carInt  : CardInt
+   isIn    : IsInt
 
 define
    %FsDecl = GFS.set
@@ -49,7 +55,13 @@ define
    Sup = {GFS.sup}
    Inf = {GFS.inf}
    Var
-   
+   Compl = GFS.comp
+   ComplIn = GFS.complIn
+   Include = GFS.incVal
+   Exclude = GFS.excVal
+   CardVal = GFS.cardVal
+   CardInt = GFS.cardInt
+   IsInt = GFS.isInt
 
 in
    local

@@ -30,7 +30,7 @@
 
 #include "GeVar.hh"
 #include "SetValue.hh"
-
+#include "../libcp-bool/GeBoolVar.hh"
 using namespace Gecode;
 using namespace Gecode::Int;
 using namespace Gecode::Set;
@@ -204,6 +204,103 @@ inline SetVar& get_SetVar(OZ_Term v) {
 inline SetVar& get_SetVarInfo(OZ_Term v) {
   return get_GeSetVar(v,false)->getSetVarInfo();
 }
+
+
+
+inline OZ_Term new_GeSetVarComp(OZ_Term V1) {
+  
+  GenericSpace* sp = oz_currentBoard()->getGenericSpace();
+
+  SetVar x(sp);
+  GeSetVar *nv = new GeSetVar(sp->getVarsSize());
+
+  OzVariable* ov   = extVar2Var(nv);
+  OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
+  int index        = sp->newVar(static_cast<VarBase*>(x.variable()), ref);
+  rel(sp, x, SRT_CMPL, get_SetVar(V1));
+  nv->ensureValReflection();
+  return ref;
+}
+
+inline OZ_Term new_GeSetVarComplIn(OZ_Term V1,OZ_Term V2) {
+  GenericSpace* sp = oz_currentBoard()->getGenericSpace();
+
+  SetVar x(sp);
+  GeSetVar *nv = new GeSetVar(sp->getVarsSize());
+
+  OzVariable* ov   = extVar2Var(nv);
+  OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
+  int index        = sp->newVar(static_cast<VarBase*>(x.variable()), ref);
+  
+  
+  rel(sp, get_SetVar(V2),SOT_MINUS, get_SetVar(V1), SRT_EQ , x);
+
+
+  nv->ensureValReflection();
+  return ref;
+}
+
+inline OZ_Return inc_GeSetVarVal(OZ_Term V1,  int val){
+  GenericSpace* sp = oz_currentBoard()->getGenericSpace();
+  SetView Var(get_SetVar(V1));
+  if(Gecode::ME_GEN_FAILED==Var.include(sp,val))    
+    return FAILED;
+  else
+    return PROCEED;
+}
+
+inline OZ_Return exc_GeSetVarVal(OZ_Term V1,  int val){
+  GenericSpace* sp = oz_currentBoard()->getGenericSpace();
+  SetView Var(get_SetVar(V1));  
+  if(Gecode::ME_GEN_FAILED==Var.exclude(sp,val))    
+    return FAILED;
+  else
+    return PROCEED;
+}
+
+
+
+inline OZ_Return cardInt_GeSetVar(OZ_Term V1,  int min,  int max){
+  GenericSpace* sp = oz_currentBoard()->getGenericSpace();
+  SetView Var(get_SetVar(V1));  
+  if(Gecode::ME_GEN_FAILED==Var.cardMin(sp,min))    
+    return FAILED;
+  else{
+    if(Gecode::ME_GEN_FAILED==Var.cardMax(sp,max))    
+      return FAILED;
+    return PROCEED;
+  }
+}
+
+inline OZ_Return card_GeSetVarVal(OZ_Term V1,  int val){
+  GenericSpace* sp = oz_currentBoard()->getGenericSpace();
+  SetView Var(get_SetVar(V1));  
+  if(Gecode::ME_GEN_FAILED==Var.cardMin(sp,val))    
+    return FAILED;
+  else{
+    if(Gecode::ME_GEN_FAILED==Var.cardMax(sp,val))    
+      return FAILED;
+    return PROCEED;
+  }
+}
+
+
+inline OZ_Term isIn_GeSetVar(OZ_Term V1, int val)
+{
+  GenericSpace* sp = oz_currentBoard()->getGenericSpace();
+  SetView Var(get_SetVar(V1));  
+  OZ_Term boolVar = new_GeBoolVar(0,1);
+  BoolView tmpBool(get_BoolVar(boolVar));
+  if(Var.notContains(val))
+    tmpBool.zero(sp);
+  else{
+    if(Var.contains(val))
+      tmpBool.one(sp);    
+    else
+      Gecode::dom(sp,get_SetVar(V1),Gecode::SRT_SUB,val,get_BoolVar(boolVar));}
+  return boolVar;
+}
+
 
 void module_init_gesetvar(void);
 #endif

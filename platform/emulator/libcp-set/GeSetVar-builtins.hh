@@ -66,6 +66,18 @@
   }                                                                        \
   Gecode::IntSet ds(*tmp##val);                                            \
 
+
+#define OZ_TOC(arg,type,var,check,conv,msg) \
+	type var;                                                      \
+	{\
+		if (!check(OZ_in(arg)))                                 \
+			return OZ_typeError(arg,msg);                     \
+		var=conv(OZ_in(arg));\
+	}
+
+
+#define DeclareInt(arg,var,msg) \
+	OZ_TOC(arg,int,var,OZ_isInt,OZ_intToC,msg)
 /*
 #define DeclareGSpace(sp) GenericSpace *sp = oz_currentBoard()->getGenericSpace();
 

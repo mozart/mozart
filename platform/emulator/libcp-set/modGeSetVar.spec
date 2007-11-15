@@ -20,6 +20,42 @@ $module_name          = "GFS";
 			     bi  => var_is,
                              fcp => ignore},
 
+    'comp'		=> { in  => ['+set'],
+			     out => ['set'],
+			     bi  => new_comp,
+                             fcp => ignore},
+
+    'complIn'		=> { in  => ['+set', '+set'],
+			     out => ['set'],
+			     bi  => new_complin,
+			     fcp => ignore},
+
+    'incVal'		=> { in  => ['value', '+set'],
+			     out => [],
+			     bi  => inc_val,
+			     fcp => ignore},
+
+    'excVal'		=> { in  => ['value', '+set'],
+			     out => [],
+			     bi  => exc_val,
+			     fcp => ignore},
+
+    'cardVal'		=> { in  => ['value', '+set'],
+			     out => [],
+			     bi  => card,
+			     fcp => ignore},
+
+    'cardInt'		=> { in  => ['value','value', '+set'],
+			     out => [],
+			     bi  => card_Int,
+			     fcp => ignore},
+
+    'isIn'		=> { in  => ['int', '+set'],
+			     out => ['bool'],
+			     bi  => is_In,
+			     fcp => ignore},
+
+
  ## misc. operations
     'inf'       => { in  => [],
 	             out => ['int'],
