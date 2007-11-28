@@ -33,6 +33,9 @@
 #include "GeVar.hh"
 #include "GeSpace.hh"
 
+#include "gecode/serialization.hh"
+
+
 using namespace Gecode;
 
 VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share) {
@@ -133,6 +136,29 @@ Gecode::SpaceStatus GenericSpace::mstatus(void) {
   makeStable();
   //  printf("Status: Memory changed... %u in space %p\n", GeSpaceAllocatedMem,this);fflush(stdout);
   return ret;
+}
+
+void GenericSpace::merge(GenericSpace *src) {
+	Reflection::VarMap vmp_src, vmp_trgt;
+	Serialization::Deserializer ds(this,vmp_trgt);
+	Reflection::VarMapIter vmi(vmp_src);
+	int vrs = 0;
+	int act = 0;
+	for (Reflection::SpecIter si(src->actorSpecs(vmp_src)); si(); ++si) {
+		for (; vmi(); ++vmi) {
+			ds.var(vmi.spec());
+			
+			//IntVar iv(Int::IntView(static_cast<Int::IntVarImp*>(vmi.var())));
+			//std::cout << "New IntVar " << iv << std::endl;
+			
+			vrs++;
+		}
+		ds.post(si.actor());
+		act++;
+	}
+	//std::cout << "Actors added: " << act << std::endl;
+	//std::cout << "Variables added: " << vrs << std::endl;
+	
 }
 
 int GenericSpace::newVar(Gecode::VarBase *v, OZ_Term r) {
