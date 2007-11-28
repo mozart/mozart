@@ -66,6 +66,7 @@ DYNAMIC_MODULETARGETS=	$(DYNAMIC_MODULES:%=%.so-$(PLATFORM))
 LIBS=		$(STATIC_MODULELIBS) @LIBS@
 
 LIBS += `pkg-config --libs "gecode = ${GECODEVERSION}"`
+LIBS += `pkg-config --libs "gecode-serialization = ${GECODEVERSION}"`
 
 
 INCS=		-I. -I$(SRCDIR)
