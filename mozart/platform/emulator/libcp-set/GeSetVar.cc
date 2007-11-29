@@ -36,7 +36,7 @@ using namespace Gecode::Set;
 //A setvalue is a valid one when  Glb of the variable is a subset of Glb of the value and 
 //Lub of the value is a subset of the of the Lub of the variable.
 Bool GeSetVar::validV(OZ_Term val) {
-  if(SetValueM::oz_isSetValueM(val)){
+  if(SetValueM::OZ_isSetValueM(val)){
     IntSetRanges tmpGl(SetValueM::tagged2SetVal(val)->getLBValue());
     IntSetRanges tmpLu(SetValueM::tagged2SetVal(val)->getUBValue());
 
@@ -159,4 +159,7 @@ void module_init_gesetvar(void){
 }
 
 #define STATICALLY_INCLUDED
+//#ifndef MODULES_LINK_STATIC
 #include "modGeSetVar-table.cc"
+#include "modGeSetVarProp-table.cc"
+//#endif

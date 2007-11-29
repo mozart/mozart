@@ -39,14 +39,7 @@ using namespace Gecode::Int;
 
 
 
-
-
-
-
 class SetValueM;
-
-
-
 
 class SetValueM: public OZ_Extension {
 
@@ -59,7 +52,7 @@ public:
 
   static SetValueM* tagged2SetVal(OZ_Term t)
   {
-    Assert(oz_isSetValueM(t));
+    Assert(OZ_isSetValueM(t));
     return (SetValueM*) OZ_getExtension(OZ_deref(t));
   }
   
@@ -75,7 +68,7 @@ public:
   //friend int oz_isSetValueM(OZ_Term);
   static int id;
 
-  static int oz_isSetValueM(OZ_Term t){
+  static int OZ_isSetValueM(OZ_Term t){
     t = OZ_deref(t);
     return OZ_isExtension(t) &&
       OZ_getExtension(t)->getIdV()==SetValueM::id;

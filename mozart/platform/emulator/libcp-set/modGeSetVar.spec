@@ -1,8 +1,8 @@
-$module_init_fun_name = "module_init_gesetvar";
+###$module_init_fun_name = "module_init_gesetvar";
 
-$module_init_fun      = "oz_init_module";
+###$module_init_fun      = "oz_init_module";
 
-$module_name          = "GFS";
+###$module_name          = "GFS";
 
 %builtins_all = 
 (
@@ -50,7 +50,7 @@ $module_name          = "GFS";
 			     bi  => card_Int,
 			     fcp => ignore},
 
-    'isIn'		=> { in  => ['int', '+set'],
+    'isIn'		=> { in  => ['+set','int','+bool'],
 			     out => ['bool'],
 			     bi  => is_In,
 			     fcp => ignore},

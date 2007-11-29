@@ -285,20 +285,21 @@ inline OZ_Return card_GeSetVarVal(OZ_Term V1,  int val){
 }
 
 
-inline OZ_Term isIn_GeSetVar(OZ_Term V1, int val)
+inline OZ_Term isIn_GeSetVar(OZ_Term V1, int val, OZ_Term VBool)
 {
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
   SetView Var(get_SetVar(V1));  
-  OZ_Term boolVar = new_GeBoolVar(0,1);
-  BoolView tmpBool(get_BoolVar(boolVar));
+  BoolView tmpBool(get_BoolVar(VBool));
+  //OZ_Term boolVar = new_GeBoolVar(0,1);
+  //BoolView tmpBool(get_BoolVar(boolVar));
   if(Var.notContains(val))
     tmpBool.zero(sp);
   else{
     if(Var.contains(val))
       tmpBool.one(sp);    
     else
-      Gecode::dom(sp,get_SetVar(V1),Gecode::SRT_SUB,val,get_BoolVar(boolVar));}
-  return boolVar;
+      Gecode::dom(sp,get_SetVar(V1),Gecode::SRT_SUB,val,get_BoolVar(VBool));}
+  return VBool;
 }
 
 
