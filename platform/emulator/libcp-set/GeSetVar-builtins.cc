@@ -141,10 +141,10 @@ OZ_BI_end
  * \brief 
  * 
  */
-OZ_BI_define(is_In,2,1)
+OZ_BI_define(is_In,3,1)
 {
   DeclareInt(0,value,"The parameter has to be a value");
-  return isIn_GeSetVar(OZ_in(1),value);  
+  return isIn_GeSetVar(OZ_in(1),value,OZ_in(2));  
 }
 OZ_BI_end
 

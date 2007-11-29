@@ -164,13 +164,13 @@ OZ_BI_define(int_linearR,5,0)
 
   DeclareGeIntVar(2,v2,sp);
   DeclareGeBoolVar(3,v3,sp);
-  /*
+  
   try{
     linear(sp,array_var,relType,v2,v3,conLevel);
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
-    }*/
+  }
   CHECK_POST(sp);
     
 } OZ_BI_end
@@ -188,13 +188,13 @@ OZ_BI_define(int_linearCR,6,0)
   
   DeclareGeIntVar(3,v3,sp);
   DeclareGeBoolVar(4,v4,sp);
-  /*
+  
   try{
     linear(sp,array_arg,array_var,relType,v3,v4,conLevel);
   }
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
-    }*/
+    }
   CHECK_POST(sp);
 
 } OZ_BI_end

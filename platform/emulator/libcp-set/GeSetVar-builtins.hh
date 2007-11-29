@@ -30,6 +30,7 @@
 
 #include "value.hh"
 #include "GeSetVar.hh"
+#include "SetValue.hh"
 #include "GeSpace-builtins.hh"
 #include "builtins.hh"
 
@@ -78,113 +79,39 @@
 
 #define DeclareInt(arg,var,msg) \
 	OZ_TOC(arg,int,var,OZ_isInt,OZ_intToC,msg)
-/*
-#define DeclareGSpace(sp) GenericSpace *sp = oz_currentBoard()->getGenericSpace();
 
-#define DeclareGeIntVar2(p,v,sp)					\
-  IntVar v;                                                             \
-  if(OZ_isInt(OZ_in(p))) {						\
-    OZ_declareInt(p,domain);						\
-    IntVar _tmp(sp,domain,domain);					\
-    v=_tmp;								\
-  }									\
-  else if(OZ_isGeIntVar(OZ_in(p))) {					\
-    v = get_IntVar(OZ_in(p));						\   
-  }									\
-  else RAISE_EXCEPTION("The variables must be either GeIntVar or int");
-
-
-#define DeclareGeIntVar1(p,v)					\
-  IntVar v;							\
-  { TaggedRef x = OZ_in(p);					\
-    DEREF(x,x_ptr);						\
-    Assert(!oz_isRef(x));					\
-    if (oz_isFree(x)) {						\
-      oz_suspendOn(makeTaggedRef(x_ptr));			\
-    }								\
-    if (OZ_isInt(x)) {						\
-      OZ_declareInt(p,domain);					\
-      IntVar _tmp(oz_currentBoard()->getGenericSpace(),		\
-		  domain, domain);				\
-      v=_tmp;							\
-    }								\
-    else if(OZ_isGeIntVar(x)) {					\
-      v = get_IntVarInfo(x);					\
-    } else							\
-      RAISE_EXCEPTION("Type error: Expected IntVar");		\
+/**
+	Macros for variable declaration inside propagators posting
+	built-ins. Space stability is affected as a side effect.
+*/
+#define DeclareGeSetVar(p,v,sp)\
+  declareInTerm(p,v##x);\
+  SetVar v;\
+  {\
+  if(SetValueM::OZ_isSetValueM(v##x)) {\    
+    SetVar _tmp( (sp) ,SetValueM::tagged2SetVal(v##x)->getLBValue(),SetValueM::tagged2SetVal(v##x)->getLBValue());\
+    v=_tmp;\
+  }\
+  else if(OZ_isGeSetVar(v##x)) {\
+    v = get_SetVar(OZ_in(p));\
+  }\
+  else return OZ_typeError(p,"SetVar or SetValue");\
   }
 
-#define DeclareGeIntVar(p,v,sp)					        \
-  {  TaggedRef x = OZ_in(p);						\
-    DEREF(x,x_ptr);							\
-    Assert(!oz_isRef(x));						\
-    if (oz_isFree(x)) {							\
-      oz_suspendOn(makeTaggedRef(x_ptr));				\
-    }}									\
-  IntVar v;								\
-  if(OZ_isInt(OZ_in(p))) {						\
-    OZ_declareInt(p,domain);						\
-    IntVar _tmp(sp,domain,domain);					\
-    v=_tmp;								\
-  }									\
-  else if(OZ_isGeIntVar(OZ_in(p))) {					\
-    v = get_IntVar(OZ_in(p));						\
-  }									\
-  else RAISE_EXCEPTION("The variables must be either GeIntVar or int");
-
-
-#define DeclareGeIntVarT2(val,ar,i)				\
-{  TaggedRef x = val;						\
-  DEREF(x,x_ptr);						\
-  Assert(!oz_isRef(x));						\
-  if (oz_isFree(x)) {						\
-    oz_suspendOn(makeTaggedRef(x_ptr));				\
-  }								\
-  if(OZ_isInt(val)) {						\
-    int domain=OZ_intToC(val);					\
-    ar[i].init(sp,domain,domain);				\
-  }								\
-  else if(OZ_isGeIntVar(val)) {					\
-          ar[i]=get_IntVar(val);					\
-  }								\
-}
-
-#define DECLARE_INTVARARRAY(sp,array,tIn)  		\
-IntVarArray array;					\
-{							\
-  int sz;						\
-  OZ_Term t = OZ_deref(OZ_in(tIn));                     \
-  if(OZ_isLiteral(t)) {					\
-    sz=0;						\
-    Gecode::IntVarArray _array((Gecode::Space*)sp,sz);		\
-    array=_array;					\
-  }							\
-  else if(OZ_isCons(t)) {				\
-    sz = OZ_length(t);					\
-    Gecode::IntVarArray _array((Gecode::Space*)sp,sz);	\
-    for(int i=0; OZ_isCons(t); t=OZ_tail(t),i++){	\
-      DeclareGeIntVarT2(OZ_deref(OZ_head(t)),_array,i); \
-    }                                                   \
-    array=_array;					\
-  }							\
-  else if(OZ_isTuple(t)) {				\
-    sz=OZ_width(t);					\
-    Gecode::IntVarArray _array((Gecode::Space*)sp,sz);	\
-    for(int i=0;i<sz;i++) {				\
-      DeclareGeIntVarT2(OZ_getArg(t,i),_array,i);	\
-    }							\
-    array=_array;                                       \
-  }							\
-  else {						\
-    assert(OZ_isRecord(t));				\
-    OZ_Term al = OZ_arityList(t);			\
-    sz = OZ_width(t);					\
-    Gecode::IntVarArray _array((Gecode::Space*)sp,sz);          \
-    for(int i=0; OZ_isCons(al); al=OZ_tail(al),i++) {	\
-      DeclareGeIntVarT2(OZ_subtree(t,OZ_head(al)),_array,i);\
-    }							\
-    array=_array;                                       \
-    }							\
-}
+/**
+	Declares a GeSetVar inside a var array. Space stability is affected as a side effect. 
 */
+#define DeclareGeSetVarVA(val,ar,i,sp)				\
+{  declareTerm(val,x);							\
+  if(SetValueM::OZ_isSetValueM(val)) {						\
+       Gecode::SetVar v(sp,SetValueM::tagged2SetVal(x)->getLBValue(),SetValueM::tagged2SetVal(x)->getLBValue());\
+       ar[i] = v;				\
+  }								\
+  else if(OZ_isGeSetVar(val)) {					\
+          ar[i]=get_SetVar(val);					\
+  }								\
+}
+
+#define DECLARE_SETVARARGS(tIn,array,sp) DECLARE_VARARGS(tIn,array,sp,SetVarArgs,DeclareGeSetVarVA)
+
 #endif

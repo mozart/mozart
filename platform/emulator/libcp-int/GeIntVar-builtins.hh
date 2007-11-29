@@ -69,7 +69,7 @@
 
 
 /**
-	Declares a veriable form OZ_Term argument at position p in the input to be an IntVar 
+	Declares a variable form OZ_Term argument at position p in the input to be an IntVar 
 	variable. This declaration does not affect space stability so it can not be used in 
 	propagator's built ins.
 */
