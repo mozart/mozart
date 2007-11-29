@@ -14,12 +14,12 @@ GECODE_INC	= `pkg-config --cflags "gecode = ${GECODEVERSION}"`
 
 CFLAGS 		= $(INCS) $(GECODE_INC) $(GESPACE_CXXFLAGS) $(CPPFLAGS) 
 
-MODULE_SPEC	= modGeSetVar.spec
+MODULE_SPEC	= modGeSetVar.spec modGeSetVarProp.spec
 
 GENERATED_FILES = $(MODULE_SPEC:.spec=-table.cc)
 
 
-GFSLIBSRC	= SetValue.cc GeSetVar.cc GeSetVar-builtins.cc ##GeIntProp-builtins.cc GeMozProp-builtins.cc
+GFSLIBSRC	= SetValue.cc GeSetVar.cc GeSetVar-builtins.cc GeSetProp-builtins.cc 
 GFSLIBOBJS	= $(GFSLIBSRC:.cc=.o)
 
 
@@ -29,7 +29,7 @@ all:
 
 # NOTE: $(SRCDIR) added to the dependencies, because in ../../Makefile.in the libs
 #       depend also on this dir
-../geoz-set.so-$(PLATFORM): first $(GFSLIBOBJS)
+../geoz-set.so-$(PLATFORM): first $(GFSLIBOBJS) 
 	$(DYNLD) -o $@ $(GFSLIBOBJS) $(LDFLAGS) $(GECODE_LIBS)
 
 %.o: %.cc
