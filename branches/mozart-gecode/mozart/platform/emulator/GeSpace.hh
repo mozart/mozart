@@ -75,20 +75,24 @@ class GenericSpace;
 class VarRefArray {
 
 private:
+
+  /// Number of variables currently stored
+  int size;
+
   /** 
    * \brief Container for variables.
    * VarImpBase is used because we need a generic way to store variables of different types in the 
    * space.
    * TODO: test if std::vector is efficient and if not then change it for a proper implementation
    */ 
-  std::vector<Gecode::VarImpBase*> vars; 
+  Gecode::Support::DynamicArray<Gecode::VarImpBase*> vars; 
   /**
    * \brief Container for references.
    * This vector contains references to variable nodes in the mozart heap. 
    * There is a one-to-one correspondence between a variable in vars and a reference in 
    * references. Position in the vector  is used to achieve this.
    */
-  std::vector<OZ_Term> refs;
+  Gecode::Support::DynamicArray<OZ_Term> refs;
  
   /**
      Invariant:
@@ -104,7 +108,7 @@ public:
    * @param s The space where the variables will be created
    */
   VarRefArray() :
-    vars(0), refs(0) {}
+    vars(0), refs(0), size(0) {}
 
   /** 
    * \brief Copy constructor
@@ -123,25 +127,23 @@ public:
    * @return The index of the new allocated variable
    */
   int newVar(Gecode::VarImpBase *x, OZ_Term r) {
-    refs.push_back(r); vars.push_back(x);
+    refs[size]=r; vars[size]=x; size++;
   }
 
-  int getSize(void) {
-    return vars.size();
-  }
+  int getSize(void) { return size; }
 
   OZ_Term *getRef(int n) { 
-    Assert(n >= 0 && n < vars.size());
+    Assert(n >= 0 && n < size);
     return &(refs[n]); 
   }
 
   Gecode::VarImpBase& getVar(int n) {
-    Assert(n >= 0 && n < vars.size());
+    Assert(n >= 0 && n < size);
     return *vars[n];
   }
 
   void setRef(int n, OZ_Term t) { 
-    Assert(n >= 0 && n < vars.size());
+    Assert(n >= 0 && n < size);
     refs[n] = t; 
   }
 };

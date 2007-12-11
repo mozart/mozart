@@ -38,9 +38,10 @@
 
 using namespace Gecode;
 
-VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share) {
-  for (int i=0; i<v.vars.size(); i++) {
-    refs.push_back(OZ_Term());
+VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share) 
+  : size(v.size) {
+  
+  for (int i=0; i<size; i++) {
     refs[i] = *v.getRef(i);
     
     // clone the GeVar pointed by refs[i]
@@ -48,14 +49,14 @@ VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share) {
     if (oz_isExtVar(dt)) {
       // ensures that refs[i] is a gecode contrain variable 
       Assert(oz_getExtVar(dt)->getIdV() == OZ_EVAR_GEVAR);
-      vars.push_back(static_cast<GeVarBase*>(oz_getExtVar(dt))->clone());
+      vars[i] = static_cast<GeVarBase*>(oz_getExtVar(dt))->clone();
     } else {
-		/* When vars[i] has been bound to a value, refs[i] no longer points to a
-		   GeVar but to a some structure in the heap (depending on the domain 
-		   specific representation). In this way, vars[i] should never be used 
-		   after that.
+      /* When vars[i] has been bound to a value, refs[i] no longer points to a
+	 GeVar but to a some structure in the heap (depending on the domain 
+	 specific representation). In this way, vars[i] should never be used 
+	 after that.
       */
-      vars.push_back(static_cast<VarImpBase*>(NULL));
+      vars[i]=static_cast<VarImpBase*>(NULL);
     }
   }
 }
@@ -67,7 +68,7 @@ GenericSpace::GenericSpace(Board* b)
     unifyProps(0),gc_pred(NULL), gc_succ(NULL), gc_marked(false),
     allocatedMemory(usedMem())
 {
-	registerGeSpace(this);
+  registerGeSpace(this);
 	GeSpaceAllocatedMem += allocatedMemory;
   //printf("Constructor: %u %p\n",GeSpaceAllocatedMem,this);fflush(stdout);
 }
