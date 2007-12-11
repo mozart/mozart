@@ -95,8 +95,17 @@ private:
   Gecode::Support::DynamicArray<OZ_Term> refs;
  
   /**
+   * \brief Root variables.
+   * Distinction between variables and root variables is needed when merging spaces.
+   * This array stores the index of variables at vars that are part of root. 
+   * TODO: replace int by VarImpBase* 
+   */
+  Gecode::Support::DynamicArray<int> root;
+
+  /**
      Invariant:
      vars.size() = refs.size() 
+     root.size() <= refs.size()
   */
 public:
   /// \name Constructors
@@ -146,6 +155,11 @@ public:
     Assert(n >= 0 && n < size);
     refs[n] = t; 
   }
+  
+  /**
+     \brief Sets the root variables of this space to variables constained in vector \a v.
+   */
+  void setRoot(OZ_Term v);
 };
 
 // Garbage collection related stuff 
