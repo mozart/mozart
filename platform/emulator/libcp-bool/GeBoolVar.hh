@@ -86,7 +86,7 @@ public:
    */ 
   virtual OZ_Term       statusV();
   //  virtual void printStreamV(ostream &out,int depth);
-  virtual VarBase* clone(void);
+  virtual VarImpBase* clone(void);
   virtual bool intersect(TaggedRef x);
   
   virtual bool In(TaggedRef x);
@@ -148,7 +148,7 @@ OZ_Term new_GeBoolVar(int min, int max) {
   GeBoolVar *nv = new GeBoolVar(sp->getVarsSize());
   OzVariable* ov   = extVar2Var(nv);
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
-  int index        = sp->newVar(static_cast<VarBase*>(x.variable()), ref);
+  int index        = sp->newVar(static_cast<VarImpBase*>(x.var()), ref);
 
   nv->ensureValReflection();
   return ref;

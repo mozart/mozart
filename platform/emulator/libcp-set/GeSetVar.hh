@@ -69,7 +69,7 @@ public:
   
   /**
      \brief Put in out a text representation of the variable.
-   */
+  */
   void toStream(ostream &out);
 
   GeVarType type() { return getType(); }
@@ -79,7 +79,7 @@ public:
 
   virtual OZ_Term       statusV();
   //  virtual void printStreamV(ostream &out,int depth);
-  virtual VarBase* clone(void);
+  virtual VarImpBase* clone(void);
   virtual bool intersect(TaggedRef x);
 
 
@@ -143,7 +143,7 @@ inline OZ_Term new_GeSetVar(IntSet glb,  IntSet lub) {
   GeSetVar *nv = new GeSetVar(sp->getVarsSize());
   OzVariable* ov   = extVar2Var(nv);
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
-  int index        = sp->newVar(static_cast<VarBase*>(x.variable()), ref);
+  int index        = sp->newVar(static_cast<VarImpBase*>(x.var()), ref);
   nv->ensureValReflection();
   return ref;
 }
@@ -155,7 +155,7 @@ inline OZ_Term new_GeSetVar_init() {
   GeSetVar *nv = new GeSetVar(sp->getVarsSize());
   OzVariable* ov   = extVar2Var(nv);
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
-  int index        = sp->newVar(static_cast<VarBase*>(x.variable()), ref);
+  int index        = sp->newVar(static_cast<VarImpBase*>(x.var()), ref);
   nv->ensureValReflection();
   return ref;
 }
@@ -216,7 +216,7 @@ inline OZ_Term new_GeSetVarComp(OZ_Term V1) {
 
   OzVariable* ov   = extVar2Var(nv);
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
-  int index        = sp->newVar(static_cast<VarBase*>(x.variable()), ref);
+  int index        = sp->newVar(static_cast<VarImpBase*>(x.var()), ref);
   rel(sp, x, SRT_CMPL, get_SetVar(V1));
   nv->ensureValReflection();
   return ref;
@@ -230,7 +230,7 @@ inline OZ_Term new_GeSetVarComplIn(OZ_Term V1,OZ_Term V2) {
 
   OzVariable* ov   = extVar2Var(nv);
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
-  int index        = sp->newVar(static_cast<VarBase*>(x.variable()), ref);
+  int index        = sp->newVar(static_cast<VarImpBase*>(x.var()), ref);
   
   
   rel(sp, get_SetVar(V2),SOT_MINUS, get_SetVar(V1), SRT_EQ , x);

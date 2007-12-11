@@ -77,11 +77,11 @@ class VarRefArray {
 private:
   /** 
    * \brief Container for variables.
-   * VarBase is used because we need a generic way to store variables of different types in the 
+   * VarImpBase is used because we need a generic way to store variables of different types in the 
    * space.
    * TODO: test if std::vector is efficient and if not then change it for a proper implementation
    */ 
-  std::vector<Gecode::VarBase*> vars; 
+  std::vector<Gecode::VarImpBase*> vars; 
   /**
    * \brief Container for references.
    * This vector contains references to variable nodes in the mozart heap. 
@@ -122,7 +122,7 @@ public:
    * @param r A reference to the mozart heap reference corresponding to the variable
    * @return The index of the new allocated variable
    */
-  int newVar(Gecode::VarBase *x, OZ_Term r) {
+  int newVar(Gecode::VarImpBase *x, OZ_Term r) {
     refs.push_back(r); vars.push_back(x);
   }
 
@@ -135,7 +135,7 @@ public:
     return &(refs[n]); 
   }
 
-  Gecode::VarBase& getVar(int n) {
+  Gecode::VarImpBase& getVar(int n) {
     Assert(n >= 0 && n < vars.size());
     return *vars[n];
   }
@@ -353,7 +353,7 @@ public:
    * 
    * @return The index of the new variable
    */
-  int newVar(Gecode::VarBase *v, OZ_Term r);
+  int newVar(Gecode::VarImpBase *v, OZ_Term r);
 
   int getVarsSize(void) {return vars.getSize();}
 
@@ -369,7 +369,7 @@ public:
    * @return A reference to the variable
    */
 
-  Gecode::VarBase* getVar(int n);
+  Gecode::VarImpBase* getVar(int n);
 
   /**
    * \brief Access IntVar at a given index for 
@@ -380,7 +380,7 @@ public:
    *
    */
 
-  Gecode::VarBase* getVarInfo(int n);
+  Gecode::VarImpBase* getVarInfo(int n);
 
   //@}
 

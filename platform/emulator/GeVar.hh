@@ -37,19 +37,19 @@
 #include "GeSpace.hh"
 
 template<class Var>
-class GeView: public Gecode::VariableViewBase<Var> {
+class GeView: public Gecode::VarViewBase<Var> {
 protected:
-  using Gecode::VariableViewBase<Var>::var;
+  using Gecode::VarViewBase<Var>::varimp;
 public:
   GeView(void)
-    : Gecode::VariableViewBase<Var>() {}
+    : Gecode::VarViewBase<Var>() {}
   
   void update(Gecode::Space* home, bool share, GeView<Var>& x) {
-    var = x.var->copy(home,share);
+    varimp = x.varimp->copy(home,share);
   }
 
-  GeView(Gecode::VarBase *v)
-    : Gecode::VariableViewBase<Var>(static_cast<Var*>(v)) {} 
+  GeView(Gecode::VarImpBase *v)
+    : Gecode::VarViewBase<Var>(static_cast<Var*>(v)) {} 
 };
 
 enum GeVarType {T_GeIntVar, T_GeSetVar, T_GeBoolVar};
@@ -73,7 +73,7 @@ public:
   */
   virtual int degree(void) = 0;
   virtual int getIndex(void) = 0;
-  virtual Gecode::VarBase* clone(void) = 0;
+  virtual Gecode::VarImpBase* clone(void) = 0;
   virtual bool hasSameDomain(TaggedRef) = 0;
 
   virtual int varprops(void) = 0;
@@ -229,7 +229,7 @@ public:
   GeVarType getType(void) { return type; }
 
   // Method needed to clone pointed gecode variables.
-  virtual Gecode::VarBase* clone(void) = 0;
+  virtual Gecode::VarImpBase* clone(void) = 0;
  
   virtual bool In(TaggedRef x) = 0;
 
