@@ -56,13 +56,13 @@ OZ_Term GeSetVar::statusV() {
 }
 
 
-VarBase* GeSetVar::clone(void) {
+VarImpBase* GeSetVar::clone(void) {
   GenericSpace* gs = getGSpace(); //extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
   Assert(gs);
   SetVar &v = getSetVarInfo();
   SetVar x;
   x.update(gs,false,v);
-  return x.variable();
+  return x.var();
 }
 
 

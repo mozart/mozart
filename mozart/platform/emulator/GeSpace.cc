@@ -55,7 +55,7 @@ VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share) {
 		   specific representation). In this way, vars[i] should never be used 
 		   after that.
       */
-      vars.push_back(static_cast<VarBase*>(NULL));
+      vars.push_back(static_cast<VarImpBase*>(NULL));
     }
   }
 }
@@ -161,18 +161,18 @@ void GenericSpace::merge(GenericSpace *src) {
 	
 }
 
-int GenericSpace::newVar(Gecode::VarBase *v, OZ_Term r) {
+int GenericSpace::newVar(Gecode::VarImpBase *v, OZ_Term r) {
   vars.newVar(v,r);
   return vars.getSize()-1;
 }
 
-Gecode::VarBase* GenericSpace::getVar(int n) { 
+Gecode::VarImpBase* GenericSpace::getVar(int n) { 
   Assert(n >= 0 && n<vars.getSize() && &vars.getVar(n));
   makeUnstable();
   return &vars.getVar(n);
 }
 
-Gecode::VarBase* GenericSpace::getVarInfo(int n){
+Gecode::VarImpBase* GenericSpace::getVarInfo(int n){
   Assert(n >= 0 && n < vars.getSize() && &vars.getVar(n));
   return &vars.getVar(n);
 }

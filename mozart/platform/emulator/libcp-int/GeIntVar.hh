@@ -85,7 +85,7 @@ public:
    */ 
   virtual OZ_Term       statusV();
   //  virtual void printStreamV(ostream &out,int depth);
-  virtual VarBase* clone(void);
+  virtual VarImpBase* clone(void);
   virtual bool intersect(TaggedRef x);
   
   virtual bool In(TaggedRef x);
@@ -141,7 +141,7 @@ inline OZ_Term new_GeIntVar(const IntSet& dom) {
   GeIntVar *nv = new GeIntVar(sp->getVarsSize());
   OzVariable* ov   = extVar2Var(nv);
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
-  int index        = sp->newVar(static_cast<VarBase*>(x.variable()), ref);
+  int index        = sp->newVar(static_cast<VarImpBase*>(x.var()), ref);
 
   nv->ensureValReflection();
   return ref;
@@ -157,7 +157,7 @@ inline OZ_Term new_GeIntVarCompl(const IntSet& dom) {
   GeIntVar *nv     = new GeIntVar(sp->getVarsSize());
   OzVariable *ov   = extVar2Var(nv);
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
-  int index        = sp->newVar(static_cast<VarBase*>(xcompl.variable()), ref);
+  int index        = sp->newVar(static_cast<VarImpBase*>(xcompl.var()), ref);
   nv->ensureValReflection();
   return ref;
 }
