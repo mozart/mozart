@@ -58,7 +58,40 @@ VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share)
       */
       vars[i]=static_cast<VarImpBase*>(NULL);
     }
+    //TODO: copy root variables.  
   }
+}
+
+void VarRefArray::setRoot(OZ_Term v) {
+  int sz;
+
+  printf("Called setRoot\n");fflush(stdout);
+  if(OZ_isCons(v)) {
+    printf("setRoot - is a list\n");fflush(stdout);
+    sz = OZ_length(v);
+    for(int i=0; OZ_isCons(v); v=OZ_tail(v)) {
+      printf("setRoot - element\n");fflush(stdout);
+      Assert(oz_isGeVar(OZ_head(v)));
+    }
+  } else if(OZ_isTuple(v)) {
+    printf("setRoot - is a tuple\n");fflush(stdout);
+    sz=OZ_width(v);
+    for(int i=0; i < sz; i++) {	
+      printf("setRoot - element\n");fflush(stdout);
+      Assert(oz_isGeVar(OZ_getArg(v,i)));
+	     //OZ_Term _tmp = OZ_getArg(v,i);
+	     //_array[i] = OZ_intToC(_tmp);
+    }
+  } else {
+    printf("setRoot - is a record\n");fflush(stdout);        
+    assert(OZ_isRecord(v));
+    OZ_Term al = OZ_arityList(v);
+    sz = OZ_width(v);		
+    for(int i = 0; OZ_isCons(al); al=OZ_tail(al))	
+      printf("setRoot - element\n");fflush(stdout);
+     Assert(oz_isGeVar(OZ_subtree(v,OZ_head(al))));
+  }
+  
 }
 
 int GenericSpace::gscounter = 0;
@@ -140,26 +173,25 @@ Gecode::SpaceStatus GenericSpace::mstatus(void) {
 }
 
 void GenericSpace::merge(GenericSpace *src) {
-	Reflection::VarMap vmp_src, vmp_trgt;
-	Serialization::Deserializer ds(this,vmp_trgt);
-	Reflection::VarMapIter vmi(vmp_src);
-	int vrs = 0;
-	int act = 0;
-	for (Reflection::SpecIter si(src->actorSpecs(vmp_src)); si(); ++si) {
-		for (; vmi(); ++vmi) {
-			ds.var(vmi.spec());
-			
-			//IntVar iv(Int::IntView(static_cast<Int::IntVarImp*>(vmi.var())));
-			//std::cout << "New IntVar " << iv << std::endl;
-			
-			vrs++;
-		}
-		ds.post(si.actor());
-		act++;
-	}
-	//std::cout << "Actors added: " << act << std::endl;
-	//std::cout << "Variables added: " << vrs << std::endl;
-	
+  Reflection::VarMap vmp_src, vmp_trgt;
+  Serialization::Deserializer ds(this,vmp_trgt);
+  Reflection::VarMapIter vmi(vmp_src);
+  int vrs = 0;
+  int act = 0;
+  for (Reflection::SpecIter si(src->actorSpecs(vmp_src)); si(); ++si) {
+    for (; vmi(); ++vmi) {
+      ds.var(vmi.spec());
+      
+      //IntVar iv(Int::IntView(static_cast<Int::IntVarImp*>(vmi.var())));
+      //std::cout << "New IntVar " << iv << std::endl;
+      
+      vrs++;
+    }
+    ds.post(si.actor());
+    act++;
+  }
+  printf("Actors added: %d\n", act);fflush(stdout);
+  printf("Variables added: %d\n", vrs);fflush(stdout);
 }
 
 int GenericSpace::newVar(Gecode::VarImpBase *v, OZ_Term r) {
