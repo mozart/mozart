@@ -178,7 +178,7 @@ void GenericSpace::merge(GenericSpace *src) {
   Reflection::VarMapIter vmi(vmp_src);
   int vrs = 0;
   int act = 0;
-  for (Reflection::SpecIter si(src->actorSpecs(vmp_src)); si(); ++si) {
+  for (Reflection::SpecIter si(src,vmp_src); si(); ++si) {
     for (; vmi(); ++vmi) {
       ds.var(vmi.spec());
       
