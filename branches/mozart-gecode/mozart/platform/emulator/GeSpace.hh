@@ -100,7 +100,8 @@ private:
    * This array stores the index of variables at vars that are part of root. 
    * TODO: replace int by VarImpBase* 
    */
-  Gecode::Support::DynamicArray<int> root;
+   // TODO: remove root vars array if not needed
+  //Gecode::Support::DynamicArray<int> root;
 
   /**
      Invariant:
@@ -159,7 +160,7 @@ public:
   /**
      \brief Sets the root variables of this space to variables constained in vector \a v.
    */
-  void setRoot(OZ_Term v);
+  //void setRoot(OZ_Term v);
 };
 
 // Garbage collection related stuff 

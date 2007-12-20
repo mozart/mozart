@@ -58,10 +58,10 @@ VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share)
       */
       vars[i]=static_cast<VarImpBase*>(NULL);
     }
-    //TODO: copy root variables.  
   }
 }
 
+/*
 void VarRefArray::setRoot(OZ_Term v) {
   int sz;
 
@@ -93,7 +93,7 @@ void VarRefArray::setRoot(OZ_Term v) {
   }
   
 }
-
+*/
 int GenericSpace::gscounter = 0;
 
 GenericSpace::GenericSpace(Board* b) 
@@ -179,15 +179,12 @@ void GenericSpace::merge(GenericSpace *src) {
   int vrs = 0;
   int act = 0;
   for (Reflection::SpecIter si(src,vmp_src); si(); ++si) {
+	Reflection::ActorSpec& s = si.actor();
     for (; vmi(); ++vmi) {
       ds.var(vmi.spec());
-      
-      //IntVar iv(Int::IntView(static_cast<Int::IntVarImp*>(vmi.var())));
-      //std::cout << "New IntVar " << iv << std::endl;
-      
       vrs++;
     }
-    ds.post(si.actor());
+    ds.post(s);
     act++;
   }
   printf("Actors added: %d\n", act);fflush(stdout);
