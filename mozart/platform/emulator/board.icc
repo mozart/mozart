@@ -318,6 +318,12 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
   // Merge propagators (must be after script installation, since script
   //                    installation might wake some propagators!!!!)
   (dst->lpq).merge(src->lpq);
+  
+  // TODO: Assumption: Both boards have a generic space
+  if (getGenericSpace(true) && dst->getGenericSpace(true)) {
+    printf("Merging spaces\n");fflush(stdout);
+    dst->getGenericSpace()->merge(getGenericSpace());
+  }
   // This might cause two serving threads for the same board!
 
   Assert(oz_isCurrentBoard(dst));
@@ -344,7 +350,7 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
 	  up->addSuspension(sl->getSuspendable());
     }
     // Merge nonmonotonic propagators
-    dst->setNonMono(dst->getNonMono()->merge(src->getNonMono()));
+    //dst->setNonMono(dst->getNonMono()->merge(src->getNonMono()));
     if (src->getDistributor()) {
       Assert(!dst->getDistributor());
       dst->setDistributor(src->getDistributor());
