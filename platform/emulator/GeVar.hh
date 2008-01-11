@@ -356,7 +356,7 @@ public:
     return s->getVarRef(index); 
   }
 
-  Gecode::ExecStatus propagate(Gecode::Space* s){
+  Gecode::ExecStatus propagate(Gecode::Space* s, Gecode::PropModEvent){
 
 
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
@@ -409,7 +409,7 @@ public:
   virtual OZ_Term getVarRef(GenericSpace* s) {return s->getVarRef(index); }
 
   // this propagator should never fail nor subsume
-  Gecode::ExecStatus propagate(Gecode::Space* s) {  
+  Gecode::ExecStatus propagate(Gecode::Space* s, Gecode::PropModEvent) {  
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
    
     Assert(oz_isVarOrRef(ref));	
