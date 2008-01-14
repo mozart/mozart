@@ -76,10 +76,10 @@ public:
   virtual int getIndex(void) = 0;
   virtual Gecode::VarImpBase* clone(void) = 0;
   /**
-     \brief To serialize a variable is to insert it in the VarMap \a vmp. Variable type
+     \brief To reflect a variable is to insert it in the VarMap \a vmp. Variable type
      information is needed at this step so this method is declared virtual. 
    */
-  virtual void serialize(Gecode::Reflection::VarMap &vmp) = 0;
+  virtual void reflect(Gecode::Reflection::VarMap &vmp) = 0;
 
   virtual bool hasSameDomain(TaggedRef) = 0;
 
@@ -92,7 +92,7 @@ protected:
   /**
      \brief Test whether the variable has a domain reflection propagator.
      This propagator reflects any domain change in mozart. It is useful
-     when a variable is browsed or inspected. It is also neede to wake up the
+     when a variable is browsed or inspected. It is also needed to wake up the
      supervisor thread if variable is not local to the space.
   */
   bool hasDomRefl;
