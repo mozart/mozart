@@ -321,7 +321,7 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
   
   // TODO: Assumption: Both boards have a generic space
   if (getGenericSpace(true) && dst->getGenericSpace(true)) {
-    printf("Merging spaces\n");fflush(stdout);
+    printf("board.icc >> Merging spaces\n");fflush(stdout);
     dst->getGenericSpace()->merge(getGenericSpace());
   }
   // This might cause two serving threads for the same board!

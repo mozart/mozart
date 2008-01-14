@@ -52,7 +52,7 @@ VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share)
       vars[i] = static_cast<GeVarBase*>(oz_getExtVar(dt))->clone();
     } else {
       /* When vars[i] has been bound to a value, refs[i] no longer points to a
-	 GeVar but to a some structure in the heap (depending on the domain 
+	 GeVar but to some structure in the heap (depending on the domain 
 	 specific representation). In this way, vars[i] should never be used 
 	 after that.
       */
@@ -173,22 +173,8 @@ Gecode::SpaceStatus GenericSpace::mstatus(void) {
 }
 
 void GenericSpace::merge(GenericSpace *src) {
-  Reflection::VarMap vmp_src, vmp_trgt;
-  Serialization::Deserializer ds(this,vmp_trgt);
-  Reflection::VarMapIter vmi(vmp_src);
-  int vrs = 0;
-  int act = 0;
-  for (Reflection::SpecIter si(src,vmp_src); si(); ++si) {
-	Reflection::ActorSpec& s = si.actor();
-    for (; vmi(); ++vmi) {
-      ds.var(vmi.spec());
-      vrs++;
-    }
-    ds.post(s);
-    act++;
-  }
-  printf("Actors added: %d\n", act);fflush(stdout);
-  printf("Variables added: %d\n", vrs);fflush(stdout);
+  printf("GeSpace.cc >> called space merge\n");fflush(stdout);
+  // Iterate on generic space references to fill the VarMap
 }
 
 int GenericSpace::newVar(Gecode::VarImpBase *v, OZ_Term r) {

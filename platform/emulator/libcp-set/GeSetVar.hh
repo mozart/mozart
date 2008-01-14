@@ -133,7 +133,11 @@ public:
     IntSet card(vv->cardMin(),vv->cardMax());    
     return makeTaggedExtension(new SetValueM(valGlb, valLub, card));
   }
-
+  
+  virtual void serialize(Gecode::Reflection::VarMap &vmp) {
+    // TODO: something must be replaced with other thing, maybe the index in the vector.
+    vmp.put(getGSpace(),getSetVarInfo(),"something");
+  }
 };
 
 

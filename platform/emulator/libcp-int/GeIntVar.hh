@@ -131,7 +131,11 @@ public:
     Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
     return OZ_int(vv->val());
   }
-
+  
+  virtual void serialize(Gecode::Reflection::VarMap &vmp) {
+    // TODO: something must be replaced with other thing, maybe the index in the vector.
+    vmp.put(getGSpace(),getIntVarInfo(),"something");
+  }
 };
 
 
