@@ -174,7 +174,18 @@ Gecode::SpaceStatus GenericSpace::mstatus(void) {
 
 void GenericSpace::merge(GenericSpace *src) {
   printf("GeSpace.cc >> called space merge\n");fflush(stdout);
+  Gecode::Reflection::VarMap vm;
   // Iterate on generic space references to fill the VarMap
+  for (int i=0; i<vars.getSize(); i++) {
+    OZ_Term t =  *vars.getRef(i);
+    OZ_Term dt = OZ_deref(t);
+    if (oz_isExtVar(dt)) {
+      Assert(oz_getExtVar(dt)->getIdV() == OZ_EVAR_GEVAR);
+      printf("possition %d of refs array contains a gecode var\n",i);
+      static_cast<GeVarBase*>(oz_getExtVar(dt))->reflect(vm);
+    }
+  }
+  printf("GeSpace.cc >> finished space merge\n");fflush(stdout);
 }
 
 int GenericSpace::newVar(Gecode::VarImpBase *v, OZ_Term r) {
