@@ -29,7 +29,7 @@
 #include "MozProp.hh"
 
 //--------------------------------------------------------------------------------
-Gecode::ExecStatus WatchMaxProp::propagate(Gecode::Space *s, Gecode::PropModEvent) {
+Gecode::ExecStatus WatchMaxProp::propagate(Gecode::Space *s, Gecode::ModEventDelta) {
   if(x0.max() <= x2 && x0.min() >= Gecode::Limits::Int::int_min) {
     GECODE_ME_CHECK(x1.eq(s,0));
     return Gecode::ES_SUBSUMED(this,s);
@@ -41,7 +41,7 @@ Gecode::ExecStatus WatchMaxProp::propagate(Gecode::Space *s, Gecode::PropModEven
   return Gecode::ES_FIX;
 }
 
-Gecode::ExecStatus WatchMinProp::propagate(Gecode::Space *s, Gecode::PropModEvent) {
+Gecode::ExecStatus WatchMinProp::propagate(Gecode::Space *s, Gecode::ModEventDelta) {
   if(x0.max() <= getX2() && x0.min() >= Gecode::Limits::Int::int_min) {
     GECODE_ME_CHECK(x1.eq(s,1));
     return Gecode::ES_SUBSUMED(this,s);
@@ -53,7 +53,7 @@ Gecode::ExecStatus WatchMinProp::propagate(Gecode::Space *s, Gecode::PropModEven
   return Gecode::ES_FIX;
 }
 
-Gecode::ExecStatus WatchSizeProp::propagate(Gecode::Space *s, Gecode::PropModEvent) {
+Gecode::ExecStatus WatchSizeProp::propagate(Gecode::Space *s, Gecode::ModEventDelta) {
   if(x0.max() - x0.min() + 1 >= getX2()) {
     GECODE_ME_CHECK(x1.eq(s,1));
     return Gecode::ES_SUBSUMED(this,s);
@@ -64,7 +64,7 @@ Gecode::ExecStatus WatchSizeProp::propagate(Gecode::Space *s, Gecode::PropModEve
 //--------------------------------------------------------------------------------
 //This propagators are insperated in the same ones of Mozart-oz
 
-Gecode::ExecStatus DisjointProp::propagate(Gecode::Space *s, Gecode::PropModEvent) {
+Gecode::ExecStatus DisjointProp::propagate(Gecode::Space *s, Gecode::ModEventDelta) {
   int xl = x0.min(), xu = x0.max();
   int yl = x1.min(), yu = x1.max();
   
@@ -155,7 +155,7 @@ Gecode::ExecStatus DisjointCProp::propagate(Gecode::Space *s) {
 }
 */
 //--------------------------------------------------------------------------------
-Gecode::ExecStatus ReifiedIntProp::propagate(Gecode::Space *s, Gecode::PropModEvent) {
+Gecode::ExecStatus ReifiedIntProp::propagate(Gecode::Space *s, Gecode::ModEventDelta) {
   //    Gecode::IntVarRanges v1(x0);
   //Gecode::IntVar tmp(s, d);
   //Gecode::Int::IntView d2(tmp);

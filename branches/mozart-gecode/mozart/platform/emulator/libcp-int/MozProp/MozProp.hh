@@ -53,7 +53,7 @@ public:
     return new(s) WatchMaxProp(s,share,*this);
   }
   
-  Gecode::ExecStatus propagate(Gecode::Space *s, Gecode::PropModEvent);
+  Gecode::ExecStatus propagate(Gecode::Space *s, Gecode::ModEventDelta);
 };
 
 class WatchMinProp: public WatchMaxProp
@@ -66,7 +66,7 @@ public:
   Gecode::Actor* copy(Gecode::Space *s,bool share) {
     return new(s) WatchMinProp(s,share,*this);
   }
-  Gecode::ExecStatus propagate(Gecode::Space *s, Gecode::PropModEvent);
+  Gecode::ExecStatus propagate(Gecode::Space *s, Gecode::ModEventDelta);
 };
 
 class WatchSizeProp: public WatchMaxProp
@@ -79,7 +79,7 @@ public:
   Gecode::Actor* copy(Gecode::Space *s, bool share) {
     return new(s) WatchSizeProp(s,share,*this);
   }
-  Gecode::ExecStatus propagate(Gecode::Space *s, Gecode::PropModEvent);
+  Gecode::ExecStatus propagate(Gecode::Space *s, Gecode::ModEventDelta);
 };
 
 //-------------------------------------------------------------------------------------
@@ -98,7 +98,7 @@ public:
     return new(s) DisjointProp(s,share,*this);
   }
 
-  Gecode::ExecStatus propagate(Gecode::Space *s, Gecode::PropModEvent);
+  Gecode::ExecStatus propagate(Gecode::Space *s, Gecode::ModEventDelta);
 };
 /*
 /*
@@ -141,7 +141,7 @@ public:
     return new(s) ReifiedIntProp(s, share, *this);
   }
 
-  Gecode::ExecStatus propagate(Gecode::Space *s, Gecode::PropModEvent);  
+  Gecode::ExecStatus propagate(Gecode::Space *s, Gecode::ModEventDelta);  
 };
 
 //-------------------------------------------------------------------------------------
