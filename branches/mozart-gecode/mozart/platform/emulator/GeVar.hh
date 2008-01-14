@@ -36,6 +36,7 @@
 #include "unify.hh"
 #include "GeSpace.hh"
 
+
 template<class Var>
 class GeView: public Gecode::VarViewBase<Var> {
 protected:
@@ -74,6 +75,12 @@ public:
   virtual int degree(void) = 0;
   virtual int getIndex(void) = 0;
   virtual Gecode::VarImpBase* clone(void) = 0;
+  /**
+     \brief To serialize a variable is to insert it in the VarMap \a vmp. Variable type
+     information is needed at this step so this method is declared virtual. 
+   */
+  virtual void serialize(Gecode::Reflection::VarMap &vmp) = 0;
+
   virtual bool hasSameDomain(TaggedRef) = 0;
 
   virtual int varprops(void) = 0;
