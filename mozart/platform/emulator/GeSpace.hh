@@ -46,7 +46,7 @@
 #include "misc.hh"
 #include "mozart.h"
 #include "gecode/kernel.hh"
-
+#include "gecode/serialization.hh"
 
 
 //-----------------------------------------------------------------------------
