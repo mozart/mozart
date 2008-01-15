@@ -137,10 +137,9 @@ public:
     return OZ_int(vv->val());
   }
 
-  virtual void reflect(Gecode::Reflection::VarMap &vmp) {
-    // TODO: something must be replaced with other thing, maybe the index in the vector.
-    vmp.put(getGSpace(),getBoolVarInfo(),"something");
- }
+  virtual void reflect(Reflection::VarMap &vmp, Support::Symbol &p) {
+    vmp.put(getGSpace(),getBoolVarInfo(),p);
+  }
 };
 
 

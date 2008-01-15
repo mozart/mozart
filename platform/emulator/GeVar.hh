@@ -77,9 +77,10 @@ public:
   virtual Gecode::VarImpBase* clone(void) = 0;
   /**
      \brief To reflect a variable is to insert it in the VarMap \a vmp. Variable type
-     information is needed at this step so this method is declared virtual. 
+     information is needed at this step so this method is declared virtual. p is a
+     prefix that depends on the generic space.
    */
-  virtual void reflect(Gecode::Reflection::VarMap &vmp) = 0;
+  virtual void reflect(Gecode::Reflection::VarMap &vmp, Gecode::Support::Symbol &p) = 0;
 
   virtual bool hasSameDomain(TaggedRef) = 0;
 
