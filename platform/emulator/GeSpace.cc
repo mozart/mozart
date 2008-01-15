@@ -172,19 +172,33 @@ Gecode::SpaceStatus GenericSpace::mstatus(void) {
   return ret;
 }
 
-void GenericSpace::merge(GenericSpace *src) {
-  printf("GeSpace.cc >> called space merge\n");fflush(stdout);
-  Gecode::Reflection::VarMap vm;
+void GenericSpace::varReflect(Reflection::VarMap &vmp) {
   // Iterate on generic space references to fill the VarMap
+  // TODO: create a prefix for this generic space
+  Support::Symbol p;
   for (int i=0; i<vars.getSize(); i++) {
     OZ_Term t =  *vars.getRef(i);
     OZ_Term dt = OZ_deref(t);
     if (oz_isExtVar(dt)) {
       Assert(oz_getExtVar(dt)->getIdV() == OZ_EVAR_GEVAR);
       printf("possition %d of refs array contains a gecode var\n",i);
-      static_cast<GeVarBase*>(oz_getExtVar(dt))->reflect(vm);
+      GeVarBase *var = static_cast<GeVarBase*>(oz_getExtVar(dt));
+      std::stringstream s;
+      s << var->getIndex();
+      Support::Symbol nn = p.copy();
+      nn += Support::Symbol(s.str().c_str(),true);
+      var->reflect(vmp,nn);
     }
   }
+}
+
+void GenericSpace::merge(GenericSpace *src) {
+  printf("GeSpace.cc >> called space merge\n");fflush(stdout);
+  Reflection::VarMap vm;
+  varReflect(vm);
+  
+  printf("GeSpace.cc >> finished VarMap fill\n");fflush(stdout);
+  
   printf("GeSpace.cc >> finished space merge\n");fflush(stdout);
 }
 

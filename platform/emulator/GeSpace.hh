@@ -272,6 +272,11 @@ private:
    */
   void setVarRef(int n,OZ_Term);
 
+  /**
+     \brief Fill vm with variables in \a vars
+   */
+  void varReflect(Gecode::Reflection::VarMap &vm);
+  
 public:
   
   static int gscounter;
