@@ -172,33 +172,68 @@ Gecode::SpaceStatus GenericSpace::mstatus(void) {
   return ret;
 }
 
-void GenericSpace::varReflect(Reflection::VarMap &vmp) {
+void GenericSpace::varReflect(Reflection::VarMap &vmp, bool registerOnly) {
   // Iterate on generic space references to fill the VarMap
   // TODO: create a prefix for this generic space
+
+  printf("Called varReflect on %p with registerOnly set to %d\n",this,registerOnly);
   Support::Symbol p;
   for (int i=0; i<vars.getSize(); i++) {
     OZ_Term t =  *vars.getRef(i);
     OZ_Term dt = OZ_deref(t);
     if (oz_isExtVar(dt)) {
       Assert(oz_getExtVar(dt)->getIdV() == OZ_EVAR_GEVAR);
-      printf("possition %d of refs array contains a gecode var\n",i);
+      //
       GeVarBase *var = static_cast<GeVarBase*>(oz_getExtVar(dt));
       std::stringstream s;
       s << var->getIndex();
       Support::Symbol nn = p.copy();
       nn += Support::Symbol(s.str().c_str(),true);
-      var->reflect(vmp,nn);
+      var->reflect(vmp,nn,registerOnly);
+      printf("Iteration %d Added symbol %s\n",i,nn.toString().c_str());fflush(stdout);
     }
   }
 }
 
 void GenericSpace::merge(GenericSpace *src) {
   printf("GeSpace.cc >> called space merge\n");fflush(stdout);
-  Reflection::VarMap vm;
-  varReflect(vm);
+
+  // Extract variables from src and fill vm
+  Reflection::VarMap svm;
+  src->varReflect(svm);
+  
+  // Extract variables from this (register only) Ask Guido.
+  
+  Reflection::VarMap tvm;
+  //varReflect(tvm,true);
   
   printf("GeSpace.cc >> finished VarMap fill\n");fflush(stdout);
   
+  Serialization::Deserializer d(this, tvm);
+  Reflection::VarMapIter vmi(svm);
+
+  for (Reflection::SpecIter si(src,svm); si(); ++si) {
+    try {
+      Reflection::ActorSpec& s = si.actor();
+      for (;vmi();++vmi) {
+	try {
+	  d.var(vmi.spec());
+	} catch (Reflection::ReflectionException e) {
+	   printf("unknown exception while creating VARIABLE\n");fflush(stdout);
+	}
+      }
+	try {
+	  d.post(s);
+	} catch (Reflection::ReflectionException e) {
+	   printf("unknown exception while creating ACTOR\n");fflush(stdout);
+	}
+    } catch (Reflection::ReflectionException e) {
+      printf("FIXME: maybe a reflection actor\n");fflush(stdout);
+    }
+    printf("Iteration on actor spec\n");fflush(stdout);
+  }
+  printf("GeSpace.cc >> finished variable and actor creation\n");fflush(stdout);
+
   printf("GeSpace.cc >> finished space merge\n");fflush(stdout);
 }
 

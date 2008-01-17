@@ -275,7 +275,7 @@ private:
   /**
      \brief Fill vm with variables in \a vars
    */
-  void varReflect(Gecode::Reflection::VarMap &vm);
+  void varReflect(Gecode::Reflection::VarMap &vm, bool registerOnly = false);
   
 public:
   

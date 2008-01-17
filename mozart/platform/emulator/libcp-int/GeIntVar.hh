@@ -132,8 +132,9 @@ public:
     return OZ_int(vv->val());
   }
   
-  virtual void reflect(Reflection::VarMap &vmp, Support::Symbol &p) {
-    vmp.put(getGSpace(),getIntVarInfo(),p);
+  virtual void reflect(Reflection::VarMap &vmp, Support::Symbol &p, 
+		       bool registerOnly = false) {
+    vmp.put(getGSpace(),getIntVarInfo(),p,registerOnly);
   }
 };
 
