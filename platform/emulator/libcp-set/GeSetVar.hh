@@ -134,8 +134,9 @@ public:
     return makeTaggedExtension(new SetValueM(valGlb, valLub, card));
   }
   
-  virtual void reflect(Reflection::VarMap &vmp, Support::Symbol &p) {
-    vmp.put(getGSpace(),getSetVarInfo(),p);
+  virtual void reflect(Reflection::VarMap &vmp, Support::Symbol &p,
+		       bool registerOnly = false) {
+    vmp.put(getGSpace(),getSetVarInfo(),p, registerOnly);
   }
 };
 
