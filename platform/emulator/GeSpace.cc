@@ -196,7 +196,7 @@ void GenericSpace::varReflect(Reflection::VarMap &vmp, bool registerOnly) {
 }
 
 void GenericSpace::merge(GenericSpace *src) {
-  printf("GeSpace.cc >> called space merge\n");fflush(stdout);
+  printf("GeSpace.cc >> called space merge current number of prop %d\n",propagators());fflush(stdout);
 
   // Extract variables from src and fill vm
   Reflection::VarMap svm;
@@ -217,6 +217,7 @@ void GenericSpace::merge(GenericSpace *src) {
       Reflection::ActorSpec& s = si.actor();
       for (;vmi();++vmi) {
 	try {
+	  // create a new variable in target space
 	  d.var(vmi.spec());
 	} catch (Reflection::ReflectionException e) {
 	   printf("unknown exception while creating VARIABLE\n");fflush(stdout);
@@ -233,8 +234,22 @@ void GenericSpace::merge(GenericSpace *src) {
     printf("Iteration on actor spec\n");fflush(stdout);
   }
   printf("GeSpace.cc >> finished variable and actor creation\n");fflush(stdout);
+  
+ // register the variable in vars array
+  printf("GeSpace.cc >> registering new var in the target space\n");fflush(stdout);
+  Reflection::VarMapIter newVars(svm);
+  Assert(src->getVarSize() == svm.size());
+  for (int i=0;newVars();++newVars,i++) {
+    // This is wrong! the second parameter must be a new reference with an updated position.
+    newVar(newVars.varImpBase(),src->getVarRef(i));
+  }
 
-  printf("GeSpace.cc >> finished space merge\n");fflush(stdout);
+  // this call is temporal, just to have an accurate number of propagators.
+  status();
+  printf("GeSpace.cc >> finished space merge current number of prop %d\n",propagators());
+  printf("GeSpace.cc >> finished space merge current number of vars %d\n",tvm.size());
+
+fflush(stdout);
 }
 
 int GenericSpace::newVar(Gecode::VarImpBase *v, OZ_Term r) {
