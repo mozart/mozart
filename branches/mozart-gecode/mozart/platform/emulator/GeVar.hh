@@ -80,7 +80,8 @@ public:
      information is needed at this step so this method is declared virtual. p is a
      prefix that depends on the generic space.
    */
-  virtual void reflect(Gecode::Reflection::VarMap &vmp, Gecode::Support::Symbol &p) = 0;
+  virtual void reflect(Gecode::Reflection::VarMap &vmp, Gecode::Support::Symbol &p, 
+		       bool registerOnly = false ) = 0;
 
   virtual bool hasSameDomain(TaggedRef) = 0;
 
