@@ -319,8 +319,9 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
   //                    installation might wake some propagators!!!!)
   (dst->lpq).merge(src->lpq);
   
+  printf("board.icc >> Merging spaces --- %d %d\n",getGenericSpace(true)!=NULL , dst->getGenericSpace(true)!=NULL);fflush(stdout);
   // TODO: Assumption: Both boards have a generic space
-  if (getGenericSpace(true) && dst->getGenericSpace(true)) {
+  if (getGenericSpace(true)!=NULL && dst->getGenericSpace(true)!=NULL) {
     printf("board.icc >> Merging spaces\n");fflush(stdout);
     dst->getGenericSpace()->merge(getGenericSpace());
   }

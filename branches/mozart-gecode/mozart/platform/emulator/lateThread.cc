@@ -69,7 +69,7 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
   	After propagation the generic space is stable, if it is not 
 	entailed, this thread must suspend.
   */
-  //printf("lateThread gs 2 %p\n",gs);fflush(stdout);  
+  printf("lateThread gs 2 %p %d\n",gs,gs->isEntailed());fflush(stdout);  
   if (!gs->isEntailed())
 	return SUSPEND;
   
