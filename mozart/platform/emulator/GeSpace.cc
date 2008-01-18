@@ -238,10 +238,15 @@ void GenericSpace::merge(GenericSpace *src) {
  // register the variable in vars array
   printf("GeSpace.cc >> registering new var in the target space\n");fflush(stdout);
   Reflection::VarMapIter newVars(svm);
-  Assert(src->getVarSize() == svm.size());
+  Assert(src->getVarsSize() == svm.size());
+  int from = getVarsSize() + 1;
   for (int i=0;newVars();++newVars,i++) {
     // This is wrong! the second parameter must be a new reference with an updated position.
+    OZ_Term  v = src->getVarRef(i);
+    Assert(oz_isGeVar(v));
+    static_cast<GeVarBase*>(oz_getExtVar(oz_deref(v)))->setIndex(from+i);
     newVar(newVars.varImpBase(),src->getVarRef(i));
+    printf("GeSpace.cc >> updating reference at new home space var: %d new pos %d\n",i,from+i);fflush(stdout);
   }
 
   // this call is temporal, just to have an accurate number of propagators.
