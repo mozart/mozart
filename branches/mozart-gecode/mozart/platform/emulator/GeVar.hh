@@ -74,6 +74,7 @@ public:
   */
   virtual int degree(void) = 0;
   virtual int getIndex(void) = 0;
+  virtual void setIndex(int) = 0;
   virtual Gecode::VarImpBase* clone(void) = 0;
   /**
      \brief To reflect a variable is to insert it in the VarMap \a vmp. Variable type
@@ -183,6 +184,8 @@ public:
   }
 
   int getIndex(void) {return index;}
+
+  void setIndex(int idx) {index = idx;}
 
   /// Returns the GenericSpace associated with this variable.
   GenericSpace * getGSpace(void) {
