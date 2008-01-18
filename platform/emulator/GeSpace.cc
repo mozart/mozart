@@ -249,12 +249,16 @@ void GenericSpace::merge(GenericSpace *src) {
     printf("GeSpace.cc >> updating reference at new home space var: %d new pos %d\n",i,from+i);fflush(stdout);
   }
 
+ 
   // this call is temporal, just to have an accurate number of propagators.
   status();
   printf("GeSpace.cc >> finished space merge current number of prop %d\n",propagators());
-  printf("GeSpace.cc >> finished space merge current number of vars %d\n",tvm.size());
+  printf("GeSpace.cc >> this %p src %p\n",this, src);
+  fflush(stdout);
 
-fflush(stdout);
+  // This is to prevent  lateThread to run twice if src is unstable. 
+  if (!src->isStable())
+    trigger = false;
 }
 
 int GenericSpace::newVar(Gecode::VarImpBase *v, OZ_Term r) {
