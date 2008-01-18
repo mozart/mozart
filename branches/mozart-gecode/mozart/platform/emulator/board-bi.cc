@@ -181,6 +181,7 @@ OZ_BI_define(BImergeSpace, 1,1) {
 
   Bool isUpward = (sc == sp);
   
+  printf("antes de is var\n"); fflush(stdout);
   if (OZ_isVariable(sb->getStatus())) {
     if (isUpward) {
       sb->bindStatus(AtomMerged);
@@ -192,6 +193,7 @@ OZ_BI_define(BImergeSpace, 1,1) {
 
   OZ_result(sb->getRootVar());
 
+  printf("antes de todo\n"); fflush(stdout);
   OZ_Return ret = sb->merge(sc,isUpward);
 
   space->markMerged();
