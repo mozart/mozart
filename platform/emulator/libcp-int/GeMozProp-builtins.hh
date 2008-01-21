@@ -28,8 +28,9 @@
 
 #include "GeIntVar.hh"
 #include "GeSpace-builtins.hh"
+//#include "../libfd/fdaux.cc"
 
-OZ_Term * vectorToOzTerms(OZ_Term t, int &sz)
+OZ_Term * vectorToOzTerms2(OZ_Term t, int &sz)
 {
   OZ_Term * v;
 

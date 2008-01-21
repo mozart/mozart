@@ -21,9 +21,9 @@
 ###
 
 
-$module_init_fun_name = "module_init_geboolvar";
+$module_init_fun_name = "gebvp_init";
 
-$module_init_fun      = "oz_init_module";
+#$module_init_fun      = "gebvp_init";
 
 $module_name          = "GBD";
 

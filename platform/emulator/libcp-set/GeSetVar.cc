@@ -154,12 +154,12 @@ void GeSetVar::toStream(ostream &out) {
 }
   
 
-void module_init_gesetvar(void){
+void gesvp_init(void){
   
 }
 
-#define STATICALLY_INCLUDED
-//#ifndef MODULES_LINK_STATIC
-#include "modGeSetVar-table.cc"
-#include "modGeSetVarProp-table.cc"
-//#endif
+//#define STATICALLY_INCLUDED
+#ifndef MODULES_LINK_STATIC
+//#include "modGeSetVar-table.cc"
+#include "../modGeSetVarProp-if.cc"
+#endif

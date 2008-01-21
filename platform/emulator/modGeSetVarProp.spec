@@ -1,6 +1,6 @@
-###$module_init_fun_name      = "gesvp_init";
+$module_init_fun_name      = "gesvp_init";
 
-###$boot_module_name      	   = "GFSProp";
+$boot_module_name      	   = "GFS";
 
 %builtins_all = 
 (

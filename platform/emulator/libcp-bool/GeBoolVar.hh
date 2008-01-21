@@ -203,5 +203,5 @@ inline BoolVar& get_BoolVarInfo(OZ_Term v) {
   return get_GeBoolVar(v,false)->getBoolVarInfo();
 }
 
-void module_init_geboolvar(void);
+void gebvp_init(void);
 #endif

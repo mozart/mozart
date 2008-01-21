@@ -307,5 +307,5 @@ inline OZ_Term isIn_GeSetVar(OZ_Term V1, int val, OZ_Term VBool)
 }
 
 
-void module_init_gesetvar(void);
+void gesvp_init(void);
 #endif
