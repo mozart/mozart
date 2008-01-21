@@ -140,9 +140,10 @@ void GeBoolVar::toStream(ostream &out) {
 }
   
 
-void module_init_geboolvar(void){
+void gebvp_init(void){
   
 }
 
-#define STATICALLY_INCLUDED
-#include "modGeBoolVar-table.cc"
+#ifndef MODULES_LINK_STATIC
+#include "../modGeBoolVar-if.cc"
+#endif

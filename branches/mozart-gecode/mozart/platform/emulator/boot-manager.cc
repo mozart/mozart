@@ -129,6 +129,9 @@ static TaggedRef dictionary_of_modules;
 #include "modVirtualSite-if.cc"
 #include "modProfile-if.cc"
 #include "modZlibIO-if.cc"
+#include "modGeIntVar-if.cc"
+#include "modGeBoolVar-if.cc"
+#include "modGeSetVar-if.cc"
 
 
 // Here comes the faked DPB interface
@@ -222,6 +225,9 @@ static ModuleEntry ext_module_table[] = {
   {"Win32",           mod_int_Win32},
   {"Profile",         mod_int_Profile},
   {"ZlibIO",          mod_int_ZlibIO},
+  {"GFD",							mod_int_GeIntVar},
+  {"GBD",							mod_int_GeBoolVar},
+  {"GFS",							mod_int_GeSetVar},
 #endif
 
 #ifdef MISC_BUILTINS

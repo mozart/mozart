@@ -16,21 +16,28 @@ CFLAGS 		= $(INCS) $(GECODE_INC) $(GESPACE_CXXFLAGS) $(CPPFLAGS)
 
 MODULE_SPEC	= modGeSetVar.spec modGeSetVarProp.spec
 
-GENERATED_FILES = $(MODULE_SPEC:.spec=-table.cc)
+#GENERATED_FILES = $(MODULE_SPEC:.spec=-table.cc)
 
 
 GFSLIBSRC	= SetValue.cc GeSetVar.cc GeSetVar-builtins.cc GeSetProp-builtins.cc 
 GFSLIBOBJS	= $(GFSLIBSRC:.cc=.o)
 
 
-FCPDECL		= $(SRCDIR)/../bidecl.perl
+#FCPDECL		= $(SRCDIR)/../bidecl.perl
 
 all:
 
 # NOTE: $(SRCDIR) added to the dependencies, because in ../../Makefile.in the libs
 #       depend also on this dir
-../geoz-set.so-$(PLATFORM): first $(GFSLIBOBJS) 
+../GFS.so-$(PLATFORM): first $(GFSLIBOBJS) 
 	$(DYNLD) -o $@ $(GFSLIBOBJS) $(LDFLAGS) $(GECODE_LIBS)
+	
+../libGFS.a: $(GFSLIBOBJS)
+	$(AR) -rc $@ $(GFSLIBOBJS) && $(RANLIB) $@
+#
+#depend:: Makefile $(FDLIBSRCS) $(SCHEDLIBSRCS)
+#	$(DEPEND) $(FDLIBSRCS:%=$(SRCDIR)/%) $(SCHEDLIBSRCS:%=$(SRCDIR)/%) \
+#		| sed -e 's/\.o:/\.lo:/g' > Makefile.deps
 
 %.o: %.cc
 	$(CXX) $(OPTIMIZE) $(CFLAGS) -c $< -o $@
@@ -45,10 +52,10 @@ Makefile: Makefile.in
 -include Makefile.deps
 include ../Makefile.rules
 
-first: $(GENERATED_FILES)
+first: #$(GENERATED_FILES)
 
-%-table.cc: %.spec
-	$(PERL) $(FCPDECL) -file $< -interface > $@ || { rm -f $@; exit 1; }
+#%-table.cc: %.spec
+#	$(PERL) $(FCPDECL) -file $< -interface > $@ || { rm -f $@; exit 1; }
 
 distclean::
 	-rm -f Makefile makefile $(GENERATED_FILES)
