@@ -32,6 +32,7 @@
 //#include "GeSpace-builtins.hh"
 #include "GeIntProp-builtins.hh"
 #include "MozProp/MozProp.cc"
+//#include "../libfd/fdaux.cc"
 
 
 using namespace Gecode;
@@ -237,7 +238,7 @@ OZ_BI_define(int_sumCN,4,0)
   OZ_Term D = OZ_deref(OZ_in(1));
   int tamD;
 
-  OZ_Term *Vec = vectorToOzTerms(D,tamD);
+  OZ_Term *Vec = vectorToOzTerms2(D,tamD);
 
   DeclareGeIntVar(3,Res,sp);
 
@@ -247,7 +248,7 @@ OZ_BI_define(int_sumCN,4,0)
 
   for(int i=0;i<tamD;i++) {
     int tamD2;
-    OZ_Term *Vec2 = vectorToOzTerms(Vec[i],tamD2);
+    OZ_Term *Vec2 = vectorToOzTerms2(Vec[i],tamD2);
     IntVarArray ArregloTmp(sp,tamD2,Limits::Int::int_min,Limits::Int::int_max);
     rel(sp,Arreglo[i],IRT_EQ,ArregloTmp[tamD2-1],ICL_VAL);
     IntVar ValVec2;

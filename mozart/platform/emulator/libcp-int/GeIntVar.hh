@@ -213,5 +213,5 @@ void module_init_geintvar(void);
 
 // Init the the module containing the propagators
 //void module_init_geintVarProp(void);
-void GFDProp(void);
+void geivp_init(void);
 #endif

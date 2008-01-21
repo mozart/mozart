@@ -47,7 +47,7 @@ MODULE_NAMES =							\
 	Win32 Profile OsTime ZlibIO 
 
 
-MODULE_NAMES += geoz-int geoz-bool geoz-set
+MODULE_NAMES += GFD GBD GFS
 
 
 
@@ -102,7 +102,8 @@ MODSPECS= \
 	VirtualSite Application DPStatistics OsTime \
 	ZlibIO \
 	$(BIMODSPECS) \
-	$(DENYS_SPECS)
+	$(DENYS_SPECS) \
+	GeIntVar GeSetVar GeBoolVar GeIntVarProp GeSetVarProp
 
 MODINTERS = $(MODSPECS:%=mod%-if.cc)
 
@@ -299,16 +300,16 @@ libVirtualSite.a VirtualSite.so-$(PLATFORM):
 libFDP.a FDP.so-$(PLATFORM) libSchedule.a Schedule.so-$(PLATFORM):
 	cd libfd; $(MAKE) ../$@
 
-.PHONY: geoz-int.so-$(PLATFORM)
-geoz-int.so-$(PLATFORM):
+.PHONY: libGFD.a GFD.so-$(PLATFORM)
+libGFD.a GFD.so-$(PLATFORM):
 	cd libcp-int; $(MAKE) ../$@
 
-.PHONY: geoz-bool.so-$(PLATFORM)
-geoz-bool.so-$(PLATFORM):
+.PHONY: libGBD.a GBD.so-$(PLATFORM)
+libGBD.a GBD.so-$(PLATFORM):
 	cd libcp-bool; $(MAKE) ../$@
 
-.PHONY: geoz-set.so-$(PLATFORM)
-geoz-set.so-$(PLATFORM):
+.PHONY: libGFS.a GFS.so-$(PLATFORM)
+libGFS.a GFS.so-$(PLATFORM):
 	cd libcp-set; $(MAKE) ../$@
 
 .PHONY: libFSP.a FSP.so-$(PLATFORM)

@@ -158,10 +158,14 @@ void GeIntVar::toStream(ostream &out) {
   oss << getIntVarInfo();
   out << "<GeIntVar " << oss.str().c_str() << ">"; 
 }
+
+// Init the the module containing the propagators
+//void module_init_geintVarProp(void);
+void geivp_init(void);
   
 
 
 #ifndef MODULES_LINK_STATIC
-#include "modGeIntVar-table.cc"
+#include "../modGeIntVar-if.cc"
 //#include "modGeIntVarProp-table.cc"
 #endif
