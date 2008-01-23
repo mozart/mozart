@@ -246,7 +246,9 @@ void GenericSpace::merge(GenericSpace *src) {
     GeVarBase *gvb = static_cast<GeVarBase*>(oz_getExtVar(oz_deref(v)));
     gvb->setIndex(from+i);
     newVar(newVars.varImpBase(),src->getVarRef(i));
-    gvb->ensureDomReflection();
+    
+    // This statement fails because the new variable is not yet in the vars array.
+    // gvb->ensureDomReflection();
     // TODO: What does happen with val relfection??
     printf("GeSpace.cc >> updating reference at new home space var: %d new pos %d\n",i,from+i);fflush(stdout);
   }
