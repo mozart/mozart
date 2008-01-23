@@ -319,12 +319,25 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
   //                    installation might wake some propagators!!!!)
   (dst->lpq).merge(src->lpq);
   
-  printf("board.icc >> Merging spaces --- %d %d\n",getGenericSpace(true)!=NULL , dst->getGenericSpace(true)!=NULL);fflush(stdout);
-  // TODO: Assumption: Both boards have a generic space
-  if (getGenericSpace(true)!=NULL && dst->getGenericSpace(true)!=NULL) {
-    printf("board.icc >> Merging spaces\n");fflush(stdout);
-    dst->getGenericSpace()->merge(getGenericSpace());
+  printf("board.icc >> Merging spaces\n");fflush(stdout);	
+  // merging depending on gespace presence
+  if (getGenericSpace(true) != NULL) {
+    // there is a genericSpace in the board that gets merged
+    if (dst->getGenericSpace(true) != NULL) {
+      // both boards have a genericSpace then do a real merge
+      printf("board.icc >> Merging spaces (real)\n");fflush(stdout);
+      dst->getGenericSpace()->merge(getGenericSpace());
+    } else {
+      /* TODO: oz_currentBoard() does not have a generic space then a clone
+	 of the space that gets merged is enough.
+       */
+      printf("board.icc >> Merging spaces (clone)\n");fflush(stdout);
+      Assert(false);
+    }
+    // In any other case generic space merging is not necessary.
   }
+  printf("board.icc >> End generic space merge\n");fflush(stdout);
+      
   // This might cause two serving threads for the same board!
 
   Assert(oz_isCurrentBoard(dst));
