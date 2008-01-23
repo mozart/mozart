@@ -980,15 +980,17 @@ build the system.  It can be retrieved from:
 fi
 ])
 
+# FIXME: this will be redundant when we upgrade the required autoconf version
+# 	 as PKG_CHECK_MODULES depends on PKG_PROG_PKG_CONFIG
 dnl ------------------------------------------------------------------
-dnl AC_GECODE_PKGCONFIG
+dnl AC_PKGCONFIG
 dnl
 dnl Checks whether pkg-config is installed. This macro was taken from 
 dnl Gecode sources (gecode.m4).
 dnl Copyright: Guido Tack, 2004, 2005
 dnl And was modified.
 dnl ------------------------------------------------------------------
-AC_DEFUN([AC_GECODE_PKGCONFIG],
+AC_DEFUN([AC_PKGCONFIG],
 	[AC_CHECK_TOOL(PKGCONFIG, pkg-config)
 	 AC_MSG_CHECKING( for pkg-config)
 	 if test "${PKGCONFIG}x" = "x"; then
@@ -997,7 +999,7 @@ AC_DEFUN([AC_GECODE_PKGCONFIG],
 The pkg-config tool is needed to build the system. It can be retrieved
 from:
 http://pkg-config.freedesktop.org
-The latest version at this time is 0.21.
+The latest version at this time is 0.22.
 ])
 
 	    AC_SUBST(HAVE_PKGCONFIG, "no")
@@ -1005,6 +1007,27 @@ The latest version at this time is 0.21.
 	    AC_MSG_RESULT(yes)
 	    AC_SUBST(HAVE_PKGCONFIG, "yes")
 	 fi])
+
+# FIXME: we need to use PKG_CHECK_MODULES instead of this when we upgrade to
+# 	 a recent autoconf
+dnl ------------------------------------------------------------------
+dnl AC_GECODE_PKGCONFIG
+dnl
+dnl Checks whether pkg-config gecode module exists. 
+dnl ------------------------------------------------------------------
+AC_DEFUN([AC_GECODE_PKGCONFIG],
+	[AC_MSG_CHECKING(for gecode 2.0.0)
+	 if pkg-config --exists "gecode = 2.0.0"; then
+    	 AC_MSG_RESULT(["yes"])
+	 else
+	     AC_MSG_RESULT(["no"])
+    	     AC_MSG_ERROR([
+The Generic Constraint Development Environment version 2.0.0 is required to
+build the system. It can be retrieved from:
+
+        http://www.gecode.org/
+])
+fi])
 
 dnl ------------------------------------------------------------------
 dnl OZ_NEEDS_FUNC(FUNCTION)

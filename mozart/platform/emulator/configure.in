@@ -121,6 +121,7 @@ fi
 
 AC_PATH_PROG(DEPEND, makedepend, makedepend)
 
+AC_PKGCONFIG
 AC_GECODE_PKGCONFIG
 
 OZTOOL_SH="sh `pwd`/oztool.sh"
