@@ -321,12 +321,12 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
   
   printf("board.icc >> Merging spaces\n");fflush(stdout);	
   // merging depending on gespace presence
-  if (getGenericSpace(true) != NULL) {
+  if (src->getGenericSpace(true) != NULL) {
     // there is a genericSpace in the board that gets merged
     if (dst->getGenericSpace(true) != NULL) {
       // both boards have a genericSpace then do a real merge
       printf("board.icc >> Merging spaces (real)\n");fflush(stdout);
-      dst->getGenericSpace()->merge(getGenericSpace());
+      dst->getGenericSpace()->merge(src->getGenericSpace());
     } else {
       /* TODO: oz_currentBoard() does not have a generic space then a clone
 	 of the space that gets merged is enough.

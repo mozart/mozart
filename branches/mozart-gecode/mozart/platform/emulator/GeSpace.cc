@@ -241,15 +241,16 @@ void GenericSpace::merge(GenericSpace *src) {
   Assert(src->getVarsSize() == svm.size());
   int from = getVarsSize() + 1;
   for (int i=0;newVars();++newVars,i++) {
-    // This is wrong! the second parameter must be a new reference with an updated position.
     OZ_Term  v = src->getVarRef(i);
     Assert(oz_isGeVar(v));
-    static_cast<GeVarBase*>(oz_getExtVar(oz_deref(v)))->setIndex(from+i);
+    GeVarBase *gvb = static_cast<GeVarBase*>(oz_getExtVar(oz_deref(v)));
+    gvb->setIndex(from+i);
     newVar(newVars.varImpBase(),src->getVarRef(i));
+    gvb->ensureDomReflection();
+    // TODO: What does happen with val relfection??
     printf("GeSpace.cc >> updating reference at new home space var: %d new pos %d\n",i,from+i);fflush(stdout);
   }
 
- 
   // this call is temporal, just to have an accurate number of propagators.
   status();
   printf("GeSpace.cc >> finished space merge current number of prop %d\n",propagators());
