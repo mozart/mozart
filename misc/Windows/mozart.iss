@@ -3,7 +3,7 @@ AppName=Mozart
 ; icon: \bin\oz.exe
 AppCopyright=Open-Source system, see www.mozart-oz.org
 AppVerName=Mozart 1.3.2
-AppPublisher=SICS, DFKI, and other parties
+AppPublisher=UCL, SICS, DFKI, and other parties
 DefaultDirName={pf}\Mozart
 DefaultGroupName=Mozart
 AllowNoIcons=yes
