@@ -32,8 +32,8 @@ require
 	    )
    
 import
-   GFS at 'x-oz://boot/geoz-set'
-   GFB at 'x-oz://boot/geoz-bool'
+   GFS at 'x-oz://boot/GFS'
+   GFB at 'x-oz://boot/GBD'
    Space
 
 export
