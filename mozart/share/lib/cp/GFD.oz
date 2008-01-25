@@ -33,7 +33,7 @@ require
 	    )
    
 import
-   GFD at 'x-oz://boot/geoz-int'
+   GFD at 'x-oz://boot/GFD'
    Space
    System
 prepare
