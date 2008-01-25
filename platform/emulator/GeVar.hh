@@ -116,7 +116,8 @@ public:
      Should be here or in GeVar??
    */
   virtual void ensureDomReflection(void) = 0;
- 
+  virtual void ensureValReflection(void) = 0;
+
   int getUnifyC(void) { return unifyC; }
 
   virtual OZ_Term getVal(void) = 0;
