@@ -51,7 +51,7 @@ import
        rel:          Rel
        linear:       Linear                     
       )
-   at 'x-oz://boot/geoz-bool'
+   at 'x-oz://boot/GBD'
    System
    Space
 
