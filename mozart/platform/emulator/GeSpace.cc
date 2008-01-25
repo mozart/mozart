@@ -239,18 +239,27 @@ void GenericSpace::merge(GenericSpace *src) {
   printf("GeSpace.cc >> registering new var in the target space\n");fflush(stdout);
   Reflection::VarMapIter newVars(svm);
   Assert(src->getVarsSize() == svm.size());
-  int from = getVarsSize() + 1;
+  //int from = getVarsSize() + 1;
   for (int i=0;newVars();++newVars,i++) {
     OZ_Term  v = src->getVarRef(i);
+    DEREF(v,v_ptr);
     Assert(oz_isGeVar(v));
-    GeVarBase *gvb = static_cast<GeVarBase*>(oz_getExtVar(oz_deref(v)));
-    gvb->setIndex(from+i);
-    newVar(newVars.varImpBase(),src->getVarRef(i));
+    GeVarBase *gvb = static_cast<GeVarBase*>(oz_getExtVar(v));
+    int newIndex = newVar(newVars.varImpBase(),v);
+    printf("GeSpace.cc >> newIndex %d varSize %d\n",newIndex,getVarsSize());fflush(stdout);
+    gvb->setIndex(newIndex);
+    printf("GeSpace.cc >> this %p ocb %p\n",this,oz_currentBoard()->getGenericSpace());fflush(stdout);
+    gvb->ensureValReflection();
     
+    /*
+    printf("newIndex = %d\n",newIndex);fflush(stdout);
+    printf("from+i = %d\n",from+i);fflush(stdout);
+    Assert(newIndex == from+i);
+    */
     // This statement fails because the new variable is not yet in the vars array.
-    // gvb->ensureDomReflection();
+    //gvb->ensureDomReflection();
     // TODO: What does happen with val relfection??
-    printf("GeSpace.cc >> updating reference at new home space var: %d new pos %d\n",i,from+i);fflush(stdout);
+    printf("GeSpace.cc >> updating reference at new home space var: %d new pos %d\n",i,newIndex);fflush(stdout);
   }
 
   // this call is temporal, just to have an accurate number of propagators.
@@ -265,8 +274,9 @@ void GenericSpace::merge(GenericSpace *src) {
 }
 
 int GenericSpace::newVar(Gecode::VarImpBase *v, OZ_Term r) {
-  vars.newVar(v,r);
-  return vars.getSize()-1;
+  int i = vars.newVar(v,r);
+  Assert(i == vars.getSize()-1);
+  return i;
 }
 
 Gecode::VarImpBase* GenericSpace::getVar(int n) { 

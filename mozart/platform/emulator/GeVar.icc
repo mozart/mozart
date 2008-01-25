@@ -161,7 +161,8 @@ OZ_Return GeVar<VarImp,pc>::bindV(TaggedRef* vPtr, TaggedRef val) {
 template <class VarImp, Gecode::PropCond pc> 
 inline
 void GeVar<VarImp,pc>::ensureValReflection(void) {
-  GenericSpace *s = getGSpace();
+  GenericSpace *s = oz_currentBoard()->getGenericSpace(true);
+  printf("ensureValReflector >> genericSpace s %p \n",s);fflush(stdout);
   VarImp *vip = reinterpret_cast<VarImp*>(s->getVarInfo(index));
   GeView<VarImp> v(vip);
   new (s) ValReflector<VarImp>(s, v, index);
@@ -172,7 +173,8 @@ template <class VarImp, Gecode::PropCond pc>
 inline
 void GeVar<VarImp,pc>::ensureDomReflection(void) {
   if (!hasDomRefl) {
-    GenericSpace *s = getGSpace();
+    GenericSpace *s = oz_currentBoard()->getGenericSpace(true);
+    printf("ensureDomReflector >> genericSpace s %p \n",s);fflush(stdout);
     VarImp *ivp = reinterpret_cast<VarImp*>(s->getVarInfo(index));
     GeView<VarImp> v(ivp);
     new (s) DomReflector<VarImp,pc>(s,v,index);
