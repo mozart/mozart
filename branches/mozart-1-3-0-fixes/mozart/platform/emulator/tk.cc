@@ -322,9 +322,7 @@ public:
 
   void put_int(TaggedRef i) {
     if (oz_isSmallInt(i)) {
-      int len;
-      sprintf(buffer,"%d%n",tagged2SmallInt(i),&len);
-      buffer += len;
+      buffer += sprintf(buffer,"%d",tagged2SmallInt(i));
       ensure(0);
     } else {
       char * s = toC(i);
@@ -337,9 +335,7 @@ public:
   }
 
   void put_float(TaggedRef f) {
-    int len;
-    sprintf(buffer,"%g%n",floatValue(f),&len);
-    buffer += len;
+    buffer += sprintf(buffer,"%g",floatValue(f));
     ensure(0);
   }
 
