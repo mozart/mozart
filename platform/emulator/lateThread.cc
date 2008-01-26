@@ -58,7 +58,6 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
   TaggedRef status = cb->getStatus();
   DEREF(status, statusPtr); 
   Assert(oz_isNeeded(status) || cb->isRoot());
-  printf("lateThread gs %p \n",gs);fflush(stdout);  
   Assert(!gs->isStable()); 
   if (gs->mstatus() == SS_FAILED) {
     cb->deleteGenericSpace();
@@ -69,7 +68,6 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
   	After propagation the generic space is stable, if it is not 
 	entailed, this thread must suspend.
   */
-  printf("lateThread gs 2 %p %d\n",gs,gs->isEntailed());fflush(stdout);  
   if (!gs->isEntailed())
 	return SUSPEND;
   
