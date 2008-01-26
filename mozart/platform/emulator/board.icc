@@ -149,7 +149,7 @@ Bool Board::isStable(void) {
   if (hasRunnableThreads()){
     //printf("isStable 1\n");fflush(stdout);
     return NO;
-}
+  }
 
   /*  if (oz_isCurrentBoard(this) && !trail.isEmptyChunk())
       return NO;*/
@@ -167,9 +167,9 @@ Bool Board::isStable(void) {
  
   Bool tmp = isEmptySuspList();
 
-    //printf("isStable 3 %d\n",tmp);fflush(stdout);
+  //printf("isStable 3 %d\n",tmp);fflush(stdout);
   
-    return tmp;
+  return tmp;
 }
 
 inline
@@ -248,7 +248,7 @@ Bool oz_isBelow(Board * below, Board * above) {
 /*
   This function checks if the current board is between "varHome" and "to"
   resp. equal to "to".
-  */
+*/
 
 inline
 oz_BFlag oz_isBetween(Board * to, Board * varHome) {
@@ -322,15 +322,21 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
   printf("board.icc >> Merging spaces\n");fflush(stdout);	
   // merging depending on gespace presence
   if (src->getGenericSpace(true) != NULL) {
+    
+    printf("board.icc >> source board has a gs\n");fflush(stdout);	
     // there is a genericSpace in the board that gets merged
     if (dst->getGenericSpace(true) != NULL) {
+      printf("board.icc >> dest board has a gs\n");fflush(stdout);	
       // both boards have a genericSpace then do a real merge
       printf("board.icc >> Merging spaces (real)\n");fflush(stdout);
       dst->getGenericSpace()->merge(src->getGenericSpace());
     } else {
       /* TODO: oz_currentBoard() does not have a generic space then a clone
 	 of the space that gets merged is enough.
-       */
+	 TODO: a clone is not the most elegant way. dst's gespace must point to 
+	 the src gespace. Special care must be taken because src gespace could be
+	 gc marked.
+      */
       printf("board.icc >> Merging spaces (clone)\n");fflush(stdout);
       Assert(false);
     }
@@ -365,6 +371,7 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
     }
     // Merge nonmonotonic propagators
     //dst->setNonMono(dst->getNonMono()->merge(src->getNonMono()));
+    // TODO: Think about this for the branching descriptions queue
     if (src->getDistributor()) {
       Assert(!dst->getDistributor());
       dst->setDistributor(src->getDistributor());
@@ -430,20 +437,20 @@ Bool Board::cacIsAlive(void) {
 
 }
 /*
-inline
-bool Board::isWaiting(void) {
+  inline
+  bool Board::isWaiting(void) {
   //TaggedRef st = getStabilityVar();
   //return st != taggedVoidValue && st != AtomNil;
   return oz_isReadOnly(oz_deref(getStabilityVar()));
-}
+  }
 
-inline
-bool Board::hasGetChoice(void) {
+  inline
+  bool Board::hasGetChoice(void) {
   //oz_isReadOnly(oz_deref(getCSync()));
   //TaggedRef cs = getCSync();
   //return cs != taggedVoidValue && cs != AtomNil;
   return oz_isReadOnly(oz_deref(getCSync()));
-}
+  }
 */
 inline
 TaggedRef Board::getStabilityVar(void) {
@@ -462,34 +469,34 @@ void Board::ensureLateThread(void) {
   bool gs_stable = getGenericSpace(true)->isStable();
   bool st_needed = oz_isNeeded(st);
   if (!lateThread) {
-	  if (st_needed) {
-		  if (!gs_stable) {
-				  //Add a runnable lateThread
-				  lateThread = oz_newThreadInject(this);
-				  lateThread->pushCall(BI_PROP_GEC,NULL);
-		  } else {
-			  Assert(false);
-		  }
-	  } else {
-		  if (!gs_stable) {
-				//Add a suspended thread in status
-				lateThread = oz_newThreadSuspended(DEFAULT_PRIORITY);
-				lateThread->pushCall(BI_PROP_GEC,NULL);
-				oz_var_addQuietSusp(st_ptr, lateThread);
-		  } else {
-			  Assert(false);
-		  }
-	  }
+    if (st_needed) {
+      if (!gs_stable) {
+	//Add a runnable lateThread
+	lateThread = oz_newThreadInject(this);
+	lateThread->pushCall(BI_PROP_GEC,NULL);
+      } else {
+	Assert(false);
+      }
+    } else {
+      if (!gs_stable) {
+	//Add a suspended thread in status
+	lateThread = oz_newThreadSuspended(DEFAULT_PRIORITY);
+	lateThread->pushCall(BI_PROP_GEC,NULL);
+	oz_var_addQuietSusp(st_ptr, lateThread);
+      } else {
+	Assert(false);
+      }
+    }
   } else {
-	  if (!gs_stable) {
-		  if (st_needed) {
-			  oz_wakeupThread(lateThread);
-		  } else {
-			  oz_var_addQuietSusp(st_ptr, lateThread);
-		  }
-	  } else {
-		  Assert(false);
-	  }
+    if (!gs_stable) {
+      if (st_needed) {
+	oz_wakeupThread(lateThread);
+      } else {
+	oz_var_addQuietSusp(st_ptr, lateThread);
+      }
+    } else {
+      Assert(false);
+    }
   }
 }
 
