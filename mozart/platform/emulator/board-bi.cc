@@ -181,7 +181,6 @@ OZ_BI_define(BImergeSpace, 1,1) {
 
   Bool isUpward = (sc == sp);
   
-  printf("antes de is var\n"); fflush(stdout);
   /*
     TODO: think about running proagation here. If the space to be merged is not
     stable, that means, there are propagators pending to be run it could be safer 
@@ -192,20 +191,15 @@ OZ_BI_define(BImergeSpace, 1,1) {
       sb->bindStatus(AtomMerged);
     } else {
       // Inject a thread to SBP to make the tell
-      printf("else---antes de is var\n"); fflush(stdout);
-  
       bindreadonly(sp,sb->getStatus(),AtomMerged);
     }
   }
 
   OZ_result(sb->getRootVar());
 
-  printf("antes de todo\n"); fflush(stdout);
   OZ_Return ret = sb->merge(sc,isUpward);
 
   space->markMerged();
-  
-  printf("termina todo\n"); fflush(stdout);
   
   return ret;
 } OZ_BI_end
