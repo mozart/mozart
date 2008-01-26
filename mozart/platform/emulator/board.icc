@@ -319,17 +319,19 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
   //                    installation might wake some propagators!!!!)
   (dst->lpq).merge(src->lpq);
   
-  printf("board.icc >> Merging spaces\n");fflush(stdout);	
+  // GenericSpace merge
+  GenericSpace * gsrc = src->getGenericSpace(true);
+  GenericSpace * gdst = dst->getGenericSpace(true);
+  
+  //printf("board.icc >> Merging spaces\n");fflush(stdout);	
   // merging depending on gespace presence
-  if (src->getGenericSpace(true) != NULL) {
-    
-    printf("board.icc >> source board has a gs\n");fflush(stdout);	
+  if (gsrc != NULL) {  
+    //printf("board.icc >> source board has a gs\n");fflush(stdout);	
     // there is a genericSpace in the board that gets merged
-    if (dst->getGenericSpace(true) != NULL) {
-      printf("board.icc >> dest board has a gs\n");fflush(stdout);	
+    if (gdst != NULL) {
+      //printf("board.icc >> dest board has a gs (real)\n");fflush(stdout);	
       // both boards have a genericSpace then do a real merge
-      printf("board.icc >> Merging spaces (real)\n");fflush(stdout);
-      dst->getGenericSpace()->merge(src->getGenericSpace());
+      gdst->merge(gsrc);
     } else {
       /* TODO: oz_currentBoard() does not have a generic space then a clone
 	 of the space that gets merged is enough.
@@ -337,13 +339,19 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
 	 the src gespace. Special care must be taken because src gespace could be
 	 gc marked.
       */
-      printf("board.icc >> Merging spaces (clone)\n");fflush(stdout);
-      Assert(false);
+      /*
+	Optimization: if a GenericSpace is present in the source board but it is
+	already solved then all constraint vars are available through mozart values
+	And it is not necessary to copy/point the source space from the target space.
+       */
+      if (!gsrc->isSolved()) {
+	//printf("board.icc >> Merging spaces (clone)\n");fflush(stdout);
+      }
     }
     // In any other case generic space merging is not necessary.
   }
-  printf("board.icc >> End generic space merge\n");fflush(stdout);
-      
+  //printf("board.icc >> End generic space merge\n");fflush(stdout);
+  
   // This might cause two serving threads for the same board!
 
   Assert(oz_isCurrentBoard(dst));
