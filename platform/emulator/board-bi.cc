@@ -182,6 +182,11 @@ OZ_BI_define(BImergeSpace, 1,1) {
   Bool isUpward = (sc == sp);
   
   printf("antes de is var\n"); fflush(stdout);
+  /*
+    TODO: think about running proagation here. If the space to be merged is not
+    stable, that means, there are propagators pending to be run it could be safer 
+    to ask for propagation in that space and then to merge.
+   */
   if (OZ_isVariable(sb->getStatus())) {
     if (isUpward) {
       sb->bindStatus(AtomMerged);
