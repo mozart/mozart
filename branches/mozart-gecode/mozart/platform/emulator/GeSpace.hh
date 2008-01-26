@@ -137,7 +137,9 @@ public:
    * @return The index of the new allocated variable
    */
   int newVar(Gecode::VarImpBase *x, OZ_Term r) {
+    int i = size;
     refs[size]=r; vars[size]=x; size++;
+    return i;
   }
 
   int getSize(void) { return size; }

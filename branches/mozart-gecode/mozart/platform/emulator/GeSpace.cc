@@ -239,34 +239,32 @@ void GenericSpace::merge(GenericSpace *src) {
   printf("GeSpace.cc >> registering new var in the target space\n");fflush(stdout);
   Reflection::VarMapIter newVars(svm);
   Assert(src->getVarsSize() == svm.size());
-  //int from = getVarsSize() + 1;
+  
   for (int i=0;newVars();++newVars,i++) {
     OZ_Term  v = src->getVarRef(i);
     DEREF(v,v_ptr);
     Assert(oz_isGeVar(v));
     GeVarBase *gvb = static_cast<GeVarBase*>(oz_getExtVar(v));
     int newIndex = newVar(newVars.varImpBase(),v);
-    printf("GeSpace.cc >> newIndex %d varSize %d\n",newIndex,getVarsSize());fflush(stdout);
     gvb->setIndex(newIndex);
-    printf("GeSpace.cc >> this %p ocb %p\n",this,oz_currentBoard()->getGenericSpace());fflush(stdout);
-    gvb->ensureValReflection();
     
-    /*
-    printf("newIndex = %d\n",newIndex);fflush(stdout);
-    printf("from+i = %d\n",from+i);fflush(stdout);
-    Assert(newIndex == from+i);
-    */
-    // This statement fails because the new variable is not yet in the vars array.
-    //gvb->ensureDomReflection();
-    // TODO: What does happen with val relfection??
-    printf("GeSpace.cc >> updating reference at new home space var: %d new pos %d\n",i,newIndex);fflush(stdout);
+    // ValRefector was not added from the old space then we have to add it here
+    // TODO: Implement serialization of reflector propagators.
+    gvb->ensureValReflection();
+    if (gvb->hasDomReflector())
+      gvb->ensureDomReflection();
+    printf("GeSpace.cc >> updating reference var: %d new pos %d\n",i,newIndex);
+    fflush(stdout);
   }
 
+  /*
   // this call is temporal, just to have an accurate number of propagators.
   status();
   printf("GeSpace.cc >> finished space merge current number of prop %d\n",propagators());
   printf("GeSpace.cc >> this %p src %p\n",this, src);
   fflush(stdout);
+  */
+
 
   // This is to prevent  lateThread to run twice if src is unstable. 
   if (!src->isStable())
