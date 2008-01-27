@@ -229,13 +229,17 @@ void GenericSpace::merge(GenericSpace *src) {
 	   printf("unknown exception while creating ACTOR\n");fflush(stdout);
 	}
     } catch (Reflection::ReflectionException e) {
-      printf("FIXME: maybe a reflection actor\n");fflush(stdout);
+      printf("FIXME!!: maybe a reflection actor\n");fflush(stdout);
     }
     printf("Iteration on actor spec\n");fflush(stdout);
   }
   printf("GeSpace.cc >> finished variable and actor creation\n");fflush(stdout);
   
- // register the variable in vars array
+  // register the variable in vars array
+  /*
+    Optimization: this can be done in the loop above just after calling deserializer
+    to create the variable.
+   */
   printf("GeSpace.cc >> registering new var in the target space\n");fflush(stdout);
   Reflection::VarMapIter newVars(svm);
   Assert(src->getVarsSize() == svm.size());
@@ -243,16 +247,24 @@ void GenericSpace::merge(GenericSpace *src) {
   for (int i=0;newVars();++newVars,i++) {
     OZ_Term  v = src->getVarRef(i);
     DEREF(v,v_ptr);
-    Assert(oz_isGeVar(v));
-    GeVarBase *gvb = static_cast<GeVarBase*>(oz_getExtVar(v));
-    int newIndex = newVar(newVars.varImpBase(),v);
-    gvb->setIndex(newIndex);
-    
-    // ValRefector was not added from the old space then we have to add it here
-    // TODO: Implement serialization of reflector propagators.
-    gvb->ensureValReflection();
-    if (gvb->hasDomReflector())
-      gvb->ensureDomReflection();
+    if (oz_isGeVar(v)) {
+      GeVarBase *gvb = static_cast<GeVarBase*>(oz_getExtVar(v));
+      int newIndex = newVar(newVars.varImpBase(),v);
+      gvb->setIndex(newIndex);
+      
+      // ValRefector was not added from the old space then we have to add it here
+      // TODO: Implement serialization of reflector propagators.
+      gvb->ensureValReflection();
+      if (gvb->hasDomReflector())
+	gvb->ensureDomReflection();
+    } else {
+      /* 
+	 Fixme: Wat shoul we put in the array of references?
+	 Maybe copy the reference in src and put null in vars is enough
+       */
+      printf("GeSpace.cc >> FIXME!! not updating reference var was det.\n");
+      fflush(stdout);
+    }
     printf("GeSpace.cc >> updating reference var: %d new pos %d\n",i,newIndex);
     fflush(stdout);
   }
