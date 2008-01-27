@@ -323,6 +323,9 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
   GenericSpace * gsrc = src->getGenericSpace(true);
   GenericSpace * gdst = dst->getGenericSpace(true);
   
+  /*
+    TODO: optimization: if src has a generic space but it is solved do nothing.
+   */
   //printf("board.icc >> Merging spaces\n");fflush(stdout);	
   // merging depending on gespace presence
   if (gsrc != NULL) {  
@@ -345,7 +348,7 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
 	And it is not necessary to copy/point the source space from the target space.
        */
       if (!gsrc->isSolved()) {
-	//printf("board.icc >> Merging spaces (clone)\n");fflush(stdout);
+	printf("board.icc >> FIXME!! Merging spaces (clone) needed\n");fflush(stdout);
       }
     }
     // In any other case generic space merging is not necessary.
