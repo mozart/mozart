@@ -209,10 +209,10 @@ void GenericSpace::merge(GenericSpace *src) {
   
   printf("GeSpace.cc >> finished VarMap fill\n");fflush(stdout);
   
-  Serialization::Deserializer d(this, tvm);
+  Reflection::Unreflector d(this, tvm);
   Reflection::VarMapIter vmi(svm);
 
-  for (Reflection::SpecIter si(src,svm); si(); ++si) {
+  for (Reflection::ActorSpecIter si(src,svm); si(); ++si) {
     try {
       Reflection::ActorSpec& s = si.actor();
       for (;vmi();++vmi) {
@@ -257,6 +257,9 @@ void GenericSpace::merge(GenericSpace *src) {
       gvb->ensureValReflection();
       if (gvb->hasDomReflector())
 	gvb->ensureDomReflection();
+
+      printf("GeSpace.cc >> updating reference var: %d new pos %d\n",i,newIndex);
+      fflush(stdout);
     } else {
       /* 
 	 Fixme: Wat shoul we put in the array of references?
@@ -265,8 +268,7 @@ void GenericSpace::merge(GenericSpace *src) {
       printf("GeSpace.cc >> FIXME!! not updating reference var was det.\n");
       fflush(stdout);
     }
-    printf("GeSpace.cc >> updating reference var: %d new pos %d\n",i,newIndex);
-    fflush(stdout);
+    
   }
 
   /*
