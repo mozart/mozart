@@ -214,7 +214,7 @@ void GenericSpace::merge(GenericSpace *src) {
 
   for (Reflection::ActorSpecIter si(src,svm); si(); ++si) {
     try {
-      Reflection::ActorSpec& s = si.actor();
+      Reflection::ActorSpec s = si.actor();
       for (;vmi();++vmi) {
 	try {
 	  // create a new variable in target space
