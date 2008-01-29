@@ -214,7 +214,11 @@ OZ_BI_define(BIhandover,2,0){
       if(ret!=OZ_ENTAILED) return ret;
       Glue_SiteRep *sa = reinterpret_cast<Glue_SiteRep*>(con);
       sa->m_setConnection(channel);
-      return OZ_ENTAILED;
+      OZ_Term ack = OZ_recordInit(oz_atom("connection_received"),
+				  oz_cons(oz_pair2(oz_int(1),sa->m_getOzSite()),
+					  oz_nil()));
+      doPortSend(tagged2Port(g_connectPort),ack,NULL);
+	return OZ_ENTAILED;
     }
   glue_com_connection->a_msgnLayer->m_anonymousChannelEstablished(channel); 
   return OZ_ENTAILED;
