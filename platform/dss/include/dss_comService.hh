@@ -71,6 +71,7 @@ public:
 class  DssReadBuffer{
 public:
   virtual int availableData() const = 0; 
+  virtual bool canRead(size_t wanted) const = 0;
 
   // Read out data which should be deserialized. Assumes available
   // data has been checked before
@@ -82,7 +83,8 @@ public:
 
 class  DssWriteBuffer{
 public:
-  virtual int availableSpace() const = 0; 
+  virtual int availableSpace() const = 0;
+  virtual bool canWrite(size_t wanted) const = 0;
 
   // ZACHARIAS: Check available space before writing, I know it did
   // that before but it is somewhat unecessary to do it twice

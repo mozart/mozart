@@ -35,7 +35,7 @@ public:
   GlueReadBuffer(BYTE*, int); 
 
   virtual int availableData() const; 
-
+  virtual bool canRead(size_t len) const {return this->availableData()>=len;}
   virtual void readFromBuffer(BYTE* ptr, size_t wanted);
   virtual void commitRead(size_t read);
 
@@ -50,7 +50,7 @@ public:
   GlueWriteBuffer(BYTE*, int); 
 
   virtual int availableSpace() const; 
-
+  virtual bool canWrite(size_t len) const {return this->availableSpace()>=len;}
   virtual void writeToBuffer(const BYTE* ptr, size_t write); 
 
   virtual void         putByte(const BYTE&); 
