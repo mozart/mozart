@@ -495,6 +495,9 @@ namespace _dss_internal{
     virtual int availableData() const{
       return a_end - a_cur; 
     }
+    virtual bool canRead(size_t len) const{
+      return a_end - a_cur>=len;
+    }
     virtual void readFromBuffer(BYTE* ptr, size_t len){
       memcpy(ptr,a_cur,len);
     }

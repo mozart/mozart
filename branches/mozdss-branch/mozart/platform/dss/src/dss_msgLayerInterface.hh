@@ -185,6 +185,7 @@ namespace _dss_internal{ //Start namespace
     BYTE *a_cur; 
   public:
     virtual int  availableSpace() const;
+    virtual bool canWrite(size_t len) const {return this->availableSpace()>=len;}
     virtual void writeToBuffer(const BYTE* ptr, size_t len);
     virtual void putByte(const BYTE& b);
     InfiniteWriteBuffer();

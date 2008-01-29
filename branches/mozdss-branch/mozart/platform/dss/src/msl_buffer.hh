@@ -99,6 +99,7 @@ namespace _msl_internal{ //Start namespace
 
     // implementation of DssReadBuffer
     virtual int availableData() const { return getFree(); }
+    virtual bool canRead(size_t len) const {return getFree()>=len;}
     virtual void readFromBuffer(BYTE* ptr, size_t len) { m_read(ptr, len); }
     virtual void commitRead(size_t len) { m_commit(len); }
     virtual const BYTE getByte() { return m_getByte(); }
@@ -120,6 +121,7 @@ namespace _msl_internal{ //Start namespace
     
     // implementation of DssWriteBuffer
     virtual int availableSpace() const { return getFree(); }
+    virtual bool canWrite(size_t len) const {return getFree()>=len;}
     virtual void writeToBuffer(const BYTE* ptr, size_t len) {
       m_write(ptr, len); m_commit(len);
     };
@@ -238,6 +240,7 @@ namespace _msl_internal{ //Start namespace
 
     // implementation of DssReadBuffer
     virtual int availableData() const;
+    virtual bool canRead(size_t len) const {return this->availableData()>=len;}
     virtual void readFromBuffer(BYTE* ptr, size_t len);
     virtual void commitRead(size_t len);
     virtual const BYTE getByte();
@@ -283,6 +286,7 @@ namespace _msl_internal{ //Start namespace
 
     // implementation of DssWriteBuffer
     virtual int availableSpace() const;
+    virtual bool canWrite(size_t len) const {return this->availableSpace()>=len;}
     virtual void writeToBuffer(const BYTE* ptr, size_t len);
     virtual void putByte(const BYTE& b);
 
