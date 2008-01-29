@@ -348,7 +348,15 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
 	And it is not necessary to copy/point the source space from the target space.
        */
       if (!gsrc->isSolved()) {
-	printf("board.icc >> FIXME!! Merging spaces (clone) needed\n");fflush(stdout);
+	/*
+	  the resulting generic space is the one in src. Pointing it from gespace
+	  attribute should be enough. It could be possible for that gespace to be
+	  marked for garbage collection, in that case unmark it. (Review Schulte's
+	  thesis to validate this).
+	 */
+	dst->gespace = src->gespace;
+	if (src->gespace->gc_marked)
+	  src->gespace->gc_marked = false;
       }
     }
     // In any other case generic space merging is not necessary.
