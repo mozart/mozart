@@ -329,6 +329,8 @@ in
 		   end
 		end
 	     end
+	  elseof connection_received(TargetSite) then
+	     skip
 	  elseof new_site(S) then
 	     {Assign LastSiteCell S}
 	  elseof abort(Requestor) then
