@@ -261,10 +261,9 @@ namespace _msl_internal{ //Start namespace
     // is marshaled, and the loop will never be able to start again.
     
     while (a_current < a_nof_fields) {
-      int space = bb->availableSpace();
       switch (a_fields[a_current].a_ft) {
       case FT_NUMBER:
-	if (space > sz_MNumberMax) {
+	if (bb->canWrite(1+sz_MNumberMax)) {
 	  int i = reinterpret_cast<int>(m_popVal());
 	  dssLog(DLL_DEBUG,"MSGCONTAINER  (%p): serilize INT %d", this, i);
 	  bb->m_putByte(TYPE_INT);
@@ -273,7 +272,7 @@ namespace _msl_internal{ //Start namespace
 	} else goto HAS_CONTINUE;
 	
       case FT_SITE:
-	if (space > Site::sm_getMRsize()) {
+	if (bb->canWrite(1+Site::sm_getMRsize())) {
 	  Site *s = static_cast<Site*>(m_popVal());
 	  dssLog(DLL_DEBUG,"MSGCONTAINER  (%p): serilize SITE %s", this,
 		 s->m_stringrep());
@@ -283,7 +282,7 @@ namespace _msl_internal{ //Start namespace
 	} else goto HAS_CONTINUE;
 	
       case FT_DCT:
-	if (space > 20) { 
+	if (bb->canWrite(1+20)) { 
 	  dssLog(DLL_DEBUG,"MSGCONTAINER  (%p): serilize DATA_AREA", this);
 	  DssCompoundTerm *dac =
 	    static_cast<DssCompoundTerm*>(a_fields[a_current].a_arg);
@@ -297,7 +296,7 @@ namespace _msl_internal{ //Start namespace
 	goto HAS_CONTINUE;
 	
       case FT_ADC:
-	if (space > 20) { 
+	if (bb->canWrite(1+20)) { 
 	  dssLog(DLL_DEBUG,"MSGCONTAINER  (%p): serilize DATA_AREA", this);
 	  ExtDataContainerInterface *dac =
 	    static_cast<ExtDataContainerInterface*>(a_fields[a_current].a_arg);
@@ -311,7 +310,7 @@ namespace _msl_internal{ //Start namespace
 	goto HAS_CONTINUE;
 	
       case FT_MSGC:
-	if (space > 100){
+	if (bb->canWrite(1+100)){
 	  MsgCnt *msg = static_cast<MsgCnt*>(a_fields[a_current].a_arg);
 	  bb->m_putByte(TYPE_MSG); 
 	  msg->m_serialize(bb, destination, env); 
@@ -331,7 +330,7 @@ namespace _msl_internal{ //Start namespace
 
     Assert(a_current == a_nof_fields); // Must be last
     // reached last, send stop marker
-    if (bb->availableSpace() > 0) {
+    if (bb->canWrite(1)) {
       bb->m_putByte(TYPE_END);
       setFlag(MSG_CLEAR);
       return;

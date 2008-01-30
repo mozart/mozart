@@ -75,7 +75,7 @@ namespace _msl_internal{
 
     a_mode = DSDD_WRITE;
     if(getPosDiff() == 0){ // haven't started yet
-      if(bb->availableSpace() > 4){ //can marshal len + one byte at least
+      if(bb->canWrite(4+1)){ //can marshal len + one byte at least
 	//printf("DssSimpleDacDct(%p)::",static_cast<void*>(this)); gf_printBuf("marshal",a_buf,a_size);
 	BYTE a_sizevec[4];
 	gf_integer2char(a_sizevec,a_size);
@@ -97,7 +97,7 @@ namespace _msl_internal{
     // this code assumes that we don't store zero length buffers
 
     if(a_size == 0){ // haven't started
-      if (bb->availableData() >= 4){
+      if (bb->canRead(4)){
 	BYTE a_sizevec[4];
 	bb->readFromBuffer(a_sizevec, 4);
 	bb->commitRead(4);
@@ -170,7 +170,7 @@ namespace _msl_internal{
 #define DI_SUSP 2
   
   bool IntListDct::marshal(DssWriteBuffer *bb, MsgnLayerEnv* env){
-    while (a_curPos() && bb->availableSpace() > MIN_DI_SIZE) {
+    while (a_curPos() && bb->canWrite(MIN_DI_SIZE+1)) {
       gf_Marshal8bitInt(bb, DI_ENTRY);
       gf_MarshalNumber(bb, *a_curPos);
       a_curPos++;
