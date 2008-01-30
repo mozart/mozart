@@ -123,7 +123,7 @@ namespace _msl_internal{ //Start namespace
   DssSimpleDacDct*
   Site::m_encrypt(DssSimpleWriteBuffer* const d){
     // should get size too...
-    Assert(d->availableSpace() >= static_cast<int>(MD5_SIZE));
+    Assert(d->canWrite(static_cast<int>(MD5_SIZE)));
     int   inlen = d->getUsed();
     BYTE* plain = d->unhook();
     //gf_printBuf("Site:encrypt",plain,inlen);
@@ -284,7 +284,7 @@ namespace _msl_internal{ //Start namespace
     } else {
       gf_Marshal8bitInt(buf,((a_state != DSite_GLOBAL_PRM) ?  DMT_SITE_OK : DMT_SITE_PERM));
       Assert(a_MarshaledRepresentation != NULL);
-      Assert(buf->availableSpace() > a_MRlength);
+      Assert(buf->canWrite(a_MRlength+1));
       gf_MarshalNumber(buf, a_MRlength);
       buf->writeToBuffer(a_MarshaledRepresentation, a_MRlength);
     }
@@ -420,7 +420,7 @@ namespace _msl_internal{ //Start namespace
     // Zacharias, remove perm since it is an open question how to decide it
     
     int len = gf_UnmarshalNumber(buf); // check size of package...
-    if(buf->availableData() < len || len < (4 + CIPHER_BLOCK_BYTES + 10))
+    if( (!buf->canRead(len)) || len < (4 + CIPHER_BLOCK_BYTES + 10))
       return NULL;
     
     BYTE* marshaled_representation = new BYTE[len];

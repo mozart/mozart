@@ -96,7 +96,7 @@ namespace _dss_internal{
 	LrgMsgEle *ele = (*a_pos);
 	switch(ele->a_type){
 	case BMET_int:
-	  if(bb->availableSpace() < 10){
+	  if(!bb->canWrite(10)){ //MAGIC?
 	    bb->putByte(SUSPEND);
 	    return false; 
 	  }
@@ -104,7 +104,7 @@ namespace _dss_internal{
 	  gf_MarshalNumber(bb, ele->a_val.i);
 	  break; 
 	case BMET_site:
-	  if(bb->availableSpace() < 300){
+	  if(!bb->canWrite(300)){ //MAGIC?
 	    bb->putByte(SUSPEND);
 	    return false; 
 	  }
@@ -113,7 +113,7 @@ namespace _dss_internal{
 	  break; 
 	
 	case BMET_ni:
-	  if(bb->availableSpace() < 320){
+	  if(!bb->canWrite(320)){ //MAGIC?
 	    bb->putByte(SUSPEND);
 	    return false; 
 	  }

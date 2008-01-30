@@ -347,7 +347,7 @@ namespace _dss_internal{
 	  gf_MarshalNumber(bb,a_len); 
 	  a_cur = 0; 
 	}
-      for(;bb->availableSpace() > LE_SIZE &&  a_cur < a_len; a_cur++)
+      for(;bb->canWrite(LE_SIZE+1) &&  a_cur < a_len; a_cur++)
 	{
 	  gf_Marshal8bitInt(bb,RttT_ENTRY);
 	  gf_MarshalNumber(bb, a_vec[a_cur].id); 
@@ -431,7 +431,7 @@ namespace _dss_internal{
 	    a_curPtr = 0; 
 	  }
 	// Assuming that we only need LE_SIZE bytes per entry
-	for(;bb->availableSpace() > LE_SIZE &&  a_curPtr < arraySize; a_curPtr++)
+	for(;bb->canWrite(LE_SIZE+1) &&  a_curPtr < arraySize; a_curPtr++)
 	  {
 	    //	printf("marshaling entry %d\n", a_curPtr); 
 	    gf_Marshal8bitInt(bb,RttT_ENTRY);

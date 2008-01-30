@@ -1223,11 +1223,11 @@ namespace _msl_internal { //Start namespace
     DssSimpleReadBuffer *dsrb = verifyEncryptedMessage(a_mslEnv->a_mySite,msg);
     DssSimpleReadBuffer  dsrb2;
 
-    if(dsrb != NULL && dsrb->availableData() > 3){
+    if(dsrb != NULL && dsrb->canRead(1+3)){
           dsrb->m_readOutBuffer(version2,3);
       
       if(strncmp(reinterpret_cast<char*>(version2), reinterpret_cast<char*>(const_cast<BYTE*>(dss_version)), 3) == 0 &&
-	 (dsrb->availableData() > (0 + 4)) && // SIZE OF DSITE
+	 (dsrb->canRead(1+4)) && // SIZE OF DSITE
 	 ((s1 = a_mslEnv->a_siteHT->m_unmarshalSite(dsrb)) != NULL) &&
 	 (s1->m_getFaultState() != DSite_GLOBAL_PRM)
 	 ){
@@ -1239,14 +1239,14 @@ namespace _msl_internal { //Start namespace
 	  
 	  if(s1->m_decrypt(retLen, plain, len, cipher)){ // if the data checks out when decrypted
 	    dsrb2.hook(plain, retLen);
-	    if(dsrb2.availableData() >= 9){ // tickets + sec type
+	    if(dsrb2.canRead(9)){ // tickets + sec type
 	      ticket = dsrb2.m_getInt();
 	      if(ticket == a_sec.a_ticket){
 		ticket = dsrb2.m_getInt(); // other side
 		a_sec.a_ticket = random_u32();
 		sec = dsrb2.getByte();
 		if (sec){
-		  if(dsrb2.availableData() >= 40){
+		  if(dsrb2.canRead(40)){
 		    dsrb2.m_readOutBuffer(a_sec.a_key,32);
 		    a_sec.a_iv1  = dsrb2.m_getInt();
 		    a_sec.a_iv2  = dsrb2.m_getInt();

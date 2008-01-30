@@ -104,11 +104,10 @@ void dpMarshalString(ByteBuffer *bs, GenTraverser *gt,
 {
   const char *name = desc->getRemainingString();
   int nameSize = desc->getCurrentSize();
-  int availSpace = bs->availableSpace() - MNumberMaxSize;
-  Assert(availSpace >= 0);
+  Assert(bs->canWrite(MNumberMaxSize));
 
   //
-  int ms = min(nameSize, availSpace);
+  int ms = min(nameSize, bs->availableSpace() - MNumberMaxSize);
   marshalStringNum(bs, name, ms);
   // If it didn't fit completely, put the continuation back:
   if (ms < nameSize) {
@@ -126,7 +125,7 @@ void dpMarshalLitCont(GenTraverser *gt, GTAbstractEntity *arg)
   Assert(arg->getType() == GT_LiteralSusp);
   ByteBuffer *bs = (ByteBuffer *) gt->getOpaque();
   // we should advance:
-  Assert(bs->availableSpace() > 2*DIFMaxSize + MNumberMaxSize);
+  Assert(bs->canWrite(1+2*DIFMaxSize + MNumberMaxSize));
 
   //
   dif_counter[DIF_LIT_CONT].send();
