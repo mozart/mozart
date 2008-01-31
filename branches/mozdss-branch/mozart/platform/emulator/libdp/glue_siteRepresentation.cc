@@ -80,7 +80,7 @@ Glue_SiteRep::m_setConnection(VirtualChannelInterface* vc) {
 OZ_Term Glue_SiteRep::m_getInfo() {
   char ip[16];
   //a_ipAddress is in network byte order!
-  int ip_addr=ntohl(a_ipAddress);
+  unsigned int ip_addr=ntohl(a_ipAddress);
   sprintf(ip,"%d.%d.%d.%d",
 	  (ip_addr/(256*256*256))%256,
 	  (ip_addr/(256*256))%256,
