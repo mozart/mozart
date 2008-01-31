@@ -59,8 +59,8 @@ namespace _msl_internal{
   
   /**************************** handling connection ********************/
 
-  VirtualChannelInterface* TCPTransObj::m_closeConnection() {
-    VirtualChannelInterface *ans = a_channel;
+  DssChannel* TCPTransObj::m_closeConnection() {
+    DssChannel *ans = a_channel;
 
     dssLog(DLL_DEBUG,"TRANSOBJ      (%p): closing down",this);
 

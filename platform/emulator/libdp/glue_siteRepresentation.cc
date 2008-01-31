@@ -72,7 +72,7 @@ void Glue_SiteRep::m_gc(){
 }
 
 void
-Glue_SiteRep::m_setConnection(VirtualChannelInterface* vc) {
+Glue_SiteRep::m_setConnection(DssChannel* vc) {
   // give the connection to the DSite, and monitor the connection
   a_dssSite->m_connectionEstablished(vc);
 }
@@ -136,7 +136,7 @@ Glue_SiteRep::reportRtViolation(int rtt, int low, int high) {
   }
 }
 
-VirtualChannelInterface *    
+DssChannel *    
 Glue_SiteRep::establishConnection(){
   OZ_Term command;
   command = OZ_recordInit(oz_atom("connect"),
@@ -149,7 +149,7 @@ Glue_SiteRep::establishConnection(){
 
 
 void     
-Glue_SiteRep::closeConnection( VirtualChannelInterface* con){}
+Glue_SiteRep::closeConnection(DssChannel* con){}
 
 
 

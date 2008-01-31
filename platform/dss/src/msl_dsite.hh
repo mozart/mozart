@@ -145,7 +145,7 @@ namespace _msl_internal{ //Start namespace
     inline bool operator>(const Site& s){return (*a_key > *(s.a_key));}
 
     virtual ConnectivityStatus m_getChannelStatus();
-    virtual void m_connectionEstablished(VirtualChannelInterface*);  
+    virtual void m_connectionEstablished(DssChannel*);  
     virtual void m_stateChange(DSiteState newState);
     virtual void m_virtualCircuitEstablished(int len , DSite *route[]);
     virtual void m_takeDownConnection();

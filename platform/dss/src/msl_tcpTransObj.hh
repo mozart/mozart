@@ -36,11 +36,11 @@
 
 namespace _msl_internal{ //Start namespace
 
-  class TCPTransObj: public BufferedTransObj, public ::VcCbkClassInterface {
+  class TCPTransObj: public BufferedTransObj, public ::DssChannelCallback {
 
   private:
     // raph: We extend the BufferedTransObj with a virtual channel.
-    ::VirtualChannelInterface* a_channel;
+    ::DssChannel* a_channel;
 
     // should not be used
     TCPTransObj(const TCPTransObj&)
@@ -55,7 +55,7 @@ namespace _msl_internal{ //Start namespace
     TCPTransObj(MsgnLayerEnv* env);
     virtual ~TCPTransObj();
     
-    virtual VirtualChannelInterface* m_closeConnection();
+    virtual DssChannel* m_closeConnection();
     virtual void deliver();
     virtual void readyToReceive();
     
@@ -67,7 +67,7 @@ namespace _msl_internal{ //Start namespace
     // m_EncryptReadTransport()  inherited
     // m_EncryptWriteTransport() inherited
 
-    inline void setChannel(VirtualChannelInterface* ch){ a_channel = ch; }
+    inline void setChannel(DssChannel* ch){ a_channel = ch; }
   };
 
 } //End namespace

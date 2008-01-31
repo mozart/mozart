@@ -52,7 +52,7 @@ public:
   ~ComService();
 
   // Connections 
-  virtual void closeAnonConnection(VirtualChannelInterface* con);
+  virtual void closeAnonConnection(DssChannel* con);
 
   virtual ExtDataContainerInterface* m_createExtDataContainer(BYTE);
   
@@ -67,7 +67,7 @@ public:
   virtual void m_gcSweep(); 
   
   // Channel establishemnt 
-  virtual void channelEstablished(ChannelRequest *CR, VirtualChannelInterface *vc);
+  virtual void channelEstablished(ChannelRequest *CR, DssChannel *vc);
   virtual void connectionFailed(ChannelRequest *CR, 
 				ConnectionFailReason reason);
 };

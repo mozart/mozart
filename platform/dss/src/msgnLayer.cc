@@ -127,7 +127,7 @@ MsgnLayer::m_UnmarshalDSite(DssReadBuffer* buf){
 }
 
 void
-MsgnLayer::m_anonymousChannelEstablished(VirtualChannelInterface* channel){
+MsgnLayer::m_anonymousChannelEstablished(DssChannel* channel){
 
     // Look into the channel and find out that it is: 
     // a reliable-fifo-channel medium, and voila, we can use the

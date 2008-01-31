@@ -79,7 +79,7 @@ namespace _msl_internal{
 
   /**************************** handling connection ********************/
 
-  VirtualChannelInterface* EndRouter::m_closeConnection(){
+  DssChannel* EndRouter::m_closeConnection(){
     dssLog(DLL_DEBUG,"EndRouter closing down");
     return NULL;
   }

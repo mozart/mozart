@@ -220,7 +220,7 @@ namespace _msl_internal{ //Start namespace
     return a_shortId;
   }
 
-  void Site::m_connectionEstablished(VirtualChannelInterface* channel){
+  void Site::m_connectionEstablished(DssChannel* channel){
     a_comObj->handover(channel);
   }
 

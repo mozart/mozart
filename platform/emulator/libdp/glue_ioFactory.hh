@@ -32,17 +32,17 @@
 
 
 // implementation of DSS channels, using sockets
-class SocketChannel : public VirtualChannelInterface {
+class SocketChannel : public DssChannel {
 private:
   int fd;                          // socket file descriptor
   bool lost;                       // true when connection lost
-  VcCbkClassInterface* worker;     // callback object
+  DssChannelCallback* worker;      // callback object
 
 public:
   SocketChannel(int _fd) : fd(_fd), lost(false), worker(NULL) {}
   ~SocketChannel();
 
-  virtual bool setCallback(VcCbkClassInterface*);
+  virtual bool setCallback(DssChannelCallback*);
   virtual void registerRead(bool);
   virtual void registerWrite(bool);
   virtual int read(void* buf, const unsigned int& len);
