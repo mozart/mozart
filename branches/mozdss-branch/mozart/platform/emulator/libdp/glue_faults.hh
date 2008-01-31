@@ -39,6 +39,7 @@
 // fault states, with their language counterpart.
 
 #include "tagged.hh"
+#include "atoms.hh"
 
 // entity fault states (do not change order!)
 enum GlueFaultState {

@@ -62,7 +62,7 @@ Annotation getAnnotation(TaggedRef);
 
 /* DP initialization */
 
-void initDP(int port, int ip, const char *siteId, int primKey);
+void initDP(int port, int ip, int id);
 
 #endif
 

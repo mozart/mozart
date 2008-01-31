@@ -89,8 +89,8 @@
 			     out => ['+record'],
 			     BI  => BIgetOperCntr},
      
-     'initIPConnection'    => { in  => ['+int','+string','+atom','+value','+port', '+int'],
-				out => ['+record'],
+     'initIPConnection'    => { in  => ['+string','+int','+int','+port'],
+				out => [],
 				BI  => BIinitIPConnection},
 
      'getBroadcastAddresses' => { in  => [],
@@ -101,9 +101,13 @@
 				  out => [],
 				  bi  => BIsockoptBroadcast},
 
-     'handover'              => { in => ['+value','+value'],
+     'setConnection'         => { in => ['+value','+int'],
                                   out => [],
-				  BI => BIhandover},
+				  BI => BIsetConnection},
+
+     'acceptConnection'      => { in => ['+int'],
+                                  out => [],
+				  BI => BIacceptConnection},
 
      'handoverRoute'         => { in => ['+[value]', '+value'],
                                   out => [],

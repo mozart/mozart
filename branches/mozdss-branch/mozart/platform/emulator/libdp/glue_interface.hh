@@ -48,7 +48,7 @@ class ComService: public ComServiceInterface{
 public:
   MsgnLayer* a_msgnLayer; 
   
-  ComService(int ip, int port, const char*);
+  ComService(int ip, int port, int id);
   ~ComService();
 
   // Connections 

@@ -29,4 +29,8 @@
 #pragma implementation "glue_faults.hh"
 #endif
 
+#include "glue_faults.hh" 
+//Since it's a pragma interface, we want to generate object code for
+//the functions.
+
 // No implementation needed.  See glue_faults.hh.

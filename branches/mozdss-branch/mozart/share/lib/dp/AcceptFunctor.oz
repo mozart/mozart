@@ -156,7 +156,7 @@ define
 	    case InString of "tcp" then
 	       {ShowInfo accepted#' '#PID}
 	       _={OS.write FD "ok"}
-	       {Glue.handover accept settings(fd:FD)}
+	       {Glue.acceptConnection FD}
 	    [] "give_up" then
 	       {OS.close FD}
 	    else

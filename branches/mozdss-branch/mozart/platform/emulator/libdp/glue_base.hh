@@ -34,7 +34,6 @@
 extern OZ_Term g_connectPort;
 extern OZ_Term g_kbrStreamPort;
 extern OZ_Term g_defaultAcceptProcedure;
-extern OZ_Term g_defaultConnectionProcedure;
 extern OZ_Term g_faultPort;
 
 void doPortSend(OzPort *port, TaggedRef val, Board*);
