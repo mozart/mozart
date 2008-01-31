@@ -243,9 +243,6 @@ public:
   virtual void closeConnection(DssChannel* con) = 0;
 };
 
-class ChannelRequest{
-};
-
 class AppMslClbkInterface
 {
 public:
@@ -272,10 +269,6 @@ public:
   
   // Mark all DSites used by the CSC. 
   virtual void m_gcSweep() = 0; 
-  
-  // Channel establishemnt 
-  virtual void channelEstablished(ChannelRequest *CR, DssChannel *vc) = 0;
-  virtual void connectionFailed(ChannelRequest *CR, ConnectionFailReason reason) = 0;
 };
 
 

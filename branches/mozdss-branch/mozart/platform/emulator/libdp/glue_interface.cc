@@ -170,11 +170,6 @@ void ComService::m_gcSweep() {
   // raph: where are those DSites?
 }
 
-// Channel establishemnt 
-void ComService::channelEstablished(ChannelRequest *CR, DssChannel *vc){;}
-void ComService::connectionFailed(ChannelRequest *CR, 
-				  ConnectionFailReason reason){;}
-
 // Explicit site handeling
 void ComService::m_MsgReceived(CsSiteInterface* CS, MsgContainer* msg){
   PstInContainer *pst = NULL; 
