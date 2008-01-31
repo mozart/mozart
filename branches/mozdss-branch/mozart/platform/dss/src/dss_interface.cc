@@ -59,8 +59,7 @@ namespace _dss_internal{
   //
   // We should be able to pass primes to the DSS_Environment to reuse
   // identity...  for now I don't see the need though
-  DSS_Environment::DSS_Environment(IoFactoryInterface * const io, 
-				   ComServiceInterface *  const sa, 
+  DSS_Environment::DSS_Environment(ComServiceInterface *  const sa, 
 				   Mediation_Object* const mo,
 				   const bool& sec):
     a_map(                      mo),
@@ -84,7 +83,7 @@ namespace _dss_internal{
 
     // Initializing the msgnlayer
     a_dssMslClbk         = new DssMslClbk(this);
-    a_msgnLayer        = new ::MsgnLayer(a_dssMslClbk, sa, io, sec);
+    a_msgnLayer        = new ::MsgnLayer(a_dssMslClbk, sa, sec);
     a_myDSite          = a_msgnLayer->a_myDSite;
     // at this point, the msgng layer is started and runnig. 
     // Note that the DSIte is first initialized here, myDSite.  
@@ -391,11 +390,10 @@ using namespace _dss_internal;
 #include "dss_object.hh"
 
 
-DSS_Object::DSS_Object(IoFactoryInterface * const io, 
-		       ComServiceInterface *  const sa, 
+DSS_Object::DSS_Object(ComServiceInterface *  const sa, 
 		       Mediation_Object* const mo,
 		       const bool& sec):
-  _a_env(new DSS_Environment(io, sa, mo, sec)){
+  _a_env(new DSS_Environment(sa, mo, sec)){
   ;
 }
 

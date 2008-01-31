@@ -206,7 +206,7 @@ OZ_BI_define(BIsetConnection,2,0){
   // It can now be used freely from the DSS, using the virtual 
   // functions defined in DssTransportChannel and implemented
   // in Glue_TransportChannel. 
-  VirtualChannelInterface* channel =   glue_ioFactory->channelFromFd(fd);
+  VirtualChannelInterface* channel = new SocketChannel(fd);
   gsr->m_setConnection(channel);
   OZ_Term ack = OZ_recordInit(oz_atom("connection_received"),
 			      oz_cons(oz_pair2(oz_int(1),site),
@@ -222,7 +222,7 @@ OZ_BI_define(BIacceptConnection,1,0){
   // It can now be used freely from the DSS, using the virtual 
   // functions defined in DssTransportChannel and implemented
   // in Glue_TransportChannel. 
-  VirtualChannelInterface* channel =   glue_ioFactory->channelFromFd(fd);
+  VirtualChannelInterface* channel = new SocketChannel(fd);
   glue_com_connection->a_msgnLayer->m_anonymousChannelEstablished(channel); 
   return OZ_ENTAILED;
 }OZ_BI_end

@@ -4,7 +4,7 @@
  *   Erik Klintskog 
  *
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -40,6 +40,7 @@
 class MsgContainer; 
 class MsgnLayer; 
 class CsSiteInterface;
+class VcCbkClassInterface;
 // Using only one unsigned long for time (in ms) gives a maximum lifetime
 // of 49 days for an emulator. Therefore, use two unsigned longs in an ADT.
 
@@ -131,7 +132,20 @@ enum DSiteState{
 
 
 
-class VirtualChannelInterface{
+// interface of DSS communication channels; their implementation is
+// provided by the user
+class VirtualChannelInterface {
+public:
+  // set callback object (when data available)
+  virtual bool setCallback(VcCbkClassInterface*) = 0;
+
+  // register for reading/writing (unregister if argument is false)
+  virtual void registerRead(bool) = 0;
+  virtual void registerWrite(bool) = 0;
+
+  // read/write when channel ready, returns how many bytes read/written
+  virtual int read(void* buf, const unsigned int& len) = 0;
+  virtual int write(void* buf, const unsigned int& len) = 0;
 };
 
 
@@ -264,24 +278,6 @@ public:
 };
 
 
-class IoFactoryInterface{
-public:
-  IoFactoryInterface();
-  // Connection establishment ComService only
-  virtual VirtualChannelInterface* establishTCPchannel(int IP, int port, ChannelRequest *CR) = 0; 
-  virtual void terminateTCPchannel(VirtualChannelInterface *vc) = 0; 
-  
-  // Communicatoin, both comservice and dss
-  virtual int  readData(VirtualChannelInterface *, void *buf, const unsigned int& len)  = 0; 
-  virtual int  writeData(VirtualChannelInterface *, void *buf, const unsigned int& len) = 0;
-  virtual void registerRead(VirtualChannelInterface*, bool on) = 0; 
-  virtual void registerWrite(VirtualChannelInterface*, bool on) = 0; 
-  virtual bool setCallBackObj(VirtualChannelInterface*, VcCbkClassInterface *) = 0; 
-  virtual int  setupTCPconnectPoint(int) = 0;
-};
-
-
-
 
 namespace _msl_internal{
   class MsgnLayerEnv;
@@ -303,7 +299,7 @@ public: // ****************** MsgContainers
   MsgContainer *createCscSendMsgContainer();
   
 public: // ******************* Aux
-  MsgnLayer(AppMslClbkInterface* , ComServiceInterface*, IoFactoryInterface*, const bool&);  
+  MsgnLayer(AppMslClbkInterface* , ComServiceInterface*, const bool&);  
   virtual ~MsgnLayer();
   void m_gcResources(); 
   

@@ -65,9 +65,9 @@ namespace _msl_internal{
     dssLog(DLL_DEBUG,"TRANSOBJ      (%p): closing down",this);
 
     if (a_channel != NULL) {
-      a_mslEnv->a_ioFactory->registerRead(a_channel, false);  // Sometimes done twice!
-      a_mslEnv->a_ioFactory->registerWrite(a_channel, false); // Sometimes done twice!
-      a_mslEnv->a_ioFactory->setCallBackObj(a_channel, NULL); 
+      a_channel->registerRead(false);  // Sometimes done twice!
+      a_channel->registerWrite(false); // Sometimes done twice!
+      a_channel->setCallback(NULL); 
       a_channel = NULL;
     }
     return ans; 
@@ -75,12 +75,12 @@ namespace _msl_internal{
 
   void TCPTransObj::deliver() {
     Assert(a_channel != NULL);
-    a_mslEnv->a_ioFactory->registerWrite(a_channel, true);
+    a_channel->registerWrite(true);
   }
 
   void TCPTransObj::readyToReceive() {
-    a_mslEnv->a_ioFactory->setCallBackObj(a_channel, this); 
-    a_mslEnv->a_ioFactory->registerRead(a_channel, true);
+    a_channel->setCallback(this); 
+    a_channel->registerRead(true);
   }
 
   void TCPTransObj::connectionLost() {
@@ -110,7 +110,7 @@ namespace _msl_internal{
     do {
       len = a_writeBuffer->getReadBlock(pos);
       a_mslEnv->a_OSWriteCounter++;
-      ret = a_mslEnv->a_ioFactory->writeData(a_channel, pos, len);
+      ret = a_channel->write(pos, len);
       a_writeBuffer->m_commitRead(ret);
     } while (ret == len && a_writeBuffer->getUsed() > 0);
 
@@ -131,7 +131,7 @@ namespace _msl_internal{
     do {
       len = a_readBuffer->getWriteBlock(pos);
       a_mslEnv->a_OSReadCounter++;
-      ret = a_mslEnv->a_ioFactory->readData(a_channel, pos, len);
+      ret = a_channel->read(pos, len);
       a_readBuffer->m_commitWrite(ret);
     } while (ret == len && a_readBuffer->getFree() > 0);
 

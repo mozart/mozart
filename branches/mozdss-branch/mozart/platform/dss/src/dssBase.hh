@@ -245,10 +245,9 @@ namespace _dss_internal{ //Start namespace
     DSS_Environment& operator=(const DSS_Environment& de){ return *this; }
 
   public:
-    DSS_Environment( IoFactoryInterface * const io, 
-		     ComServiceInterface *  const sa, 
-		     Mediation_Object* const mo,
-		     const bool& sec);
+    DSS_Environment(ComServiceInterface *  const sa, 
+		    Mediation_Object* const mo,
+		    const bool& sec);
     
     virtual ~DSS_Environment(); //closeDSS
 

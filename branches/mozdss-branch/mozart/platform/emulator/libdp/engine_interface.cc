@@ -53,7 +53,6 @@ Bool glueInitialized = FALSE;
 MAP* glue_dss_connection           = NULL;
 DSS_Object* dss                    = NULL;
 ComService* glue_com_connection    = NULL; 
-GlueIoFactoryClass* glue_ioFactory = NULL;
 
 // GC Routines
 // 
@@ -174,7 +173,6 @@ void initDP(int port, int ip, int id)
   glueInitialized = OK;
   glue_dss_connection = new MAP();
   glue_com_connection = new ComService(ip, port, id);
-  glue_ioFactory      = new GlueIoFactoryClass();
   
   // Allocate the marshalers, and unmarshalers
   DPM_Repository = new DPMarshalers();
@@ -212,7 +210,7 @@ void initDP(int port, int ip, int id)
   gCollectMediator  = gcMediatorImpl;
 
   // Starting the DSS
-  dss = new DSS_Object(glue_ioFactory, glue_com_connection, glue_dss_connection);
+  dss = new DSS_Object(glue_com_connection, glue_dss_connection);
 
   initHeartBeat(HEART_BEAT_RATE);
   OzSite_init();

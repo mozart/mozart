@@ -5,6 +5,7 @@
  * 
  *  Contributors:
  *    Anna Neiderud (annan@sics.se)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  * 
@@ -29,34 +30,27 @@
 #ifndef __GLUE_IOFACTORY_HH
 #define __GLUE_IOFACTORY_HH
 
-class GlueIoFactoryClass:public IoFactoryInterface{
+
+// implementation of DSS channels, using sockets
+class SocketChannel : public VirtualChannelInterface {
+private:
+  int fd;                          // socket file descriptor
+  bool lost;                       // true when connection lost
+  VcCbkClassInterface* worker;     // callback object
+
 public:
-  GlueIoFactoryClass();
+  SocketChannel(int _fd) : fd(_fd), lost(false), worker(NULL) {}
+  ~SocketChannel();
 
-  // These two are not used in this impl. Connections are established
-  // using the primitives provided by Mozart
-  virtual VirtualChannelInterface* establishTCPchannel(int IP, int port, ChannelRequest *CR);
-  virtual void terminateTCPchannel(VirtualChannelInterface *vc);
-  
-  // Communication
-  virtual int  readData(VirtualChannelInterface *vc, void *buf, const unsigned int& len); 
-  virtual int  writeData(VirtualChannelInterface *vc, void *buf, const unsigned int& len);
-  virtual void registerRead(VirtualChannelInterface *vc, bool on); 
-  virtual void registerWrite(VirtualChannelInterface *vc, bool on); 
-  virtual bool setCallBackObj(VirtualChannelInterface *vc, VcCbkClassInterface *); 
+  virtual bool setCallback(VcCbkClassInterface*);
+  virtual void registerRead(bool);
+  virtual void registerWrite(bool);
+  virtual int read(void* buf, const unsigned int& len);
+  virtual int write(void* buf, const unsigned int& len);
 
-  virtual int  setupTCPconnectPoint(int);
-      
-  // The method is used for the mozrt ComService that 
-  // runns the whole connection establishment in oz, and
-  // concequently establishes the connection at that level. 
-  // I.e. extremly non-portable. 
-  VirtualChannelInterface* channelFromFd(int fd);
-
+  bool invoke_reader();
+  bool invoke_writer();
 };
-
-// defined in engine_interface together with inits
-extern GlueIoFactoryClass* glue_ioFactory;
 
 
 #endif
