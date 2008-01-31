@@ -134,7 +134,7 @@ ComService::ComService(int ip, int port, int id){
 
 ComService::~ComService(){;}
 
-void ComService::closeAnonConnection(VirtualChannelInterface* con){
+void ComService::closeAnonConnection(DssChannel* con){
   printf("Implement the IO-factory, socket not closed\n"); 
 }
 
@@ -171,7 +171,7 @@ void ComService::m_gcSweep() {
 }
 
 // Channel establishemnt 
-void ComService::channelEstablished(ChannelRequest *CR, VirtualChannelInterface *vc){;}
+void ComService::channelEstablished(ChannelRequest *CR, DssChannel *vc){;}
 void ComService::connectionFailed(ChannelRequest *CR, 
 				  ConnectionFailReason reason){;}
 

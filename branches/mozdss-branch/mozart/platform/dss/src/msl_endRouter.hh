@@ -58,7 +58,7 @@ namespace _msl_internal{ //Start namespace
     EndRouter(MsgnLayerEnv*); 
     virtual ~EndRouter() {}
 
-    virtual VirtualChannelInterface *m_closeConnection();
+    virtual DssChannel *m_closeConnection();
     virtual void deliver();
     virtual void readyToReceive();
 

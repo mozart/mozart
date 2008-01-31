@@ -76,7 +76,7 @@ SocketChannel::~SocketChannel() {
 }
 
 bool
-SocketChannel::setCallback(VcCbkClassInterface* cbk) {
+SocketChannel::setCallback(DssChannelCallback* cbk) {
   if (lost) return false;
   worker = cbk;
   return true;

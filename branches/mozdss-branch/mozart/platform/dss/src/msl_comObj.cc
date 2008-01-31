@@ -196,7 +196,7 @@ namespace _msl_internal { //Start namespace
     clearTimers();
     a_lastrtt=-1;
     if(a_transObj){
-      VirtualChannelInterface* ch = a_transObj->m_closeConnection(); 
+      DssChannel* ch = a_transObj->m_closeConnection(); 
       if(a_site != NULL) 
 	(a_site->m_getCsSite())->closeConnection(ch); 
       else // the comobj is anonymous
@@ -401,7 +401,7 @@ namespace _msl_internal { //Start namespace
 
   // Called by builtin when this comObj can have its communication
   // The returnvalue indicates whether it is wanted or not
-  void ComObj::handover(VirtualChannelInterface* tc) {
+  void ComObj::handover(DssChannel* tc) {
     if(a_state!=OPENING_WF_HANDOVER) {
       a_mslEnv->a_comService->closeAnonConnection( tc); 
       return;
@@ -1006,7 +1006,7 @@ namespace _msl_internal { //Start namespace
     a_closeHardFlag = false; 
     m_setCState(OPENING_WF_HANDOVER);
     a_closeHardFlag = false; 
-    VirtualChannelInterface *tc; 
+    DssChannel *tc; 
     tc = (a_site->m_getCsSite())->establishConnection(); 
     if (tc) 
       m_OPENING_WF_HANDOVER_2_OPENING_WF_PRESENT(tc);
@@ -1017,7 +1017,7 @@ namespace _msl_internal { //Start namespace
   // 1) create a transportation layer for the channel
   // 2) assume it is the site we want to talk to, if not we will
   //    detect that later (presentation phae)
-  void ComObj::m_OPENING_WF_HANDOVER_2_OPENING_WF_PRESENT(VirtualChannelInterface* tc){
+  void ComObj::m_OPENING_WF_HANDOVER_2_OPENING_WF_PRESENT(DssChannel* tc){
     Assert(a_state == OPENING_WF_HANDOVER);
     
     

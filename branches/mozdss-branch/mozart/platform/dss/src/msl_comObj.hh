@@ -180,7 +180,7 @@ namespace _msl_internal{ //Start namespace
 
     // INITIATING
     void m_CLOSED_2_OPENING_WF_HANDOVER();
-    void m_OPENING_WF_HANDOVER_2_OPENING_WF_PRESENT(VirtualChannelInterface* tc);
+    void m_OPENING_WF_HANDOVER_2_OPENING_WF_PRESENT(DssChannel* tc);
     bool m_OPENING_WF_PRESENT_2_OPENING_WF_NEGOTIATE(MsgCnt* msg);
     bool m_OPENING_WF_NEGOTIATE_2_WORKING(MsgCnt* msg); 
 
@@ -263,7 +263,7 @@ namespace _msl_internal{ //Start namespace
     void connectionLost();
 
     // For connection procedure
-    void handover(VirtualChannelInterface*);
+    void handover(DssChannel*);
     // The same as handover() but it uses EndRouter instead of TCPTransObj
     void handoverRoute(DSite *vec[], int); 
     void m_acceptAnonConnection(TransObj *);

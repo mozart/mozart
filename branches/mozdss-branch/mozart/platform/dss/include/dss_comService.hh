@@ -40,7 +40,7 @@
 class MsgContainer; 
 class MsgnLayer; 
 class CsSiteInterface;
-class VcCbkClassInterface;
+class DssChannelCallback;
 // Using only one unsigned long for time (in ms) gives a maximum lifetime
 // of 49 days for an emulator. Therefore, use two unsigned longs in an ADT.
 
@@ -134,10 +134,10 @@ enum DSiteState{
 
 // interface of DSS communication channels; their implementation is
 // provided by the user
-class VirtualChannelInterface {
+class DssChannel {
 public:
   // set callback object (when data available)
-  virtual bool setCallback(VcCbkClassInterface*) = 0;
+  virtual bool setCallback(DssChannelCallback*) = 0;
 
   // register for reading/writing (unregister if argument is false)
   virtual void registerRead(bool) = 0;
@@ -146,6 +146,14 @@ public:
   // read/write when channel ready, returns how many bytes read/written
   virtual int read(void* buf, const unsigned int& len) = 0;
   virtual int write(void* buf, const unsigned int& len) = 0;
+};
+
+// interface of channel readers/writers; provided by the DSS
+class DssChannelCallback{
+public:
+  virtual void connectionLost()     = 0;
+  virtual bool readDataAvailable()  = 0;
+  virtual bool writeDataAvailable() = 0;
 };
 
 
@@ -164,7 +172,7 @@ public:
   virtual DSiteState  m_getFaultState() const = 0; 
   
   //***************  CSC methods: ******************************'
-  virtual void m_connectionEstablished(VirtualChannelInterface* con) = 0; 
+  virtual void m_connectionEstablished(DssChannel* con) = 0; 
   virtual void m_virtualCircuitEstablished( int len, DSite *route[]) = 0; 
   virtual int  m_installRTmonitor( int lowLimit, int highLimit) = 0; 
   virtual void m_stateChange(DSiteState newState) = 0; 
@@ -231,18 +239,11 @@ public:
   // monitor() is called when the connection can be monitored
   virtual void    monitor() = 0; 
   virtual void    reportRtViolation(int measuredRT, int installedLow, int installedHigh) = 0; 
-  virtual VirtualChannelInterface *establishConnection() = 0;
-  virtual void closeConnection( VirtualChannelInterface* con) = 0;
+  virtual DssChannel *establishConnection() = 0;
+  virtual void closeConnection(DssChannel* con) = 0;
 };
 
 class ChannelRequest{
-};
-
-class VcCbkClassInterface{
-public:
-  virtual void connectionLost()     = 0;
-  virtual bool readDataAvailable()  = 0;
-  virtual bool writeDataAvailable() = 0;
 };
 
 class AppMslClbkInterface
@@ -259,7 +260,7 @@ public:
   ComServiceInterface();
   
   // Connections 
-  virtual void closeAnonConnection(VirtualChannelInterface* con) = 0;
+  virtual void closeAnonConnection(DssChannel* con) = 0;
 
   // The CsSite Object
   virtual CsSiteInterface* unmarshalCsSite(DSite* Ds, DssReadBuffer* const buf) = 0; 
@@ -273,7 +274,7 @@ public:
   virtual void m_gcSweep() = 0; 
   
   // Channel establishemnt 
-  virtual void channelEstablished(ChannelRequest *CR, VirtualChannelInterface *vc) = 0;
+  virtual void channelEstablished(ChannelRequest *CR, DssChannel *vc) = 0;
   virtual void connectionFailed(ChannelRequest *CR, ConnectionFailReason reason) = 0;
 };
 
@@ -309,7 +310,7 @@ public: //**************** TIMERS *******************************
   void m_clearTimer(TimerElementInterface* tel);
   
 public: //**************** CSC **********************************
-  void  m_anonymousChannelEstablished(VirtualChannelInterface* channel);
+  void  m_anonymousChannelEstablished(DssChannel* channel);
   void  m_heartBeat(const int&  TimePassedInMs); 
 
   MACRO_NO_DEFAULT_CONSTRUCTORS(MsgnLayer);

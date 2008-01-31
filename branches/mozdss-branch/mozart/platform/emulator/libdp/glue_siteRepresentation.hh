@@ -53,7 +53,7 @@ public:
   
   DSite* m_getDssSite() {return a_dssSite;}
   void m_setDssSite(DSite* sa) {a_dssSite = sa;}
-  void m_setConnection(VirtualChannelInterface* vc);
+  void m_setConnection(DssChannel* vc);
 
   Glue_SiteRep *m_getNext() {return a_next;}
   Glue_SiteRep **m_getNextPP() {return &a_next;}
@@ -68,8 +68,8 @@ public:
   virtual void    monitor(); 
   virtual void    reportRtViolation(int measuredRT, int installedLow,
 				    int installedHigh); 
-  virtual VirtualChannelInterface *establishConnection();
-  virtual void closeConnection( VirtualChannelInterface* con);
+  virtual DssChannel *establishConnection();
+  virtual void closeConnection(DssChannel* con);
 };
 
 
