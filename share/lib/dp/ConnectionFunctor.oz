@@ -31,6 +31,8 @@ define
       ConnectWithRoute
    import
       ConnectionWrapper at 'x-oz://connection/ConnectionWrapper.ozf'
+      Glue at 'x-oz://boot/Glue'
+      Browser(browse:Browse)
 \ifdef DBGroute
       System
 \endif
@@ -57,7 +59,10 @@ define
       
       proc {Parse P ?Address ?IPPort}
       % Get Address and Port to connect to out of P
-	 ip_addr(addr:Address port:IPPort)=P
+	 I={Glue.getSiteInfo P}in
+	 Address=I.ip
+	 IPPort=I.port
+	 %ip_addr(addr:Address port:IPPort)=P
       end
 
       %%bmc: Method GetNegChannel it was previously local to Connect
@@ -68,7 +73,7 @@ define
 	       if FD==~1 then raise no_fd end end
 	       {ConnectionWrapper.connect FD Address Port}
 	    catch X then
-	       {Dshow X}
+	       {Browse X}
 	       case X of system(os(_ _ _ "Connection refused") ...) then
 		  raise perm end
 	       elseof system(os(_ _ _ "In progress") ...) then
@@ -136,7 +141,8 @@ define
 	    skip
 	    {Dshow could_not_connect}
 	    raise failed_to_connect end
-	 [] E then 
+	 [] E then
+	    {Browse E}
 	    {ConnectionWrapper.close FD}
 	    {Dshow tcp_did_not_work}
 	    %{Delay 1000}

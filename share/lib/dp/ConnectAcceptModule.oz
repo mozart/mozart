@@ -88,7 +88,7 @@ define
    fun{CheckFunctor Func} 
       true
    end
-   fun{GetConnectionWrapper Obj}
+   fun{GetConnectionWrapper Obj TargetSite}
       {Module.apply
        [functor 
 	export
@@ -117,8 +117,8 @@ define
 		 {Obj unregisterResource(fd(FD))}
 	      else skip end
 		 
-	      if {Dictionary.member OngoingRequests Obj.id} then
-		 {Glue.handover Obj.requestor SetUpParameter}
+	      if {Dictionary.member OngoingRequests 'a'} then
+		 {Glue.setConnection TargetSite SetUpParameter.fd}
 	      end
 	   end
       
@@ -154,7 +154,7 @@ define
 	      {Obj unregisterResource(fd(FD))}
 	   end
 	   
-	   Connect=OS.connectNonblocking
+	   Connect=OS.connect%Nonblocking
 	   Write=OS.write
 	   Read=OS.read
 	   WriteSelect=OS.writeSelect
@@ -167,38 +167,40 @@ define
       prop
 	 locking
       feat
-	 id
-	 requestor
+	 %id
+	 %requestor
 	 moduleManager
       attr
 	 allocatedResources:nil
 	 localState 
-      meth init(Id Requestor LocalOzState DistOzState ToRoute TargetSite)
-	 ConnectionFunctor
+      meth init(ToRoute TargetSite ConnectionFunctor)
+	 %ConnectionFunctor
 	 ConnectModule
       in
 	 try
-	    self.id=Id
-	    self.requestor = Requestor
-	    case DistOzState.type of
-	       ordinary then
-	       ConnectionFunctor = LocalOzState.connectionFunctor
-	    elseof dynamic then
-	       ConnectionFunctor = {Pickle.load  DistOzState.location}
-	    elseof replicated then
-	       raise notImplementedYet end
+	    %self.id=Id
+	    %self.requestor = Requestor
+	    %case DistOzState.type of
+	    %ordinary then
+	    %ConnectionFunctor = LocalOzState.connectionFunctor
+	    %elseof dynamic then
+	    %   ConnectionFunctor = {Pickle.load  DistOzState.location}
+	    %elseof replicated then
+	    %   raise notImplementedYet end
 	       %% Do a lot of loading and shit ...
-	    end
-	    if {Not {CheckFunctor ConnectionFunctor}} then
-	       raise malishiousFunctor end
-	    end
+	    %end
+	    %if {Not {CheckFunctor ConnectionFunctor}} then
+	    %   raise malishiousFunctor end
+	    %end
 	    self.moduleManager ={New Module.manager init}
+	    {System.show cc_after_mmm}
 	    {self.moduleManager
 	     enter(url:'x-oz://connection/ConnectionWrapper.ozf'
-		   {GetConnectionWrapper self})}
+		   {GetConnectionWrapper self TargetSite})}
+	    {System.show cc_after_enter(ConnectionFunctor)}
 	    {self.moduleManager apply(ConnectionFunctor ConnectModule)} 
-	    localState <- LocalOzState.localState  
-
+	    %localState <- LocalOzState.localState  
+	    {System.show cc_after_modules}
 	    local
 	       NConId = {NewConnId}
 	       RProc
@@ -218,27 +220,29 @@ define
 	       {Dictionary.put RcvProcs NConId RProc}
 	       
 	       %% temporary use the route intention here ... /V
-	       if ToRoute andthen {Length {GetConSites}} > 0 then
-		  {CWR}
-		  {Dictionary.remove RcvProcs NConId}
-	       else %% connect directly
+	       %if ToRoute andthen {Length {GetConSites}} > 0 then
+	       %{CWR}
+	       %{Dictionary.remove RcvProcs NConId}
+	       %else %% connect directly
 \ifdef DBGroute 
-		  {System.showInfo 'connect directly'}
 \endif
+		  {System.showInfo 'connect directly'}
 		  try
-		     {ConnectModule.connect DistOzState.parameter}
+		     {ConnectModule.connect TargetSite}
 		  catch failed_to_connect then
-		     {CWR}
+		     %{CWR}
+		     skip
 		  [] abort then
 		     raise abort end
 		  [] terminated then
 		     raise terminated end
 		  [] _ then
-		     {CWR}
+		     %{CWR}
+		     skip
 		  finally
 		     {Dictionary.remove RcvProcs NConId}
 		  end
-	       end	       
+	       %end	       
 	    end
 \ifdef DBG
 	 catch X then 
@@ -283,7 +287,7 @@ define
    end
    OngoingRequests
 in
-   proc{InitConnection Stream ToRoute}
+   proc{InitConnection Stream ToRoute ConFun}
 \ifdef DBG
       PID={OS.getPID}
    in
@@ -299,25 +303,28 @@ in
 	  {System.show got(Request PID Ind)}
 \endif
 	  case Request of
-	     connect(Requestor LocalOzState DistOzState TargetSite) then
-	     Id = {GetIdFromRequestor Requestor}
+	     connect(TargetSite) then
+	     {System.show {Glue.getSiteInfo TargetSite}}
+	     %Id = {GetIdFromRequestor Requestor}
+	     skip
 	  in
-	     if {Dictionary.member OngoingRequests Id} then
+	     if {Dictionary.member OngoingRequests 'a'} then
+		{System.show dropped}
 		skip
 %		thread raise already_connecting(Id) end end
 	     else
-		OngoingRequests.Id:=r(thr:_)
+		OngoingRequests.'a':=r(thr:_)
+		{System.show will_connect}
 		thread
 		   try
-		      case OngoingRequests.Id of r(thr:T) then
+		      case OngoingRequests.'a' of r(thr:T) then
 			 T={Thread.this}
 		      end
-		      _ = {New ConnectionController init(Id Requestor
-							 LocalOzState
-							 DistOzState
-							 ToRoute
-							 TargetSite)}
-		      {Dictionary.remove OngoingRequests Id}
+		      {System.show before_cc_init}
+		      _ = {New ConnectionController init(ToRoute
+							 TargetSite ConFun)}
+		      {System.show after_cc_init}
+		      {Dictionary.remove OngoingRequests 'a'}
 \ifdef DBG
 		   catch X then
 		      {System.show warning(X)}
@@ -329,12 +336,12 @@ in
 		   end
 		end
 	     end
-	  elseof connection_received(TargetSite) then
+	  elseof connection_received(TargetSite FD) then
 	     skip
 	  elseof new_site(S) then
 	     {Assign LastSiteCell S}
 	  elseof abort(Requestor) then
-	     Id = {GetIdFromRequestor Requestor}
+	     Id = 'a'%{GetIdFromRequestor Requestor}
 	  in
 	     try
 		case {CondSelect OngoingRequests Id notfound}

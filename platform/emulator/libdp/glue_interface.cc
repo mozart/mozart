@@ -51,7 +51,6 @@ MAP::MAP() :
  OZ_Term g_connectPort;
  OZ_Term g_kbrStreamPort;
  OZ_Term g_defaultAcceptProcedure;
- OZ_Term g_defaultConnectionProcedure;
  OZ_Term g_faultPort;
 
 
@@ -125,15 +124,11 @@ MAP::kbr_newResp(int start, int stop, int n, PstInContainerInterface* pstin){
 
 
 
-ComService::ComService(int ip, int port, const char* str){
+ComService::ComService(int ip, int port, int id){
   Oz_Site *os = new Oz_Site(); 
   OZ_Term oz_os = OZ_extension(os); 
-  thisGSite = new Glue_SiteRep(ip, port, NULL,oz_os); 
+  thisGSite = new Glue_SiteRep(ip, port, id, NULL, oz_os); 
   os->setGSR(thisGSite);
-  char *RId = (char *)malloc(strlen(str)+1); // RId will be freed in GSA
-  strcpy(RId, str); 
-  thisGSite->m_setRId(RId);
-
 } 
 
 
@@ -149,18 +144,12 @@ void ComService::closeAnonConnection(VirtualChannelInterface* con){
 CsSiteInterface* ComService::unmarshalCsSite(DSite* name, DssReadBuffer* const buf){
   int ip = getInt(buf); 
   int port = getInt(buf); 
-	
-  int RIdLen = getInt(buf);
-  char *RId = (char *)malloc(RIdLen+1);
-  getStr(buf, RId, RIdLen);
-  *(RId+RIdLen) = 0x00;  // put the sring terminator
+  int id = getInt(buf);
 
   Oz_Site *os = new Oz_Site(); 
   OZ_Term oz_os = OZ_extension(os); 
-  Glue_SiteRep * gsa = new Glue_SiteRep(ip, port, name,oz_os); 
-  gsa->m_setRId(RId);
-  os->setGSR(gsa); 
-  
+  Glue_SiteRep * gsa = new Glue_SiteRep(ip, port, id, name,oz_os); 
+  os->setGSR(gsa);
   OZ_Term command=OZ_recordInit(oz_atom("new_site"),
 				oz_cons(oz_pair2(oz_int(1),
 						 oz_os),

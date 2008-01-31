@@ -104,10 +104,9 @@ define
 				 elseof [nil] then "127.0.0.1"
 				 elseof L then L.1 end
 			      end
-			   siteId#fun{$} nil end
+			   id#fun{$} 1 end
 			   %% temporary set the route intention here ... /V
-			   toRoute#fun{$} false end
-			   dhtId#fun{$} 0-1 end]
+			   toRoute#fun{$} false end]
 		    fun{$ Ind F#P}
 		       if  {HasFeature Ind F} then Ind
 		       else{AdjoinAt Ind F {P}} end
@@ -116,8 +115,7 @@ define
       
       LP = {NewPort Stream}
       {Show InSettings}
-      {Show {Glue.initIPConnection InSettings.port InSettings.ip
-	     InSettings.siteId InSettings.connectProc LP InSettings.dhtId}}
+      {Glue.initIPConnection InSettings.ip InSettings.port InSettings.id LP}
       
       %% set RPC wrapper procedure
       {Glue.getRPC} = proc {$ P Args Ret}
@@ -133,7 +131,7 @@ define
       
       thread
 	 %% temporary set the route intention here ... /V
-	 {ConnectAcceptModule.initConnection Stream InSettings.toRoute}
+	 {ConnectAcceptModule.initConnection Stream InSettings.toRoute InSettings.connectProc}
       end
       Settings
    end

@@ -34,45 +34,33 @@
 
 class Glue_SiteRep:public CsSiteInterface{
 private:
-  int a_ipAddress; 
+  int a_ipAddress; // In network byte order
   int a_portNum; 
+  int a_idNum; // ip+port+id identifies the site.
   DSite *a_dssSite;
   Glue_SiteRep *a_next; 
   OZ_Term a_ozSite; 
-  OZ_Term a_conThreadVar; 
-  char *a_RId;  // readable id of the site
 public:
-  Glue_SiteRep(int ip, int port, DSite*, OZ_Term);
-  ~Glue_SiteRep() { 
-    if (a_RId != NULL)
-      free(a_RId); 
-  }
+  Glue_SiteRep(int ip, int port, int id, DSite*, OZ_Term);
+  ~Glue_SiteRep() {}
   void dispose(){
     a_ozSite = (OZ_Term) 0;
   }
 public:
   int getIpNum() {return a_ipAddress;}
   int getPortNum() {return a_portNum;}
+  int getIdNum() {return a_idNum;}
   
-  void m_marshal(DssWriteBuffer*);
-  char* m_stringrep();
-  
-  void m_updateAddress(DssReadBuffer* const buf);
-  
-  DSite* m_getDssSite();
-  void m_setDssSite(DSite*);
+  DSite* m_getDssSite() {return a_dssSite;}
+  void m_setDssSite(DSite* sa) {a_dssSite = sa;}
   void m_setConnection(VirtualChannelInterface* vc);
 
-  Glue_SiteRep *m_getNext();
+  Glue_SiteRep *m_getNext() {return a_next;}
   Glue_SiteRep **m_getNextPP() {return &a_next;}
   
-  void m_storeConnectionThread( OZ_Term v);
   void m_gc();
-  OZ_Term m_getOzSite(); 
+  OZ_Term m_getOzSite(){return a_ozSite;}
   OZ_Term m_getInfo();
-  const char *m_getRId() { return a_RId; }
-  void m_setRId(char* RId);
-  void m_showRId() { printf("site RId:%s\n", a_RId); }
 public:
   virtual void    marshalCsSite( DssWriteBuffer* const buf);
   virtual void    updateCsSite( DssReadBuffer* const buf); 

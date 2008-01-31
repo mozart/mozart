@@ -167,13 +167,13 @@ void initHeartBeat(int rate)
 
 /************************* DP initialization *************************/
 
-void initDP(int port, int ip, const char *siteId, int primKey)
+void initDP(int port, int ip, int id)
 {
   //
   if (glueInitialized) return;
   glueInitialized = OK;
   glue_dss_connection = new MAP();
-  glue_com_connection = new ComService(ip, port, siteId);
+  glue_com_connection = new ComService(ip, port, id);
   glue_ioFactory      = new GlueIoFactoryClass();
   
   // Allocate the marshalers, and unmarshalers

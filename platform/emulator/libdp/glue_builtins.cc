@@ -41,6 +41,7 @@
 #include "glue_buffer.hh"
 #include "glue_base.hh"
 #include "glue_mediators.hh"
+#include "glue_faults.hh"
 #include "glue_marshal.hh"
 #include "glue_ozSite.hh" // used for Oz_Site 
 #include "pstContainer.hh"
@@ -95,6 +96,10 @@ DSite *ozSite2DssSite(OZ_Term site){
   return gsr->m_getDssSite();
 }
 
+Glue_SiteRep *ozSite2Glue_SiteRep(OZ_Term site){
+  Oz_Site *oz_site = static_cast<Oz_Site*>(OZ_getExtension(OZ_deref(site)));
+  return oz_site->getGSR();
+}
 
 
 
@@ -190,41 +195,37 @@ OZ_BI_define(BIhandoverRoute,2,0) {
 }OZ_BI_end
 
 
-
-OZ_BI_define(BIhandover,2,0){
-  oz_declareNonvarIN(0,requestor);
-  OZ_declareTerm(1,settings);
-  int  fd;
-  OZ_Return ret; 
-
-  ret=getRecordField(settings,"fd",fd);
-  if(ret!=OZ_ENTAILED) return ret;
-  
+OZ_BI_define(BIsetConnection,2,0){
+  oz_declareNonvarIN(0,site);
+  OZ_declareInt(1,fd);
+  if(!OZ_isExtension(site))return OZ_typeError(0, "site");
+  OZ_Extension *site_ext=OZ_getExtension(site);
+  if(site_ext->getIdV()!=OZ_E_SITE)return OZ_typeError(0, "site");
+  Glue_SiteRep *gsr=((Oz_Site *)site_ext)->getGSR();
   // encapsulating the filedescriptor in a Transport_Channel object. 
   // It can now be used freely from the DSS, using the virtual 
   // functions defined in DssTransportChannel and implemented
   // in Glue_TransportChannel. 
   VirtualChannelInterface* channel =   glue_ioFactory->channelFromFd(fd);
-  
-  DSite *requested_by = NULL; 
-  if(!oz_eq(requestor,oz_atom("accept")))
-    {
-      int con;
-      OZ_Return ret=getRecordField(requestor,"req",con);
-      if(ret!=OZ_ENTAILED) return ret;
-      Glue_SiteRep *sa = reinterpret_cast<Glue_SiteRep*>(con);
-      sa->m_setConnection(channel);
-      OZ_Term ack = OZ_recordInit(oz_atom("connection_received"),
-				  oz_cons(oz_pair2(oz_int(1),sa->m_getOzSite()),
-					  oz_nil()));
-      doPortSend(tagged2Port(g_connectPort),ack,NULL);
-	return OZ_ENTAILED;
-    }
-  glue_com_connection->a_msgnLayer->m_anonymousChannelEstablished(channel); 
+  gsr->m_setConnection(channel);
+  OZ_Term ack = OZ_recordInit(oz_atom("connection_received"),
+			      oz_cons(oz_pair2(oz_int(1),site),
+				      oz_cons(oz_pair2(oz_int(2),OZ_int(fd)),
+					      oz_nil())));
+  doPortSend(tagged2Port(g_connectPort),ack,NULL);
   return OZ_ENTAILED;
 }OZ_BI_end
 
-
+OZ_BI_define(BIacceptConnection,1,0){
+  OZ_declareInt(0,fd);
+  // encapsulating the filedescriptor in a Transport_Channel object. 
+  // It can now be used freely from the DSS, using the virtual 
+  // functions defined in DssTransportChannel and implemented
+  // in Glue_TransportChannel. 
+  VirtualChannelInterface* channel =   glue_ioFactory->channelFromFd(fd);
+  glue_com_connection->a_msgnLayer->m_anonymousChannelEstablished(channel); 
+  return OZ_ENTAILED;
+}OZ_BI_end
 
 // Not connection failed stupid, but 
 // statechange
@@ -276,41 +277,20 @@ OZ_BI_define(BImigrateManager,1,0){
 }OZ_BI_end
 
 
-OZ_BI_define(BIinitIPConnection,6,1)
+OZ_BI_define(BIinitIPConnection,4,0)
 {
-  oz_declareIntIN(0, port);
-  oz_declareProperStringIN(1,addr);
-  oz_declareNonvarIN(2, ozsiteId);
-  oz_declareNonvarIN(3,proc);
-  oz_declareNonvarIN(4,ozPort);
-  oz_declareIntIN(5, primKey);
-  if (!oz_isAtom(ozsiteId)) {
-    return OZ_typeError(0,"atom");
-  }
-  const char *siteId = OZ_atomToC(ozsiteId);
+  oz_declareProperStringIN(0,addr);
+  oz_declareIntIN(1, port);
+  oz_declareIntIN(2, id);
+  oz_declareNonvarIN(3,ozPort);
 
-  int ip = (int)inet_addr(addr);
-  
-  g_defaultConnectionProcedure = proc;
-  OZ_protect(&g_defaultConnectionProcedure);
-  initDP(port,ip, siteId, primKey); 
-  
   g_connectPort = ozPort;
   OZ_protect(&g_connectPort);
 
-  OZ_RETURN(OZ_recordInit(oz_atom("ipInfo"),
-			  oz_cons(
-				  oz_pairAA("ip",addr), 
-				  oz_cons(oz_pairAI("port",80),
-					  oz_cons(oz_pairA("firewall",oz_bool(TRUE)),
-						  oz_cons(oz_pairAA("acceptProc","<>"),
-							  oz_cons(oz_pairAA("connectProc","<>"),
-								  oz_nil())
-							  )
-						  )
-					  )
-				  )));
+  int ip = (int)inet_addr(addr);  
+  initDP(port, ip, id); 
   
+  return OZ_ENTAILED;
 } OZ_BI_end
 
 
