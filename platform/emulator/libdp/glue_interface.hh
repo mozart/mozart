@@ -65,11 +65,6 @@ public:
   
   // Mark all DSites used by the CSC. 
   virtual void m_gcSweep(); 
-  
-  // Channel establishemnt 
-  virtual void channelEstablished(ChannelRequest *CR, DssChannel *vc);
-  virtual void connectionFailed(ChannelRequest *CR, 
-				ConnectionFailReason reason);
 };
 
 
