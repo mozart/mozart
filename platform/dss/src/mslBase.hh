@@ -52,7 +52,6 @@ public:
   Site*                a_srcSite; 
   Site*                a_mySite;
   ::ComServiceInterface* a_comService; 
-  ::IoFactoryInterface*          a_ioFactory;
   Timers*              a_timers;
   InterRouter*         a_interRouter;
   ImmediateEvents*     a_immediateEvents;
@@ -91,7 +90,6 @@ public:
   
   MsgnLayerEnv(::AppMslClbkInterface* clbk, 
 	       ::ComServiceInterface* csc, 
-	       ::IoFactoryInterface* iof,
 	       ::MsgnLayer *msl, 
 	       const bool& sec);
   ~MsgnLayerEnv();

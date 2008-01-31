@@ -84,11 +84,11 @@ int DSS_LongTime::operator-(const DSS_LongTime &t2) {
   
 
 MsgnLayer::MsgnLayer(::AppMslClbkInterface* clb , ::ComServiceInterface* csc, 
-		     ::IoFactoryInterface* iof, const bool& sec):
+		     const bool& sec):
   a_mslEnv(NULL),
   a_myDSite(NULL)
 {
-  a_mslEnv = new MsgnLayerEnv(clb, csc, iof, this, sec);
+  a_mslEnv = new MsgnLayerEnv(clb, csc, this, sec);
   a_myDSite = static_cast<DSite*>(a_mslEnv->a_mySite); 
 }
 

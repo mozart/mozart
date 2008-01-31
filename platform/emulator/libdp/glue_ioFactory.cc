@@ -3,7 +3,7 @@
  *    Erik Klintskog (erik@sics.se)
  * 
  *  Contributors:
- *    Erik Klintskog (erik@sics.se)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  * 
@@ -35,217 +35,123 @@
 #include <netdb.h>
 #include <net/if.h>
 #endif
+
 /************* I/O ************************/
-Bool glue_io_read(int fd, void *arg);
-Bool glue_io_write(int fd, void *arg);
 
-class VirtualTcpChannel:public VirtualChannelInterface{
-private:
-  int a_fd; 
-  bool a_connectionLost;  
-public:
-  VcCbkClassInterface *a_clbck;
-
-private:
-  ErrorClass classifyError() {
-    switch(ossockerrno()) {
-    case EINTR:
-      printf("eintr\n"); 
-      return EC_GO_AHEAD;
+ErrorClass classifyError() {
+  switch(ossockerrno()) {
+  case EINTR:
+    printf("eintr\n"); 
+    return EC_GO_AHEAD;
     
-    case EHOSTUNREACH:
-    case EAGAIN:
-    case ETIMEDOUT:
-      return EC_CONTINUE_LATER;
+  case EHOSTUNREACH:
+  case EAGAIN:
+  case ETIMEDOUT:
+    return EC_CONTINUE_LATER;
       
-    case EINPROGRESS: 
-    case EPIPE:
-    case ECONNRESET:
-    case EBADF:
-      return EC_LOST;  // This connection is broken! The site might still be up.
-    default: 
-      return EC_LOST;
-    }
+  case EINPROGRESS: 
+  case EPIPE:
+  case ECONNRESET:
+  case EBADF:
+    return EC_LOST;  // This connection is broken! The site might still be up.
+  default: 
+    return EC_LOST;
   }
-public:
-  VirtualTcpChannel(int fd):a_fd(fd), a_clbck(NULL), a_connectionLost(false){;}
-  
-  ~VirtualTcpChannel(){
-    ;
-  }
-  
-  bool m_isConnectionLost()
-  { 
-    return a_connectionLost;
-  }
-
-  int m_readData( void *buf, const unsigned int& len){
-    int ret = osread(a_fd,buf,len);
-    if (ret<=0)
-      {
-	if (classifyError() == EC_LOST) {
-    printf("the connection was lost reading data\n"); //bmc
-	  a_connectionLost = true;
-    }
-	return 0; 
-      }
-    return ret; 
-  }
-  
-  int m_writeData(void *buf, const unsigned int& len){
-    int ret = oswrite(a_fd,buf,len);
-    if (ret<0)
-      {
-	if (classifyError() == EC_LOST) {
-    printf("connection lost when writting data\n"); //bmc
-	  a_connectionLost = true;
-   }
-	return 0; 
-      }
-    return ret; 
-  }
-  
-  void m_closeChannel(){
-    osclose(a_fd);
-    delete this; 
-  }
-
-  void m_registerRead(bool on){
-    if(on)
-      OZ_registerReadHandler(a_fd,glue_io_read ,this); 
-    else
-      OZ_unregisterRead(a_fd);
-  }
-  
-  void m_registerWrite(bool on){
-   if(on) 
-     OZ_registerWriteHandler(a_fd,glue_io_write,this);
-   else
-     OZ_unregisterWrite(a_fd);
-  }
-  
-  bool m_readInvoke(){
-    // Check to see that we have a callback object, 
-    // a null ptr indicates that no interest existst for the 
-    // channel
-    if(a_clbck == NULL || a_connectionLost)
-      return false; 
-    
-    bool readMore = a_clbck->readDataAvailable();
-    
-    // After the call we check to see if the channel was lost 
-    // while reading it. Note that we _dont_ tell the callback 
-    // object while reading about the fact that teh cahnnel was 
-    // lost. 
-    if (a_connectionLost){
-      a_clbck->connectionLost();
-      return false; 
-    }
-    return readMore; 
-  }
-  
-  bool m_writeInvoke(){
-    // Check to see that we have a callback object, 
-    // a null ptr indicates that no interest existst for the 
-    // channel
-    if(a_clbck == NULL || a_connectionLost)
-      return false; 
-    
-    bool writeMore = a_clbck->writeDataAvailable();
-    
-    // After the call we check to see if the channel was lost 
-    // while reading it. Note that we _dont_ tell the callback 
-    // object while reading about the fact that teh cahnnel was 
-    // lost. 
-    if (a_connectionLost){
-      a_clbck->connectionLost();
-      return false; 
-    }
-    return writeMore; 
-  }
-  
-  void m_setCallBackObj(VcCbkClassInterface* c) {
-    a_clbck = c; 
-  }
-};
-
+}
 
 Bool glue_io_read(int fd, void *arg){
-  return static_cast<VirtualTcpChannel*>(arg)->m_readInvoke();
+  return static_cast<SocketChannel*>(arg)->invoke_reader();
 }
 
 Bool glue_io_write(int fd, void *arg){
-  return static_cast<VirtualTcpChannel*>(arg)->m_writeInvoke();
+  return static_cast<SocketChannel*>(arg)->invoke_writer();
 }
 
 
 
-GlueIoFactoryClass::GlueIoFactoryClass(){
-  ;
+/************************* SocketChannel *************************/
+
+SocketChannel::~SocketChannel() {
+  osclose(fd);
 }
 
-
-VirtualChannelInterface*
-GlueIoFactoryClass::channelFromFd(int fd){
-  return new VirtualTcpChannel(fd);
+bool
+SocketChannel::setCallback(VcCbkClassInterface* cbk) {
+  if (lost) return false;
+  worker = cbk;
+  return true;
 }
 
-
-// These two are not used in this impl. Connections are established
-// using the primitives provided by Mozart
-
-VirtualChannelInterface*
-GlueIoFactoryClass::establishTCPchannel(int IP, int port, ChannelRequest *CR)
-{
-  printf("Here should code exist that requests a connection establishment\n");
-  printf("and returns a channel. Not yet however\n");
-  return NULL; 
+void
+SocketChannel::registerRead(bool on) {
+  if (on) {
+    OZ_registerReadHandler(fd, glue_io_read, this);
+  } else {
+    OZ_unregisterRead(fd);
+  }
 }
 
-void 
-GlueIoFactoryClass::terminateTCPchannel(VirtualChannelInterface *vc)
-{
-  printf("Here should code exist that terminates a connection termination.\n");
-  printf("Not yet however\n");
+void
+SocketChannel::registerWrite(bool on) {
+  if (on) {
+    OZ_registerWriteHandler(fd, glue_io_write, this);
+  } else {
+    OZ_unregisterWrite(fd);
+  }
 }
-  
-  // Communication
-int  
-GlueIoFactoryClass::readData(VirtualChannelInterface *vc, void *buf, 
-			     const unsigned int& len)
-{ 
-  VirtualTcpChannel *vtc = static_cast<VirtualTcpChannel*>(vc);
-  return vtc->m_readData(buf, len);  
+
+int
+SocketChannel::read(void* buf, const unsigned int& len) {
+  int ret = osread(fd, buf, len);
+  if (ret <= 0) {
+    if (classifyError() == EC_LOST) lost = true;
+    return 0; 
+  }
+  return ret;
 }
-int  
-GlueIoFactoryClass::writeData(VirtualChannelInterface *vc, void *buf, 
-			      const unsigned int& len)
-{
-  VirtualTcpChannel *vtc = static_cast<VirtualTcpChannel*>(vc);
-  return vtc->m_writeData(buf, len); 
+
+int
+SocketChannel::write(void* buf, const unsigned int& len) {
+  int ret = oswrite(fd, buf, len);
+  if (ret < 0) {
+    if (classifyError() == EC_LOST) lost = true;
+    return 0; 
+  }
+  return ret;
 }
-void 
-GlueIoFactoryClass::registerRead(VirtualChannelInterface *vc, bool on){
-  VirtualTcpChannel *vtc = static_cast<VirtualTcpChannel*>(vc);
-  vtc->m_registerRead(on);
-}
-void 
-GlueIoFactoryClass::registerWrite(VirtualChannelInterface *vc, bool on){
-  VirtualTcpChannel *vtc = static_cast<VirtualTcpChannel*>(vc);
-  vtc->m_registerWrite(on);
-}
-bool 
-GlueIoFactoryClass::setCallBackObj(VirtualChannelInterface *vc, VcCbkClassInterface *vcc){
-  VirtualTcpChannel *vtc = static_cast<VirtualTcpChannel*>(vc);
-  if(vtc->m_isConnectionLost()) 
+
+bool
+SocketChannel::invoke_reader() {
+  // Check to see that we have a callback object, a null pointer
+  // indicates that no interest exists for the channel
+  if (worker == NULL || lost) return false;
+
+  bool hasmore = worker->readDataAvailable();
+
+  // After the call we check to see if the channel was lost while
+  // reading it.  Note that we _dont_ tell the callback object while
+  // reading about the fact that the channel was lost.
+  if (lost) {
+    worker->connectionLost();
     return false;
-  vtc->m_setCallBackObj(vcc);
-  
+  }
+  return hasmore;
+}
 
-} 
+bool
+SocketChannel::invoke_writer() {
+  // Check to see that we have a callback object, a null pointer
+  // indicates that no interest exists for the channel
+  if (worker == NULL || lost) return false;
 
-int   
-GlueIoFactoryClass::setupTCPconnectPoint(int){
-  printf("GlueIoFactoryClass::setupTCPconnectPoint -- not impl\n"); 
-  return 0; 
+  bool hasmore = worker->writeDataAvailable();
+
+  // After the call we check to see if the channel was lost while
+  // writing it.  Note that we _dont_ tell the callback object while
+  // writing about the fact that the channel was lost.
+  if (lost) {
+    worker->connectionLost();
+    return false;
+  }
+  return hasmore;
 }

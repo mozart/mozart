@@ -160,14 +160,12 @@ namespace _msl_internal{
 
   MsgnLayerEnv::MsgnLayerEnv(::AppMslClbkInterface* clbk, 
 			     ::ComServiceInterface* csc, 
-			     ::IoFactoryInterface* iof,
 			     ::MsgnLayer *msl, 
 			     const bool& sec):
     a_destSite(NULL),
     a_srcSite(NULL) ,
     a_mySite(NULL),
     a_comService(csc), 
-    a_ioFactory(iof),
     a_timers(new Timers()), 
     a_interRouter(NULL),
     a_immediateEvents(new ImmediateEvents()), 
@@ -228,4 +226,3 @@ namespace _msl_internal{
 //Constructors added to force the inclussion of the symbols in the library.
 ComServiceInterface::ComServiceInterface() {}
 CsSiteInterface::CsSiteInterface() {}
-IoFactoryInterface::IoFactoryInterface() {}

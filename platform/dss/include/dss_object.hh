@@ -74,7 +74,7 @@ private:
   _dss_internal::DSS_Environment* _a_env;
 
 public:
-  DSS_Object(IoFactoryInterface* const io, ComServiceInterface*  const sa, Mediation_Object* const mo, const bool& sec_channel = false);
+  DSS_Object(ComServiceInterface*  const sa, Mediation_Object* const mo, const bool& sec_channel = false);
   virtual ~DSS_Object();
 
   // create a coordination proxy
