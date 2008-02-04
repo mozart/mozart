@@ -155,7 +155,7 @@ inline OZ_Term new_GeIntVarCompl(const IntSet& dom) {
   GenericSpace *sp = oz_currentBoard()->getGenericSpace();
   IntVar x(sp,dom);
   ViewRanges<IntView> xvr(x);
-  IntVar xcompl(sp, Gecode::Limits::Int::int_min, Gecode::Limits::Int::int_max);
+  IntVar xcompl(sp, Gecode::Int::Limits::int_min, Gecode::Int::Limits::int_max);
   IntView xcv(xcompl);
   xcv.minus_r(sp, xvr);
   GeIntVar *nv     = new GeIntVar(sp->getVarsSize());

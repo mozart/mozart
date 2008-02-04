@@ -47,14 +47,14 @@ Bool GeIntVar::validV(OZ_Term val) {
   //   Gecode::Limits::Int::int_min
   if (OZ_isSmallInt(val)) {
     int n = OZ_intToC(val);
-    if(n >= Limits::Int::int_min &&
-       n <= Limits::Int::int_max)
+    if(n >= Int::Limits::int_min &&
+       n <= Int::Limits::int_max)
       {
 	//printf("GeIntVar::validV\n");fflush(stdout);
       return IntView(getIntVarInfo()).in(n);
       }
     else {
-      GEOZ_DEBUG_PRINT(("Invalid integer.\n All domain ranges must be between %d and %d",Limits::Int::int_min,Limits::Int::int_max));
+      GEOZ_DEBUG_PRINT(("Invalid integer.\n All domain ranges must be between %d and %d",Int::Limits::int_min,Int::Limits::int_max));
       return false;
     }
   }
@@ -88,7 +88,7 @@ bool GeIntVar::intersect(TaggedRef x) {
   IntView tmp2(gv);
 
   printf("GeIntVar.cc min1=%d - max1=%d -- min2=%d - max2=%d\n",vw.min(), vw.max(),tmp2.min(),tmp2.max());fflush(stdout);  
-  //Ask Alejandro about the use of getGSpace() instead of oz_currentBoard()
+  //TODO: Ask Alejandro about the use of getGSpace() instead of oz_currentBoard()
   return (vw.inter_r(oz_currentBoard()->getGenericSpace(),gvr)==ME_GEN_FAILED ? false: true);
 }
 
@@ -104,7 +104,7 @@ bool GeIntVar::In(TaggedRef lx) {
 TaggedRef GeIntVar::clone(TaggedRef v) {
   Assert(OZ_isGeIntVar(v));
   
-  OZ_Term lv = new_GeIntVar(IntSet(Limits::Int::int_min,Limits::Int::int_max));
+  OZ_Term lv = new_GeIntVar(IntSet(Int::Limits::int_min,Int::Limits::int_max));
   get_GeIntVar(v,false)->intersect(lv);
   return lv;
 }
@@ -127,8 +127,8 @@ bool GeIntVar::hasSameDomain(TaggedRef v) {
 
 inline
 TaggedRef GeIntVar::newVar(void) {
-  return new_GeIntVar(IntSet(Limits::Int::int_min,
-			     Limits::Int::int_max));
+  return new_GeIntVar(IntSet(Int::Limits::int_min,
+			     Int::Limits::int_max));
 }
 
 
