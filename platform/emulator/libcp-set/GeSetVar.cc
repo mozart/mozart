@@ -100,7 +100,7 @@ bool GeSetVar::In(TaggedRef lx) {
 TaggedRef GeSetVar::clone(TaggedRef v) {
   Assert(OZ_isGeSetVar(v));
   
-  OZ_Term lv = new_GeSetVar(IntSet(Limits::Int::int_min,Limits::Int::int_max),IntSet(Limits::Int::int_min,Limits::Int::int_max));
+  OZ_Term lv = new_GeSetVar(IntSet(Int::Limits::int_min,Int::Limits::int_max),IntSet(Int::Limits::int_min,Int::Limits::int_max));
   get_GeSetVar(v,false)->intersect(lv);
   return lv;
 }
@@ -122,8 +122,8 @@ bool GeSetVar::hasSameDomain(TaggedRef v) {
 
 inline
 TaggedRef GeSetVar::newVar(void) {
-  return new_GeSetVar(IntSet(Limits::Int::int_min,
-			     Limits::Int::int_max),IntSet(Limits::Int::int_min,Limits::Int::int_max));
+  return new_GeSetVar(IntSet(Int::Limits::int_min,
+			     Int::Limits::int_max),IntSet(Int::Limits::int_min,Int::Limits::int_max));
 }
 
 
