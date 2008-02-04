@@ -198,7 +198,13 @@ void GenericSpace::varReflect(Reflection::VarMap &vmp, bool registerOnly) {
       /* TODO: if var is a local representation of a global variable and we are merging two space then 
 	 put in vmp the reflection of the global variable instead of var.
        */
-      var->reflect(vmp,nn,registerOnly);
+      if (var->isLocal()) {
+	printf("Local only variable found during merge\n");fflush(stdout);
+	var->reflect(vmp,nn,registerOnly);
+      } else {
+	printf("GLOBAL variable found during merge\n");fflush(stdout);
+	var->getGlobal()->reflect(vmp,nn,registerOnly);
+      }
       printf("Iteration %d Added symbol %s\n",i,nn.toString().c_str());fflush(stdout);
     }
   }
