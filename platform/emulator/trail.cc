@@ -206,7 +206,7 @@ void unBind(TaggedRef *p, TaggedRef t) {
   if (!t) t=oz_newThreadPropagate(b);
 
 TaggedRef Trail::unwind(Board * b) {
-  //printf("unwind\n");fflush(stdout);
+  printf("unwind\n");fflush(stdout);
   TaggedRef s = AtomNil;
 
   if (!isEmptyChunk()) {
@@ -255,7 +255,7 @@ TaggedRef Trail::unwind(Board * b) {
 	Assert(oz_isRef(*refPtr) || !oz_isVar(*refPtr));
 	Assert(oz_isVar(value));
 	//	Assert(oz_isGeVar(value));
-
+	
 	s = oz_cons(oz_cons(makeTaggedRef(refPtr),*refPtr),s);
 	
 	TaggedRef vv= *refPtr;
@@ -265,12 +265,17 @@ TaggedRef Trail::unwind(Board * b) {
 	Assert(!oz_isRef(vv));
 	unBind(refPtr, value);
 	
+	printf("unwind GEVAR\n");fflush(stdout);
 	if(hasNoRunnable && !oz_var_hasSuspAt(*refPtr,b)) {
 	  if(oz_isGeVar(*refPtr)) {
 	    GeVarBase *vglobal = get_GeVar(*refPtr);
+	    printf("Found** a local reference to a global var\n");fflush(stdout);
 	    vglobal->ensureDomReflection();
+	    GeVarBase *vlocal = get_GeVar(vv);
+	    vlocal->setLocal(vglobal);
 	    if(vglobal->hasSameDomain(vv)) {
-	      GeVarBase *vlocal = get_GeVar(vv);
+	      //GeVarBase *vlocal = get_GeVar(vv);
+	      printf("Found a local reference to a global var\n");fflush(stdout);
 	      if(vlocal->degree() == vlocal->varprops() && tagged2Var(vv)->isEmptySuspList() ){
 		break;
 	      }
