@@ -63,10 +63,10 @@ enum GeVarType {T_GeIntVar, T_GeSetVar, T_GeBoolVar};
 class GeVarBase: public ExtVar {
 protected:
   GeVarBase(Board *b, GeVarBase& gv) 
-    :  hasDomRefl(gv.hasDomRefl), unifyC(gv.unifyC), ExtVar(b) {}
+    :  hasDomRefl(gv.hasDomRefl), local(false), unifyC(gv.unifyC), ExtVar(b) {}
 
 public:
-  GeVarBase(Board *b) : hasDomRefl(false), unifyC(0), ExtVar(b) {}
+  GeVarBase(Board *b) : hasDomRefl(false), local(false), unifyC(0), ExtVar(b) {}
   
   /**
      \brief Number of propagators associated with a variable. This method
@@ -87,6 +87,10 @@ public:
   virtual bool hasSameDomain(TaggedRef) = 0;
 
   virtual int varprops(void) = 0;
+
+private:
+  bool local; /// Is this variable a local representation of a global one
+  GeVarBase *global; /// Corresponding global var
 
   /// \name Reflection mechanisms
   //@{
@@ -130,6 +134,19 @@ public:
   */
   virtual TaggedRef clone(TaggedRef v) = 0;
   //@}
+
+  bool isLocal() { return local; }
+  void setLocal(GeVarBase *glb) {
+    local = true;
+    global = glb;
+  }
+  
+  GeVarBase* getGlobal(void) {
+    Assert(local);
+    return global;
+  }
+  
+  
 };
 
 /** 
