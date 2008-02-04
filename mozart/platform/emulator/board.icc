@@ -313,6 +313,7 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
   dst->incSuspCount(src->getSuspCount());
 
   // Merge constraints
+  printf("Before merge constraints\n");fflush(stdout);
   OZ_Return ret = installScript(OK);
 
   // Merge propagators (must be after script installation, since script

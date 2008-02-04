@@ -335,26 +335,25 @@ private:
   Distributor * dist;
   
   /**
-  	\brief This variable is used for commit <-> getChoice synchronization. It 
-	has three possible states:
-	*) taggedVoidValue -> Initialization in the constructor.
-	*) AtomNil -> The next getChoice statement will return nil.
-	*) ReadOnly variable -> there is a suspended thread in a getChoice statement
-  */
+     \brief This variable is used for commit <-> getChoice synchronization. It 
+     has three possible states:
+     *) taggedVoidValue -> Initialization in the constructor.
+     *) AtomNil -> The next getChoice statement will return nil.
+     *) ReadOnly variable -> there is a suspended thread in a getChoice statement
+     */
   TaggedRef cmtQSync;
   
   /**
-  	\brief Branching definition for this board. Old versions of mozart stored 
-	this information in the alternatives attribute of the distributor. Now this 
-	information does not consist only of numbers but anything the user wants.
+     \brief Branching definition for this board. Old versions of mozart stored 
+     this information in the alternatives attribute of the distributor. Now this 
+     information does not consist only of numbers but anything the user wants.
   */
   TaggedRef branching;
   
   /**
-    \brief A queue to store all pending branches for this board. Committing
-    branches to this board will store them in this queue and getChoice method
-    will retrieve them.
-    
+     \brief A queue to store all pending branches for this board. Committing
+     branches to this board will store them in this queue and getChoice method
+     will retrieve them. 
   */
   BranchQueue *bq;
   

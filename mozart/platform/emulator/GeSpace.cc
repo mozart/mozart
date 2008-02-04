@@ -173,7 +173,13 @@ Gecode::SpaceStatus GenericSpace::mstatus(void) {
 }
 
 void GenericSpace::varReflect(Reflection::VarMap &vmp, bool registerOnly) {
-  // Iterate on generic space references to fill the VarMap
+  /*
+    Iterate on generic space references to fill the VarMap. Only variables in 
+    vars are considered. At this time some propagators are implemented in terms
+    of other and use temporary gecode variables (i.e. SumCN), those implicit
+    variables are not filled in this method. This may cause problems.
+  */
+
   // TODO: create a prefix for this generic space
 
   printf("Called varReflect on %p with registerOnly set to %d\n",this,registerOnly);
@@ -189,6 +195,9 @@ void GenericSpace::varReflect(Reflection::VarMap &vmp, bool registerOnly) {
       s << var->getIndex();
       Support::Symbol nn = p.copy();
       nn += Support::Symbol(s.str().c_str(),true);
+      /* TODO: if var is a local representation of a global variable and we are merging two space then 
+	 put in vmp the reflection of the global variable instead of var.
+       */
       var->reflect(vmp,nn,registerOnly);
       printf("Iteration %d Added symbol %s\n",i,nn.toString().c_str());fflush(stdout);
     }
@@ -205,8 +214,7 @@ void GenericSpace::merge(GenericSpace *src) {
   // Extract variables from this (register only) Ask Guido.
   
   Reflection::VarMap tvm;
-  //varReflect(tvm,true);
-  
+
   printf("GeSpace.cc >> finished VarMap fill\n");fflush(stdout);
   
   Reflection::Unreflector d(this, tvm);
@@ -257,14 +265,14 @@ void GenericSpace::merge(GenericSpace *src) {
       gvb->ensureValReflection();
       if (gvb->hasDomReflector())
 	gvb->ensureDomReflection();
-
+      
       printf("GeSpace.cc >> updating reference var: %d new pos %d\n",i,newIndex);
       fflush(stdout);
     } else {
       /* 
 	 Fixme: Wat shoul we put in the array of references?
 	 Maybe copy the reference in src and put null in vars is enough
-       */
+      */
       printf("GeSpace.cc >> FIXME!! not updating reference var was det.\n");
       fflush(stdout);
     }
