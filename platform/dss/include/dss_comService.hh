@@ -158,6 +158,7 @@ public:
 
 
 
+// interface of site representation; provided by the DSS
 class DSite{
 public:
   //*************** General Methods *****************************
@@ -174,7 +175,13 @@ public:
   //***************  CSC methods: ******************************'
   virtual void m_connectionEstablished(DssChannel* con) = 0; 
   virtual void m_virtualCircuitEstablished( int len, DSite *route[]) = 0; 
-  virtual int  m_installRTmonitor( int lowLimit, int highLimit) = 0; 
+
+  // m_monitorRTT() asks the site to monitor message round-trip times.
+  // Measured rtt are reported, and a timeout event is triggered
+  // whenever no message is received within maxrtt.  Upon timeout, the
+  // rtt monitoring is stopped.
+  virtual void m_monitorRTT(int maxrtt) = 0;
+
   virtual void m_stateChange(DSiteState newState) = 0; 
   virtual void m_takeDownConnection() = 0; 
   virtual ConnectivityStatus  m_getChannelStatus() = 0;
@@ -185,6 +192,25 @@ public:
   virtual unsigned char* m_getId(int &len) = 0;
   virtual CsSiteInterface* m_getCsSiteRep() = 0; 
   
+};
+
+// interface of sites provided by the user; it implements the specific
+// way to marshal sites, how to provide communication channels, and
+// how to diagnose failures.
+class CsSiteInterface {
+public:
+  CsSiteInterface();
+  virtual void marshalCsSite( DssWriteBuffer* const buf) = 0; 
+  virtual void updateCsSite( DssReadBuffer* const buf) = 0; 
+  virtual void disposeCsSite() = 0; 
+
+  // working() is called when the connection is ready to work
+  virtual void working() = 0; 
+  virtual void reportRTT(int rtt) = 0;
+  virtual void reportTimeout(int maxrtt) = 0;
+
+  virtual DssChannel *establishConnection() = 0;
+  virtual void closeConnection(DssChannel* con) = 0;
 };
 
 
@@ -229,19 +255,6 @@ public:
 };
 
 
-
-class CsSiteInterface{
-public:
-  CsSiteInterface();
-  virtual void    marshalCsSite( DssWriteBuffer* const buf) = 0; 
-  virtual void    updateCsSite( DssReadBuffer* const buf) = 0; 
-  virtual void    disposeCsSite() = 0; 
-  // monitor() is called when the connection can be monitored
-  virtual void    monitor() = 0; 
-  virtual void    reportRtViolation(int measuredRT, int installedLow, int installedHigh) = 0; 
-  virtual DssChannel *establishConnection() = 0;
-  virtual void closeConnection(DssChannel* con) = 0;
-};
 
 class AppMslClbkInterface
 {

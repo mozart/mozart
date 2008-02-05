@@ -3,6 +3,7 @@
  *    Anna Neiderud (annan@sics.se)
  * 
  *  Contributors:
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  * 
@@ -129,7 +130,6 @@ namespace _msl_internal { //Start namespace
     a_sentLrgMsg(0),
     a_receivedLrgMsg(0),
     a_reopentimer(NULL),
-    a_minrtt(0),
     a_maxrtt(0),
     a_ackCanceled(true),
     a_ackExpiration(DSS_LongTime()),
@@ -224,7 +224,7 @@ namespace _msl_internal { //Start namespace
 
   } // perhaps pass from where we came
   
-  inline unsigned int ComObj::sendProbePing(){
+  unsigned int ComObj::sendProbePing(){
     if (a_msgReceivedDuringProbeInterval) {
       // We have received a msg, and it was within the rtt boundary.
       // So continue probing, and make sure that at least one message
@@ -239,11 +239,10 @@ namespace _msl_internal { //Start namespace
     }
 
     // Nothing has been received within the rtt boundary, so stop
-    // probing, and report the violation.  By convention the reported
-    // rtt is a_maxrtt.
+    // probing, and report the timeout.
     a_probeIntervalTimer = NULL;   // timer will be deleted after return
     a_probing = false;
-    a_site->m_getCsSite()->reportRtViolation(a_maxrtt, a_minrtt, a_maxrtt);
+    a_site->m_getCsSite()->reportTimeout(a_maxrtt);
     return 0;
   }
 
@@ -792,20 +791,12 @@ namespace _msl_internal { //Start namespace
   
   void ComObj::msgAcked(int num) {
     int rtt = a_queues->msgAcked(num, false, a_probing && a_state==WORKING);
-    if (rtt!=-1) a_lastrtt=rtt;
-
+    if (rtt != -1) {
+      a_lastrtt = rtt;
+      a_site->m_getCsSite()->reportRTT(t_max(rtt, MSG_ACK_TIMEOUT));
+    }
     if (a_probing && a_state==WORKING) {   // we are probing
       a_msgReceivedDuringProbeInterval = true;
-
-      if (rtt != -1 && (rtt < a_minrtt || a_maxrtt <= rtt)) {
-	// The rtt of the message was out of bounds, so stop probing,
-	// and report the violation.  By convention the reported rtt
-	// must be different from a_maxrtt in this case.
-	if (rtt == a_maxrtt) rtt++;
-	e_timers->clearTimer(a_probeIntervalTimer);
-	a_probing=false;
-	a_site->m_getCsSite()->reportRtViolation(rtt, a_minrtt, a_maxrtt);
-      }
     }
   }
   
@@ -897,11 +888,14 @@ namespace _msl_internal { //Start namespace
     }
   }
   
-  void ComObj::installProbe(int lowerBound, int higherBound) {
-    a_minrtt=lowerBound;
-    a_maxrtt=higherBound;
-    setProbeIntervalTimer();
-    a_probing=true;
+  void ComObj::installProbe(int maxrtt) {
+    if (maxrtt > 0) {
+      a_maxrtt = maxrtt;
+      if (!a_probing) {
+	setProbeIntervalTimer();
+	a_probing = true;
+      }
+    }
   }
 
   int ComObj::getQueueStatus(){return a_queues->getQueueStatus();}

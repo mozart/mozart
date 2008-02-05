@@ -65,9 +65,11 @@ public:
   virtual void    marshalCsSite( DssWriteBuffer* const buf);
   virtual void    updateCsSite( DssReadBuffer* const buf); 
   virtual void    disposeCsSite(); 
-  virtual void    monitor(); 
-  virtual void    reportRtViolation(int measuredRT, int installedLow,
-				    int installedHigh); 
+
+  virtual void    working(); 
+  virtual void    reportRTT(int);
+  virtual void    reportTimeout(int);
+
   virtual DssChannel *establishConnection();
   virtual void closeConnection(DssChannel* con);
 };

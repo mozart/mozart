@@ -116,24 +116,25 @@ Glue_SiteRep::disposeCsSite(){
 }
 
 void    
-Glue_SiteRep::monitor() {
+Glue_SiteRep::working() {
   // We monitor all our connections
-  a_dssSite->m_installRTmonitor(0, RTT_UPPERBOUND);
+  a_dssSite->m_monitorRTT(RTT_UPPERBOUND);
 }
 
-void    
-Glue_SiteRep::reportRtViolation(int rtt, int low, int high) {
-  if (a_dssSite->m_getFaultState() <= DSite_TMP) {
-    if (rtt == high) {
-      // This means that no message was received recently
-      a_dssSite->m_stateChange(DSite_TMP);
-      a_dssSite->m_installRTmonitor(RTT_UPPERBOUND, RTT_UPPERBOUND);
-    } else {
-      // A message has been received, so the site is ok again
-      a_dssSite->m_stateChange(DSite_OK);
-      a_dssSite->m_installRTmonitor(0, RTT_UPPERBOUND);
-    }
+void
+Glue_SiteRep::reportRTT(int rtt) {
+  if (a_dssSite->m_getFaultState() == DSite_TMP) {
+    a_dssSite->m_stateChange(DSite_OK);
+    a_dssSite->m_monitorRTT(RTT_UPPERBOUND);
   }
+}
+
+void
+Glue_SiteRep::reportTimeout(int rtt) {
+  if (a_dssSite->m_getFaultState() == DSite_OK) {
+    a_dssSite->m_stateChange(DSite_TMP);
+  }    
+  a_dssSite->m_monitorRTT(RTT_UPPERBOUND);     // keep on monitoring
 }
 
 DssChannel *    
