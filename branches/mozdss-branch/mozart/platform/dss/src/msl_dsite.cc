@@ -260,14 +260,9 @@ namespace _msl_internal{ //Start namespace
   }
 
   // Faults
-  int Site::m_installRTmonitor(int lowLimit,int highLimit)
-  {
-    if(a_comObj == NULL)
-      {
-	a_comObj=new ComObj(this, a_msgnLayerEnv);
-      }
-    a_comObj->installProbe(lowLimit,highLimit);
-    return 0; 
+  void Site::m_monitorRTT(int maxrtt) {
+    if (!a_comObj) a_comObj = new ComObj(this, a_msgnLayerEnv);
+    a_comObj->installProbe(maxrtt);
   }
 
   void Site::m_marshalDSite(DssWriteBuffer* buf){

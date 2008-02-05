@@ -149,7 +149,7 @@ namespace _msl_internal{ //Start namespace
     virtual void m_stateChange(DSiteState newState);
     virtual void m_virtualCircuitEstablished(int len , DSite *route[]);
     virtual void m_takeDownConnection();
-    virtual int m_installRTmonitor(int lowLimit,int highLimit);
+    virtual void m_monitorRTT(int maxrtt);
     // returns stringrep of id + length of string
     virtual BYTE* m_getId(int &len);
     virtual void m_invalidateMarshaledRepresentation();

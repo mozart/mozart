@@ -3,6 +3,7 @@
  *    Anna Neiderud (annan@sics.se)
  * 
  *  Contributors:
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  * 
@@ -110,7 +111,6 @@ namespace _msl_internal{ //Start namespace
     TimerElement *a_reopentimer;
 
     // Special timers for probing and acking
-    int  a_minrtt;
     int  a_maxrtt;
     bool a_ackCanceled;
     // If this time is greater than the timer then it shouldn't fire
@@ -140,34 +140,38 @@ namespace _msl_internal{ //Start namespace
 
     EndRouter* a_pred; // the transObj preceding this comObj.!!! change it
     
-    inline void m_setCState(const CState& s){
+    void m_setCState(const CState& s){
       a_state = s;
-      if (s == WORKING && a_site->m_getCsSite())
+      if (s == WORKING && a_site->m_getCsSite()) {
 	// notify the upper layer that the connection is now working,
 	// hence application monitors can be applied.
-	a_site->m_getCsSite()->monitor();
+	a_site->m_getCsSite()->working();
+      }
     }
-    inline CState m_getCState() const { return a_state; }
+    CState m_getCState() const { return a_state; }
 
-    // throw a State vector to check if in one of a set of states -> (WORKING | CLOSED | ... )
-    inline bool m_inState(const unsigned int& states) const { return((a_state & states) != 0); }
+    // throw a State vector to check if in one of a set of states ->
+    // (WORKING | CLOSED | ... )
+    bool m_inState(const unsigned int& states) const {
+      return a_state & states;
+    }
 
     // ******* Special timer opts ********
     // remember that if we explicitly clear the timer it won't fire so
     // we don't have to worry about that in our 'fire' function
-    inline void setAckTimer();
-    inline void clearAckTimer();
-    inline void setProbeIntervalTimer();
-    inline void setProbeFaultTimer();
+    void setAckTimer();
+    void clearAckTimer();
+    void setProbeIntervalTimer();
+    void setProbeFaultTimer();
 
 
     // private methods
     void m_open();
     void errorRec(int);
-    inline bool hasNeed();
-    inline void createCI(DssSimpleWriteBuffer*, int);
-    inline bool extractCI(DssSimpleReadBuffer*,int&);
-    inline bool adoptCI(DssSimpleReadBuffer*);
+    bool hasNeed();
+    void createCI(DssSimpleWriteBuffer*, int);
+    bool extractCI(DssSimpleReadBuffer*,int&);
+    bool adoptCI(DssSimpleReadBuffer*);
 
 
     bool m_merge(ComObj *old);
@@ -221,7 +225,7 @@ namespace _msl_internal{ //Start namespace
     TransObj *getTransObj() const { return a_transObj; }
 
     void m_send(MsgCnt *, int prio);
-    void installProbe(int lowerBound, int higherBound);  
+    void installProbe(int maxrtt);  
     // Should this be moved to the comController?
     bool canBeFreed(); // A question that implicitly tells the comObj
     // that no local references exist.
