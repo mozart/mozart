@@ -40,6 +40,11 @@ private:
   DSite *a_dssSite;
   Glue_SiteRep *a_next; 
   OZ_Term a_ozSite; 
+
+  int rtt_avg;         // average rtt
+  int rtt_mdev;        // median deviation of rtt
+  int rtt_timeout;     // adaptive timeout for detecting tempFail
+
 public:
   Glue_SiteRep(int ip, int port, int id, DSite*, OZ_Term);
   ~Glue_SiteRep() {}

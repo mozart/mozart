@@ -34,7 +34,8 @@
 Glue_SiteRep* site_address_representations=NULL; 
 Glue_SiteRep* thisGSite = NULL;
 
-int RTT_UPPERBOUND = 30000;     // higher bound for rtt monitor
+int RTT_INIT        =  5000;     // initial timeout
+int RTT_UPPERBOUND  = 30000;     // higher bound for rtt monitor
 
 // UTILS 
 
@@ -62,7 +63,10 @@ Glue_SiteRep::Glue_SiteRep(int ip, int port, int id, DSite *name, OZ_Term ozSite
   a_idNum(id),
   a_dssSite(name),
   a_next(site_address_representations),
-  a_ozSite(ozSite)
+  a_ozSite(ozSite),
+  rtt_avg(0),
+  rtt_mdev(0),
+  rtt_timeout(RTT_INIT)
 {
   site_address_representations = this;
 }
@@ -117,24 +121,36 @@ Glue_SiteRep::disposeCsSite(){
 
 void    
 Glue_SiteRep::working() {
-  // We monitor all our connections
-  a_dssSite->m_monitorRTT(RTT_UPPERBOUND);
+  rtt_avg = 0;                              // reset rtt parameters
+  rtt_timeout = RTT_INIT;
+  a_dssSite->m_monitorRTT(rtt_timeout);
 }
 
 void
 Glue_SiteRep::reportRTT(int rtt) {
   if (a_dssSite->m_getFaultState() == DSite_TMP) {
     a_dssSite->m_stateChange(DSite_OK);
-    a_dssSite->m_monitorRTT(RTT_UPPERBOUND);
   }
+  if (rtt > RTT_UPPERBOUND) rtt = RTT_UPPERBOUND;
+  if (rtt_avg) {
+    int err = rtt - rtt_avg;
+    rtt_avg += err / 2;
+    rtt_mdev += (abs(err) - rtt_mdev) / 4;
+  } else {
+    rtt_avg = rtt;
+    rtt_mdev = rtt;
+  }
+  rtt_timeout = rtt_avg + rtt_mdev;
+  a_dssSite->m_monitorRTT(rtt_timeout);
 }
 
 void
-Glue_SiteRep::reportTimeout(int rtt) {
-  if (a_dssSite->m_getFaultState() == DSite_OK) {
-    a_dssSite->m_stateChange(DSite_TMP);
-  }    
-  a_dssSite->m_monitorRTT(RTT_UPPERBOUND);     // keep on monitoring
+Glue_SiteRep::reportTimeout(int timeout) {
+  switch (a_dssSite->m_getFaultState()) {
+  case DSite_OK:  a_dssSite->m_stateChange(DSite_TMP);
+  case DSite_TMP: a_dssSite->m_monitorRTT(rtt_timeout);
+  default: break;
+  }
 }
 
 DssChannel *    
