@@ -128,20 +128,26 @@ Glue_SiteRep::working() {
 
 void
 Glue_SiteRep::reportRTT(int rtt) {
-  if (a_dssSite->m_getFaultState() == DSite_TMP) {
+  switch (a_dssSite->m_getFaultState()) {
+  case DSite_TMP:
     a_dssSite->m_stateChange(DSite_OK);
+    // fall through
+  case DSite_OK:
+    if (rtt > RTT_UPPERBOUND) rtt = RTT_UPPERBOUND;
+    if (rtt_avg) {
+      int err = rtt - rtt_avg;
+      rtt_avg += err / 2;
+      rtt_mdev += (abs(err) - rtt_mdev) / 4;
+    } else {
+      rtt_avg = rtt;
+      rtt_mdev = rtt;
+    }
+    rtt_timeout = rtt_avg + rtt_mdev;
+    a_dssSite->m_monitorRTT(rtt_timeout);
+    // fall through
+  default:
+    break;     // (stop monitoring when permfailed)
   }
-  if (rtt > RTT_UPPERBOUND) rtt = RTT_UPPERBOUND;
-  if (rtt_avg) {
-    int err = rtt - rtt_avg;
-    rtt_avg += err / 2;
-    rtt_mdev += (abs(err) - rtt_mdev) / 4;
-  } else {
-    rtt_avg = rtt;
-    rtt_mdev = rtt;
-  }
-  rtt_timeout = rtt_avg + rtt_mdev;
-  a_dssSite->m_monitorRTT(rtt_timeout);
 }
 
 void
@@ -149,7 +155,7 @@ Glue_SiteRep::reportTimeout(int timeout) {
   switch (a_dssSite->m_getFaultState()) {
   case DSite_OK:  a_dssSite->m_stateChange(DSite_TMP);
   case DSite_TMP: a_dssSite->m_monitorRTT(rtt_timeout);
-  default: break;
+  default: break;     // (stop monitoring when permfailed)
   }
 }
 
