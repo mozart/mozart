@@ -63,10 +63,12 @@ enum GeVarType {T_GeIntVar, T_GeSetVar, T_GeBoolVar};
 class GeVarBase: public ExtVar {
 protected:
   GeVarBase(Board *b, GeVarBase& gv) 
-    :  hasDomRefl(gv.hasDomRefl), local(false), unifyC(gv.unifyC), ExtVar(b) {}
+    :  hasDomRefl(gv.hasDomRefl), localRep(false), unifyC(gv.unifyC), ExtVar(b) {
+    Assert(!gv.localRep);
+  }
 
 public:
-  GeVarBase(Board *b) : hasDomRefl(false), local(false), unifyC(0), ExtVar(b) {}
+  GeVarBase(Board *b) : hasDomRefl(false), localRep(false), unifyC(0), ExtVar(b) {}
   
   /**
      \brief Number of propagators associated with a variable. This method
@@ -89,7 +91,7 @@ public:
   virtual int varprops(void) = 0;
 
 private:
-  bool local; /// Is this variable a local representation of a global one
+  bool localRep; /// Is this variable a local representation of a global var
   GeVarBase *global; /// Corresponding global var
 
   /// \name Reflection mechanisms
@@ -135,14 +137,14 @@ public:
   virtual TaggedRef clone(TaggedRef v) = 0;
   //@}
 
-  bool isLocal() { return local; }
-  void setLocal(GeVarBase *glb) {
-    local = true;
+  bool isLocalRep() { return localRep; }
+  void setLocalRep(GeVarBase *glb) {
+    localRep = true;
     global = glb;
   }
   
   GeVarBase* getGlobal(void) {
-    Assert(local);
+    Assert(localRep);
     return global;
   }
   
@@ -460,10 +462,16 @@ public:
 
 inline
 void checkGlobalVar(OZ_Term v) {
+  printf("Called checkGlobalVar\n");fflush(stdout);
   Assert(oz_isGeVar(v));
   ExtVar *ev = oz_getExtVar(oz_deref(v));
   if (!oz_isLocalVar(ev)) {
-    TaggedRef nlv = static_cast<GeVarBase*>(ev)->clone(v);
+    printf("CheckGlobalVar found non local reference\n");fflush(stdout);
+    /* This is tha cease when speculating on var v (which contains glv).
+       being v the global var and nlv the new local var
+    */
+
+    TaggedRef nlv =  static_cast<GeVarBase*>(ev)->clone(v);
     ExtVar *varTmp = var2ExtVar(tagged2Var(oz_deref(nlv)));
     GeVarBase *gvar = static_cast<GeVarBase*>(varTmp);
     
