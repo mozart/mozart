@@ -196,14 +196,14 @@ void GenericSpace::varReflect(Reflection::VarMap &vmp, bool registerOnly) {
       Support::Symbol nn = p.copy();
       nn += Support::Symbol(s.str().c_str(),true);
       /* TODO: if var is a local representation of a global variable and we are merging two space then 
-	 put in vmp the reflection of the global variable instead of var.
+	 put in vmp the reflection of the global variable instead of var. Intersection??
        */
-      if (var->isLocal()) {
-	printf("Local only variable found during merge\n");fflush(stdout);
-	var->reflect(vmp,nn,registerOnly);
-      } else {
-	printf("GLOBAL variable found during merge\n");fflush(stdout);
+      if (var->isLocalRep()) {
+	printf("Global VAR found during merge\n");fflush(stdout);
 	var->getGlobal()->reflect(vmp,nn,registerOnly);
+      } else {
+	printf("Local var found during merge\n");fflush(stdout);
+	var->reflect(vmp,nn,registerOnly);	
       }
       printf("Iteration %d Added symbol %s\n",i,nn.toString().c_str());fflush(stdout);
     }
@@ -263,17 +263,19 @@ void GenericSpace::merge(GenericSpace *src) {
     DEREF(v,v_ptr);
     if (oz_isGeVar(v)) {
       GeVarBase *gvb = static_cast<GeVarBase*>(oz_getExtVar(v));
-      int newIndex = newVar(newVars.varImpBase(),v);
-      gvb->setIndex(newIndex);
-      
-      // ValRefector was not added from the old space then we have to add it here
-      // TODO: Implement serialization of reflector propagators.
-      gvb->ensureValReflection();
-      if (gvb->hasDomReflector())
-	gvb->ensureDomReflection();
-      
-      printf("GeSpace.cc >> updating reference var: %d new pos %d\n",i,newIndex);
-      fflush(stdout);
+      if (!gvb->isLocalRep()) {
+	int newIndex = newVar(newVars.varImpBase(),v);
+	gvb->setIndex(newIndex);
+	
+	// ValRefector was not added from the old space then we have to add it here
+	// TODO: Implement serialization of reflector propagators.
+	gvb->ensureValReflection();
+	if (gvb->hasDomReflector())
+	  gvb->ensureDomReflection();
+	
+	printf("GeSpace.cc >> updating reference var: %d new pos %d\n",i,newIndex);
+	fflush(stdout);
+      }
     } else {
       /* 
 	 Fixme: Wat shoul we put in the array of references?
