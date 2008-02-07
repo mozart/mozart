@@ -68,6 +68,11 @@ OZ_Return GeVar<VarImp, pc>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
       if(!oz_isLocalVar(extVar2Var(rgevar))){
 	if(!(rgevar->intersect(makeTaggedRef(lPtr))))
 	  return FAILED;
+	printf("Inicia deteccion de globalidad \n");fflush(stdout);
+	// store information about the local -> global relation for future merge
+	lgevar->setLocalRep(rgevar);
+	
+	printf("Termina deteccion de globalidad \n");fflush(stdout);
 	oz_bindGlobalVar2(extVar2Var(rgevar), rPtr, makeTaggedRef(lPtr));	
 	disposeS();
       }else{
