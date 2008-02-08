@@ -124,9 +124,9 @@ MAP::kbr_newResp(int start, int stop, int n, PstInContainerInterface* pstin){
 
 
 ComService::ComService(int ip, int port, int id){
-  Oz_Site *os = new Oz_Site(); 
+  OzSite *os = new OzSite(); 
   OZ_Term oz_os = OZ_extension(os); 
-  thisGSite = new Glue_SiteRep(ip, port, id, NULL, oz_os); 
+  thisGSite = new GlueSite(ip, port, id, NULL, oz_os); 
   os->setGSR(thisGSite);
 } 
 
@@ -145,9 +145,9 @@ CsSiteInterface* ComService::unmarshalCsSite(DSite* name, DssReadBuffer* const b
   int port = getInt(buf); 
   int id = getInt(buf);
 
-  Oz_Site *os = new Oz_Site(); 
+  OzSite *os = new OzSite(); 
   OZ_Term oz_os = OZ_extension(os); 
-  Glue_SiteRep * gsa = new Glue_SiteRep(ip, port, id, name,oz_os); 
+  GlueSite * gsa = new GlueSite(ip, port, id, name,oz_os); 
   os->setGSR(gsa);
   OZ_Term command=OZ_recordInit(oz_atom("new_site"),
 				oz_cons(oz_pair2(oz_int(1),
@@ -172,7 +172,7 @@ void ComService::m_gcSweep() {
 // Explicit site handeling
 void ComService::m_MsgReceived(CsSiteInterface* CS, MsgContainer* msg){
   PstInContainer *pst = NULL; 
-  Glue_SiteRep *gsr = static_cast<Glue_SiteRep*>(CS);
+  GlueSite *gsr = static_cast<GlueSite*>(CS);
 
   OZ_Term command=OZ_recordInit(oz_atom("directMsg"),
 				oz_cons(oz_pair2(oz_atom("msg"),
