@@ -87,9 +87,8 @@ void gcGlueRootsImpl()
   // incomming queue
   gcPstContainersRoot();
   
-  // Gcollect suspended connection atempts. These 
-  // suspended threads must be keept alive. 
-  gCollectGASreps();
+  // mark GlueSites' roots
+  gcGlueSiteRoots();
 
   // GCollect all the suspended operations
   gCollectSuspendedOperations();
@@ -108,6 +107,8 @@ void gcGlueFinalImpl()
   gcMediatorTableCleanUp();
 
   dss->gcDssResources();
+
+  gcGlueSiteFinal();
 
   gcPstContainersFinish();
 }

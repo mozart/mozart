@@ -69,39 +69,49 @@
 
 class GlueSite : public CsSiteInterface {
 private:
+  DSite*  dsite;           // the site's corresponding DSite
+  OZ_Term ozsite;          // the site's OzSite
+  OZ_Term faultstream;     // the site's fault stream
+
+  GlueSite* next;          // GlueSite form a linked list
+  bool      disposed;      // flag set when GlueSite must be deleted
+
   int a_ipAddress; // In network byte order
   int a_portNum; 
   int a_idNum; // ip+port+id identifies the site.
-  DSite *a_dssSite;
-  GlueSite *a_next; 
-  OZ_Term a_ozSite; 
 
   int rtt_avg;         // average rtt
   int rtt_mdev;        // median deviation of rtt
   int rtt_timeout;     // adaptive timeout for detecting tempFail
 
 public:
-  GlueSite(int ip, int port, int id, DSite*, OZ_Term);
+  GlueSite(DSite*, int ip, int port, int id);
   ~GlueSite() {}
-  void dispose(){
-    a_ozSite = (OZ_Term) 0;
-  }
-public:
-  int getIpNum() {return a_ipAddress;}
-  int getPortNum() {return a_portNum;}
-  int getIdNum() {return a_idNum;}
-  
-  DSite* m_getDssSite() {return a_dssSite;}
-  void m_setDssSite(DSite* sa) {a_dssSite = sa;}
+
+  // get DSite/OzSite
+  DSite* getDSite() const { return dsite; }
+  void setDSite(DSite* s) { dsite = s; }
+  OZ_Term getOzSite();
+
+  GlueSite* getNext() const { return next; }
+  GlueSite** getNextPtr() { return &next; }
+  bool isDisposed() const { return disposed; }
+
+  // glue-specific information
+  int getIpNum() { return a_ipAddress; }
+  int getPortNum() { return a_portNum; }
+  int getIdNum() { return a_idNum; }
+  OZ_Term m_getInfo();
+
+  // channels
   void m_setConnection(DssChannel* vc);
 
-  GlueSite *m_getNext() {return a_next;}
-  GlueSite **m_getNextPP() {return &a_next;}
-  
+  // gc  
+  void m_gcRoots();
   void m_gc();
-  OZ_Term m_getOzSite(){return a_ozSite;}
-  OZ_Term m_getInfo();
-public:
+  void m_gcFinal();
+
+  // CsSiteInterface
   virtual void    marshalCsSite( DssWriteBuffer* const buf);
   virtual void    updateCsSite( DssReadBuffer* const buf); 
   virtual void    disposeCsSite(); 
@@ -115,13 +125,14 @@ public:
 };
 
 
-extern GlueSite* site_address_representations; 
 
-extern GlueSite* thisGSite; // the gsa proper to the current process 
+extern GlueSite* thisGSite;
 
-extern int RTT_UPPERBOUND;     // the maximum rtt used to detect tempFail
+GlueSite* getGlueSites();     // to iterate on them
 
-void gCollectGASreps(); 
+void gcGlueSiteRoots();
+void gcGlueSiteFinal();
+
 
 
 void putInt(DssWriteBuffer *buf, int i);
@@ -134,11 +145,15 @@ void cleanStr(DssReadBuffer *buf, int len);
 
 #define OZ_E_SITE  4211
 
-class OzSite: public OZ_Extension
-{
+class OzSite: public OZ_Extension {
 private:
-  GlueSite *a_gSite; 
-public: // From Oz_Extension 
+  GlueSite *a_gSite;
+
+public:
+  OzSite(GlueSite* gs) : a_gSite(gs) {}
+
+  GlueSite* getGlueSite() const { return a_gSite; }
+
   virtual int           getIdV(void);
 
   virtual OZ_Extension* gCollectV(void);
@@ -155,18 +170,14 @@ public: // From Oz_Extension
   virtual OZ_Return	putFeatureV(OZ_Term,OZ_Term ) { return OZ_FAILED; }
   virtual OZ_Return     eqV(OZ_Term);
   //
-  virtual OZ_Boolean    toBePickledV() { return (OZ_FALSE); }
-  virtual void          pickleV(MarshalerBuffer *mb, GenTraverser *gt) {}
+  virtual OZ_Boolean    toBePickledV() { return (OZ_TRUE); }
+  virtual void          pickleV(MarshalerBuffer *mb, GenTraverser *gt);
   virtual OZ_Boolean    toBeMarshaledV() { return (OZ_TRUE); }
   virtual void          marshalSuspV(OZ_Term te,
 				     ByteBuffer *bs, GenTraverser *gt);
   virtual int           minNeededSpace() { return (0); }
   
   void internalMarshal(DssWriteBuffer *buf);
-  
-  
-  void setGSR(GlueSite*);
-  GlueSite* getGSR(){ return a_gSite; }
 };
 
 void OzSite_init();

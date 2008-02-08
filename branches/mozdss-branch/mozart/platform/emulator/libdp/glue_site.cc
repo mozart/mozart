@@ -26,6 +26,7 @@
 
 #include "base.hh"
 #include "pickle.hh"
+#include "cac.hh"
 #include "glue_site.hh"
 #include "glue_base.hh"
 #include "glue_buffer.hh"
@@ -33,11 +34,11 @@
 #include "pstContainer.hh"
 #include <netinet/in.h>
 
-GlueSite* site_address_representations=NULL; 
 GlueSite* thisGSite = NULL;
+GlueSite* gSiteList = NULL; 
 
-int RTT_INIT        =  5000;     // initial timeout
-int RTT_UPPERBOUND  = 30000;     // higher bound for rtt monitor
+const int RTT_INIT       =  5000;     // initial timeout
+const int RTT_UPPERBOUND = 30000;     // higher bound for rtt monitor
 
 // UTILS 
 
@@ -56,31 +57,30 @@ void cleanStr(DssReadBuffer *buf, int len){
     buf->getByte(); 
 }
 
-// GLUE_SITE_ADDRESS methods
 
 
-GlueSite::GlueSite(int ip, int port, int id, DSite *name, OZ_Term ozSite):
+/****************************** GlueSite ******************************/
+
+GlueSite::GlueSite(DSite* site, int ip, int port, int id) :
+  dsite(site),
+  ozsite(makeTaggedNULL()),
+  faultstream(makeTaggedNULL()),
+  next(gSiteList),
+  disposed(false),
   a_ipAddress(ip),
   a_portNum(port),
   a_idNum(id),
-  a_dssSite(name),
-  a_next(site_address_representations),
-  a_ozSite(ozSite),
   rtt_avg(0),
   rtt_mdev(0),
   rtt_timeout(RTT_INIT)
 {
-  site_address_representations = this;
+  gSiteList = this;
 }
 
-void GlueSite::m_gc(){
-  if (a_ozSite) oz_gCollectTerm(a_ozSite, a_ozSite);
-}
-
-void
-GlueSite::m_setConnection(DssChannel* vc) {
-  // give the connection to the DSite, and monitor the connection
-  a_dssSite->m_connectionEstablished(vc);
+// create the OzSite lazily
+OZ_Term GlueSite::getOzSite() {
+  if (!ozsite) ozsite = OZ_extension(new OzSite(this));
+  return ozsite;
 }
 
 OZ_Term GlueSite::m_getInfo() {
@@ -99,14 +99,38 @@ OZ_Term GlueSite::m_getInfo() {
 		       oz_nil()))));
 }
 
+void
+GlueSite::m_setConnection(DssChannel* vc) {
+  // give the connection to the DSite, and monitor the connection
+  dsite->m_connectionEstablished(vc);
+}
+
+void
+GlueSite::m_gcRoots() {
+  oz_gCollectTerm(faultstream, faultstream);
+}
+
+void
+GlueSite::m_gc() {
+  oz_gCollectTerm(ozsite, ozsite);     // update ref to OzSite
+  dsite->m_makeGCpreps();              // mark DSite
+}
+
+void
+GlueSite::m_gcFinal() {
+  if (isGCMarkedTerm(ozsite)) {
+    oz_gCollectTerm(ozsite, ozsite);     // update ref to OzSite
+  } else {
+    ozsite = 0;
+  }
+}
+
 void    
 GlueSite::marshalCsSite( DssWriteBuffer* const buf){
   putInt(buf, a_ipAddress); 
   putInt(buf, a_portNum); 
   putInt(buf, a_idNum);
 }
-
-
 
 void    
 GlueSite::updateCsSite( DssReadBuffer* const buf){
@@ -116,23 +140,24 @@ GlueSite::updateCsSite( DssReadBuffer* const buf){
   (void) getInt(buf);
   (void) getInt(buf);
 }
+
 void    
 GlueSite::disposeCsSite(){
-  printf("we are deleted\n"); 
+  disposed = true;          // will be deleted in gcGlueSiteFinal()
 }
 
 void    
 GlueSite::working() {
   rtt_avg = 0;                              // reset rtt parameters
   rtt_timeout = RTT_INIT;
-  a_dssSite->m_monitorRTT(rtt_timeout);
+  dsite->m_monitorRTT(rtt_timeout);
 }
 
 void
 GlueSite::reportRTT(int rtt) {
-  switch (a_dssSite->m_getFaultState()) {
+  switch (dsite->m_getFaultState()) {
   case DSite_TMP:
-    a_dssSite->m_stateChange(DSite_OK);
+    dsite->m_stateChange(DSite_OK);
     // fall through
   case DSite_OK:
     if (rtt > RTT_UPPERBOUND) rtt = RTT_UPPERBOUND;
@@ -145,7 +170,7 @@ GlueSite::reportRTT(int rtt) {
       rtt_mdev = rtt;
     }
     rtt_timeout = rtt_avg + rtt_mdev;
-    a_dssSite->m_monitorRTT(rtt_timeout);
+    dsite->m_monitorRTT(rtt_timeout);
     // fall through
   default:
     break;     // (stop monitoring when permfailed)
@@ -154,48 +179,54 @@ GlueSite::reportRTT(int rtt) {
 
 void
 GlueSite::reportTimeout(int timeout) {
-  switch (a_dssSite->m_getFaultState()) {
-  case DSite_OK:  a_dssSite->m_stateChange(DSite_TMP);
-  case DSite_TMP: a_dssSite->m_monitorRTT(rtt_timeout);
+  switch (dsite->m_getFaultState()) {
+  case DSite_OK:  dsite->m_stateChange(DSite_TMP);
+  case DSite_TMP: dsite->m_monitorRTT(rtt_timeout);
   default: break;     // (stop monitoring when permfailed)
   }
 }
 
 DssChannel *    
 GlueSite::establishConnection(){
-  OZ_Term command;
-  command = OZ_recordInit(oz_atom("connect"),
-			  oz_cons(oz_pair2(oz_int(1),this->m_getOzSite()),
-				  oz_nil()));
+  OZ_Term command = OZ_recordInit(oz_atom("connect"),
+				  oz_cons(oz_pair2(oz_int(1), getOzSite()),
+					  oz_nil()));
   doPortSend(tagged2Port(g_connectPort), command, NULL);  
   // return NULL to indicate that the operation is assynchronous
   return NULL; 
 }
 
-
 void     
-GlueSite::closeConnection(DssChannel* con){}
+GlueSite::closeConnection(DssChannel* con) {
+  delete con;
+}
 
 
 
+GlueSite* getGlueSites() {
+  return gSiteList;
+}
 
-void gCollectGASreps(){
-  GlueSite** ptr = &site_address_representations; 
-  while((*ptr) != NULL)
-    {
-      GlueSite *tmp = *ptr; 
-      // raph: we must keep the representation of this site!
-      if (tmp != thisGSite && tmp->m_getOzSite() == (OZ_Term) 0)
-	{
-	  *ptr = tmp->m_getNext(); 
-	  delete tmp; 
-	}
-      else
-	{
-	  tmp->m_gc();
-	  ptr = tmp->m_getNextPP(); 
-	}
+void gcGlueSiteRoots() {
+  GlueSite* site = gSiteList;
+  while (site) {
+    site->m_gcRoots();
+    site = site->getNext();
+  }
+}
+
+void gcGlueSiteFinal() {
+  GlueSite** siteptr = &gSiteList;
+  GlueSite* site;
+  while (site = *siteptr) {
+    if (site->isDisposed()) {
+      *siteptr = site->getNext();
+      delete site;
+    } else {
+      site->m_gcFinal();
+      siteptr = site->getNextPtr();
     }
+  }
 }
 
 
@@ -211,14 +242,7 @@ OZ_Term OzSite::typeV(void) {
 }
 
 OZ_Return OzSite::eqV(OZ_Term t) {
-  if (OZ_isExtension(t)) {
-    OZ_Extension *e = OZ_getExtension(t);
-    if (e->getIdV() == OZ_E_SITE) {
-      OzSite *w = static_cast<OzSite *>(e);
-      if (w->a_gSite == a_gSite)
-	return PROCEED;
-    }
-  }
+  // two different OzSites represent different sites
   return FAILED;
 }
 
@@ -234,24 +258,20 @@ OZ_Extension *OzSite::gCollectV(void) {
   return new OzSite(*this);
 }
 
+void OzSite::gCollectRecurseV(void) {
+  a_gSite->m_gc();
+}
+
 OZ_Extension *OzSite::sCloneV(void) {
-   printf("Should not clone address sites DSite!!\n"); 
    Assert(0); 
    return new OzSite(*this);
 }
 
-void OzSite::gCollectRecurseV(void) 
-{
-}
-
 void OzSite::sCloneRecurseV(void) {}
 
-void  OzSite::setGSR(GlueSite* gsa){
-  a_gSite = gsa;
-}
-
-OZ_Boolean toBePickledV() { return (OZ_TRUE); }
-void pickleV(MarshalerBuffer *bs, GenTraverser *gt) {
+void OzSite::pickleV(MarshalerBuffer *bs, GenTraverser *gt) {
+  printf("site pickling not implemented yet\n");
+  Assert(0);
   // This should only be called when we explicit put a site reference into 
   // a pickle save. 
   
@@ -265,7 +285,7 @@ void pickleV(MarshalerBuffer *bs, GenTraverser *gt) {
 // a thing. It is completly done by the DSS. 
 void OzSite::marshalSuspV(OZ_Term te, ByteBuffer *bs, GenTraverser *gt) {
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs);
-  (a_gSite->m_getDssSite())->m_marshalDSite(gwb);
+  (a_gSite->getDSite())->m_marshalDSite(gwb);
 }
 
 
@@ -283,7 +303,7 @@ OZ_Term suspUnmarshalOzSite(ByteBuffer *mb, Builder*,
   GlueReadBuffer *grb = static_cast<GlueReadBuffer *>(mb); 
   DSite *ds = glue_com_connection->a_msgnLayer->m_UnmarshalDSite(grb); 
   GlueSite *gsa = static_cast< GlueSite *>(ds->m_getCsSiteRep());
-  return gsa->m_getOzSite();
+  return gsa->getOzSite();
 }
 
 static
