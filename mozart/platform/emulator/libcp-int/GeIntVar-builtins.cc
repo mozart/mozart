@@ -76,7 +76,7 @@ OZ_BI_end
 
 OZ_BI_define(int_sup,0,1)
 {
-  OZ_RETURN_INT(Int::Limits::int_max);
+  OZ_RETURN_INT(Int::Limits::max);
 } 
 OZ_BI_end
 
@@ -88,7 +88,7 @@ OZ_BI_end
 
 OZ_BI_define(int_inf,0,1)
 {
-  OZ_RETURN_INT(Int::Limits::int_min);
+  OZ_RETURN_INT(Int::Limits::min);
 } 
 OZ_BI_end
 
@@ -222,7 +222,7 @@ OZ_BI_define(int_nextSmaller,2,1)
   int Val = OZ_intToC(OZ_in(1));
   IntVar Tmp = get_IntVar(OZ_in(0));
   IntVarRanges TmpRange(Tmp);
-  int Min = Gecode::Int::Limits::int_max;
+  int Min = Gecode::Int::Limits::max;
   if(Tmp.min() >= Val)
     return OZ_typeError(0,"Input value is smaller that domain of input variable");
   for(;TmpRange(); ++TmpRange) {

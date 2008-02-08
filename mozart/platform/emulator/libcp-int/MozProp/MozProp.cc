@@ -30,11 +30,11 @@
 
 //--------------------------------------------------------------------------------
 Gecode::ExecStatus WatchMaxProp::propagate(Gecode::Space *s, Gecode::ModEventDelta) {
-  if(x0.max() <= x2 && x0.min() >= Gecode::Int::Limits::int_min) {
+  if(x0.max() <= x2 && x0.min() >= Gecode::Int::Limits::min) {
     GECODE_ME_CHECK(x1.eq(s,0));
     return Gecode::ES_SUBSUMED(this,s);
   }
-  if(x0.min() <= Gecode::Int::Limits::int_max && x0.min() >= x2+1) {
+  if(x0.min() <= Gecode::Int::Limits::max && x0.min() >= x2+1) {
     GECODE_ME_CHECK(x1.eq(s,1));
     return Gecode::ES_SUBSUMED(this,s);
   }
@@ -42,11 +42,11 @@ Gecode::ExecStatus WatchMaxProp::propagate(Gecode::Space *s, Gecode::ModEventDel
 }
 
 Gecode::ExecStatus WatchMinProp::propagate(Gecode::Space *s, Gecode::ModEventDelta) {
-  if(x0.max() <= getX2() && x0.min() >= Gecode::Int::Limits::int_min) {
+  if(x0.max() <= getX2() && x0.min() >= Gecode::Int::Limits::min) {
     GECODE_ME_CHECK(x1.eq(s,1));
     return Gecode::ES_SUBSUMED(this,s);
   }
-  if(x0.min() >= getX2() && x0.max() <= Gecode::Int::Limits::int_max) {
+  if(x0.min() >= getX2() && x0.max() <= Gecode::Int::Limits::max) {
     GECODE_ME_CHECK(x1.eq(s,0));
     return Gecode::ES_SUBSUMED(this,s);
   }
