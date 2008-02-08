@@ -90,13 +90,13 @@ int dssIsCons(OZ_Term list, OZ_Term *hd, OZ_Term *tl) {
 }
 
 DSite *ozSite2DssSite(OZ_Term site){
-  Oz_Site *oz_site = static_cast<Oz_Site*>(OZ_getExtension(OZ_deref(site)));
-  Glue_SiteRep *gsr = oz_site->getGSR();
+  OzSite *oz_site = static_cast<OzSite*>(OZ_getExtension(OZ_deref(site)));
+  GlueSite *gsr = oz_site->getGSR();
   return gsr->m_getDssSite();
 }
 
-Glue_SiteRep *ozSite2Glue_SiteRep(OZ_Term site){
-  Oz_Site *oz_site = static_cast<Oz_Site*>(OZ_getExtension(OZ_deref(site)));
+GlueSite *ozSite2GlueSite(OZ_Term site){
+  OzSite *oz_site = static_cast<OzSite*>(OZ_getExtension(OZ_deref(site)));
   return oz_site->getGSR();
 }
 
@@ -177,9 +177,9 @@ OZ_BI_define(BIhandoverRoute,2,0) {
     Assert(tmpNum > 0);
 
     /*
-    Oz_Site *oz_site =
-      static_cast<Oz_Site*>(OZ_getExtension(OZ_deref(hd)));
-    Glue_SiteRep *gsa = oz_site->getGSR();
+    OzSite *oz_site =
+      static_cast<OzSite*>(OZ_getExtension(OZ_deref(hd)));
+    GlueSite *gsa = oz_site->getGSR();
     gsa->m_showRId();
     */
 
@@ -200,7 +200,7 @@ OZ_BI_define(BIsetConnection,2,0){
   if(!OZ_isExtension(site))return OZ_typeError(0, "site");
   OZ_Extension *site_ext=OZ_getExtension(site);
   if(site_ext->getIdV()!=OZ_E_SITE)return OZ_typeError(0, "site");
-  Glue_SiteRep *gsr=((Oz_Site *)site_ext)->getGSR();
+  GlueSite *gsr=((OzSite *)site_ext)->getGSR();
   // encapsulating the filedescriptor in a Transport_Channel object. 
   // It can now be used freely from the DSS, using the virtual 
   // functions defined in DssTransportChannel and implemented
@@ -237,7 +237,7 @@ OZ_BI_define(BIconnFailed,2,0) {
   OZ_Return ret = getRecordField(requestor, "req", Cid);
   if (ret != OZ_ENTAILED) return ret;
   
-  Glue_SiteRep *sa = reinterpret_cast<Glue_SiteRep*>(Cid);
+  GlueSite *sa = reinterpret_cast<GlueSite*>(Cid);
   
   if (oz_eq(reason, oz_atom("perm"))) {
     sa->m_getDssSite()->m_stateChange(DSite_GLOBAL_PRM);
@@ -991,7 +991,7 @@ OZ_BI_define(BIsendMsgToSite,2,0){
 OZ_BI_define(BIgetAllSites,0,1){
    OZ_Term siteLst = oz_nil();
 
-   for(Glue_SiteRep* cur = site_address_representations; 
+   for(GlueSite* cur = site_address_representations; 
        cur != NULL;  
        cur = cur->m_getNext() ) {
      siteLst = oz_cons(cur->m_getOzSite(), siteLst); 
@@ -1004,7 +1004,7 @@ OZ_BI_define(BIgetAllSites,0,1){
 OZ_BI_define(BIgetConSites,0,1){
   OZ_Term siteLst = oz_nil();
   
-  for(Glue_SiteRep* cur = site_address_representations; 
+  for(GlueSite* cur = site_address_representations; 
       cur != NULL;  
       cur = cur->m_getNext() ) {
     if(((cur->m_getDssSite()->m_getChannelStatus() & CS_COMMUNICATING) == CS_COMMUNICATING) 
@@ -1064,9 +1064,9 @@ OZ_BI_define(BIgetSiteInfo,1,1){
   }
   else return FAILED;
 
-  Oz_Site *oz_site =
-    static_cast<Oz_Site*>(OZ_getExtension(OZ_deref(tag_site)));
-  Glue_SiteRep *gsa = oz_site->getGSR();
+  OzSite *oz_site =
+    static_cast<OzSite*>(OZ_getExtension(OZ_deref(tag_site)));
+  GlueSite *gsa = oz_site->getGSR();
   OZ_RETURN(gsa->m_getInfo());
 }OZ_BI_end
 

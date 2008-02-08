@@ -3,7 +3,7 @@
  *    Erik Klintskog (erik@sics.se)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Raphael Collet (raph@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Erik Klintskog, 2002
@@ -32,13 +32,48 @@
 #include "base.hh"
 #include "value.hh"
 
-class Glue_SiteRep:public CsSiteInterface{
+/*
+  The classes GlueSite and OzSite provide objects to interface DSite
+  objects from the DSS.  OzSite objects are Oz chunks, they simply
+  reflect DSS sites in the language.  GlueSite implements the
+  interface CsSiteInterface for the DSS, and provides specific data to
+  connect to the site.  GlueSite also implements a tempFail failure
+  detector, and maintains a fault stream for each site.
+
+			     OzSite    FaultStream
+			         ^      ^
+				 |      |
+				 v      |
+				 GlueSite (CsSiteInterface)
+				    ^
+				    |
+				    v
+				  DSite
+
+  - TempFail detection: GlueSite implements an adaptive timeout for
+  the round-trip times measured in the DSS.  It maintains a round-trip
+  time average and median, and modifies the DSS timeout accordingly.
+  This technique relieves the user from providing an ad hoc timeout
+  value.
+
+  - Memory management: when marked, an OzSite forces its corresponding
+  GlueSite to mark its DSite in the DSS.  The DSS also marks the
+  DSites it needs, then deletes the unused DSites and dispose their
+  corresponding GlueSite.  By design, the disposed GlueSites are no
+  longer referenced from anywhere.  A GlueSite is free to drop its
+  corresponding OzSite if the latter is not marked by the garbage
+  collector; a new OzSite can be created when needed (without any
+  visible inconsistency).
+
+ */
+
+class GlueSite : public CsSiteInterface {
 private:
   int a_ipAddress; // In network byte order
   int a_portNum; 
   int a_idNum; // ip+port+id identifies the site.
   DSite *a_dssSite;
-  Glue_SiteRep *a_next; 
+  GlueSite *a_next; 
   OZ_Term a_ozSite; 
 
   int rtt_avg;         // average rtt
@@ -46,8 +81,8 @@ private:
   int rtt_timeout;     // adaptive timeout for detecting tempFail
 
 public:
-  Glue_SiteRep(int ip, int port, int id, DSite*, OZ_Term);
-  ~Glue_SiteRep() {}
+  GlueSite(int ip, int port, int id, DSite*, OZ_Term);
+  ~GlueSite() {}
   void dispose(){
     a_ozSite = (OZ_Term) 0;
   }
@@ -60,8 +95,8 @@ public:
   void m_setDssSite(DSite* sa) {a_dssSite = sa;}
   void m_setConnection(DssChannel* vc);
 
-  Glue_SiteRep *m_getNext() {return a_next;}
-  Glue_SiteRep **m_getNextPP() {return &a_next;}
+  GlueSite *m_getNext() {return a_next;}
+  GlueSite **m_getNextPP() {return &a_next;}
   
   void m_gc();
   OZ_Term m_getOzSite(){return a_ozSite;}
@@ -80,9 +115,9 @@ public:
 };
 
 
-extern Glue_SiteRep* site_address_representations; 
+extern GlueSite* site_address_representations; 
 
-extern Glue_SiteRep* thisGSite; // the gsa proper to the current process 
+extern GlueSite* thisGSite; // the gsa proper to the current process 
 
 extern int RTT_UPPERBOUND;     // the maximum rtt used to detect tempFail
 
@@ -99,10 +134,10 @@ void cleanStr(DssReadBuffer *buf, int len);
 
 #define OZ_E_SITE  4211
 
-class Oz_Site: public OZ_Extension
+class OzSite: public OZ_Extension
 {
 private:
-  Glue_SiteRep *a_gSite; 
+  GlueSite *a_gSite; 
 public: // From Oz_Extension 
   virtual int           getIdV(void);
 
@@ -130,8 +165,8 @@ public: // From Oz_Extension
   void internalMarshal(DssWriteBuffer *buf);
   
   
-  void setGSR(Glue_SiteRep*);
-  Glue_SiteRep* getGSR(){ return a_gSite; }
+  void setGSR(GlueSite*);
+  GlueSite* getGSR(){ return a_gSite; }
 };
 
 void OzSite_init();
