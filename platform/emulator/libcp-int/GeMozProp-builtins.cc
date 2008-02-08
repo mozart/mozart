@@ -242,14 +242,14 @@ OZ_BI_define(int_sumCN,4,0)
 
   DeclareGeIntVar(3,Res,sp);
 
-  IntVarArray Arreglo(sp,tamD, Int::Limits::int_min,Int::Limits::int_max);
+  IntVarArray Arreglo(sp,tamD, Int::Limits::min,Int::Limits::max);
 
   linear(sp,x0,Arreglo,relType,Res,ICL_VAL);
 
   for(int i=0;i<tamD;i++) {
     int tamD2;
     OZ_Term *Vec2 = vectorToOzTerms2(Vec[i],tamD2);
-    IntVarArray ArregloTmp(sp,tamD2,Int::Limits::int_min,Int::Limits::int_max);
+    IntVarArray ArregloTmp(sp,tamD2,Int::Limits::min,Int::Limits::max);
     rel(sp,Arreglo[i],IRT_EQ,ArregloTmp[tamD2-1],ICL_VAL);
     IntVar ValVec2;
     OZ_Term val = Vec2[0];

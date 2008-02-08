@@ -43,18 +43,18 @@ Bool GeIntVar::validV(OZ_Term val) {
   //   FD.sup = 134 217 726
   //   FD.inf = 0
   // In Gecode:
-  //   Gecode::Limits::Int::int_max
-  //   Gecode::Limits::Int::int_min
+  //   Gecode::Limits::Int::max
+  //   Gecode::Limits::Int::min
   if (OZ_isSmallInt(val)) {
     int n = OZ_intToC(val);
-    if(n >= Int::Limits::int_min &&
-       n <= Int::Limits::int_max)
+    if(n >= Int::Limits::min &&
+       n <= Int::Limits::max)
       {
 	//printf("GeIntVar::validV\n");fflush(stdout);
       return IntView(getIntVarInfo()).in(n);
       }
     else {
-      GEOZ_DEBUG_PRINT(("Invalid integer.\n All domain ranges must be between %d and %d",Int::Limits::int_min,Int::Limits::int_max));
+      GEOZ_DEBUG_PRINT(("Invalid integer.\n All domain ranges must be between %d and %d",Int::Limits::min,Int::Limits::max));
       return false;
     }
   }
@@ -104,7 +104,7 @@ bool GeIntVar::In(TaggedRef lx) {
 TaggedRef GeIntVar::clone(TaggedRef v) {
   Assert(OZ_isGeIntVar(v));
   
-  OZ_Term lv = new_GeIntVar(IntSet(Int::Limits::int_min,Int::Limits::int_max));
+  OZ_Term lv = new_GeIntVar(IntSet(Int::Limits::min,Int::Limits::max));
   get_GeIntVar(v,false)->intersect(lv);
   return lv;
 }
@@ -127,8 +127,8 @@ bool GeIntVar::hasSameDomain(TaggedRef v) {
 
 inline
 TaggedRef GeIntVar::newVar(void) {
-  return new_GeIntVar(IntSet(Int::Limits::int_min,
-			     Int::Limits::int_max));
+  return new_GeIntVar(IntSet(Int::Limits::min,
+			     Int::Limits::max));
 }
 
 
