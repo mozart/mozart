@@ -36,14 +36,13 @@
 
 #include "cac.hh"
 #include "dss_object.hh"
-#include "glue_siteRepresentation.hh"
+#include "glue_site.hh"
 #include "glue_buffer.hh"
 #include "os.hh"
 #include "glue_base.hh"
 #include "glue_mediators.hh"
 #include "glue_interface.hh"
 #include "glue_entityOpImpl.hh"
-#include "glue_ozSite.hh"
 #include "glue_suspendedThreads.hh"
 #include "glue_ioFactory.hh"
 

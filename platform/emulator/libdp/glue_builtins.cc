@@ -37,13 +37,12 @@
 #include "glue_tables.hh"
 #include "glue_utils.hh"
 #include "engine_interface.hh"
-#include "glue_siteRepresentation.hh"
+#include "glue_site.hh"
 #include "glue_buffer.hh"
 #include "glue_base.hh"
 #include "glue_mediators.hh"
 #include "glue_faults.hh"
 #include "glue_marshal.hh"
-#include "glue_ozSite.hh" // used for Oz_Site 
 #include "pstContainer.hh"
 
 #include "glue_ioFactory.hh"
