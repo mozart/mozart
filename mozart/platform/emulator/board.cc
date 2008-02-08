@@ -128,10 +128,12 @@ Board::Board(Board * p)
   rootVar = makeTaggedRef(newTaggedOptVar(optVar));
   setGCStep(oz_getGCStep());
   lpq.init();
+  // If something goes wrong check here
   if(p->gespace != NULL) {
     gespace = new GenericSpace(this);
     if(p->getLateThread()) {
       //ensureLateThread();
+      lateThread = NULL;
     } else
       lateThread = NULL;
   } else {
