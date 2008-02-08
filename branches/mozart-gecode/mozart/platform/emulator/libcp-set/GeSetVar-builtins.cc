@@ -158,7 +158,7 @@ OZ_BI_end
 
 OZ_BI_define(set_sup,0,1)
 {
-  OZ_RETURN_INT(Set::Limits::int_max);
+  OZ_RETURN_INT(Set::Limits::max);
 } 
 OZ_BI_end
 
@@ -170,7 +170,7 @@ OZ_BI_end
 
 OZ_BI_define(set_inf,0,1)
 {
-  OZ_RETURN_INT(Set::Limits::int_min);
+  OZ_RETURN_INT(Set::Limits::min);
 } 
 OZ_BI_end
 
