@@ -1016,13 +1016,13 @@ dnl
 dnl Checks whether pkg-config gecode module exists. 
 dnl ------------------------------------------------------------------
 AC_DEFUN([AC_GECODE_PKGCONFIG],
-	[AC_MSG_CHECKING(for gecode 2.0.0)
-	 if pkg-config --exists "gecode = 2.0.0"; then
+	[AC_MSG_CHECKING(for gecode 2.0.1)
+	 if pkg-config --exists "gecode = 2.0.1"; then
     	 AC_MSG_RESULT(["yes"])
 	 else
 	     AC_MSG_RESULT(["no"])
     	     AC_MSG_ERROR([
-The Generic Constraint Development Environment version 2.0.0 is required to
+The Generic Constraint Development Environment version 2.0.1 is required to
 build the system. It can be retrieved from:
 
         http://www.gecode.org/
