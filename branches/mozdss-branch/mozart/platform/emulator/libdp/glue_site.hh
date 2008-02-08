@@ -165,13 +165,8 @@ public:
   virtual OZ_Term       printLongV(int depth = 10, int offset = 0);
   virtual OZ_Term       typeV(void);
   virtual OZ_Boolean    isChunkV(void) { return OZ_TRUE; }
-  virtual OZ_Term       getFeatureV(OZ_Term){;}
-  virtual OZ_Return	getFeatureV(OZ_Term,OZ_Term&) { return OZ_FAILED; }
-  virtual OZ_Return	putFeatureV(OZ_Term,OZ_Term ) { return OZ_FAILED; }
-  virtual OZ_Return     eqV(OZ_Term);
+  virtual OZ_Return	getFeatureV(OZ_Term,OZ_Term&);
   //
-  virtual OZ_Boolean    toBePickledV() { return (OZ_TRUE); }
-  virtual void          pickleV(MarshalerBuffer *mb, GenTraverser *gt);
   virtual OZ_Boolean    toBeMarshaledV() { return (OZ_TRUE); }
   virtual void          marshalSuspV(OZ_Term te,
 				     ByteBuffer *bs, GenTraverser *gt);

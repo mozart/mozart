@@ -241,11 +241,6 @@ OZ_Term OzSite::typeV(void) {
   return OZ_atom("site");
 }
 
-OZ_Return OzSite::eqV(OZ_Term t) {
-  // two different OzSites represent different sites
-  return FAILED;
-}
-
 OZ_Term OzSite::printV(int depth) {
   return OZ_atom("<site>");
 }
@@ -263,21 +258,21 @@ void OzSite::gCollectRecurseV(void) {
 }
 
 OZ_Extension *OzSite::sCloneV(void) {
-   Assert(0); 
-   return new OzSite(*this);
+  Assert(0); 
+  return new OzSite(*this);
 }
 
 void OzSite::sCloneRecurseV(void) {}
 
-void OzSite::pickleV(MarshalerBuffer *bs, GenTraverser *gt) {
-  printf("site pickling not implemented yet\n");
-  Assert(0);
-  // This should only be called when we explicit put a site reference into 
-  // a pickle save. 
-  
-  // call the DSite and ask for serialization... 
-  
+OZ_Return OzSite::getFeatureV(OZ_Term feat, OZ_Term& value) {
+  Assert(feat == oz_deref(feat));
+  if (feat == AtomInfo) {
+    value = a_gSite->m_getInfo();
+    return PROCEED;
+  }
+  return OZ_FAILED;
 }
+
 
 
 // The idea goes as follows. The Oz-object calls the DSS object that will 
