@@ -462,11 +462,11 @@ public:
 
 inline
 void checkGlobalVar(OZ_Term v) {
-  printf("Called checkGlobalVar\n");fflush(stdout);
+  //- printf("Called checkGlobalVar\n");fflush(stdout);
   Assert(oz_isGeVar(v));
   ExtVar *ev = oz_getExtVar(oz_deref(v));
   if (!oz_isLocalVar(ev)) {
-    printf("CheckGlobalVar found non local reference\n");fflush(stdout);
+    //- printf("CheckGlobalVar found non local reference\n");fflush(stdout);
     /* This is tha cease when speculating on var v (which contains glv).
        being v the global var and nlv the new local var
     */

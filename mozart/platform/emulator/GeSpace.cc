@@ -61,39 +61,6 @@ VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share)
   }
 }
 
-/*
-void VarRefArray::setRoot(OZ_Term v) {
-  int sz;
-
-  printf("Called setRoot\n");fflush(stdout);
-  if(OZ_isCons(v)) {
-    printf("setRoot - is a list\n");fflush(stdout);
-    sz = OZ_length(v);
-    for(int i=0; OZ_isCons(v); v=OZ_tail(v)) {
-      printf("setRoot - element\n");fflush(stdout);
-      Assert(oz_isGeVar(OZ_head(v)));
-    }
-  } else if(OZ_isTuple(v)) {
-    printf("setRoot - is a tuple\n");fflush(stdout);
-    sz=OZ_width(v);
-    for(int i=0; i < sz; i++) {	
-      printf("setRoot - element\n");fflush(stdout);
-      Assert(oz_isGeVar(OZ_getArg(v,i)));
-	     //OZ_Term _tmp = OZ_getArg(v,i);
-	     //_array[i] = OZ_intToC(_tmp);
-    }
-  } else {
-    printf("setRoot - is a record\n");fflush(stdout);        
-    assert(OZ_isRecord(v));
-    OZ_Term al = OZ_arityList(v);
-    sz = OZ_width(v);		
-    for(int i = 0; OZ_isCons(al); al=OZ_tail(al))	
-      printf("setRoot - element\n");fflush(stdout);
-     Assert(oz_isGeVar(OZ_subtree(v,OZ_head(al))));
-  }
-  
-}
-*/
 int GenericSpace::gscounter = 0;
 
 GenericSpace::GenericSpace(Board* b) 
@@ -182,7 +149,7 @@ void GenericSpace::varReflect(Reflection::VarMap &vmp, bool registerOnly) {
 
   // TODO: create a prefix for this generic space
 
-  printf("Called varReflect on %p with registerOnly set to %d\n",this,registerOnly);
+  //- printf("Called varReflect on %p with registerOnly set to %d\n",this,registerOnly);
   Support::Symbol p;
   for (int i=0; i<vars.getSize(); i++) {
     OZ_Term t =  *vars.getRef(i);
@@ -199,19 +166,19 @@ void GenericSpace::varReflect(Reflection::VarMap &vmp, bool registerOnly) {
 	 put in vmp the reflection of the global variable instead of var. Intersection??
        */
       if (var->isLocalRep()) {
-	printf("Global VAR found during merge\n");fflush(stdout);
+	//- printf("Global VAR found during merge\n");fflush(stdout);
 	var->getGlobal()->reflect(vmp,nn,registerOnly);
       } else {
-	printf("Local var found during merge\n");fflush(stdout);
+	//- printf("Local var found during merge\n");fflush(stdout);
 	var->reflect(vmp,nn,registerOnly);	
       }
-      printf("Iteration %d Added symbol %s\n",i,nn.toString().c_str());fflush(stdout);
+      //- printf("Iteration %d Added symbol %s\n",i,nn.toString().c_str());fflush(stdout);
     }
   }
 }
 
 void GenericSpace::merge(GenericSpace *src) {
-  printf("GeSpace.cc >> called space merge current number of prop %d\n",propagators());fflush(stdout);
+  //- printf("GeSpace.cc >> called space merge current number of prop %d\n",propagators());fflush(stdout);
 
   // Extract variables from src and fill vm
   Reflection::VarMap svm;
@@ -221,7 +188,7 @@ void GenericSpace::merge(GenericSpace *src) {
   
   Reflection::VarMap tvm;
 
-  printf("GeSpace.cc >> finished VarMap fill\n");fflush(stdout);
+  //- printf("GeSpace.cc >> finished VarMap fill\n");fflush(stdout);
   
   Reflection::Unreflector d(this, tvm);
   Reflection::VarMapIter vmi(svm);
@@ -234,27 +201,27 @@ void GenericSpace::merge(GenericSpace *src) {
 	  // create a new variable in target space
 	  d.var(vmi.spec());
 	} catch (Reflection::ReflectionException e) {
-	   printf("unknown exception while creating VARIABLE\n");fflush(stdout);
+	  //- printf("unknown exception while creating VARIABLE\n");fflush(stdout);
 	}
       }
 	try {
 	  d.post(s);
 	} catch (Reflection::ReflectionException e) {
-	   printf("unknown exception while creating ACTOR\n");fflush(stdout);
+	  //- printf("unknown exception while creating ACTOR\n");fflush(stdout);
 	}
     } catch (Reflection::ReflectionException e) {
-      printf("FIXME!!: maybe a reflection actor\n");fflush(stdout);
+      //- printf("FIXME!!: maybe a reflection actor\n");fflush(stdout);
     }
-    printf("Iteration on actor spec\n");fflush(stdout);
+    //- printf("Iteration on actor spec\n");fflush(stdout);
   }
-  printf("GeSpace.cc >> finished variable and actor creation\n");fflush(stdout);
+  //- printf("GeSpace.cc >> finished variable and actor creation\n");fflush(stdout);
   
   // register the variable in vars array
   /*
     Optimization: this can be done in the loop above just after calling deserializer
     to create the variable.
    */
-  printf("GeSpace.cc >> registering new var in the target space\n");fflush(stdout);
+  //- printf("GeSpace.cc >> registering new var in the target space\n");fflush(stdout);
   Reflection::VarMapIter newVars(svm);
   Assert(src->getVarsSize() == svm.size());
   
@@ -273,16 +240,16 @@ void GenericSpace::merge(GenericSpace *src) {
 	if (gvb->hasDomReflector())
 	  gvb->ensureDomReflection();
 	
-	printf("GeSpace.cc >> updating reference var: %d new pos %d\n",i,newIndex);
-	fflush(stdout);
+	//- printf("GeSpace.cc >> updating reference var: %d new pos %d\n",i,newIndex);
+	//- fflush(stdout);
       }
     } else {
       /* 
 	 Fixme: Wat shoul we put in the array of references?
 	 Maybe copy the reference in src and put null in vars is enough
       */
-      printf("GeSpace.cc >> FIXME!! not updating reference var was det.\n");
-      fflush(stdout);
+      //- printf("GeSpace.cc >> FIXME!! not updating reference var was det.\n");
+      //- fflush(stdout);
     }
     
   }
@@ -379,7 +346,7 @@ void gCollectGeSpaces() {
   printf("collecting memory: %d\n",geAlloc);fflush(stdout);
   */
   //printf("Before collect there are %d generic space in memory\n",GenericSpace::gscounter);
-  fflush(stdout);
+  //fflush(stdout);
   //  printf("collecting memory used by generic spaces\n");fflush(stdout);
   GenericSpace* cur = GeSpaceCollectList;
   unsigned int i = 0;
@@ -399,5 +366,5 @@ void gCollectGeSpaces() {
   }
   //printf("collected memory for %d of %d spaces\n",i,j);
   //printf("there are %d generic space in memory\n",GenericSpace::gscounter);
-  fflush(stdout);
+  //fflush(stdout);
 }
