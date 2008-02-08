@@ -123,11 +123,8 @@ MAP::kbr_newResp(int start, int stop, int n, PstInContainerInterface* pstin){
 
 
 
-ComService::ComService(int ip, int port, int id){
-  OzSite *os = new OzSite(); 
-  OZ_Term oz_os = OZ_extension(os); 
-  thisGSite = new GlueSite(ip, port, id, NULL, oz_os); 
-  os->setGSR(thisGSite);
+ComService::ComService(int ip, int port, int id) {
+  thisGSite = new GlueSite(NULL, ip, port, id);
 } 
 
 
@@ -140,27 +137,24 @@ void ComService::closeAnonConnection(DssChannel* con){
 // Create a SiteAddress object from the representation found in 
 // the readbuffer. Connect the new object to the passed DssSite
 // object. 
-CsSiteInterface* ComService::unmarshalCsSite(DSite* name, DssReadBuffer* const buf){
-  int ip = getInt(buf); 
-  int port = getInt(buf); 
-  int id = getInt(buf);
+CsSiteInterface*
+ComService::unmarshalCsSite(DSite* name, DssReadBuffer* const buf) {
+  int ip   = getInt(buf);
+  int port = getInt(buf);
+  int id   = getInt(buf);
+  GlueSite* gs = new GlueSite(name, ip, port, id);
 
-  OzSite *os = new OzSite(); 
-  OZ_Term oz_os = OZ_extension(os); 
-  GlueSite * gsa = new GlueSite(ip, port, id, name,oz_os); 
-  os->setGSR(gsa);
-  OZ_Term command=OZ_recordInit(oz_atom("new_site"),
-				oz_cons(oz_pair2(oz_int(1),
-						 oz_os),
-					oz_nil()));
+  OZ_Term command = OZ_recordInit(oz_atom("new_site"),
+				  oz_cons(oz_pair2(oz_int(1), gs->getOzSite()),
+					  oz_nil()));
   doPortSend(tagged2Port(g_connectPort), command, NULL); 
-  return gsa; 
-} 
+  return gs;
+}
 
     
 CsSiteInterface *ComService::connectSelfReps(MsgnLayer *msg, DSite* ds){ 
   a_msgnLayer = msg; 
-  thisGSite->m_setDssSite(ds);
+  thisGSite->setDSite(ds);
   return thisGSite;
 }
 
@@ -172,13 +166,13 @@ void ComService::m_gcSweep() {
 // Explicit site handeling
 void ComService::m_MsgReceived(CsSiteInterface* CS, MsgContainer* msg){
   PstInContainer *pst = NULL; 
-  GlueSite *gsr = static_cast<GlueSite*>(CS);
+  GlueSite *gs = static_cast<GlueSite*>(CS);
 
-  OZ_Term command=OZ_recordInit(oz_atom("directMsg"),
-				oz_cons(oz_pair2(oz_atom("msg"),
-						 pst->a_term),
-				oz_cons(oz_pair2(oz_atom("srcSite"),gsr->m_getOzSite()),
-				oz_nil())));
+  OZ_Term command =
+    OZ_recordInit(oz_atom("directMsg"),
+		  oz_cons(oz_pair2(oz_atom("msg"), pst->a_term),
+			  oz_cons(oz_pair2(oz_atom("srcSite"), gs->getOzSite()),
+				  oz_nil())));
   doPortSend(tagged2Port(g_connectPort), command, NULL); 
 }
 
