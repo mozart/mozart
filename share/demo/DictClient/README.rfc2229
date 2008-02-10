@@ -1,0 +1,6 @@
+The text for RFC 2229 has been removed from this directory since its
+copyright restricts modification. This is incompatible with some of
+the distributions that include Mozart/Oz (e.g., see the Debian Free
+Software Guidelines). It can be obtained from many places, including:
+
+   http://www.ietf.org/rfc/rfc2229.txt
