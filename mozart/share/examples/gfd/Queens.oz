@@ -124,7 +124,11 @@ in
 	       LFil = {List.filter L fun {$ I#X} {Fil X} end}
 	    in
 	       if LFil \= nil then
-		  LSel = {List.foldL LFil fun {$ I#X Acc} if {Order X Acc} then Acc else I#X end end LFil.1}
+		  LSel = {List.foldL LFil
+			  fun {$ I#X O#Acc}
+			     if {Order X Acc} then O#Acc
+			     else I#X end end LFil.1}
+		  
 		  I#X = LSel
 		  M={SelVal X}
 	       in
@@ -153,8 +157,8 @@ fun{Queens N}
       {GFD.distinctOffset Root C1}
       {GFD.distinctOffset Root C2}
       
-      {GFDDistribute naive Root}
+      {GFDDistribute ff Root}
    end
 end
 
-{Show {SearchAll {Queens 15}}}
+{Show {SearchAll {Queens 10}}}
