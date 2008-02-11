@@ -2166,6 +2166,11 @@ if (gespace != NULL) {
     false is used for clone because we want an independent copy of the space.
     true could be used but we have not tested it yet and could not be thread safe.
   */
+  /*
+    TODO: Just to skip an assertion produced by gecode we have to run 
+    propagation before cloning. See gecode 2.1.0 change log.
+   */
+  gespace->status();
   gespace = static_cast<GenericSpace*>(gespace->clone(false));
 #endif
   gespace->_cac();
