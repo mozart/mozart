@@ -256,7 +256,10 @@ namespace _msl_internal{ //Start namespace
       }
     default: 
       dssError("Not handled fault state\n"); 
+      return;
     }
+    // notify CsSite
+    if (a_csSite) a_csSite->reportFaultState(stat);
   }
 
   // Faults
