@@ -171,8 +171,6 @@ public:
   virtual void          marshalSuspV(OZ_Term te,
 				     ByteBuffer *bs, GenTraverser *gt);
   virtual int           minNeededSpace() { return (0); }
-  
-  void internalMarshal(DssWriteBuffer *buf);
 };
 
 void OzSite_init();
