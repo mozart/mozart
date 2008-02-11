@@ -37,6 +37,7 @@
 #include "controlvar.hh"
 #include "thr_int.hh"
 #include "glue_faults.hh"
+#include "glue_site.hh"
 #include "unify.hh"
 #include "var_readonly.hh"
 #include "cac.hh"
@@ -124,6 +125,8 @@ Mediator *glue_getMediator(TaggedRef entity) {
     case Co_Extension:
       if (oz_isThread(entity))
 	return getCTWHMediator<OzThreadMediator>(ct);
+      if (oz_isOzSite(entity))
+	return NULL;               // no mediator, but a GlueSite instead!
 
       // fall through, other extensions are unusables
     case Co_Resource:

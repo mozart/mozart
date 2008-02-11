@@ -86,12 +86,15 @@ private:
 
 public:
   GlueSite(DSite*, int ip, int port, int id);
-  ~GlueSite() {}
+  ~GlueSite();
 
   // get DSite/OzSite
   DSite* getDSite() const { return dsite; }
   void setDSite(DSite* s) { dsite = s; }
   OZ_Term getOzSite();
+
+  OZ_Term getFaultState();
+  OZ_Term getFaultStream();
 
   GlueSite* getNext() const { return next; }
   GlueSite** getNextPtr() { return &next; }
@@ -119,6 +122,8 @@ public:
   virtual void    working(); 
   virtual void    reportRTT(int);
   virtual void    reportTimeout(int);
+
+  virtual void reportFaultState(DSiteState);
 
   virtual DssChannel *establishConnection();
   virtual void closeConnection(DssChannel* con);
@@ -174,5 +179,22 @@ public:
 };
 
 void OzSite_init();
+
+inline
+Bool oz_isOzSite(TaggedRef ref) {
+  return OZ_isExtension(ref) && OZ_getExtension(ref)->getIdV() == OZ_E_SITE;
+}
+
+inline
+GlueSite* ozSite2GlueSite(TaggedRef ref) {
+  Assert(oz_isOzSite(ref));
+  OzSite* os = static_cast<OzSite*>(OZ_getExtension(ref));
+  return os->getGlueSite();
+}
+
+inline
+DSite* ozSite2DSite(TaggedRef ref) {
+  return ozSite2GlueSite(ref)->getDSite();
+}
 
 #endif

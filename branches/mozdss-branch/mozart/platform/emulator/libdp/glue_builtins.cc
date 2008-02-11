@@ -89,21 +89,6 @@ int dssIsCons(OZ_Term list, OZ_Term *hd, OZ_Term *tl) {
   return 1;
 }
 
-DSite *ozSite2DssSite(OZ_Term site){
-  OzSite *oz_site = static_cast<OzSite*>(OZ_getExtension(OZ_deref(site)));
-  return oz_site->getGlueSite()->getDSite();
-}
-
-GlueSite *ozSite2GlueSite(OZ_Term site){
-  OzSite *oz_site = static_cast<OzSite*>(OZ_getExtension(OZ_deref(site)));
-  return oz_site->getGlueSite();
-}
-
-
-
-
-
-
 
 
 OZ_Return getRecordField(OZ_Term record, char* field, int &ans){
@@ -182,12 +167,12 @@ OZ_BI_define(BIhandoverRoute,2,0) {
     gsa->m_showRId();
     */
 
-    dsVec[--tmpNum] = ozSite2DssSite(hd);
+    dsVec[--tmpNum] = ozSite2DSite(hd);
     slist = tl;
   }
 
   Assert(tmpNum == 0); 
-  ozSite2DssSite(peer)->m_virtualCircuitEstablished(nrSites, dsVec); 
+  ozSite2DSite(peer)->m_virtualCircuitEstablished(nrSites, dsVec); 
   
   return PROCEED;
 }OZ_BI_end
@@ -630,6 +615,11 @@ OZ_BI_define(BIsetAnnotation,4,0)
   oz_declareIntIN(2,aa);
   oz_declareIntIN(3,rc);
 
+  if (oz_isOzSite(entity)) { // special case: sites
+    if (pn == PN_NO_PROTOCOL || pn == PN_IMMEDIATE) return PROCEED;
+    goto protocol_error;
+  }
+
   Annotation a = getAnnotation(entity);
 
   // check incrementality and consistency
@@ -682,9 +672,15 @@ OZ_BI_define(BIsetAnnotation,4,0)
 
 } OZ_BI_end
 
+
 OZ_BI_define(BIgetAnnotation,1,3)
 {
   oz_declareSafeDerefIN(0,entity);
+  if (oz_isOzSite(entity)) { // special case: sites
+    OZ_out(0) = oz_int(PN_IMMEDIATE);
+    OZ_out(1) = oz_int(AA_NO_ARCHITECTURE);
+    OZ_out(2) = oz_int(RC_ALG_NONE);
+  }
   Annotation a = getAnnotation(entity);
   OZ_out(0) = oz_int(a.pn);
   OZ_out(1) = oz_int(a.aa);
@@ -692,15 +688,18 @@ OZ_BI_define(BIgetAnnotation,1,3)
   return PROCEED;
 } OZ_BI_end
 
+
 OZ_BI_define(BIgetFaultStream,1,1)
 {
   oz_declareSafeDerefIN(0,entity);
   Mediator* med = glue_getMediator(entity);
   if (med)
     OZ_RETURN(med->getFaultStream());
-  else
-    return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
+  if (oz_isOzSite(entity))
+    OZ_RETURN(ozSite2GlueSite(entity)->getFaultStream());
+  return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
 } OZ_BI_end
+
 
 OZ_BI_define(BIgetFaultState,1,1)
 {
@@ -708,9 +707,11 @@ OZ_BI_define(BIgetFaultState,1,1)
   Mediator* med = glue_getMediator(entity);
   if (med)
     OZ_RETURN(fsToAtom(med->getFaultState()));
-  else
-    return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
+  if (oz_isOzSite(entity))
+    OZ_RETURN(ozSite2GlueSite(entity)->getFaultState());
+  return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
 } OZ_BI_end
+
 
 OZ_BI_define(BIsetFaultState,2,0)
 {
@@ -723,16 +724,23 @@ OZ_BI_define(BIsetFaultState,2,0)
     return oz_raise(E_SYSTEM, AtomDp, "invalid fault state", 1, state);
 
   Mediator* med = glue_getMediator(entity);
-  if (med == NULL)
-    return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
-
-  // check state transition
-  if (!validFSTransition(med->getFaultState(), fs))
-    return oz_raise(E_SYSTEM, AtomDp, "invalid fault transition", 1, state);
-
-  // set new state
-  med->setFaultState(fs);
-  return PROCEED;
+  if (med) {
+    // check state transition
+    if (!validFSTransition(med->getFaultState(), fs))
+      return oz_raise(E_SYSTEM, AtomDp, "invalid fault transition", 1, state);
+    // set new state
+    med->setFaultState(fs);
+    return PROCEED;
+  }
+  if (oz_isOzSite(entity)) {
+    // translate GlueFaultState to DSiteState (HACK!)
+    static DSiteState dfs[] =
+      { DSite_OK, DSite_TMP, DSite_LOCAL_PRM, DSite_GLOBAL_PRM };
+    // set new state
+    ozSite2DSite(entity)->m_stateChange(dfs[fs]);
+    return PROCEED;
+  }
+  return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
 
 } OZ_BI_end
 
@@ -743,28 +751,34 @@ OZ_BI_define(BIkill,1,0)
   oz_declareSafeDerefIN(0,entity);
 
   Mediator* med = glue_getMediator(entity);
-  if (med == NULL)
-    return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
-
-  if (med->isDistributed())
-    med->abstractOperation_Kill();
-  else
-    med->setFaultState(GLUE_FAULT_PERM);
-
-  return PROCEED;
+  if (med) {
+    if (med->isDistributed())
+      med->abstractOperation_Kill();
+    else
+      med->setFaultState(GLUE_FAULT_PERM);
+    return PROCEED;
+  }
+  if (oz_isOzSite(entity)) {
+    return oz_raise(E_SYSTEM, AtomDp, "Kill: not implemented yet", 1, entity);
+  }
+  return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
 } OZ_BI_end
+
 
 OZ_BI_define(BIkillLocal,1,0)
 {
   oz_declareSafeDerefIN(0,entity);
 
   Mediator* med = glue_getMediator(entity);
-  if (med == NULL)
-    return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
-
-  // simply set fault state to localFail (at least)
-  med->setFaultState(GLUE_FAULT_LOCAL);
-  return PROCEED;
+  if (med) {   // simply set fault state to localFail (at least)
+    med->setFaultState(GLUE_FAULT_LOCAL);
+    return PROCEED;
+  }
+  if (oz_isOzSite(entity)) {   // put site to state DSite_LOCAL_PRM
+    ozSite2DSite(entity)->m_stateChange(DSite_LOCAL_PRM);
+    return PROCEED;
+  }
+  return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
 } OZ_BI_end
 
 /******************** Tempfail detection parameters ********************/
@@ -979,7 +993,7 @@ OZ_BI_define(BIsendMsgToSite,2,0){
 
   PstOutContainer *load = new PstOutContainer(msg);
   MsgContainer *msgC = NULL; 
-  ozSite2DssSite(tag_site)->m_sendMsg(msgC);
+  ozSite2DSite(tag_site)->m_sendMsg(msgC);
 
   return PROCEED;
 }OZ_BI_end
@@ -1024,7 +1038,7 @@ OZ_BI_define(BIgetChannelStatus,1,1){
   }
   else return FAILED;
 
-  cstatus = ozSite2DssSite(tag_site)->m_getChannelStatus();
+  cstatus = ozSite2DSite(tag_site)->m_getChannelStatus();
 
   if ((cstatus & CS_COMMUNICATING) == CS_COMMUNICATING) 
     COMMUNICATING = TRUE;
