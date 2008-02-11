@@ -211,6 +211,8 @@ public:
   virtual void reportRTT(int rtt) = 0;
   virtual void reportTimeout(int maxrtt) = 0;
 
+  virtual void reportFaultState(DSiteState) = 0;
+
   virtual DssChannel *establishConnection() = 0;
   virtual void closeConnection(DssChannel* con) = 0;
 };
