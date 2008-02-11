@@ -131,7 +131,7 @@ ComService::ComService(int ip, int port, int id) {
 ComService::~ComService(){;}
 
 void ComService::closeAnonConnection(DssChannel* con){
-  printf("Implement the IO-factory, socket not closed\n"); 
+  delete con;
 }
 
 // Create a SiteAddress object from the representation found in 

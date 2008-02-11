@@ -136,6 +136,8 @@ enum DSiteState{
 // provided by the user
 class DssChannel {
 public:
+  virtual ~DssChannel() {}
+
   // set callback object (when data available)
   virtual bool setCallback(DssChannelCallback*) = 0;
 
