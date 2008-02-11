@@ -27,6 +27,7 @@
 #include "base.hh"
 #include "pickle.hh"
 #include "cac.hh"
+#include "var_readonly.hh"
 #include "glue_site.hh"
 #include "glue_base.hh"
 #include "glue_buffer.hh"
@@ -57,6 +58,16 @@ void cleanStr(DssReadBuffer *buf, int len){
     buf->getByte(); 
 }
 
+TaggedRef fs2atom(const DSiteState &state) {
+  switch (state) {
+  case DSite_OK:         return AtomOk;
+  case DSite_TMP:        return AtomTempFail;
+  case DSite_LOCAL_PRM:  return AtomLocalFail;
+  case DSite_GLOBAL_PRM: return AtomPermFail;
+  }
+  Assert(0);
+}
+
 
 
 /****************************** GlueSite ******************************/
@@ -77,10 +88,24 @@ GlueSite::GlueSite(DSite* site, int ip, int port, int id) :
   gSiteList = this;
 }
 
+GlueSite::~GlueSite() {
+  // close the fault stream with 'nil' (if present)
+  if (faultstream) oz_bindReadOnly(tagged2Ref(faultstream), oz_nil());
+}
+
 // create the OzSite lazily
 OZ_Term GlueSite::getOzSite() {
   if (!ozsite) ozsite = OZ_extension(new OzSite(this));
   return ozsite;
+}
+
+OZ_Term GlueSite::getFaultState() {
+  return fs2atom(dsite->m_getFaultState());
+}
+
+OZ_Term GlueSite::getFaultStream() {
+  if (!faultstream) faultstream = oz_newReadOnly(oz_rootBoard());
+  return oz_cons(getFaultState(), faultstream);
 }
 
 OZ_Term GlueSite::m_getInfo() {
@@ -183,6 +208,16 @@ GlueSite::reportTimeout(int timeout) {
   case DSite_OK:  dsite->m_stateChange(DSite_TMP);
   case DSite_TMP: dsite->m_monitorRTT(rtt_timeout);
   default: break;     // (stop monitoring when permfailed)
+  }
+}
+
+void
+GlueSite::reportFaultState(DSiteState state) {
+  if (faultstream) {
+    OZ_Term head = fs2atom(state);
+    OZ_Term tail = oz_newReadOnly(oz_rootBoard());
+    oz_bindReadOnly(tagged2Ref(faultstream), oz_cons(head, tail));
+    faultstream = tail;
   }
 }
 
