@@ -66,17 +66,21 @@
 #include    <sys/ioctl.h>
 #endif
 
-#define DeclareSiteListIN(ARG,VAR)					\
+/****************************** Utils ******************************/
+
+#define DeclareSiteListIN(ARG,VAR,LEN)					\
 OZ_Term VAR = OZ_in(ARG);						\
+int LEN = 0;								\
 { OZ_Term arg = VAR;							\
   while (OZ_isCons(arg)) {						\
-    TaggedRef a = OZ_head(arg);						\
+    TaggedRef a = oz_safeDeref(OZ_head(arg));				\
     if (OZ_isVariable(a)) OZ_suspendOn(a);				\
-    /*if (!OZ_isAtom(a))    return OZ_typeError(ARG,"list(Atom)"); */	\
+    if (!oz_isOzSite(a)) return OZ_typeError(ARG, "list(site)");	\
     arg = OZ_tail(arg);							\
+    ++LEN;								\
   }									\
   if (OZ_isVariable(arg)) OZ_suspendOn(arg);				\
-  if (!OZ_isNil(arg))     return OZ_typeError(ARG,"list(site)");	\
+  if (!OZ_isNil(arg)) return OZ_typeError(ARG,"list(site)");		\
 }
 
 inline 
@@ -88,8 +92,6 @@ int dssIsCons(OZ_Term list, OZ_Term *hd, OZ_Term *tl) {
   *tl = OZ_tail(list);
   return 1;
 }
-
-
 
 OZ_Return getRecordField(OZ_Term record, char* field, int &ans){
   if(OZ_isRecord(record)){
@@ -110,121 +112,80 @@ OZ_Return getRecordField(OZ_Term record, char* field, int &ans){
 }
 
 
-OZ_Term createGrantRecord(void *g){
-  return OZ_recordInit(oz_atom("grant"),
-		       oz_cons(oz_pairAI("key",reinterpret_cast<int>(g)),oz_nil()));
-}
-
-
-OZ_Return readGrantRecord(OZ_Term record, void *&g){
-  int gr;
-  OZ_Return ret=getRecordField(record,"key",gr);
-  if(ret!=OZ_ENTAILED) return ret;
-  g = reinterpret_cast<void*> (gr);
-  return OZ_ENTAILED;
-}
+/**********************************************************************
+                     Handling of site connections
+ **********************************************************************/
 
 /* Handover a route(0) to a remote site(1). */
 OZ_BI_define(BIhandoverRoute,2,0) {
-  DeclareSiteListIN(0, slist);
-  OZ_declareTerm(1, peer);
+  DeclareSiteListIN(0, slist, len);
+  oz_declareNonvarIN(1, peer);
 
-  OZ_Term hd, tl;
-  DSite *lst_sn = NULL;
-  int nrSites = 0;
-  OZ_Term tmp = slist; 
-  while (dssIsCons(tmp, &hd, &tl)) {
-    if (OZ_isVariable(hd)) return SUSPEND;
-    
-    if (OZ_isExtension(hd)) {
-      OZ_Extension *e = OZ_getExtension(hd);
-      if (e->getIdV() != OZ_E_SITE) 
-	return OZ_typeError(0,"site");
-    }
-    else return FAILED;
-    nrSites++; 
-    tmp = tl; 
-  }
+  if (!oz_isOzSite(peer)) return OZ_typeError(1, "site");
+  // arguments have been checked, now proceed
   
-  // route list too small 
-  if (nrSites < 2) 
-    return OZ_FAILED; 
+  // check size of list (upper limit is an implementation limit)
+  if (len < 2) 
+    return oz_raise(E_SYSTEM, AtomDp, "route too small", 0);
 
-  // route list too long; the marshaler does not support more
-  if (nrSites > 6) 
-    return OZ_FAILED; 
+  if (len > 6) 
+    return oz_raise(E_SYSTEM, AtomDp, "route too long", 0);
 
-  DSite **dsVec = new DSite*[nrSites];
-
-  int tmpNum = nrSites; 
-  while (dssIsCons(slist, &hd, &tl)) {
-    Assert(tmpNum > 0);
-
-    /*
-    OzSite *oz_site =
-      static_cast<OzSite*>(OZ_getExtension(OZ_deref(hd)));
-    GlueSite *gsa = oz_site->getGlueSite();
-    gsa->m_showRId();
-    */
-
-    dsVec[--tmpNum] = ozSite2DSite(hd);
-    slist = tl;
+  DSite** route = new DSite* [len];
+  OZ_Term head, tail;
+  int count = len;
+  while (dssIsCons(slist, &head, &tail)) {
+    Assert(count > 0);
+    route[--count] = ozSite2DSite(head);
+    slist = tail;
   }
+  Assert(count == 0);
 
-  Assert(tmpNum == 0); 
-  ozSite2DSite(peer)->m_virtualCircuitEstablished(nrSites, dsVec); 
-  
+  ozSite2DSite(peer)->m_virtualCircuitEstablished(len, route); 
   return PROCEED;
+
 }OZ_BI_end
 
 
+// create a connection for the given site, with the given file descriptor
 OZ_BI_define(BIsetConnection,2,0){
   oz_declareNonvarIN(0,site);
   OZ_declareInt(1,fd);
-  if(!OZ_isExtension(site))return OZ_typeError(0, "site");
-  OZ_Extension *site_ext=OZ_getExtension(site);
-  if(site_ext->getIdV()!=OZ_E_SITE)return OZ_typeError(0, "site");
-  GlueSite *gsr=((OzSite *)site_ext)->getGlueSite();
-  // encapsulating the filedescriptor in a Transport_Channel object. 
-  // It can now be used freely from the DSS, using the virtual 
-  // functions defined in DssTransportChannel and implemented
-  // in Glue_TransportChannel. 
+  if (!oz_isOzSite(site)) return OZ_typeError(0, "site");
+
   DssChannel* channel = new SocketChannel(fd);
-  gsr->m_setConnection(channel);
+  ozSite2GlueSite(site)->m_setConnection(channel);
+
+  // notify the DP port
   OZ_Term ack = OZ_recordInit(oz_atom("connection_received"),
 			      oz_cons(oz_pair2(oz_int(1),site),
 				      oz_cons(oz_pair2(oz_int(2),OZ_int(fd)),
 					      oz_nil())));
   doPortSend(tagged2Port(g_connectPort),ack,NULL);
-  return OZ_ENTAILED;
+  return PROCEED;
+
 }OZ_BI_end
 
+
+// hand over an anonymous connection to the DSS (arg is a file descriptor)
 OZ_BI_define(BIacceptConnection,1,0){
   OZ_declareInt(0,fd);
-  // encapsulating the filedescriptor in a Transport_Channel object. 
-  // It can now be used freely from the DSS, using the virtual 
-  // functions defined in DssTransportChannel and implemented
-  // in Glue_TransportChannel. 
   DssChannel* channel = new SocketChannel(fd);
   glue_com_connection->a_msgnLayer->m_anonymousChannelEstablished(channel); 
-  return OZ_ENTAILED;
+  return PROCEED;
 }OZ_BI_end
+
 
 // Not connection failed stupid, but 
 // statechange
 
 OZ_BI_define(BIconnFailed,2,0) {
-  oz_declareNonvarIN(0,requestor);
-  oz_declareNonvarIN(1,reason);
-  
-  int Cid;
-  OZ_Return ret = getRecordField(requestor, "req", Cid);
-  if (ret != OZ_ENTAILED) return ret;
-  
-  GlueSite *sa = reinterpret_cast<GlueSite*>(Cid);
+  oz_declareNonvarIN(0, site);
+  oz_declareNonvarIN(1, reason);
+  if (!oz_isOzSite(site)) return OZ_typeError(0, "site");
   
   if (oz_eq(reason, oz_atom("perm"))) {
-    sa->getDSite()->m_stateChange(DSite_GLOBAL_PRM);
+    ozSite2DSite(site)->m_stateChange(DSite_GLOBAL_PRM);
   } 
   else if (oz_eq(reason, oz_atom("temp"))) {
     // This could be reported to the comObj, but the comObj also
@@ -237,6 +198,27 @@ OZ_BI_define(BIconnFailed,2,0) {
   }
   return PROCEED;
 }OZ_BI_end
+
+
+// change the fault state of a site
+OZ_BI_define(BIsetSiteState, 2, 0) {
+  oz_declareNonvarIN(0, site);
+  oz_declareNonvarIN(1, state);
+  if (!oz_isOzSite(site)) return OZ_typeError(0, "site");
+
+  // first parse new state
+  GlueFaultState fs;
+  if (!atomToFS(state, fs))
+    return oz_raise(E_SYSTEM, AtomDp, "invalid fault state", 1, state);
+
+  // translate GlueFaultState to DSiteState (HACK!)
+  static DSiteState dfs[] =
+    { DSite_OK, DSite_TMP, DSite_LOCAL_PRM, DSite_GLOBAL_PRM };
+  // set new state
+  ozSite2DSite(site)->m_stateChange(dfs[fs]);
+  return PROCEED;
+
+} OZ_BI_end
 
 
 
@@ -483,13 +465,6 @@ OZ_BI_define(BIgetMsgCntr,0,1)
 				  oz_nil())))))));
 }OZ_BI_end   
 
-OZ_BI_define(BIgetOperCntr,0,1)
-{
-  OZ_error("Removed during reconstruction");
-  OZ_RETURN(oz_nil());
-}OZ_BI_end
-
-
 
 OZ_BI_define(BIprintDPTables,0,0)
 {
@@ -518,79 +493,6 @@ OZ_BI_define(BIcreateLogFile,1,0)
 {
   return OZ_FAILED;
 }OZ_BI_end
-
-
-OZ_BI_define(BIsetDGC,2,1)
-{
-  OZ_error("Removed during reconstruction");
-  OZ_RETURN(oz_false());
-}OZ_BI_end  
-
-OZ_BI_define(BIgetDGC,1,1)
-{ 
-  OZ_declareTerm(0,entity);
-  OZ_RETURN(oz_atom("local_entity"));
-}OZ_BI_end  
-
-// ZACHARIAS
-OZ_BI_define(BIgetDGCAlgs,0,1)
-{ 
-  OZ_error("Removed during interface reconstruction");
-  OZ_RETURN(oz_true());
-}OZ_BI_end  
-
-
-OZ_BI_define(BIgetDGCAlgInfo,1,1)
-{ 
-  OZ_error("Removed during interface reconstruction");
-  OZ_RETURN(oz_true());
-}OZ_BI_end  
-
-
-OZ_BI_define(BIsetDGCAlg,2,0)
-{ 
-  OZ_error("Removed during reconstruction");
-  return OZ_ENTAILED;
-}OZ_BI_end  
-
-
-OZ_BI_define(BIsetDGCAlgProp,3,0)
-{ 
-  OZ_error("Removed during reconstruction");
-  return OZ_ENTAILED;
-}OZ_BI_end  
-
-
-OZ_BI_define(BIgetMsgPriority,0,1)
-{
-  OZ_error("Removed during reconstruction");
-  OZ_RETURN(oz_nil());
-}OZ_BI_end
-
-OZ_BI_define(BIsetMsgPriority,2,0)
-{
-  OZ_error("Removed during reconstruction");
-  return FAILED;
-}OZ_BI_end
-
-
-
-
-OZ_BI_define(BIsendCping,5,0)   
-{
-  OZ_error("Removed during reconstruction"); return PROCEED; 
-} OZ_BI_end
-
-OZ_BI_define(BIsendMpongTerm,6,0)   
-{
-  OZ_error("Removed during reconstruction"); return PROCEED; 
-} OZ_BI_end
-
-
-OZ_BI_define(BIsendMpongPL,5,0)   
-{
-  OZ_error("Removed during reconstruction"); return PROCEED; 
-} OZ_BI_end
 
 
 
@@ -781,137 +683,7 @@ OZ_BI_define(BIkillLocal,1,0)
   return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
 } OZ_BI_end
 
-/******************** Tempfail detection parameters ********************/
 
-OZ_BI_define(BIgetMaxRtt,0,1)
-{
-  OZ_RETURN(oz_int(30000));
-} OZ_BI_end
-
-OZ_BI_define(BIsetMaxRtt,1,0)
-{
-  // deprecated
-  return PROCEED;
-} OZ_BI_end
-
-
-
-OZ_BI_define(BItablesExtract,0,1)
-{
-  OZ_RETURN(oz_false());
-} OZ_BI_end
-
-OZ_BI_define(BIsiteStatistics,0,1)
-{
-  Assert(0); 
-  OZ_RETURN(oz_false());
-} OZ_BI_end
-
-			       
-OZ_BI_define(BI_DistMemInfo,0,1)
-{
-  OZ_RETURN(oz_nil());
-} OZ_BI_end
-
-
-//
-// The names from marshalBase is not printable. 
-// A new set of names are defined here.
-// If incompatibilites should ocour please update this
-// array to the same number of entries as the master copy.
-// Erik 
-const struct {
-  MarshalTag tag;
-  char *name;
-} dif_Mynames[] = {
-  { DIF_UNUSED0,         "unused0"},
-  { DIF_SMALLINT,        "smallint"},
-  { DIF_BIGINT,          "bigint"},
-  { DIF_FLOAT,           "float"},
-  { DIF_ATOM_DEF,        "atom_def"},
-  { DIF_NAME_DEF,        "name_def"},
-  { DIF_UNIQUENAME_DEF,  "uniquename_def"},
-  { DIF_RECORD_DEF,      "record_def"},
-  { DIF_TUPLE_DEF,       "tuple_def"},
-  { DIF_LIST_DEF,        "list_def"},
-  { DIF_REF,             "ref"},
-  { DIF_UNUSED1,         "unused1"},
-  { DIF_OWNER_DEF,       "owner_def"},
-  { DIF_UNUSED2,         "unused2"},
-  { DIF_PORT_DEF,        "port_def"}, // 
-  { DIF_CELL_DEF,        "cell_def"},
-  { DIF_LOCK_DEF,        "lock_def"},
-  { DIF_VAR_DEF,         "var_def"},
-  { DIF_BUILTIN_DEF,     "builtin_def"},
-  { DIF_DICT_DEF,        "dict_def"},
-  { DIF_OBJECT_DEF,      "object_def"},
-  { DIF_UNUSED3,         "unused3"},
-  { DIF_UNUSED4,         "unused4"},
-  { DIF_CHUNK_DEF,       "chunk_def"},
-  { DIF_PROC_DEF,        "proc_def"},
-  { DIF_CLASS_DEF,       "class_def"},
-  { DIF_ARRAY_DEF,       "array_def"},
-  { DIF_FSETVALUE,       "fsetvalue"},
-  { DIF_ABSTRENTRY,      "abstrentry"},
-  { DIF_UNUSED5,         "unused5"},
-  { DIF_UNUSED6,         "unused6"},
-  { DIF_SITE,            "site"},
-  { DIF_UNUSED7,         "unused7"},
-  { DIF_SITE_PERM,       "site_perm"},
-  { DIF_UNUSED8,         "unused8"},
-  { DIF_COPYABLENAME_DEF,"copyablename_def"},
-  { DIF_EXTENSION_DEF,   "extension_def"},
-  { DIF_RESOURCE_DEF,    "resource_def"},
-  { DIF_RESOURCE,        "resource"},
-  { DIF_READONLY_DEF,    "readonly_def"},
-  { DIF_VAR_AUTO_DEF,    "automatically_registered_var_def"},
-  { DIF_READONLY_AUTO_DEF, "automatically_registered_readonly_def"},
-  { DIF_EOF,             "eof"},
-  { DIF_CODEAREA,        "code_area_segment"},
-  { DIF_VAR_OBJECT_DEF,  "var_object_exported_def"},
-  { DIF_SYNC,            "sync"},
-  { DIF_CLONEDCELL_DEF,  "clonedcell_def"},
-  { DIF_STUB_OBJECT_DEF, "object_exported_def"},
-  { DIF_SUSPEND,         "marshaling_suspended"},
-  { DIF_LIT_CONT,        "dif_literal_continuation"},
-  { DIF_EXT_CONT,        "dif_extension_continuation"},
-  { DIF_SITE_SENDER,     "site_opt"},
-  { DIF_RECORD,          "record"},
-  { DIF_TUPLE,           "tuple"},
-  { DIF_LIST,            "list"},
-  { DIF_PORT,            "port"},
-  { DIF_CELL,            "cell"},
-  { DIF_LOCK,            "lock"},
-  { DIF_BUILTIN,         "builtin"},
-  { DIF_DICT,            "dict"},
-  { DIF_OBJECT,          "object"},
-  { DIF_CHUNK,           "chunk"},
-  { DIF_PROC,	         "proc"},
-  { DIF_CLASS,           "class"},
-  { DIF_EXTENSION,       "extension"},
-  { DIF_STUB_OBJECT,     "object_exported"},
-  { DIF_BIGINT_DEF,      "bigint_def"},
-  { DIF_CLONEDCELL,      "clonedcell"},
-  { DIF_ARRAY,           "array"},
-  { DIF_ATOM,            "atom"},
-  { DIF_NAME,  	         "name"},
-  { DIF_UNIQUENAME,      "uniquename"},
-  { DIF_COPYABLENAME,    "copyablename"},
-  { DIF_OWNER,           "owner"},
-  { DIF_VAR,             "var"},
-  { DIF_READONLY,        "readonly"},
-  { DIF_VAR_AUTO,        "automatically_registered_var"},
-  { DIF_READONLY_AUTO,   "automatically_registered_readonly"},
-  { DIF_VAR_OBJECT,      "var_object_exported"},
-  { DIF_LAST,            "last"}
-};
-
-
-OZ_BI_define(BIperdioStatistics,0,1)
-{
-  Assert(0);
-  OZ_RETURN(oz_nil());
-} OZ_BI_end
 
 /**********************************************************************/
 /*   Fault Builtins                                                    */
@@ -964,21 +736,6 @@ OZ_BI_define(BIgetEntityCond,2,0){
 }OZ_BI_end
 
 
-// ???
-OZ_BI_define(BIremoteExecDone,3,0){
-  /*
-  OZ_Term entity  =   OZ_in(0);
-  OZ_Term ans     =   OZ_in(1);
-  OZ_Term id      =   OZ_in(2); 
-  
-  OzCell *cell = tagged2Cell(entity);
-  int id_int = OZ_intToC(id); 
-  cellOperationDoneReadImpl(cell, ans, id_int); 
-  */
-  return PROCEED;
-}OZ_BI_end
-
-
 /* Send a Pst message to this site. */
 OZ_BI_define(BIsendMsgToSite,2,0){
   OZ_declareTerm(0, tag_site);
@@ -1024,36 +781,22 @@ OZ_BI_define(BIgetConSites,0,1){
 
 
 OZ_BI_define(BIgetChannelStatus,1,1){
-  OZ_declareTerm(0, tag_site);
-  ConnectivityStatus cstatus;
-  Bool COMMUNICATING = FALSE;
-  Bool CHANNEL = FALSE;
-  Bool CIRCUIT = FALSE;
-  Bool ROUTER = FALSE;
+  oz_declareNonvarIN(0, site);
+  if (!oz_isOzSite(site)) return OZ_typeError(0, "site");
 
-  if (OZ_isExtension(tag_site)) {
-    OZ_Extension *e = OZ_getExtension(tag_site);
-    if (e->getIdV() != OZ_E_SITE) 
-      return OZ_typeError(0,"site");
-  }
-  else return FAILED;
-
-  cstatus = ozSite2DSite(tag_site)->m_getChannelStatus();
-
-  if ((cstatus & CS_COMMUNICATING) == CS_COMMUNICATING) 
-    COMMUNICATING = TRUE;
-  if ((cstatus & CS_CHANNEL) == CS_CHANNEL) 
-    CHANNEL = TRUE;
-  if ((cstatus & CS_CIRCUIT) == CS_CIRCUIT) 
-    CIRCUIT = TRUE;
+  ConnectivityStatus cstatus = ozSite2DSite(site)->m_getChannelStatus();
+  Bool COMM    = cstatus & CS_COMMUNICATING;
+  Bool CHANNEL = cstatus & CS_CHANNEL;
+  Bool CIRCUIT = cstatus & CS_CIRCUIT;
   
   //! this record must still be completed with the other fields 
   OZ_RETURN(OZ_recordInit(oz_atom("cs"),
-			  oz_cons(oz_pairA("communicating", oz_bool(COMMUNICATING)),
+			  oz_cons(oz_pairA("communicating", oz_bool(COMM)),
 			  oz_cons(oz_pairA("channel", oz_bool(CHANNEL)),
 			  oz_cons(oz_pairA("circuit", oz_bool(CIRCUIT)),
 			  oz_nil())))));
 }OZ_BI_end
+
 
 /* Get the site proper to current process. */
 OZ_BI_define(BIgetThisSite,0,1){
@@ -1063,98 +806,11 @@ OZ_BI_define(BIgetThisSite,0,1){
 
 /* Get the site info*/
 OZ_BI_define(BIgetSiteInfo,1,1){
-  OZ_declareTerm(0, tag_site);
-
-  if (OZ_isExtension(tag_site)) {
-    OZ_Extension *e = OZ_getExtension(tag_site);
-    if (e->getIdV() != OZ_E_SITE) 
-      return OZ_typeError(0,"site");
-  }
-  else return FAILED;
-
-  OzSite *oz_site =
-    static_cast<OzSite*>(OZ_getExtension(OZ_deref(tag_site)));
-  GlueSite *gsa = oz_site->getGlueSite();
-  OZ_RETURN(gsa->m_getInfo());
+  oz_declareNonvarIN(0, site);
+  if (!oz_isOzSite(site)) return OZ_typeError(0, "site");
+  OZ_RETURN(ozSite2GlueSite(site)->m_getInfo());
 }OZ_BI_end
 
-TaggedRef BI_remoteExecDone =  makeTaggedConst(new Builtin("", "remoteExecDone", 3, 0, BIremoteExecDone, OK));
-
-OZ_BI_define(BIcreateDHT,1,0)
-{
-  oz_declareNonvarIN(0,ozPort);
-  g_kbrStreamPort = ozPort;
-  OZ_protect(&g_kbrStreamPort);
-  // dss->kbr_start(NULL);
-  Assert(0); 
-  printf("dhtStarted\n"); 
-  return PROCEED;
-
-}OZ_BI_end
-
-OZ_BI_define(BIcreateSiteRef,0,1)
-{
-  GlueWriteBuffer buf(portToTickBuf, PORT_TO_TICK_BUF_LEN); 
-  GlueWriteBuffer *ptr = &buf; 
-  Assert(dynamic_cast<DssWriteBuffer*>(ptr));
-  DssWriteBuffer *dwb_ptr = static_cast<DssWriteBuffer*>(ptr); 
-  printf("buf %d\n", ptr); 
-  thisGSite->getDSite()->m_marshalDSite(ptr);
-  int len = buf.bufferUsed();
-  char *str = encodeB64((char*)portToTickBuf, len);
-  printf("site: %s\n", str); 
-  OZ_RETURN( OZ_string(str));
-}OZ_BI_end
-
-
-OZ_BI_define(BIconnectDHT,2,0)
-{
-
-  oz_declareProperStringIN(1,str);
-  oz_declareNonvarIN(0,ozPort);
-  g_kbrStreamPort = ozPort;
-  OZ_protect(&g_kbrStreamPort);
-  
-  int len = strlen(str); 
-  unsigned char* raw_buf = (unsigned char*)decodeB64((char*)str, len);
-  GlueReadBuffer buf(raw_buf, len);
-  DSite *dsite = glue_com_connection->a_msgnLayer->m_UnmarshalDSite(&buf);
-  delete raw_buf;
-  Assert(0);
-  // dss->kbr_start(dsite);
-  return PROCEED;
-}OZ_BI_end
-
-
-OZ_BI_define(BIinsertDHTitem,2,0)
-{
-  oz_declareIntIN(0,key);
-  OZ_declareTerm(1,value);
-  Assert(0);
-  // bool ans = dss->kbr_route(key, new PstOutContainer(value)); 
-  // We should actually check the answer...
-  //Assert(ans); 
-  return PROCEED; 
-}OZ_BI_end
-
-
-OZ_BI_define(BIlookupDHTitem,1,0)
-{
-  oz_declareIntIN(0,key);
-  //dss->dht_lookup(key); 
-  return PROCEED; 
-}OZ_BI_end
-
-
-
-
-OZ_BI_define(BIkbrTransferResp,1,0)
-{
-  OZ_declareTerm(0,resp);
-  // dss->kbr_transferResp(new PstOutContainer(resp));
-  Assert(0);
-  return PROCEED; 
-}OZ_BI_end
 
 /*
  * The builtin table

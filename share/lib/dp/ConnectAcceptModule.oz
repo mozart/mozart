@@ -128,8 +128,8 @@ define
       
 	   proc{ConnFailed Reason}
 	      {Obj freeResources}
-	      if {Dictionary.member OngoingRequests Obj.id} then
-		 {Glue.connFailed Obj.requestor Reason}
+	      if {Dictionary.member OngoingRequests 'a'} then
+		 {Glue.connFailed TargetSite Reason}
 	      end
 	   end
 

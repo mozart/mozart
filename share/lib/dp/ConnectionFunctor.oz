@@ -32,7 +32,6 @@ define
    import
       ConnectionWrapper at 'x-oz://connection/ConnectionWrapper.ozf'
       Glue at 'x-oz://boot/Glue'
-      Browser(browse:Browse)
 \ifdef DBGroute
       System
 \endif
@@ -73,7 +72,7 @@ define
 	       if FD==~1 then raise no_fd end end
 	       {ConnectionWrapper.connect FD Address Port}
 	    catch X then
-	       {Browse X}
+	       {Dshow X}
 	       case X of system(os(_ _ _ "Connection refused") ...) then
 		  raise perm end
 	       elseof system(os(_ _ _ "In progress") ...) then
@@ -142,7 +141,6 @@ define
 	    {Dshow could_not_connect}
 	    raise failed_to_connect end
 	 [] E then
-	    {Browse E}
 	    {ConnectionWrapper.close FD}
 	    {Dshow tcp_did_not_work}
 	    %{Delay 1000}
