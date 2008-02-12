@@ -82,9 +82,9 @@
 					  out => [],
 					  BI  => BIprintDssMemoryAllocation},
 
-     'getRPC'                =>  { in  => [],
-                                   out => ['value'],
-                                   BI  => BIgetRPC},
+     'setRPC'                =>  { in  => ['+procedure/3'],
+                                   out => [],
+                                   BI  => BIsetRPC},
 
      'getAnnotation'         =>  { in  => ['value'],
                                    out => ['+int','+int','+int'],

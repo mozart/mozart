@@ -498,8 +498,12 @@ OZ_BI_define(BIcreateLogFile,1,0)
 
 /************************* access RPC wrapper *************************/
 
-OZ_BI_define(BIgetRPC,0,1) {
-  OZ_RETURN(getRPC());
+OZ_BI_define(BIsetRPC,1,0) {
+  oz_declareNonvarIN(0, proc);
+  if (!oz_isProcedure(proc) || oz_procedureArity(proc) != 3) {
+    oz_typeError(0, "procedure/3");
+  }
+  return oz_unify(getRPC(), proc);
 } OZ_BI_end
 
 
