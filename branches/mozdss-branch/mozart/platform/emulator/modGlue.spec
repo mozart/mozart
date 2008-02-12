@@ -26,33 +26,6 @@
 
 %builtins_all =
     (
-     'transferRespKBR'	     =>  { in  => ['value'],
-		                  out => [],
-		                  BI  => BIkbrTransferResp},
-
-     'createDHT'          =>  { in  => ['+port'],
-		                  out => [],
-		                  BI  => BIcreateDHT},
-
-     'createSiteRef'      =>  { in  => [],
-		                out => ['+string'],
-		                BI  => BIcreateSiteRef},
-
-
-     'connectDHT'          =>  { in  => ['+port','+string'],
-		                  out => [],
-		                  BI  => BIconnectDHT},
-
-     'insertDHTitem'             => { in  => ['+int', 'value'],
-  			             out => [],	
-			             BI  => BIinsertDHTitem},
-
-     'lookupDHTitem'             => { in  => ['+int'],
-  			             out => [],	
-			             BI  => BIlookupDHTitem},
-
-
-
      'getCRC'	            =>  { in  => ['+virtualString'],
 		                  out => ['+int'],
 		                  BI  => BIgetCRC},
@@ -61,34 +34,14 @@
 				  out => ['+string'],
 				  BI  => BIportToMS},
 
-
      'unmarshalPort'           => { in  => ['+string'],
 				  out => ['+port'],
 				  BI  => BImsToPort},
 
-
-     'sendcp' 		=> { in  => ['+int', '+int', '+int', '+int', '+int'],
-			     out => [],
-			     BI  => BIsendCping},
-
-
-     'sendmpp' 		=> { in  => ['+int', '+int', '+int', '+int', '+int'],
-			     out => [],
-			     BI  => BIsendMpongPL},
-
-     'sendmpt' 		=> { in  => ['+int', '+int', '+int', '+int', '+int' ,'value'],
-			     out => [],
-			     BI  => BIsendMpongTerm},
-
-
      'getMsgCntr'       => { in  => [],
 			     out => ['+record'],
 			     BI  => BIgetMsgCntr},
-     
-     'getOperCntr'      => { in  => [],
-			     out => ['+record'],
-			     BI  => BIgetOperCntr},
-     
+
      'initIPConnection'    => { in  => ['+string','+int','+int','+port'],
 				out => [],
 				BI  => BIinitIPConnection},
@@ -113,9 +66,13 @@
                                   out => [],
 				  BI => BIhandoverRoute},
 
-     'connFailed'            => { in => ['+int','+atom'],
+     'connFailed'            => { in => ['+value','+atom'],
 				  out => [],
 				  BI  => BIconnFailed},
+
+     'setSiteState'          => { in => ['+value','+atom'],
+				  out => [],
+				  BI  => BIsetSiteState},
 
      'printDPTables'	     => { in  => [],
 				  out => [],
@@ -124,39 +81,6 @@
      'printDssMemoryAllocation'	     => { in  => [],
 					  out => [],
 					  BI  => BIprintDssMemoryAllocation},
-
-     'setDGC'	             => { in  => ['value', '+atom'],
-				  out => ['bool'],
-				  BI  => BIsetDGC},
-
-
-     'getDGC'	             => { in  => ['value'],
-				  out => ['+record'],
-				  BI  => BIgetDGC},
-
-     'getDGCAlgs'            => { in  => [],
-				  out => ['+record'],
-				  BI  => BIgetDGCAlgs},
-
-     'getDGCAlgInfo'         => { in  => ['+atom'],
-				  out => ['+record'],
-				  BI  => BIgetDGCAlgInfo},
-
-     'setDGCAlg'	     => { in  => ['+atom','+bool'],
-				  out => [],
-				  BI  => BIsetDGCAlg},
-
-     'setDGCAlgProp'         => { in  => ['+atom','+atom','value'],
-				  out => [],
-				  BI  => BIsetDGCAlgProp},
-
-     'getMsgPriority'        =>  { in  => [],
-                                   out => ['+record'],
-                                   BI  => BIgetMsgPriority},
-
-     'setMsgPriority'        =>  { in  => ['+atom','+atom'],
-                                   out => [],
-                                   BI  => BIsetMsgPriority},
 
      'getRPC'                =>  { in  => [],
                                    out => ['value'],
@@ -190,14 +114,6 @@
 				  out => [],
 				  BI  => BIkillLocal},
 
-     'getMaxRtt'             => { in  => [],
-                                  out => ['+int'],
-                                  BI  => BIgetMaxRtt},
-
-     'setMaxRtt'             => { in  => ['+int'],
-                                  out => [],
-                                  BI  => BIsetMaxRtt},
-
      'migrateManager'        =>  { in  => ['value'],
                                    out => [],
                                    BI  => BImigrateManager},
@@ -206,22 +122,6 @@
 				  out => [],
 				  BI  => BIcreateLogFile},
 
-     'siteStatistics'	=> { in  => [],
-			     out => ['+[value]'],
-			     BI  => BIsiteStatistics},
-
-     'getTablesInfo'	=> { in  => [],
-			     out => ['+[value]'],
-			     BI  => BItablesExtract},
-
-     'getNetInfo'	=> { in  => [],
-			     out => ['+[value]'],
-			     BI  => BI_DistMemInfo},
-
-     'perdioStatistics'	=> { in  => [],
-			     out => ['+record'],
-			     BI  => BIperdioStatistics},
-				  
     'getEntityCond'	=>  { in  => ['value'],
 			     out => ['value'],
 			     BI  => BIgetEntityCond},
@@ -269,6 +169,3 @@
 			  BI => BIgetChannelStatus},
     
     );
-
-
-
