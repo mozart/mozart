@@ -126,6 +126,7 @@ public:
   virtual void reportFaultState(DSiteState);
 
   virtual DssChannel *establishConnection();
+  virtual void receivedMsg(MsgContainer*);
 };
 
 

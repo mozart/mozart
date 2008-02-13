@@ -35,6 +35,12 @@
 #include "msl_dct.hh"
 #include "msl_serialize.hh"
 
+// borrowed from dss_msgLayerInterface.hh
+namespace _dss_internal {
+  void gf_pushPstOut(MsgContainer*, PstOutContainerInterface*); 
+  PstInContainerInterface* gf_popPstIn(MsgContainer*);
+}
+
 namespace _msl_internal{ //Start namespace
 
   const int INITIAL_SIZE = 8;     // initial size of a_fields
@@ -386,6 +392,11 @@ namespace _msl_internal{ //Start namespace
     return static_cast<ExtDataContainerInterface*>(m_popVal());
   }
 
+  PstInContainerInterface*
+  MsgCnt::popPstIn() {
+    return _dss_internal::gf_popPstIn(this);
+  }
+
   MsgContainer* 
   MsgCnt::popMsgC(){
     Assert(checkCounters() && m_getFT() == FT_MSGC);
@@ -412,6 +423,10 @@ namespace _msl_internal{ //Start namespace
 
   void MsgCnt::pushSDC(ExtDataContainerInterface* v) {
     m_pushVal(static_cast<void*>(v), FT_SDC);
+  }
+
+  void MsgCnt::pushPstOut(PstOutContainerInterface* v) {
+    _dss_internal::gf_pushPstOut(this, v);
   }
 
   void MsgCnt::pushMsgC(MsgContainer* v) {

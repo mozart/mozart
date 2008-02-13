@@ -231,6 +231,19 @@ GlueSite::establishConnection(){
   return NULL; 
 }
 
+void
+GlueSite::receivedMsg(MsgContainer* msg) {
+  PstInContainer* pst = static_cast<PstInContainer*>(msg->popPstIn());
+  if (pst) {
+    OZ_Term command =
+      OZ_recordInit(oz_atom("deliver"),
+		    oz_cons(oz_pair2(oz_atom("msg"), pst->a_term),
+		    oz_cons(oz_pair2(oz_atom("src"), getOzSite()),
+			    oz_nil())));
+    doPortSend(tagged2Port(g_connectPort), command, NULL); 
+  }
+}
+
 
 
 GlueSite* getGlueSites() {
