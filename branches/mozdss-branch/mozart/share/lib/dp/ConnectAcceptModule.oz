@@ -352,7 +352,7 @@ in
 		   skip
 		end
 	     catch _ then skip end
-	  elseof directMsg(srcSite:S msg:Msg) then
+	  elseof deliver(src:S msg:Msg) then
 	     {ProcessMsg S Msg}
 	  else 
 	     {System.showError "Warning Connection Wrapper called with wrong parameters"}
