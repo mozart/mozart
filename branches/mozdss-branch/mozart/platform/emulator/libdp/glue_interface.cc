@@ -130,10 +130,6 @@ ComService::ComService(int ip, int port, int id) {
 
 ComService::~ComService(){;}
 
-void ComService::closeAnonConnection(DssChannel* con){
-  delete con;
-}
-
 // Create a SiteAddress object from the representation found in 
 // the readbuffer. Connect the new object to the passed DssSite
 // object. 

@@ -197,10 +197,7 @@ namespace _msl_internal { //Start namespace
     a_lastrtt=-1;
     if(a_transObj){
       DssChannel* ch = a_transObj->m_closeConnection(); 
-      if(a_site != NULL) 
-	(a_site->m_getCsSite())->closeConnection(ch); 
-      else // the comobj is anonymous
-	a_mslEnv->a_comService->closeAnonConnection(ch); 
+      ch->close();          // the channel object can be freed
       delete a_transObj; 
       a_transObj=NULL;
       
@@ -402,7 +399,7 @@ namespace _msl_internal { //Start namespace
   // The returnvalue indicates whether it is wanted or not
   void ComObj::handover(DssChannel* tc) {
     if(a_state!=OPENING_WF_HANDOVER) {
-      a_mslEnv->a_comService->closeAnonConnection( tc); 
+      tc->close();     // the channel object can be freed
       return;
     }
     m_OPENING_WF_HANDOVER_2_OPENING_WF_PRESENT(tc); 

@@ -51,9 +51,6 @@ public:
   ComService(int ip, int port, int id);
   ~ComService();
 
-  // Connections 
-  virtual void closeAnonConnection(DssChannel* con);
-
   virtual ExtDataContainerInterface* m_createExtDataContainer(BYTE);
   
   // The CsSite Object

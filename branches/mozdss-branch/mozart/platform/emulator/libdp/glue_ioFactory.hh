@@ -47,6 +47,7 @@ public:
   virtual void registerWrite(bool);
   virtual int read(void* buf, const unsigned int& len);
   virtual int write(void* buf, const unsigned int& len);
+  virtual void close();
 
   bool invoke_reader();
   bool invoke_writer();
