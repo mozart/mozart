@@ -523,7 +523,7 @@ OZ_BI_define(BIsetAnnotation,4,0)
 
   if (oz_isOzSite(entity)) { // special case: sites
     if (pn == PN_NO_PROTOCOL || pn == PN_IMMEDIATE) return PROCEED;
-    goto protocol_error;
+    return oz_raise(E_SYSTEM, AtomDp, "incorrect protocol", 0);
   }
 
   Annotation a = getAnnotation(entity);
