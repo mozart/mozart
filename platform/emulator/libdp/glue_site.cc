@@ -231,11 +231,6 @@ GlueSite::establishConnection(){
   return NULL; 
 }
 
-void     
-GlueSite::closeConnection(DssChannel* con) {
-  delete con;
-}
-
 
 
 GlueSite* getGlueSites() {

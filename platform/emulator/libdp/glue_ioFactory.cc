@@ -75,6 +75,11 @@ SocketChannel::~SocketChannel() {
   osclose(fd);
 }
 
+void
+SocketChannel::close() {
+  delete this;
+}
+
 bool
 SocketChannel::setCallback(DssChannelCallback* cbk) {
   if (lost) return false;

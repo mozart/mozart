@@ -136,8 +136,6 @@ enum DSiteState{
 // provided by the user
 class DssChannel {
 public:
-  virtual ~DssChannel() {}
-
   // set callback object (when data available)
   virtual bool setCallback(DssChannelCallback*) = 0;
 
@@ -148,6 +146,9 @@ public:
   // read/write when channel ready, returns how many bytes read/written
   virtual int read(void* buf, const unsigned int& len) = 0;
   virtual int write(void* buf, const unsigned int& len) = 0;
+
+  // close the channel; the object can be deleted at this point
+  virtual void close() = 0;
 };
 
 // interface of channel readers/writers; provided by the DSS
@@ -214,7 +215,6 @@ public:
   virtual void reportFaultState(DSiteState) = 0;
 
   virtual DssChannel *establishConnection() = 0;
-  virtual void closeConnection(DssChannel* con) = 0;
 };
 
 
@@ -272,9 +272,6 @@ public:
 class ComServiceInterface{
 public:
   ComServiceInterface();
-  
-  // Connections 
-  virtual void closeAnonConnection(DssChannel* con) = 0;
 
   // The CsSite Object
   virtual CsSiteInterface* unmarshalCsSite(DSite* Ds, DssReadBuffer* const buf) = 0; 
