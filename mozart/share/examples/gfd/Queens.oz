@@ -40,6 +40,7 @@ local
    %% Optimized and generic
    SelVal = map(min:      GFD.reflect.min
 		max:      GFD.reflect.max
+		splitMin: GFD.reflect.med
 	       )
    
    %% Generic only
@@ -70,7 +71,7 @@ local
    fun {MapSelect Map AOP}
       if {IsAtom AOP} then Map.AOP else AOP end
    end
-	    
+   
    fun {PreProcessSpec Spec}
       FullSpec = {Adjoin
 		  generic(order:     size
@@ -157,8 +158,8 @@ fun{Queens N}
       {GFD.distinctOffset Root C1}
       {GFD.distinctOffset Root C2}
       
-      {GFDDistribute ff Root}
+      {GFDDistribute split Root}
    end
 end
 
-{Show {SearchAll {Queens 10}}}
+{Show {SearchAll {Queens 6}}}
