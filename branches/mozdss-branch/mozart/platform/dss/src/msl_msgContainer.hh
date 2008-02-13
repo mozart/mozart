@@ -202,6 +202,7 @@ namespace _msl_internal{ //Start namespace
     virtual int popIntVal();
     virtual ExtDataContainerInterface* popADC();
     virtual ExtDataContainerInterface* popSDC();
+    virtual PstInContainerInterface* popPstIn();
     virtual MsgContainer* popMsgC(); 
 
 
@@ -210,6 +211,7 @@ namespace _msl_internal{ //Start namespace
     virtual void pushIntVal(int v);
     virtual void pushADC(ExtDataContainerInterface* v);
     virtual void pushSDC(ExtDataContainerInterface* v);
+    virtual void pushPstOut(PstOutContainerInterface*);
     virtual void pushMsgC(MsgContainer*); 
 
 

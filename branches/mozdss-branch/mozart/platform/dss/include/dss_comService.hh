@@ -215,6 +215,7 @@ public:
   virtual void reportFaultState(DSiteState) = 0;
 
   virtual DssChannel *establishConnection() = 0;
+  virtual void receivedMsg(MsgContainer*) = 0;
 };
 
 
@@ -229,6 +230,8 @@ public:
   virtual void resetMarshaling() = 0; 
 };
 
+class PstInContainerInterface;
+class PstOutContainerInterface;
 
 class TimerElementInterface{
 };
@@ -242,12 +245,14 @@ public:
   virtual void pushIntVal(int) = 0; 
   virtual void pushADC(ExtDataContainerInterface*) = 0; 
   virtual void pushSDC(ExtDataContainerInterface*) = 0; 
+  virtual void pushPstOut(PstOutContainerInterface*) = 0;
   virtual void pushMsgC(MsgContainer*) = 0; 
   
   virtual DSite* popDSiteVal() = 0; 
   virtual int popIntVal() = 0; 
   virtual ExtDataContainerInterface* popADC() = 0; 
   virtual ExtDataContainerInterface* popSDC() = 0; 
+  virtual PstInContainerInterface* popPstIn() = 0;
   virtual MsgContainer* popMsgC() = 0; 
   
   virtual bool m_isEmpty() const = 0; 
@@ -277,9 +282,6 @@ public:
   virtual CsSiteInterface* unmarshalCsSite(DSite* Ds, DssReadBuffer* const buf) = 0; 
   virtual CsSiteInterface *connectSelfReps(MsgnLayer* ,DSite*) = 0; 
   virtual ExtDataContainerInterface* m_createExtDataContainer(BYTE) = 0; 
-  
-  // Explicit site handeling
-  virtual void m_MsgReceived(CsSiteInterface*, MsgContainer*) = 0; 
   
   // Mark all DSites used by the CSC. 
   virtual void m_gcSweep() = 0; 

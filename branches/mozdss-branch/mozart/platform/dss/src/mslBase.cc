@@ -138,7 +138,7 @@ namespace _msl_internal{
   {
     DSite *ds = static_cast<DSite*>(s); 
     MsgContainer* msgR = static_cast<MsgContainer*>(msg); 
-    a_comService->m_MsgReceived(ds->m_getCsSiteRep() , msgR);
+    ds->m_getCsSiteRep()->receivedMsg(msgR);
   }
   
   void MsgnLayerEnv::m_appendImmediateEvent(Event* e){

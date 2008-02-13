@@ -159,19 +159,6 @@ void ComService::m_gcSweep() {
   // raph: where are those DSites?
 }
 
-// Explicit site handeling
-void ComService::m_MsgReceived(CsSiteInterface* CS, MsgContainer* msg){
-  PstInContainer *pst = NULL; 
-  GlueSite *gs = static_cast<GlueSite*>(CS);
-
-  OZ_Term command =
-    OZ_recordInit(oz_atom("directMsg"),
-		  oz_cons(oz_pair2(oz_atom("msg"), pst->a_term),
-			  oz_cons(oz_pair2(oz_atom("srcSite"), gs->getOzSite()),
-				  oz_nil())));
-  doPortSend(tagged2Port(g_connectPort), command, NULL); 
-}
-
 ExtDataContainerInterface* 
 ComService::m_createExtDataContainer(BYTE){
   printf("we're sending NOTHING, thus we should se no extdata containers\n"); 

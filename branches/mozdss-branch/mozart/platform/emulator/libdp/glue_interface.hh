@@ -57,9 +57,6 @@ public:
   virtual CsSiteInterface* unmarshalCsSite(DSite* Ds, DssReadBuffer* const buf); 
   virtual CsSiteInterface *connectSelfReps(MsgnLayer*, DSite*); 
   
-   // Explicit site handeling
-  virtual void m_MsgReceived(CsSiteInterface*, MsgContainer*); 
-  
   // Mark all DSites used by the CSC. 
   virtual void m_gcSweep(); 
 };

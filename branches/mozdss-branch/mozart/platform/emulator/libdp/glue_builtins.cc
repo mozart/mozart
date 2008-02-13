@@ -740,21 +740,16 @@ OZ_BI_define(BIgetEntityCond,2,0){
 }OZ_BI_end
 
 
-/* Send a Pst message to this site. */
+// send a value (1) on a given site (0)
 OZ_BI_define(BIsendMsgToSite,2,0){
-  OZ_declareTerm(0, tag_site);
-  OZ_declareTerm(1, msg);
+  oz_declareNonvarIN(0, site);
+  oz_declareIN(1, value);
+  if (!oz_isOzSite(site)) oz_typeError(0, "site");
 
-  if (OZ_isExtension(tag_site)) {
-    OZ_Extension *e = OZ_getExtension(tag_site);
-    if (e->getIdV() != OZ_E_SITE) 
-      return OZ_typeError(0,"site");
-  }
-  else return FAILED; 
-
-  PstOutContainer *load = new PstOutContainer(msg);
-  MsgContainer *msgC = NULL; 
-  ozSite2DSite(tag_site)->m_sendMsg(msgC);
+  MsgContainer* msg =
+    glue_com_connection->a_msgnLayer->createCscSendMsgContainer();
+  msg->pushPstOut(new PstOutContainer(value));
+  ozSite2DSite(site)->m_sendMsg(msg);
 
   return PROCEED;
 }OZ_BI_end

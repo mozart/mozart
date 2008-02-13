@@ -143,10 +143,9 @@
 			     out => [],
 			     BI  => BIsetDssLogLevel},
 
-
-    'sendMsgToSite'=>{ in => ['+value', '+value'],
-                       out => [],  
-                       BI => BIsendMsgToSite},
+    'sendSite'      =>  { in => ['+value', 'value'],
+                          out => [],  
+			  BI => BIsendMsgToSite},
 
     'getAllSites'=>{ in => [],
                      out => ['+[value]'],
