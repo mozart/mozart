@@ -79,7 +79,7 @@ for ?_{Space}.
 <synopsis>
 <<{Space.askVerbose ?+{Space} ??{T}}>>
 <item>
-returns the status of ?_{Space} in verbose form. Reduces immediately, even if ?_{Space} is not yet stable.
+returns the status of ?_{Space} in verbose form. Reduces immediately, even if ?_{Space} is not yet stable. --Need a change--
 <p>
 If ?_{Space} becomes merged, the atom <<merged>> is returned.
 <p>
@@ -221,6 +221,22 @@ propagation has been carried out.
 If executed in the toplevel space, it will block
 forever. 
 
+
+<entry><<getChoice>>
+<index class=tails/<<Space>><and><<getChoice>>/
+<synopsis>
+<<{Space.getChoice ??{L}}>>
+<item>
+blocks until either the current space becomes stable (without branching), or a branch has been commited to the current space. If there is no branching and space is stable atom nil is returned. If a branch B has been commited, ?_{L} is bound to [B].
+
+<entry><<branch>>
+<index class=tails/<<Space>><and><<branch>>/
+<synopsis>
+<<{Space.branch ?+{L}}>>
+<item>
+defines the branching of the current space to be the ones in list ?_{L}. This primitive terminates inmediately. Branches Bi are exactly the ones that appear in the tuple branching(B1 ... Bn) returned by <<ask>>.
+
+
 <entry><<choose>>
 <index class=tails/<<Space>><and><<choose>>/
 <synopsis>
@@ -234,17 +250,14 @@ selected by <<Space.commit>>. Reduces as soon as
 ?_{I2} becomes bound.
 
 <p>
-<<Space.choose>> is a primitive intended for
-programming abstractions. For example, the
-Mozart-compiler expands the following
-<<choice>>-statement 
-<<<choice ?_{S1} [] ?_{S2} end>>>
-to the following statement
+<<Space.choose>> is a not a primitive anymore as it can be implemented in terms of <<Space.branch>> and <<Space.getChoice>>.
 <<<
-case {Space.choose 2}
-of 1 then ?_{S1}
-[] 2 then ?_{S2}
-end
+ fun {Choose N}
+          %% create the branching
+          {Branch {List.number 1 N 1}}
+          %% wait for the commitment
+          case {GetChoice} of [I] then I end
+       end
 >>>
 
 <p>
