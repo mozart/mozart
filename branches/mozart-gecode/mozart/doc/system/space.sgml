@@ -108,13 +108,14 @@ Does not synchronize on stability of ?_{Space}.
 Raises a runtime error if the current space is not admissible
 for ?_{Space}.
 
+<!--
 <entry><<merge>>
 <index class=tails/<<Space>><and><<merge>>/
 <synopsis>
 <<{Space.merge ?+{Space} ?_{X}}>>
 <item>
 merges ?_{Space} with the current space and constrains ?_{X} to the
-root variable of ?_{Space}.
+root variable of ?_{Space}. <<not_working>>
 
 <p>
 Does not synchronize on stability of ?_{Space}.
@@ -122,6 +123,7 @@ Does not synchronize on stability of ?_{Space}.
 <p>
 Raises a runtime error if ?_{Space} is already merged, or if the
 current space is not admissible for ?_{Space}.
+-->
 
 <entry><<clone>>
 <index class=tails/<<Space>><and><<clone>>/
@@ -225,16 +227,16 @@ forever.
 <entry><<getChoice>>
 <index class=tails/<<Space>><and><<getChoice>>/
 <synopsis>
-<<{Space.getChoice ??{L}}>>
+<<{Space.getChoice ??{X}}>>
 <item>
-blocks until either the current space becomes stable (without branching), or a branch has been commited to the current space. If there is no branching and space is stable atom nil is returned. If a branch B has been commited, ?_{L} is bound to [B].
+blocks until either the current space becomes stable (without branching), or a branch has been commited to the current space. If there is no branching and space is stable atom nil is returned. If a branch <<B>> has been commited, ?_{X} is bound to <<B>>.
 
 <entry><<branch>>
 <index class=tails/<<Space>><and><<branch>>/
 <synopsis>
 <<{Space.branch ?+{L}}>>
 <item>
-defines the branching of the current space to be the ones in list ?_{L}. This primitive terminates inmediately. Branches Bi are exactly the ones that appear in the tuple branching(B1 ... Bn) returned by <<ask>>.
+Sets the branchings of the current space to be the ones in list ?_{L}. This primitive terminates inmediately. Branches in ?_{L} are exactly the ones that appear in the tuple  <<branching([B1 ... Bn])>> returned by <<ask>>.
 
 
 <entry><<choose>>
@@ -250,14 +252,14 @@ selected by <<Space.commit>>. Reduces as soon as
 ?_{I2} becomes bound.
 
 <p>
-<<Space.choose>> is a not a primitive anymore as it can be implemented in terms of <<Space.branch>> and <<Space.getChoice>>.
+<<Space.choose>> is not a primitive anymore as it can be implemented in terms of <<Space.branch>> and <<Space.getChoice>>.
 <<<
  fun {Choose N}
-          %% create the branching
-          {Branch {List.number 1 N 1}}
-          %% wait for the commitment
-          case {GetChoice} of [I] then I end
-       end
+     %% create the branching
+     {Branch {List.number 1 N 1}}
+     %% wait for the commitment
+     case {GetChoice} of [I] then I end
+ end
 >>>
 
 <p>
