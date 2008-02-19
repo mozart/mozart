@@ -416,6 +416,26 @@ returns the current domain of ?_{D} as an ordered list of integers.
 returns the current domain of  ?_{D} as a domain specification.
 
 <entry>
+<index class=module/FD<and>reflect<and>regretMin/
+<<reflect.regretMin>>
+<synopsis>
+<<<
+{FD.reflect.regretMin ?*{D} ??{D2}}
+>>>
+<item>
+Return regret of domain minimum (distance to next larger value). 
+
+<entry>
+<index class=module/FD<and>reflect<and>regretMax/
+<<reflect.regretMax>>
+<synopsis>
+<<<
+{FD.reflect.regretMax ?*{D} ??{D2}}
+>>>
+<item>
+Return regret of domain maximum (distance to next smaller value). 
+
+<entry>
 <index class=module/FD<and>reflect<and>nbSusps/
 <<reflect.nbSusps>>
 <synopsis>
@@ -424,7 +444,6 @@ returns the current domain of  ?_{D} as a domain specification.
 >>>
 <item>
 returns the current number of threads suspending on ?_{D}.
-
 
 <entry>
 <index class=module/FD<and>reflect<and>nbProp/
