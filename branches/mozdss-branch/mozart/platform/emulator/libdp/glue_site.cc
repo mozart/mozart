@@ -109,7 +109,7 @@ OZ_Term GlueSite::getFaultStream() {
 }
 
 OZ_Term GlueSite::m_getInfo() {
-  char ip[16];
+  static char ip[16];
   //a_ipAddress is in network byte order!
   unsigned int ip_addr=ntohl(a_ipAddress);
   sprintf(ip,"%d.%d.%d.%d",
@@ -288,17 +288,17 @@ OZ_Term OzSite::printV(int depth) {
   if (depth == 0) {
     return OZ_atom("<site>");
   } else {
-    static char str[45];
+    static char str[16];
     //a_ipAddress is in network byte order!
     unsigned int ip_addr=ntohl(a_gSite->getIpNum());
-    sprintf(str, "<site %d.%d.%d.%d:%u:%u>",
+    sprintf(str, "%d.%d.%d.%d",
 	    (ip_addr/(256*256*256))%256,
 	    (ip_addr/(256*256))%256,
 	    (ip_addr/256)%256,
-	    ip_addr%256,
-	    a_gSite->getPortNum(),
-	    a_gSite->getIdNum());
-    return oz_atom(str);
+	    ip_addr%256);
+    return OZ_mkTupleC("#", 7, oz_atom("<site "), oz_atom(str), oz_atom(":"),
+		       oz_int(a_gSite->getPortNum()), oz_atom(":"),
+		       oz_int(a_gSite->getIdNum()), oz_atom(">"));
   }
 }
 
