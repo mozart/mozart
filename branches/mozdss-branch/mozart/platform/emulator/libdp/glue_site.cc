@@ -285,7 +285,21 @@ OZ_Term OzSite::typeV(void) {
 }
 
 OZ_Term OzSite::printV(int depth) {
-  return OZ_atom("<site>");
+  if (depth == 0) {
+    return OZ_atom("<site>");
+  } else {
+    static char str[45];
+    //a_ipAddress is in network byte order!
+    unsigned int ip_addr=ntohl(a_gSite->getIpNum());
+    sprintf(str, "<site %d.%d.%d.%d:%u:%u>",
+	    (ip_addr/(256*256*256))%256,
+	    (ip_addr/(256*256))%256,
+	    (ip_addr/256)%256,
+	    ip_addr%256,
+	    a_gSite->getPortNum(),
+	    a_gSite->getIdNum());
+    return oz_atom(str);
+  }
 }
 
 OZ_Term OzSite::printLongV(int depth, int offset) {
