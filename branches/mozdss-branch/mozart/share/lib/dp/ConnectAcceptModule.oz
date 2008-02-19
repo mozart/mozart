@@ -84,6 +84,13 @@ define
    fun{GetIdFromRequestor Requestor}
       Requestor.id
    end
+
+   fun {SiteKey Site}
+      site(ip:IP port:PN id:ID) = Site.info
+   in
+      {VirtualString.toAtom IP#':'#PN#':'#ID}
+   end
+
    %% Check the functor, it is only allowed to importthe ConnectionWrapper
    fun{CheckFunctor Func} 
       true
@@ -108,6 +115,8 @@ define
 	   ReadSelect
 	   Close
 	define
+	   Key={SiteKey TargetSite}
+
 	   proc{Handover SetUpParameter}
 	      % This is a fix and not a solution. If another
 	      % ConnectionFunctor than the default one keeps a
@@ -117,7 +126,7 @@ define
 		 {Obj unregisterResource(fd(FD))}
 	      else skip end
 		 
-	      if {Dictionary.member OngoingRequests 'a'} then
+	      if {Dictionary.member OngoingRequests Key} then
 		 {Glue.setConnection TargetSite SetUpParameter.fd}
 	      end
 	   end
@@ -128,7 +137,7 @@ define
       
 	   proc{ConnFailed Reason}
 	      {Obj freeResources}
-	      if {Dictionary.member OngoingRequests 'a'} then
+	      if {Dictionary.member OngoingRequests Key} then
 		 {Glue.connFailed TargetSite Reason}
 	      end
 	   end
@@ -306,25 +315,24 @@ in
 	     connect(TargetSite) then
 	     {System.show {Glue.getSiteInfo TargetSite}}
 	     %Id = {GetIdFromRequestor Requestor}
-	     skip
+	     Key={SiteKey TargetSite}
 	  in
-	     if {Dictionary.member OngoingRequests 'a'} then
+	     if {Dictionary.member OngoingRequests Key} then
 		{System.show dropped}
 		skip
 %		thread raise already_connecting(Id) end end
 	     else
-		OngoingRequests.'a':=r(thr:_)
+		OngoingRequests.Key:=r(thr:_)
 		{System.show will_connect}
 		thread
 		   try
-		      case OngoingRequests.'a' of r(thr:T) then
+		      case OngoingRequests.Key of r(thr:T) then
 			 T={Thread.this}
 		      end
 		      {System.show before_cc_init}
 		      _ = {New ConnectionController init(ToRoute
 							 TargetSite ConFun)}
 		      {System.show after_cc_init}
-		      {Dictionary.remove OngoingRequests 'a'}
 \ifdef DBG
 		   catch X then
 		      {System.show warning(X)}
@@ -336,24 +344,28 @@ in
 		   end
 		end
 	     end
+	     
 	  elseof connection_received(TargetSite FD) then
-	     skip
+	     {Dictionary.remove OngoingRequests {SiteKey TargetSite}}
+	     
 	  elseof new_site(S) then
 	     {Assign LastSiteCell S}
-	  elseof abort(Requestor) then
-	     Id = 'a'%{GetIdFromRequestor Requestor}
-	  in
-	     try
-		case {CondSelect OngoingRequests Id notfound}
-		of r(thr:T) then
-		   {Thread.terminate T}
-		   {Dictionary.remove OngoingRequests Id}
-		else
-		   skip
-		end
-	     catch _ then skip end
+% 	  elseof abort(Requestor) then
+% 	     Id = 'a'%{GetIdFromRequestor Requestor}
+% 	  in
+% 	     try
+% 		case {CondSelect OngoingRequests Id notfound}
+% 		of r(thr:T) then
+% 		   {Thread.terminate T}
+% 		   {Dictionary.remove OngoingRequests Id}
+% 		else
+% 		   skip
+% 		end
+% 	     catch _ then skip end
+	     
 	  elseof deliver(src:S msg:Msg) then
 	     {ProcessMsg S Msg}
+	     
 	  else 
 	     {System.showError "Warning Connection Wrapper called with wrong parameters"}
 %	     {System.showError {Value.toVirtualString Request 100 100}}
