@@ -225,7 +225,7 @@ The integer limits are chosen such that addition and subtraction of two values w
 FD.sup
 >>>
 <item>
-Largest allowed integer value. 
+Largest allowed integer value. Constant value: 2 147 483 646
 <!-- In Mozart <<FD.sup>> is 134 217 726. -->
 
 <entry>
@@ -236,7 +236,8 @@ Largest allowed integer value.
 FD.inf
 >>>
 <item>
-Smallest allowed integer value.
+Smallest allowed integer value. Constant value: ~2 147 483 646
+
 <!-- In Mozart <<FD.inf>> is 0. -->
 
 
@@ -245,10 +246,10 @@ Smallest allowed integer value.
 <<is>>
 <synopsis>
 <<<
-{FD.is ?*{D} ??{B}}  
+{FD.is ?*{V} ??{B}}  
 >>>
 <item>
-tests whether ?_{D} is an integer between 0 and <<FD.sup>>. <<be_careful_the meaning is different>>
+tests whether ?_{V} is a finite domain variable. <!-- integer between 0 and <<FD.sup>>. <<be_careful_the meaning is different>> -->
 
 </list>
 </section>
@@ -324,7 +325,7 @@ label ?_{L}.
 {FD.decl ??{D}}  
 >>>
 <item>
-Abbreviates <<{FD.int 0#FD.sup ?_{D}}>>.
+Abbreviates <<{FD.int FD.inf#FD.sup ?_{D}}>>.
 </list>
 </section>
 
