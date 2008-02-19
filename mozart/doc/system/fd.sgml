@@ -536,7 +536,49 @@ Propagates <math> l\leq x\leq m </math>
 >>>
 <item>
  Propagates <math> l\leq x_i\leq m\f$ for all \f$0\leq i<|x|</math>
+
+<entry>
+<index class=module/FD<and>dom/
+<<dom>>
+<synopsis>
+<<<
+{FD.dom ?*{Dv} ?+{A} ?*{D}}
+>>>
+<item>
+ Propagates <math>  x\in s</math>
+
+<entry>
+<index class=module/FD<and>dom/
+<<dom>>
+<synopsis>
+<<<
+{FD.dom ?*{Dv} ?+{A} ?*{D}}
+>>>
+<item>
+ Propagates <math>  x_i\in s\f$ for all \f$0\leq i<|x| </math>
+
+<entry>
+<index class=module/FD<and>dom/
+<<dom>>
+<synopsis>
+<<<
+{FD.dom ?*{Dv} ?+{A} ?*{D}}
+>>>
+<item>
+ Post propagator for <math> (l\leq x \leq m) \Leftrightarrow b </math>
+
+<entry>
+<index class=module/FD<and>dom/
+<<dom>>
+<synopsis>
+<<<
+{FD.dom ?*{Dv} ?+{A} ?*{D}}
+>>>
+<item>
+Post propagator for <math>  (x \in s) \Leftrightarrow b\f </math>
+
 </list>
+
 
 <!-- ********************************************************************** -->
 <section id="section.fd.rel"><title/Simple relation constraints/
