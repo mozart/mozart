@@ -511,6 +511,68 @@ than ?_{D2}.
 </section>
 
 <!-- ********************************************************************** -->
+<section id="section.fd.prop"><title/Porpagators information/
+
+<!-- ********************************************************************** -->
+<section id="section.fd.dom"><title/Domain constraints/
+
+<list>
+<entry>
+<index class=module/FD<and>dom/
+<<dom>>
+<synopsis>
+<<<
+{FD.dom ?*{Dv} ?+{A} ?*{D}}
+>>>
+<item>
+Propagates <math> l\leq x\leq m </math>
+
+<entry>
+<index class=module/FD<and>dom/
+<<dom>>
+<synopsis>
+<<<
+{FD.dom ?*{Dv} ?+{A} ?*{D}}
+>>>
+<item>
+ Propagates <math> l\leq x_i\leq m\f$ for all \f$0\leq i<|x|</math>
+</list>
+
+<!-- ********************************************************************** -->
+<section id="section.fd.rel"><title/Simple relation constraints/
+
+<!-- ********************************************************************** -->
+<section id="section.fd.element"><title/Element constraints/
+
+<!-- ********************************************************************** -->
+<section id="section.fd.distinct"><title/Distinct constraints/
+
+<!-- ********************************************************************** -->
+<section id="section.fd.channel"><title/Channel constraints/
+
+<!-- ********************************************************************** -->
+<section id="section.fd.graph"><title/Graph constraints/
+
+<!-- ********************************************************************** -->
+<section id="section.fd.scheduling"><title/Scheduling constraints/
+
+<!-- ********************************************************************** -->
+<section id="section.fd.sorted"><title/Sorted constraints/
+
+<!-- ********************************************************************** -->
+<section id="section.fd.cardinality"><title/Cardinality constraints/
+
+<!-- ********************************************************************** -->
+<section id="section.fd.extensional"><title/Extensional constraints/
+
+<!-- ********************************************************************** -->
+<section id="section.fd.arithmetic"><title/Arithmetic constraints
+
+<!-- ********************************************************************** -->
+<section id="section.fd.linear"><title/Linear constraints/
+
+
+<!-- ********************************************************************** -->
 <section id="section.fd.arithmetic"><title/Generic Propagators/
 <p>
 The generic propagators <<FD.sum>>, <<FD.sumC>> and <<FD.sumCN>> do

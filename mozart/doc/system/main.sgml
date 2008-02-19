@@ -180,7 +180,20 @@
     <Meta name="html.split"       value="section.fd.general">
     <Meta name="html.split"       value="section.fd.telling">
     <Meta name="html.split"       value="section.fd.reflection">
-    <Meta name="html.split"       value="section.fd.watching">
+    <Meta name="html.split"       value="section.fd.rel">
+    <Meta name="html.split"       value="section.fd.element">
+    <Meta name="html.split"       value="section.fd.distinct">
+    <Meta name="html.split"       value="section.fd.channel">
+    <Meta name="html.split"       value="section.fd.graph">
+    <Meta name="html.split"       value="section.fd.scheduling">
+    <Meta name="html.split"       value="section.fd.sorted">
+    <Meta name="html.split"       value="section.fd.cardinality">
+    <Meta name="html.split"       value="section.fd.extensional">
+    <Meta name="html.split"       value="section.fd.arithmetic">
+    <Meta name="html.split"       value="section.fd.linear">
+
+
+<!--    <Meta name="html.split"       value="section.fd.watching"> 
     <Meta name="html.split"       value="section.fd.arithmetic">
     <Meta name="html.split"       value="section.fd.nonlinear">
     <Meta name="html.split"       value="section.fd.bool">
@@ -189,13 +202,12 @@
     <Meta name="html.split"       value="section.fd.distribution">
     <Meta name="html.split"       value="section.fd.assignment">
 
-
     <Meta name="html.split"       value="chapter.schedule">
     <Meta name="html.split"       value="section.schedule.unary">
     <Meta name="html.split"       value="section.schedule.distribute">
     <Meta name="html.split"       value="section.schedule.cumulative">
     <Meta name="html.split"       value="section.schedule.misc">
-
+-->
 
     <Meta name="html.split"       value="chapter.fs">
     <Meta name="html.split"       value="section.fs.genral">
