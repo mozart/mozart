@@ -238,9 +238,9 @@ define
 			  %% distance between maximum and minimum
 			  width  : GFD.'reflect.width' 
 			  %% regret of domain minimum (distance to next larger value).
-			  regret_min : GFD.'reflect.regretMin'
+			  regretMin : GFD.'reflect.regretMin'
 			  %% regret of domain maximum (distance to next smaller value). 
-			  regret_max : GFD.'reflect.regretMax'
+			  regretMax : GFD.'reflect.regretMax'
 			  %% number of propagators associated with the variable
 			  nbProp: GFD.'reflect.nbProp'
 			  %% number of suspendables associated with the variables
