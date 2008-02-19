@@ -363,7 +363,6 @@ returns the current upper bound of ?_{D1}.
 <item>
 returns the median of the domain.
 
-<!-- here -->
 <entry>
 <index class=module/FD<and>reflect<and>nextLarger/
 <<reflect.nextLarger>>
@@ -424,7 +423,19 @@ returns the current domain of  ?_{D} as a domain specification.
 {FD.reflect.nbSusps ?*{D} ??{I}}
 >>>
 <item>
-returns the current number of suspensions  on ?_{D}.
+returns the current number of threads suspending on ?_{D}.
+
+
+<entry>
+<index class=module/FD<and>reflect<and>nbProp/
+<<reflect.nbProp>>
+<synopsis>
+<<<
+{FD.reflect.nbProp ?*{D} ??{I}}
+>>>
+<item>
+returns the current number of propagators related with ?_{D}.
+
 </list>
 </section>
 
