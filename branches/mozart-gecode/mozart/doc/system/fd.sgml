@@ -60,6 +60,96 @@ possible atoms and the associated relations are summarized below.
 
 <para><title/domain propagation,
 interval propagation/
+When a propagator is posted in a computation space it does not perform any 
+domain pruning. This behavior allows batch recomputation enabled search engines
+(see PAPER). Different consistency levels are implemented by finite domain
+propagators including value, bound and domain consistency when no consistency 
+level is specified on propagator posting, domain consistency is used. 
+
+<list>
+
+<entry>
+<index class=module/FD<and>cl<and>val/
+<<val>>
+<synopsis>
+<<<
+FD.cl.inf
+>>>
+<item>
+Value consistency (naive)
+
+<entry>
+<index class=module/FD<and>cl<and>bnd/
+<<bnd>>
+<synopsis>
+<<<
+FD.cl.bnd
+>>>
+<item>
+Bounds consistency
+
+<entry>
+<index class=module/FD<and>cl<and>dom/
+<<dom>>
+<synopsis>
+<<<
+FD.cl.dom
+>>>
+<item>
+Domain consistency
+
+<entry>
+<index class=module/FD<and>cl<and>def/
+<<val>>
+<synopsis>
+<<<
+FD.cl.def
+>>>
+<item>
+The default consistency for a constraint
+</list>
+
+<p>
+Propagation kind is another parameter that defines memory and speed tradeoff 
+when running propagators.
+
+<list>
+
+<entry>
+<index class=module/FD<and>pk<and>speed/
+<<speed>>
+<synopsis>
+<<<
+FD.pk.speed
+>>>
+<item>
+Preferr speed over memory consumption
+
+<entry>
+<index class=module/FD<and>pk<and>memory/
+<<memory>>
+<synopsis>
+<<<
+FD.pk.memory
+>>>
+<item>
+Prefer little memory over speed
+
+<entry>
+<index class=module/FD<and>pk<and>def/
+<<def>>
+<synopsis>
+<<<
+FD.pk.def
+>>>
+<item>
+Make a default decision
+</list>
+
+
+
+
+<!-- 
 If a propagator is invoked, it tries to narrow the domains of the
 variables it is posted on. The amount of narrowing of domains depends on
 the operational semantics of the propagator. There are two main schemes
@@ -69,6 +159,7 @@ solution of the modeled constraint. But due to efficiency reasons,
 most propagators provide only interval 
 propagation, &ie; only the bounds of domains are narrowed. For some
 propagators, there is an operational semantics in between both schemes.
+-->
 
 <p>
 A propagator ceases to exist at least if all the variables it is posted
@@ -80,7 +171,7 @@ current lower bound of <<Y>>.
 </section>
 
 <!-- ********************************************************************** -->
-<section id="section.fd.condis"><title/The Concept of Constructive Disjunction/
+<section id="section.fd.condis"><title/The Concept of Constructive Disjunction - Not anymore/
 
 <p>
 The operational semantics of some propagators is based on the concept
@@ -122,7 +213,20 @@ to&nbsp;<math/\{0,1,9,10\}/.
 <p>
 <index scope="section.fd.general"/Finite Domains/
 
+<p>
+The integer limits are chosen such that addition and subtraction of two values within the limits can be done safely without numerical overflow. Also, changing the sign is always possible without overflow.
+
 <list>
+<entry>
+<index class=module/FD<and>sup/
+<<sup>>
+<synopsis>
+<<<
+FD.sup
+>>>
+<item>
+Largest allowed integer value. 
+<!-- In Mozart <<FD.sup>> is 134 217 726. -->
 
 <entry>
 <index class=module/FD<and>inf/
@@ -132,19 +236,9 @@ to&nbsp;<math/\{0,1,9,10\}/.
 FD.inf
 >>>
 <item>
-is a constant integer. Its concrete value is implementation dependent. 
-In Mozart <<FD.inf>> is 0.
+Smallest allowed integer value.
+<!-- In Mozart <<FD.inf>> is 0. -->
 
-<entry>
-<index class=module/FD<and>sup/
-<<sup>>
-<synopsis>
-<<<
-FD.sup
->>>
-<item>
-is a constant integer. Its concrete value is implementation dependent. 
-In Mozart <<FD.sup>> is 134 217 726.
 
 <entry>
 <index class=module/FD<and>is/
@@ -154,7 +248,8 @@ In Mozart <<FD.sup>> is 134 217 726.
 {FD.is ?*{D} ??{B}}  
 >>>
 <item>
-tests whether ?_{D} is an integer between 0 and <<FD.sup>>. 
+tests whether ?_{D} is an integer between 0 and <<FD.sup>>. <<be_careful_the meaning is different>>
+
 </list>
 </section>
 
