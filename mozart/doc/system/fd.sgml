@@ -354,18 +354,16 @@ returns the current lower bound of ?_{D1}.
 returns the current upper bound of ?_{D1}.
 
 <entry>
-<index class=module/FD<and>reflect<and>mid/
-<<reflect.mid>>
+<index class=module/FD<and>reflect<and>med/
+<<reflect.med>>
 <synopsis>
 <<<
-{FD.reflect.mid ?*{D1} ??{D2}}
+{FD.reflect.med ?*{D1} ??{D2}}
 >>>
 <item>
-returns the integer which is closest to the 
-middle of the current domain (the arithmetical means of the lower and upper
-bound of ?_{D1}). In case of ties, the smaller
-element	is selected.
+returns the median of the domain.
 
+<!-- here -->
 <entry>
 <index class=module/FD<and>reflect<and>nextLarger/
 <<reflect.nextLarger>>
