@@ -396,6 +396,17 @@ returns the largest integer in the domain of ?_{D1} which is smaller than
 returns the size of the current domain of ?_{D1}.
 
 <entry>
+<index class=module/FD<and>reflect<and>width/
+<<reflect.width>>
+<synopsis>
+<<<
+{FD.reflect.width ?*{D1} ??{D2}}
+>>>
+<item>
+returns width of domain (distance between maximum and minimum) ?_{D1}.
+
+
+<entry>
 <index class=module/FD<and>reflect<and>domList/
 <<reflect.domList>>
 <synopsis>
