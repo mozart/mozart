@@ -518,68 +518,144 @@ than ?_{D2}.
 <section id="section.fd.dom"><title/Domain constraints/
 
 <p>
+
 <list>
 <entry>
 <index class=module/FD<and>dom/
 <<dom>>
 <synopsis>
 <<<
-{FD.dom ?*{Dv} ?+{A} ?*{D}}
+{FD.dom ?_{X} ?_{L} ?_{M}}
 >>>
-<item> Propagates <math> l\leq x\leq m </math>
-<item> Propagates <math> l\leq x_i\leq m\f$ for all \f$0\leq i<|x| </math>
-<item> Propagates <math> x\in s <math>
-<item> Propagates <math> x_i\in s\f$ for all \f$0\leq i<|x| <math>
-<item> Post propagator for <math> (l\leq x \leq m) \Leftrightarrow b</math>
-<item> Post propagator for <math> (x \in s) \Leftrightarrow b </math>
+<item> Propagates <math> L \leq X\leq M </math>
+
+
+<entry>
+<index class=module/FD<and>dom1/
+<<dom1>>
+<synopsis>
+<<<
+{FD.dom1 ?_{X} ?_{L} ?_{M}}
+>>>
+<item> Propagates <math> L\leq X_i\leq M </math> for all <math>0\leq i<|x| </math>
+
+
+<entry>
+<index class=module/FD<and>dom3/
+<<dom3>>
+<synopsis>
+<<<
+{FD.dom3 ?_{X} ?_{S}}
+>>>
+<item> Propagates <math> X\in S </math>, being S an IntSet.
+
+
+<entry>
+<index class=module/FD<and>dom4/
+<<dom4>>
+<synopsis>
+<<<
+{FD.dom4 ?_{X} ?_{S}}
+>>>
+<item> Propagates <math> X_i\in S</math> for all <math>0\leq i<|X| </math>
+
+<entry>
+<index class=module/FD<and>dom5/
+<<dom5>>
+<synopsis>
+<<<
+{FD.dom5 ?_{X} ?_{L} ?_{M} ?_{B}}
+>>>
+<item> Post propagator for <math> (L\leq X \leq M) \Leftrightarrow B</math>
+
+<entry>
+<index class=module/FD<and>dom6/
+<<dom6>>
+<synopsis>
+<<<
+{FD.dom6 ?_{X} ?_{S} ?_{B}}
+>>>
+<item> Post propagator for <math> (X \in S) \Leftrightarrow B </math>
+
 
 </list>
-
 
 <!-- ********************************************************************** -->
 <section id="section.fd.rel"><title/Simple relation constraints/
 
 <p>
+<list>
+<entry>
+<index class=module/FD<and>rel/
+<<rel>>
+<synopsis>
+<<<
+{FD.rel ?_{Xv} ?_{R} ?_{Y}}
+>>>
+<item> Post propagators for <math> X_i \sim_R Y </math> for all <math>0\leq i<|X| </math>. Supports both bounds (\a icl = ICL_BND) and domain-consistency (\a icl = ICL_DOM, default).
 
-<item> Post propagator for <math> x_0 \sim_r x_1 </math>. Supports both bounds (\a icl = ICL_BND) and domain-consistency (\a icl = ICL_DOM, default).
+<entry>
+<index class=module/FD<and>rel2/
+<<rel2>>
+<synopsis>
+<<<
+{FD.rel2 ?_{X} ?_{R} ?_{C}}
+>>>
+<item> Propagates <math> X \sim_R C </math>
 
-<item> Post propagators for <math> x_i \sim_r y \f$ for all \f$0\leq i<|x| </math>. Supports both bounds (\a icl = ICL_BND) and domain-consistency (\a icl = ICL_DOM, default).
+<entry>
+<index class=module/FD<and>rel3/
+<<rel3>>
+<synopsis>
+<<<
+{FD.rel3 ?_{Xv} ?_{R} ?_{C}}
+>>>
+<item> Propagates <math> X_i \sim_R C </math> for all <math> 0\leq i<|X|</math> 
+<entry>
+<index class=module/FD<and>rel4/
+<<rel4>>
+<synopsis>
+<<<
+{FD.rel4 ?_{X0} ?_{R} ?_{X1} ?_{B}}
+>>>
+<item> Post propagator for <math> (X0 \sim_R X1)\Leftrightarrow B </math>. Supports both bounds (\a icl = ICL_BND) and domain-consistency (\a icl = ICL_DOM, default).
 
-<item> Propagates <math> x \sim_r c </math>
+<entry>
+<index class=module/FD<and>rel5/
+<<rel5>>
+<synopsis>
+<<<
+{FD.rel5 ?_{X} ?_{R} ?_{C} ?_{B}}
+>>>
+<item> Post propagator for <math> (X \sim_R C)\Leftrightarrow B </math>. Supports both bounds (\a icl = ICL_BND) and domain-consistency (\a icl = ICL_DOM, default).
 
-<item> Propagates <math> x_i \sim_r c </math> for all <math> 0\leq i<|x|</math>
-<item> Post propagator for <math> (x_0 \sim_r x_1)\Leftrightarrow b </math>. Supports both bounds (\a icl = ICL_BND) and domain-consistency (\a icl = ICL_DOM, default).
+<entry>
+<index class=module/FD<and>rel6/
+<<rel6>>
+<synopsis>
+<<<
+{FD.rel6 ?_{X} ?_{R}}
+>>>
+<item> Post propagator for pairwise relation on  X. States that the elements of  X are in the following relation:
+  <p>if  R = IRT_EQ, then all elements of X must be equal. Supports both bounds (\a icl = ICL_BND) and domain-consistency (\a icl = ICL_DOM, default).
+  <p>if  R = IRT_LE, R = IRT_LQ, R = IRT_GR, or R = IRT_GQ, then the elements of X are ordered with respt to R. Supports domain-consistency (\a icl = ICL_DOM, default).
+  <p>if R = IRT_NQ, then all elements of X must be pairwise distinct (corresponds to the distinct constraint). Supports value (\a icl = ICL_VAL, default), bounds (\a icl = ICL_BND), and domain-consistency (\a icl = ICL_DOM). Throws an exception of type Int::ArgumentSame, if X contains the same unassigned variable multiply.
+   
 
-<item> Post propagator for <math> (x \sim_r c)\Leftrightarrow b </math>. Supports both bounds (\a icl = ICL_BND) and domain-consistency (\a icl = ICL_DOM, default).
 
-<!--
-<item> Post propagator for pairwise relation on \a x. States that the elements of \a x are in the following relation:
-     - if \a r = IRT_EQ, then all elements of \a x must be equal. 
-       Supports both bounds (\a icl = ICL_BND) and
-       domain-consistency (\a icl = ICL_DOM, default).
-   
-  - if \a r = IRT_LE, \a r = IRT_LQ, \a r = IRT_GR, or \a r = IRT_GQ, 
-       then the elements of \a x are ordered with respt to \a r.
-       Supports domain-consistency (\a icl = ICL_DOM, default).
-   
-  - if \a r = IRT_NQ, then all elements of \a x must be pairwise 
-       distinct (corresponds to the distinct constraint).
-       Supports value (\a icl = ICL_VAL, default), bounds (\a icl = ICL_BND),
-       and domain-consistency (\a icl = ICL_DOM).
-       Throws an exception of type Int::ArgumentSame, if \a x contains
-       the same unassigned variable multiply.
-   
-   -->
- <item> Post propagator for relation between \a x and \a y.
-   
-    Note that for the inequality relations this corresponds to
-    the lexical order between \a x and \a y.
-   
-    Supports both bounds (\a icl = ICL_BND) and
-    domain-consistency (\a icl = ICL_DOM, default).
-   
-    Throws an exception of type Int::ArgumentSizeMismatch, if
-    \a x and \a y are of different size.
+<entry>
+<index class=module/FD<and>rel7/
+<<rel7>>
+<synopsis>
+<<<
+{FD.rel7 ?_{X} ?_{R} ?_{Y}}
+>>>
+<item> Post propagator for relation R between \a X and \a Y. 
+    <p> Note that for the inequality relations this corresponds to
+    the lexical order between \a X and \a Y. Supports both bounds (\a icl = ICL_BND) and domain-consistency (\a icl = ICL_DOM, default). Throws an exception of type Int::ArgumentSizeMismatch, if \a X and \a Y are of different size.
+
+
+</list>
    
  
 <!-- ********************************************************************** -->
@@ -614,7 +690,7 @@ than ?_{D2}.
 
 
 <!-- ********************************************************************** -->
-<section id="section.fd.arithmetic"><title/Generic Propagators/
+<section id="section.fd.arithmetic2"><title/Generic Propagators/
 <p>
 The generic propagators <<FD.sum>>, <<FD.sumC>> and <<FD.sumCN>> do
 interval propagation. The propagators  <<FD.sumAC>> and
