@@ -153,6 +153,7 @@ export
 
    %% Distribution
    distribute : FdDistribute
+   distributeBR : FdDistributeBR
    %% Miscelaneus
    inf : FdInf
    sup : FdSup
@@ -321,5 +322,9 @@ define
    in
       FdDistribute = IntVarDistribute
    end
-   
+   local
+      \insert GeIntVarDistBR
+   in
+      FdDistributeBR = GFDDistribute
+   end
 end
