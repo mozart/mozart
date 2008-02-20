@@ -660,6 +660,74 @@ than ?_{D2}.
  
 <!-- ********************************************************************** -->
 <section id="section.fd.element"><title/Element constraints/
+<p>
+
+<list>
+<entry>
+<index class=module/FD<and>element/
+<<element>>
+<synopsis>
+<<<
+{FD.element ?_{N} ?_{X0} ?_{X1}}
+>>>
+<item> Post propagator for <math> N_{X0}=X1 </math>. Being N a vector of integers and  X0 and X1  integer constraint variables. Throws an exception of type Int::OutOfLimits, if the integers in \a N exceed the limits in Int::Limits.
+
+<entry>
+<index class=module/FD<and>element2/
+<<element2>>
+<synopsis>
+<<<
+{FD.element2 ?_{N} ?_{X0} ?_{B}}
+>>>
+<item> Post propagator for <math> N_{X0}=B </math>. Being N a vector of integers, X0 an integer constraint variable and B a boolean constraint variable. Throws an exception of type Int::OutOfLimits, if the integers in \a n exceed the limits in Int::Limits.
+
+<entry>
+<index class=module/FD<and>element3/
+<<element3>>
+<synopsis>
+<<<
+{FD.element3 ?_{N} ?_{X0} ?_{C}}
+>>>
+<item> Post propagator for <math> N_{X0}=C </math>.  Being N a vector of integers, X0 an integer constraint variable and C an integer. Throws an exception of type Int::OutOfLimits, if the integers in \a n exceed the limits in Int::Limits.
+
+<entry>
+<index class=module/FD<and>element4/
+<<element4>>
+<synopsis>
+<<<
+{FD.element4 ?_{Xv} ?_{Y0} ?_{Y1}}
+>>>
+<item> Post propagator for <math> Xv_{Y0}=Y1 </math>. Being Xv a vector of integer constraint variables and Y0 and Y1  integer constraint variables. Supports both bounds (\a icl = ICL_BND) and domain-consistency (\a icl = ICL_DOM, default).
+
+<entry>
+<index class=module/FD<and>element5/
+<<element5>>
+<synopsis>
+<<<
+{FD.element5 ?_{Xv} ?_{Y0} ?_{C}}
+>>>
+<item> Post propagator for <math> Xv_{Y0}=C </math>. Being  Xv a vector of integer constraint variables, Y0 an integer constraint variable and C an integer value. Supports both bounds (\a icl = ICL_BND) and domain-consistency (\a icl = ICL_DOM, default).
+
+<entry>
+<index class=module/FD<and>element6/
+<<element6>>
+<synopsis>
+<<<
+{FD.element6 ?_{Bv} ?_{Y0} ?_{B}}
+>>>
+<item>  Post propagator for <math> Bv_{Y0}=Y1 </math>. Being Bv a vector of boolean constraint variables, Y0 an integer constraint variable and B a boolean constraint variable.
+
+<entry>
+<index class=module/FD<and>element7/
+<<element7>>
+<synopsis>
+<<<
+{FD.element7 ?_{Bv} ?_{Y0} ?_{C}}
+>>>
+<item>  Post propagator for <math>  Bv_{Y0}=C </math>. Being Bv a vector of boolean constraint variables, Y0 an integer constraint variable and C an integer constant.
+</list>
+
+
 
 <!-- ********************************************************************** -->
 <section id="section.fd.distinct"><title/Distinct constraints/
