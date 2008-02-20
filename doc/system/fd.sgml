@@ -513,6 +513,61 @@ than ?_{D2}.
 -->
 <!-- ********************************************************************** -->
 <section id="section.fd.prop"><title/Porpagators information/
+<p>
+Relation types for integer constraint variables:
+<list class=enum>
+<item> <<FD.rt.'=:'>> Equality (<math>=</math>).
+<item> <<FD.rt.'\\=:'>> Disequality (<math>\neq</math>).
+<item> <<FD.rt.'=<:'>> Less or equal (<math>\leq</math>).
+<item> <<FD.rt.'<:'>> Less (<math><</math>).
+<item> <<FD.rt.'>=:'>> Greater or equal (<math>\geq</math>).
+<item> <<FD.rt.'>:'>> Greater (<math> > </math>).
+</list>
+
+Any of the above mentioned relation can be passed as an argument to functions
+with ?_{Rt} as formal parameter.
+
+<!-- ********************************************************************** -->
+<section id="section.fd.consistency"><title/Consistency levels/
+<p>
+Propagators API functions post propagators in the current computation space. All
+these functions takes as parammeters a consistency level and a propagator kind. 
+Consistency level defines propgators semantic, for instance the bound consistency
+level indicates that the propagator only removes values from domain boundaries.
+
+<p>
+Not all propagators provide all consistency techniques implementation so passing
+different values as consistency level parameter will do nothing. It is not 
+required that a propagator achieves full domain-consistency or full 
+bounds-consistency. It is more like: which level of consistency comes closest.
+
+<p>
+If in the description of a constraint below no consistency level is mentioned, the propagator for the constraint implements domain-consistency.
+
+<list class=enum>
+<item> <<FD.cl.val>>: Value consistency (naive).
+<item> <<FD.cl.bnd>>: Bounds consistency.
+<item> <<FD.cl.dom>>: Domain consistency.
+<item> <<FD.cl.def>>: The default consistency for a constraint.
+</list>
+
+From now on every time a propagator takes an argumment ?_{Cl}, this will referr to
+a consistency level and can be one of the metioned above.
+
+<!-- ********************************************************************** -->
+<section id="section.fd.kind"><title/Propagation kinds/
+Signals that a particular kind is used in propagation for the implementation of 
+a particular constraint. Possible values include:
+
+<list class=enum>
+<item> <<FD.pk.def>>: Make a default decision.
+<item><<FD.pk.speed>>: Prefer speed over memory consumption.
+<item> <<FD.pk.memory>>: Prefer little memory over speed.
+</list>
+
+Every time a propagator takes ?_{Pk} as an argument, this will referr to a 
+propagation kind and can be one of the mentioned above.
+
 
 <!-- ********************************************************************** -->
 <section id="section.fd.dom"><title/Domain constraints/
@@ -1879,20 +1934,23 @@ shall be able to deal with overlapping tasks.
 --> <section id="section.fd.distribution"><title/Distribution/
 <p>
 In this section it is shown how Oz supports distribution with
-constraints.  The following procedure creates binary
-choice-points for variables. The choice is delayed until propagation has
-reached a fixed point. Assume  <<Dv>> to be a vector of finite 
-domain integers. The distribution differs in the order of the
-choice-points and in the constraint with which is distributed.
+constraints.  The following procedure creates branching descriptions that
+define a search tree. Decisions are made by commiting a branching description
+to a computation space to create another node in the search tree. Assume  <<Dv>> 
+to be a vector of finite domain integers. The distribution differs in the 
+order of the choice-points and in the constraint with which is distributed.
+
  Essentially, it works as follows
 <list class=enum>
 <item> Select an element <<D>> of <<Dv>> which is not determined.
 <item> Select a value or a domain specification <<Spec>> in the current
 domain of <<D>>. 
-<item> Create a choice point for <<X::Spec>> and <<X::compl(Spec)>>. 
+<item> Create a branching description for this space as <<[X::Spec X::compl(Spec)]>>. 
 <item> If not all elements of <<Dv>> are determined, go to step 1.
 </list>
+
 The order of <<Dv>> is preserved. 
+
 <list>
 <entry>
 <index class=module/FD<and>distribute/
@@ -1962,7 +2020,9 @@ The values under the respective features must be as follows:
         <item> <<nbSusps>>: Selects the variable with the
                          largest number of suspensions. If 
 several variables suspend on the maximal number of constraints, 
-the leftmost variable whose domain is minimal is selected.  
+the leftmost variable whose domain is minimal is selected.
+	<item> <<nbProps>>: Selects the variable with the largest number of 
+                            associated propagators.
 </list>
 <item> ?_{Filter}: 
 <list>
@@ -2066,9 +2126,7 @@ For the naive distribution strategy, the following may be used.
 --> <section id="section.fd.assignment"><title/Assigning Values/
 <p>
 Special support is available for assigning particular values to
-vectors of variables. Assignment interleaves the assignment of a
-value proper to a variable and synchronization until stability
-after each assignment.
+vectors of variables. 
 </p>
 <p>The selection of variables and the selection of values is as
 with distribution <ptr to="section.fd.distribution">.
@@ -2093,7 +2151,7 @@ Is equivalent to (for a list of variables <<Xs>>):
 <p>
 <<<proc {FD.assign ValA Xs}
    for X in Xs do 
-      {Space.waitStable}
+      %% {Space.waitStable} %% - why?
       X = {FD.reflect.ValA X}
    end
 end>>>
