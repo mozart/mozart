@@ -731,6 +731,27 @@ than ?_{D2}.
 
 <!-- ********************************************************************** -->
 <section id="section.fd.distinct"><title/Distinct constraints/
+<p>
+<list>
+<entry>
+<index class=module/FD<and>distinct/
+<<distinct>>
+<synopsis>
+<<<
+{FD.distinct ?_{X}}
+>>>
+<item> Post propagator for <math> X_i\neq X_j </math> for all <math>0\leq i\neq j<|x|</math>. Supports value (\a icl = ICL_VAL, default), bounds (\a icl = ICL_BND), and domain-consistency (\a icl = ICL_DOM). Throws an exception of type Int::ArgumentSame, if \a x contains the same unassigned variable multiply.
+
+<entry>
+<index class=module/FD<and>distinct2/
+<<distinct2>>
+<synopsis>
+<<<
+{FD.distinct2 ?_{N} ?_{X}}
+>>>
+<item> Post propagator for <math> X_i+N_i\neq X_j+N_j </math> for all <math>0\leq i\neq j<|x|</math>. Being N and X vectors of integers and integer constraint variables resp. Supports value (\a icl = ICL_VAL, default), bounds (\a icl = ICL_BND),  and domain-consistency (\a icl = ICL_DOM). Throws an exception of type Int::OutOfLimits, if the integers in \a n exceed the limits in Int::Limits or if the sum of \a n and \a x exceed the limits. Throws an exception of type Int::ArgumentSizeMismatch, if \a x and \a n are of different size. Throws an exception of type Int::ArgumentSame, if \a x contains the same unassigned variable multiply.
+
+</list>
 
 <!-- ********************************************************************** -->
 <section id="section.fd.channel"><title/Channel constraints/
