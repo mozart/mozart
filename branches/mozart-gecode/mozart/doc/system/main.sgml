@@ -181,6 +181,10 @@
     <Meta name="html.split"       value="section.fd.telling">
     <Meta name="html.split"       value="section.fd.reflection">
     <Meta name="html.split"       value="section.fd.prop">
+
+    <Meta name="html.split"       value="section.fd.consistency">
+    <Meta name="html.split"       value="section.fd.kind">
+
     <Meta name="html.split"       value="section.fd.dom">
     <Meta name="html.split"       value="section.fd.rel">
     <Meta name="html.split"       value="section.fd.element">
