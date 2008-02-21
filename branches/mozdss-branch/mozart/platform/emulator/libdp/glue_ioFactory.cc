@@ -41,7 +41,6 @@
 ErrorClass classifyError() {
   switch(ossockerrno()) {
   case EINTR:
-    printf("eintr\n"); 
     return EC_GO_AHEAD;
     
   case EHOSTUNREACH:
@@ -107,22 +106,28 @@ SocketChannel::registerWrite(bool on) {
 
 int
 SocketChannel::read(void* buf, const unsigned int& len) {
-  int ret = osread(fd, buf, len);
-  if (ret <= 0) {
-    if (classifyError() == EC_LOST) lost = true;
-    return 0; 
+  while (true) {
+    int ret = osread(fd, buf, len);
+    if (ret > 0) return ret;         // normal return
+    switch (classifyError()) {
+    case EC_GO_AHEAD: continue;      // read was interrupted, retry
+    case EC_LOST:     lost = true;   // connection is lost
+    default:          return 0;
+    }
   }
-  return ret;
 }
 
 int
 SocketChannel::write(void* buf, const unsigned int& len) {
-  int ret = oswrite(fd, buf, len);
-  if (ret < 0) {
-    if (classifyError() == EC_LOST) lost = true;
-    return 0; 
+  while (true) {
+    int ret = oswrite(fd, buf, len);
+    if (ret >= 0) return ret;        // normal return
+    switch (classifyError()) {
+    case EC_GO_AHEAD: continue;      // write was interrupted, retry
+    case EC_LOST:     lost = true;   // connection is lost
+    default:          return 0; 
+    }
   }
-  return ret;
 }
 
 bool
