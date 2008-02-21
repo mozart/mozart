@@ -64,89 +64,7 @@ When a propagator is posted in a computation space it does not perform any
 domain pruning. This behavior allows batch recomputation enabled search engines
 (see PAPER). Different consistency levels are implemented by finite domain
 propagators including value, bound and domain consistency when no consistency 
-level is specified on propagator posting, domain consistency is used. 
-
-<list>
-
-<entry>
-<index class=module/FD<and>cl<and>val/
-<<val>>
-<synopsis>
-<<<
-FD.cl.inf
->>>
-<item>
-Value consistency (naive)
-
-<entry>
-<index class=module/FD<and>cl<and>bnd/
-<<bnd>>
-<synopsis>
-<<<
-FD.cl.bnd
->>>
-<item>
-Bounds consistency
-
-<entry>
-<index class=module/FD<and>cl<and>dom/
-<<dom>>
-<synopsis>
-<<<
-FD.cl.dom
->>>
-<item>
-Domain consistency
-
-<entry>
-<index class=module/FD<and>cl<and>def/
-<<val>>
-<synopsis>
-<<<
-FD.cl.def
->>>
-<item>
-The default consistency for a constraint
-</list>
-
-<p>
-Propagation kind is another parameter that defines memory and speed tradeoff 
-when running propagators.
-
-<list>
-
-<entry>
-<index class=module/FD<and>pk<and>speed/
-<<speed>>
-<synopsis>
-<<<
-FD.pk.speed
->>>
-<item>
-Preferr speed over memory consumption
-
-<entry>
-<index class=module/FD<and>pk<and>memory/
-<<memory>>
-<synopsis>
-<<<
-FD.pk.memory
->>>
-<item>
-Prefer little memory over speed
-
-<entry>
-<index class=module/FD<and>pk<and>def/
-<<def>>
-<synopsis>
-<<<
-FD.pk.def
->>>
-<item>
-Make a default decision
-</list>
-
-
+level is specified on propagator posting, domain consistency is used (see Reference section.fd.consistency). Also, it is possible to choice between memory consumption over speed when posting propagators. Section reference section.fd.kind for more details. 
 
 
 <!-- 
@@ -556,6 +474,7 @@ a consistency level and can be one of the metioned above.
 
 <!-- ********************************************************************** -->
 <section id="section.fd.kind"><title/Propagation kinds/
+<p>
 Signals that a particular kind is used in propagation for the implementation of 
 a particular constraint. Possible values include:
 
@@ -645,56 +564,56 @@ propagation kind and can be one of the mentioned above.
 <<rel>>
 <synopsis>
 <<<
-{FD.rel ?_{Xv} ?_{R} ?_{Y}}
+{FD.rel ?_{Xv} ?_{Rt} ?_{Y}}
 >>>
-<item> Post propagators for <math> X_i \sim_R Y </math> for all <math>0\leq i<|X| </math>. Supports both bounds (\a icl = ICL_BND) and domain-consistency (\a icl = ICL_DOM, default).
+<item> Post propagators for <math> X_i \sim_Rt Y </math> for all <math>0\leq i<|X| </math>. Supports both bounds (<<FD.cl.bnd>>) and domain-consistency (<<FD.cl.dom>>, default).
 
 <entry>
 <index class=module/FD<and>rel2/
 <<rel2>>
 <synopsis>
 <<<
-{FD.rel2 ?_{X} ?_{R} ?_{C}}
+{FD.rel2 ?_{X} ?_{Rt} ?_{C}}
 >>>
-<item> Propagates <math> X \sim_R C </math>
+<item> Propagates <math> X \sim_Rt C </math>
 
 <entry>
 <index class=module/FD<and>rel3/
 <<rel3>>
 <synopsis>
 <<<
-{FD.rel3 ?_{Xv} ?_{R} ?_{C}}
+{FD.rel3 ?_{Xv} ?_{Rt} ?_{C}}
 >>>
-<item> Propagates <math> X_i \sim_R C </math> for all <math> 0\leq i<|X|</math> 
+<item> Propagates <math> X_i \sim_Rt C </math> for all <math> 0\leq i<|X|</math> 
 <entry>
 <index class=module/FD<and>rel4/
 <<rel4>>
 <synopsis>
 <<<
-{FD.rel4 ?_{X0} ?_{R} ?_{X1} ?_{B}}
+{FD.rel4 ?_{X0} ?_{Rt} ?_{X1} ?_{B}}
 >>>
-<item> Post propagator for <math> (X0 \sim_R X1)\Leftrightarrow B </math>. Supports both bounds (\a icl = ICL_BND) and domain-consistency (\a icl = ICL_DOM, default).
+<item> Post propagator for <math> (X0 \sim_Rt X1)\Leftrightarrow B </math>. Supports both bounds (<<FD.cl.bnd>>) and domain-consistency (<<FD.cl.dom>>, default).
 
 <entry>
 <index class=module/FD<and>rel5/
 <<rel5>>
 <synopsis>
 <<<
-{FD.rel5 ?_{X} ?_{R} ?_{C} ?_{B}}
+{FD.rel5 ?_{X} ?_{Rt} ?_{C} ?_{B}}
 >>>
-<item> Post propagator for <math> (X \sim_R C)\Leftrightarrow B </math>. Supports both bounds (\a icl = ICL_BND) and domain-consistency (\a icl = ICL_DOM, default).
+<item> Post propagator for <math> (X \sim_Rt C)\Leftrightarrow B </math>. Supports both bounds (<<FD.cl.bnd>>) and domain-consistency (<<FD.cl.dom>>, default).
 
 <entry>
 <index class=module/FD<and>rel6/
 <<rel6>>
 <synopsis>
 <<<
-{FD.rel6 ?_{X} ?_{R}}
+{FD.rel6 ?_{X} ?_{Rt}}
 >>>
-<item> Post propagator for pairwise relation on  X. States that the elements of  X are in the following relation:
-  <p>if  R = IRT_EQ, then all elements of X must be equal. Supports both bounds (\a icl = ICL_BND) and domain-consistency (\a icl = ICL_DOM, default).
-  <p>if  R = IRT_LE, R = IRT_LQ, R = IRT_GR, or R = IRT_GQ, then the elements of X are ordered with respt to R. Supports domain-consistency (\a icl = ICL_DOM, default).
-  <p>if R = IRT_NQ, then all elements of X must be pairwise distinct (corresponds to the distinct constraint). Supports value (\a icl = ICL_VAL, default), bounds (\a icl = ICL_BND), and domain-consistency (\a icl = ICL_DOM). Throws an exception of type Int::ArgumentSame, if X contains the same unassigned variable multiply.
+<item> Post propagator for pairwise relation on  <<X>>. States that the elements of  ?_{X} are in the following relation:
+  <p>if  <<Rt=FD.rt.'=:'>>, then all elements of <<X>> must be equal. Supports both bounds (<<FD.cl.bnd>>) and domain-consistency (<<FD.cl.dom>>, default).
+  <p>if  <<Rt=FD.rt.'<:'>>,<<Rt=FD.rt.'=<:'>>, <<Rt=FD.rt.'>:'>>, or <<Rt=FD.rt.'>=:'>>, then the elements of <<X>> are ordered with respt to <<Rt>>. Supports domain-consistency (<<FD.cl.dom>>, default).
+  <p>if <<Rt=FD.rt.'\\=:'>>, then all elements of <<X>> must be pairwise distinct (corresponds to the distinct constraint). Supports value (\a icl = ICL_VAL, default), bounds (<<FD.cl.bnd>>), and domain-consistency (<<FD.cl.dom>>). Throws an exception of type Int::ArgumentSame, if <<X>> contains the same unassigned variable multiply.
    
 
 
@@ -707,7 +626,7 @@ propagation kind and can be one of the mentioned above.
 >>>
 <item> Post propagator for relation R between \a X and \a Y. 
     <p> Note that for the inequality relations this corresponds to
-    the lexical order between \a X and \a Y. Supports both bounds (\a icl = ICL_BND) and domain-consistency (\a icl = ICL_DOM, default). Throws an exception of type Int::ArgumentSizeMismatch, if \a X and \a Y are of different size.
+    the lexical order between \a X and \a Y. Supports both bounds (<<FD.cl.bnd>>) and domain-consistency (<<FD.cl.dom>>, default). Throws an exception of type Int::ArgumentSizeMismatch, if \a X and \a Y are of different size.
 
 
 </list>
@@ -752,7 +671,7 @@ propagation kind and can be one of the mentioned above.
 <<<
 {FD.element4 ?_{Xv} ?_{Y0} ?_{Y1}}
 >>>
-<item> Post propagator for <math> Xv_{Y0}=Y1 </math>. Being Xv a vector of integer constraint variables and Y0 and Y1  integer constraint variables. Supports both bounds (\a icl = ICL_BND) and domain-consistency (\a icl = ICL_DOM, default).
+<item> Post propagator for <math> Xv_{Y0}=Y1 </math>. Being Xv a vector of integer constraint variables and Y0 and Y1  integer constraint variables. Supports both bounds (<<FD.cl.bnd>>) and domain-consistency (<<FD.cl.dom>>, default).
 
 <entry>
 <index class=module/FD<and>element5/
@@ -761,7 +680,7 @@ propagation kind and can be one of the mentioned above.
 <<<
 {FD.element5 ?_{Xv} ?_{Y0} ?_{C}}
 >>>
-<item> Post propagator for <math> Xv_{Y0}=C </math>. Being  Xv a vector of integer constraint variables, Y0 an integer constraint variable and C an integer value. Supports both bounds (\a icl = ICL_BND) and domain-consistency (\a icl = ICL_DOM, default).
+<item> Post propagator for <math> Xv_{Y0}=C </math>. Being  Xv a vector of integer constraint variables, Y0 an integer constraint variable and C an integer value. Supports both bounds (<<FD.cl.bnd>>) and domain-consistency (<<FD.cl.dom>>, default).
 
 <entry>
 <index class=module/FD<and>element6/
@@ -795,7 +714,7 @@ propagation kind and can be one of the mentioned above.
 <<<
 {FD.distinct ?_{X}}
 >>>
-<item> Post propagator for <math> X_i\neq X_j </math> for all <math>0\leq i\neq j<|x|</math>. Supports value (\a icl = ICL_VAL, default), bounds (\a icl = ICL_BND), and domain-consistency (\a icl = ICL_DOM). Throws an exception of type Int::ArgumentSame, if \a x contains the same unassigned variable multiply.
+<item> Post propagator for <math> X_i\neq X_j </math> for all <math>0\leq i\neq j<|x|</math>. Supports value (\a icl = ICL_VAL, default), bounds (<<FD.cl.bnd>>), and domain-consistency (<<FD.cl.dom>>). Throws an exception of type Int::ArgumentSame, if \a x contains the same unassigned variable multiply.
 
 <entry>
 <index class=module/FD<and>distinct2/
@@ -804,7 +723,7 @@ propagation kind and can be one of the mentioned above.
 <<<
 {FD.distinct2 ?_{N} ?_{X}}
 >>>
-<item> Post propagator for <math> X_i+N_i\neq X_j+N_j </math> for all <math>0\leq i\neq j<|x|</math>. Being N and X vectors of integers and integer constraint variables resp. Supports value (\a icl = ICL_VAL, default), bounds (\a icl = ICL_BND),  and domain-consistency (\a icl = ICL_DOM). Throws an exception of type Int::OutOfLimits, if the integers in \a n exceed the limits in Int::Limits or if the sum of \a n and \a x exceed the limits. Throws an exception of type Int::ArgumentSizeMismatch, if \a x and \a n are of different size. Throws an exception of type Int::ArgumentSame, if \a x contains the same unassigned variable multiply.
+<item> Post propagator for <math> X_i+N_i\neq X_j+N_j </math> for all <math>0\leq i\neq j<|x|</math>. Being N and X vectors of integers and integer constraint variables resp. Supports value (\a icl = ICL_VAL, default), bounds (<<FD.cl.bnd>>),  and domain-consistency (<<FD.cl.dom>>). Throws an exception of type Int::OutOfLimits, if the integers in \a n exceed the limits in Int::Limits or if the sum of \a n and \a x exceed the limits. Throws an exception of type Int::ArgumentSizeMismatch, if \a x and \a n are of different size. Throws an exception of type Int::ArgumentSame, if \a x contains the same unassigned variable multiply.
 
 </list>
 
