@@ -23,8 +23,6 @@
 
 $module_init_fun_name = "gebvp_init";
 
-#$module_init_fun      = "gebvp_init";
-
 $module_name          = "GBD";
 
 %builtins_all = 
@@ -33,33 +31,59 @@ $module_name          = "GBD";
  # Built-ins
  #
  
-    'bool'		=> { in  => ['+value'],
-			     out => ['int'],
-			     bi  => new_boolvar,
-                             fcp => ignore},
-
-    'isVar'		=> { in  => ['+value'],
-			     out => ['bool'],
-			     bi  => boolvar_is,
-                             fcp => ignore},
-
-    'reflect.zero'        => { in  => ['*int'],
-			      out => ['+int'],
-			      bi  => boolvar_getZero},
-    
-    'reflect.one'        => { in  => ['*int'],
-			      out => ['+int'],
-			      bi  => boolvar_getOne},
-
-    'reflect.size'       => { in  => ['*int'],
-			      out => ['+int'],
-			      bi  => boolvar_getSize},
-
 
 ## Relation propagators
+
 	'rel_BV_BT_BV_BV' => {in => ['+value','+value','+value','+value'],
 	    out => [],
 	    bi => bool_rel_BV_BT_BV_BV},
+
+## Builtins Propagators
+
+'rel_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => rel_5 }
+,
+
+'rel_6' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => rel_6 }
+,
+
+'rel_3' => { in => ['+value', '+value', '+value'],
+	out=>[],
+	bi => rel_3 }
+,
+
+'rel_4' => { in => ['+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => rel_4 }
+,
+
+'linear_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => linear_5 }
+,
+
+'linear_6' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => linear_6 }
+,
+
+'linear_7' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => linear_7 }
+,
+
+'linear_3' => { in => ['+value', '+value', '+value'],
+	out=>[],
+	bi => linear_3 }
+,
+
+'linear_4' => { in => ['+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => linear_4 },
+
 
 ##Propagators
 

@@ -2,6 +2,9 @@
 %%% Authors:
 %%%     Alejandro Arbelaez <aarbelaez@puj.edu.co>
 %%%
+%%%  Contributors:
+%%% 	Andres Felipe Barco (anfelbar@univalle.edu.co)
+%%%
 %%% Copyright:
 %%%     Alejandro Arbelaez, 2006
 %%%
@@ -29,7 +32,7 @@ proc{SumCN Iv Dvv A D}
 end
 
 proc{Sum Dv A D}
-%      {GFD.linear Dv A D Cl.val}
+%      {GFDP.linear Dv A D Cl.val}
    {Linear Dv Rt.A D Cl.val}
 end
    
@@ -151,6 +154,6 @@ end
 %%   Reified.int = IntR
 
 %%Pending ....
-Reified.int = GFD.int_reified 
+Reified.int = GFDP.int_reified 
 
 

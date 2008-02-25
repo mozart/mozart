@@ -1,3 +1,31 @@
+#
+#  Authors:
+#    Alberto Delgado (adelgado@cic.puj.edu.co)
+#    Alejandro Arbelaez (aarbelaez@cic.puj.edu.co)
+#    Gustavo Gutierrez (ggutierrez@cic.puj.edu.co)
+# 
+#  Contributors:
+# 	Andres Felipe Barco (anfelbar@univalle.edu.co)
+#  Copyright:
+#    Alberto Delgado, 2006-2007
+#    Alejandro Arbelaez, 2006-2007
+#    Gustavo Gutierrez, 2006-2007
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://www.mozart-oz.org
+# 
+#  See the file "LICENSE" or
+#     http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+#
+#
 
 include ../Makefile.vars
 
@@ -14,48 +42,44 @@ GECODE_INC	= `pkg-config --cflags "gecode = ${GECODEVERSION}"`
 
 CFLAGS 		= $(INCS) $(GECODE_INC) $(GESPACE_CXXFLAGS) $(CPPFLAGS) 
 
-MODULE_SPEC	= modGeSetVar.spec modGeSetVarProp.spec
 
-#GENERATED_FILES = $(MODULE_SPEC:.spec=-table.cc)
+GFSBLIBSRC	= SetValue.cc GeSetVar.cc GeSetVar-builtins.cc
+GFSBLIBOBJS	= $(GFSBLIBSRC:.cc=.o)
 
+GFSPLIBSRC	= GeSetProp-builtins.cc GeFSP-Builtins.cc
+GFSPLIBOBJS	= $(GFSPLIBSRC:.cc=.o)
 
-GFSLIBSRC	= SetValue.cc GeSetVar.cc GeSetVar-builtins.cc GeSetProp-builtins.cc 
-GFSLIBOBJS	= $(GFSLIBSRC:.cc=.o)
-
-
-#FCPDECL		= $(SRCDIR)/../bidecl.perl
 
 all:
 
 # NOTE: $(SRCDIR) added to the dependencies, because in ../../Makefile.in the libs
 #       depend also on this dir
-../GFS.so-$(PLATFORM): first $(GFSLIBOBJS) 
-	$(DYNLD) -o $@ $(GFSLIBOBJS) $(LDFLAGS) $(GECODE_LIBS)
+
+../GFSB.so-$(PLATFORM): $(GFSBLIBOBJS) 
+	$(DYNLD) -o $@ $(GFSBLIBOBJS) $(LDFLAGS) $(GECODE_LIBS)
 	
-../libGFS.a: $(GFSLIBOBJS)
-	$(AR) -rc $@ $(GFSLIBOBJS) && $(RANLIB) $@
-#
-#depend:: Makefile $(FDLIBSRCS) $(SCHEDLIBSRCS)
-#	$(DEPEND) $(FDLIBSRCS:%=$(SRCDIR)/%) $(SCHEDLIBSRCS:%=$(SRCDIR)/%) \
-#		| sed -e 's/\.o:/\.lo:/g' > Makefile.deps
+../libGFSB.a: $(GFSBLIBOBJS)
+	$(AR) -rc $@ $(GFSBLIBOBJS) && $(RANLIB) $@
+	
+../GFSP.so-$(PLATFORM): $(GFSPLIBOBJS) 
+	$(DYNLD) -o $@ $(GFSPLIBOBJS) $(LDFLAGS) $(GECODE_LIBS)
+	
+../libGFSP.a: $(GFSPLIBOBJS)
+	$(AR) -rc $@ $(GFSPLIBOBJS) && $(RANLIB) $@
+	
+
+depend:: Makefile $(GFSBLIBSRC) $(GFSPLIBSRC)
+	$(DEPEND) $(GFSBLIBSRC:%=$(SRCDIR)/%) $(GFSPLIBSRC:%=$(SRCDIR)/%) \
+		| sed -e 's/\.o:/\.lo:/g' > Makefile.deps
 
 %.o: %.cc
 	$(CXX) $(OPTIMIZE) $(CFLAGS) -c $< -o $@
-
-
-depend:: Makefile $(GFSLIBSRC)
-	$(DEPEND) $(GFSLIBSRC:%=$(SRCDIR)/%) > Makefile.deps
 
 Makefile: Makefile.in
 	(cd ..; ./config.status)
 
 -include Makefile.deps
 include ../Makefile.rules
-
-first: #$(GENERATED_FILES)
-
-#%-table.cc: %.spec
-#	$(PERL) $(FCPDECL) -file $< -interface > $@ || { rm -f $@; exit 1; }
 
 distclean::
 	-rm -f Makefile makefile $(GENERATED_FILES)

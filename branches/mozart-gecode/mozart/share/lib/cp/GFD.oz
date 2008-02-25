@@ -4,6 +4,9 @@
 %%%     Alberto Delgado <adelgado@cic.puj.edu.co>
 %%%     Alejandro Arbelaez <aarbelaez@puj.edu.co>
 %%%
+%%%  Contributors:
+%%% 	Andres Felipe Barco (anfelbar@univalle.edu.co)
+%%%
 %%% Copyright:
 %%%     Gustavo Gutierrez, 2006
 %%%     Alberto Delgado, 2006
@@ -33,7 +36,8 @@ require
 	    )
    
 import
-   GFD at 'x-oz://boot/GFD'
+   GFDB at 'x-oz://boot/GFDB'
+   GFDP at 'x-oz://boot/GFDP'
    Space
    System
 prepare
@@ -147,6 +151,72 @@ export
    %%Propagators
    Abs
    sortedness: Int_sortedness
+   
+     %% Propagators Builtins
+   dom_2:						Dom2
+   dom_3:						Dom3
+   dom_4:						Dom4
+   dom_5:						Dom5
+   dom_6:						Dom6
+   
+   rel_2:						Rel2
+   rel_3:						Rel3
+   rel_4:						Rel4
+   rel_5:						Rel5
+   rel_6:						Rel6
+   
+   element_3:				Element3
+   element_5:				Element5
+   
+   channel_2:				Channel2
+   channel_4:				Channel4
+   channel_5:				Channel5
+   
+   cumulatives_7:		Cumulatives7
+   cumulatives_9:		Cumulatives9
+   
+   sorted_2: 				Sorted2
+   sorted_3: 				Sorted3
+   sorted_4: 				Sorted4
+   sorted_5: 				Sorted5
+   
+   count_2:					Count2
+   count_3:					Count3
+   count_4:					Count4
+   count_5:					Count5
+   count_6:					Count6
+   
+   extensional_2: 	Extensional2
+   extensional_3: 	Extensional3
+   extensional_4: 	Extensional4
+   extensional_5: 	Extensional5
+   
+   mult_3: 					Mult3
+   mult_5: 					Mult5
+   
+   min_2:						Min2
+   min_3:						Min3
+   min_4:						Min4
+   min_5:						Min5
+   
+   abs_2:						Abs2
+   abs_4:						Abs4
+   
+   linear_3:				Linear3
+   linear_4:				Linear4
+   linear_5:				Linear5
+   linear_6:				Linear6
+   linear_7:				Linear7
+   
+   distinct_1:			Distinct1
+   %distinct_2:			Distinct2 there is another prop call distinct_2, defined in /platform/emulator/libcp-int/GeIntProp-builtins.cc line 87.
+   distinct_3:			Distinct3
+   distinct_4:			Distinct4
+   
+   max_2:						Max2
+   max_3:						Max3
+   max_4:						Max4
+   max_5:						Max5
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -175,7 +245,7 @@ export
 define
 
    %% Telling domains
-   FdInt = GFD.int
+   FdInt = GFDB.int
    local
       
       proc {ListDom Xs Dom}
@@ -196,7 +266,7 @@ define
       
    in
       fun {FdDecl}
-	 {FdInt {GFD.inf}#{GFD.sup}}
+	 {FdInt {GFDB.inf}#{GFDB.sup}}
       end
       
       proc {FdDom Dom Vec}
@@ -225,25 +295,25 @@ define
    %% Reflection
    local
       fun {NBSusps X}
-	 {GFD.'reflect.nbProp' X} + {System.nbSusps X}
+	 {GFDB.'reflect.nbProp' X} + {System.nbSusps X}
       end
    in
-      FdReflect = reflect(min    : GFD.'reflect.min'
-			  max    : GFD.'reflect.max'
-			  size   : GFD.'reflect.size'  %% cardinality
-			  dom    : GFD.'reflect.dom'
-			  domList: GFD.'reflect.domList'
-			  nextSmaller : GFD.'reflect.nextSmaller'
-			  nextLarger : GFD.'reflect.nextLarger'
-			  med    : GFD.'reflect.med'   %% median of domain
+      FdReflect = reflect(min    : GFDB.'reflect.min'
+			  max    : GFDB.'reflect.max'
+			  size   : GFDB.'reflect.size'  %% cardinality
+			  dom    : GFDB.'reflect.dom'
+			  domList: GFDB.'reflect.domList'
+			  nextSmaller : GFDB.'reflect.nextSmaller'
+			  nextLarger : GFDB.'reflect.nextLarger'
+			  med    : GFDB.'reflect.med'   %% median of domain
 			  %% distance between maximum and minimum
-			  width  : GFD.'reflect.width' 
+			  width  : GFDB.'reflect.width' 
 			  %% regret of domain minimum (distance to next larger value).
-			  regretMin : GFD.'reflect.regretMin'
+			  regretMin : GFDB.'reflect.regretMin'
 			  %% regret of domain maximum (distance to next smaller value). 
-			  regretMax : GFD.'reflect.regretMax'
+			  regretMax : GFDB.'reflect.regretMax'
 			  %% number of propagators associated with the variable
-			  nbProp: GFD.'reflect.nbProp'
+			  nbProp: GFDB.'reflect.nbProp'
 			  %% number of suspendables associated with the variables
 			  nbSusps: NBSusps 
 			 )
@@ -260,9 +330,9 @@ define
 	    if BTmp == 1 then B = true else B = false end
 	 end
       end
-      WatchMin = {WatchDomain GFD.'watch.max'}
-      WatchMax = {WatchDomain GFD.'watch.min'}
-      WatchSize = {WatchDomain GFD.'watch.size'}
+      WatchMin = {WatchDomain GFDB.'watch.max'}
+      WatchMax = {WatchDomain GFDB.'watch.min'}
+      WatchSize = {WatchDomain GFDB.'watch.size'}
    in
       FdWatch = watch(size: WatchSize 
 		      min : WatchMin
@@ -270,42 +340,104 @@ define
    end
 
 %%% Direct access to the module
-   Prop = GFD
+   Prop = GFDP
 %%%
    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Clasify!!!!%%%%%%%%%%%%%
-   Eq = GFD.'eq'
-   Rel = GFD.'rel'       
-   Linear = GFD.'linear'
-   Linear2 = GFD.'linear2'
-   LinearR = GFD.'linearR'
-   LinearCR = GFD.'linearCR'
+   Eq = GFDP.'eq'
+   Rel = GFDP.'rel'       
+   Linear = GFDP.'linear'
+   Linear2 = GFDP.'linear2'
+   LinearR = GFDP.'linearR'
+   LinearCR = GFDP.'linearCR'
    
-   Count = GFD.'count'
-   Distinct= GFD.'distinct'
-   Distinct2 = GFD.'distinct2'
-   Mult=   GFD.'mult'
-   %%Bool_and = GFD.'bool_and'
-   Abs = GFD.'int_Gabs'
-   Int_sortedness = GFD.'int_sortedness'
+   Count = GFDP.'count'
+   Distinct= GFDP.'distinct'
+   Distinct2 = GFDP.'distinct2'
+   Mult=   GFDP.'mult'
+   %%Bool_and = GFDP.'bool_and'
+   Abs = GFDP.'int_Gabs'
+   Int_sortedness = GFDP.'int_sortedness'
    
    %%Mozart Propagators (backward compatibility))
    
-   Int_sumCN =   GFD.int_sumCN
-   %Int_disjoint =   GFD.int_disjoint
-   %Int_reified_int =   GFD.int_reified_int
+   Int_sumCN =   GFDP.int_sumCN
+   %Int_disjoint =   GFDP.int_disjoint
+   %Int_reified_int =   GFDP.int_reified_int
 
    %% Assignment propagators
-   Assign = GFD.'assign'
+   Assign = GFDP.'assign'
 
-   Int_ext = GFD.'int_ext'
+   Int_ext = GFDP.'int_ext'
    %% Backward compatibility propagators
 
-
+   %% Propagators Builtins
+   Dom2 = GFDP.'dom_2'
+   Dom3 = GFDP.'dom_3'
+   Dom4 = GFDP.'dom_4'
+   Dom5 = GFDP.'dom_5'
+   Dom6 = GFDP.'dom_6'
    
-
-
+   Rel2 = GFDP.'rel_2'
+   Rel3 = GFDP.'rel_3'
+   Rel4 = GFDP.'rel_4'
+   Rel5 = GFDP.'rel_5'
+   Rel6 = GFDP.'rel_6'
+   
+   Element3 = GFDP.'element_3'
+   Element5 = GFDP.'element_5'
+   
+   Channel2 = GFDP.'channel_2'
+   Channel4 = GFDP.'channel_4'
+   Channel5 = GFDP.'channel_5'
+   
+   Cumulatives7 = GFDP.'cumulatives_7'
+   Cumulatives9 = GFDP.'cumulatives_9'
+   
+   Sorted2 = GFDP.'sorted_2'
+   Sorted3 = GFDP.'sorted_3'
+   Sorted4 = GFDP.'sorted_4'
+   Sorted5 = GFDP.'sorted_5'
+   
+   Count2 = GFDP.'count_2'
+   Count3 = GFDP.'count_3'
+   Count4 = GFDP.'count_4'
+   Count5 = GFDP.'count_5'
+   Count6 = GFDP.'count_6'
+   
+   Extensional2 = GFDP.'extensional_2'
+   Extensional3 = GFDP.'extensional_3'
+   Extensional4 = GFDP.'extensional_4'
+   Extensional5 = GFDP.'extensional_5'
+   
+   Mult3 = GFDP.'mult_3'
+   Mult5 = GFDP.'mult_5'
+   
+   Min2 = GFDP.'min_2'
+   Min3 = GFDP.'min_3'
+   Min4 = GFDP.'min_4'
+   Min5 = GFDP.'min_5'
+   
+   Abs2 = GFDP.'abs_2'
+   Abs4 = GFDP.'abs_4'
+   
+   Linear3 = GFDP.'linear_3'
+   Linear4 = GFDP.'linear_4'
+   Linear5 = GFDP.'linear_5'
+   Linear6 = GFDP.'linear_6'
+   Linear7 = GFDP.'linear_7'
+   
+   Distinct1 = GFDP.'distinct_1'
+   %Distinct2 = GFDP.'distinct_2'
+   Distinct3 = GFDP.'distinct_3'
+   Distinct4 = GFDP.'distinct_4'
+   
+   Max2 = GFDP.'max_2'
+   Max3 = GFDP.'max_3'
+   Max4 = GFDP.'max_4'
+   Max5 = GFDP.'max_5'
+  
    
    \insert GeMozProp.oz
    
@@ -313,9 +445,9 @@ define
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    
    %% Miscelaneus
-   FdInf = {GFD.inf}
-   FdSup = {GFD.sup}
-   FdIs  = GFD.is
+   FdInf = {GFDB.inf}
+   FdSup = {GFDB.sup}
+   FdIs  = GFDB.is
 
    local
       \insert GeIntVarDist

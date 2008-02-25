@@ -5,7 +5,7 @@
  *     Alberto Delgado <adelgado@cic.puj.edu.co>
  *
  *  Contributing authors:
- *     
+ *     Andres Felipe Barco <anfelbar@univalle.edu.co>
  *
  *  Copyright:
  *     Gustavo Gutierrez, 2006
@@ -158,8 +158,6 @@ void gesvp_init(void){
   
 }
 
-//#define STATICALLY_INCLUDED
 #ifndef MODULES_LINK_STATIC
-//#include "modGeSetVar-table.cc"
-#include "../modGeSetVarProp-if.cc"
+#include "../modGFSB-if.cc"
 #endif

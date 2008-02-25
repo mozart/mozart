@@ -3,6 +3,9 @@
  *    Denys Duchier (duchier@ps.uni-sb.de)
  *    Christian Schulte <schulte@ps.uni-sb.de>
  * 
+ *  Contributors:
+* 			Andres Felipe Barco (anfelbar@univalle.edu.co)
+*
  *  Copyright:
  *    Christian Schulte, 1998
  * 
@@ -129,9 +132,12 @@ static TaggedRef dictionary_of_modules;
 #include "modVirtualSite-if.cc"
 #include "modProfile-if.cc"
 #include "modZlibIO-if.cc"
-#include "modGeIntVar-if.cc"
-#include "modGeBoolVar-if.cc"
-#include "modGeSetVar-if.cc"
+#include "modGFDB-if.cc"
+#include "modGFDP-if.cc"
+#include "modGBDB-if.cc"
+#include "modGBDP-if.cc"
+#include "modGFSB-if.cc"
+#include "modGFSP-if.cc"
 
 
 // Here comes the faked DPB interface
@@ -201,7 +207,7 @@ static ModuleEntry ext_module_table[] = {
 #endif
 
 #ifdef MODULES_LINK_STATIC
-  {"Space",	      mod_int_Space},
+  {"Space",	      	  mod_int_Space},
   {"FDB",             mod_int_FDB},
   {"FSP",             mod_int_FSP},
   {"FSB",             mod_int_FSB},
@@ -225,9 +231,12 @@ static ModuleEntry ext_module_table[] = {
   {"Win32",           mod_int_Win32},
   {"Profile",         mod_int_Profile},
   {"ZlibIO",          mod_int_ZlibIO},
-  {"GFD",							mod_int_GeIntVar},
-  {"GBD",							mod_int_GeBoolVar},
-  {"GFS",							mod_int_GeSetVar},
+  {"GFDB",			  mod_int_GFDB},
+  {"GFDP",			  mod_int_GFDP},
+  {"GBDB",			  mod_int_GBDB},
+  {"GBDP",			  mod_int_GBDP},
+  {"GFSB",			  mod_int_GFSB},
+  {"GFSP",			  mod_int_GFSP},
 #endif
 
 #ifdef MISC_BUILTINS

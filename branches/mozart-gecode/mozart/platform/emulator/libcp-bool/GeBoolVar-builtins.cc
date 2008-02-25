@@ -3,7 +3,7 @@
  *     Alberto Delgado <adelgado@cic.puj.edu.co> 
  *
  *  Contributing authors:
- *
+ *		Andres Felipe Barco (anfelbar@univalle.edu.co)
  *  Copyright:
  *    Alberto Delgado, 2006-2007
  *
@@ -27,7 +27,7 @@
 #ifndef __GEOZ_BOOL_VAR_BUILTINS_CC__
 #define __GEOZ_BOOL_VAR_BUILTINS_CC__
 
-#include "GeBoolVar-builtins.hh"
+#include "BoolVarMacros.hh"
 
 
 using namespace Gecode;
