@@ -75,6 +75,8 @@ depend:: Makefile $(GFSBLIBSRC) $(GFSPLIBSRC)
 %.o: %.cc
 	$(CXX) $(OPTIMIZE) $(CFLAGS) -c $< -o $@
 
+first:
+
 Makefile: Makefile.in
 	(cd ..; ./config.status)
 
