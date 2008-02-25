@@ -5,7 +5,7 @@
 #    Gustavo Gutierrez (ggutierrez@cic.puj.edu.co)
 # 
 #  Contributors:
-# 			Andres Felipe Barco (anfelbar@univalle.edu.co)
+#    Andres Felipe Barco (anfelbar@univalle.edu.co)
 #  Copyright:
 #    Alberto Delgado, 2006-2007
 #    Alejandro Arbelaez, 2006-2007
@@ -72,6 +72,8 @@ depend:: Makefile $(GBDBLIBSRC) $(GBDPLIBSRC)
 
 %.o: %.cc
 	$(CXX) $(OPTIMIZE) $(CFLAGS) -c $< -o $@
+
+first:
 
 Makefile: Makefile.in
 	(cd ..; ./config.status)
