@@ -5,6 +5,7 @@
  *
  *  Contributing authors:
  *     Alejandro Arbelaez <aarbelaez@puj.edu.co>
+ *	   Andres Felipe Barco <anfelbar@univalle.edu.co>
  *
  *  Copyright:
  *     Gustavo Gutierrez, 2006
@@ -28,7 +29,7 @@
 #ifndef __GEOZ_SET_VAR_BUILTINS_CC__
 #define __GEOZ_SET_VAR_BUILTINS_CC__
 
-#include "GeSetVar-builtins.hh"
+#include "SetVarMacros.hh"
 
 
 using namespace Gecode;
@@ -174,99 +175,4 @@ OZ_BI_define(set_inf,0,1)
 } 
 OZ_BI_end
 
-
-/** 
- * \brief Returns the minimum elemen in the domain
- * 
- * @param intvar_getMin 
- * @param 0 A reference to the variable 
- * @param 1 The minimum of the domain 
- */
-/*OZ_BI_define(intvar_getMin,1,1)
-{
-  DeclareGeIntVar1(0,v);
-  OZ_RETURN_INT(v.min());
-}
-OZ_BI_end
-*/
-/** 
- * \brief Returns the maximum elemen in the domain
- * 
- * @param intvar_getMin 
- * @param 0 A reference to the variable 
- * @param 1 The maximum of the domain 
- */
-/*OZ_BI_define(intvar_getMax,1,1)
-{
-  DeclareGeIntVar1(0,v);
-  OZ_RETURN_INT(v.max());
-}
-OZ_BI_end
-*/
-/** 
- * \brief Returns the size of the domain
- * 
- * @param OZ_in(0) A reference to the variable 
- * @param OZ_out(0) The domain size
- */
-/*OZ_BI_define(intvar_getSize,1,1)
-{
-  DeclareGeIntVar1(0,v);
-  OZ_RETURN_INT(v.size());
-}
-OZ_BI_end
-*/
-
-/** 
- * \brief Returns the median of the domain
- * 
- * @param OZ_in(0) A reference to the variable 
- * @param OZ_out(0) The median
- */
-/*OZ_BI_define(intvar_getMed,1,1)
-{
-  DeclareGeIntVar1(0,v);
-  OZ_RETURN_INT(v.med());
-}
-OZ_BI_end
-*/
-
-/** 
- * \brief Returns the width of the domain
- * 
- * @param OZ_in(0) A reference to the variable 
- * @param OZ_out(0) The width
- */
-/*OZ_BI_define(intvar_getWidth,1,1)
-{
-  DeclareGeIntVar1(0,v);
-  OZ_RETURN_INT(v.width());
-}
-OZ_BI_end
-*/
-/** 
- * \brief Returns the Regret Min of the domain
- * 
- * @param OZ_in(0) A reference to the variable 
- * @param OZ_out(0) The Regret Min
- */
-/*OZ_BI_define(intvar_getRegretMin,1,1)
-{
-  DeclareGeIntVar1(0,v);
-  OZ_RETURN_INT(IntView(v).regret_min());
-}
-OZ_BI_end*/
-
-/** 
- * \brief Returns the Regret Max of the domain
- * 
- * @param OZ_in(0) A reference to the variable 
- * @param OZ_out(0) The Regret Max
- */
-/*OZ_BI_define(intvar_getRegretMax,1,1)
-{
-  DeclareGeIntVar1(0,v);
-  OZ_RETURN_INT(IntView(v).regret_max());
-}
-OZ_BI_end*/
 #endif

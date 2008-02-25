@@ -2,10 +2,10 @@
  *  Main authors:
  *     Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
  *     Alberto Delgado <adelgado@cic.puj.edu.co> 
- *     Alejandro Arbelaez (aarbelaez@cic.puj.edu.co)
+ *     Alejandro Arbelaez <aarbelaez@cic.puj.edu.co>
  *
  *  Contributing authors:
- *
+ *			Andres Felipe Barco <anfelbar@univalle.edu.co>
  *  Copyright:
  *    Alberto Delgado, 2006-2007
  *    Alejandro Arbelaez, 2006-2007
@@ -30,8 +30,7 @@
 #ifndef __GEOZ_INT_PROP_BUILTINS_CC__
 #define __GEOZ_INT_PROP_BUILTINS_CC__
 
-#include "GeIntProp-builtins.hh"
-
+#include "IntVarMacros.hh" 
 
 using namespace Gecode;
 using namespace Gecode::Int;
@@ -57,7 +56,7 @@ OZ_BI_define(int_eq,3,0)
 OZ_BI_define(int_rel,4,0) {
   DeclareGSpace(gs);
   DeclareIntConLevel(3,consistencyLevel);
-  RelType(1,relType);
+  DeclareIntRelType(1,relType);
 
   DeclareGeIntVar(0,v1,gs);
   DeclareGeIntVar(2,v2,gs);
@@ -108,7 +107,7 @@ OZ_BI_define(int_dist,2,0)
  {
    DeclareGSpace(sp);
    DECLARE_INTVARARGS(0,x1,sp);
-   RelType(1,x2);
+   DeclareIntRelType(1,x2);
    DeclareIntConLevel(3,x4);	   
    if(!OZ_isInt(OZ_deref(OZ_in(2)))) {
      try{
@@ -134,7 +133,7 @@ OZ_BI_define(int_dist,2,0)
    DeclareGSpace(sp);
    DECLARE_INTARGS(0,arguments);
    DECLARE_INTVARARGS(1,array_var,sp);
-   RelType(2,rel);
+   DeclareIntRelType(2,rel);
    DeclareIntConLevel(4,con);
    if(!OZ_isInt(OZ_deref(OZ_in(3)))) {
      try{
@@ -159,7 +158,7 @@ OZ_BI_define(int_linearR,5,0)
   DeclareGSpace(sp);
   DECLARE_INTVARARGS(0,array_var,sp);
 
-  RelType(1,relType);
+  DeclareIntRelType(1,relType);
   DeclareIntConLevel(4,conLevel);
 
   DeclareGeIntVar(2,v2,sp);
@@ -183,7 +182,7 @@ OZ_BI_define(int_linearCR,6,0)
   DECLARE_INTARGS(0,array_arg);
   DECLARE_INTVARARGS(1,array_var,sp);
   
-  RelType(2,relType);
+  DeclareIntRelType(2,relType);
   DeclareIntConLevel(5,conLevel);
   
   DeclareGeIntVar(3,v3,sp);
@@ -205,7 +204,7 @@ OZ_BI_define(int_count,5,0)
   DeclareGSpace(sp);
   DECLARE_INTVARARGS(0,arreglo,sp);
   IntVar x1,x3;
-  RelType(2,rl);
+  DeclareIntRelType(2,rl);
   DeclareIntConLevel(4,cl);
   
   if(OZ_isGeIntVar(OZ_deref(OZ_in(1))))
@@ -372,7 +371,8 @@ OZ_BI_define(int_ext,2,0)
 } OZ_BI_end
 
 
-// Include the propagators wrapper functions generated automatically.
-#include "FDPBuiltins.cc"
+#ifndef MODULES_LINK_STATIC
+#include "../modGFDP-if.cc"
+#endif
 
 #endif

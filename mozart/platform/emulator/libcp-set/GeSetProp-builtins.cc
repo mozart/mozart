@@ -5,7 +5,7 @@
  *     Alejandro Arbelaez (aarbelaez@cic.puj.edu.co)
  *
  *  Contributing authors:
- *
+ *		Andres Felipe Barco <anfelbar@univalle.edu.co>
  *  Copyright:
  *    Alberto Delgado, 2006-2007
  *    Alejandro Arbelaez, 2006-2007
@@ -30,8 +30,7 @@
 #ifndef __GEOZ_SET_PROP_BUILTINS_CC__
 #define __GEOZ_SET_PROP_BUILTINS_CC__
 
-#include "GeSetProp-builtins.hh"
-
+#include "SetVarMacros.hh"
 
 using namespace Gecode;
 using namespace Gecode::Set;
@@ -167,7 +166,9 @@ OZ_BI_define(set_distinct,2,0)
   CHECK_POST(gs);
 } OZ_BI_end
 
-
+#ifndef MODULES_LINK_STATIC
+#include "../modGFSP-if.cc"
+#endif
 
 
 #endif

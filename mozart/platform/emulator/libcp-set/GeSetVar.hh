@@ -5,7 +5,7 @@
  *     Alberto Delgado <adelgado@cic.puj.edu.co>
  *
  *  Contributing authors:
- *     
+ *     Andres Felipe Barco <anfelbar@univalle.edu.co>
  *
  *  Copyright:
  *     Gustavo Gutierrez, 2006
@@ -32,7 +32,6 @@
 #include "SetValue.hh"
 #include "../libcp-bool/GeBoolVar.hh"
 using namespace Gecode;
-using namespace Gecode::Int;
 using namespace Gecode::Set;
 
 typedef GeVar<SetVarImp,PC_SET_ANY> GeVar_Set;
@@ -306,6 +305,23 @@ inline OZ_Term isIn_GeSetVar(OZ_Term V1, int val, OZ_Term VBool)
   return VBool;
 }
 
+/**
+		\brief Checks if the term is a SetRelType.
+*/
+inline
+bool OZ_isSetRelType(OZ_Term t){
+	int v = OZ_intToC(t);
+	return v == 0 || v == 1 || v == 2 || v == 3 || v == 4 || v == 5 ? true : false;
+}
+
+/**
+		\brief Checks if the term is a SetOpType.
+*/
+inline
+bool OZ_isSetOpType(OZ_Term t){
+	int v = OZ_intToC(t);
+	return v == 0 || v == 1 || v == 2 || v == 3 || v == 4 ? true : false;
+}
 
 void gesvp_init(void);
 #endif

@@ -3,10 +3,10 @@
  *     Raphael Collet <raph@info.ucl.ac.be>
  *     Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
  *     Alberto Delgado <adelgado@cic.puj.edu.co> 
- *     Alejandro Arbelaez (aarbelaez@cic.puj.edu.co)
+ *     Alejandro Arbelaez <aarbelaez@cic.puj.edu.co>
  *
  *  Contributing authors:
- *
+ *			Andres Felipe Barco <anfelbar@univalle.edu.co>
  *  Copyright:
  *    Alberto Delgado, 2006-2007
  *    Alejandro Arbelaez, 2006-2007
@@ -161,11 +161,12 @@ void GeIntVar::toStream(ostream &out) {
 
 // Init the the module containing the propagators
 //void module_init_geintVarProp(void);
-void geivp_init(void);
+void geivp_init(void){
+
+}
   
 
 
 #ifndef MODULES_LINK_STATIC
-#include "../modGeIntVar-if.cc"
-//#include "modGeIntVarProp-table.cc"
+#include "../modGFDB-if.cc"
 #endif

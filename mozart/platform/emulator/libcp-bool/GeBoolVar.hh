@@ -3,7 +3,7 @@
  *     Alberto Delgado <adelgado@cic.puj.edu.co> 
  *
  *  Contributing authors:
- *
+* 			Andres Felipe Barco <anfelbar@univalle.edu.co>
  *  Copyright:
  *    Alberto Delgado, 2006-2007
  *
@@ -201,6 +201,16 @@ inline BoolVar& get_BoolVar(OZ_Term v) {
 */
 inline BoolVar& get_BoolVarInfo(OZ_Term v) {
   return get_GeBoolVar(v,false)->getBoolVarInfo();
+}
+
+/**
+		\brief Checks if the term is a BoolOpType.
+*/
+inline
+bool OZ_isBoolOpType(OZ_Term t){
+	int v = OZ_intToC(t);
+	// see GBD.oz for details about number's mean.
+	return v == 0 || v == 1 || v == 2 || v == 3 || v == 4 ? true : false;
 }
 
 void gebvp_init(void);

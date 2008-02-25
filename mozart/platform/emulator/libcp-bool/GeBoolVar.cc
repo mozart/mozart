@@ -3,7 +3,7 @@
  *     Alberto Delgado <adelgado@cic.puj.edu.co> 
  *
  *  Contributing authors:
- *
+ *			Andres Felipe Barco <anfelbar@univalle.edu.co>
  *  Copyright:
  *    Alberto Delgado, 2006-2007
  *
@@ -145,5 +145,5 @@ void gebvp_init(void){
 }
 
 #ifndef MODULES_LINK_STATIC
-#include "../modGeBoolVar-if.cc"
+#include "../modGBDB-if.cc"
 #endif

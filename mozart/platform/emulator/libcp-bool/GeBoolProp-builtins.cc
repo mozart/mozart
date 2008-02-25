@@ -3,7 +3,7 @@
  *     Alberto Delgado <adelgado@cic.puj.edu.co> 
  *
  *  Contributing authors:
- *
+ *		Andres Felipe Barco (anfelbar@univalle.edu.co)
  *  Copyright:
  *    Alberto Delgado, 2006-2007
  *
@@ -26,7 +26,7 @@
 #ifndef __GEOZ_BOOL_PROP_BUILTINS_CC__
 #define __GEOZ_BOOL_PROP_BUILTINS_CC__
 
-#include "GeBoolProp-builtins.hh"
+#include "BoolVarMacros.hh"
 
 
 using namespace Gecode;
@@ -313,5 +313,8 @@ OZ_BI_define(bool_linear,4,0)
   CHECK_POST(sp);       
 } OZ_BI_end
 
+#ifndef MODULES_LINK_STATIC
+#include "../modGBDP-if.cc"
+#endif
 
 #endif
