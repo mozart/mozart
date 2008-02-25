@@ -132,22 +132,19 @@ GlueSite::m_setConnection(DssChannel* vc) {
 
 void
 GlueSite::m_gcRoots() {
+  ozsite = makeTaggedNULL();     // will be reset by OzSite if marked
   oz_gCollectTerm(faultstream, faultstream);
 }
 
 void
-GlueSite::m_gc() {
-  oz_gCollectTerm(ozsite, ozsite);     // update ref to OzSite
-  dsite->m_makeGCpreps();              // mark DSite
+GlueSite::m_gcMark(OZ_Term s) {
+  Assert(s);
+  ozsite = s;                    // updated ref to OzSite
 }
 
-void
-GlueSite::m_gcFinal() {
-  if (isGCMarkedTerm(ozsite)) {
-    oz_gCollectTerm(ozsite, ozsite);     // update ref to OzSite
-  } else {
-    ozsite = 0;
-  }
+bool
+GlueSite::m_isMarked() {
+  return ozsite != makeTaggedNULL();     // non-null means marked
 }
 
 void    
@@ -263,10 +260,10 @@ void gcGlueSiteFinal() {
   GlueSite* site;
   while (site = *siteptr) {
     if (site->isDisposed()) {
+      Assert(site != thisGSite);
       *siteptr = site->getNext();
       delete site;
     } else {
-      site->m_gcFinal();
       siteptr = site->getNextPtr();
     }
   }
@@ -311,7 +308,7 @@ OZ_Extension *OzSite::gCollectV(void) {
 }
 
 void OzSite::gCollectRecurseV(void) {
-  a_gSite->m_gc();
+  a_gSite->m_gcMark(OZ_extension(this));
 }
 
 OZ_Extension *OzSite::sCloneV(void) {
