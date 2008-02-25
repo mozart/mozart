@@ -5,7 +5,7 @@
 #    Gustavo Gutierrez (ggutierrez@cic.puj.edu.co)
 # 
 #  Contributors:
-# 
+# 			Andres Felipe Barco (anfelbar@univalle.edu.co)
 #  Copyright:
 #    Alberto Delgado, 2006-2007
 #    Alejandro Arbelaez, 2006-2007
@@ -38,52 +38,45 @@ INCS		= -I$(SRCDIR) -I. -I$(SRCDIR)/.. -I..
 GECODE_LIBS	= `pkg-config --libs "gecode = ${GECODEVERSION}"`
 GECODE_INC	= `pkg-config --cflags "gecode = ${GECODEVERSION}"`
 
-
-
 CFLAGS 		= $(INCS) $(GECODE_INC) $(GESPACE_CXXFLAGS) $(CPPFLAGS) 
 
-MODULE_SPEC	= modGeIntVar.spec modGeIntVarProp.spec
 
-# GENERATED_FILES = $(MODULE_SPEC:.spec=-table.cc)
+GFDBLIBSRC	= GeIntVar.cc GeIntVar-builtins.cc 
+GFDBLIBOBJS	= $(GFDBLIBSRC:.cc=.o)
 
-
-GFDLIBSRC	= GeIntVar.cc GeIntVar-builtins.cc GeIntProp-builtins.cc GeMozProp-builtins.cc
-GFDLIBOBJS	= $(GFDLIBSRC:.cc=.o)
-
-
-#FCPDECL		= $(SRCDIR)/../bidecl.perl
+GFDPLIBSRC	=  GeFDP-Builtins.cc GeMozProp-builtins.cc GeIntProp-builtins.cc
+GFDPLIBOBJS	= $(GFDPLIBSRC:.cc=.o)
 
 all:
 
 # NOTE: $(SRCDIR) added to the dependencies, because in ../../Makefile.in the libs
 #       depend also on this dir
-../GFD.so-$(PLATFORM): $(GFDLIBOBJS)
-	$(DYNLD) -o $@ $(GFDLIBOBJS) $(LDFLAGS) $(GECODE_LIBS)
+
+../GFDB.so-$(PLATFORM): $(GFDBLIBOBJS)
+	$(DYNLD) -o $@ $(GFDBLIBOBJS) $(LDFLAGS) $(GECODE_LIBS)
 	
-../libGFD.a: $(GFDLIBOBJS)
-	$(AR) -rc $@ $(GFDLIBOBJS) && $(RANLIB) $@
-#
-#depend:: Makefile $(FDLIBSRCS) $(SCHEDLIBSRCS)
-#	$(DEPEND) $(FDLIBSRCS:%=$(SRCDIR)/%) $(SCHEDLIBSRCS:%=$(SRCDIR)/%) \
-#		| sed -e 's/\.o:/\.lo:/g' > Makefile.deps
+../libGFDB.a: $(GFDBLIBOBJS)
+	$(AR) -rc $@ $(GFDBLIBOBJS) && $(RANLIB) $@
+	
+../GFDP.so-$(PLATFORM): $(GFDPLIBOBJS)
+	$(DYNLD) -o $@ $(GFDPLIBOBJS) $(LDFLAGS) $(GECODE_LIBS)
+	
+../libGFDP.a: $(GFDPLIBOBJS)
+	$(AR) -rc $@ $(GFDPLIBOBJS) && $(RANLIB) $@	
+
+
+depend:: Makefile $(GFDBLIBSRCS) $(GFDPLIBSRCS)
+	$(DEPEND) $(GFDBLIBSRCS:%=$(SRCDIR)/%) $(GFDPLIBSRCS:%=$(SRCDIR)/%) \
+		| sed -e 's/\.o:/\.lo:/g' > Makefile.deps
 
 %.o: %.cc
 	$(CXX) $(OPTIMIZE) $(CFLAGS) -c $< -o $@
-
-
-depend:: Makefile $(GFDLIBSRC)
-	$(DEPEND) $(GFDLIBSRC:%=$(SRCDIR)/%) > Makefile.deps
 
 Makefile: Makefile.in
 	(cd ..; ./config.status)
 
 -include Makefile.deps
 include ../Makefile.rules
-
-first: #$(GENERATED_FILES)
-
-#%-table.cc: %.spec
-#	$(PERL) $(FCPDECL) -file $< -interface > $@ || { rm -f $@; exit 1; }
 
 distclean::
 	-rm -f Makefile makefile $(GENERATED_FILES)

@@ -5,6 +5,7 @@
 #    Alberto Delgado (adelgado@cic.puj.edu.co)
 #    Alejandro Arbelaez (aarbelaez@cic.puj.edu.co)
 #    Gustavo Gutierrez (ggutierrez@cic.puj.edu.co)
+# 			Andrés Felipe Barco (anfelbar@univalle.edu.co)
 # 
 #  Copyright:
 #    Michael Mehl, 1998
@@ -13,7 +14,7 @@
 #    Gustavo Gutierrez, 2006-2007
 # 
 #  Last change:
-#    $Date$ by $Author$
+#    $Date:$ by $Author: 
 #    $Revision$
 # 
 #  This file is part of Mozart, an implementation 
@@ -46,8 +47,8 @@ MODULE_NAMES =							\
 	CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat \
 	Win32 Profile OsTime ZlibIO 
 
-
-MODULE_NAMES += GFD GBD GFS
+### add to built with gecode ###
+MODULE_NAMES += GFDB GBDB GFSB GFDP GBDP GFSP
 
 
 
@@ -77,7 +78,7 @@ SUBDIRS=	libdp libfd libfset
 OZVERSION=	$(SRCTOP)/OZVERSION
 
 
-
+### dirs to built with gecode ###
 SUBDIRS+=libcp-int
 SUBDIRS+=libcp-bool
 SUBDIRS+=libcp-set
@@ -103,7 +104,7 @@ MODSPECS= \
 	ZlibIO \
 	$(BIMODSPECS) \
 	$(DENYS_SPECS) \
-	GeIntVar GeSetVar GeBoolVar GeIntVarProp GeSetVarProp
+	GFDB GFDP GBDB GBDP GFSB GFSP # specs to built with  gecode
 
 MODINTERS = $(MODSPECS:%=mod%-if.cc)
 
@@ -299,22 +300,38 @@ libVirtualSite.a VirtualSite.so-$(PLATFORM):
 .PHONY: libFDP.a FDP.so-$(PLATFORM) libSchedule.a Schedule.so-$(PLATFORM)
 libFDP.a FDP.so-$(PLATFORM) libSchedule.a Schedule.so-$(PLATFORM):
 	cd libfd; $(MAKE) ../$@
-
-.PHONY: libGFD.a GFD.so-$(PLATFORM)
-libGFD.a GFD.so-$(PLATFORM):
-	cd libcp-int; $(MAKE) ../$@
-
-.PHONY: libGBD.a GBD.so-$(PLATFORM)
-libGBD.a GBD.so-$(PLATFORM):
-	cd libcp-bool; $(MAKE) ../$@
-
-.PHONY: libGFS.a GFS.so-$(PLATFORM)
-libGFS.a GFS.so-$(PLATFORM):
-	cd libcp-set; $(MAKE) ../$@
-
+	
 .PHONY: libFSP.a FSP.so-$(PLATFORM)
 libFSP.a FSP.so-$(PLATFORM):
 	cd libfset; $(MAKE) ../$@
+
+### GeOz libs, to built with gecode ###
+
+.PHONY: libGFDB.a GFDB.so-$(PLATFORM)
+libGFDB.a GFDB.so-$(PLATFORM):
+	cd libcp-int; $(MAKE) ../$@
+	
+.PHONY: libGFDP.a GFDP.so-$(PLATFORM)
+libGFDP.a GFDP.so-$(PLATFORM):
+	cd libcp-int; $(MAKE) ../$@
+
+.PHONY: libGBDB.a GBDB.so-$(PLATFORM)
+libGBDB.a GBDB.so-$(PLATFORM):
+	cd libcp-bool; $(MAKE) ../$@
+
+.PHONY: libGBDP.a GBDP.so-$(PLATFORM)
+libGBDP.a GBDP.so-$(PLATFORM):
+	cd libcp-bool; $(MAKE) ../$@
+
+.PHONY: libGFSB.a GFSB.so-$(PLATFORM)
+libGFSB.a GFSB.so-$(PLATFORM):
+	cd libcp-set; $(MAKE) ../$@
+
+.PHONY: libGFSP.a GFSP.so-$(PLATFORM)
+libGFSP.a GFSP.so-$(PLATFORM):
+	cd libcp-set; $(MAKE) ../$@
+	
+### end GeOz libs ### 
 
 ZlibIO.so-$(PLATFORM): $(ZLIBIOOBJS)
 	$(DYNLD) -o $@ $(ZLIBIOOBJS)

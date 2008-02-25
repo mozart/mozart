@@ -2,6 +2,9 @@
 %%% Authors:
 %%%     Alberto Delgado <adelgado@cic.puj.edu.co>
 %%%
+%%%  Contributors:
+%%% 	Andres Felipe Barco (anfelbar@univalle.edu.co)
+%%%
 %%% Copyright:
 %%%     Alberto Delgado, 2007
 %%%
@@ -32,9 +35,20 @@ require
 	    )
    
 import
-   GFS at 'x-oz://boot/GFS'
+   GFSB at 'x-oz://boot/GFSB'
+   GFSP at 'x-oz://boot/GFSP'
    GFB at 'x-oz://boot/GBD'
    Space
+
+prepare
+   %%This record must reflect the SetRelType in gecode/set.hh
+   Rt = '#'('=:':0     %Equality
+	    '\\=:':1    %Disequality
+	    '<:':2    %SubSet
+	    '>:':3    %SuperSet
+	    '||:':4     %Disjoint
+	    '^:':5			%complement
+	   )
 
 export
    %% Telling domains
@@ -64,26 +78,26 @@ export
 
 define
    %FsDecl = GFS.set
-   IsVar = GFS.isVar
-   Sup = {GFS.sup}
-   Inf = {GFS.inf}
+   IsVar = GFSB.isVar
+   Sup = {GFSB.sup}
+   Inf = {GFSB.inf}
    Var
-   Compl = GFS.comp
-   ComplIn = GFS.complIn
-   Include = GFS.incVal
-   Exclude = GFS.excVal
-   CardVal = GFS.cardVal
-   CardInt = GFS.cardInt
+   Compl = GFSB.comp
+   ComplIn = GFSB.complIn
+   Include = GFSB.incVal
+   Exclude = GFSB.excVal
+   CardVal = GFSB.cardVal
+   CardInt = GFSB.cardInt
    IsIn
    %% Propagators
-   Diff = GFS.diff
-   Inter = GFS.intersect
-   InterN = GFS.intersectN
-   Union = GFS.union
-   UnionN = GFS.unionN
-   Subset = GFS.subset
-   Disj = GFS.disjoint
-   Dist = GFS.distinct
+   Diff = GFSP.diff
+   Inter = GFSP.intersect
+   InterN = GFSP.intersectN
+   Union = GFSP.union
+   UnionN = GFSP.unionN
+   Subset = GFSP.subset
+   Disj = GFSP.disjoint
+   Dist = GFSP.distinct
    DisjointN
    DistinctN
    Partition
@@ -92,14 +106,14 @@ define
 in
    local
       fun {Decl}
-	 {GFS.bounds nil Inf#Sup}
+	 {GFSB.bounds nil Inf#Sup}
       end
       fun {Upper Val}
-	 {GFS.bounds nil Val}
+	 {GFSB.bounds nil Val}
       end
       
       fun {Lower Val}
-	 {GFS.bounds Val Inf#Sup}
+	 {GFSB.bounds Val Inf#Sup}
       end
 
       proc {TupleDom N T Fun Dom Dom2}
@@ -164,7 +178,7 @@ in
       end
 
       fun {FsListBounds N Dom1 Dom2}
-	 if N>0 then {GFS.bounds Dom1 Dom2}|{FsListBounds N-1 Dom1 Dom2}
+	 if N>0 then {GFSB.bounds Dom1 Dom2}|{FsListBounds N-1 Dom1 Dom2}
 	 else nil
 	 end
       end
@@ -182,7 +196,7 @@ in
       end
 
       fun {FsTupleBounds L N Dom1 Dom2}
-	 {FsTuple L N GFS.bounds Dom1 Dom2}
+	 {FsTuple L N GFSB.bounds Dom1 Dom2}
       end
       
 
@@ -199,7 +213,7 @@ in
       end
 
       fun {FsRecordBounds L As Dom1 Dom2}
-	 {FsRecord L As GFS.bounds Dom1 Dom2}
+	 {FsRecord L As GFSB.bounds Dom1 Dom2}
       end
       
      
@@ -207,7 +221,7 @@ in
       
    in     
       Var = var(decl : Decl
-		bounds : GFS.bounds
+		bounds : GFSB.bounds
 		upperBound : Upper
 		lowerBound : Lower
 		list(decl : FsListDecl
@@ -230,7 +244,7 @@ in
       proc {DisjointN Mv}
 	 for I in 1..{List.lenght Mv} do
 	    for J in I.. {List.lenght Mv} do
-	    {GFS.disjoint {List.nth Mv I} {List.nth Mv I}}
+	    {GFSP.disjoint {List.nth Mv I} {List.nth Mv I}}
 	    end
 	 end
       end
@@ -238,7 +252,7 @@ in
       proc {DistinctN Mv}
 	 for I in 1..{List.lenght Mv} do
 	    for J in I.. {List.lenght Mv} do
-	    {GFS.distinct {List.nth Mv I} {List.nth Mv I}}
+	    {GFSP.distinct {List.nth Mv I} {List.nth Mv I}}
 	    end
 	 end
       end

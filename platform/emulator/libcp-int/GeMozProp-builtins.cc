@@ -1,9 +1,9 @@
 /*
  *  Main authors:
- *     Alejandro Arbelaez (aarbelaez@cic.puj.edu.co)
+ *     Alejandro Arbelaez <aarbelaez@cic.puj.edu.co>
  *
  *  Contributing authors:
- *
+ *		Andres Felipe Barco <anfelbar@univalle.edu.co>
  *  Copyright:
  *    Alejandro Arbelaez, 2006-2007
  *
@@ -26,102 +26,14 @@
 #ifndef __GEOZ_MOZ_PROP_BUILTINS_CC__
 #define __GEOZ_MOZ_PROP_BUILTINS_CC__
 
-#include "GeMozProp-builtins.hh"
-
-//#include "GeIntVar.hh"
-//#include "GeSpace-builtins.hh"
-#include "GeIntProp-builtins.hh"
+#include "IntVarMacros.hh"
 #include "MozProp/MozProp.cc"
-//#include "../libfd/fdaux.cc"
+
+
 
 
 using namespace Gecode;
 using namespace Gecode::Int;
-
-/**
- * \brief the same that FD.watch.min in mozart
- * @param 0 A reference to the variable
- * @param 1 A reference to the variable (BoolVar)
- * @param 2 Integer
- */
-
-OZ_BI_define(int_watch_min,3,0)
-{
-  //IntVar v1,v2;
-  //  int, v2, v3;
-  //GenericSpace *sp;
-  DeclareGSpace(sp);
-  DeclareGeIntVar(0,v1,sp);
-  DeclareGeIntVar(1,v2,sp);
-
-  OZ_declareInt(2,v3);
-  try {
-
-    WatchMin(sp,v1,v2,v3);
-
-  }
-  catch(Exception e) {
-    //return OZ_raiseC("prop: watch size",0);
-    RAISE_GE_EXCEPTION(e);    
-  }
-  return PROCEED;
-
-} 
-OZ_BI_end
-
-
-/**
- * \brief the same that FD.watch.max in mozart
- * @param 0 A reference to the variable
- * @param 1 A reference to the variable (BoolVar)
- * @param 2 Integer
- */
-
-OZ_BI_define(int_watch_max,3,0)
-{
-  DeclareGSpace(sp);
-  DeclareGeIntVar(0,v1,sp);
-  DeclareGeIntVar(1,v2,sp);
-
-  OZ_declareInt(2,v3);
-  try {
-
-    WatchMax(sp,v1,v2,v3);
-
-    return PROCEED;
-  }
-  catch(Exception e) {
-    return OZ_raiseC("prop: watch size",0);
-  }
-
-} OZ_BI_end
-
-/**
- * \brief the same that FD.watch.size in mozart
- * @param 0 A reference to the variable
- * @param 1 A reference to the variable (BoolVar)
- * @param 2 Integer
- */
-
-OZ_BI_define(int_watch_size,3,0)
-{
-
-  DeclareGSpace(sp);
-  DeclareGeIntVar(0,v1,sp);
-  DeclareGeIntVar(1,v2,sp);
-
-  OZ_declareInt(2,v3);
-  try {
-
-    WatchSize(sp,v1,v2,v3);
-
-    return PROCEED;
-  }
-  catch(Exception e) {
-    return OZ_raiseC("prop: watch size",0);
-  }
-
-} OZ_BI_end
 
 
 /**
@@ -230,7 +142,7 @@ OZ_BI_define(int_disjointC,5,0)
 OZ_BI_define(int_sumCN,4,0)
 {
   DECLARE_INTARGS(0,x0);
-  RelType(2,relType);
+  DeclareIntRelType(2,relType);
   //  IntVar Res;
 
   DeclareGSpace(sp);

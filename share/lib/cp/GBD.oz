@@ -2,6 +2,9 @@
 %%% Authors:
 %%%     Alberto Delgado <adelgado@cic.puj.edu.co>
 %%%
+%%%  Contributors:
+%%% 	Andres Felipe Barco (anfelbar@univalle.edu.co)
+%%%
 %%% Copyright:
 %%%     Alberto Delgado, 2006
 %%%
@@ -35,23 +38,8 @@ require
 
 import
    
-   GBD(bool: BoolVar
-       isVar: IsVar
-
-       'reflect.size':       Size
-       'reflect.zero':       Zero
-       'reflect.one':        One
-
-       'rel_BV_BT_BV_BV':    VarRel
-       'not':                Bool_not
-
-       andA: 	     Bool_and_arr       
-       orA: 	     Bool_or_arr              
-    
-       rel:          Rel
-       linear:       Linear                     
-      )
-   at 'x-oz://boot/GBD'
+   GBDB at 'x-oz://boot/GBDB'
+   GBDP at 'x-oz://boot/GBDP'
    System
    Space
 
@@ -76,17 +64,20 @@ prepare
    
 export
    %% Telling domains
-   bool:   BoolVar
    decl:   Decl
    dom:    GBDDom
    list:   BoolVarList
    tuple:  BoolVarTuple
+	 bool: BoolVar
 
    %% Testing
    is:    IsVar
    
    %%Access
    Reflect
+   'reflect.size':       Size
+   'reflect.zero':       Zero
+   'reflect.one':        One
 
    %% Consistency levels for propagators
    cl:    Cl
@@ -103,7 +94,7 @@ export
    %% propagators
 
    %% Variable Variable Boolean relation propagator
-   varRel:  VarRel
+   rel_BV_BT_BV_BV:  VarRel
 
    %% boolean relations
    and: And
@@ -111,6 +102,18 @@ export
    xor: Xor
    imp: Imp
    eqv: Eqv
+
+	%% Propagators Builtins
+	rel_3: Rel3
+	rel_4: Rel4
+	rel_5: Rel5
+	rel_6: Rel6
+
+	linear_3: Linear3
+	linear_4: Linear4
+	linear_5: Linear5
+	linear_6: Linear6
+	linear_7: Linear7
 
    %% some aliases
    disj:    Or
@@ -133,6 +136,16 @@ export
    %%Space
    
 define
+
+	
+	%% operations
+	   BoolVar = GBDB.'bool'
+		 IsVar = GBDB.'isVar'
+     Size = GBDB.'reflect.size'
+     Zero = GBDB.'reflect.zero'
+   	 One = GBDB.'reflect.one'
+     Bool_not = GBDP.'not'
+		VarRel = GBDP.'rel_BV_BT_BV_BV'
 
    Reflect = reflect(size: Size
 		     zero: Zero
@@ -194,7 +207,7 @@ define
    end
 
 
-   %% Bolean relations (ropagators)
+   %% Bolean relations (propagators)
    proc {And X Y Z}
       {VarRel X BOT.and Y Z}
    end
@@ -214,5 +227,19 @@ define
    proc {Eqv X Y Z}
       {VarRel X BOT.eqv Y Z}
    end
+
+
+	%%Propagators Builtins
+	
+	Rel3 = GBDP.'rel_3'
+	Rel4 = GBDP.'rel_4'
+	Rel5 = GBDP.'rel_5'
+	Rel6 = GBDP.'rel_6'
+
+	Linear3 = GBDP.'linear_3'
+	Linear4 = GBDP.'linear_4'
+	Linear5 = GBDP.'linear_5'
+	Linear6 = GBDP.'linear_6'
+	Linear7 = GBDP.'linear_7'
    
 end
