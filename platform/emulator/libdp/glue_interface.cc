@@ -156,7 +156,11 @@ CsSiteInterface *ComService::connectSelfReps(MsgnLayer *msg, DSite* ds){
 
 // mark all DSites used by the CSC
 void ComService::m_gcSweep() {
-  // raph: where are those DSites?
+  GlueSite* site = getGlueSites();
+  while (site) {
+    if (site->m_isMarked()) site->getDSite()->m_makeGCpreps();
+    site = site->getNext();
+  }
 }
 
 ExtDataContainerInterface* 

@@ -111,8 +111,8 @@ public:
 
   // gc  
   void m_gcRoots();
-  void m_gc();
-  void m_gcFinal();
+  void m_gcMark(OZ_Term);          // called by OzSite only!
+  bool m_isMarked();
 
   // CsSiteInterface
   virtual void    marshalCsSite( DssWriteBuffer* const buf);
