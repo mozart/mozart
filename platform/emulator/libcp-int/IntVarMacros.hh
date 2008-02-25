@@ -243,7 +243,7 @@ if (!OZ_isBool(v##x))\
       _pairs[i][1] = OZ_intToC(OZ_getArg(_val,1));		\
     }								\
     else {							\
-      return OZ_typeError(0,"domain type unknown");		\
+      return OZ_typeError(0,"malformed domain description");	\
     }								\
   }								\
   Gecode::IntSet ds(_pairs, length);
