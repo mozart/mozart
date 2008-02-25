@@ -77,6 +77,7 @@ GlueSite::GlueSite(DSite* site, int ip, int port, int id) :
   ozsite(makeTaggedNULL()),
   faultstream(makeTaggedNULL()),
   next(gSiteList),
+  gcmarked(false),
   disposed(false),
   a_ipAddress(ip),
   a_portNum(port),
@@ -132,19 +133,17 @@ GlueSite::m_setConnection(DssChannel* vc) {
 
 void
 GlueSite::m_gcRoots() {
-  ozsite = makeTaggedNULL();     // will be reset by OzSite if marked
   oz_gCollectTerm(faultstream, faultstream);
 }
 
 void
-GlueSite::m_gcMark(OZ_Term s) {
-  Assert(s);
-  ozsite = s;                    // updated ref to OzSite
-}
-
-bool
-GlueSite::m_isMarked() {
-  return ozsite != makeTaggedNULL();     // non-null means marked
+GlueSite::m_gcFinal() {
+  if (gcmarked) {
+    oz_gCollectTerm(ozsite, ozsite);
+    gcmarked = false;
+  } else {
+    ozsite = makeTaggedNULL();
+  }
 }
 
 void    
@@ -264,6 +263,7 @@ void gcGlueSiteFinal() {
       *siteptr = site->getNext();
       delete site;
     } else {
+      site->m_gcFinal();
       siteptr = site->getNextPtr();
     }
   }
@@ -308,7 +308,7 @@ OZ_Extension *OzSite::gCollectV(void) {
 }
 
 void OzSite::gCollectRecurseV(void) {
-  a_gSite->m_gcMark(OZ_extension(this));
+  a_gSite->m_gcMark();
 }
 
 OZ_Extension *OzSite::sCloneV(void) {

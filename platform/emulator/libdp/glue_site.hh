@@ -74,7 +74,8 @@ private:
   OZ_Term faultstream;     // the site's fault stream
 
   GlueSite* next;          // GlueSite form a linked list
-  bool      disposed;      // flag set when GlueSite must be deleted
+  bool      gcmarked:1;    // flag set by OzSite
+  bool      disposed:1;    // flag set when GlueSite must be deleted
 
   int a_ipAddress; // In network byte order
   int a_portNum; 
@@ -111,8 +112,9 @@ public:
 
   // gc  
   void m_gcRoots();
-  void m_gcMark(OZ_Term);          // called by OzSite only!
-  bool m_isMarked();
+  void m_gcMark() { gcmarked = true; }
+  bool m_isMarked() { return gcmarked; }
+  void m_gcFinal();
 
   // CsSiteInterface
   virtual void    marshalCsSite( DssWriteBuffer* const buf);
