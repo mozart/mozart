@@ -69,7 +69,7 @@ OZ_BI_define(dom_5,5,0){
 	}
 	else if(OZ_isGeIntVar(OZ_in(0)) && OZ_isIntSet(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
 		DeclareGeIntVar(0, __x, home);
-		DECLARE_INT_SET(1, __s);
+		DECLARE_INT_SET2(1, __s);
 		DeclareGeBoolVar(2, __b, home);
 		try{
 			Gecode::dom(home, __x, __s, __b, __ICL_DEF, __PK_DEF);
@@ -88,7 +88,7 @@ OZ_BI_define(dom_4,4,0){
 	DeclareGSpace(home);
 	if(OZ_isGeIntVar(OZ_in(0)) && OZ_isIntSet(OZ_in(1)) && OZ_isIntConLevel(OZ_in(2)) && OZ_isPropKind(OZ_in(3))){
 		DeclareGeIntVar(0, __x, home);
-		DECLARE_INT_SET(1, __s);
+		DECLARE_INT_SET2(1, __s);
 		DeclareIntConLevel(2, __ICL_DEF);
 		DeclarePropKind(3, __PK_DEF);
 		try{
@@ -100,7 +100,7 @@ OZ_BI_define(dom_4,4,0){
 	}
 	else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntSet(OZ_in(1)) && OZ_isIntConLevel(OZ_in(2)) && OZ_isPropKind(OZ_in(3))){
 		DECLARE_INTVARARGS(0, __x, home);
-		DECLARE_INT_SET(1, __s);
+		DECLARE_INT_SET2(1, __s);
 		DeclareIntConLevel(2, __ICL_DEF);
 		DeclarePropKind(3, __PK_DEF);
 		try{
@@ -171,7 +171,7 @@ OZ_BI_define(dom_3,3,0){
 	}
 	else if(OZ_isGeIntVar(OZ_in(0)) && OZ_isIntSet(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2))){
 		DeclareGeIntVar(0, __x, home);
-		DECLARE_INT_SET(1, __s);
+		DECLARE_INT_SET2(1, __s);
 		DeclareGeBoolVar(2, __b, home);
 		try{
 			Gecode::dom(home, __x, __s, __b);
@@ -188,7 +188,7 @@ OZ_BI_define(dom_3,3,0){
 
 OZ_BI_define(dom_2,2,0){
 	DeclareGSpace(home);
-	DECLARE_INT_SET(1, __s);
+	DECLARE_INT_SET2(1, __s);
 	if(OZ_isGeIntVar(OZ_in(0)) && OZ_isIntSet(OZ_in(1))){
 		DeclareGeIntVar(0, __x, home);
 		try{
@@ -1211,7 +1211,7 @@ OZ_BI_define(count_5,5,0){
 		}
 	}
 	else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntSet(OZ_in(1)) && OZ_isIntArgs(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
-		DECLARE_INT_SET(1, __c);
+		DECLARE_INT_SET2(1, __c);
 		try{
 			Gecode::count(home, __x, __c, __v, __ICL_DEF, __PK_DEF);
 		}
@@ -1275,7 +1275,7 @@ OZ_BI_define(count_3,3,0){
 		}
 	}
 	else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntSet(OZ_in(1)) && OZ_isIntArgs(OZ_in(2))){
-		DECLARE_INT_SET(1, __c);
+		DECLARE_INT_SET2(1, __c);
 		try{
 			Gecode::count(home, __x, __c, __v);
 		}
@@ -1330,7 +1330,7 @@ OZ_BI_define(extensional_5,5,0){
 	DeclareIntConLevel(3, __ICL_DEF);
 	DeclarePropKind(4, __PK_DEF);
 	try{
-		Gecode::extensional(home, __c, __x, __t, __ICL_DEF, __PK_DEF);
+	  Gecode::extensional(home, __x, __t, __ICL_DEF, __PK_DEF);
 	}
 	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);
@@ -1371,7 +1371,7 @@ OZ_BI_define(extensional_3,3,0){
 	DECLARE_INTVARARGS(1, __x, home);
 	DeclareTupleSet(2, __t);
 	try{
-		Gecode::extensional(home, __c, __x, __t);
+	  Gecode::extensional(home, __x, __t);
 	}
 	catch(Exception e){
 		RAISE_GE_EXCEPTION(e);

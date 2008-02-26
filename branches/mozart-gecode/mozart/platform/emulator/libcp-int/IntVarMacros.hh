@@ -66,12 +66,13 @@
   }
   
 /**
-	*	\brief Declares a variable form OZ_Term argument at position p in the input to be an IntVar 
-	* variable. This declaration does not affect space stability so it can not be used in 
-	* propagator's built ins.
-	* @param p The position in OZ
-	* @param v Name of the new variable
-*/
+ * \brief Declares a variable form OZ_Term argument at position p in the
+ * input to be an IntVar variable. This declaration does not affect space 
+ * stability so it can not be used in 
+ * propagator's built ins.
+ * @param p The position in OZ
+ * @param v Name of the new variable
+ */
 #define DeclareGeIntVar1(p,v)					\
   IntVar v;							\
   {\
@@ -108,13 +109,14 @@
 }
 
 /**
-	* \brief Macro to declare VarArgs from OZ_terms (list, records, tuples)
-	* @param tIn values
-	* @param array the array of type @a type
-	* @param sp the space of declaration
-	* @param type the type of variable, must be IntVarArgs or BoolVarargs.
-	* @param opDecl is the name of a function, macro to	declare one variable of the corresponding array type.
-*/
+ * \brief Macro to declare VarArgs from OZ_terms (list, records, tuples)
+ * @param tIn values
+ * @param array the array of type @a type
+ * @param sp the space of declaration
+ * @param type the type of variable, must be IntVarArgs or BoolVarargs.
+ * @param opDecl is the name of a function, macro to declare one variable 
+ * of the corresponding array type.
+ */
 
 /*#define DECLARE_VARARGS(tIn,array,sp,type,opDecl)  		\
 int __x##tIn = 0; \
@@ -218,7 +220,7 @@ if (!OZ_isBool(v##x))\
  
  
 /**
-############################## Domains declaration macros ##############################
+############################## Domain declaration ##############################
 */
 
 /** 
@@ -228,12 +230,11 @@ if (!OZ_isBool(v##x))\
  * @param _t Mozart domain specification
  */
 #define	DECLARE_INT_SET(_t,ds)					\
-  OZ_Term l = (OZ_isCons(_t) ? _t : OZ_cons(_t, OZ_nil()));	\
-  int length = OZ_length(l);					\
-  int _pairs[length][2];					\
-								\
-  for (int i = 0; OZ_isCons(l); l=OZ_tail(l), i++) {		\
-    OZ_Term _val = OZ_head(l);					\
+  OZ_Term _l = (OZ_isCons(_t) ? _t : OZ_cons(_t, OZ_nil()));	\
+  int _length = OZ_length(_l);					\
+  int _pairs[_length][2];					\
+  for (int i = 0; OZ_isCons(_l); _l=OZ_tail(_l), i++) {		\
+    OZ_Term _val = OZ_head(_l);					\
     if (OZ_isInt(_val)) {					\
       _pairs[i][0] = OZ_intToC(_val);				\
       _pairs[i][1] = OZ_intToC(_val);				\
@@ -241,13 +242,15 @@ if (!OZ_isBool(v##x))\
     else if (OZ_isTuple(_val)) {				\
       _pairs[i][0] = OZ_intToC(OZ_getArg(_val,0));		\
       _pairs[i][1] = OZ_intToC(OZ_getArg(_val,1));		\
-    }								\
+    }							\
     else {							\
       return OZ_typeError(0,"malformed domain description");	\
     }								\
   }								\
-  Gecode::IntSet ds(_pairs, length);
+  Gecode::IntSet ds(_pairs, _length);
   
+
+#define DECLARE_INT_SET2(_p,_v) DECLARE_INT_SET(OZ_in(_p),_v)
 /** 
  * \brief Declares a Gecode::Int::IntSetArgs from an Oz domain description, no working yet.
  * 
