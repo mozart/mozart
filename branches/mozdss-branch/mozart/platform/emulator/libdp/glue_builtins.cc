@@ -671,7 +671,7 @@ OZ_BI_define(BIkill,1,0)
 } OZ_BI_end
 
 
-OZ_BI_define(BIkillLocal,1,0)
+OZ_BI_define(BIbreak,1,0)
 {
   oz_declareSafeDerefIN(0,entity);
 
