@@ -152,13 +152,14 @@ export
    Abs
    sortedness: Int_sortedness
    
-     %% Propagators Builtins
-   dom_2:						Dom2
+   %% Propagators Builtins
+   domP: Dom
+/*   dom_2:						Dom2
    dom_3:						Dom3
    dom_4:						Dom4
    dom_5:						Dom5
    dom_6:						Dom6
-   
+  */ 
    rel_2:						Rel2
    rel_3:						Rel3
    rel_4:						Rel4
@@ -373,11 +374,28 @@ define
    %% Backward compatibility propagators
 
    %% Propagators Builtins
+   proc {Dom S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 5 then
+	 {GFDP.dom_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      [] 4 then
+	 {GFDP.dom_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+      [] 6 then
+	 {GFDP.dom_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
+      else
+	 raise malformed('Dom post') end
+      end
+   end
+/*   
    Dom2 = GFDP.'dom_2'
    Dom3 = GFDP.'dom_3'
    Dom4 = GFDP.'dom_4'
    Dom5 = GFDP.'dom_5'
    Dom6 = GFDP.'dom_6'
+   */
    
    Rel2 = GFDP.'rel_2'
    Rel3 = GFDP.'rel_3'
