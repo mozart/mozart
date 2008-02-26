@@ -105,6 +105,7 @@ namespace _msl_internal{ //Start namespace
   }
 
   Site::~Site(){
+    if (a_csSite) a_csSite->disposeCsSite();     // dispose CsSite!
     delete a_key;
     delete a_comObj;
     delete [] a_MarshaledRepresentation;
