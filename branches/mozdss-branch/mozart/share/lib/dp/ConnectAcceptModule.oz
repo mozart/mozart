@@ -35,7 +35,6 @@ export
    CondGetAppState
    InitConnection
 %   InitAccept
-   LastSite
    GetAllSites
    GetConSites
    GetThisSite
@@ -52,8 +51,6 @@ define
    
    ThisSite = {Glue.getThisSite}
    
-   LastSiteCell = {NewCell none}
-   LastSite
    GetAllSites
    GetConSites
    GetThisSite
@@ -349,7 +346,7 @@ in
 	     {Dictionary.remove OngoingRequests {SiteKey TargetSite}}
 	     
 	  elseof new_site(S) then
-	     {Assign LastSiteCell S}
+	     skip
 % 	  elseof abort(Requestor) then
 % 	     Id = 'a'%{GetIdFromRequestor Requestor}
 % 	  in
@@ -390,10 +387,6 @@ in
 %    proc{InitAccept AcceptFunc}
 %       {AcceptProc.accept}
 %    end
-
-   fun{LastSite}
-      {Access LastSiteCell}
-   end
 
    fun {GetAllSites}
       {Glue.getAllSites}

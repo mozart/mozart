@@ -33,7 +33,6 @@ import
 export
    Init
    GetSettings
-   GetLastSite
    GetAllSites
    GetConSites
    GetThisSite
@@ -168,10 +167,7 @@ define
 	      acceptProc:{CondSelect S acceptProc default})
       end
    end
-   fun{GetLastSite}
-      {ConnectAcceptModule.lastSite}
-   end
-   
+
    fun {GetAllSites}
       {ConnectAcceptModule.getAllSites}
    end
