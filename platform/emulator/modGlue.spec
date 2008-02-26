@@ -26,145 +26,217 @@
 
 %builtins_all =
     (
-     'getCRC'	            =>  { in  => ['+virtualString'],
+     # compute a CRC for a virtual string.  This is used to add a CRC
+     # to connection tickets, for instance.
+     'getCRC'	             => { in  => ['+virtualString'],
 		                  out => ['+int'],
 		                  BI  => BIgetCRC},
 
+     # marshal a port into a base-64-encoded string (may be used for
+     # tickets)
      'marshalPort'           => { in  => ['+port'],
 				  out => ['+string'],
 				  BI  => BIportToMS},
 
-     'unmarshalPort'           => { in  => ['+string'],
+     # unmarshal a port from a base-64-encoded string (see above)
+     'unmarshalPort'         => { in  => ['+string'],
 				  out => ['+port'],
 				  BI  => BImsToPort},
 
-     'getMsgCntr'       => { in  => [],
-			     out => ['+record'],
-			     BI  => BIgetMsgCntr},
+     # initialize the IP module.  The arguments are: ip address of the
+     # site (as a string), ip port number, an identifier, and an Oz
+     # port.  The latter is used by the Glue to request connections,
+     # etc.
+     'initIPConnection'      => { in  => ['+string','+int','+int','+port'],
+	                          out => [],
+				  BI  => BIinitIPConnection},
 
-     'initIPConnection'    => { in  => ['+string','+int','+int','+port'],
-				out => [],
-				BI  => BIinitIPConnection},
-
-     'getBroadcastAddresses' => { in  => [],
-				  out => ['+[string]'],
-				  bi  => BIgetBroadcastAddresses},
-
-     'sockoptBroadcast'      => { in  => ['+int'],
-				  out => [],
-				  bi  => BIsockoptBroadcast},
-
-     'setConnection'         => { in => ['+value','+int'],
+     # establish a connection to a site (1st arg) with the given
+     # socket descriptor (2nd arg)
+     'setConnection'         => { in  => ['+value','+int'],
                                   out => [],
-				  BI => BIsetConnection},
+				  BI  => BIsetConnection},
 
-     'acceptConnection'      => { in => ['+int'],
+     # establish an anonymous connection with the given socket
+     # descriptor
+     'acceptConnection'      => { in  => ['+int'],
                                   out => [],
-				  BI => BIacceptConnection},
+				  BI  => BIacceptConnection},
 
-     'handoverRoute'         => { in => ['+[value]', '+value'],
+     # establish a DSS route (list of intermediate sites) to reach a
+     # given site (2nd argument); not tested
+     'handoverRoute'         => { in  => ['+[value]', '+value'],
                                   out => [],
-				  BI => BIhandoverRoute},
+				  BI  => BIhandoverRoute},
 
-     'connFailed'            => { in => ['+value','+atom'],
+     # indicate that a connection could not be established for a given
+     # site (1st arg).  The second argument states whether the
+     # connection failure is permanent ('perm') or not ('temp').  The
+     # failure is reported on the site's fault state.
+     'connFailed'            => { in  => ['+value','+atom'],
 				  out => [],
 				  BI  => BIconnFailed},
 
-     'setSiteState'          => { in => ['+value','+atom'],
+     # force the fault state of a site to one of: ok, tempFail,
+     # localFail, permFail.
+     'setSiteState'          => { in  => ['+value','+atom'],
 				  out => [],
 				  BI  => BIsetSiteState},
 
-     'printDPTables'	     => { in  => [],
-				  out => [],
-				  BI  => BIprintDPTables},
+     # defines the RPC wrapper used by the Glue.
+     'setRPC'                => { in  => ['+procedure/3'],
+                                  out => [],
+                                  BI  => BIsetRPC},
 
-     'printDssMemoryAllocation'	     => { in  => [],
-					  out => [],
-					  BI  => BIprintDssMemoryAllocation},
+     # return the annotation (coordination, protocol, and gc
+     # parameters in DSS) of a given entity
+     'getAnnotation'         => { in  => ['value'],
+                                  out => ['+int','+int','+int'],
+                                  BI  => BIgetAnnotation},
 
-     'setRPC'                =>  { in  => ['+procedure/3'],
-                                   out => [],
-                                   BI  => BIsetRPC},
+     # set the annotation (coordination, protocol, and gc parameters
+     # in DSS) of a given entity; the operation is a incremental tell
+     'setAnnotation'         => { in  => ['value','+int','+int','+int'],
+                                  out => [],
+                                  BI  => BIsetAnnotation},
 
-     'getAnnotation'         =>  { in  => ['value'],
-                                   out => ['+int','+int','+int'],
-                                   BI  => BIgetAnnotation},
-
-     'setAnnotation'         =>  { in  => ['value','+int','+int','+int'],
-                                   out => [],
-                                   BI  => BIsetAnnotation},
-
+     # return the fault stream of an entity
      'getFaultStream'        => { in  => ['value'],
 				  out => ['list'],
 				  BI  => BIgetFaultStream},
 
+     # return the current fault state of an entity
      'getFaultState'         => { in  => ['value'],
 				  out => ['+atom'],
 				  BI  => BIgetFaultState},
 
+     # force the fault state of an entity; use for debugging only
      'setFaultState'         => { in  => ['value','+atom'],
 				  out => [],
 				  BI  => BIsetFaultState},
 
+     # kill an entity; the operation is asynchronous and not
+     # guaranteed to succeed
      'kill'                  => { in  => ['value'],
 				  out => [],
 				  BI  => BIkill},
 
-     'killLocal'             => { in  => ['value'],
+     # put the given entity in the fault state 'localFail' (unless it
+     # is already permFail)
+     'break'                 => { in  => ['value'],
 				  out => [],
-				  BI  => BIkillLocal},
+				  BI  => BIbreak},
 
-     'migrateManager'        =>  { in  => ['value'],
-                                   out => [],
-                                   BI  => BImigrateManager},
+     # attempt to migrate the coordinator of the given entity on the
+     # current site
+     'migrateManager'        => { in  => ['value'],
+                                  out => [],
+                                  BI  => BImigrateManager},
 
+     # return the total number of sent and received messages.  The
+     # output is a record of the form
+     #
+     #      msgStatistics(sent:      <number of messages sent>
+     #                    received:  <number of messages received>
+     #                    oswritten: <number of calls to write(2)>
+     #                    osread:    <number of calls to read(2)>
+     #                    cont:      <number of marshaler continuations>)
+     #
+     'getMsgCntr'            => { in  => [],
+			          out => ['+record'],
+				  BI  => BIgetMsgCntr},
+
+     # print the mediator table, and DSS tables
+     'printDPTables'	     => { in  => [],
+				  out => [],
+				  BI  => BIprintDPTables},
+
+     # print the current memory usage of the DSS
+     'printDssMemoryAllocation'	     => { in  => [],
+					  out => [],
+					  BI  => BIprintDssMemoryAllocation},
+
+     # set the DSS log level (0: nothing, 1: normal, 2: important, 3:
+     # behavior, 4: debug, 5: all); see the internals of the DSS for
+     # the exact meaning of these levels
+     'setDssLogLevel'        => { in  => ['+int'],
+			          out => [],
+				  BI  => BIsetDssLogLevel},
+
+     # define a file to send DSS log information; currently not implemented
      'createLogFile'         => { in  => ['+string'],
 				  out => [],
 				  BI  => BIcreateLogFile},
 
-    'getEntityCond'	=>  { in  => ['value'],
-			     out => ['value'],
-			     BI  => BIgetEntityCond},
+     # send a message (2nd arg) to a site (1st arg); the message is
+     # delivered at the destination site (through the Oz port given to
+     # initIPConnection)
+     'sendSite'              => { in => ['+value', 'value'],
+                                  out => [],  
+				  BI => BIsendMsgToSite},
 
-    'installFaultPort'	=>  { in  => ['+port'],
-			     out => [],
-			     BI  => BIinstallFaultPort},
+     # return the list of all currently known sites
+     'getAllSites'           => { in => [],
+                                  out => ['+[value]'],
+				  BI => BIgetAllSites},
 
-    'distHandlerInstall'=>  { in  => ['value','+int','value'],
-			     out => ['+bool'],
-			     BI  => BIdistHandlerInstall},
+     # return the list of all sites currently connected to this site
+     'getConSites'           => { in => [],
+                                  out => ['+[value]'],
+				  BI => BIgetConSites},
 
-    'distHandlerDeInstall'=>{ in  => ['value','+int','value'],
-			     out => ['+bool'],
-			     BI  => BIdistHandlerDeInstall},
+     # return the current site
+     'getThisSite'           => { in => [],
+                                  out => ['+value'],
+				  BI => BIgetThisSite},
 
+     # return site information (ip address, ip port, identifier);
+     # currently has the form of a record
+     #
+     #      site(ip:   <ip address (atom)>
+     #           port: <ip port number>
+     #           id:   <id number>)
+     #
+     'getSiteInfo'           => { in => ['+value'],
+                                  out => ['+value'],
+				  BI => BIgetSiteInfo},
 
-    'setDssLogLevel'=>{ in  => ['+int'],
-			     out => [],
-			     BI  => BIsetDssLogLevel},
+     # return the connection status of the given site, as a record
+     #
+     #      cs(channel:       <whether a direct channel is used>
+     #         circuit:       <whether a circuit is used>
+     #         communicating: <whether currently communicating>)
+     #
+     'getChannelStatus'      => { in => ['+value'],
+			          out => ['+value'],
+				  BI => BIgetChannelStatus},
 
-    'sendSite'      =>  { in => ['+value', 'value'],
-                          out => [],  
-			  BI => BIsendMsgToSite},
+     # to be removed - related to former Fault module
+     'getEntityCond'	     => { in  => ['value'],
+			          out => ['value'],
+				  BI  => BIgetEntityCond},
 
-    'getAllSites'=>{ in => [],
-                     out => ['+[value]'],
-                     BI => BIgetAllSites},
+     'installFaultPort'      => { in  => ['+port'],
+			          out => [],
+				  BI  => BIinstallFaultPort},
 
-    'getConSites'=>{ in => [],
-                     out => ['+[value]'],
-                     BI => BIgetConSites},
+     'distHandlerInstall'    => { in  => ['value','+int','value'],
+			          out => ['+bool'],
+				  BI  => BIdistHandlerInstall},
 
-    'getThisSite'=>{ in => [],
-                     out => ['+value'],
-                     BI => BIgetThisSite},
+     'distHandlerDeInstall'  => { in  => ['value','+int','value'],
+			          out => ['+bool'],
+				  BI  => BIdistHandlerDeInstall},
 
-    'getSiteInfo'=>{ in => ['+value'],
-                     out => ['+value'],
-                     BI => BIgetSiteInfo},
+     # return a list of broadcast addresses available (used in module
+     # Discovery)
+     'getBroadcastAddresses' => { in  => [],
+				  out => ['+[string]'],
+				  bi  => BIgetBroadcastAddresses},
 
-    'getChannelStatus'=>{ in => ['+value'],
-			  out => ['+value'],
-			  BI => BIgetChannelStatus},
-    
+     # allow the broadcast messages for a given socket (module Discovery)
+     'sockoptBroadcast'      => { in  => ['+int'],
+				  out => [],
+				  bi  => BIsockoptBroadcast},
+
     );
