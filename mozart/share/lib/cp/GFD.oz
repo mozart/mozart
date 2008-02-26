@@ -166,8 +166,11 @@ export
    rel_5:						Rel5
    rel_6:						Rel6
    
+   element: Element
+   /*
    element_3:				Element3
    element_5:				Element5
+   */
    
    channel_2:				Channel2
    channel_4:				Channel4
@@ -386,7 +389,7 @@ define
       [] 6 then
 	 {GFDP.dom_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
       else
-	 raise malformed('Dom post') end
+	 raise malformed('Domain constraint post') end
       end
    end
 /*   
@@ -403,8 +406,22 @@ define
    Rel5 = GFDP.'rel_5'
    Rel6 = GFDP.'rel_6'
    
+
+   proc {Element S}
+      Sc =  Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 5 then
+	 {GFD.element_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      else
+	 raise malformed('Element constraint post') end
+      end
+   end
+   /*
    Element3 = GFDP.'element_3'
    Element5 = GFDP.'element_5'
+   */
    
    Channel2 = GFDP.'channel_2'
    Channel4 = GFDP.'channel_4'
