@@ -53,3 +53,13 @@ void GlueWriteBuffer::putByte(const BYTE& c) { put(c); }
 void GlueWriteBuffer::writeToBuffer(const BYTE* ptr, size_t size) {
   for(; size>0; size--) { put(*ptr); ptr++; }
 } 
+
+
+
+void GlueMarshalerBuffer::readFromBuffer(BYTE* ptr, size_t sz) {
+  for (; sz > 0; sz--) { *ptr = buffer->get(); ptr++; }
+}
+
+void GlueMarshalerBuffer::writeToBuffer(const BYTE* ptr, size_t sz) {
+  for (; sz > 0; sz--) { buffer->put(*ptr); ptr++; }
+}

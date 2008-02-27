@@ -332,17 +332,24 @@ OZ_Return OzSite::getFeatureV(OZ_Term feat, OZ_Term& value) {
 // The idea goes as follows. The Oz-object calls the DSS object that will 
 // create a serialized representation. The oz-object does thus not serialize
 // a thing. It is completly done by the DSS. 
-void OzSite::marshalSuspV(OZ_Term te, ByteBuffer *bs, GenTraverser *gt) {
-  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs);
-  (a_gSite->getDSite())->m_marshalDSite(gwb);
+void OzSite::pickleV(MarshalerBuffer* mb, GenTraverser*) {
+  GlueMarshalerBuffer gmb(mb);
+  a_gSite->getDSite()->m_marshalDSite(&gmb);
+}
+
+static
+OZ_Term unmarshalOzSite(MarshalerBuffer *mb, Builder*) {
+  if (!glue_com_connection) return UnmarshalEXT_Error;
+  GlueMarshalerBuffer gmb(mb);
+  DSite* ds = glue_com_connection->a_msgnLayer->m_UnmarshalDSite(&gmb);
+  GlueSite* gs = static_cast<GlueSite*>(ds->m_getCsSiteRep());
+  return gs->getOzSite();
 }
 
 
-static
-OZ_Term unmarshalOzSite(MarshalerBuffer *bs, Builder*)
-{
-  Assert(0); 
-  return (UnmarshalEXT_Error);
+void OzSite::marshalSuspV(OZ_Term te, ByteBuffer *bs, GenTraverser *gt) {
+  GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs);
+  (a_gSite->getDSite())->m_marshalDSite(gwb);
 }
 
 static

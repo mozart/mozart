@@ -57,5 +57,31 @@ public:
 
 };
 
+
+// An object GlueMarshalerBuffer just provides the interfaces
+// DssReadBuffer and DssWriteBuffer to an existing MarshalerBuffer.
+// Note that the available size checks are not correct...
+class GlueMarshalerBuffer : public DssReadBuffer, public DssWriteBuffer {
+public:
+  MarshalerBuffer* buffer;
+
+  GlueMarshalerBuffer() : buffer(NULL) {}     // should not be used
+  GlueMarshalerBuffer(MarshalerBuffer* m) : buffer(m) {}
+  ~GlueMarshalerBuffer() {}
+
+  // DssReadBuffer interface
+  virtual int availableData() const { return 1000000; }     // ahem...
+  virtual bool canRead(size_t) const { return true; }
+  virtual void readFromBuffer(BYTE*, size_t);
+  virtual void commitRead(size_t) {}
+  virtual const BYTE getByte() { return buffer->get(); }
+
+  // DssWriteBuffer interface
+  virtual int availableSpace() const { return 1000000; }     // ahem...
+  virtual bool canWrite(size_t) const { return true; }
+  virtual void writeToBuffer(const BYTE* ptr, size_t write);
+  virtual void putByte(const BYTE& b) { buffer->put(b); }
+};
+
 #endif
 
