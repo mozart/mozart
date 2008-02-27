@@ -159,12 +159,16 @@ export
    dom_4:						Dom4
    dom_5:						Dom5
    dom_6:						Dom6
-  */ 
- %  rel_2:						Rel2
- %  rel_3:						Rel3
+   */
+
+   relP: RelP
+   /*
+   rel_2:						Rel2
+   rel_3:						Rel3
    rel_4:						Rel4
    rel_5:						Rel5
    rel_6:						Rel6
+   */
    
    element: Element
    /*
@@ -399,13 +403,30 @@ define
    Dom5 = GFDP.'dom_5'
    Dom6 = GFDP.'dom_6'
    */
-   
-   %Rel2 = GFDP.'rel_2'
-   %Rel3 = GFDP.'rel_3'
+
+   proc {RelP S}
+      Sc =  Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      %% Assert 2 is a GFD.rt.*
+      case W
+      of 5 then
+	 {GFDP.rel_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      []  6 then
+	 {GFDP.rel_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
+      [] 4 then
+	 {GFDP.rel_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+      else
+	 raise malformed('Rel post') end
+      end
+   end
+   /*
+   Rel2 = GFDP.'rel_2'
+   Rel3 = GFDP.'rel_3'
    Rel4 = GFDP.'rel_4'
    Rel5 = GFDP.'rel_5'
    Rel6 = GFDP.'rel_6'
-   
+   */
 
    proc {Element S}
       Sc =  Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
