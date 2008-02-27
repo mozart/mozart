@@ -141,15 +141,15 @@ $boot_module_name      		  = "GFD";
 	out=>[],
 	bi => channel_5 }
 ,
+'circuit_3' => { in => ['+value', '+value', '+value'],
+	out=>[],
+	bi => circuit_3 }
+,
+
 
 'cumulatives_9' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value'],
 	out=>[],
 	bi => cumulatives_9 }
-,
-
-'cumulatives_7' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value'],
-	out=>[],
-	bi => cumulatives_7 }
 ,
 
 'sorted_4' => { in => ['+value', '+value', '+value', '+value'],

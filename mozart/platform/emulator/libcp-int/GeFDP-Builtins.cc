@@ -762,6 +762,9 @@ OZ_BI_define(circuit_3,3,0){
   DECLARE_INTVARARGS(0, __x, home);
   DeclareIntConLevel(1, __ICL_DEF);
   DeclarePropKind(2, __PK_DEF);
+
+  //   circuit(Space* home, const IntVarArgs& x, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
+
   try{
     Gecode::circuit(home, __x, __ICL_DEF, __PK_DEF);
   }
@@ -771,6 +774,7 @@ OZ_BI_define(circuit_3,3,0){
   CHECK_POST(home);
 }OZ_BI_end
 
+ /*
 OZ_BI_define(circuit_1,1,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
@@ -782,7 +786,7 @@ OZ_BI_define(circuit_1,1,0){
   }
   CHECK_POST(home);
 }OZ_BI_end
-
+ */
 
  /**
     Scheduling constraints
@@ -793,91 +797,163 @@ OZ_BI_define(cumulatives_9,9,0){
   DECLARE_INTVARARGS(3, __end, home);
   DECLARE_INTARGS(5, __limit);
   DeclareBool(6, __at_most);
+  
+  Assert(OZ_isIntConLevel(OZ_in(7)) && OZ_isPropKind(OZ_in(8)));
+
   DeclareIntConLevel(7, __ICL_DEF);
   DeclarePropKind(8, __PK_DEF);
-  if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntVarArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntVarArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6)) && OZ_isIntConLevel(OZ_in(7)) && OZ_isPropKind(OZ_in(8))){
+
+  bool posted = false;
+
+  if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntVarArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntVarArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6)) ){
+    /*   cumulatives(Space* home, const IntVarArgs& machine,
+              const IntVarArgs& start, const IntVarArgs& duration,
+              const IntVarArgs& end, const IntVarArgs& height,
+              const IntArgs& limit, bool at_most, 
+              IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
+    */
     DECLARE_INTVARARGS(0, __machine, home);
     DECLARE_INTVARARGS(2, __duration, home);
     DECLARE_INTVARARGS(4, __height, home);
     try{
       Gecode::cumulatives(home, __machine, __start, __duration, __end, __height, __limit, __at_most, __ICL_DEF, __PK_DEF);
+      posted = true;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntVarArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntVarArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6)) && OZ_isIntConLevel(OZ_in(7)) && OZ_isPropKind(OZ_in(8))){
+  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntVarArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntVarArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6)) ){
+    /*
+      cumulatives(Space* home, const IntArgs& machine,
+              const IntVarArgs& start, const IntVarArgs& duration,
+              const IntVarArgs& end, const IntVarArgs& height,
+              const IntArgs& limit, bool at_most, 
+              IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
+     */
     DECLARE_INTARGS(0, __machine);
     DECLARE_INTVARARGS(2, __duration, home);
     DECLARE_INTVARARGS(4, __height, home);
     try{
       Gecode::cumulatives(home, __machine, __start, __duration, __end, __height, __limit, __at_most, __ICL_DEF, __PK_DEF);
+      posted= true;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntVarArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6)) && OZ_isIntConLevel(OZ_in(7)) && OZ_isPropKind(OZ_in(8))){
+  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntVarArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6))){
+    /*
+      cumulatives(Space* home, const IntVarArgs& machine,
+              const IntVarArgs& start, const IntArgs& duration,
+              const IntVarArgs& end, const IntVarArgs& height,
+              const IntArgs& limit, bool at_most, 
+              IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
+    */
     DECLARE_INTVARARGS(0, __machine, home);
     DECLARE_INTARGS(2, __duration);
     DECLARE_INTVARARGS(4, __height, home);
     try{
       Gecode::cumulatives(home, __machine, __start, __duration, __end, __height, __limit, __at_most, __ICL_DEF, __PK_DEF);
+      posted = true;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntVarArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6)) && OZ_isIntConLevel(OZ_in(7)) && OZ_isPropKind(OZ_in(8))){
+  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntVarArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6)) ) {
+    /*
+        cumulatives(Space* home, const IntArgs& machine,
+              const IntVarArgs& start, const IntArgs& duration,
+              const IntVarArgs& end, const IntVarArgs& height,
+              const IntArgs& limit, bool at_most, 
+              IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
+
+     */
     DECLARE_INTARGS(0, __machine);
     DECLARE_INTARGS(2, __duration);
     DECLARE_INTVARARGS(4, __height, home);
     try{
       Gecode::cumulatives(home, __machine, __start, __duration, __end, __height, __limit, __at_most, __ICL_DEF, __PK_DEF);
+      posted = true;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntVarArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6)) && OZ_isIntConLevel(OZ_in(7)) && OZ_isPropKind(OZ_in(8))){
+  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntVarArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6)) ){
+    /*
+      cumulatives(Space* home, const IntVarArgs& machine,
+              const IntVarArgs& start, const IntVarArgs& duration,
+              const IntVarArgs& end, const IntArgs& height,
+              const IntArgs& limit, bool at_most, 
+              IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
+     */
+    
     DECLARE_INTVARARGS(0, __machine, home);
     DECLARE_INTVARARGS(2, __duration, home);
     DECLARE_INTARGS(4, __height);
     try{
       Gecode::cumulatives(home, __machine, __start, __duration, __end, __height, __limit, __at_most, __ICL_DEF, __PK_DEF);
+      posted = true;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntVarArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6)) && OZ_isIntConLevel(OZ_in(7)) && OZ_isPropKind(OZ_in(8))){
+  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntVarArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6))){
+    /*
+        cumulatives(Space* home, const IntArgs& machine,
+              const IntVarArgs& start, const IntVarArgs& duration,
+              const IntVarArgs& end, const IntArgs& height,
+              const IntArgs& limit, bool at_most, 
+              IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
+     */
     DECLARE_INTARGS(0, __machine);
     DECLARE_INTVARARGS(2, __duration, home);
     DECLARE_INTARGS(4, __height);
     try{
       Gecode::cumulatives(home, __machine, __start, __duration, __end, __height, __limit, __at_most, __ICL_DEF, __PK_DEF);
+      posted = false;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6)) && OZ_isIntConLevel(OZ_in(7)) && OZ_isPropKind(OZ_in(8))){
+  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6))){
+    /*
+        cumulatives(Space* home, const IntVarArgs& machine,
+              const IntVarArgs& start, const IntArgs& duration,
+              const IntVarArgs& end, const IntArgs& height,
+              const IntArgs& limit, bool at_most, 
+              IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
+
+     */
     DECLARE_INTVARARGS(0, __machine, home);
     DECLARE_INTARGS(2, __duration);
     DECLARE_INTARGS(4, __height);
     try{
       Gecode::cumulatives(home, __machine, __start, __duration, __end, __height, __limit, __at_most, __ICL_DEF, __PK_DEF);
+      posted = true;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6)) && OZ_isIntConLevel(OZ_in(7)) && OZ_isPropKind(OZ_in(8))){
+  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6))){
+    /*
+        cumulatives(Space* home, const IntArgs& machine,
+              const IntVarArgs& start, const IntArgs& duration,
+              const IntVarArgs& end, const IntArgs& height,
+              const IntArgs& limit, bool at_most, 
+              IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
+     */
     DECLARE_INTARGS(0, __machine);
     DECLARE_INTARGS(2, __duration);
     DECLARE_INTARGS(4, __height);
     try{
       Gecode::cumulatives(home, __machine, __start, __duration, __end, __height, __limit, __at_most, __ICL_DEF, __PK_DEF);
+      posted = true;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -886,27 +962,31 @@ OZ_BI_define(cumulatives_9,9,0){
   else{
     OZ_typeError(0, "Malformed Propagator");
   }
+  Assert(posted);
   CHECK_POST(home);
 }OZ_BI_end
 
+ /*
 OZ_BI_define(cumulatives_7,7,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(1, __start, home);
   DECLARE_INTVARARGS(3, __end, home);
   DECLARE_INTARGS(5, __limit);
   DeclareBool(6, __at_most);
+  
   if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntVarArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntVarArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6))){
-    DECLARE_INTVARARGS(0, __machine, home);
-    DECLARE_INTVARARGS(2, __duration, home);
-    DECLARE_INTVARARGS(4, __height, home);
-    try{
-      Gecode::cumulatives(home, __machine, __start, __duration, __end, __height, __limit, __at_most);
-    }
-    catch(Exception e){
-      RAISE_GE_EXCEPTION(e);
-    }
+  DECLARE_INTVARARGS(0, __machine, home);
+  DECLARE_INTVARARGS(2, __duration, home);
+  DECLARE_INTVARARGS(4, __height, home);
+  try{
+  Gecode::cumulatives(home, __machine, __start, __duration, __end, __height, __limit, __at_most);
   }
-  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntVarArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntVarArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6))){
+  catch(Exception e){
+  RAISE_GE_EXCEPTION(e);
+  }
+  }
+  else 
+  if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntVarArgs(OZ_in(2)) && OZ_isIntVarArgs(OZ_in(3)) && OZ_isIntVarArgs(OZ_in(4)) && OZ_isIntArgs(OZ_in(5)) && OZ_isBool(OZ_in(6))){
     DECLARE_INTARGS(0, __machine);
     DECLARE_INTVARARGS(2, __duration, home);
     DECLARE_INTVARARGS(4, __height, home);
@@ -988,7 +1068,7 @@ OZ_BI_define(cumulatives_7,7,0){
   }
   CHECK_POST(home);
 }OZ_BI_end
-
+ */
 
  /**
     Sorted constraints
