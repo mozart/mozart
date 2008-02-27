@@ -101,16 +101,6 @@ $boot_module_name      		  = "GFD";
 	bi => dom_6 }
 ,
 
-'dom_3' => { in => ['+value', '+value', '+value'],
-	out=>[],
-	bi => dom_3 }
-,
-
-'dom_2' => { in => ['+value', '+value'],
-	out=>[],
-	bi => dom_2 }
-,
-
 'rel_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
 	bi => rel_5 }
@@ -126,15 +116,6 @@ $boot_module_name      		  = "GFD";
 	bi => rel_4 }
 ,
 
-'rel_3' => { in => ['+value', '+value', '+value'],
-	out=>[],
-	bi => rel_3 }
-,
-
-'rel_2' => { in => ['+value', '+value'],
-	out=>[],
-	bi => rel_2 }
-,
 
 'element_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
