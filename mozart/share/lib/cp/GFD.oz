@@ -160,8 +160,8 @@ export
    dom_5:						Dom5
    dom_6:						Dom6
   */ 
-   rel_2:						Rel2
-   rel_3:						Rel3
+ %  rel_2:						Rel2
+ %  rel_3:						Rel3
    rel_4:						Rel4
    rel_5:						Rel5
    rel_6:						Rel6
@@ -400,8 +400,8 @@ define
    Dom6 = GFDP.'dom_6'
    */
    
-   Rel2 = GFDP.'rel_2'
-   Rel3 = GFDP.'rel_3'
+   %Rel2 = GFDP.'rel_2'
+   %Rel3 = GFDP.'rel_3'
    Rel4 = GFDP.'rel_4'
    Rel5 = GFDP.'rel_5'
    Rel6 = GFDP.'rel_6'
@@ -413,7 +413,7 @@ define
    in
       case W
       of 5 then
-	 {GFD.element_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+	 {GFDP.element_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
       else
 	 raise malformed('Element constraint post') end
       end
