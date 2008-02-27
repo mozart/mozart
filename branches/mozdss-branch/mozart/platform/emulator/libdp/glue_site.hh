@@ -174,6 +174,8 @@ public:
   virtual OZ_Boolean    isChunkV(void) { return OZ_TRUE; }
   virtual OZ_Return	getFeatureV(OZ_Term,OZ_Term&);
   //
+  virtual OZ_Boolean    toBePickledV() { return (OZ_TRUE); }
+  virtual void          pickleV(MarshalerBuffer *mb, GenTraverser *gt);
   virtual OZ_Boolean    toBeMarshaledV() { return (OZ_TRUE); }
   virtual void          marshalSuspV(OZ_Term te,
 				     ByteBuffer *bs, GenTraverser *gt);
