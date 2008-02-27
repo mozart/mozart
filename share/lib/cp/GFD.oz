@@ -175,10 +175,13 @@ export
    element_3:				Element3
    element_5:				Element5
    */
-   
+
+   channel: Channel
+   /*
    channel_2:				Channel2
    channel_4:				Channel4
    channel_5:				Channel5
+   */
    
    cumulatives_7:		Cumulatives7
    cumulatives_9:		Cumulatives9
@@ -406,7 +409,7 @@ define
    */
 
    proc {RelP S}
-      Sc =  Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
    in
       %% Assert 2 is a GFD.rt.*
@@ -430,7 +433,7 @@ define
    */
 
    proc {Element S}
-      Sc =  Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
    in
       case W
@@ -444,10 +447,27 @@ define
    Element3 = GFDP.'element_3'
    Element5 = GFDP.'element_5'
    */
+
+   proc {Channel S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 4 then
+	 {GFDP.channel_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+      [] 5 then
+	 % TODO: Sc.3 can be 0 by default.
+	 {GFDP.channel_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      else
+	 raise malformed('Channel constraint post') end
+      end
+   end
    
+   /*
    Channel2 = GFDP.'channel_2'
    Channel4 = GFDP.'channel_4'
    Channel5 = GFDP.'channel_5'
+   */
    
    Cumulatives7 = GFDP.'cumulatives_7'
    Cumulatives9 = GFDP.'cumulatives_9'
