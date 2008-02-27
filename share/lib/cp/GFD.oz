@@ -216,10 +216,11 @@ export
    linear_6:				Linear6
    linear_7:				Linear7
    
-   distinct_1:			Distinct1
+   %distinct_1:			Distinct1
    %distinct_2:			Distinct2 there is another prop call distinct_2, defined in /platform/emulator/libcp-int/GeIntProp-builtins.cc line 87.
-   distinct_3:			Distinct3
-   distinct_4:			Distinct4
+   %distinct_3:			Distinct3
+   %distinct_4:			Distinct4
+   distinctP: DistinctP
    
    max_2:						Max2
    max_3:						Max3
@@ -483,11 +484,25 @@ define
    Linear5 = GFDP.'linear_5'
    Linear6 = GFDP.'linear_6'
    Linear7 = GFDP.'linear_7'
+
    
-   Distinct1 = GFDP.'distinct_1'
+   proc {DistinctP S}
+      Sc =  Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 3 then
+	 {GFDP.distinct_3 Sc.1 Sc.cl Sc.pk}
+      [] 4 then
+	 {GFDP.distinct_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+      else
+	 raise malformed('Distinct constraint post') end
+      end
+   end
+   %Distinct1 = GFDP.'distinct_1'
    %Distinct2 = GFDP.'distinct_2'
-   Distinct3 = GFDP.'distinct_3'
-   Distinct4 = GFDP.'distinct_4'
+   %Distinct3 = GFDP.'distinct_3'
+   %Distinct4 = GFDP.'distinct_4'
    
    Max2 = GFDP.'max_2'
    Max3 = GFDP.'max_3'

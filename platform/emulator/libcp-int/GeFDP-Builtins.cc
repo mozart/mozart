@@ -576,6 +576,8 @@ OZ_BI_define(distinct_3,3,0){
   DECLARE_INTVARARGS(0, __x, home);
   DeclareIntConLevel(1, __ICL_DEF);
   DeclarePropKind(2, __PK_DEF);
+
+  //   distinct(Space* home, const IntVarArgs& x, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
   try{
     Gecode::distinct(home, __x, __ICL_DEF, __PK_DEF);
   }
@@ -591,6 +593,8 @@ OZ_BI_define(distinct_4,4,0){
   DECLARE_INTVARARGS(1, __x, home);
   DeclareIntConLevel(2, __ICL_DEF);
   DeclarePropKind(3, __PK_DEF);
+
+  //   distinct(Space* home, const IntArgs& n, const IntVarArgs& x, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
   try{
     Gecode::distinct(home, __n, __x, __ICL_DEF, __PK_DEF);
   }
@@ -600,6 +604,7 @@ OZ_BI_define(distinct_4,4,0){
   CHECK_POST(home);
 }OZ_BI_end
 
+ /*
 OZ_BI_define(distinct_1,1,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
@@ -624,7 +629,7 @@ OZ_BI_define(distinct_2,2,0){
   }
   CHECK_POST(home);
 }OZ_BI_end
-
+ */
 
  /**
     Channel constraints
