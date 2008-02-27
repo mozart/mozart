@@ -182,10 +182,14 @@ export
    channel_4:				Channel4
    channel_5:				Channel5
    */
-   
+
+   circuit: Circuit
+
+   cumulatives: Cumulatives
+   /*
    cumulatives_7:		Cumulatives7
    cumulatives_9:		Cumulatives9
-   
+   */
    sorted_2: 				Sorted2
    sorted_3: 				Sorted3
    sorted_4: 				Sorted4
@@ -468,9 +472,35 @@ define
    Channel4 = GFDP.'channel_4'
    Channel5 = GFDP.'channel_5'
    */
-   
+
+   proc {Circuit S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 3 then
+	 {GFDP.circuit_3 Sc.1 Sc.cl Sc.pk}
+      else
+	 raise malformed('Circuit constraint post') end
+      end
+   end
+
+   proc {Cumulatives S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 9 then
+	 {GFDP.cumulatives_9 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.6 Sc.7 Sc.cl Sc.pk}
+      else
+	 raise malformed('Cumulatives constraint post') end
+      end
+   end
+      
+   /*
    Cumulatives7 = GFDP.'cumulatives_7'
    Cumulatives9 = GFDP.'cumulatives_9'
+   */
    
    Sorted2 = GFDP.'sorted_2'
    Sorted3 = GFDP.'sorted_3'
