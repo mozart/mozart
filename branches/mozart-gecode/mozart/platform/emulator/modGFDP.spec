@@ -132,16 +132,6 @@ $boot_module_name      		  = "GFD";
 	bi => distinct_4 }
 ,
 
-'distinct_1' => { in => ['+value'],
-	out=>[],
-	bi => distinct_1 }
-,
-
-'distinct_2' => { in => ['+value', '+value'],
-	out=>[],
-	bi => distinct_2 }
-,
-
 'channel_4' => { in => ['+value', '+value', '+value', '+value'],
 	out=>[],
 	bi => channel_4 }
