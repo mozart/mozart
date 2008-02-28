@@ -216,13 +216,15 @@ export
    
    abs_2:						Abs2
    abs_4:						Abs4
-   
+
+   linearP: LinearP
+   /*
    linear_3:				Linear3
    linear_4:				Linear4
    linear_5:				Linear5
    linear_6:				Linear6
    linear_7:				Linear7
-   
+   */
    %distinct_1:			Distinct1
    %distinct_2:			Distinct2 there is another prop call distinct_2, defined in /platform/emulator/libcp-int/GeIntProp-builtins.cc line 87.
    %distinct_3:			Distinct3
@@ -528,13 +530,30 @@ define
    
    Abs2 = GFDP.'abs_2'
    Abs4 = GFDP.'abs_4'
+
+   proc {LinearP S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 5 then
+	 {GFDP.linear_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      [] 6 then
+	 {GFDP.linear_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
+      [] 7 then
+	 {GFDP.linear_5 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl Sc.pk}
+      else
+	 raise malformed('Linear constraint post') end
+      end
+   end
    
+   /*
    Linear3 = GFDP.'linear_3'
    Linear4 = GFDP.'linear_4'
    Linear5 = GFDP.'linear_5'
    Linear6 = GFDP.'linear_6'
    Linear7 = GFDP.'linear_7'
-
+   */
    
    proc {DistinctP S}
       Sc =  Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
