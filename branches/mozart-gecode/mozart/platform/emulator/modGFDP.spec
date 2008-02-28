@@ -279,25 +279,15 @@ $boot_module_name      		  = "GFD";
 
 'linear_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => linear_5 }
+	bi => GFDlinear_5 }
 ,
 
 'linear_6' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => linear_6 }
+	bi => GFDlinear_6 }
 ,
 
 'linear_7' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => linear_7 }
-,
-
-'linear_3' => { in => ['+value', '+value', '+value'],
-	out=>[],
-	bi => linear_3 }
-,
-
-'linear_4' => { in => ['+value', '+value', '+value', '+value'],
-	out=>[],
-	bi => linear_4 }
+	bi => GFDlinear_7 }
 );

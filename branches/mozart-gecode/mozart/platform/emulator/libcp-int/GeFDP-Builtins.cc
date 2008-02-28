@@ -1678,38 +1678,50 @@ OZ_BI_define(abs_2,2,0){
  /**
     Linear constraints over integer variables
  */
-OZ_BI_define(linear_5,5,0){
+OZ_BI_define(GFDlinear_5,5,0){
   DeclareGSpace(home);
-  bool called = false;
-  if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isInt(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
+  
+  Assert( OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4)));
+  DeclareIntConLevel(3, __ICL_DEF);
+  DeclarePropKind(4, __PK_DEF);
+  
+  bool posted = false;
+
+  if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isInt(OZ_in(2))){
+    /* linear(Space* home, const IntVarArgs& x, 
+         IntRelType r, int c,
+         IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
+    */
     DECLARE_INTVARARGS(0, __x, home);
     DeclareIntRelType(1, __r);
     DeclareInt2(2, __c);
-    DeclareIntConLevel(3, __ICL_DEF);
-    DeclarePropKind(4, __PK_DEF);
     try{
       Gecode::linear(home, __x, __r, __c, __ICL_DEF, __PK_DEF);
-      called = true;
+      posted = true;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
+  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2))) {
+    /*
+      linear(Space* home, const IntVarArgs& x,
+         IntRelType r, IntVar y,
+         IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
+     */
     DECLARE_INTVARARGS(0, __x, home);
     DeclareIntRelType(1, __r);
     DeclareGeIntVar(2, __y, home);
-    DeclareIntConLevel(3, __ICL_DEF);
-    DeclarePropKind(4, __PK_DEF);
     try{
       Gecode::linear(home, __x, __r, __y, __ICL_DEF, __PK_DEF);
-      called = true;
+      posted = true;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isInt(OZ_in(3)) && OZ_isGeBoolVar(OZ_in(4))){
+  /*
+    else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isInt(OZ_in(3)) && OZ_isGeBoolVar(OZ_in(4))){
     DECLARE_INTARGS(0, __a);
     DECLARE_INTVARARGS(1, __x, home);
     DeclareIntRelType(2, __r);
@@ -1722,8 +1734,8 @@ OZ_BI_define(linear_5,5,0){
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
-  }
-  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isGeIntVar(OZ_in(3)) && OZ_isGeBoolVar(OZ_in(4))){
+    }*/
+  /* else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isGeIntVar(OZ_in(3)) && OZ_isGeBoolVar(OZ_in(4))){
     DECLARE_INTARGS(0, __a);
     DECLARE_INTVARARGS(1, __x, home);
     DeclareIntRelType(2, __r);
@@ -1736,61 +1748,89 @@ OZ_BI_define(linear_5,5,0){
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
-  }
+  }*/
   else{
     OZ_typeError(0, "Malformed Propagator");
   }
-  Assert(called);
+  Assert(posted);
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(linear_6,6,0){
+OZ_BI_define(GFDlinear_6,6,0){
   DeclareGSpace(home);
+
+  Assert( OZ_isIntConLevel(OZ_in(4)) && OZ_isPropKind(OZ_in(5)));
   DeclareIntConLevel(4, __ICL_DEF);
   DeclarePropKind(5, __PK_DEF);
-  if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isInt(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3)) && OZ_isIntConLevel(OZ_in(4)) && OZ_isPropKind(OZ_in(5))){
+
+  bool posted = false;
+
+  if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isInt(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3)) ){
+    /*  linear(Space* home, const IntVarArgs& x,
+         IntRelType r, int c, BoolVar b, 
+         IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
+    */
     DECLARE_INTVARARGS(0, __x, home);
     DeclareIntRelType(1, __r);
     DeclareInt2(2, __c);
     DeclareGeBoolVar(3, __b, home);
     try{
       Gecode::linear(home, __x, __r, __c, __b, __ICL_DEF, __PK_DEF);
+      posted = true;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3)) && OZ_isIntConLevel(OZ_in(4)) && OZ_isPropKind(OZ_in(5))){
+  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3)) ){
+    /*
+       linear(Space* home, const IntVarArgs& x,
+         IntRelType r, IntVar y, BoolVar b, 
+         IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
+     */
     DECLARE_INTVARARGS(0, __x, home);
     DeclareIntRelType(1, __r);
     DeclareGeIntVar(2, __y, home);
     DeclareGeBoolVar(3, __b, home);
     try{
       Gecode::linear(home, __x, __r, __y, __b, __ICL_DEF, __PK_DEF);
+      posted = true;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isInt(OZ_in(3)) && OZ_isIntConLevel(OZ_in(4)) && OZ_isPropKind(OZ_in(5))){
+  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isInt(OZ_in(3)) ){
+    /*
+       linear(Space* home, const IntArgs& a, const IntVarArgs& x,
+         IntRelType r, int c,
+         IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
+     */
     DECLARE_INTARGS(0, __a);
     DECLARE_INTVARARGS(1, __x, home);
     DeclareIntRelType(2, __r);
     DeclareInt2(3, __c);
     try{
       Gecode::linear(home, __a, __x, __r, __c, __ICL_DEF, __PK_DEF);
+      posted = true;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isGeIntVar(OZ_in(3)) && OZ_isIntConLevel(OZ_in(4)) && OZ_isPropKind(OZ_in(5))){
+  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isGeIntVar(OZ_in(3)) ){
+    /*
+       linear(Space* home, const IntArgs& a, const IntVarArgs& x,
+         IntRelType r, IntVar y,
+         IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
+     */
     DECLARE_INTARGS(0, __a);
     DECLARE_INTVARARGS(1, __x, home);
     DeclareIntRelType(2, __r);
     DeclareGeIntVar(3, __y, home);
     try{
       Gecode::linear(home, __a, __x, __r, __y, __ICL_DEF, __PK_DEF);
+      posted = true;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -1799,30 +1839,49 @@ OZ_BI_define(linear_6,6,0){
   else{
     OZ_typeError(0, "Malformed Propagator");
   }
+  Assert(posted);
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(linear_7,7,0){
+OZ_BI_define(GFDlinear_7,7,0){
   DeclareGSpace(home);
   DECLARE_INTARGS(0, __a);
   DECLARE_INTVARARGS(1, __x, home);
   DeclareIntRelType(2, __r);
   DeclareGeBoolVar(4, __b, home);
+  
+  Assert(OZ_isIntConLevel(OZ_in(5)) && OZ_isPropKind(OZ_in(6)));
+
   DeclareIntConLevel(5, __ICL_DEF);
   DeclarePropKind(6, __PK_DEF);
-  if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isInt(OZ_in(3)) && OZ_isGeBoolVar(OZ_in(4)) && OZ_isIntConLevel(OZ_in(5)) && OZ_isPropKind(OZ_in(6))){
+
+  bool posted = false;
+
+  if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isInt(OZ_in(3)) && OZ_isGeBoolVar(OZ_in(4))){
+    /*
+       linear(Space* home, const IntArgs& a, const IntVarArgs& x,
+         IntRelType r, int c, BoolVar b,
+         IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
+     */
     DeclareInt2(3, __c);
     try{
       Gecode::linear(home, __a, __x, __r, __c, __b, __ICL_DEF, __PK_DEF);
+      posted = true;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isGeIntVar(OZ_in(3)) && OZ_isGeBoolVar(OZ_in(4)) && OZ_isIntConLevel(OZ_in(5)) && OZ_isPropKind(OZ_in(6))){
+  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isGeIntVar(OZ_in(3)) && OZ_isGeBoolVar(OZ_in(4))){
+    /*
+      linear(Space* home, const IntArgs& a, const IntVarArgs& x,
+         IntRelType r, IntVar y, BoolVar b,
+         IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
+     */
     DeclareGeIntVar(3, __y, home);
     try{
       Gecode::linear(home, __a, __x, __r, __y, __b, __ICL_DEF, __PK_DEF);
+      posted = true;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -1831,9 +1890,11 @@ OZ_BI_define(linear_7,7,0){
   else{
     OZ_typeError(0, "Malformed Propagator");
   }
+  Assert(posted);
   CHECK_POST(home);
 }OZ_BI_end
 
+ /*
 OZ_BI_define(linear_3,3,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
@@ -1861,7 +1922,8 @@ OZ_BI_define(linear_3,3,0){
   }
   CHECK_POST(home);
 }OZ_BI_end
-
+ */
+ /*
 OZ_BI_define(linear_4,4,0){
   DeclareGSpace(home);
   if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isInt(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3))){
@@ -1917,5 +1979,5 @@ OZ_BI_define(linear_4,4,0){
   }
   CHECK_POST(home);
 }OZ_BI_end
-
+ */
 #endif
