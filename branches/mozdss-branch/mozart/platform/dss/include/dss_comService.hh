@@ -166,6 +166,7 @@ class DSite{
 public:
   //*************** General Methods *****************************
   virtual void m_marshalDSite(DssWriteBuffer*) = 0; 
+  virtual int  m_getMarshaledSize() const = 0;
   virtual void m_makeGCpreps() = 0;
   virtual char*  m_stringrep() = 0; 
   virtual bool m_sendMsg(MsgContainer*) = 0; 

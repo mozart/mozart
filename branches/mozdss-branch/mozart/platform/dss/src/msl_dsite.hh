@@ -57,7 +57,6 @@ namespace _msl_internal{ //Start namespace
 #ifdef DEBUG_CHECK
     static int a_allocated;
 #endif
-    static int sm_getMRsize();
 
   private:
     u32              a_shortId;     // used for hash
@@ -107,18 +106,12 @@ namespace _msl_internal{ //Start namespace
 
     bool m_useSecureChannel() const { return a_secChannel; }
     void m_useSecureChannel(const bool& u){ a_secChannel = u; }
-
-    short int   m_getSize() const{ return a_MRlength; } ;
- 
    
     void        m_setComObj(ComObj *comObj) {a_comObj = comObj;}    
     ComObj*     m_getComObj() const { return a_comObj;}
 
     void        m_setCsSite(CsSiteInterface *s){  a_csSite = s; };
     CsSiteInterface*     m_getCsSite() const { return a_csSite; }
-
-
-    int         getSize(){ return a_MRlength; } // size of marshaled representation
 
     // ********************************************************
 
@@ -133,6 +126,8 @@ namespace _msl_internal{ //Start namespace
     //**********************************************
     // Virtuals from the DSite interface
     virtual void  m_marshalDSite(DssWriteBuffer* buf);
+    virtual int m_getMarshaledSize() const;
+
     virtual void  m_makeGCpreps() { a_isGcMarked = true; }
     virtual DSiteState  m_getFaultState() const {return a_state;}
     virtual char*       m_stringrep();

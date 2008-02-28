@@ -57,11 +57,7 @@ namespace _msl_internal{ //Start namespace
   // *   SECTION :: BaseSite object methods                               *
   // **********************************************************************
 
-  const int BUILD_SIZE = 200;
-  
-  int Site::sm_getMRsize(){
-    return 200;
-  }
+  const int BUILD_SIZE = 512;
   
 #ifdef DEBUG_CHECK
   int Site::a_allocated=0;
@@ -270,23 +266,35 @@ namespace _msl_internal{ //Start namespace
   }
 
   void Site::m_marshalDSite(DssWriteBuffer* buf){
-    // one byte
     Site *dest = a_msgnLayerEnv->a_destSite;
-    dssLog(DLL_DEBUG,"SITE          (%p): Marshal! Dest set to:(%p)",this,a_msgnLayerEnv->a_destSite);
-    if(dest == this) {// Receiving site
-	    gf_Marshal8bitInt(buf,DMT_DEST_SITE);
-    }
-    else if(a_msgnLayerEnv->a_mySite == this &&
-	    dest != NULL &&  
-	    dest->a_comObj->getState() == WORKING){
+    dssLog(DLL_DEBUG,"SITE (%p): Marshal! Dest set to:(%p)", this, dest);
+    if (dest == this) {
+      // Receiving site: one byte
+      gf_Marshal8bitInt(buf, DMT_DEST_SITE);
+    } else if (a_msgnLayerEnv->a_mySite == this &&
+	       dest != NULL &&  
+	       dest->a_comObj->getState() == WORKING) {
+      // source site: one byte
       gf_Marshal8bitInt(buf,DMT_SRC_SITE);
     } else {
-      gf_Marshal8bitInt(buf,((a_state != DSite_GLOBAL_PRM) ?  DMT_SITE_OK : DMT_SITE_PERM));
+      // other site
       Assert(a_MarshaledRepresentation != NULL);
       Assert(buf->canWrite(a_MRlength+1));
+      gf_Marshal8bitInt(buf, (a_state == DSite_GLOBAL_PRM ?
+			      DMT_SITE_PERM : DMT_SITE_OK));
       gf_MarshalNumber(buf, a_MRlength);
       buf->writeToBuffer(a_MarshaledRepresentation, a_MRlength);
     }
+  }
+
+  int Site::m_getMarshaledSize() const {
+    // size depends on destination (see m_marshalDSite())
+    Site* dest = a_msgnLayerEnv->a_destSite;
+    if (dest == this) return 1;
+    if (a_msgnLayerEnv->a_mySite == this &&
+	dest &&
+	dest->a_comObj->getState() == WORKING) return 1;
+    return 1 + a_MRlength;
   }
 
   /************************* site table lookup *************************/

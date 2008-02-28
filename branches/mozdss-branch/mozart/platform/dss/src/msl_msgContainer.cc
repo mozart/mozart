@@ -277,15 +277,17 @@ namespace _msl_internal{ //Start namespace
 	  continue; // next field;
 	} else goto HAS_CONTINUE;
 	
-      case FT_SITE:
-	if (bb->canWrite(1+Site::sm_getMRsize())) {
-	  Site *s = static_cast<Site*>(m_popVal());
+      case FT_SITE: {
+	Site* s = static_cast<Site*>(m_nextVal());
+	if (bb->canWrite(1+s->m_getMarshaledSize())) {
+	  (void) m_popVal();
 	  dssLog(DLL_DEBUG,"MSGCONTAINER  (%p): serilize SITE %s", this,
 		 s->m_stringrep());
 	  bb->m_putByte(TYPE_SITE);
 	  s->m_marshalDSite(bb);
 	  continue; // next field;
 	} else goto HAS_CONTINUE;
+      }
 	
       case FT_DCT:
 	if (bb->canWrite(1+20)) { 
