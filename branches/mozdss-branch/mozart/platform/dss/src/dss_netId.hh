@@ -69,6 +69,13 @@ namespace _dss_internal{
     bool operator== (const NetIdentity &n) {
       return index == n.index && site == n.site;
     }
+
+    // marshaling; unmarshaling is done by constructor
+    int getMarshaledSize() const {
+      return site->m_getMarshaledSize() + sz_MNumberMax;
+    }
+    void marshal(DssWriteBuffer*);
+    NetIdentity(DssReadBuffer*, DSS_Environment*);
   };
 
 
