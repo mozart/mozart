@@ -99,6 +99,7 @@ namespace _dss_internal{ //Start namespace
     // Marshaling and unmarshaling proxy information
     virtual bool marshal_protocol_info(DssWriteBuffer *buf, DSite*);
     virtual bool dispose_protocol_info(DssReadBuffer *buf );
+    virtual int  getMarshaledSize() const { return 1; }
     virtual bool m_initRemoteProt(DssReadBuffer*);
   
     virtual void

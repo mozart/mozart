@@ -45,6 +45,7 @@ namespace _dss_internal{
     DksInstance(int N, int K, int F, DKS_userClass* usr, DSS_Environment*); 
     DksInstance(int N, int K, int F, NetIdentity , DSite*,DSS_Environment*); 
     void m_marshal(DssWriteBuffer*); 
+    int m_getMarshaledSize() const;
     virtual  MsgContainer *m_createDKSMsg();
     void m_joinDksRing(); 
     

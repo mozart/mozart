@@ -93,8 +93,8 @@ namespace _dss_internal{
     unsigned int hashCode() const { return netid.hashCode(); }
     bool hashMatch(const NetIdentity &n) { return netid == n; }
     
-    DSite *m_getGUIdSite() { return netid.site; }
-    NetIdentity m_getNetId() { return netid; }
+    DSite *m_getGUIdSite() const { return netid.site; }
+    NetIdentity m_getNetId() const { return netid; }
 
   private:
     NetIdNode(const NetIdNode&);

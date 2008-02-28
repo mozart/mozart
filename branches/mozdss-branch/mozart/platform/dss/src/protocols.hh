@@ -149,6 +149,7 @@ namespace _dss_internal{ //Start namespace
     virtual bool marshal_protocol_info(DssWriteBuffer*, DSite*) { return false;}
     virtual bool m_initRemoteProt(DssReadBuffer*) { return false; }
     virtual bool dispose_protocol_info(DssReadBuffer*) { return false; }
+    virtual int  getMarshaledSize() const { return 0; }
 
     // Called when the state of a site changes. It is up to the
     // protocol to deduce if it is affected by the site. 
