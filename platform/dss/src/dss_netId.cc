@@ -35,15 +35,22 @@
 
 namespace _dss_internal{ //Start namespace
 
+  void NetIdentity::marshal(DssWriteBuffer* bb) {
+    site->m_marshalDSite(bb);
+    gf_MarshalNumber(bb, index);
+  }
+
+  NetIdentity::NetIdentity(DssReadBuffer* bb, DSS_Environment* env) {
+    site  = env->a_msgnLayer->m_UnmarshalDSite(bb);
+    index = gf_UnmarshalNumber(bb);
+  }
+
   void gf_marshalNetIdentity(DssWriteBuffer *bb, NetIdentity ni){
-    ni.site->m_marshalDSite(bb);
-    gf_MarshalNumber(bb, ni.index);
+    ni.marshal(bb);
   }
 
   NetIdentity gf_unmarshalNetIdentity(DssReadBuffer *bb, DSS_Environment* env){
-    DSite *sd = env->a_msgnLayer->m_UnmarshalDSite(bb);
-    int si    = gf_UnmarshalNumber(bb);
-    return NetIdentity(sd, si);
+    return NetIdentity(bb, env);
   }
 
   void gf_pushNetIdentity(MsgContainer* msgC, NetIdentity ni){
