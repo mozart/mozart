@@ -74,6 +74,12 @@ namespace  _dss_internal{
     printf("====>   Done\n"); 
   }
 
+  int
+  DksInstance::m_getMarshaledSize() const {
+    return m_getNetId().getMarshaledSize() +
+      m_getEnvironment()->a_myDSite->m_getMarshaledSize() + 3 * sz_MNumberMax;
+  }
+
   MsgContainer* 
   DksInstance::m_createDKSMsg(){
     MsgContainer *msg = m_getEnvironment()->a_msgnLayer->createAppSendMsgContainer();

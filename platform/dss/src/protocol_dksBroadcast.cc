@@ -117,6 +117,9 @@ void ProtocolDksBcManager::makeGCpreps(){
     a_dks->m_marshal(buf); 
     return false; 
   }
+  int ProtocolDksBcProxy::getMarshaledSize() const {
+    return a_dks->m_getMarshaledSize();
+  }
   bool ProtocolDksBcProxy::dispose_protocol_info(DssReadBuffer *buf){ 
     DksInstance* _unused; 
     a_proxy->m_getEnvironment()->a_dksInstHT->m_unmarshalDksInstance(buf, _unused); 

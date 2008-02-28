@@ -88,6 +88,7 @@ namespace _dss_internal{ //Start namespace
     //+++++++++++++
     virtual bool marshal_protocol_info(DssWriteBuffer *buf, DSite *);
     virtual bool dispose_protocol_info(DssReadBuffer *buf); 
+    virtual int  getMarshaledSize() const;
     
     virtual void remoteInitatedOperationCompleted(DssOperationId* opId,
 						  ::PstOutContainerInterface* pstOut); 
