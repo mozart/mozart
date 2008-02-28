@@ -143,6 +143,7 @@ namespace _msl_internal{ //Start namespace
 
   public: // Queue manipulating methods
     inline FieldType m_getFT() const { return a_fields[a_current].a_ft; }
+    inline void *m_nextVal() const { return a_fields[a_current].a_arg; }
     inline void *m_popVal(){ return a_fields[a_current++].a_arg; }
     inline void *m_popDropVal() {
       void *v = a_fields[a_current].a_arg;
