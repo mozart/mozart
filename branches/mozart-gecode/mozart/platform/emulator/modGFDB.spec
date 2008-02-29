@@ -77,19 +77,6 @@
 
     'reflect.regretMax'  => { in  => ['*int'],
 	                  out => ['+int'],
-					  bi  => intvar_getRegretMax},
-
-## Watching variables
-    'watch.min'  => { in  => ['+value','+value','int'],
-	            	  out => [],
-					  bi  => int_watch_min},
-
-    'watch.max'  => { in  => ['+value','+value','int'],
-	             	  out => [],
-					  bi  => int_watch_max},
-
-    'watch.size' => { in  => ['+value','+value','int'],
-	              	  out => [],
-					  bi  => int_watch_size}
+					  bi  => intvar_getRegretMax}
 
 );

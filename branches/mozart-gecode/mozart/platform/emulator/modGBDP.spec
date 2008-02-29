@@ -40,49 +40,49 @@ $module_name          = "GBD";
 
 ## Builtins Propagators
 
-'rel_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+'gbd_rel_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => rel_5 }
+	bi => gbd_rel_5 }
 ,
 
-'rel_6' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
+'gbd_rel_6' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => rel_6 }
+	bi => gbd_rel_6 }
 ,
 
-'rel_3' => { in => ['+value', '+value', '+value'],
+'gbd_rel_3' => { in => ['+value', '+value', '+value'],
 	out=>[],
-	bi => rel_3 }
+	bi => gbd_rel_3 }
 ,
 
-'rel_4' => { in => ['+value', '+value', '+value', '+value'],
+'gbd_rel_4' => { in => ['+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => rel_4 }
+	bi => gbd_rel_4 }
 ,
 
-'linear_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+'gbd_linear_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => linear_5 }
+	bi => gbd_linear_5 }
 ,
 
-'linear_6' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
+'gbd_linear_6' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => linear_6 }
+	bi => gbd_linear_6 }
 ,
 
-'linear_7' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value'],
+'gbd_linear_7' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => linear_7 }
+	bi => gbd_linear_7 }
 ,
 
-'linear_3' => { in => ['+value', '+value', '+value'],
+'gbd_linear_3' => { in => ['+value', '+value', '+value'],
 	out=>[],
-	bi => linear_3 }
+	bi => gbd_linear_3 }
 ,
 
-'linear_4' => { in => ['+value', '+value', '+value', '+value'],
+'gbd_linear_4' => { in => ['+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => linear_4 },
+	bi => gbd_linear_4 },
 
 
 ##Propagators

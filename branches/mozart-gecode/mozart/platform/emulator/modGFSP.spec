@@ -43,67 +43,67 @@ $boot_module_name      		  = "GFS";
     out=>[],
     bi => set_subS},
 
-'dom_3' => { in => ['+value', '+value', '+value'],
+'gfs_dom_3' => { in => ['+value', '+value', '+value'],
 	out=>[],
-	bi => dom_3 }
+	bi => gfs_dom_3 }
 ,
 
-'dom_4' => { in => ['+value', '+value', '+value', '+value'],
+'gfs_dom_4' => { in => ['+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => dom_4 }
+	bi => gfs_dom_4 }
 ,
 
-'dom_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+'gfs_dom_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => dom_5 }
+	bi => gfs_dom_5 }
 ,
 
-'rel_3' => { in => ['+value', '+value', '+value'],
+'gfs_rel_3' => { in => ['+value', '+value', '+value'],
 	out=>[],
-	bi => rel_3 }
+	bi => gfs_rel_3 }
 ,
 
-'rel_4' => { in => ['+value', '+value', '+value', '+value'],
+'gfs_rel_4' => { in => ['+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => rel_4 }
+	bi => gfs_rel_4 }
 ,
 
-'rel_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+'gfs_rel_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => rel_5 }
+	bi => gfs_rel_5 }
 ,
 
-'sequence_1' => { in => ['+value'],
+'gfs_sequence_1' => { in => ['+value'],
 	out=>[],
-	bi => sequence_1 }
+	bi => gfs_sequence_1 }
 ,
 
-'min_2' => { in => ['+value', '+value'],
+'gfs_min_2' => { in => ['+value', '+value'],
 	out=>[],
-	bi => min_2 }
+	bi => gfs_min_2 }
 ,
 
-'match_2' => { in => ['+value', '+value'],
+'gfs_match_2' => { in => ['+value', '+value'],
 	out=>[],
-	bi => match_2 }
+	bi => gfs_match_2 }
 ,
 
-'channel_2' => { in => ['+value', '+value'],
+'gfs_channel_2' => { in => ['+value', '+value'],
 	out=>[],
-	bi => channel_2 }
+	bi => gfs_channel_2 }
 ,
 
-'selectUnion_3' => { in => ['+value', '+value', '+value'],
+'gfs_selectUnion_3' => { in => ['+value', '+value', '+value'],
 	out=>[],
-	bi => selectUnion_3 }
+	bi => gfs_selectUnion_3 }
 ,
 
-'selectDisjoint_2' => { in => ['+value', '+value'],
+'gfs_selectDisjoint_2' => { in => ['+value', '+value'],
 	out=>[],
-	bi => selectDisjoint_2 }
+	bi => gfs_selectDisjoint_2 }
 ,
 
-'selectSet_3' => { in => ['+value', '+value', '+value'],
+'gfs_selectSet_3' => { in => ['+value', '+value', '+value'],
 	out=>[],
-	bi => selectSet_3 }
+	bi => gfs_selectSet_3 }
 );
