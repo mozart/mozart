@@ -179,7 +179,7 @@ public:
   virtual OZ_Boolean    toBeMarshaledV() { return (OZ_TRUE); }
   virtual void          marshalSuspV(OZ_Term te,
 				     ByteBuffer *bs, GenTraverser *gt);
-  virtual int           minNeededSpace() { return (0); }
+  virtual int           minNeededSpace();
 };
 
 void OzSite_init();
