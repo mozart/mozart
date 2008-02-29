@@ -36,7 +36,7 @@
 //#include "GeBDP-Builtins.hh"
 #include "BoolVarMacros.hh"
 
-OZ_BI_define(rel_5,5,0){
+OZ_BI_define(gbd_rel_5,5,0){
 	DeclareGSpace(home);
 	DeclareIntConLevel(3, __ICL_DEF);
 	DeclarePropKind(4, __PK_DEF);
@@ -112,7 +112,7 @@ OZ_BI_define(rel_5,5,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(rel_6,6,0){
+OZ_BI_define(gbd_rel_6,6,0){
 	DeclareGSpace(home);
 	DeclareGeBoolVar(0, __x0, home);
 	DeclareBoolOpType(1, __o);
@@ -143,7 +143,7 @@ OZ_BI_define(rel_6,6,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(rel_3,3,0){
+OZ_BI_define(gbd_rel_3,3,0){
 	DeclareGSpace(home);
 	if(OZ_isGeBoolVar(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2))){
 		DeclareGeBoolVar(0, __x0, home);
@@ -217,7 +217,7 @@ OZ_BI_define(rel_3,3,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(rel_4,4,0){
+OZ_BI_define(gbd_rel_4,4,0){
 
 if(OZ_isGeBoolVar(OZ_in(0)))
 {printf("posicion 0 si es geboolvar\n"); fflush(stdout);}
@@ -259,7 +259,7 @@ if(OZ_isGeBoolVar(OZ_in(3)))
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(linear_5,5,0){
+OZ_BI_define(gbd_linear_5,5,0){
 	DeclareGSpace(home);
 	if(OZ_isBoolVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isInt(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
 		DECLARE_BOOLVARARGS(0, __x, home);
@@ -306,7 +306,7 @@ OZ_BI_define(linear_5,5,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(linear_6,6,0){
+OZ_BI_define(gbd_linear_6,6,0){
 	DeclareGSpace(home);
 	DeclareIntConLevel(4, __ICL_DEF);
 	DeclarePropKind(5, __PK_DEF);
@@ -364,7 +364,7 @@ OZ_BI_define(linear_6,6,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(linear_7,7,0){
+OZ_BI_define(gbd_linear_7,7,0){
 	DeclareGSpace(home);
 	DECLARE_INTARGS(0, __a);
 	DECLARE_BOOLVARARGS(1, __x, home);
@@ -382,7 +382,7 @@ OZ_BI_define(linear_7,7,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(linear_3,3,0){
+OZ_BI_define(gbd_linear_3,3,0){
 	DeclareGSpace(home);
 	DECLARE_BOOLVARARGS(0, __x, home);
 	DeclareIntRelType(1, __r);
@@ -410,7 +410,7 @@ OZ_BI_define(linear_3,3,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(linear_4,4,0){
+OZ_BI_define(gbd_linear_4,4,0){
 	DeclareGSpace(home);
 	if(OZ_isBoolVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isInt(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3))){
 		DECLARE_BOOLVARARGS(0, __x, home);

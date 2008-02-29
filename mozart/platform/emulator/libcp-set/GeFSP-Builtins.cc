@@ -36,7 +36,7 @@
 //#include "GeFSP-Builtins.hh"
 #include "SetVarMacros.hh"
 
-OZ_BI_define(dom_3,3,0){
+OZ_BI_define(gfs_dom_3,3,0){
 	DeclareGSpace(home);
 	DeclareGeSetVar(0, __x, home);
 	DeclareSetRelType(1, __r);
@@ -50,7 +50,7 @@ OZ_BI_define(dom_3,3,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(dom_4,4,0){
+OZ_BI_define(gfs_dom_4,4,0){
 	DeclareGSpace(home);
 	DeclareGeSetVar(0, __x, home);
 	DeclareSetRelType(1, __r);
@@ -79,7 +79,7 @@ OZ_BI_define(dom_4,4,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(dom_5,5,0){
+OZ_BI_define(gfs_dom_5,5,0){
 	DeclareGSpace(home);
 	DeclareGeSetVar(0, __x, home);
 	DeclareSetRelType(1, __r);
@@ -95,7 +95,7 @@ OZ_BI_define(dom_5,5,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(rel_3,3,0){
+OZ_BI_define(gfs_rel_3,3,0){
 	DeclareGSpace(home);
 	if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && OZ_isGeSetVar(OZ_in(2))){
 		DeclareGeSetVar(0, __x, home);
@@ -169,7 +169,7 @@ OZ_BI_define(rel_3,3,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(rel_4,4,0){
+OZ_BI_define(gfs_rel_4,4,0){
 	DeclareGSpace(home);
 	DeclareSetRelType(1, __r);
 	DeclareGeBoolVar(3, __b, home);
@@ -209,7 +209,7 @@ OZ_BI_define(rel_4,4,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(rel_5,5,0){
+OZ_BI_define(gfs_rel_5,5,0){
 	DeclareGSpace(home);
 	DeclareGeSetVar(0, __x, home);
 	DeclareSetOpType(1, __op);
@@ -225,7 +225,7 @@ OZ_BI_define(rel_5,5,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(sequence_1,1,0){
+OZ_BI_define(gfs_sequence_1,1,0){
 	DeclareGSpace(home);
 	DECLARE_SETVARARGS(0, __x, home);
 	try{
@@ -237,7 +237,7 @@ OZ_BI_define(sequence_1,1,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(min_2,2,0){
+OZ_BI_define(gfs_min_2,2,0){
 	DeclareGSpace(home);
 	DeclareGeSetVar(0, __s, home);
 	DeclareGeIntVar(1, __x, home);
@@ -250,7 +250,7 @@ OZ_BI_define(min_2,2,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(match_2,2,0){
+OZ_BI_define(gfs_match_2,2,0){
 	DeclareGSpace(home);
 	DeclareGeSetVar(0, __s, home);
 	DECLARE_INTVARARGS(1, __x, home);
@@ -263,7 +263,7 @@ OZ_BI_define(match_2,2,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(channel_2,2,0){
+OZ_BI_define(gfs_channel_2,2,0){
 	DeclareGSpace(home);
 	if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isSetVarArgs(OZ_in(1))){
 		DECLARE_INTVARARGS(0, __x, home);
@@ -291,7 +291,7 @@ OZ_BI_define(channel_2,2,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(selectUnion_3,3,0){
+OZ_BI_define(gfs_selectUnion_3,3,0){
 	DeclareGSpace(home);
 	DECLARE_SETVARARGS(0, __x, home);
 	DeclareGeSetVar(1, __y, home);
@@ -305,7 +305,7 @@ OZ_BI_define(selectUnion_3,3,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(selectDisjoint_2,2,0){
+OZ_BI_define(gfs_selectDisjoint_2,2,0){
 	DeclareGSpace(home);
 	DECLARE_SETVARARGS(0, __x, home);
 	DeclareGeSetVar(1, __y, home);
@@ -318,7 +318,7 @@ OZ_BI_define(selectDisjoint_2,2,0){
 	CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(selectSet_3,3,0){
+OZ_BI_define(gfs_selectSet_3,3,0){
 	DeclareGSpace(home);
 	DECLARE_SETVARARGS(0, __x, home);
 	DeclareGeIntVar(1, __y, home);

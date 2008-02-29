@@ -59,6 +59,19 @@ $boot_module_name      		  = "GFD";
     'int_sortedness'     => { in  => ['+value','+value','+int'],
 	                      out => [],
 			      bi  => int_sortedness},
+            
+## Watching variables
+    'watch.min'  => { in  => ['+value','+value','int'],
+                  out => [],
+            bi  => int_watch_min},
+
+    'watch.max'  => { in  => ['+value','+value','int'],
+                  out => [],
+            bi  => int_watch_max},
+
+    'watch.size' => { in  => ['+value','+value','int'],
+                    out => [],
+            bi  => int_watch_size},
     
 ##Mozart propagators
 
@@ -86,208 +99,209 @@ $boot_module_name      		  = "GFD";
 			      
 ### Finite domain propagators from gecode
 
-'dom_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+'gfd_dom_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => dom_5 }
+	bi => gfd_dom_5 }
 ,
 
-'dom_4' => { in => ['+value', '+value', '+value', '+value'],
+'gfd_dom_4' => { in => ['+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => dom_4 }
+	bi => gfd_dom_4 }
 ,
 
-'dom_6' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
+'gfd_dom_6' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => dom_6 }
+	bi => gfd_dom_6 }
 ,
 
-'rel_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+'gfd_rel_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => rel_5 }
+	bi => gfd_rel_5 }
 ,
 
-'rel_6' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
+'gfd_rel_6' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => rel_6 }
+	bi => gfd_rel_6 }
 ,
 
-'rel_4' => { in => ['+value', '+value', '+value', '+value'],
+'gfd_rel_4' => { in => ['+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => rel_4 }
-,
-
-
-'element_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
-	out=>[],
-	bi => element_5 }
-,
-
-'distinct_3' => { in => ['+value', '+value', '+value'],
-	out=>[],
-	bi => distinct_3 }
-,
-
-'distinct_4' => { in => ['+value', '+value', '+value', '+value'],
-	out=>[],
-	bi => distinct_4 }
-,
-
-'channel_4' => { in => ['+value', '+value', '+value', '+value'],
-	out=>[],
-	bi => channel_4 }
-,
-
-'channel_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
-	out=>[],
-	bi => channel_5 }
-,
-'circuit_3' => { in => ['+value', '+value', '+value'],
-	out=>[],
-	bi => circuit_3 }
+	bi => gfd_rel_4 }
 ,
 
 
-'cumulatives_9' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value'],
+'gfd_element_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => cumulatives_9 }
+	bi => gfd_element_5 }
 ,
 
-'sorted_4' => { in => ['+value', '+value', '+value', '+value'],
+'gfd_distinct_3' => { in => ['+value', '+value', '+value'],
 	out=>[],
-	bi => sorted_4 }
+	bi => gfd_distinct_3 }
 ,
 
-'sorted_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+'gfd_distinct_4' => { in => ['+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => sorted_5 }
+	bi => gfd_distinct_4 }
 ,
 
-'sorted_2' => { in => ['+value', '+value'],
+'gfd_channel_4' => { in => ['+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => sorted_2 }
+	bi => gfd_channel_4 }
 ,
 
-'sorted_3' => { in => ['+value', '+value', '+value'],
+'gfd_channel_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => sorted_3 }
+	bi => gfd_channel_5 }
+,
+'gfd_circuit_3' => { in => ['+value', '+value', '+value'],
+	out=>[],
+	bi => gfd_circuit_3 }
 ,
 
-'count_6' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
+
+'gfd_cumulatives_9' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => count_6 }
+	bi => gfd_cumulatives_9 }
 ,
 
-'count_4' => { in => ['+value', '+value', '+value', '+value'],
+'gfd_sorted_4' => { in => ['+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => count_4 }
+	bi => gfd_sorted_4 }
 ,
 
-'count_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+'gfd_sorted_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => count_5 }
+	bi => gfd_sorted_5 }
 ,
 
-'count_2' => { in => ['+value', '+value'],
+'gfd_sorted_2' => { in => ['+value', '+value'],
 	out=>[],
-	bi => count_2 }
+	bi => gfd_sorted_2 }
 ,
 
-'count_3' => { in => ['+value', '+value', '+value'],
+'gfd_sorted_3' => { in => ['+value', '+value', '+value'],
 	out=>[],
-	bi => count_3 }
+	bi => gfd_sorted_3 }
 ,
 
-'extensional_4' => { in => ['+value', '+value', '+value', '+value'],
+'gfd_count_6' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => extensional_4 }
+	bi => gfd_count_6 }
 ,
 
-'extensional_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+'gfd_count_4' => { in => ['+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => extensional_5 }
+	bi => gfd_count_4 }
 ,
 
-'extensional_2' => { in => ['+value', '+value'],
+'gfd_count_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => extensional_2 }
+	bi => gfd_count_5 }
 ,
 
-'extensional_3' => { in => ['+value', '+value', '+value'],
+'gfd_count_2' => { in => ['+value', '+value'],
 	out=>[],
-	bi => extensional_3 }
+	bi => gfd_count_2 }
 ,
 
-'max_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+'gfd_count_3' => { in => ['+value', '+value', '+value'],
 	out=>[],
-	bi => max_5 }
+	bi => gfd_count_3 }
 ,
 
-'max_4' => { in => ['+value', '+value', '+value', '+value'],
+'gfd_extensional_4' => { in => ['+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => max_4 }
+	bi => gfd_extensional_4 }
 ,
 
-'max_3' => { in => ['+value', '+value', '+value'],
+'gfd_extensional_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => max_3 }
+	bi => gfd_extensional_5 }
 ,
 
-'max_2' => { in => ['+value', '+value'],
+'gfd_extensional_2' => { in => ['+value', '+value'],
 	out=>[],
-	bi => max_2 }
+	bi => gfd_extensional_2 }
 ,
 
-'mult_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+'gfd_extensional_3' => { in => ['+value', '+value', '+value'],
 	out=>[],
-	bi => mult_5 }
+	bi => gfd_extensional_3 }
 ,
 
-'mult_3' => { in => ['+value', '+value', '+value'],
+'gfd_max_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => mult_3 }
+	bi => gfd_max_5 }
 ,
 
-'min_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+'gfd_max_4' => { in => ['+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => min_5 }
+	bi => gfd_max_4 }
 ,
 
-'min_4' => { in => ['+value', '+value', '+value', '+value'],
+'gfd_max_3' => { in => ['+value', '+value', '+value'],
 	out=>[],
-	bi => min_4 }
+	bi => gfd_max_3 }
 ,
 
-'min_3' => { in => ['+value', '+value', '+value'],
+'gfd_max_2' => { in => ['+value', '+value'],
 	out=>[],
-	bi => min_3 }
+	bi => gfd_max_2 }
 ,
 
-'min_2' => { in => ['+value', '+value'],
+'gfd_mult_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => min_2 }
+	bi => gfd_mult_5 }
 ,
 
-'abs_4' => { in => ['+value', '+value', '+value', '+value'],
+'gfd_mult_3' => { in => ['+value', '+value', '+value'],
 	out=>[],
-	bi => abs_4 }
+	bi => gfd_mult_3 }
 ,
 
-'abs_2' => { in => ['+value', '+value'],
+'gfd_min_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => abs_2 }
+	bi => gfd_min_5 }
 ,
 
-'linear_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+'gfd_min_4' => { in => ['+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => GFDlinear_5 }
+	bi => gfd_min_4 }
 ,
 
-'linear_6' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
+'gfd_min_3' => { in => ['+value', '+value', '+value'],
 	out=>[],
-	bi => GFDlinear_6 }
+	bi => gfd_min_3 }
 ,
 
-'linear_7' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value'],
+'gfd_min_2' => { in => ['+value', '+value'],
 	out=>[],
-	bi => GFDlinear_7 }
+	bi => gfd_min_2 }
+,
+
+'gfd_abs_4' => { in => ['+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => gfd_abs_4 }
+,
+
+'gfd_abs_2' => { in => ['+value', '+value'],
+	out=>[],
+	bi => gfd_abs_2 }
+,
+
+'gfd_linear_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => gfd_linear_5 }
+,
+
+'gfd_linear_6' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => gfd_linear_6 }
+,
+
+'gfd_linear_7' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => gfd_linear_7 }
+
 );
