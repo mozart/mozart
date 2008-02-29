@@ -52,6 +52,7 @@ namespace _dss_internal{ // Start namespace
 
     bool m_isRoot();
     void m_getReferenceInfo(DssWriteBuffer *bs, DSite* dest);
+    int  m_getReferenceSize() const { return 1; }
     void m_getCtlMsg(DSite* msite, MsgContainer* msg);
   };
 
@@ -69,6 +70,7 @@ namespace _dss_internal{ // Start namespace
 
     bool m_isRoot();
     void m_getReferenceInfo(DssWriteBuffer *bs, DSite* dest);
+    int  m_getReferenceSize() const { return 1; }
     void m_mergeReferenceInfo(DssReadBuffer *bs);
     void m_getCtlMsg(DSite* msite, MsgContainer* msg);
     void m_dropReference();

@@ -60,6 +60,7 @@ namespace _dss_internal{ // Start namespace
 
     bool m_isRoot();
     void m_getReferenceInfo(DssWriteBuffer *bs, DSite* dest);
+    int  m_getReferenceSize() const { return sz_MNumberMax; }
     void m_getCtlMsg(DSite* msite, MsgContainer* msg);
 
     // val must be longer than until the announced lease has 
@@ -97,6 +98,7 @@ namespace _dss_internal{ // Start namespace
     void m_mergeReferenceInfo(DssReadBuffer *bs);
     void m_dropReference();
     void m_getReferenceInfo(DssWriteBuffer *bs, DSite* dest);
+    int  m_getReferenceSize() const { return sz_MNumberMax; }
     void m_getCtlMsg(DSite* msite, MsgContainer* msg);
 
     // val must be shorter than the expire date (otherwise we

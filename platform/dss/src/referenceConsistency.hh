@@ -49,10 +49,11 @@ namespace _dss_internal{ // Start namespace
   class Reference{
   public:
     GCalgorithm* a_algs;
+    int a_maxsize;          // maximum space needed when marshaling
 
   public:
     //Initialize
-    Reference(): a_algs(NULL) {;}
+    Reference(): a_algs(NULL), a_maxsize(0) {;}
     virtual ~Reference(){ m_removeAlgs(); a_algs = NULL;};
     
     inline GCalgorithm *m_findAlg(const RCalg& alg) const {
@@ -80,6 +81,8 @@ namespace _dss_internal{ // Start namespace
     void m_dropReference();
 
     void m_getReferenceInfo(DssWriteBuffer *bs, DSite* dest);
+    int  m_getReferenceSize() const { return a_maxsize; }
+    void m_computeReferenceSize();     // determine maximum space needed
     
     virtual void m_mergeReferenceInfo(DssReadBuffer* bs) = 0; 
     virtual void m_makeGCpreps();

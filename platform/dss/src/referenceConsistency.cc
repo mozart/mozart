@@ -58,6 +58,7 @@ namespace _dss_internal{ //Start namespace
   void
   Reference::m_removeAlgs(){
     t_deleteList(a_algs);
+    m_computeReferenceSize();
   }
 
 
@@ -68,6 +69,14 @@ namespace _dss_internal{ //Start namespace
     for(GCalgorithm *tmp = a_algs; tmp != NULL ; tmp = tmp->a_next){
       gf_Marshal8bitInt(bs, tmp->a_type); //        2: save type
       tmp->m_getReferenceInfo(bs, dest); //   3: save data
+    }
+  }
+
+  void
+  Reference::m_computeReferenceSize() {
+    a_maxsize = 1;     // length
+    for (GCalgorithm* alg = a_algs; alg; alg = alg->a_next) {
+      a_maxsize += 1 + alg->m_getReferenceSize();     // type + data
     }
   }
   
@@ -148,6 +157,7 @@ namespace _dss_internal{ //Start namespace
 	GCalgorithm *del_tmp = *tmp;
 	(*tmp)=(*tmp)->a_next;
 	delete del_tmp;
+	m_computeReferenceSize();
 	return true;
       }
       tmp = &((*tmp)->a_next);
@@ -180,6 +190,7 @@ namespace _dss_internal{ //Start namespace
 	Assert(a_algs != NULL); //Else the glue made us persistent "accidentaly"
       }
     }
+    m_computeReferenceSize();
   }
 
   bool
@@ -319,6 +330,7 @@ namespace _dss_internal{ //Start namespace
         break;
       }
     }
+    m_computeReferenceSize();
   }
 
 
@@ -381,6 +393,7 @@ namespace _dss_internal{ //Start namespace
 	a_algs = tmp->a_next; 
 	delete tmp; 
       }
+    m_computeReferenceSize();
   }
 
 

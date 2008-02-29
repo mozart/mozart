@@ -54,7 +54,11 @@ namespace _dss_internal{ // Start namespace
     // ******************* General Interfaces(for both home and remote **********'''
     
     virtual char *m_stringrep();
+
+    // marshal ref, and maximum space needed, in bytes
     virtual void m_getReferenceInfo(DssWriteBuffer *bs, DSite* dest)=0;
+    virtual int  m_getReferenceSize() const = 0;
+
     virtual void m_getCtlMsg(DSite* msite, MsgContainer* msg)=0;
     virtual bool m_isRoot()=0;
     virtual void m_makeGCpreps(){};
