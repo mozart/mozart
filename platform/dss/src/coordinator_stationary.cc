@@ -177,7 +177,13 @@ namespace _dss_internal{ //Start namespace
     if (dest != m_getCoordinatorSite())
       m_getReferenceStructure()->m_getReferenceInfo(bs, dest); 
   }
-  
+
+  int
+  ProxyStationary::m_getReferenceSize(DSite* dest) {
+    return (dest == m_getCoordinatorSite() ? 0 :
+	    m_getReferenceStructure()->m_getReferenceSize());
+  }
+
   void  
   ProxyStationary::m_mergeReferenceInfo(DssReadBuffer *bs){
     m_getReferenceStructure()->m_mergeReferenceInfo(bs);

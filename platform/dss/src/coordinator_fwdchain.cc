@@ -440,14 +440,32 @@ namespace _dss_internal{ //Start namespace
       epoch     = coord->a_refList.front().element().second;
     }
     
-    if( dest == coordSite){
+    if (dest == coordSite) {
       bs->putByte(FWDC_NO_REFINFO); 
-    }else{
-    bs->putByte(FWDC_REFINFO); 
-    gf_MarshalNumber(bs, epoch); 
-    coordSite->m_marshalDSite(bs); 
-    ref->m_getReferenceInfo(bs, dest);
+    } else {
+      bs->putByte(FWDC_REFINFO); 
+      gf_MarshalNumber(bs, epoch); 
+      coordSite->m_marshalDSite(bs); 
+      ref->m_getReferenceInfo(bs, dest);
     }
+  }
+
+  int
+  ProxyFwdChain::m_getReferenceSize(DSite* dest) {
+    Reference* ref;
+    DSite* coordSite;
+    if (a_ref) {
+      ref = a_ref;
+      coordSite = a_coordSite;
+    } else {
+      CoordinatorFwdChain* coord =
+	static_cast<CoordinatorFwdChain*>(a_coordinator);
+      ref = coord->a_refList.front().element().first;
+      coordSite = m_getEnvironment()->a_myDSite;
+    }
+    return (dest == coordSite ? 1 :
+	    1 + sz_MNumberMax + coordSite->m_getMarshaledSize() +
+	    ref->m_getReferenceSize());
   }
   
   void ProxyFwdChain::m_mergeReferenceInfo(DssReadBuffer *bs){

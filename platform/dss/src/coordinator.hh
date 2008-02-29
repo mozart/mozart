@@ -181,8 +181,6 @@ namespace _dss_internal{ //Start namespace
 #ifdef DEBUG_CHECK
     static int a_allocated;
 #endif
-    
-    static int sm_getMRsize();
 
   protected:
     ProxyStatus    a_ps:3;             // 3 needed for Windows!
@@ -234,6 +232,7 @@ namespace _dss_internal{ //Start namespace
     // The method returns true if the entity's state should be
     // marshaled as well (immediate copy for immutables).
     virtual bool marshal(DssWriteBuffer* , const ProxyMarshalFlag&);
+    virtual int  getMarshaledSize(const ProxyMarshalFlag&);
     inline AbstractEntityName m_getAEname(){
       return a_abstractEntity ? a_abstractEntity->getAEName() : AEN_NOT_DEFINED;
     }
@@ -264,6 +263,7 @@ namespace _dss_internal{ //Start namespace
     // **************** REFERENCE *******************
 
     virtual void m_getReferenceInfo(DssWriteBuffer *bs, DSite* dest) = 0; 
+    virtual int  m_getReferenceSize(DSite* dest) = 0;
     virtual void m_mergeReferenceInfo(DssReadBuffer *bs) = 0;
     virtual void m_makePersistent() = 0; 
     
