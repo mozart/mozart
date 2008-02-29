@@ -332,6 +332,10 @@ OZ_Return OzSite::getFeatureV(OZ_Term feat, OZ_Term& value) {
 // The idea goes as follows. The Oz-object calls the DSS object that will 
 // create a serialized representation. The oz-object does thus not serialize
 // a thing. It is completly done by the DSS. 
+int OzSite::minNeededSpace() {
+  return a_gSite->getDSite()->m_getMarshaledSize();
+}
+
 void OzSite::pickleV(MarshalerBuffer* mb, GenTraverser*) {
   GlueMarshalerBuffer gmb(mb);
   a_gSite->getDSite()->m_marshalDSite(&gmb);
