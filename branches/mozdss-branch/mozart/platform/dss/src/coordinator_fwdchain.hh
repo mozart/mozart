@@ -141,6 +141,7 @@ namespace _dss_internal{ //Start namespace
     
     // ******************** REFERNCE *****************************
     virtual void m_getReferenceInfo(DssWriteBuffer *bs, DSite* dest);
+    virtual int  m_getReferenceSize(DSite* dest);
     virtual void m_mergeReferenceInfo(DssReadBuffer *bs);
     virtual void m_makePersistent();
     

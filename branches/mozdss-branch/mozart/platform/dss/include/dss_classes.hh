@@ -300,6 +300,7 @@ public:
   // returns true if the entity's state should be marshaled as well
   // (immediate copy for immutables)
   virtual bool marshal(DssWriteBuffer*, const ProxyMarshalFlag&) = 0;
+  virtual int  getMarshaledSize(const ProxyMarshalFlag&) = 0;
 };
 
 

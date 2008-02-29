@@ -402,7 +402,13 @@ namespace _dss_internal{ //Start namespace
       a_remoteRef->m_getReferenceInfo(bs, dest); 
     }
   }
-  
+
+  int
+  ProxyMobile::m_getReferenceSize(DSite* dest) {
+    DSite* coord = m_getCoordinatorSite();
+    return coord->m_getMarshaledSize() + sz_MNumberMax + 1 +
+      (dest != coord ? 0 : a_remoteRef->m_getReferenceSize());
+  }
 
   void
   ProxyMobile::m_mergeReferenceInfo(DssReadBuffer *bs){
