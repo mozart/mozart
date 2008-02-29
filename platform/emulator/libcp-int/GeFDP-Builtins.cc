@@ -37,7 +37,7 @@
 /**
    Domain constraints
 */
-OZ_BI_define(dom_5,5,0){
+OZ_BI_define(gfd_dom_5,5,0){
   DeclareGSpace(home);
   DeclareIntConLevel(3, __ICL_DEF);
   DeclarePropKind(4, __PK_DEF);
@@ -93,7 +93,7 @@ OZ_BI_define(dom_5,5,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(dom_4,4,0){
+OZ_BI_define(gfd_dom_4,4,0){
   DeclareGSpace(home);
   Assert(OZ_isPropKind(OZ_in(4)));
   Assert( OZ_isIntConLevel(OZ_in(3)));
@@ -135,7 +135,7 @@ OZ_BI_define(dom_4,4,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(dom_6,6,0){
+OZ_BI_define(gfd_dom_6,6,0){
   DeclareGSpace(home);
   DeclareGeIntVar(0, __x, home);
   DeclareInt2(1, __l);
@@ -157,7 +157,7 @@ OZ_BI_define(dom_6,6,0){
  /**
     Simple relation constraints over integer variables
  */
-OZ_BI_define(rel_5,5,0){
+OZ_BI_define(gfd_rel_5,5,0){
   DeclareGSpace(home);
   DeclareIntRelType(1, __r);
   DeclareIntConLevel(3, __ICL_DEF);
@@ -233,7 +233,7 @@ OZ_BI_define(rel_5,5,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(rel_6,6,0){
+OZ_BI_define(gfd_rel_6,6,0){
   DeclareGSpace(home);
   DeclareGeIntVar(0, __x, home);
   DeclareIntRelType(1, __r);
@@ -275,7 +275,7 @@ OZ_BI_define(rel_6,6,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(rel_4,4,0){
+OZ_BI_define(gfd_rel_4,4,0){
   DeclareGSpace(home);
   DeclareIntRelType(1, __r);
 
@@ -395,7 +395,7 @@ OZ_BI_define(rel_2,2,0){
  /**
     Element constraints
  */
-OZ_BI_define(element_5,5,0){
+OZ_BI_define(gfd_element_5,5,0){
   DeclareGSpace(home);
   DeclareGeIntVar(1, __x1, home);
 
@@ -571,7 +571,7 @@ OZ_BI_define(element_3,3,0){
  /**
     Distinct constraints
  */
-OZ_BI_define(distinct_3,3,0){
+OZ_BI_define(gfd_distinct_3,3,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
   DeclareIntConLevel(1, __ICL_DEF);
@@ -587,7 +587,7 @@ OZ_BI_define(distinct_3,3,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(distinct_4,4,0){
+OZ_BI_define(gfd_distinct_4,4,0){
   DeclareGSpace(home);
   DECLARE_INTARGS(0, __n);
   DECLARE_INTVARARGS(1, __x, home);
@@ -634,7 +634,7 @@ OZ_BI_define(distinct_2,2,0){
  /**
     Channel constraints
  */
-OZ_BI_define(channel_4,4,0){
+OZ_BI_define(gfd_channel_4,4,0){
   DeclareGSpace(home);
 
   Assert(OZ_isIntConLevel(OZ_in(2)) && OZ_isPropKind(OZ_in(3)));
@@ -687,7 +687,7 @@ OZ_BI_define(channel_4,4,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(channel_5,5,0){
+OZ_BI_define(gfd_channel_5,5,0){
   DeclareGSpace(home);
   DECLARE_BOOLVARARGS(0, __x, home);
   DeclareGeIntVar(1, __y, home);
@@ -757,7 +757,7 @@ OZ_BI_define(channel_2,2,0){
  /**
     Graph constraints
  */
-OZ_BI_define(circuit_3,3,0){
+OZ_BI_define(gfd_circuit_3,3,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
   DeclareIntConLevel(1, __ICL_DEF);
@@ -791,7 +791,7 @@ OZ_BI_define(circuit_1,1,0){
  /**
     Scheduling constraints
  */
-OZ_BI_define(cumulatives_9,9,0){
+OZ_BI_define(gfd_cumulatives_9,9,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(1, __start, home);
   DECLARE_INTVARARGS(3, __end, home);
@@ -1073,7 +1073,7 @@ OZ_BI_define(cumulatives_7,7,0){
  /**
     Sorted constraints
  */
-OZ_BI_define(sorted_4,4,0){
+OZ_BI_define(gfd_sorted_4,4,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
   DECLARE_INTVARARGS(1, __y, home);
@@ -1088,7 +1088,7 @@ OZ_BI_define(sorted_4,4,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(sorted_5,5,0){
+OZ_BI_define(gfd_sorted_5,5,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
   DECLARE_INTVARARGS(1, __y, home);
@@ -1104,7 +1104,7 @@ OZ_BI_define(sorted_5,5,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(sorted_2,2,0){
+OZ_BI_define(gfd_sorted_2,2,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
   DECLARE_INTVARARGS(1, __y, home);
@@ -1117,7 +1117,7 @@ OZ_BI_define(sorted_2,2,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(sorted_3,3,0){
+OZ_BI_define(gfd_sorted_3,3,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
   DECLARE_INTVARARGS(1, __y, home);
@@ -1136,7 +1136,7 @@ OZ_BI_define(sorted_3,3,0){
  /**
     Cardinality constraints
  */
-OZ_BI_define(count_6,6,0){
+OZ_BI_define(gfd_count_6,6,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
   DeclareIntRelType(2, __r);
@@ -1208,7 +1208,7 @@ OZ_BI_define(count_6,6,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(count_4,4,0){
+OZ_BI_define(gfd_count_4,4,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
   if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntConLevel(OZ_in(2)) && OZ_isPropKind(OZ_in(3))){
@@ -1305,7 +1305,7 @@ OZ_BI_define(count_4,4,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(count_5,5,0){
+OZ_BI_define(gfd_count_5,5,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
   DECLARE_INTARGS(2, __v);
@@ -1344,7 +1344,7 @@ OZ_BI_define(count_5,5,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(count_2,2,0){
+OZ_BI_define(gfd_count_2,2,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
   if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1))){
@@ -1371,7 +1371,7 @@ OZ_BI_define(count_2,2,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(count_3,3,0){
+OZ_BI_define(gfd_count_3,3,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
   DECLARE_INTARGS(2, __v);
@@ -1412,7 +1412,7 @@ OZ_BI_define(count_3,3,0){
  /**
     Extensional constraints
  */
-OZ_BI_define(extensional_4,4,0){
+OZ_BI_define(gfd_extensional_4,4,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
   DeclareIntConLevel(2, __ICL_DEF);
@@ -1441,7 +1441,7 @@ OZ_BI_define(extensional_4,4,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(extensional_5,5,0){
+OZ_BI_define(gfd_extensional_5,5,0){
   DeclareGSpace(home);
   DECLARE_INTARGS(0, __c);
   DECLARE_INTVARARGS(1, __x, home);
@@ -1457,7 +1457,7 @@ OZ_BI_define(extensional_5,5,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(extensional_2,2,0){
+OZ_BI_define(gfd_extensional_2,2,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
   if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isDFA(OZ_in(1))){
@@ -1484,7 +1484,7 @@ OZ_BI_define(extensional_2,2,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(extensional_3,3,0){
+OZ_BI_define(gfd_extensional_3,3,0){
   DeclareGSpace(home);
   DECLARE_INTARGS(0, __c);
   DECLARE_INTVARARGS(1, __x, home);
@@ -1501,7 +1501,7 @@ OZ_BI_define(extensional_3,3,0){
  /**
     Arithmetic constraints
  */
-OZ_BI_define(max_5,5,0){
+OZ_BI_define(gfd_max_5,5,0){
   DeclareGSpace(home);
   DeclareGeIntVar(0, __x0, home);
   DeclareGeIntVar(1, __x1, home);
@@ -1517,7 +1517,7 @@ OZ_BI_define(max_5,5,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(max_4,4,0){
+OZ_BI_define(gfd_max_4,4,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
   DeclareGeIntVar(1, __y, home);
@@ -1532,7 +1532,7 @@ OZ_BI_define(max_4,4,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(max_3,3,0){
+OZ_BI_define(gfd_max_3,3,0){
   DeclareGSpace(home);
   DeclareGeIntVar(0, __x0, home);
   DeclareGeIntVar(1, __x1, home);
@@ -1546,7 +1546,7 @@ OZ_BI_define(max_3,3,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(max_2,2,0){
+OZ_BI_define(gfd_max_2,2,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
   DeclareGeIntVar(1, __y, home);
@@ -1559,7 +1559,7 @@ OZ_BI_define(max_2,2,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(mult_5,5,0){
+OZ_BI_define(gfd_mult_5,5,0){
   DeclareGSpace(home);
   DeclareGeIntVar(0, __x0, home);
   DeclareGeIntVar(1, __x1, home);
@@ -1575,7 +1575,7 @@ OZ_BI_define(mult_5,5,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(mult_3,3,0){
+OZ_BI_define(gfd_mult_3,3,0){
   DeclareGSpace(home);
   DeclareGeIntVar(0, __x0, home);
   DeclareGeIntVar(1, __x1, home);
@@ -1589,7 +1589,7 @@ OZ_BI_define(mult_3,3,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(min_5,5,0){
+OZ_BI_define(gfd_min_5,5,0){
   DeclareGSpace(home);
   DeclareGeIntVar(0, __x0, home);
   DeclareGeIntVar(1, __x1, home);
@@ -1605,7 +1605,7 @@ OZ_BI_define(min_5,5,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(min_4,4,0){
+OZ_BI_define(gfd_min_4,4,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
   DeclareGeIntVar(1, __y, home);
@@ -1620,7 +1620,7 @@ OZ_BI_define(min_4,4,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(min_3,3,0){
+OZ_BI_define(gfd_min_3,3,0){
   DeclareGSpace(home);
   DeclareGeIntVar(0, __x0, home);
   DeclareGeIntVar(1, __x1, home);
@@ -1634,7 +1634,7 @@ OZ_BI_define(min_3,3,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(min_2,2,0){
+OZ_BI_define(gfd_min_2,2,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
   DeclareGeIntVar(1, __y, home);
@@ -1647,7 +1647,7 @@ OZ_BI_define(min_2,2,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(abs_4,4,0){
+OZ_BI_define(gfd_abs_4,4,0){
   DeclareGSpace(home);
   DeclareGeIntVar(0, __x0, home);
   DeclareGeIntVar(1, __x1, home);
@@ -1662,7 +1662,7 @@ OZ_BI_define(abs_4,4,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(abs_2,2,0){
+OZ_BI_define(gfd_abs_2,2,0){
   DeclareGSpace(home);
   DeclareGeIntVar(0, __x0, home);
   DeclareGeIntVar(1, __x1, home);
@@ -1678,7 +1678,7 @@ OZ_BI_define(abs_2,2,0){
  /**
     Linear constraints over integer variables
  */
-OZ_BI_define(GFDlinear_5,5,0){
+OZ_BI_define(gfd_linear_5,5,0){
   DeclareGSpace(home);
   
   Assert( OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4)));
@@ -1756,7 +1756,7 @@ OZ_BI_define(GFDlinear_5,5,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(GFDlinear_6,6,0){
+OZ_BI_define(gfd_linear_6,6,0){
   DeclareGSpace(home);
 
   Assert( OZ_isIntConLevel(OZ_in(4)) && OZ_isPropKind(OZ_in(5)));
@@ -1843,7 +1843,7 @@ OZ_BI_define(GFDlinear_6,6,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(GFDlinear_7,7,0){
+OZ_BI_define(gfd_linear_7,7,0){
   DeclareGSpace(home);
   DECLARE_INTARGS(0, __a);
   DECLARE_INTVARARGS(1, __x, home);
@@ -1895,7 +1895,7 @@ OZ_BI_define(GFDlinear_7,7,0){
 }OZ_BI_end
 
  /*
-OZ_BI_define(linear_3,3,0){
+OZ_BI_define(gfd_linear_3,3,0){
   DeclareGSpace(home);
   DECLARE_INTVARARGS(0, __x, home);
   DeclareIntRelType(1, __r);
@@ -1924,7 +1924,7 @@ OZ_BI_define(linear_3,3,0){
 }OZ_BI_end
  */
  /*
-OZ_BI_define(linear_4,4,0){
+OZ_BI_define(gfd_linear_4,4,0){
   DeclareGSpace(home);
   if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isInt(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3))){
     DECLARE_INTVARARGS(0, __x, home);

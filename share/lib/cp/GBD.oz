@@ -104,7 +104,7 @@ export
    eqv: Eqv
 
 	%% Propagators Builtins
-	rel_3: Rel3
+/*	rel_3: Rel3
 	rel_4: Rel4
 	rel_5: Rel5
 	rel_6: Rel6
@@ -113,7 +113,7 @@ export
 	linear_4: Linear4
 	linear_5: Linear5
 	linear_6: Linear6
-	linear_7: Linear7
+	linear_7: Linear7*/
 
    %% some aliases
    disj:    Or
@@ -231,7 +231,7 @@ define
 
 	%%Propagators Builtins
 	
-	Rel3 = GBDP.'rel_3'
+/*	Rel3 = GBDP.'rel_3'
 	Rel4 = GBDP.'rel_4'
 	Rel5 = GBDP.'rel_5'
 	Rel6 = GBDP.'rel_6'
@@ -240,6 +240,6 @@ define
 	Linear4 = GBDP.'linear_4'
 	Linear5 = GBDP.'linear_5'
 	Linear6 = GBDP.'linear_6'
-	Linear7 = GBDP.'linear_7'
+	Linear7 = GBDP.'linear_7'*/
    
 end

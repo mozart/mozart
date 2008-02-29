@@ -32,7 +32,7 @@
 #define __GEOZ_INT_VAR_BUILTINS_CC__
 
 #include "IntVarMacros.hh"
-#include "MozProp/MozProp.cc"
+//#include "MozProp/MozProp.cc"
 
 
 
@@ -314,83 +314,5 @@ OZ_BI_end
  * @param 1 A reference to the variable (BoolVar)
  * @param 2 Integer
  */
-
-OZ_BI_define(int_watch_min,3,0)
-{
-  //IntVar v1,v2;
-  //  int, v2, v3;
-  //GenericSpace *sp;
-  DeclareGSpace(sp);
-  DeclareGeIntVar(0,v1,sp);
-  DeclareGeIntVar(1,v2,sp);
-
-  OZ_declareInt(2,v3);
-  try {
-
-    WatchMin(sp,v1,v2,v3);
-
-  }
-  catch(Exception e) {
-    //return OZ_raiseC("prop: watch size",0);
-    RAISE_GE_EXCEPTION(e);    
-  }
-  return PROCEED;
-
-} 
-OZ_BI_end
-
-
-/**
- * \brief the same that FD.watch.max in mozart
- * @param 0 A reference to the variable
- * @param 1 A reference to the variable (BoolVar)
- * @param 2 Integer
- */
-
-OZ_BI_define(int_watch_max,3,0)
-{
-  DeclareGSpace(sp);
-  DeclareGeIntVar(0,v1,sp);
-  DeclareGeIntVar(1,v2,sp);
-
-  OZ_declareInt(2,v3);
-  try {
-
-    WatchMax(sp,v1,v2,v3);
-
-    return PROCEED;
-  }
-  catch(Exception e) {
-    return OZ_raiseC("prop: watch size",0);
-  }
-
-} OZ_BI_end
-
-/**
- * \brief the same that FD.watch.size in mozart
- * @param 0 A reference to the variable
- * @param 1 A reference to the variable (BoolVar)
- * @param 2 Integer
- */
-
-OZ_BI_define(int_watch_size,3,0)
-{
-
-  DeclareGSpace(sp);
-  DeclareGeIntVar(0,v1,sp);
-  DeclareGeIntVar(1,v2,sp);
-
-  OZ_declareInt(2,v3);
-  try {
-
-    WatchSize(sp,v1,v2,v3);
-
-    return PROCEED;
-  }
-  catch(Exception e) {
-    return OZ_raiseC("prop: watch size",0);
-  }
-
-} OZ_BI_end
 
 #endif

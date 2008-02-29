@@ -153,88 +153,15 @@ export
    sortedness: Int_sortedness
    
    %% Propagators Builtins
+   
    domP: Dom
-/*   dom_2:						Dom2
-   dom_3:						Dom3
-   dom_4:						Dom4
-   dom_5:						Dom5
-   dom_6:						Dom6
-   */
-
    relP: RelP
-   /*
-   rel_2:						Rel2
-   rel_3:						Rel3
-   rel_4:						Rel4
-   rel_5:						Rel5
-   rel_6:						Rel6
-   */
-   
    element: Element
-   /*
-   element_3:				Element3
-   element_5:				Element5
-   */
-
    channel: Channel
-   /*
-   channel_2:				Channel2
-   channel_4:				Channel4
-   channel_5:				Channel5
-   */
-
    circuit: Circuit
-
    cumulatives: Cumulatives
-   /*
-   cumulatives_7:		Cumulatives7
-   cumulatives_9:		Cumulatives9
-   */
-   sorted_2: 				Sorted2
-   sorted_3: 				Sorted3
-   sorted_4: 				Sorted4
-   sorted_5: 				Sorted5
-   
-   count_2:					Count2
-   count_3:					Count3
-   count_4:					Count4
-   count_5:					Count5
-   count_6:					Count6
-   
-   extensional_2: 	Extensional2
-   extensional_3: 	Extensional3
-   extensional_4: 	Extensional4
-   extensional_5: 	Extensional5
-   
-   mult_3: 					Mult3
-   mult_5: 					Mult5
-   
-   min_2:						Min2
-   min_3:						Min3
-   min_4:						Min4
-   min_5:						Min5
-   
-   abs_2:						Abs2
-   abs_4:						Abs4
-
-   linearP: LinearP
-   /*
-   linear_3:				Linear3
-   linear_4:				Linear4
-   linear_5:				Linear5
-   linear_6:				Linear6
-   linear_7:				Linear7
-   */
-   %distinct_1:			Distinct1
-   %distinct_2:			Distinct2 there is another prop call distinct_2, defined in /platform/emulator/libcp-int/GeIntProp-builtins.cc line 87.
-   %distinct_3:			Distinct3
-   %distinct_4:			Distinct4
    distinctP: DistinctP
-   
-   max_2:						Max2
-   max_3:						Max3
-   max_4:						Max4
-   max_5:						Max5
+   linearP: LinearP
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -348,9 +275,9 @@ define
 	    if BTmp == 1 then B = true else B = false end
 	 end
       end
-      WatchMin = {WatchDomain GFDB.'watch.max'}
-      WatchMax = {WatchDomain GFDB.'watch.min'}
-      WatchSize = {WatchDomain GFDB.'watch.size'}
+      WatchMin = {WatchDomain GFDP.'watch.max'}
+      WatchMax = {WatchDomain GFDP.'watch.min'}
+      WatchSize = {WatchDomain GFDP.'watch.size'}
    in
       FdWatch = watch(size: WatchSize 
 		      min : WatchMin
@@ -397,22 +324,15 @@ define
    in
       case W
       of 5 then
-	 {GFDP.dom_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+	 {GFDP.gfd_dom_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
       [] 4 then
-	 {GFDP.dom_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+	 {GFDP.gfd_dom_4 Sc.1 Sc.2 Sc.cl Sc.pk}
       [] 6 then
-	 {GFDP.dom_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
+	 {GFDP.gfd_dom_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
       else
 	 raise malformed('Domain constraint post') end
       end
    end
-/*   
-   Dom2 = GFDP.'dom_2'
-   Dom3 = GFDP.'dom_3'
-   Dom4 = GFDP.'dom_4'
-   Dom5 = GFDP.'dom_5'
-   Dom6 = GFDP.'dom_6'
-   */
 
    proc {RelP S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
@@ -421,22 +341,15 @@ define
       %% Assert 2 is a GFD.rt.*
       case W
       of 5 then
-	 {GFDP.rel_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+	 {GFDP.gfd_rel_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
       []  6 then
-	 {GFDP.rel_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
+	 {GFDP.gfd_rel_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
       [] 4 then
-	 {GFDP.rel_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+	 {GFDP.gfd_rel_4 Sc.1 Sc.2 Sc.cl Sc.pk}
       else
 	 raise malformed('Rel post') end
       end
    end
-   /*
-   Rel2 = GFDP.'rel_2'
-   Rel3 = GFDP.'rel_3'
-   Rel4 = GFDP.'rel_4'
-   Rel5 = GFDP.'rel_5'
-   Rel6 = GFDP.'rel_6'
-   */
 
    proc {Element S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
@@ -444,15 +357,11 @@ define
    in
       case W
       of 5 then
-	 {GFDP.element_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+	 {GFDP.gfd_element_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
       else
 	 raise malformed('Element constraint post') end
       end
    end
-   /*
-   Element3 = GFDP.'element_3'
-   Element5 = GFDP.'element_5'
-   */
 
    proc {Channel S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
@@ -460,20 +369,14 @@ define
    in
       case W
       of 4 then
-	 {GFDP.channel_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+	 {GFDP.gfd_channel_4 Sc.1 Sc.2 Sc.cl Sc.pk}
       [] 5 then
 	 % TODO: Sc.3 can be 0 by default.
-	 {GFDP.channel_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+	 {GFDP.gfd_channel_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
       else
 	 raise malformed('Channel constraint post') end
       end
    end
-   
-   /*
-   Channel2 = GFDP.'channel_2'
-   Channel4 = GFDP.'channel_4'
-   Channel5 = GFDP.'channel_5'
-   */
 
    proc {Circuit S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
@@ -481,7 +384,7 @@ define
    in
       case W
       of 3 then
-	 {GFDP.circuit_3 Sc.1 Sc.cl Sc.pk}
+	 {GFDP.gfd_circuit_3 Sc.1 Sc.cl Sc.pk}
       else
 	 raise malformed('Circuit constraint post') end
       end
@@ -493,17 +396,13 @@ define
    in
       case W
       of 9 then
-	 {GFDP.cumulatives_9 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.6 Sc.7 Sc.cl Sc.pk}
+	 {GFDP.gfd_cumulatives_9 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.6 Sc.7 Sc.cl Sc.pk}
       else
 	 raise malformed('Cumulatives constraint post') end
       end
    end
-      
-   /*
-   Cumulatives7 = GFDP.'cumulatives_7'
-   Cumulatives9 = GFDP.'cumulatives_9'
-   */
-   
+
+/*
    Sorted2 = GFDP.'sorted_2'
    Sorted3 = GFDP.'sorted_3'
    Sorted4 = GFDP.'sorted_4'
@@ -530,53 +429,36 @@ define
    
    Abs2 = GFDP.'abs_2'
    Abs4 = GFDP.'abs_4'
-
+*/
    proc {LinearP S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
    in
       case W
       of 5 then
-	 {GFDP.linear_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+	 {GFDP.gfd_linear_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
       [] 6 then
-	 {GFDP.linear_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
+	 {GFDP.gfd_linear_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
       [] 7 then
-	 {GFDP.linear_5 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl Sc.pk}
+	 {GFDP.gfd_linear_5 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl Sc.pk}
       else
 	 raise malformed('Linear constraint post') end
       end
    end
-   
-   /*
-   Linear3 = GFDP.'linear_3'
-   Linear4 = GFDP.'linear_4'
-   Linear5 = GFDP.'linear_5'
-   Linear6 = GFDP.'linear_6'
-   Linear7 = GFDP.'linear_7'
-   */
-   
+
    proc {DistinctP S}
       Sc =  Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
    in
       case W
       of 3 then
-	 {GFDP.distinct_3 Sc.1 Sc.cl Sc.pk}
+	 {GFDP.gfd_distinct_3 Sc.1 Sc.cl Sc.pk}
       [] 4 then
-	 {GFDP.distinct_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+	 {GFDP.gfd_distinct_4 Sc.1 Sc.2 Sc.cl Sc.pk}
       else
 	 raise malformed('Distinct constraint post') end
       end
    end
-   %Distinct1 = GFDP.'distinct_1'
-   %Distinct2 = GFDP.'distinct_2'
-   %Distinct3 = GFDP.'distinct_3'
-   %Distinct4 = GFDP.'distinct_4'
-   
-   Max2 = GFDP.'max_2'
-   Max3 = GFDP.'max_3'
-   Max4 = GFDP.'max_4'
-   Max5 = GFDP.'max_5'
   
    
    \insert GeMozProp.oz
