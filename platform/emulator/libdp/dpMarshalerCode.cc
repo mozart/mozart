@@ -204,76 +204,34 @@ void DPMARSHALERCLASS::processLiteral(OZ_Term litTerm)
 inline
 void DPMARSHALERCLASS::processNoGood(OZ_Term resTerm)
 {
-  ByteBuffer *bs = (ByteBuffer *) getOpaque();
-
-  if (bs->availableSpace() >=
-      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize) {
-    int index;
-#if defined(DBG_TRACE)
-    {
-      DBGINIT();
-      fprintf(dbgout, "> tag: %s(%d) = %s\n",
-	    dif_names[DIF_RESOURCE].name, DIF_RESOURCE, toC(resTerm));
-      fflush(dbgout);
-    }
-#endif
-
-    //
-    VISITNODE(resTerm, vIT, bs, index, return);
-    //
-    marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
-    (void) glue_marshalEntity(resTerm, bs);
-    //
-    Assert(bs->availableSpace() >= DIFMaxSize);
-  } else {
-#if defined(DBG_TRACE)
-    DBGINIT();
-    fprintf(dbgout, "> tag: %s(%d) on %s\n",
-	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(resTerm));
-    fflush(dbgout);
-#endif
-    marshalDIFcounted(bs, DIF_SUSPEND);
-    suspend(resTerm);
-  }
+  processGlue(resTerm);
 }
 
 //
 inline
 void DPMARSHALERCLASS::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
 {
-  ByteBuffer *bs = (ByteBuffer *) getOpaque();
   Builtin *bi = (Builtin *) biConst;
+
+  if (bi->isSited())
+    return processGlue(biTerm);     // sited builtins are handled by the Glue
+
+  ByteBuffer *bs = (ByteBuffer *) getOpaque();
   const char *pn = bi->getPrintName();
 
-  //
-  if (bs->availableSpace() >= 
-      max(2*DIFMaxSize + 2*MNumberMaxSize + strlen(pn),
-	  2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize)) {
+  if (bs->availableSpace() >= 2*DIFMaxSize + 2*MNumberMaxSize + strlen(pn)) {
     int index;
-
-    //
-    VISITNODE(biTerm, vIT, bs, index, return);
-
-    //
-    if (bi->isSited()) {
-      marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
-      (void) glue_marshalEntity(biTerm, bs);
-
-    } else {
 #if defined(DBG_TRACE)
       DBGINIT();
       fprintf(dbgout, "> tag: %s(%d) = %s\n",
 	      dif_names[DIF_BUILTIN].name, DIF_BUILTIN, toC(biTerm));
       fflush(dbgout);
 #endif
-
-      //
-      marshalDIFindex(bs, DIF_BUILTIN, DIF_BUILTIN_DEF, index);
-      //
-      marshalString(bs, pn);
-    }
-    // otherwise fall through and put 'DIF_SUSPEND';
-
+    //
+    VISITNODE(biTerm, vIT, bs, index, return);
+    //
+    marshalDIFindex(bs, DIF_BUILTIN, DIF_BUILTIN_DEF, index);
+    marshalString(bs, pn);
     //
     Assert(bs->availableSpace() >= DIFMaxSize);
   } else {
@@ -339,154 +297,39 @@ void DPMARSHALERCLASS::processExtension(OZ_Term et)
 inline 
 Bool DPMARSHALERCLASS::processObject(OZ_Term term, ConstTerm *objConst)
 {
-  ByteBuffer *bs = (ByteBuffer *) getOpaque();
-
-  // marshaling a mediator: DIF_GLUE, index, mediator
-  if (bs->availableSpace() >=
-      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize) {
-    int index;
-    VISITNODE(term, vIT, bs, index, return(OK));
-    marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
-    (void) glue_marshalEntity(term, bs);
-    Assert(bs->availableSpace() >= DIFMaxSize);
-
-  } else {
-#if defined(DBG_TRACE)
-    DBGINIT();
-    fprintf(dbgout, "> tag: %s(%d) on %s\n",
-      dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term));
-    fflush(dbgout);
-#endif
-    marshalDIFcounted(bs, DIF_SUSPEND);
-    suspend(term);
-  }
-  return (OK);
+  return processGlue(term);     // handled by the Glue
 }
 
 //
 inline 
 Bool DPMARSHALERCLASS::processObjectState(OZ_Term term, ConstTerm *stateConst)
 {
-  ByteBuffer *bs = (ByteBuffer *) getOpaque();
-
-  // marshaling a mediator: DIF_GLUE, index, mediator
-  if (bs->availableSpace() >=
-      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize) {
-    int index;
-    VISITNODE(term, vIT, bs, index, return(OK));
-    marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
-    (void) glue_marshalEntity(term, bs);
-    Assert(bs->availableSpace() >= DIFMaxSize);
-
-  } else {
-#if defined(DBG_TRACE)
-    DBGINIT();
-    fprintf(dbgout, "> tag: %s(%d) on %s\n",
-      dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term));
-    fflush(dbgout);
-#endif
-    marshalDIFcounted(bs, DIF_SUSPEND);
-    suspend(term);
-  }
-  return (OK);
+  return processGlue(term);     // handled by the Glue
 }
 
 //
 inline 
 void DPMARSHALERCLASS::processLock(OZ_Term term, ConstTerm *lockConst)
 {
-  ByteBuffer *bs = (ByteBuffer *) getOpaque();
-  if (bs->availableSpace() >= 
-      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize) {
-    int index;
-    VISITNODE(term, vIT, bs, index, return);
-    marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
-    (void) glue_marshalEntity(term, bs);
-    Assert(bs->availableSpace() >= DIFMaxSize);
-
-  } else {
-#if defined(DBG_TRACE)
-    DBGINIT();
-    fprintf(dbgout, "> tag: %s(%d) on %s\n",
-      dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term));
-    fflush(dbgout);
-#endif
-    marshalDIFcounted(bs, DIF_SUSPEND);
-    suspend(term);
-  }
+  processGlue(term);     // handled by the Glue
 }
 
 inline 
 Bool DPMARSHALERCLASS::processCell(OZ_Term term, ConstTerm *cellConst)
 {
-  ByteBuffer *bs = (ByteBuffer *) getOpaque();
-  if (bs->availableSpace() >= 
-      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize) {
-    int index;
-    VISITNODE(term, vIT, bs, index, return(OK));
-    marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
-    (void) glue_marshalEntity(term, bs);
-    Assert(bs->availableSpace() >= DIFMaxSize);
-
-  } else {
-#if defined(DBG_TRACE)
-    DBGINIT();
-    fprintf(dbgout, "> tag: %s(%d) on %s\n",
-      dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term));
-    fflush(dbgout);
-#endif
-    marshalDIFcounted(bs, DIF_SUSPEND);
-    suspend(term);
-  }
-  return (OK);
+  return processGlue(term);     // handled by the Glue
 }
 
 inline 
 void DPMARSHALERCLASS::processPort(OZ_Term term, ConstTerm *portConst)
 {
-  ByteBuffer *bs = (ByteBuffer *) getOpaque();
-  if (bs->availableSpace() >= 
-      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize) {
-    int index;
-    VISITNODE(term, vIT, bs, index, return);
-    marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
-    (void) glue_marshalEntity(term, bs);
-    Assert(bs->availableSpace() >= DIFMaxSize);
-
-  } else {
-#if defined(DBG_TRACE)
-    DBGINIT();
-    fprintf(dbgout, "> tag: %s(%d) on %s\n",
-      dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term));
-    fflush(dbgout);
-#endif
-    marshalDIFcounted(bs, DIF_SUSPEND);
-    suspend(term);
-  }
+  processGlue(term);     // handled by the Glue
 }
 
 inline 
 void DPMARSHALERCLASS::processResource(OZ_Term term, ConstTerm *unusConst)
 {
-  ByteBuffer *bs = (ByteBuffer *) getOpaque();
-  if (bs->availableSpace() >= 
-      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize) {
-    int index;
-    VISITNODE(term, vIT, bs, index, return);
-    marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
-    (void) glue_marshalEntity(term, bs);
-    Assert(bs->availableSpace() >= DIFMaxSize);
-
-  } else {
-#if defined(DBG_TRACE)
-    DBGINIT();
-    fprintf(dbgout, "> tag: %s(%d) on %s\n",
-      dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term));
-    fflush(dbgout);
-#endif
-    marshalDIFcounted(bs, DIF_SUSPEND);
-    suspend(term);
-  }
+  processGlue(term);     // handled by the Glue
 }
 
 //
@@ -497,91 +340,51 @@ inline
 Bool DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
 {
   // v == *vRef && oz_isVar(v)
-  ByteBuffer *bs = (ByteBuffer *) getOpaque();
+  OZ_Term term = makeTaggedRef(vRef);
 
-  // check whether bs has enough space available
-  if (bs->availableSpace() >=
-      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize) {
-#if defined(DBG_TRACE)
-    DBGINIT();
-    fprintf(dbgout, "> var = %s\n", toC(v));
-    fflush(dbgout);
-#endif
+  if (oz_isExtVar(v) &&
+      oz_getExtVar(v)->getIdV() == OZ_EVAR_DISTRIBUTEDVARPATCH) {
+    // a patch, marshal it
+    return processGlue(term);
 
-    // check index first
-    int index;
-    OZ_Term vrt = makeTaggedRef(vRef);
-    VISITNODE(vrt, vIT, bs, index, return(OK));
+  } else if (oz_isFree(v) || oz_isReadOnly(v)) {
+    // marshal it
+    processGlue(term);
+    // patch it
+    expVars = new MarshaledVarPatch(term, expVars);
+    return (OK);
 
-    // extvars marshal themselves
-    if (oz_isExtVar(v)) {
-      ExtVarType evt = oz_getExtVar(v)->getIdV();
-      switch (evt) {
-      case OZ_EVAR_LAZY:
-	// raph: this is broken, don't use it!
-	Assert(0);
-	// oz_getLazyVar(v)->marshal(bs, index);
-	// only a "place holding" patch is necessary:
-	// expVars = new MarshaledVarPatch(vrt, expVars);
-	break;
+  } else if (oz_isFailed(v)) {
+    // specific marshaling for failed values
+    ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
-      case OZ_EVAR_DISTRIBUTEDVARPATCH:
-	// marshal it
-	printf("--- raph: marshaling distributed var patch\n");
-	marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
-	(void) glue_marshalEntity(vrt, bs);
-	break;
-
-      case OZ_EVAR_MARSHALEDVARPATCH:
-      default:
-	Assert(0);
-	break;
-      }
-
-      //
-    } else if (oz_isFree(v) || oz_isReadOnly(v)) {
-      // marshal it
-      marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
-      (void) glue_marshalEntity(vrt, bs);
-      // patch it
-      expVars = new MarshaledVarPatch(vrt, expVars);
-
-      //
-    } else if (oz_isFailed(v)) {
+    if (bs->availableSpace() >= 2*DIFMaxSize + MNumberMaxSize) {
+      int index;
+      VISITNODE(term, vIT, bs, index, return(OK));
       // marshal tag
       marshalDIFindex(bs, DIF_FAILEDVALUE, DIF_FAILEDVALUE_DEF, index);
-      // then recurse through the exception
-      return (NO);
+      //
+      Assert(bs->availableSpace() >= DIFMaxSize);
+      return (NO);     // recurse through the exception
 
     } else {
-      // Handle the variable as a resource. 
-
-      // kost@ : this does not work currently in the sense that when a
-      // variable is bound, its 'ref' owner entry will never be found
-      // again, but instead marshaled as a value [the variable has been
-      // bound to];
-      OZ_warning("marshaling a variable as a resource!");
-      // handle it as a resource. Note that co-references are already
-      // taken care of;
-      OZ_error("DPMARSHALERCLASS::Dont remember : MRHTentry\n");
-      //MarshalRHTentry(vrt, 0);
+#if defined(DBG_TRACE)
+      DBGINIT();
+      fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	      dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(v));
+      fflush(dbgout);
+#endif
+      marshalDIFcounted(bs, DIF_SUSPEND);
+      suspend(term);
+      return (OK);
     }
 
-    // this is necessary for DIF_SUSPEND
-    Assert(bs->availableSpace() >= DIFMaxSize);
-    return (OK);
-
   } else {
-#if defined(DBG_TRACE)
-    DBGINIT();
-    fprintf(dbgout, "> tag: %s(%d) on %s\n",
-	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(v));
-    fflush(dbgout);
-#endif
-    marshalDIFcounted(bs, DIF_SUSPEND);
-    suspend(makeTaggedRef(vRef));
+    // error: this variable cannot be marshaled!
+    OZ_error("cannot marshal variable!\n");
     return (OK);
   }
+  Assert(0);
 }
 
 //
@@ -676,14 +479,15 @@ Bool DPMARSHALERCLASS::processSRecord(OZ_Term srecordTerm)
 inline 
 Bool DPMARSHALERCLASS::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
 { 
+  if (!(isImmediate() || glue_isImmediate(chunkTerm)))
+    return processGlue(chunkTerm);     // handled by the Glue
+
+  // immediate marshaling: DIF_CHUNK, index, gname
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
-  if (isImmediate() || glue_isImmediate(chunkTerm)) {
-    // immediate marshaling: DIF_CHUNK, index, gname
-    if (bs->availableSpace() < 2*DIFMaxSize + MNumberMaxSize + MGNameMaxSize)
-      goto suspend;
-
+  if (bs->availableSpace() >= 2*DIFMaxSize + MNumberMaxSize + MGNameMaxSize) {
     int index;
+
     VISITNODE(chunkTerm, vIT, bs, index, return(OK));
     //
 #if defined(DBG_TRACE)
@@ -704,34 +508,17 @@ Bool DPMARSHALERCLASS::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
     return (NO);
 
   } else {
-    // marshaling a mediator: DIF_GLUE, index, mediator, gname
-    if (bs->availableSpace() <
-	2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize + MGNameMaxSize)
-      goto suspend;
-
-    int index;
-    //
-    VISITNODE(chunkTerm, vIT, bs, index, return(OK));
-    //
-    marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
-    //
-    (void) glue_marshalEntity(chunkTerm, bs);
-    Assert(bs->availableSpace() >= DIFMaxSize);
-    return (OK);     // leaf node
-
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(chunkTerm));
+    fflush(dbgout);
+#endif
+    marshalDIFcounted(bs, DIF_SUSPEND);
+    suspend(chunkTerm);
+    return (OK);
   }
   Assert(0);
-
- suspend:
-#if defined(DBG_TRACE)
-  DBGINIT();
-  fprintf(dbgout, "> tag: %s(%d) on %s\n",
-	  dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(chunkTerm));
-  fflush(dbgout);
-#endif
-  marshalDIFcounted(bs, DIF_SUSPEND);
-  suspend(chunkTerm);
-  return (OK);
 }
 
 //
@@ -770,42 +557,28 @@ Bool DPMARSHALERCLASS::processFSETValue(OZ_Term fsetvalueTerm)
 inline 
 Bool DPMARSHALERCLASS::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
 {
+  OzDictionary *d = (OzDictionary *) dictConst;
+
+  if (!d->isSafeDict())
+    return processGlue(dictTerm);     // handled by the Glue
+
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
-
-  printf("Process Dictionary %s\n", toC(dictTerm));
   //
-  if (bs->availableSpace() >= 
-      max(2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize,
-	  2*DIFMaxSize + 2*MNumberMaxSize)) {
+  if (bs->availableSpace() >= 2*DIFMaxSize + 2*MNumberMaxSize) {
     int index;
-
-    //
-    VISITNODE(dictTerm, vIT, bs, index, return(OK));
-
-    //
-    OzDictionary *d = (OzDictionary *) dictConst;
-    if (!d->isSafeDict()) {
-      printf("It is not a safe dictionary\n"); //bmc
-      //OZ_error("DPMARSHALERCLASS::processDict : MRHTentry\n");
-      marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
-      (void) glue_marshalEntity(dictTerm, bs);
-      Assert(bs->availableSpace() >= DIFMaxSize);
-      return (OK);
-    } else {
 #if defined(DBG_TRACE)
-      DBGINIT();
-      fprintf(dbgout, "> tag: %s(%d) = %s\n",
-	      dif_names[DIF_DICT].name, DIF_DICT, toC(dictTerm));
-      fflush(dbgout);
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	    dif_names[DIF_DICT].name, DIF_DICT, toC(dictTerm));
+    fflush(dbgout);
 #endif
-      marshalDIFindex(bs, DIF_DICT, DIF_DICT_DEF, index);
-      marshalNumber(bs, d->getSize());
-      Assert(bs->availableSpace() >= DIFMaxSize);
-      return (NO);
-    }
-    Assert(0);
-
+    VISITNODE(dictTerm, vIT, bs, index, return(OK));
     //
+    marshalDIFindex(bs, DIF_DICT, DIF_DICT_DEF, index);
+    marshalNumber(bs, d->getSize());
+    Assert(bs->availableSpace() >= DIFMaxSize);
+    return (NO);
+
   } else {
 #if defined(DBG_TRACE)
     DBGINIT();
@@ -824,42 +597,21 @@ Bool DPMARSHALERCLASS::processDictionary(OZ_Term dictTerm, ConstTerm *dictConst)
 inline 
 Bool DPMARSHALERCLASS::processArray(OZ_Term arrayTerm, ConstTerm *arrayConst)
 {
-  ByteBuffer *bs = (ByteBuffer *) getOpaque();
-
-  if (bs->availableSpace() >= 
-      2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize) {
-    int index;
-
-    //
-    VISITNODE(arrayTerm, vIT, bs, index, return(OK));
-    //
-    marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
-    (void) glue_marshalEntity(arrayTerm, bs);
-    //
-    Assert(bs->availableSpace() >= DIFMaxSize);
-  } else {
-#if defined(DBG_TRACE)
-    DBGINIT();
-    fprintf(dbgout, "> tag: %s(%d) on %s\n",
-	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(arrayTerm));
-    fflush(dbgout);
-#endif
-    marshalDIFcounted(bs, DIF_SUSPEND);
-    suspend(arrayTerm);
-  }
-  return (OK);
+  return processGlue(arrayTerm);     // handled by the Glue
 }
 
 //
 inline 
 Bool DPMARSHALERCLASS::processClass(OZ_Term classTerm, ConstTerm *classConst)
 { 
+  if (!(isImmediate() || glue_isImmediate(classTerm)))
+    return processGlue(classTerm);
+
+  // immediate marshaling: DIF_CLASS, index, gname, number
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
-  if (isImmediate() || glue_isImmediate(classTerm)) {
-    // immediate marshaling: DIF_CLASS, index, gname, number
-    if (bs->availableSpace() < 2*DIFMaxSize + 2*MNumberMaxSize + MGNameMaxSize)
-      goto suspend;
+  if (bs->availableSpace() >=
+      2*DIFMaxSize + 2*MNumberMaxSize + MGNameMaxSize) {
 
     int index;
     VISITNODE(classTerm, vIT, bs, index, return(OK));
@@ -891,48 +643,31 @@ Bool DPMARSHALERCLASS::processClass(OZ_Term classTerm, ConstTerm *classConst)
     return (NO);
 
   } else {
-    // marshaling a mediator: DIF_GLUE, index, mediator, gname
-    if (bs->availableSpace() <
-	2*DIFMaxSize + MNumberMaxSize + MMediatorMaxSize + MGNameMaxSize)
-      goto suspend;
-
-    int index;
-    //
-    VISITNODE(classTerm, vIT, bs, index, return(OK));
-    //
-    marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
-    //
-    (void) glue_marshalEntity(classTerm, bs);
-    Assert(bs->availableSpace() >= DIFMaxSize);
-    return (OK);     // leaf node
-
-  }
-  Assert(0);
-
- suspend:
 #if defined(DBG_TRACE)
-  DBGINIT();
-  fprintf(dbgout, "> tag: %s(%d) on %s\n",
-	  dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(classTerm));
-  fflush(dbgout);
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(classTerm));
+    fflush(dbgout);
 #endif
-  marshalDIFcounted(bs, DIF_SUSPEND);
-  suspend(classTerm);
-  return (OK);
+    marshalDIFcounted(bs, DIF_SUSPEND);
+    suspend(classTerm);
+    return (OK);
+  }
 }
 
 //
 inline 
 Bool DPMARSHALERCLASS::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
 {
+  if (!(isImmediate() || glue_isImmediate(absTerm)))
+    return processGlue(absTerm);     // handled by the Glue
+
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
-  if (isImmediate() || glue_isImmediate(absTerm)) {
-    // immediate marshaling: DIF_PROC, index, gname, arity, gsize,
-    // maxX, line, column, bytecode size
-    if (bs->availableSpace() < 2*DIFMaxSize + 7*MNumberMaxSize + MGNameMaxSize)
-      goto suspend;
-
+  // immediate marshaling: DIF_PROC, index, gname, arity, gsize, maxX,
+  // line, column, bytecode size
+  if (bs->availableSpace() >=
+      2*DIFMaxSize + 7*MNumberMaxSize + MGNameMaxSize) {
     int index;
     //
     VISITNODE(absTerm, vIT, bs, index, return(OK));
@@ -984,34 +719,16 @@ Bool DPMARSHALERCLASS::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
     return (NO);
 
   } else {
-    // marshaling a mediator: DIF_GLUE, index, mediator, gname, arity
-    if (bs->availableSpace() <
-	2*DIFMaxSize + 2*MNumberMaxSize + MMediatorMaxSize + MGNameMaxSize)
-      goto suspend;
-
-    int index;
-    //
-    VISITNODE(absTerm, vIT, bs, index, return(OK));
-    //
-    marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
-    //
-    (void) glue_marshalEntity(absTerm, bs);
-    Assert(bs->availableSpace() >= DIFMaxSize);
-    return (OK);     // leaf node
-
-  }
-  Assert(0);
-
- suspend:
 #if defined(DBG_TRACE)
-  DBGINIT();
-  fprintf(dbgout, "> tag: %s(%d) on %s\n",
-	  dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(absTerm));
-  fflush(dbgout);
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(absTerm));
+    fflush(dbgout);
 #endif
-  marshalDIFcounted(bs, DIF_SUSPEND);
-  suspend(absTerm);
-  return (OK);
+    marshalDIFcounted(bs, DIF_SUSPEND);
+    suspend(absTerm);
+    return (OK);
+  }
 }
 
 //
@@ -1037,6 +754,43 @@ void DPMARSHALERCLASS::processSync()
     marshalDIFcounted(bs, DIF_SUSPEND);
     suspendSync();
   }
+}
+
+// for entities managed by the Glue
+inline
+Bool DPMARSHALERCLASS::processGlue(OZ_Term entity) {
+  ByteBuffer *bs = (ByteBuffer *) getOpaque();
+
+  // marshaling: DIF_GLUE, index, mediator, and a possible DIF_SUSPEND
+  if (bs->availableSpace() >=
+      2*DIFMaxSize + MNumberMaxSize + glue_getMarshaledSize(entity)) {
+    int index;
+#if defined(DBG_TRACE)
+    {
+      DBGINIT();
+      fprintf(dbgout, "> tag: %s(%d) = %s\n",
+	    dif_names[DIF_GLUE].name, DIF_GLUE, toC(entity));
+      fflush(dbgout);
+    }
+#endif
+    //
+    VISITNODE(entity, vIT, bs, index, return);
+    //
+    marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
+    (void) glue_marshalEntity(entity, bs);
+    //
+    Assert(bs->availableSpace() >= DIFMaxSize);
+  } else {
+#if defined(DBG_TRACE)
+    DBGINIT();
+    fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	    dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(entity));
+    fflush(dbgout);
+#endif
+    marshalDIFcounted(bs, DIF_SUSPEND);
+    suspend(entity);
+  }
+  return (OK);
 }
 
 //

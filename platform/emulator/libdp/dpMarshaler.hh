@@ -398,6 +398,9 @@ public:
   Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
   void processSync();
 
+  // a generic one for all entities managed by the Glue
+  Bool processGlue(OZ_Term entity);
+
   //
   void doit();
   //
@@ -440,6 +443,9 @@ public:
   Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
   Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
   void processSync();
+
+  // a generic one for entities managed by the Glue
+  Bool processGlue(OZ_Term entity);
 
   //
   void doit();
@@ -889,14 +895,6 @@ void marshalObject(MarshalerBuffer *bs, ConstTerm* t);
   (2*DIFMaxSize + MNumberMaxSize + MCreditMaxSize)
 #define MToOwnerMaxSize MCreditToOwnerMaxSize
 #define MRefConsInfoMaxSize (MDSiteMaxSize + MCreditMaxSize) 
-
-// raph: maximal size for marshaling distributed entities.  The
-// DssProxyMaxSize is only speculative, and might be underevaluated.
-// When marshaling, the DSS assumes there is enough space available in
-// the provided buffers.  Increase DssProxyMaxSize if you encounter
-// DSS errors when marshaling.
-#define MDssProxyMaxSize  172
-#define MMediatorMaxSize  MDssProxyMaxSize + 1   // (proxy + glue tag)
 
 //
 // Top-level management of marshalers (to be used by transport
