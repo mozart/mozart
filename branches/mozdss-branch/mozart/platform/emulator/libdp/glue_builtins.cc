@@ -285,7 +285,7 @@ OZ_BI_define(BIportToMS,1,1)
   // marshal the Dss abstract entity, and entity-specific stuff
   GlueWriteBuffer buf(portToTickBuf, PORT_TO_TICK_BUF_LEN);
   med->getCoordinatorAssistant()->marshal(&buf, PMF_FREE);
-  med->marshal(&buf);
+  med->marshalData(&buf);
 
   // turn it into a string
   int len = buf.bufferUsed();
@@ -313,7 +313,7 @@ OZ_BI_define(BImsToPort,1,1)
     med = glue_newMediator(GLUE_PORT);
     med->setProxy(proxy);
   }
-  med->unmarshal(&buf);
+  med->unmarshalData(&buf);
   free(raw_buf);
 
   OZ_RETURN(med->getEntity());

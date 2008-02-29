@@ -75,10 +75,10 @@ void glue_globalizeEntity(TaggedRef entity) {
   The last part is entity-specific data, which is necessary to build a
   stub for an entity.  This part must be small in size, and should not
   contain the state of the entity.  This data is handled by the
-  methods marshal()/unmarshal() of the entity's mediator.  The method
-  unmarshal() is in charge of building an entity stub, if it does not
-  exist yet.  In case the entity exists, it simply disposes the data
-  from the buffer.
+  methods marshalData()/unmarshalData() of the entity's mediator.  The
+  method unmarshalData() is in charge of building an entity stub, if
+  it does not exist yet.  In case the entity exists, it simply
+  disposes the data from the buffer.
 
 */
 
@@ -93,7 +93,7 @@ bool glue_marshalEntity(TaggedRef entity, ByteBuffer *bs) {
   bs->put(med->getType());
 
   // marshal entity-specific data
-  med->marshal(bs);
+  med->marshalData(bs);
 
   return immediate;
 }
@@ -116,10 +116,20 @@ bool glue_unmarshalEntity(ByteBuffer *bs, TaggedRef &entity) {
     med = glue_newMediator(tag);
     med->setProxy(proxy);
   }
-  med->unmarshal(bs);
+  med->unmarshalData(bs);
   entity = med->getEntity();
 
   return immediate;
+}
+
+
+// marshaler hook
+int glue_getMarshaledSize(TaggedRef entity) {
+  Mediator* med = glue_getMediator(entity);
+  if (!med->isDistributed()) med->globalize();
+
+  return (med->getCoordinatorAssistant()->getMarshaledSize(PMF_ORDINARY) +
+	  med->getMarshaledDataSize() + 1);
 }
 
 
@@ -133,35 +143,36 @@ bool glue_isImmediate(TaggedRef entity) {
 /************************* Entity-specific stuff *************************/
 
 // generic marshaling; by default there is no entity-specific data
-void Mediator::marshal(ByteBuffer *bs) {}
+void Mediator::marshalData(ByteBuffer *bs) {}
+int Mediator::getMarshaledDataSize() const { return 0; }
 
 
 // ports
-void PortMediator::unmarshal(ByteBuffer* bs) {
+void PortMediator::unmarshalData(ByteBuffer* bs) {
   if (!hasEntity()) setConst(new OzPort(oz_currentBoard(), makeTaggedNULL()));
 }
 
 
 // cells
-void CellMediator::unmarshal(ByteBuffer* bs) {
+void CellMediator::unmarshalData(ByteBuffer* bs) {
   if (!hasEntity()) setConst(new OzCell(oz_currentBoard(), makeTaggedNULL()));
 }
 
 
 // locks
-void LockMediator::unmarshal(ByteBuffer* bs) {
+void LockMediator::unmarshalData(ByteBuffer* bs) {
   if (!hasEntity()) setConst(new OzLock(oz_currentBoard()));
 }
 
 
 // arrays
-void ArrayMediator::marshal(ByteBuffer *bs) {
+void ArrayMediator::marshalData(ByteBuffer *bs) {
   OzArray *oza = static_cast<OzArray*>(getConst());
   marshalNumber(bs, oza->getLow());
   marshalNumber(bs, oza->getHigh());
 }
 
-void ArrayMediator::unmarshal(ByteBuffer* bs) {
+void ArrayMediator::unmarshalData(ByteBuffer* bs) {
   int low  = unmarshalNumber(bs);
   int high = unmarshalNumber(bs);
   if (!hasEntity()) {
@@ -169,33 +180,37 @@ void ArrayMediator::unmarshal(ByteBuffer* bs) {
   }
 }
 
+int ArrayMediator::getMarshaledDataSize() const {
+  return 2 * MNumberMaxSize;
+}
+
 
 // dictionaries
-void DictionaryMediator::unmarshal(ByteBuffer* bs) {
+void DictionaryMediator::unmarshalData(ByteBuffer* bs) {
   if (!hasEntity()) setConst(new OzDictionary(oz_currentBoard()));
 }
 
 
 // objects
-void ObjectMediator::unmarshal(ByteBuffer* bs) {
+void ObjectMediator::unmarshalData(ByteBuffer* bs) {
   if (!hasEntity()) setConst(new OzObject(oz_currentBoard()));
 }
 
 // object states
-void ObjectStateMediator::unmarshal(ByteBuffer* bs) {
+void ObjectStateMediator::unmarshalData(ByteBuffer* bs) {
   if (!hasEntity())
     setConst(new ObjectState(oz_currentBoard(), makeTaggedNULL()));
 }
 
 
 // thread ids
-void OzThreadMediator::unmarshal(ByteBuffer* bs) {
+void OzThreadMediator::unmarshalData(ByteBuffer* bs) {
   if (!hasEntity()) setEntity(oz_thread(oz_newThreadSuspended()));
 }
 
 
 // variables
-void OzVariableMediator::unmarshal(ByteBuffer* bs) {
+void OzVariableMediator::unmarshalData(ByteBuffer* bs) {
   if (!hasEntity()) {
     switch (getType()) {
     case GLUE_VARIABLE:
@@ -212,20 +227,20 @@ void OzVariableMediator::unmarshal(ByteBuffer* bs) {
 
 
 // unusables
-void UnusableMediator::unmarshal(ByteBuffer* bs) {
+void UnusableMediator::unmarshalData(ByteBuffer* bs) {
   if (!hasEntity()) setConst(new UnusableResource());
 }
 
 
 // chunks
-void ChunkMediator::marshal(ByteBuffer *bs) {
+void ChunkMediator::marshalData(ByteBuffer *bs) {
   SChunk* chunk = static_cast<SChunk*>(getConst());
   GName* gname = chunk->globalize();
   Assert(gname);
   marshalGName(bs, gname);
 }
 
-void ChunkMediator::unmarshal(ByteBuffer* bs) {
+void ChunkMediator::unmarshalData(ByteBuffer* bs) {
   TaggedRef value;
   GName* gname = unmarshalGName(&value, bs);
   if (!hasEntity()) {
@@ -240,16 +255,20 @@ void ChunkMediator::unmarshal(ByteBuffer* bs) {
   }
 }
 
+int ChunkMediator::getMarshaledDataSize() const {
+  return MGNameMaxSize;
+}
+
 
 // classes
-void ClassMediator::marshal(ByteBuffer *bs) {
+void ClassMediator::marshalData(ByteBuffer *bs) {
   OzClass* cls = static_cast<OzClass*>(getConst());
   GName* gname = cls->globalize();
   Assert(gname);
   marshalGName(bs, gname);
 }
 
-void ClassMediator::unmarshal(ByteBuffer* bs) {
+void ClassMediator::unmarshalData(ByteBuffer* bs) {
   TaggedRef value;
   GName* gname = unmarshalGName(&value, bs);
   if (!hasEntity()) {
@@ -268,9 +287,13 @@ void ClassMediator::unmarshal(ByteBuffer* bs) {
   }
 }
 
+int ClassMediator::getMarshaledDataSize() const {
+  return MGNameMaxSize;
+}
+
 
 // procedures
-void ProcedureMediator::marshal(ByteBuffer *bs) {
+void ProcedureMediator::marshalData(ByteBuffer *bs) {
   Abstraction* a = tagged2Abstraction(getEntity());
   GName* gname = a->globalize();
   Assert(gname);
@@ -278,7 +301,7 @@ void ProcedureMediator::marshal(ByteBuffer *bs) {
   marshalNumber(bs, a->getArity());
 }
 
-void ProcedureMediator::unmarshal(ByteBuffer* bs) {
+void ProcedureMediator::unmarshalData(ByteBuffer* bs) {
   TaggedRef value;
   GName* gname = unmarshalGName(&value, bs);
   int arity = unmarshalNumber(bs);
@@ -292,4 +315,8 @@ void ProcedureMediator::unmarshal(ByteBuffer* bs) {
     Assert(oz_isAbstraction(value));
     setEntity(value);
   }
+}
+
+int ProcedureMediator::getMarshaledDataSize() const {
+  return MGNameMaxSize + MNumberMaxSize;
 }

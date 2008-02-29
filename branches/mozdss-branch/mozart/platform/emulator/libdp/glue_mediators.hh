@@ -210,8 +210,9 @@ public:
   virtual void reportFaultState(const FaultState&);
 
   /*************** marshaling, see glue_marshal.hh ***************/
-  virtual void marshal(ByteBuffer*);
-  virtual void unmarshal(ByteBuffer*) = 0;
+  virtual void marshalData(ByteBuffer*);
+  virtual void unmarshalData(ByteBuffer*) = 0;
+  virtual int  getMarshaledDataSize() const;
 
   /*************** debugging ***************/
   virtual char* getPrintType() { return "unknown"; }
@@ -257,7 +258,7 @@ public:
     Assert(0); return NULL; }
   virtual void installEntityRepresentation(PstInContainerInterface*) {
     Assert(0); }
-  virtual void unmarshal(ByteBuffer*);
+  virtual void unmarshalData(ByteBuffer*);
   virtual char *getPrintType() { return "port"; }
 }; 
 
@@ -277,7 +278,7 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
-  virtual void unmarshal(ByteBuffer*);
+  virtual void unmarshalData(ByteBuffer*);
   virtual char *getPrintType() { return "cell"; }
 }; 
 
@@ -297,7 +298,7 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
-  virtual void unmarshal(ByteBuffer*);
+  virtual void unmarshalData(ByteBuffer*);
   virtual char *getPrintType() { return "lock"; }
 }; 
 
@@ -317,8 +318,9 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
-  virtual void marshal(ByteBuffer*);
-  virtual void unmarshal(ByteBuffer*);
+  virtual void marshalData(ByteBuffer*);
+  virtual void unmarshalData(ByteBuffer*);
+  virtual int  getMarshaledDataSize() const;
   virtual char *getPrintType() { return "array"; }
 }; 
 
@@ -338,7 +340,7 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
-  virtual void unmarshal(ByteBuffer*);
+  virtual void unmarshalData(ByteBuffer*);
   virtual char *getPrintType() { return "dictionary"; }
 }; 
 
@@ -354,7 +356,7 @@ public:
 				   PstOutContainerInterface*&);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
-  virtual void unmarshal(ByteBuffer*);
+  virtual void unmarshalData(ByteBuffer*);
   virtual char *getPrintType() { return "object"; }
 };
 
@@ -374,7 +376,7 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
-  virtual void unmarshal(ByteBuffer*);
+  virtual void unmarshalData(ByteBuffer*);
   virtual char *getPrintType() { return "object state"; }
 };
 
@@ -393,7 +395,7 @@ public:
 				   PstOutContainerInterface*&);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
-  virtual void unmarshal(ByteBuffer*);
+  virtual void unmarshalData(ByteBuffer*);
   virtual char *getPrintType() { return "thread"; }
 };
 
@@ -419,7 +421,7 @@ public:
 				      PstOutContainerInterface*& answer);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);
-  virtual void unmarshal(ByteBuffer*);
+  virtual void unmarshalData(ByteBuffer*);
 }; 
 
 // Note.  Patched variables keep their distribution support alive,
@@ -443,7 +445,7 @@ public:
     Assert(0); return NULL; }
   virtual void installEntityRepresentation(PstInContainerInterface*) {
     Assert(0); }
-  virtual void unmarshal(ByteBuffer*);
+  virtual void unmarshalData(ByteBuffer*);
   virtual char *getPrintType() { return "unusable"; }
 };
 
@@ -485,8 +487,9 @@ public:
   virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
 				   PstInContainerInterface*,
 				   PstOutContainerInterface*&);
-  virtual void marshal(ByteBuffer*);
-  virtual void unmarshal(ByteBuffer*);
+  virtual void marshalData(ByteBuffer*);
+  virtual void unmarshalData(ByteBuffer*);
+  virtual int  getMarshaledDataSize() const;
   virtual char *getPrintType() { return "chunk"; }
 };
 
@@ -499,8 +502,9 @@ public:
   virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
 				   PstInContainerInterface*,
 				   PstOutContainerInterface*&);
-  virtual void marshal(ByteBuffer*);
-  virtual void unmarshal(ByteBuffer*);
+  virtual void marshalData(ByteBuffer*);
+  virtual void unmarshalData(ByteBuffer*);
+  virtual int  getMarshaledDataSize() const;
   virtual char *getPrintType() { return "class"; }
 };
 
@@ -513,8 +517,9 @@ public:
   virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
 				   PstInContainerInterface*,
 				   PstOutContainerInterface*&);
-  virtual void marshal(ByteBuffer*);
-  virtual void unmarshal(ByteBuffer*);
+  virtual void marshalData(ByteBuffer*);
+  virtual void unmarshalData(ByteBuffer*);
+  virtual int  getMarshaledDataSize() const;
   virtual char *getPrintType() { return "procedure"; }
 };
 
