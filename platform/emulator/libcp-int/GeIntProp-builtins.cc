@@ -35,6 +35,9 @@
 using namespace Gecode;
 using namespace Gecode::Int;
 
+/*
+// not needed, use GFD.relP instead
+
 OZ_BI_define(int_eq,3,0) 
 {
   DeclareGSpace(gs);
@@ -67,8 +70,10 @@ OZ_BI_define(int_rel,4,0) {
   }  
   CHECK_POST(gs);
 } OZ_BI_end
+*/
 
-
+  /*
+  // not needed use GFD.distinctP
 OZ_BI_define(int_dist,2,0)
  {
    DeclareGSpace(sp);
@@ -82,8 +87,8 @@ OZ_BI_define(int_dist,2,0)
    CHECK_POST(sp);
  } OZ_BI_end
 
-
- OZ_BI_define(int_dist2,3,0)
+  */
+  /* OZ_BI_define(int_dist2,3,0)
  {
    DeclareGSpace(sp);
    DECLARE_INTARGS(0,arguments);
@@ -99,7 +104,7 @@ OZ_BI_define(int_dist,2,0)
    
  } OZ_BI_end
 
-
+  */
 
 // //Propagador lineal simple
 // //La suma de los elementos del arreglo(x1) debe ser igual a (x3 int o IntVar)
@@ -236,6 +241,7 @@ OZ_BI_define(int_count,5,0)
 
 } OZ_BI_end
 
+  /*
 OZ_BI_define(int_mult,3,0)
 {
   DeclareGSpace(sp);
@@ -249,7 +255,7 @@ OZ_BI_define(int_mult,3,0)
   }
   CHECK_POST(sp);
 } OZ_BI_end
-
+  */
 
 OZ_BI_define(int_Gabs,3,0)
 {

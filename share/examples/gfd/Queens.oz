@@ -34,9 +34,9 @@ fun{Queens N}
    in
       Root = {GFD.list N 1#N}
       D = {List.toTuple '#' Root}
-      {GFD.distinct Root GFD.cl.val}
-      {GFD.distinctOffset Root C1}
-      {GFD.distinctOffset Root C2}
+      {GFD.distinctP post(Root cl:GFD.cl.val)}
+      {GFD.distinctP post(C1 Root cl:GFD.cl.val)}
+      {GFD.distinctP post(C2 Root cl:GFD.cl.val)}
       
       {GFD.distributeBR split Root}
    end

@@ -88,15 +88,15 @@ export
 %%%%% Clasify!!!!%%%%%%%%%%%%%
    
    %% Propagators
-   eq:                   Eq
-   rel:                  Rel       
+   %eq:                   Eq
+   %rel:                  Rel       
    linear:               Linear
    linear2:              Linear2
    linearR:              LinearR
    linearCR:             LinearCR
    count:                Count
-   distinct2:            Distinct2
-   mult:                 Mult
+   %distinct2:            Distinct2
+   %mult:                 Mult
    %%bool_and: 	         Bool_and
    int_Gabs:             Abs       
    int_sortedness:       Int_sortedness
@@ -138,8 +138,8 @@ export
    reified:        Reified
    
    %%Symbolic propagators
-   distinct:        Distinct
-   distinctOffset:  DistinctOffset
+   %distinct:        Distinct
+   %distinctOffset:  DistinctOffset
    atMost:          AtMost
    atLeast:         AtLeast
    exactly:         Exactly
@@ -293,17 +293,17 @@ define
    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Clasify!!!!%%%%%%%%%%%%%
-   Eq = GFDP.'eq'
-   Rel = GFDP.'rel'       
+   %Eq = GFDP.'eq'
+   %Rel = GFDP.'rel'       
    Linear = GFDP.'linear'
    Linear2 = GFDP.'linear2'
    LinearR = GFDP.'linearR'
    LinearCR = GFDP.'linearCR'
    
    Count = GFDP.'count'
-   Distinct= GFDP.'distinct'
-   Distinct2 = GFDP.'distinct2'
-   Mult=   GFDP.'mult'
+   %Distinct= GFDP.'distinct'
+   %Distinct2 = GFDP.'distinct2'
+   %Mult=   GFDP.'mult'
    %%Bool_and = GFDP.'bool_and'
    Abs = GFDP.'int_Gabs'
    Int_sortedness = GFDP.'int_sortedness'
@@ -421,14 +421,6 @@ define
    Extensional3 = GFDP.'extensional_3'
    Extensional4 = GFDP.'extensional_4'
    Extensional5 = GFDP.'extensional_5'
-   
-   Mult3 = GFDP.'mult_3'
-   Mult5 = GFDP.'mult_5'
-
-   Min2 = GFDP.'min_2'
-   Min3 = GFDP.'min_3'
-   Min4 = GFDP.'min_4'
-   Min5 = GFDP.'min_5'
    
    Abs2 = GFDP.'abs_2'
    Abs4 = GFDP.'abs_4'
