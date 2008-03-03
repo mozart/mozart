@@ -3,7 +3,8 @@
 %%%     Alejandro Arbelaez <aarbelaez@puj.edu.co>
 %%%
 %%%  Contributors:
-%%% 	Andres Felipe Barco (anfelbar@univalle.edu.co)
+%%%     Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
+%%% 	Andres Felipe Barco <anfelbar@univalle.edu.co>
 %%%
 %%% Copyright:
 %%%     Alejandro Arbelaez, 2006
@@ -91,9 +92,9 @@ proc{Exactly D Dv I}
 end
 
    
-proc{DistinctOffset Dv Iv}
-   {Distinct2 Iv Dv Cl.val}
-end
+%proc{DistinctOffset Dv Iv}
+%   {Distinct2 Iv Dv Cl.val}
+%end
 
 %%Miscellaneous propagators
 %Disjoint = Int_disjoint
@@ -116,24 +117,24 @@ proc{MinusD D1 D2 D3}
 end
 
 proc{Less D1 D2}
-   {Rel D1 Rt.'<:' D2 Cl.val}
+   {RelP post(D1 Rt.'<:' D2 cl:Cl.val)}
 end
 
 proc{LessEq D1 D2}
-   {Rel D1 Rt.'=<:' D2 Cl.val}
+   {RelP post(D1 Rt.'=<:' D2 cl:Cl.val)}
 end
 
 proc{Greater D1 D2}
-   {Rel D1 Rt.'>:' D2 Cl.val}
+   {RelP post(D1 Rt.'>:' D2 cl:Cl.val)}
 end
 
 proc{GreaterEq D1 D2}
-   {Rel D1 Rt.'>=:' D2 Cl.val}
+   {RelP post(D1 Rt.'>=:' D2 cl:Cl.val)}
 end
 
 %%maybe this proc have to change something after we have all gecode propagators implemented
 proc{Times D1 D2 D3}
-   {Mult D1 D2 D3}
+   {MultP post(D1 D2 D3)}
 end
 
 proc{TimesD D1 D2 D3}
@@ -142,7 +143,7 @@ end
 
 proc{DivI D1 I D3}
    {Wait I}
-   {Mult D3 D1 I}
+   {MultP post(D3 D1 I)}
 end
 
 %%Assigning Values

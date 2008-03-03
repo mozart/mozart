@@ -10,27 +10,6 @@ $boot_module_name      		  = "GFD";
 ##Propagators
 
 ## Miscellaneous Propagators
-
-
-    'eq'		 => { in  => ['+value','+value', 'int'],
-			     out => [],
-			     bi  => int_eq},
-
-    'rel'		 => { in  => ['+value', 'int', '+value', 'int'],
-			     out => [],
-			     bi  => int_rel},
-
-    'distinct'		 => { in  => ['+value', 'int'],
-			     out => [],
-			     bi  => int_dist},
-
-    'distinct2'		 => { in  => ['+value','+value', 'int'],
-			     out => [],
-			     bi  => int_dist2},
-    
-    'mult'               => { in  => ['+value','+value','+value'],
-	                      out => [],
-			      bi  => int_mult},
     
     'linear'		 => { in  => ['+value','int', '+value', 'int'],
 			     out => [],
