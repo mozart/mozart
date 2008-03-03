@@ -161,6 +161,9 @@ export
    circuit: Circuit
    cumulatives: Cumulatives
    distinctP: DistinctP
+   minP: MinP
+   maxP: MaxP
+   multP: MultP
    linearP: LinearP
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -421,7 +424,7 @@ define
    
    Mult3 = GFDP.'mult_3'
    Mult5 = GFDP.'mult_5'
-   
+
    Min2 = GFDP.'min_2'
    Min3 = GFDP.'min_3'
    Min4 = GFDP.'min_4'
@@ -429,7 +432,75 @@ define
    
    Abs2 = GFDP.'abs_2'
    Abs4 = GFDP.'abs_4'
-*/
+   */
+
+   proc {MinP S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 4 then
+	 {GFDP.gfd_min_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+      [] 5 then
+	 {GFDP.gfd_min_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      else
+	 raise malformed('Min constraint post') end
+      end
+   end
+
+
+   proc {MaxP S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 4 then
+	 {GFDP.gfd_max_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+      [] 5 then
+	 {GFDP.gfd_max_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      else
+	 raise malformed('Max constraint post') end
+      end
+   end
+
+   proc {MultP S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 5 then
+	 {GFDP.gfd_mult_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      else
+	 raise malformed('Mult constraint post') end
+      end
+   end
+
+   /*
+   proc {Sqr S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 4 then
+	 {GFDP.gfd_sqr_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+      else
+	 raise malformed('Sqr constraint post') end
+      end
+   end
+
+   proc {Sqrt S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 4 then
+	 {GFDP.gfd_sqrt_5 Sc.1 Sc.2 Sc.cl Sc.pk}
+      else
+	 raise malformed('Sqrt constraint post') end
+      end
+   end
+   */
+   
    proc {LinearP S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
