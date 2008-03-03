@@ -100,9 +100,9 @@ proc {GFDDistribute RawSpec Xs}
 	 of I#D then
 	    case D
 	    of compl(M) then
-	       {Rel V.I Rt.'\\=:' M Cl.bnd}
+	       {RelP post(V.I Rt.'\\=:' M cl:Cl.bnd)}
 	    [] M then
-	       {Rel V.I Rt.'=:' M Cl.bnd}
+	       {RelP post(V.I Rt.'=:' M cl:Cl.bnd)}
 	    end
 	    {Distribute L}
 	 [] nil then

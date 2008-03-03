@@ -128,11 +128,9 @@ proc {IntVarDistribute RawSpec Vec}
 		  {Space.waitStable}
 	       end		  
 	       choice
-		     %{System.show aqui_equal#{IsDet V}#V}			
-		  {Rel V Rt.'=:' {SelVal V} Cl.bnd}
+		  {RelP post(V Rt.'=:' {SelVal V} cl:Cl.bnd)}
 	       []
-		     %{System.show aqui_different#{IsDet V}#V}
-		  {Rel V Rt.'\\=:' {SelVal V} Cl.bnd}
+		  {RelP post(V Rt.'\\=:' {SelVal V} cl:Cl.bnd)}
 	       end		  
 	       {Do Fs}
 	    end
