@@ -85,4 +85,7 @@ void oz_bindReadOnly(OZ_Term *vPtr,OZ_Term val)
   oz_var_forceBind(tagged2Var(*vPtr),vPtr,val);
 }
 
+// create a read-only view of a variable
+OZ_Term oz_readOnlyView(OZ_Term ref);
+
 #endif /* __READONLY__HH__ */
