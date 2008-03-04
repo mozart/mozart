@@ -50,16 +50,6 @@ $module_name          = "GBD";
 	bi => gbd_rel_6 }
 ,
 
-'gbd_rel_3' => { in => ['+value', '+value', '+value'],
-	out=>[],
-	bi => gbd_rel_3 }
-,
-
-'gbd_rel_4' => { in => ['+value', '+value', '+value', '+value'],
-	out=>[],
-	bi => gbd_rel_4 }
-,
-
 'gbd_linear_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
 	bi => gbd_linear_5 }
@@ -72,17 +62,7 @@ $module_name          = "GBD";
 
 'gbd_linear_7' => { in => ['+value', '+value', '+value', '+value', '+value', '+value', '+value'],
 	out=>[],
-	bi => gbd_linear_7 }
-,
-
-'gbd_linear_3' => { in => ['+value', '+value', '+value'],
-	out=>[],
-	bi => gbd_linear_3 }
-,
-
-'gbd_linear_4' => { in => ['+value', '+value', '+value', '+value'],
-	out=>[],
-	bi => gbd_linear_4 },
+	bi => gbd_linear_7 },
 
 
 ##Propagators
