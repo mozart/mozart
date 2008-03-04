@@ -213,8 +213,10 @@ void DPMARSHALERCLASS::processBuiltin(OZ_Term biTerm, ConstTerm *biConst)
 {
   Builtin *bi = (Builtin *) biConst;
 
-  if (bi->isSited())
-    return processGlue(biTerm);     // sited builtins are handled by the Glue
+  if (bi->isSited()) {
+    processGlue(biTerm);     // sited builtins are handled by the Glue
+    return;
+  }
 
   ByteBuffer *bs = (ByteBuffer *) getOpaque();
   const char *pn = bi->getPrintName();
@@ -774,7 +776,7 @@ Bool DPMARSHALERCLASS::processGlue(OZ_Term entity) {
     }
 #endif
     //
-    VISITNODE(entity, vIT, bs, index, return);
+    VISITNODE(entity, vIT, bs, index, return(OK));
     //
     marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
     (void) glue_marshalEntity(entity, bs);
