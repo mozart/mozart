@@ -353,7 +353,7 @@ Bool DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
     // marshal it
     processGlue(term);
     // patch it
-    expVars = new MarshaledVarPatch(term, expVars);
+    expVars = new DistributedVarPatch(term, expVars, true);
     return (OK);
 
   } else if (oz_isFailed(v)) {

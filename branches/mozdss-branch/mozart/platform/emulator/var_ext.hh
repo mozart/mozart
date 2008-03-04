@@ -38,7 +38,6 @@ typedef enum {
   // Patches are not really variables, but serve for marshaling
   // (see marshalerPatch.hh and libdp/dpMarshaler.hh);
   OZ_EVAR_DISTRIBUTEDVARPATCH,
-  OZ_EVAR_MARSHALEDVARPATCH,
   OZ_EVAR_LAST
 } ExtVarType;
 

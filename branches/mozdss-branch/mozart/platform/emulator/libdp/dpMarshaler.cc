@@ -505,7 +505,7 @@ Bool VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
   } else if (oz_isFree(v) || oz_isReadOnly(v)) {
     // globalize the variable if needed, and patch it
     glue_globalizeEntity(vrt);
-    expVars = new DistributedVarPatch(vrt, expVars);
+    expVars = new DistributedVarPatch(vrt, expVars, false);
 
   } else if (oz_isFailed(v)) {
     // that's a value, just go through it

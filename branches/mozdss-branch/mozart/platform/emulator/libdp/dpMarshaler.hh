@@ -470,46 +470,25 @@ public:
 //   their external (network) representations are sent out;
 
 //
-// MarshaledVarPatch holds a location of a *marshaled* variable, of
-// whichever type (but should not be marshaled itself: 'processVar()'
-// methods should recognize coreferences, and marshal them
-// accordingly).  It can be seen as an optimization of
-// DistributedVarPatch.
-
-class MarshaledVarPatch : public OzValuePatch {
-public:
-  MarshaledVarPatch(OZ_Term loc, OzValuePatch *next)
-    : OzValuePatch(loc, next) {}
-  ~MarshaledVarPatch() { Assert(0); }
-
-  //
-  virtual void disposeV() { 
-    disposeOVP();
-    oz_freeListDispose(extVar2Var(this), extVarSizeof(MarshaledVarPatch));
-  }
-  //
-  virtual ExtVarType getIdV(void) { return (OZ_EVAR_MARSHALEDVARPATCH); }
-  //
-  virtual OzValuePatch* gCollectV() {
-    return (new MarshaledVarPatch(*this));
-  }
-  virtual void gCollectRecurseV() { gcRecurseOVP(); }
-};
-
+// DistributedVarPatch holds a location of a variable.  If the patched
+// variable has not been marshaled yet, its mediator is assigned to
+// the patch itself.  The mediator contains the necessary information
+// for marshaling the variable, even after its binding.
 //
-// DistributedVarPatch holds a location of a variable that has not
-// been marshaled yet when the snapshot took place.  The mediator of
-// the patched variable is assigned to the patch itself.  This
-// mediator contains all the necessary information for marshaling.
+// In case the variable has been marshaled already, the mediator is
+// ignored.  This is an optimization: processVar() methods should
+// recognize coreferences, and marshal them accordingly.
 
 class DistributedVarPatch : public OzValuePatch {
 public:
-  DistributedVarPatch(OZ_Term loc, OzValuePatch *next)
+  DistributedVarPatch(OZ_Term loc, OzValuePatch *next, Bool marshaled = false)
     : OzValuePatch(loc, next)
   {
-    OzVariable *ov = tagged2Var(oz_deref(loc));
-    Assert(ov->hasMediator());
-    extVar2Var(this)->setMediator(ov->getMediator());
+    if (!marshaled) {
+      OzVariable *ov = tagged2Var(oz_deref(loc));
+      Assert(ov->hasMediator());
+      extVar2Var(this)->setMediator(ov->getMediator());
+    }
   }
   virtual ~DistributedVarPatch() { Assert(0); }
 
