@@ -31,28 +31,28 @@ in
    Root = [A B C D E F G H I J K L M
 	   N O P Q R S T U V W X Y Z]
    {GFD.dom 1#26 Root}
-   {GFD.linear [B A L L E T] GFD.rt.'=:' 45 GFD.cl.val}
-   {GFD.linear [C E L L O] GFD.rt.'=:' 43 GFD.cl.val}
-   {GFD.linear [C O N C E R T] GFD.rt.'=:' 74 GFD.cl.val}
-   {GFD.linear [F L U T E] GFD.rt.'=:' 30 GFD.cl.val}
-   {GFD.linear [F U G U E] GFD.rt.'=:' 50 GFD.cl.val}
-   {GFD.linear [G L E E] GFD.rt.'=:' 66 GFD.cl.val}
-   {GFD.linear [J A Z Z] GFD.rt.'=:' 58 GFD.cl.val}
-   {GFD.linear [L Y R E] GFD.rt.'=:' 47 GFD.cl.val}
-   {GFD.linear [O B O E] GFD.rt.'=:' 53 GFD.cl.val}
-   {GFD.linear [O P E R A] GFD.rt.'=:' 65 GFD.cl.val}
-   {GFD.linear [P O L K A] GFD.rt.'=:' 59 GFD.cl.val}
-   {GFD.linear [Q U A R T E T] GFD.rt.'=:' 50 GFD.cl.val}
-   {GFD.linear [S A X O P H O N E] GFD.rt.'=:' 134 GFD.cl.val}
-   {GFD.linear [S C A L E] GFD.rt.'=:' 51 GFD.cl.val}
-   {GFD.linear [S O L O] GFD.rt.'=:' 37 GFD.cl.val}
-   {GFD.linear [S O N G] GFD.rt.'=:' 61 GFD.cl.val}
-   {GFD.linear [S O P R A N O] GFD.rt.'=:' 82 GFD.cl.val}
-   {GFD.linear [T H E M E] GFD.rt.'=:' 72 GFD.cl.val}
-   {GFD.linear [V I O L I N] GFD.rt.'=:' 100 GFD.cl.val}
-   {GFD.linear [W A L T Z] GFD.rt.'=:' 34 GFD.cl.val}
+   {GFD.linearP post([B A L L E T] GFD.rt.'=:' 45 cl:GFD.cl.val)}
+   {GFD.linearP post([C E L L O] GFD.rt.'=:' 43 cl:GFD.cl.val)}
+   {GFD.linearP post([C O N C E R T] GFD.rt.'=:' 74 cl:GFD.cl.val)}
+   {GFD.linearP post([F L U T E] GFD.rt.'=:' 30 cl:GFD.cl.val)}
+   {GFD.linearP post([F U G U E] GFD.rt.'=:' 50 cl:GFD.cl.val)}
+   {GFD.linearP post([G L E E] GFD.rt.'=:' 66 cl:GFD.cl.val)}
+   {GFD.linearP post([J A Z Z] GFD.rt.'=:' 58 cl:GFD.cl.val)}
+   {GFD.linearP post([L Y R E] GFD.rt.'=:' 47 cl:GFD.cl.val)}
+   {GFD.linearP post([O B O E] GFD.rt.'=:' 53 cl:GFD.cl.val)}
+   {GFD.linearP post([O P E R A] GFD.rt.'=:' 65 cl:GFD.cl.val)}
+   {GFD.linearP post([P O L K A] GFD.rt.'=:' 59 cl:GFD.cl.val)}
+   {GFD.linearP post([Q U A R T E T] GFD.rt.'=:' 50 cl:GFD.cl.val)}
+   {GFD.linearP post([S A X O P H O N E] GFD.rt.'=:' 134 cl:GFD.cl.val)}
+   {GFD.linearP post([S C A L E] GFD.rt.'=:' 51 cl:GFD.cl.val)}
+   {GFD.linearP post([S O L O] GFD.rt.'=:' 37 cl:GFD.cl.val)}
+   {GFD.linearP post([S O N G] GFD.rt.'=:' 61 cl:GFD.cl.val)}
+   {GFD.linearP post([S O P R A N O] GFD.rt.'=:' 82 cl:GFD.cl.val)}
+   {GFD.linearP post([T H E M E] GFD.rt.'=:' 72 cl:GFD.cl.val)}
+   {GFD.linearP post([V I O L I N] GFD.rt.'=:' 100 cl:GFD.cl.val)}
+   {GFD.linearP post([W A L T Z] GFD.rt.'=:' 34 cl:GFD.cl.val)}
 
-   {GFD.distinct Root GFD.cl.val}
+   {GFD.distinctP post(Root cl:GFD.cl.val)}
    {GFD.distribute ff Root}
 end
 

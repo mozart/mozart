@@ -49,8 +49,8 @@ proc{Difference X D N}
       DIFF.I = {GFD.int (1-N)-1#(N-1)}
    end
    for I in 1..(N-1) do
-      {GFD.linear2 [1 ~1] [X.(I+1) X.I] GFD.rt.'=:' DIFF.I GFD.cl.bnd}
-      {GFD.abs DIFF.I D.I GFD.cl.bnd}
+      {GFD.linearP post([1 ~1] [X.(I+1) X.I] GFD.rt.'=:' DIFF.I cl:GFD.cl.bnd)}
+      {GFD.abs post(DIFF.I D.I cl:GFD.cl.bnd)}
    end
 end
 
