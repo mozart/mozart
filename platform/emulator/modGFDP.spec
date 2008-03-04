@@ -11,25 +11,25 @@ $boot_module_name      		  = "GFD";
 
 ## Miscellaneous Propagators
     
-    'linear'		 => { in  => ['+value','int', '+value', 'int'],
-			     out => [],
-			     bi  => int_linear},
+#    'linear'		 => { in  => ['+value','int', '+value', 'int'],
+#			     out => [],
+#			     bi  => int_linear},
+#
+ #   'linear2'		 => { in  => ['+value','+value', 'int', '+value', 'int'],
+		#	     out => [],
+		#	     bi  => int_linear2},
 
-    'linear2'		 => { in  => ['+value','+value', 'int', '+value', 'int'],
-			     out => [],
-			     bi  => int_linear2},
+#    'linearR'		 => { in  => ['+value','int','+value','+value','int'],
+#			     out => [],
+#			     bi  => int_linearR},
+#
+#    'linearCR'		 => { in  => ['+value','+value', 'int', '+value', '+value','int'],
+#			     out => [],
+#			     bi  => int_linearCR},
 
-    'linearR'		 => { in  => ['+value','int','+value','+value','int'],
-			     out => [],
-			     bi  => int_linearR},
-
-    'linearCR'		 => { in  => ['+value','+value', 'int', '+value', '+value','int'],
-			     out => [],
-			     bi  => int_linearCR},
-
-    'count'              => { in  => ['+value','int','+value','int','+value'],
-	                     out  => [],
-			     bi   => int_count},
+#    'count'              => { in  => ['+value','int','+value','int','+value'],
+#	                     out  => [],
+#			     bi   => int_count},
 
     'int_Gabs'           => { in  => ['+value','+value','+value'],
 	                      out => [],

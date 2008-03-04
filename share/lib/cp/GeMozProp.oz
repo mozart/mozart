@@ -33,20 +33,19 @@ proc{SumCN Iv Dvv A D}
 end
 
 proc{Sum Dv A D}
-%      {GFDP.linear Dv A D Cl.val}
-   {Linear Dv Rt.A D Cl.val}
+   {LinearP post(Dv Rt.A D cl:Cl.val)}
 end
    
 proc{SumC Iv Dv A D}
-   {Linear2 Iv Dv Rt.A D Cl.val}
+   {LinearP post(Iv Dv Rt.A D cl:Cl.val)}
 end
 
 proc{SumD Dv A D}
-   {Linear Dv Rt.A D Cl.dom}
+   {LinearP post(Dv Rt.A D cl:Cl.dom)}
 end
 
 proc{SumCD Iv Dv A D}
-   {Linear Iv Dv Rt.A D Cl.dom}
+   {LinearP post(Iv Dv Rt.A D cl:Cl.dom)}
 end
 
 
@@ -67,11 +66,11 @@ Reified = reified(sum:_ sumC:_ sumCN:_ int:_)
 
 %%FD.reified.sumC +Iv *Dv +A *D1 D2}
 proc{SumR Dv A D1 D2}
-   {LinearR Dv Rt.A D1 D2 Cl.val}
+   {LinearP post(Dv Rt.A D1 D2 cl:Cl.val)}
 end
 
 proc{SumCR Iv Dv A D1 D2}
-   {LinearCR Iv Dv Rt.A D1 D2 Cl.val}
+   {LinearP post(Iv Dv Rt.A D1 D2 cl:Cl.val)}
 end
 
 Reified.sum = SumR
@@ -80,22 +79,18 @@ Reified.sumC = SumCR
 %%Symbolic propagators
    
 proc{AtLeast D Dv I}
-   {Count Dv D Rt.'=<:' I Cl.val}
+   {CountP post(Dv D Rt.'=<:' I cl:Cl.val)}
 end
    
 proc{AtMost D Dv I}
-   {Count Dv D Rt.'>=:' I Cl.val}
+   {CountP post(Dv D Rt.'>=:' I cl:Cl.val)}
 end
    
 proc{Exactly D Dv I}
-   {Count Dv D Rt.'=:' I Cl.val}
+   {CountP post(Dv D Rt.'=:' I cl:Cl.val)}
 end
 
    
-%proc{DistinctOffset Dv Iv}
-%   {Distinct2 Iv Dv Cl.val}
-%end
-
 %%Miscellaneous propagators
 %Disjoint = Int_disjoint
 DisjointC = _
