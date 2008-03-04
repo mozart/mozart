@@ -5,7 +5,8 @@
 %%%     Alejandro Arbelaez <aarbelaez@puj.edu.co>
 %%%
 %%%  Contributors:
-%%% 	Andres Felipe Barco (anfelbar@univalle.edu.co)
+%%%     Andres Felipe Barco (anfelbar@univalle.edu.co)
+%%%     Gustavo A. Gomez Farhat (gafarhat@univalle.edu.co)
 %%%
 %%% Copyright:
 %%%     Gustavo Gutierrez, 2006
@@ -149,6 +150,8 @@ export
    element: Element
    channel: Channel
    circuit: Circuit
+   sortedP: Sorted
+   extensionalP: Extensional
    cumulatives: Cumulatives
    distinctP: DistinctP
    minP: MinP
@@ -364,6 +367,32 @@ define
 	 {GFDP.gfd_circuit_3 Sc.1 Sc.cl Sc.pk}
       else
 	 raise malformed('Circuit constraint post') end
+      end
+   end
+
+   proc {Sorted S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 4 then
+	 {GFDP.gfd_sorted_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+      [] 5 then
+	 {GFDP.gfd_sorted_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      else
+	 raise malformed('Sorted constraint post') end
+      end
+   end
+
+   proc {Extensional S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 4 then
+	 {GFDP.gfd_extensional_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+      else
+	 raise malformed('Extensional constraint post') end
       end
    end
 

@@ -4,7 +4,8 @@
  *     Juan Gabriel Torres  <juantorres@puj.edu.co>
  *
  *  Contributing authors:
- *  	Andres Felipe Barco (anfelbar@univalle.edu.co) 
+ *     Andres Felipe Barco (anfelbar@univalle.edu.co)
+ *     Gustavo A. Gomez Farhat (gafarhat@univalle.edu.co) 
  *
  *  Copyright:
  *     Diana Lorena Velasco, 2007
@@ -1073,65 +1074,78 @@ OZ_BI_define(cumulatives_7,7,0){
  /**
     Sorted constraints
  */
+
 OZ_BI_define(gfd_sorted_4,4,0){
   DeclareGSpace(home);
-  DECLARE_INTVARARGS(0, __x, home);
-  DECLARE_INTVARARGS(1, __y, home);
+  
+  Assert(OZ_isIntConLevel(OZ_in(2)) && OZ_isPropKind(OZ_in(3)));
+  
   DeclareIntConLevel(2, __ICL_DEF);
   DeclarePropKind(3, __PK_DEF);
-  try{
-    Gecode::sorted(home, __x, __y, __ICL_DEF, __PK_DEF);
+
+  bool posted = false;
+
+  if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1))){
+    /*
+      void Gecode::sorted (Space *home, const IntVarArgs &x, 
+      const IntVarArgs &y, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+      Post propagator that y is x sorted in increasing order. 
+    */
+    
+    DECLARE_INTVARARGS(0, __x, home);
+    DECLARE_INTVARARGS(1, __y, home);
+    
+    try{
+      Gecode::sorted(home, __x, __y, __ICL_DEF, __PK_DEF);
+      posted = true;
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
   }
-  catch(Exception e){
-    RAISE_GE_EXCEPTION(e);
+  else{
+    OZ_typeError(0, "Malformed Propagator");
   }
+  Assert(posted);
   CHECK_POST(home);
 }OZ_BI_end
 
 OZ_BI_define(gfd_sorted_5,5,0){
   DeclareGSpace(home);
-  DECLARE_INTVARARGS(0, __x, home);
-  DECLARE_INTVARARGS(1, __y, home);
-  DECLARE_INTVARARGS(2, __z, home);
+
+  Assert(OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4)));
+
   DeclareIntConLevel(3, __ICL_DEF);
   DeclarePropKind(4, __PK_DEF);
-  try{
-    Gecode::sorted(home, __x, __y, __z, __ICL_DEF, __PK_DEF);
+
+  bool posted = false;
+
+  if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && 
+     OZ_isIntVarArgs(OZ_in(2))){
+    /*
+      void Gecode::sorted (Space *, const IntVarArgs &x, const IntVarArgs &y, 
+      const IntVarArgs &z, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+      Post propagator that y is x sorted in increasing order. 
+    */
+    
+    DECLARE_INTVARARGS(0, __x, home);
+    DECLARE_INTVARARGS(1, __y, home);
+    DECLARE_INTVARARGS(2, __z, home);
+
+    try{
+      Gecode::sorted(home, __x, __y, __z, __ICL_DEF, __PK_DEF);
+      posted = true;
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
   }
-  catch(Exception e){
-    RAISE_GE_EXCEPTION(e);
+  else{
+    OZ_typeError(0, "Malformed Propagator");
   }
+  Assert(posted);
   CHECK_POST(home);
 }OZ_BI_end
-
-OZ_BI_define(gfd_sorted_2,2,0){
-  DeclareGSpace(home);
-  DECLARE_INTVARARGS(0, __x, home);
-  DECLARE_INTVARARGS(1, __y, home);
-  try{
-    Gecode::sorted(home, __x, __y);
-  }
-  catch(Exception e){
-    RAISE_GE_EXCEPTION(e);
-  }
-  CHECK_POST(home);
-}OZ_BI_end
-
-OZ_BI_define(gfd_sorted_3,3,0){
-  DeclareGSpace(home);
-  DECLARE_INTVARARGS(0, __x, home);
-  DECLARE_INTVARARGS(1, __y, home);
-  DECLARE_INTVARARGS(2, __z, home);
-  try{
-    Gecode::sorted(home, __x, __y, __z);
-  }
-  catch(Exception e){
-    RAISE_GE_EXCEPTION(e);
-  }
-  CHECK_POST(home);
-}OZ_BI_end
-
-
 
  /**
     Cardinality constraints
@@ -1408,25 +1422,44 @@ OZ_BI_define(gfd_count_3,3,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-
  /**
     Extensional constraints
  */
 OZ_BI_define(gfd_extensional_4,4,0){
   DeclareGSpace(home);
-  DECLARE_INTVARARGS(0, __x, home);
+
+  Assert(OZ_isIntConLevel(OZ_in(2)) && OZ_isPropKind(OZ_in(3)));
+
   DeclareIntConLevel(2, __ICL_DEF);
   DeclarePropKind(3, __PK_DEF);
-  if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isDFA(OZ_in(1)) && OZ_isIntConLevel(OZ_in(2)) && OZ_isPropKind(OZ_in(3))){
+
+  bool posted = false;
+
+  if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isDFA(OZ_in(1))){
+    /*
+      void Gecode::extensional (Space *home, const IntVarArgs &x, DFA d, 
+      IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+      Post propagator for extensional constraint described by a DFA. 
+    */
+    
+    DECLARE_INTVARARGS(0, __x, home);
     DeclareDFA(1, __d);
+    
     try{
       Gecode::extensional(home, __x, __d, __ICL_DEF, __PK_DEF);
+      posted = true;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isTupleSet(OZ_in(1)) && OZ_isIntConLevel(OZ_in(2)) && OZ_isPropKind(OZ_in(3))){
+  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isTupleSet(OZ_in(1))){
+    /*
+      void Gecode::extensional (Space *home, const IntVarArgs &x, 
+      const TupleSet &t, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+      Post propagator for $x\in T$. 
+    */
+    DECLARE_INTVARARGS(0, __x, home);
     DeclareTupleSet(1, __t);
     try{
       Gecode::extensional(home, __x, __t, __ICL_DEF, __PK_DEF);
@@ -1438,63 +1471,7 @@ OZ_BI_define(gfd_extensional_4,4,0){
   else{
     OZ_typeError(0, "Malformed Propagator");
   }
-  CHECK_POST(home);
-}OZ_BI_end
-
-OZ_BI_define(gfd_extensional_5,5,0){
-  DeclareGSpace(home);
-  DECLARE_INTARGS(0, __c);
-  DECLARE_INTVARARGS(1, __x, home);
-  DeclareTupleSet(2, __t);
-  DeclareIntConLevel(3, __ICL_DEF);
-  DeclarePropKind(4, __PK_DEF);
-  try{
-    Gecode::extensional(home, __x, __t, __ICL_DEF, __PK_DEF);
-  }
-  catch(Exception e){
-    RAISE_GE_EXCEPTION(e);
-  }
-  CHECK_POST(home);
-}OZ_BI_end
-
-OZ_BI_define(gfd_extensional_2,2,0){
-  DeclareGSpace(home);
-  DECLARE_INTVARARGS(0, __x, home);
-  if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isDFA(OZ_in(1))){
-    DeclareDFA(1, __d);
-    try{
-      Gecode::extensional(home, __x, __d);
-    }
-    catch(Exception e){
-      RAISE_GE_EXCEPTION(e);
-    }
-  }
-  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isTupleSet(OZ_in(1))){
-    DeclareTupleSet(1, __t);
-    try{
-      Gecode::extensional(home, __x, __t);
-    }
-    catch(Exception e){
-      RAISE_GE_EXCEPTION(e);
-    }
-  }
-  else{
-    OZ_typeError(0, "Malformed Propagator");
-  }
-  CHECK_POST(home);
-}OZ_BI_end
-
-OZ_BI_define(gfd_extensional_3,3,0){
-  DeclareGSpace(home);
-  DECLARE_INTARGS(0, __c);
-  DECLARE_INTVARARGS(1, __x, home);
-  DeclareTupleSet(2, __t);
-  try{
-    Gecode::extensional(home, __x, __t);
-  }
-  catch(Exception e){
-    RAISE_GE_EXCEPTION(e);
-  }
+  Assert(posted);
   CHECK_POST(home);
 }OZ_BI_end
 
