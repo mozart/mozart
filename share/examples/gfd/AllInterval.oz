@@ -34,14 +34,14 @@ fun{AllInterval N}
 	 {GFD.minus X.(I+1) X.I Tmp1}
 	 {GFD.abs Tmp1 D.I GFD.cl.bnd}
       end
-      {GFD.distinct X GFD.cl.bnd}
-      {GFD.distinct D GFD.cl.bnd}
+      {GFD.distinctP post(X cl:GFD.cl.bnd)}
+      {GFD.distinctP post(D cl:GFD.cl.bnd)}
       
-      {GFD.rel X.1 GFD.rt.'=<:' X.2 GFD.cl.bnd}
-      {GFD.rel D.1 GFD.rt.'>=:' D.2 GFD.cl.bnd}
+      {GFD.relP post(X.1 GFD.rt.'=<:' X.2 cl:GFD.cl.bnd)}
+      {GFD.relP post(D.1 GFD.rt.'>=:' D.2 cl:GFD.cl.bnd)}
       
-      {GFD.distribute naive Root}
+      {GFD.distributeBR naive Root}
    end
 end
-%{Show {AllInterval}}
-{Show {SearchOne {AllInterval 5}}}
+
+{Show {SearchOne {AllInterval 8}}}
