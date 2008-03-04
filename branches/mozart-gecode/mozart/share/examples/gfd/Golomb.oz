@@ -45,7 +45,7 @@ in
 	 end
       end
       {GFD.distinctP post(D cl:GFD.cl.val)}
-      {GFD.distributeBR naive K}
+      {GFD.distribute naive K}
    end
 end
 

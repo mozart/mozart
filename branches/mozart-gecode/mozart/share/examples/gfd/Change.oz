@@ -32,10 +32,10 @@ in
       {GFD.tuple change NbDenoms 0#Amount Change}
       {For 1 NbDenoms 1 proc {$ I}
                            %Change.I =<: Available.I
-			   {GFD.rel Change.I GFD.rt.'=<:' Available.I GFD.cl.val}
+			   {GFD.relP post(Change.I GFD.rt.'=<:' Available.I cl:GFD.cl.val)}
                         end}
       {GFD.sumC Denomination Change '=:' Amount}
-      {GFD.distribute generic(order:naive value:max) Change}
+      {GFD.distributeBR generic(order:naive value:max) Change}
    end
 end
 

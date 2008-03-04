@@ -32,7 +32,7 @@ fun{AllInterval N}
       for I in 1..(N-1) do Tmp1 in
 	 Tmp1 = {GFD.decl}
 	 {GFD.minus X.(I+1) X.I Tmp1}
-	 {GFD.abs Tmp1 D.I GFD.cl.bnd}
+	 {GFD.abs post(Tmp1 D.I cl:GFD.cl.bnd)}
       end
       {GFD.distinctP post(X cl:GFD.cl.bnd)}
       {GFD.distinctP post(D cl:GFD.cl.bnd)}
