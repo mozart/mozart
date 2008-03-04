@@ -124,16 +124,6 @@ $boot_module_name      		  = "GFD";
 	bi => gfd_sorted_5 }
 ,
 
-'gfd_sorted_2' => { in => ['+value', '+value'],
-	out=>[],
-	bi => gfd_sorted_2 }
-,
-
-'gfd_sorted_3' => { in => ['+value', '+value', '+value'],
-	out=>[],
-	bi => gfd_sorted_3 }
-,
-
 'gfd_count_6' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
 	out=>[],
 	bi => gfd_count_6 }
@@ -162,21 +152,6 @@ $boot_module_name      		  = "GFD";
 'gfd_extensional_4' => { in => ['+value', '+value', '+value', '+value'],
 	out=>[],
 	bi => gfd_extensional_4 }
-,
-
-'gfd_extensional_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
-	out=>[],
-	bi => gfd_extensional_5 }
-,
-
-'gfd_extensional_2' => { in => ['+value', '+value'],
-	out=>[],
-	bi => gfd_extensional_2 }
-,
-
-'gfd_extensional_3' => { in => ['+value', '+value', '+value'],
-	out=>[],
-	bi => gfd_extensional_3 }
 ,
 
 'gfd_max_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
