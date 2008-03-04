@@ -33,10 +33,10 @@ fun{MagicSequence N}
       for I in 0..N-1 do
 	 {GFD.count Seq I GFD.rt.'=:' Seq.(I+1) GFD.cl.val}
       end
-      {GFD.linear Seq GFD.rt.'=:' N GFD.cl.val}
-      {GFD.linear2 Cs Seq GFD.rt.'=:' 0 GFD.cl.val}
-      {GFD.distribute ff Seq}
+      {GFD.linearP post(Seq GFD.rt.'=:' N cl:GFD.cl.val)}
+      {GFD.linearP post(Cs Seq GFD.rt.'=:' 0 cl:GFD.cl.val)}
+      {GFD.distributeBR ff Seq}
    end
 end
 
-{Show {SearchOne {MagicSequence 10}}}
+{Show {SearchOne {MagicSequence 15}}}
