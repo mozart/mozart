@@ -52,13 +52,13 @@ end
 proc{SumAC Iv Dv A D SP} Tmp in
    Tmp = {FdDecl}
    {SumC Iv Dv A Tmp}
-   {Abs Tmp D Cl.val}
+   {Abs post(Tmp D cl:Cl.val)}
 end
 
 proc{SumACN Iv Dv A D SP} Tmp in
    Tmp = {FdDecl}
    {SumCN Iv Dv A Tmp}
-   {Abs Tmp D Cl.val}
+   {Abs post(Tmp D cl:Cl.val)}
 end
 
 %%Reified Propagators

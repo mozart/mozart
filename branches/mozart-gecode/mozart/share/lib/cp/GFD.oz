@@ -88,17 +88,6 @@ export
 %%%%% Clasify!!!!%%%%%%%%%%%%%
    
    %% Propagators
-   %eq:                   Eq
-   %rel:                  Rel       
-   %linear:               Linear
-   %linear2:              Linear2
-   %linearR:              LinearR
-   %linearCR:             LinearCR
-   %count:                Count
-   %distinct2:            Distinct2
-   %mult:                 Mult
-   %%bool_and: 	         Bool_and
-   int_Gabs:             Abs       
    int_sortedness:       Int_sortedness
    
    %%Mozart Propagators (backward compatibility))
@@ -143,13 +132,14 @@ export
    atMost:          AtMost
    atLeast:         AtLeast
    exactly:         Exactly
+   %lex:             Lex
    
    %% Assignment propagators
    assign: Assign
 
    int_ext: Int_ext
    %%Propagators
-   Abs
+   %Abs
    sortedness: Int_sortedness
    
    %% Propagators Builtins
@@ -163,6 +153,7 @@ export
    distinctP: DistinctP
    minP: MinP
    maxP: MaxP
+   abs: Abs
    multP: MultP
    linearP: LinearP
    countP: CountP
@@ -189,8 +180,7 @@ export
    
    %% Integer assignment
    ia: IA
-   %% Temporal:
-   'prop' : Prop
+
 define
 
    %% Telling domains
@@ -288,25 +278,8 @@ define
 		      max : WatchMax)
    end
 
-%%% Direct access to the module
-   Prop = GFDP
-%%%
-   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Clasify!!!!%%%%%%%%%%%%%
-   %Eq = GFDP.'eq'
-   %Rel = GFDP.'rel'       
-   %Linear = GFDP.'linear'
-   %Linear2 = GFDP.'linear2'
-   %LinearR = GFDP.'linearR'
-   %LinearCR = GFDP.'linearCR'
-   
-   %Count = GFDP.'count'
-   %Distinct= GFDP.'distinct'
-   %Distinct2 = GFDP.'distinct2'
-   %Mult=   GFDP.'mult'
-   %%Bool_and = GFDP.'bool_and'
-   Abs = GFDP.'int_Gabs'
    Int_sortedness = GFDP.'int_sortedness'
    
    %%Mozart Propagators (backward compatibility))
@@ -321,7 +294,7 @@ define
    Int_ext = GFDP.'int_ext'
    %% Backward compatibility propagators
 
-   %% Propagators Builtins
+   %% Propagators Builtins      
    proc {Dom S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
@@ -446,7 +419,20 @@ define
 	 raise malformed('Mult constraint post') end
       end
    end
+   
+   proc {Abs S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 4 then
+	 {GFDP.gfd_abs_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+      else
+	 raise malformed('Abs constraint post') end
+      end
+   end
 
+      
    /*
    proc {Sqr S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
