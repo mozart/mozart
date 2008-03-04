@@ -165,6 +165,7 @@ export
    maxP: MaxP
    multP: MultP
    linearP: LinearP
+   countP: CountP
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -405,27 +406,6 @@ define
       end
    end
 
-/*
-   Sorted2 = GFDP.'sorted_2'
-   Sorted3 = GFDP.'sorted_3'
-   Sorted4 = GFDP.'sorted_4'
-   Sorted5 = GFDP.'sorted_5'
-   
-   Count2 = GFDP.'count_2'
-   Count3 = GFDP.'count_3'
-   Count4 = GFDP.'count_4'
-   Count5 = GFDP.'count_5'
-   Count6 = GFDP.'count_6'
-   
-   Extensional2 = GFDP.'extensional_2'
-   Extensional3 = GFDP.'extensional_3'
-   Extensional4 = GFDP.'extensional_4'
-   Extensional5 = GFDP.'extensional_5'
-   
-   Abs2 = GFDP.'abs_2'
-   Abs4 = GFDP.'abs_4'
-   */
-
    proc {MinP S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
@@ -522,7 +502,23 @@ define
 	 raise malformed('Distinct constraint post') end
       end
    end
-  
+     
+    proc {CountP S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 4 then
+        {GFDP.gfd_count_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+      [] 5 then
+         {GFDP.gfd_count_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      [] 6 then
+      % Post propagator count_6 support domain-consistency only.
+         {GFDP.gfd_count_6 Sc.1 Sc.2 Sc.3 Sc.4 Cl.dom Sc.pk}
+      else
+   raise malformed('Count constraint post') end
+      end
+   end
    
    \insert GeMozProp.oz
    

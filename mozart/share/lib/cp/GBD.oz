@@ -3,7 +3,7 @@
 %%%     Alberto Delgado <adelgado@cic.puj.edu.co>
 %%%
 %%%  Contributors:
-%%% 	Andres Felipe Barco (anfelbar@univalle.edu.co)
+%%% 	Andres Felipe Barco <anfelbar@univalle.edu.co>
 %%%
 %%% Copyright:
 %%%     Alberto Delgado, 2006
@@ -59,8 +59,16 @@ prepare
 	    '>=:':4    %Greater or equal
 	    '>:':5     %Greater
 	   )
-
+   
+   %% Bool Operator Type
    BOT = '#'('and': 0 'or':1 'imp':2 'eqv':3 'xor':4)
+   
+   %% Propagator kind
+   Pk = '#'(
+     def:   0  %Make a default decision
+     speed: 1  %Prefer speed over memory consumption
+     memory:2  %Prefer little memory over speed
+     )
    
 export
    %% Telling domains
@@ -103,17 +111,10 @@ export
    imp: Imp
    eqv: Eqv
 
-	%% Propagators Builtins
-/*	rel_3: Rel3
-	rel_4: Rel4
-	rel_5: Rel5
-	rel_6: Rel6
-
-	linear_3: Linear3
-	linear_4: Linear4
-	linear_5: Linear5
-	linear_6: Linear6
-	linear_7: Linear7*/
+  %% Propagators Builtins
+  
+  relP:     RelP
+  linearP:  LinearP
 
    %% some aliases
    disj:    Or
@@ -229,17 +230,36 @@ define
    end
 
 
-	%%Propagators Builtins
-	
-/*	Rel3 = GBDP.'rel_3'
-	Rel4 = GBDP.'rel_4'
-	Rel5 = GBDP.'rel_5'
-	Rel6 = GBDP.'rel_6'
-
-	Linear3 = GBDP.'linear_3'
-	Linear4 = GBDP.'linear_4'
-	Linear5 = GBDP.'linear_5'
-	Linear6 = GBDP.'linear_6'
-	Linear7 = GBDP.'linear_7'*/
+  %%Propagators Builtins
+  
+   proc {RelP S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 5 then
+   {GBDP.gbd_rel_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      []  6 then
+   {GBDP.gbd_rel_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
+      else
+   raise malformed('Rel constraint post') end
+      end
+   end
+  
+   proc {LinearP S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 5 then
+   {GBDP.gbd_linearl_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      []  6 then
+   {GBDP.gbd_linear_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
+      [] 7 then
+   {GBDP.gbd_linear_7 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl Sc.pk}
+      else
+   raise malformed('Linear constraint post') end
+      end
+   end
    
 end
