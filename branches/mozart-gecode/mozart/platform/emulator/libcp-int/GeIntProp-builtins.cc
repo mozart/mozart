@@ -106,8 +106,7 @@ OZ_BI_define(int_dist,2,0)
 
   */
 
-// //Propagador lineal simple
-// //La suma de los elementos del arreglo(x1) debe ser igual a (x3 int o IntVar)
+  /*
  OZ_BI_define(int_linear,4,0)
  {
    DeclareGSpace(sp);
@@ -131,8 +130,9 @@ OZ_BI_define(int_dist,2,0)
    } 
    CHECK_POST(sp);       
  } OZ_BI_end
- 
-// //Propagador un poco linear un poco mas complicado
+  */
+
+  /*
  OZ_BI_define(int_linear2,5,0)
  {
    DeclareGSpace(sp);
@@ -157,7 +157,8 @@ OZ_BI_define(int_dist,2,0)
    }
    CHECK_POST(sp);
  } OZ_BI_end
- 
+  */
+  /*
 OZ_BI_define(int_linearR,5,0)
 {
   DeclareGSpace(sp);
@@ -178,8 +179,8 @@ OZ_BI_define(int_linearR,5,0)
   CHECK_POST(sp);
     
 } OZ_BI_end
-
-
+  */
+  /*
 OZ_BI_define(int_linearCR,6,0)
 {
 
@@ -203,7 +204,7 @@ OZ_BI_define(int_linearCR,6,0)
 
 } OZ_BI_end
 
-
+  */
 OZ_BI_define(int_count,5,0)
 {
   DeclareGSpace(sp);

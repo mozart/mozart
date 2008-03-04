@@ -90,11 +90,11 @@ export
    %% Propagators
    %eq:                   Eq
    %rel:                  Rel       
-   linear:               Linear
-   linear2:              Linear2
-   linearR:              LinearR
-   linearCR:             LinearCR
-   count:                Count
+   %linear:               Linear
+   %linear2:              Linear2
+   %linearR:              LinearR
+   %linearCR:             LinearCR
+   %count:                Count
    %distinct2:            Distinct2
    %mult:                 Mult
    %%bool_and: 	         Bool_and
@@ -296,12 +296,12 @@ define
 %%%%% Clasify!!!!%%%%%%%%%%%%%
    %Eq = GFDP.'eq'
    %Rel = GFDP.'rel'       
-   Linear = GFDP.'linear'
-   Linear2 = GFDP.'linear2'
-   LinearR = GFDP.'linearR'
-   LinearCR = GFDP.'linearCR'
+   %Linear = GFDP.'linear'
+   %Linear2 = GFDP.'linear2'
+   %LinearR = GFDP.'linearR'
+   %LinearCR = GFDP.'linearCR'
    
-   Count = GFDP.'count'
+   %Count = GFDP.'count'
    %Distinct= GFDP.'distinct'
    %Distinct2 = GFDP.'distinct2'
    %Mult=   GFDP.'mult'
