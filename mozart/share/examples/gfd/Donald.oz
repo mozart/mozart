@@ -33,14 +33,16 @@ in
 	       100000 10000 1000 100 10 1
 	       ~100000 ~10000 ~1000 ~100 ~10 ~1]
    {GFD.dom 0#9 Root}
-   {GFD.rel D GFD.rt.'\\=:' O GFD.cl.val}
-   {GFD.rel G GFD.rt.'\\=:' 0 GFD.cl.val}
-   {GFD.rel R GFD.rt.'\\=:' 0 GFD.cl.val}
-   {GFD.linear2 RootArgs
-    [D O N A L D G E R A L D R O B E R T]
-    GFD.rt.'=:' 0 GFD.cl.val}
-   {GFD.distinct Root GFD.cl.val}
-   {GFD.distribute ff Root}
+   {GFD.relP post(D GFD.rt.'\\=:' O cl:GFD.cl.val)}
+   {GFD.relP post(G GFD.rt.'\\=:' 0 cl:GFD.cl.val)}
+   {GFD.relP post(R GFD.rt.'\\=:' 0 cl:GFD.cl.val)}
+   {GFD.linearP post(RootArgs
+		     [D O N A L D
+		      G E R A L D
+		      R O B E R T]
+		     GFD.rt.'=:' 0 cl:GFD.cl.val)}
+   {GFD.distinctP post(Root cl:GFD.cl.val)}
+   {GFD.distributeBR naive Root}
 end
 
 {Show {SearchOne Donald}}

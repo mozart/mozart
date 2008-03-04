@@ -55,11 +55,11 @@ proc{Difference X D N}
 end
 
 proc{Break_negation X}
-   {GFD.rel X.1 GFD.rt.'=<:' X.2 GFD.cl.bnd}
+   {GFD.relP post(X.1 GFD.rt.'=<:' X.2 cl:GFD.cl.bnd)}
 end
 
 proc{Break_reversal D N}
-   {GFD.rel D.1 GFD.rt.'=<:' D.(N-1) GFD.cl.bnd}
+   {GFD.relP post(D.1 GFD.rt.'=<:' D.(N-1) cl:GFD.cl.bnd)}
 end
 
 fun{AllInterval N}
@@ -82,8 +82,8 @@ fun{AllInterval N}
       {Adiff_sn X N}
       {Adiff_sn_star D N}
       
-      {GFD.distribute ff X}
+      {GFD.distributeBR ff X}
    end
 end
 
-{Show {SearchOne {AllInterval 7}}}
+{Show {SearchOne {AllInterval 15}}}

@@ -45,7 +45,7 @@ in
    A =: 79*{GFD.decl}  % 79 is prime factor of S=711
    B =<: C
    C =<: D 
-   {GFD.distribute ff Root}
+   {GFD.distributeBR ff Root}
 end
 
 %{ExploreOne Grocery}
