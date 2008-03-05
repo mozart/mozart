@@ -224,7 +224,7 @@ OZ_BI_define(gfs_dom_5,5,0){
 /**
     Relation constraints
 */
- /*
+ 
 OZ_BI_define(gfs_rel_3,3,0){
   DeclareGSpace(home);
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && OZ_isGeSetVar(OZ_in(2))){
@@ -309,8 +309,7 @@ OZ_BI_define(gfs_rel_3,3,0){
   }
   CHECK_POST(home);
 }OZ_BI_end
- */
- /*
+
 OZ_BI_define(gfs_rel_4,4,0){
   DeclareGSpace(home);
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && OZ_isGeSetVar(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3))){
@@ -378,7 +377,7 @@ OZ_BI_define(gfs_rel_4,4,0){
   }
   CHECK_POST(home);
 }OZ_BI_end
-
+ 
 OZ_BI_define(gfs_rel_5,5,0){
   DeclareGSpace(home);
   DeclareSetOpType(1, __op);
@@ -454,7 +453,7 @@ OZ_BI_define(gfs_rel_5,5,0){
   }
   CHECK_POST(home);
 }OZ_BI_end
- */
+ 
 /**
     Convexity constraints
 */
