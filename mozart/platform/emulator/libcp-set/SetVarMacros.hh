@@ -260,6 +260,19 @@
     OZ_TOC(arg,int,__vv,OZ_isInt,OZ_intToC,"Expected relation type") ;	\
     var = (SetRelType)__vv;						\
   }
+
+// be careful copy and paste from intvarmacros
+/**
+ * \brief Declares a Gecode::IntRelType
+ * @param arg An integer defining the IntRelType
+ * @param var the variable name of the IntRelType
+ */
+#define DeclareIntRelType(arg,var)					\
+  IntRelType var;							\
+  {									\
+    OZ_TOC(arg,int,__vv,OZ_isInt,OZ_intToC,"Expected relation type") ;	\
+    var = (IntRelType)__vv;						\
+  }
 	
 /**
  * \brief Macros for variable declaration inside propagators posting built-ins. 
