@@ -959,11 +959,6 @@ void OzVariable::_cacVarRecurse(void) {
   if (hasMediator()) (*gCollectMediator)(getMediator());
   
   switch (getType()) {
-  case OZ_VAR_SIMPLE_QUIET:
-  case OZ_VAR_SIMPLE:
-  case OZ_VAR_READONLY_QUIET:
-  case OZ_VAR_READONLY:
-    break;
   case OZ_VAR_FAILED:  
     ((Failed *)      this)->_cacRecurse(); 
     break;
@@ -977,7 +972,8 @@ void OzVariable::_cacVarRecurse(void) {
     var2ExtVar(this)->_cacRecurseV(); 
     break;
   default: 
-    Assert(0);
+    // only the mediator had to be marked
+    break;
   }
 }
 

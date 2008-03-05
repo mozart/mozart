@@ -863,13 +863,39 @@ OzThreadMediator::installEntityRepresentation(PstInContainerInterface*){
 
 /************************* OzVariableMediator *************************/
 
+// The distribution of variables that are neither free nor read-only
+// is a bit tricky.  We do not provide full distribution of their
+// operations (domain ask and tell), because those operations are
+// assumed to be immediate in the emulator.  Those variables are
+// globalized with the tag GLUE_READONLY, which means that remote
+// references are read-only (but reference integrity is kept intact).
+// Remote sites only see the variable binding once it is determined.
+//
+// What makes the distribution tricky is that it is almost impossible
+// to "catch" the binding of some variables, like variables that are
+// bound by constraint propagation.  Our solution is the following:
+// the distributed binding is not handled by the variable itself, but
+// by a read-only view instead.  The read-only has the same mediator
+// as the variable.  The binding of the variable has not effect on its
+// mediator.  Once the variable is determined, eventually the read-
+// only view is bound.  The latter automatically calls its (the
+// variable's) mediator, which distributes the binding.  This binds
+// all the remote read-onlys corresponding to the variable.
+
 OzVariableMediator::OzVariableMediator(GlueTag t) : Mediator(t) {}
 
 // assumption: e is a tagged REF to a tagged VAR.
 OzVariableMediator::OzVariableMediator(TaggedRef e) :
   Mediator(oz_isFree(*tagged2Ref(e)) ? GLUE_VARIABLE : GLUE_READONLY) {
+  TaggedRef v = *tagged2Ref(e);
   setEntity(e);
   attach();
+  if (!oz_isFree(v) && !oz_isReadOnly(v)) {
+    // the variable is neither free nor read-only; see comment above
+    TaggedRef r = oz_readOnlyView(e);
+    OzVariable* rv = tagged2Var(*tagged2Ref(r));
+    rv->setMediator(this);
+  }
 }
 
 void OzVariableMediator::attach() {
@@ -903,9 +929,15 @@ void OzVariableMediator::bind(TaggedRef arg) {
   arg = oz_safeDeref(arg);
   makePassive();               // mediator no longer active
 
-  TaggedRef*  ref = tagged2Ref(getEntity());
-  OzVariable* var = tagged2Var(*ref);
-  oz_bindLocalVar(var, ref, arg);
+  TaggedRef* ref = tagged2Ref(getEntity());
+  if (oz_isVar(*ref)) {
+    OzVariable* var = tagged2Var(*ref);
+    oz_bindLocalVar(var, ref, arg);
+  } else {
+    // the variable is already bound; this is the case for variables
+    // that are neither free nor read-only (see comment above)
+    Assert(oz_eqeq(*ref, arg));
+  }
 
   if (faultStream) {
     if (oz_isVarOrRef(arg)) {

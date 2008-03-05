@@ -343,50 +343,64 @@ Bool DPMARSHALERCLASS::processVar(OZ_Term v, OZ_Term *vRef)
 {
   // v == *vRef && oz_isVar(v)
   OZ_Term term = makeTaggedRef(vRef);
+  ByteBuffer *bs = (ByteBuffer *) getOpaque();
 
-  if (oz_isExtVar(v) &&
-      oz_getExtVar(v)->getIdV() == OZ_EVAR_DISTRIBUTEDVARPATCH) {
-    // a patch, marshal it
-    return processGlue(term);
-
-  } else if (oz_isFree(v) || oz_isReadOnly(v)) {
-    // marshal it
-    processGlue(term);
-    // patch it
-    expVars = new DistributedVarPatch(term, expVars, true);
-    return (OK);
-
-  } else if (oz_isFailed(v)) {
-    // specific marshaling for failed values
-    ByteBuffer *bs = (ByteBuffer *) getOpaque();
-
+  if (oz_isFailed(v)) {
+    // marshaling a failed value: do not use the Glue
     if (bs->availableSpace() >= 2*DIFMaxSize + MNumberMaxSize) {
       int index;
+#if defined(DBG_TRACE)
+      {
+	DBGINIT();
+	fprintf(dbgout, "> tag: %s(%d) = %s\n",
+		dif_names[DIF_FAILEDVALUE].name, DIF_FAILEDVALUE, toC(term));
+	fflush(dbgout);
+      }
+#endif
       VISITNODE(term, vIT, bs, index, return(OK));
       // marshal tag
       marshalDIFindex(bs, DIF_FAILEDVALUE, DIF_FAILEDVALUE_DEF, index);
       //
       Assert(bs->availableSpace() >= DIFMaxSize);
       return (NO);     // recurse through the exception
-
-    } else {
-#if defined(DBG_TRACE)
-      DBGINIT();
-      fprintf(dbgout, "> tag: %s(%d) on %s\n",
-	      dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(v));
-      fflush(dbgout);
-#endif
-      marshalDIFcounted(bs, DIF_SUSPEND);
-      suspend(term);
-      return (OK);
     }
 
   } else {
-    // error: this variable cannot be marshaled!
-    OZ_error("cannot marshal variable!\n");
-    return (OK);
+    // marshaling a true variable: see processGlue()
+    if (bs->availableSpace() >=
+	2*DIFMaxSize + MNumberMaxSize + glue_getMarshaledSize(term)) {
+      int index;
+#if defined(DBG_TRACE)
+      {
+	DBGINIT();
+	fprintf(dbgout, "> tag: %s(%d) = %s\n",
+		dif_names[DIF_GLUE].name, DIF_GLUE, toC(term));
+	fflush(dbgout);
+      }
+#endif
+      VISITNODE(term, vIT, bs, index, return(OK));
+      // marshal it
+      marshalDIFindex(bs, DIF_GLUE, DIF_GLUE_DEF, index);
+      (void) glue_marshalEntity(term, bs);
+      // patch it, unless it is already a patch
+      if (!oz_isDistributedVarPatch(v))
+	expVars = new DistributedVarPatch(term, expVars, true);
+      //
+      Assert(bs->availableSpace() >= DIFMaxSize);
+      return (OK);
+    }
   }
-  Assert(0);
+
+  // buffer too small: suspend
+#if defined(DBG_TRACE)
+  DBGINIT();
+  fprintf(dbgout, "> tag: %s(%d) on %s\n",
+	  dif_names[DIF_SUSPEND].name, DIF_SUSPEND, toC(term));
+  fflush(dbgout);
+#endif
+  marshalDIFcounted(bs, DIF_SUSPEND);
+  suspend(term);
+  return (OK);
 }
 
 //
