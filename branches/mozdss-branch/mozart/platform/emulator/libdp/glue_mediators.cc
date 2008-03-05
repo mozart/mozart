@@ -936,7 +936,7 @@ void OzVariableMediator::bind(TaggedRef arg) {
   } else {
     // the variable is already bound; this is the case for variables
     // that are neither free nor read-only (see comment above)
-    Assert(oz_eqeq(*ref, arg));
+    Assert(oz_eq(oz_safeDeref(*ref), oz_safeDeref(arg)));
   }
 
   if (faultStream) {
