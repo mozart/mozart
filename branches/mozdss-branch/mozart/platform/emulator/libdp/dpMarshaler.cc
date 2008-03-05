@@ -505,7 +505,8 @@ inline
 Bool VSnapshotBuilder::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
 {
   VisitNodeTrav(chunkTerm, vIT, return(TRUE));
-  return (NO);
+  // return false if the chunk is marshaled immediately
+  return !(isImmediate() || glue_isImmediate(chunkTerm));
 }
 
 //
@@ -538,7 +539,9 @@ VSnapshotBuilder::processClass(OZ_Term classTerm, ConstTerm *classConst)
 { 
   VisitNodeTrav(classTerm, vIT, return(TRUE));
   //
-  return (((OzClass *) classConst)->isSited());
+  if (((OzClass *) classConst)->isSited()) return (OK);
+  // return false if the class is marshaled immediately
+  return !(isImmediate() || glue_isImmediate(classTerm));
 }
 
 //
@@ -546,6 +549,9 @@ inline Bool
 VSnapshotBuilder::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
 {
   VisitNodeTrav(absTerm, vIT, return(TRUE));
+
+  // return OK if handled by the Glue
+  if (!(isImmediate() || glue_isImmediate(absTerm))) return (OK);
 
   //
   Abstraction *pp = (Abstraction *) absConst;
