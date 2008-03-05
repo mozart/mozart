@@ -44,8 +44,8 @@ using namespace Gecode::Set;
  */
 OZ_BI_define(new_bounds,2,1)
 {
-  DECLARE_INT_SET(dom,val,0);   // the glb of the SetVar
-  DECLARE_INT_SET(dom2,val1,1);   // the lub of the SetVar
+  DECLARE_INT_SET(0,dom);   // the glb of the SetVar
+  DECLARE_INT_SET(1,dom2);   // the lub of the SetVar
   OZ_RETURN(new_GeSetVar(dom,dom2));
 }
 OZ_BI_end
