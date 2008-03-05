@@ -474,52 +474,17 @@ Bool VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
   Assert(oz_isVar(v));
   OZ_Term vrt = makeTaggedRef(vRef);
 
-  // Note: a variable is identified by its *location*;
+  // Note: a variable is identified by its *location*.  Note that
+  // patched variables, by construction, have already been visited, so
+  // they return immediately here.
   VisitNodeTrav(vrt, vIT, return(OK));
 
-  // Now, construct a VAR patch for this variable (export it if needed);
-  if (oz_isExtVar(v)) {
-    ExtVarType evt = oz_getExtVar(v)->getIdV();
-    switch (evt) {
-    case OZ_EVAR_MANAGER:
-      OZ_error("Snaphshoting non existing var: OZ_EVAR_MANAGER");
-      break;
+  // failed values are not handled as variables here, just go through it
+  if (oz_isFailed(v)) return NO;
 
-    case OZ_EVAR_PROXY:
-      // those no longer exist
-      OZ_error("Snaphshoting non existing var: OZ_EVAR_PROXY");
-      break;
-
-    case OZ_EVAR_LAZY:
-      // First, lazy variables are transparent for the programmer.
-      // Secondly, the earlier an object gets over the network the
-      // better for failure handling (aka "no failure - simple
-      // failure handling!"). Altogether, delayed exportation is a
-      // good thing here, so we ignore these vars;
-      break;
-
-    default:
-      Assert(0);
-      break;
-    }
-  } else if (oz_isFree(v) || oz_isReadOnly(v)) {
-    // globalize the variable if needed, and patch it
-    glue_globalizeEntity(vrt);
-    expVars = new DistributedVarPatch(vrt, expVars, false);
-
-  } else if (oz_isFailed(v)) {
-    // that's a value, just go through it
-    return NO;
-
-  } else {
-    // Actualy, we should copy all these types of variables
-    // (constraint stuff), and then marshal them as "nogood"s.  So,
-    // just ignoring them is a limitation: the system behaves
-    // differently when such variables are bound between logical
-    // sending of a message and their marshaling.
-    Assert(0);
-  }
-
+  // globalize the variable if needed, and patch it
+  glue_globalizeEntity(vrt);
+  expVars = new DistributedVarPatch(vrt, expVars, false);
   return OK;
 }
 
