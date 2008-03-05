@@ -43,67 +43,123 @@ $boot_module_name      		  = "GFS";
     out=>[],
     bi => set_subS},
 
+# 'gfs_projector_4' => { in => ['+value', '+value', '+value', '+value'],
+#   out=>[],
+#   bi => gfs_projector_4 }
+# ,
+
+# 'gfs_projector_3' => { in => ['+value', '+value', '+value'],
+#   out=>[],
+#   bi => gfs_projector_3 }
+# ,
+
+# 'gfs_projector_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+#   out=>[],
+#   bi => gfs_projector_5 }
+# ,
+
 'gfs_dom_3' => { in => ['+value', '+value', '+value'],
-	out=>[],
-	bi => gfs_dom_3 }
+  out=>[],
+  bi => gfs_dom_3 }
 ,
 
 'gfs_dom_4' => { in => ['+value', '+value', '+value', '+value'],
-	out=>[],
-	bi => gfs_dom_4 }
+  out=>[],
+  bi => gfs_dom_4 }
 ,
 
 'gfs_dom_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
-	out=>[],
-	bi => gfs_dom_5 }
+  out=>[],
+  bi => gfs_dom_5 }
 ,
 
-'gfs_rel_3' => { in => ['+value', '+value', '+value'],
-	out=>[],
-	bi => gfs_rel_3 }
-,
+# 'gfs_rel_3' => { in => ['+value', '+value', '+value'],
+#   out=>[],
+#   bi => gfs_rel_3 }
+# ,
 
-'gfs_rel_4' => { in => ['+value', '+value', '+value', '+value'],
-	out=>[],
-	bi => gfs_rel_4 }
-,
+# 'gfs_rel_4' => { in => ['+value', '+value', '+value', '+value'],
+#   out=>[],
+#   bi => gfs_rel_4 }
+# ,
 
-'gfs_rel_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
-	out=>[],
-	bi => gfs_rel_5 }
-,
+# 'gfs_rel_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+#   out=>[],
+#   bi => gfs_rel_5 }
+# ,
 
-'gfs_sequence_1' => { in => ['+value'],
-	out=>[],
-	bi => gfs_sequence_1 }
-,
+# 'gfs_convex_1' => { in => ['+value'],
+#   out=>[],
+#   bi => gfs_convex_1 }
+# ,
 
-'gfs_min_2' => { in => ['+value', '+value'],
-	out=>[],
-	bi => gfs_min_2 }
-,
+# 'gfs_convexHull_2' => { in => ['+value', '+value'],
+#   out=>[],
+#   bi => gfs_convexHull_2 }
+# ,
 
-'gfs_match_2' => { in => ['+value', '+value'],
-	out=>[],
-	bi => gfs_match_2 }
-,
+# 'gfs_sequence_1' => { in => ['+value'],
+#   out=>[],
+#   bi => gfs_sequence_1 }
+# ,
 
-'gfs_channel_2' => { in => ['+value', '+value'],
-	out=>[],
-	bi => gfs_channel_2 }
-,
+# 'gfs_sequentialUnion_2' => { in => ['+value', '+value'],
+#   out=>[],
+#   bi => gfs_sequentialUnion_2 }
+# ,
 
-'gfs_selectUnion_3' => { in => ['+value', '+value', '+value'],
-	out=>[],
-	bi => gfs_selectUnion_3 }
-,
+# 'gfs_min_2' => { in => ['+value', '+value'],
+#   out=>[],
+#   bi => gfs_min_2 }
+# ,
 
-'gfs_selectDisjoint_2' => { in => ['+value', '+value'],
-	out=>[],
-	bi => gfs_selectDisjoint_2 }
-,
+# 'gfs_match_2' => { in => ['+value', '+value'],
+#   out=>[],
+#   bi => gfs_match_2 }
+# ,
 
-'gfs_selectSet_3' => { in => ['+value', '+value', '+value'],
-	out=>[],
-	bi => gfs_selectSet_3 }
+# 'gfs_channel_2' => { in => ['+value', '+value'],
+#   out=>[],
+#   bi => gfs_channel_2 }
+# ,
+
+# 'gfs_cardinality_2' => { in => ['+value', '+value'],
+#   out=>[],
+#   bi => gfs_cardinality_2 }
+# ,
+
+# 'gfs_max_2' => { in => ['+value', '+value'],
+#   out=>[],
+#   bi => gfs_max_2 }
+# ,
+
+# 'gfs_weights_4' => { in => ['+value', '+value', '+value', '+value'],
+#   out=>[],
+#   bi => gfs_weights_4 }
+# ,  
+
+# 'sgfs_electUnion_3' => { in => ['+value', '+value', '+value'],
+#   out=>[],
+#   bi => gfs_selectUnion_3 }
+# ,
+
+# 'gfs_selectInterIn_4' => { in => ['+value', '+value', '+value', '+value'],
+#   out=>[],
+#   bi => gfs_selectInterIn_4 }
+# ,
+
+# 'gfs_selectSet_3' => { in => ['+value', '+value', '+value'],
+#   out=>[],
+#   bi => gfs_selectSet_3 }
+# ,
+
+# 'gfs_selectInter_3' => { in => ['+value', '+value', '+value'],
+#   out=>[],
+#   bi => gfs_selectInter_3 }
+# ,
+
+# 'gfs_selectDisjoint_2' => { in => ['+value', '+value'],
+#   out=>[],
+#   bi => gfs_selectDisjoint_2 }
+  
 );
