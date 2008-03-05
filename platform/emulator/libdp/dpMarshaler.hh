@@ -569,6 +569,7 @@ public:
 
   //
   OzValuePatch *takeExpVars () { return (expVars); }
+  bool isImmediate() const { return immediate; }
 
   //
   void processSmallInt(OZ_Term siTerm);
