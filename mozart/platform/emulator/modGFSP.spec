@@ -73,9 +73,9 @@ $boot_module_name      		  = "GFS";
   bi => gfs_dom_5 }
 ,
 
-# 'gfs_rel_3' => { in => ['+value', '+value', '+value'],
-#   out=>[],
-#   bi => gfs_rel_3 }
+#  'gfs_rel_3' => { in => ['+value', '+value', '+value'],
+#    out=>[],
+#    bi => gfs_rel_3 }
 # ,
 
 # 'gfs_rel_4' => { in => ['+value', '+value', '+value', '+value'],
@@ -123,10 +123,10 @@ $boot_module_name      		  = "GFS";
 #   bi => gfs_channel_2 }
 # ,
 
-# 'gfs_cardinality_2' => { in => ['+value', '+value'],
-#   out=>[],
-#   bi => gfs_cardinality_2 }
-# ,
+ 'gfs_cardinality_2' => { in => ['+value', '+value'],
+   out=>[],
+   bi => gfs_cardinality_2 }
+ ,
 
 # 'gfs_max_2' => { in => ['+value', '+value'],
 #   out=>[],
