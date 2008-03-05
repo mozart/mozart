@@ -42,12 +42,12 @@ import
 
 prepare
    %%This record must reflect the SetRelType in gecode/set.hh
-   Rt = '#'('=:':0     %Equality
-	    '\\=:':1    %Disequality
+   Rt = '#'('=:':0    %Equality
+	    '\\=:':1  %Disequality
 	    '<:':2    %SubSet
 	    '>:':3    %SuperSet
-	    '||:':4     %Disjoint
-	    '^:':5			%complement
+	    '||:':4   %Disjoint
+	    '^:':5    %complement
 	   )
 
 export
@@ -107,8 +107,8 @@ define
    Partition
 
    %% Gecode ropagators
-   Cardinality= GFSP.cardinality
-
+   Cardinality= GFSP.gfs_cardinality_2
+   Rel
 in
    local
       fun {Decl}
@@ -231,26 +231,26 @@ in
 		upperBound : Upper
 		lowerBound : Lower
 		list: '#'(decl : FsListDecl
-			   bounds : FsListBounds
-			   upperBound : FsListUpperBound
-			   lowerBound : FsListLowerBound
-			  )
+			  bounds : FsListBounds
+			  upperBound : FsListUpperBound
+			  lowerBound : FsListLowerBound
+			 )
 		tuple: '#'(decl: FsTupleDecl
-			     bounds : FsTupleBounds
-			     upperBound : FsTupleUpperBound
-			     lowerBound : FsTupleLowerBound
-			    )
+			   bounds : FsTupleBounds
+			   upperBound : FsTupleUpperBound
+			   lowerBound : FsTupleLowerBound
+			  )
 		record: '#'(decl: FsRecordDecl
-			       bounds : FsRecordBounds
-			       upperBound : FsRecordUpperBound
-			       lowerBound : FsRecordLowerBound
-			      )		
+			    bounds : FsRecordBounds
+			    upperBound : FsRecordUpperBound
+			    lowerBound : FsRecordLowerBound
+			   )		
 	       )
 
       proc {DisjointN Mv}
 	 for I in 1..{List.lenght Mv} do
 	    for J in I.. {List.lenght Mv} do
-	    {GFSP.disjoint {List.nth Mv I} {List.nth Mv I}}
+	       {GFSP.disjoint {List.nth Mv I} {List.nth Mv I}}
 	    end
 	 end
       end
@@ -258,7 +258,7 @@ in
       proc {DistinctN Mv}
 	 for I in 1..{List.lenght Mv} do
 	    for J in I.. {List.lenght Mv} do
-	    {GFSP.distinct {List.nth Mv I} {List.nth Mv I}}
+	       {GFSP.distinct {List.nth Mv I} {List.nth Mv I}}
 	    end
 	 end
       end
@@ -273,19 +273,23 @@ in
 	 {GFB.isIn Var Val Bool}
 	 Var
       end      
-      
+
+      proc{Rel Sc}
+	 W = {Record.width Sc}
+      in
+	 case W
+	 of 3 then
+	    {GFSP.gfs_rel_3 Sc.1 Sc.2 Sc.3}
+	 []  4 then
+	    {GFSP.gfs_rel_4 Sc.1 Sc.2 Sc.3 Sc.4}
+	 []  5 then
+	    {GFSP.gfs_rel_5 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5}
+	 else
+	    raise malformed('Rel constraint post') end
+	 end
+      end
+
    end   
 
-      /*
-   proc{Rel Sc}
-       W = {Record.width Sc}
-   in
-      case W
-      of 3 then
-	 {GFSP.gfs_rel_3 Sc.1 Sc.2 Sc.3}
-      else
-	 raise malformed('Rel constraint post') end
-      end
-   end
-   */
+     
 end
