@@ -309,7 +309,8 @@ OZ_BI_define(gfs_rel_3,3,0){
   }
   CHECK_POST(home);
 }OZ_BI_end
-
+ */
+ /*
 OZ_BI_define(gfs_rel_4,4,0){
   DeclareGSpace(home);
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && OZ_isGeSetVar(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3))){
@@ -568,18 +569,18 @@ OZ_BI_define(gfs_rel_5,5,0){
 //   CHECK_POST(home);
 // }OZ_BI_end
 
-// OZ_BI_define(gfs_cardinality_2,2,0){
-//   DeclareGSpace(home);
-//   DeclareGeSetVar(0, __s, home);
-//   DeclareGeIntVar(1, __x, home);
-//   try{
-//     Gecode::cardinality(home, __s, __x);
-//   }
-//   catch(Exception e){
-//     RAISE_GE_EXCEPTION(e);
-//   }
-//   CHECK_POST(home);
-// }OZ_BI_end
+OZ_BI_define(gfs_cardinality_2,2,0){
+  DeclareGSpace(home);
+  DeclareGeSetVar(0, __s, home);
+  DeclareGeIntVar(1, __x, home);
+  try{
+    Gecode::cardinality(home, __s, __x);
+  }
+  catch(Exception e){
+    RAISE_GE_EXCEPTION(e);
+  }
+  CHECK_POST(home);
+}OZ_BI_end
 
 // OZ_BI_define(gfs_max_2,2,0){
 //   DeclareGSpace(home);
