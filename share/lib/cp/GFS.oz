@@ -75,7 +75,10 @@ export
    distinctN  : DistinctN
    partition  : Partition
    
-
+   %Gecode propagators
+   cardinality: Cardinality
+   rel: Rel
+   
 define
    %FsDecl = GFS.set
    IsVar = GFSB.isVar
@@ -89,6 +92,7 @@ define
    CardVal = GFSB.cardVal
    CardInt = GFSB.cardInt
    IsIn
+   
    %% Propagators
    Diff = GFSP.diff
    Inter = GFSP.intersect
@@ -101,7 +105,9 @@ define
    DisjointN
    DistinctN
    Partition
-   
+
+   %% Gecode ropagators
+   Cardinality= GFSP.cardinality
 
 in
    local
@@ -224,21 +230,21 @@ in
 		bounds : GFSB.bounds
 		upperBound : Upper
 		lowerBound : Lower
-		list(decl : FsListDecl
-		     bounds : FsListBounds
-		     upperBound : FsListUpperBound
-		     lowerBound : FsListLowerBound
-		    )
-		tuple(decl: FsTupleDecl
-		      bounds : FsTupleBounds
-		      upperBound : FsTupleUpperBound
-		      lowerBound : FsTupleLowerBound
-		     )
-		record(decl: FsRecordDecl
-		      bounds : FsRecordBounds
-		      upperBound : FsRecordUpperBound
-		      lowerBound : FsRecordLowerBound
-		      )		
+		list: '#'(decl : FsListDecl
+			   bounds : FsListBounds
+			   upperBound : FsListUpperBound
+			   lowerBound : FsListLowerBound
+			  )
+		tuple: '#'(decl: FsTupleDecl
+			     bounds : FsTupleBounds
+			     upperBound : FsTupleUpperBound
+			     lowerBound : FsTupleLowerBound
+			    )
+		record: '#'(decl: FsRecordDecl
+			       bounds : FsRecordBounds
+			       upperBound : FsRecordUpperBound
+			       lowerBound : FsRecordLowerBound
+			      )		
 	       )
 
       proc {DisjointN Mv}
@@ -269,5 +275,17 @@ in
       end      
       
    end   
-   
+
+      /*
+   proc{Rel Sc}
+       W = {Record.width Sc}
+   in
+      case W
+      of 3 then
+	 {GFSP.gfs_rel_3 Sc.1 Sc.2 Sc.3}
+      else
+	 raise malformed('Rel constraint post') end
+      end
+   end
+   */
 end
