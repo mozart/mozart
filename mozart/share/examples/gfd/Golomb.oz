@@ -34,18 +34,18 @@ in
       end
    in
       S = s(k:K dm:{DIJ 1 N})
-      K.1 = 0
-      K.2 = {GFD.int 0#NN}
+      K.1 =: 0
+      K.2 =: {GFD.int 0#NN}
       for I in 1..N-1 do
-	 %K.(I+1) >: K.I
+	 %% K.(I+1) >: K.I
 	 {GFD.relP post(K.(I+1) GFD.rt.'>:' K.I cl:GFD.cl.val)}
 	 for J in I+1..N do
-	    %K.J - K.I =: {DIJ I J}
+	    %% K.J - K.I =: {DIJ I J}
 	    {GFD.sumC [1 ~1] [K.J K.I] '=:' {DIJ I J}}
 	 end
       end
       {GFD.distinctP post(D cl:GFD.cl.val)}
-      {GFD.distribute naive K}
+      {GFD.distributeBR naive K}
    end
 end
 
