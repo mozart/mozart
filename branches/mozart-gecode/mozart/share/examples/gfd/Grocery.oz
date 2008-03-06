@@ -40,7 +40,9 @@ proc {Grocery Root}
 in
    Root ::: 0#S
    A*B*C*D =: S*100*100*100
-   A+B+C+D =: S
+   {GFD.linearP post([A B C D] GFD.rt.'=:' S)}
+   %A+B+C+D =: S
+   
    %% eliminate symmetries
    A =: 79*{GFD.decl}  % 79 is prime factor of S=711
    B =<: C
