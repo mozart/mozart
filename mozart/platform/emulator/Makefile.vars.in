@@ -91,7 +91,7 @@ endif
 
 LDFLAGS=	   @LDFLAGS@ $(CUSR)
 
-GECODEVERSION=2.1.0
+GECODEVERSION=2.1.1
 
 LDFLAGS += `pkg-config --libs "gecode = ${GECODEVERSION}"` $(UNIV_LDFLAGS)
 
