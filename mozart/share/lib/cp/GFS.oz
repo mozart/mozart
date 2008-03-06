@@ -77,7 +77,7 @@ export
    
    %Gecode propagators
    cardinality: Cardinality
-   rel: Rel
+   %rel: Rel
    
 define
    %FsDecl = GFS.set
