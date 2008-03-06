@@ -166,7 +166,7 @@
  * @param var the variable declared as integer
  */
 #define DeclareInt2(arg,var)						\
-  OZ_TOC(arg,int,var,OZ_isInt,OZ_intToC,"The value muts be a number")
+  OZ_TOC(arg,int,var,OZ_isInt,OZ_intToC,"The value must be a number")
 
 /**
  * \brief Declare a new integer
