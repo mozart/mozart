@@ -61,6 +61,7 @@ prepare
 		   'Error' 'ErrorRegistry' 'Finalize' 'Service'
 		   'Fault' 'Connection' 'Remote' 'VirtualSite' 'URL'
 		   'DPStatistics' 'DPInit' 'DPControl'
+		   'DP' 'Site'
 		   'Discovery'
 		   'Open'
 		   'Tk' 'TkTools' 'Tix'
