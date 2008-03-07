@@ -210,6 +210,8 @@ inline IntVar& get_IntVarInfo(OZ_Term v) {
   return get_GeIntVar(v,false)->getIntVarInfo();
 }
 
+
+/*** Fuction for type checking of posting functions ***/
 /**
 		\brief Checks if the term is a intconlevel
 */
@@ -222,6 +224,7 @@ bool OZ_isIntConLevel(OZ_Term t) {
 /**
 		\brief Checks if the term is a propKind
 */
+
 inline
 bool OZ_isPropKind(OZ_Term t) {
 	int pk = OZ_intToC(t);
@@ -229,15 +232,16 @@ bool OZ_isPropKind(OZ_Term t) {
 }
 
 /**
-		\brief Checks if the term is a IntVarArgs.
+	\brief Iterates over a mozart vector (list, tuple or record) \a t and
+	test if every element satisfies \a checkOne.
 */
 inline
-bool OZ_isIntVarArgs(OZ_Term t) {
-	int sz = 0;
-	if(OZ_isCons(t)) {			
-	    sz = OZ_length(t);
+bool checkAll(OZ_Term t, bool (*checkOne)(OZ_Term)) {
+  int sz = 0;
+  if(OZ_isCons(t)) {			
+    sz = OZ_length(t);
     for(int i=0; OZ_isCons(t); t=OZ_tail(t))
-      if (!OZ_isGeIntVar(OZ_head(t)))
+      if (!checkOne(OZ_head(t)))
       	return false;
     return true;
   }
@@ -245,7 +249,7 @@ bool OZ_isIntVarArgs(OZ_Term t) {
     sz=OZ_width(t);					
     for(int i=0; i < sz; i++) {
       OZ_Term _tmp = OZ_getArg(t,i);
-      if (!OZ_isGeIntVar(_tmp))
+      if (!checkOne(_tmp))
       	return false;
   	}
     return true;
@@ -255,7 +259,7 @@ bool OZ_isIntVarArgs(OZ_Term t) {
     sz = OZ_width(t);
     IntArgs _array(sz);
     for(int i = 0; OZ_isCons(al); al=OZ_tail(al))
-      if(!OZ_isGeIntVar(OZ_subtree(t,OZ_head(al))))
+      if(!checkOne(OZ_subtree(t,OZ_head(al))))
       	return false;
     return true;
     
@@ -263,39 +267,23 @@ bool OZ_isIntVarArgs(OZ_Term t) {
     return false;
 }
 
+
+/**
+   \brief Checks if the term is a IntVarArgs.
+*/
+inline
+bool OZ_isIntVarArgs(OZ_Term t) {
+	return checkAll(t, &OZ_isGeIntVar); 
+}
+
 /**
 		\brief Checks if the term is a SetVarArgs.
 */
 inline
-bool OZ_isSetVarArgs(OZ_Term t){
-	int sz = 0;
-	if(OZ_isCons(t)) {			
-	    sz = OZ_length(t);
-    for(int i=0; OZ_isCons(t); t=OZ_tail(t))
-      if (!OZ_isGeSetVar(OZ_head(t)))
-      	return false;
-    return true;
-  }
-  else if(OZ_isTuple(t)) {
-    sz=OZ_width(t);					
-    for(int i=0; i < sz; i++) {
-      OZ_Term _tmp = OZ_getArg(t,i);
-      if (!OZ_isGeSetVar(_tmp))
-      	return false;
-  	}
-    return true;
-  }
-  else if(OZ_isRecord(t)) {
-    OZ_Term al = OZ_arityList(t);
-    sz = OZ_width(t);
-    IntArgs _array(sz);
-    for(int i = 0; OZ_isCons(al); al=OZ_tail(al))
-      if(!OZ_isGeSetVar(OZ_subtree(t,OZ_head(al))))
-      	return false;
-    return true;
-   }
-    return false;
+bool OZ_isSetVarArgs(OZ_Term t) {
+	return checkAll(t,&OZ_isGeSetVar);
 }
+
 
 /**
 		\brief Checks if the term is a IntRelType.
@@ -306,9 +294,19 @@ bool OZ_isIntRelType(OZ_Term t){
 	return v == 0 | v == 1 || v == 2 || v == 3 || v == 4 || v == 5 ? true : false;
 }
 
+// this function is needed to cast int to bool.
+inline
+bool IsInt(OZ_Term t) { return OZ_isInt(t);}
+
 /**
-		\brief Checks if the term is a IntArgs.
+   \brief Checks if the term is a IntArgs.
 */
+inline
+bool OZ_isIntArgs(OZ_Term t) {
+	// TODO: Why the old definition requiered to test for a literal??
+	return checkAll(t, &IsInt); 
+}
+/*
 inline
 bool OZ_isIntArgs(OZ_Term t){
   if(OZ_isLiteral(t)) {
@@ -341,7 +339,7 @@ bool OZ_isIntArgs(OZ_Term t){
   }
 	return false;
 }
-
+*/
 /**
 		\brief Checks if the term is a TupleSet.
 */
@@ -360,105 +358,89 @@ bool OZ_isTupleSet(OZ_Term v){
 }
 
 /**
-		\brief Checks if the term is a TransitionS.
+   \brief Checks if the term is a TransitionS.
 */
 inline
 bool OZ_isTransitionS(OZ_Term tr){
-	if(OZ_isTuple(tr)){
-  	return OZ_isInt(OZ_getArg(tr,0)) && OZ_isInt(OZ_getArg(tr,1)) && OZ_isInt(OZ_getArg(tr,2)) ? true : false;
+  if(OZ_isTuple(tr)){
+    return OZ_isInt(OZ_getArg(tr,0)) && OZ_isInt(OZ_getArg(tr,1)) && OZ_isInt(OZ_getArg(tr,2)) ? true : false;
   }
   return false;
 }
 
 /**
-		\brief Checks if the term is a DFA.
+   \brief Checks if the term is a DFA.
 */
 inline
 bool OZ_isDFA(OZ_Term _t){
-	if(OZ_isRecord(_t)){
-  	OZ_Term _inputl = OZ_arityList(_t);
-  	OZ_Term _inputs = OZ_subtree(_t, OZ_head(_inputl));
-  	int _istate     = OZ_intToC(_inputs);
-  	OZ_Term _tl    = OZ_subtree(_t, OZ_head(OZ_tail(_inputl)));
-  	for(int i=0; OZ_isCons(_tl); _tl=OZ_tail(_tl)) {
-    	if(!OZ_isTransitionS(OZ_head(_tl))) return false;
-  	}
+  if(OZ_isRecord(_t)){
+    OZ_Term _inputl = OZ_arityList(_t);
+    OZ_Term _inputs = OZ_subtree(_t, OZ_head(_inputl));
+    int _istate     = OZ_intToC(_inputs);
+    OZ_Term _tl    = OZ_subtree(_t, OZ_head(OZ_tail(_inputl)));
+    for(int i=0; OZ_isCons(_tl); _tl=OZ_tail(_tl)) {
+      if(!OZ_isTransitionS(OZ_head(_tl))) return false;
+    }
   	return true;
   }
   return false;
 }
 
 /**
-		\brief Checks if the term is a BoolVarArgs.
+   \brief Checks if the term is a BoolVarArgs.
 */
 inline
-bool OZ_isBoolVarArgs(OZ_Term t){
-	int sz = 0;
-	if(OZ_isCons(t)) {			
-	    sz = OZ_length(t);
-    for(int i=0; OZ_isCons(t); t=OZ_tail(t))
-      if (!OZ_isGeBoolVar(OZ_head(t)))
-      	return false;
-    return true;
-  }
-  else if(OZ_isTuple(t)) {
-    sz=OZ_width(t);					
-    for(int i=0; i < sz; i++) {
-      OZ_Term _tmp = OZ_getArg(t,i);
-      if (!OZ_isGeBoolVar(_tmp))
-      	return false;
-  	}
-    return true;
-  }
-  else if(OZ_isRecord(t)) {
-    OZ_Term al = OZ_arityList(t);
-    sz = OZ_width(t);
-    IntArgs _array(sz);
-    for(int i = 0; OZ_isCons(al); al=OZ_tail(al))
-      if(!OZ_isGeBoolVar(OZ_subtree(t,OZ_head(al))))
-      	return false;
-    return true;
-    
-   }
-    return false;
+bool isBoolVarArg(OZ_Term t) {
+	if (!OZ_isGeBoolVar(OZ_head(t))){
+		if(OZ_intToC(OZ_head(t)) == 1 || OZ_intToC(OZ_head(t)) == 0) 
+			return true;
+      	else 
+			return false;
+	} else 
+		return true;
+}
+
+inline
+bool OZ_isBoolVarArgs(OZ_Term t) {
+	return checkAll(t, &isBoolVarArg); 
 }
 
 /**
-		\brief Checks if the term is a IntSet.
+   \brief Checks if the term is a IntSet.
 */
 inline
 bool OZ_isIntSet(OZ_Term t){
-	  if(OZ_isCons(t)){
-	  	for (int i = 0; OZ_isCons(t); t=OZ_tail(t), i++) {
-	  		OZ_Term val = OZ_head(t);
-	  		if(!OZ_isInt(val)) {
-	  			if(!OZ_isTuple(val)) return false;
-	  			else if(!OZ_isInt(OZ_getArg(val,0)) || !OZ_isInt(OZ_getArg(val,0))) return false;
-	  		}
-	  	}
-	  	return true;
-	  }else if(OZ_isTuple(t)){
-	  		return OZ_isInt(OZ_getArg(t,0)) && OZ_isInt(OZ_getArg(t,0)) ? true : false;
-	   }
-	return false;
+  if(OZ_isCons(t)){
+    for (int i = 0; OZ_isCons(t); t=OZ_tail(t), i++) {
+      OZ_Term val = OZ_head(t);
+      if(!OZ_isInt(val)) {
+	if(!OZ_isTuple(val)) return false;
+	else if(!OZ_isInt(OZ_getArg(val,0)) || !OZ_isInt(OZ_getArg(val,0))) return false;
+      }
+    }
+    return true;
+  }else if(OZ_isTuple(t)){
+    return OZ_isInt(OZ_getArg(t,0)) && OZ_isInt(OZ_getArg(t,0)) ? true : false;
+  }
+  return false;
 }
 
 /**
-		\brief Checks if the term is a IntSetArgs.
+   \brief Checks if the term is a IntSetArgs.
 */
 inline
 bool OZ_isIntSetArgs(OZ_Term t){
-	  if(OZ_isCons(t)){
-	  	for (int i = 0; OZ_isCons(t); t=OZ_tail(t), i++) {
-	  		OZ_Term val = OZ_head(t);
-	  		if(!OZ_isIntSet(val)) return false;
-	  	}	
-	  	return true;
-	  }
+  if(OZ_isCons(t)){
+    for (int i = 0; OZ_isCons(t); t=OZ_tail(t), i++) {
+      OZ_Term val = OZ_head(t);
+      if(!OZ_isIntSet(val)) return false;
+    }	
+    return true;
+  }
 }
 
 /**
-	Needed by GeMozProp-bulitins.cc
+   Needed by GeMozProp-bulitins.cc
 */
 inline
 OZ_Term * vectorToOzTerms2(OZ_Term t, int &sz)
