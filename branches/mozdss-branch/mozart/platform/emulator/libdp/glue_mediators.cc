@@ -929,14 +929,12 @@ void OzVariableMediator::bind(TaggedRef arg) {
   arg = oz_safeDeref(arg);
   makePassive();               // mediator no longer active
 
-  TaggedRef* ref = tagged2Ref(getEntity());
-  if (oz_isVar(*ref)) {
+  // bind the variable, unless it is already bound (as variables that
+  // are neither free nor read-only, see comment above)
+  if (!oz_eq(oz_safeDeref(getEntity()), oz_safeDeref(arg))) {
+    TaggedRef* ref = tagged2Ref(getEntity());
     OzVariable* var = tagged2Var(*ref);
     oz_bindLocalVar(var, ref, arg);
-  } else {
-    // the variable is already bound; this is the case for variables
-    // that are neither free nor read-only (see comment above)
-    Assert(oz_eq(oz_safeDeref(*ref), oz_safeDeref(arg)));
   }
 
   if (faultStream) {
