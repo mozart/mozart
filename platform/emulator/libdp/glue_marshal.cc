@@ -30,7 +30,6 @@
 #endif
 
 #include "glue_marshal.hh"
-#include "glue_entities.hh"
 #include "glue_mediators.hh"
 #include "glue_buffer.hh"
 #include "glue_interface.hh"

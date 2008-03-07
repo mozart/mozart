@@ -31,7 +31,6 @@
 #include "engine_interface.hh"
 #include "builtins.hh"
 #include "pstContainer.hh"
-#include "glue_entities.hh"
 #include "glue_tables.hh"
 
 #include "cac.hh"

@@ -35,7 +35,6 @@
 #include "byteBuffer.hh"
 #include "marshalerBase.hh"
 #include "gname.hh"
-#include "glue_entities.hh"
 
 #ifdef INTERFACE  
 #pragma interface
