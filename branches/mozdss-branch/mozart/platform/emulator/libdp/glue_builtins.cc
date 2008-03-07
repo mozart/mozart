@@ -31,7 +31,6 @@
 #include "builtins.hh"
 #include "os.hh"
 #include "dpMarshaler.hh"
-#include "glue_entities.hh"
 #include "dss_object.hh"
 #include "glue_interface.hh"
 #include "glue_tables.hh"
