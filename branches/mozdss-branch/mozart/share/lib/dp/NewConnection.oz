@@ -78,7 +78,7 @@ define
       R=
       for U in URIs return:R default:unit do
 	 if{List.isPrefix "oz-site://s(" U} then
-	    {R {VirtualString.toString "oz-ticket"#{List.drop U {Length "oz-site"}}#"?"#T}}
+	    {R {VirtualString.toAtom "oz-ticket"#{List.drop U {Length "oz-site"}}#"?"#T}}
 	 end
       end
    in
@@ -87,7 +87,9 @@ define
       end
       R
    end
-   fun{ParseTicket T}
+   fun{ParseTicket VS}
+      T={VirtualString.toString VS}
+   in
       if {List.isPrefix "oz-ticket://s(" T} then TId in
 	 ("oz-site"#
 	  {List.takeDropWhile {List.drop T {Length "oz-ticket"}} fun{$C}C\=&?end $ TId})
