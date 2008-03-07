@@ -42,14 +42,34 @@
 /**
    ############################## Variable declaration macros ##############################
 */
+inline
+IntVar* declareIV(OZ_Term p, GenericSpace *s) {
+	IntVar *v = NULL;
+	if (OZ_isInt(p)) {
+		int val = OZ_intToC(p);
+		v = new IntVar(s,val,val);
+	} else if (OZ_isGeIntVar(p)) {
+		v = &get_IntVar(p);
+	} 
+	return v;
+} 
 
 /**
  * \brief Macros for variable declaration inside propagators posting built-ins. 
  * Space stability is affected as a side effect.
- * @param p The position in OZ
+ * @param p The position in OZ_in
  * @param v Name of the new variable
  * @param sp The space where the variable is declared.
  */
+#define DeclareGeIntVar(p,v,sp)				\
+  declareInTerm(p,v##x);				\
+  IntVar v;\
+  { IntVar *vp = declareIV(v##x,sp);\
+    if (vp == NULL) return OZ_typeError(p,"IntVar or Int");\
+	v = *vp;\
+  }
+ 
+/*
 #define DeclareGeIntVar(p,v,sp)				\
   declareInTerm(p,v##x);				\
   IntVar v;						\
@@ -64,7 +84,20 @@
     }							\
     else return OZ_typeError(p,"IntVar or Int");	\
   }
-  
+*/  
+
+inline
+IntVar* declareIV(OZ_Term p) {
+	IntVar *v = NULL;
+	if (OZ_isInt(p)) {
+		int val = OZ_intToC(p);
+		v = new IntVar(oz_currentBoard()->getGenericSpace(),val,val);
+	} else if (OZ_isGeIntVar(p)) {
+		v = &get_IntVar(p);
+	} 
+	return v;
+} 
+
 /**
  * \brief Declares a variable form OZ_Term argument at position p in the
  * input to be an IntVar variable. This declaration does not affect space 
@@ -73,6 +106,14 @@
  * @param p The position in OZ
  * @param v Name of the new variable
  */
+#define DeclareGeIntVar1(p,v)				\
+  declareInTerm(p,v##x);				\
+  IntVar v;\
+  { IntVar *vp = declareIV(v##x);\
+    if (vp == NULL) return OZ_typeError(p,"IntVar or Int");\
+	v = *vp;\
+  }
+/*
 #define DeclareGeIntVar1(p,v)				\
   IntVar v;						\
   {							\
@@ -88,13 +129,13 @@
     } else						\
       return OZ_typeError(p,"IntVar");			\
   }  
-  
+*/  
 /**
  * \brief Declares a GeIntVar inside a var array. Space stability is affected as a side effect.
  * @param val integer value of the new variable
  * @param ar array of variables where the new variable is posted
  * @param i position in the array assigned to the variable
- * @param sp Space where the array belows to
+ * @param sp Space where the array belongs to
  */
 #define DeclareGeIntVarVA(val,ar,i,sp)		\
   {  declareTerm(val,x);			\
@@ -173,6 +214,28 @@
    Macros for variable declaration inside propagators posting
    built-ins. Space stability is affected as a side effect.
 */
+inline
+BoolVar* declareBV(OZ_Term p, GenericSpace *s) {
+	BoolVar *v = NULL;
+	if (OZ_isInt(p)) {
+		int val = OZ_intToC(p);
+		if (val == 0 || val == 1) {
+			v = new BoolVar(s,val,val);
+		}
+	} else if (OZ_isGeBoolVar(p)) {
+		v = &get_BoolVar(p);
+	} 
+	return v;
+} 
+
+#define DeclareGeBoolVar(p,v,sp)				\
+  declareInTerm(p,v##x);				\
+  BoolVar v;\
+  { BoolVar *vp = declareBV(v##x,sp);\
+    if (vp == NULL) return OZ_typeError(p,"Error while declaring a BoolVar, expected BoolVar or Int between 0 and 1");\
+	v = *vp;\
+  }
+/*
 #define DeclareGeBoolVar(p,v,sp)					\
   declareInTerm(p,v##x);						\
   BoolVar v;								\
@@ -189,7 +252,7 @@
     else return OZ_typeError(p,"BoolVar or Int");			\
   }
 
-
+*/
 /**
    Declares a GeBoolVar inside a var array. Space stability is affected as a side effect. 
 */
