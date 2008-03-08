@@ -113,6 +113,7 @@ IntVar* declareIV(OZ_Term p) {
     if (vp == NULL) return OZ_typeError(p,"IntVar or Int");\
 	v = *vp;\
   }
+  
 /*
 #define DeclareGeIntVar1(p,v)				\
   IntVar v;						\
@@ -294,6 +295,38 @@ BoolVar* declareBV(OZ_Term p, GenericSpace *s) {
  * @param ds The domain description int terms of list and tuples
  * @param _t Mozart domain specification
  */
+inline
+Gecode::IntSet* declareIntSet(OZ_Term t) {
+	OZ_Term l = (OZ_isCons(t) ? t : OZ_cons(t, OZ_nil()));
+	int length = OZ_length(l);
+	int pairs[length][2];
+	
+	for (int i = 0; OZ_isCons(l); l=OZ_tail(l), i++) {
+		OZ_Term val = OZ_head(l);
+		if (OZ_isInt(val)) {
+			pairs[i][0] = OZ_intToC(val);	
+			pairs[i][1] = OZ_intToC(val);
+		}
+		else if (OZ_isTuple(val)) {
+			pairs[i][0] = OZ_intToC(OZ_getArg(val,0));
+			pairs[i][1] = OZ_intToC(OZ_getArg(val,1));
+		} else {
+			// invalid element found in IntSet declaration
+			return NULL;
+		}
+	}
+	return new Gecode::IntSet(pairs,length);	
+} 
+
+// TODO: wait for _t if is a free var?
+#define DECLARE_INT_SET(_t,ds)				\
+  Gecode::IntSet ds;\
+  { Gecode::IntSet *isp = declareIntSet(_t);\
+    if (isp == NULL) return OZ_typeError(0,"IntSet declaration");\
+	ds = *isp;\
+  }
+/*
+
 #define	DECLARE_INT_SET(_t,ds)					\
   OZ_Term _l = (OZ_isCons(_t) ? _t : OZ_cons(_t, OZ_nil()));	\
   int _length = OZ_length(_l);					\
@@ -313,14 +346,15 @@ BoolVar* declareBV(OZ_Term p, GenericSpace *s) {
     }								\
   }								\
   Gecode::IntSet ds(_pairs, _length);
-  
+  */
 
 #define DECLARE_INT_SET2(_p,_v) DECLARE_INT_SET(OZ_in(_p),_v)
 /** 
- * \brief Declares a Gecode::Int::IntSetArgs from an Oz domain description, no working yet.
+ * \brief Declares a Gecode::Int::IntSetArgs from an Oz domain description
  * 
  * @param ds The domain description int terms of list and tuples
  * @param _t Mozart domain specification
+ * TODO: where is this macro used?
  */
 #define	DECLARE_INT_SET_ARGS(_t,ds)				\
   OZ_Term l = (OZ_isCons(_t) ? _t : OZ_cons(_t, OZ_nil()));	\
@@ -367,16 +401,64 @@ BoolVar* declareBV(OZ_Term p, GenericSpace *s) {
   }									\
 									\
 									\
+// TODO: improve this fuction to replace the macro
+/*
+inline
+IntArgs* declareIntArgs(OZ_Term t) {
+	IntArgs *array = NULL;
+	int sz = 0;							
+	
+	if(OZ_isLiteral(t)) {
+		IntArgs a(sz);
+		array = a;
+    }
+    else if(OZ_isCons(t)) {
+		sz = OZ_length(t);
+		IntArgs a(sz);
+		for(int i=0; OZ_isCons(t); t=OZ_tail(t))
+			a[i++] = OZ_intToC(OZ_head(t));
+		array = a;
+    } else if(OZ_isTuple(t)) {
+		sz = OZ_width(t);
+		IntArgs a(sz);
+		for(int i=0; i < sz; i++) {
+			OZ_Term tmp = OZ_getArg(t,i);
+			a[i] = OZ_intToC(tmp);
+		}
+		array=a;
+    }
+    else {
+		assert(OZ_isRecord(t));
+		OZ_Term al = OZ_arityList(t);
+		sz = OZ_width(t);
+		IntArgs a(sz);
+		for(int i = 0; OZ_isCons(al); al=OZ_tail(al))
+			a[i++]=OZ_intToC(OZ_subtree(t,OZ_head(al)));
+		array=a;
+    }
+	return &array;			
+}
+*/
 /**
  * \brief Declares a Gecode::Int:IntArgs from a literal, list, tuple or record of int values.
  * @param tIn possition in OZ_in
  * @param array the resulting IntArgs
  */
+
+/*
+#define DECLARE_INTARGS(tIn,array)				\
+	declareInTerm(tIn,t);\
+	IntArgs array;\
+	{ IntArgs *ap = declareIntArgs(t);\
+    if (ap == NULL) return OZ_typeError(0,"IntArgs declaration");\
+	array = *ap;\
+  }
+*/
+
 #define DECLARE_INTARGS(tIn,array)				\
   IntArgs array(0);						\
   {								\
     int sz;							\
-    /*OZ_Term t = OZ_deref(OZ_in(tIn));*/			\
     OZ_declareTerm(tIn,t);					\
     if(OZ_isLiteral(t)) {					\
       sz = 0;							\
@@ -386,20 +468,16 @@ BoolVar* declareBV(OZ_Term p, GenericSpace *s) {
     else if(OZ_isCons(t)) {					\
       sz = OZ_length(t);					\
       IntArgs _array(sz);					\
-      /*t = OZ_hallocOzTerms(sz);*/				\
       for(int i=0; OZ_isCons(t); t=OZ_tail(t))			\
 	_array[i++] = OZ_intToC(OZ_head(t));			\
-      /*t[i++] = OZ_head(t);*/					\
       array=_array;						\
     }								\
     else if(OZ_isTuple(t)) {					\
       sz=OZ_width(t);						\
       IntArgs _array(sz);					\
-      /*t = OZ_hallocOzTerms(sz);*/				\
       for(int i=0; i < sz; i++) {				\
 	OZ_Term _tmp = OZ_getArg(t,i);				\
 	_array[i] = OZ_intToC(_tmp);				\
-	/*v[i] = OZ_getArg(t,i);*/				\
       }								\
       array=_array;						\
     }								\
