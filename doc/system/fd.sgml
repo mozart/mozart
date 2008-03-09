@@ -28,16 +28,31 @@
   -->
 
 <Chapter id="Chapter.FD">
-  <Title/Finite Domain Constraints: <<FD>>/
+  <Title/Finite Domain Constraints: <<GFD>>/
 
 <p>
 The procedures in this module have the following properties. 
-<p>
+
+<!-- <p>
 Each of their applications creates a new thread except for basic
 constraints which may block.
+-->
 <p>
+To get an unified call interface for propagators, all propagator
+posting functions take only a record as argument. This record
+contains all the parameters needed to call the propagator and two
+optional fields: <<cl>> and <<pk>>. <<cl>> is for specifying which
+consistency level should be used by the propagator, options include
+domain consistency, bounds consistency, etc. <<pk>> is used to tell
+the propagator whether to prefer extensive use of cpu over memory
+or not. Both fields are completely optional as default values are
+internally choosen when they are not provided by user.
+
+<!-- <p>
 Most of the propagators perform interval propagation. Only some
 do domain propagation (&ie; cut holes into domains). 
+-->
+
 <p>
 Equality between variables is exploited, except for some non-linear
 propagators.  For example, <<A+A=:B>> is equivalent to <<2*A=:B>> (for
@@ -47,15 +62,43 @@ The constraint store is amplified with constraints <<X::Spec>>  and
 equality between variables, &eg;, <<X=:Y>> is equivalent to <<X=Y>>.
 
 <para><title/relation symbols/
-There are generic procedures who take
-an atomic argument <<A>> to denote an arithmetic relation <math/\sim_A/. The 
-possible atoms and the associated relations are summarized below. 
+There are propagator posting procedures that take an argument <<Rt>> to denote 
+an arithmetic relation <math/\sim_{Rt}/. The possible values and the associated 
+relations are summarized below. 
+<table>
+<tr><td/<<GFD.rt.'=:'>>/ <td> Equality (<math>=</math>)</td></tr>
+<tr><td/<<GFD.rt.'\\=:'>>/ <td> Disequality (<math>\neq</math>)</td></tr>
+<tr><td/<<GFD.rt.'=<:'>>/ <td> Less or equal (<math>\leq</math>)</td></tr>
+<tr><td/<<GFD.rt.'<:'>>/ <td> Less (<math><</math>)</td></tr>
+<tr><td/<<GFD.rt.'>=:'>>/ <td> Greater or equal (<math>\geq</math>)</td></tr>
+<tr><td/<<GFD.rt.'>:'>>/ <td> Greater (<math>></math>)</td></tr>
+</table>
+
+<!--
 <table>
 <tr/<td/<<A>>/<td/<<'=:'>> /<td/ <<'&gt;:'>> /<td/ <<'&gt;=:'>> /<td/ <<'&lt;:'>> /<td/ <<'=&lt;:'>> /<td/ <<'\\=:'>>//
 <tr/<td/<math>\sim_A</math> /<td/ <math>=</math> /<td/ <math>&gt;</math> /<td/ <math>\geq</math> /<td/ <math><</math> /<td/ <math>\leq</math> /<td/ <math>\neq</math>//
 </table>
+-->
 
+<para><title/Lazy propagation/
+When a propagator is posted in a computation space it does not performs any
+domain pruning. This behavior allows the implementation of batch recomputation 
+enabled search engines (REF paper). Lazy propagation is only acheved in sub-spaces,
+it is, when on toplevel propagation is performe eagerly. To perform propagation
+in a sub-space you have to ask the space to do so by calling <<Space.ask>>.
+
+<p>
+A propagator ceases to exist at least if all the variables it is posted
+on are determined. In the following
+sections, only exceptions from this rule are mentioned, &ie; if the
+propagator ceases to exist earlier. For example, {<<X =<: Y>>} ceases to
+exist if the current upper bound of <<X>> is smaller than or equal to the
+current lower bound of <<Y>>.
+
+  
 <!-- ********************************************************************** -->
+<!--
 <section id="section.fd.facts"><title/Some Facts About Propagators/
 
 <para><title/domain propagation,
@@ -64,8 +107,10 @@ When a propagator is posted in a computation space it does not perform any
 domain pruning. This behavior allows batch recomputation enabled search engines
 (see PAPER). Different consistency levels are implemented by finite domain
 propagators including value, bound and domain consistency when no consistency 
-level is specified on propagator posting, domain consistency is used (see Reference section.fd.consistency). Also, it is possible to choice between memory consumption over speed when posting propagators. Section reference section.fd.kind for more details. 
-
+level is specified on propagator posting, domain consistency is used (see Reference section.fd.consistency).
+Also, it is possible to choice between memory consumption over speed when posting 
+propagators. Section reference section.fd.kind for more details. 
+-->
 
 <!-- 
 If a propagator is invoked, it tries to narrow the domains of the
@@ -79,16 +124,11 @@ propagation, &ie; only the bounds of domains are narrowed. For some
 propagators, there is an operational semantics in between both schemes.
 -->
 
-<p>
-A propagator ceases to exist at least if all the variables it is posted
-on are determined. In the following
-sections, only exceptions from this rule are mentioned, &ie; if the
-propagator ceases to exist earlier. For example, {<<X =<: Y>>} ceases to
-exist if the current upper bound of <<X>> is smaller than or equal to the
-current lower bound of <<Y>>.
-</section>
+
+<!-- </section> -->
 
 <!-- ********************************************************************** -->
+<!--
 <section id="section.fd.condis"><title/The Concept of Constructive Disjunction - Not anymore/
 
 <p>
@@ -125,6 +165,7 @@ end
 Constructive disjunction narrows the domains of <<X>> and <<Y>>
 to&nbsp;<math/\{0,1,9,10\}/.
 </section>
+-->
 
 <!-- ********************************************************************** -->
 <section id="section.fd.general"><title/Finite Domains/
@@ -132,26 +173,28 @@ to&nbsp;<math/\{0,1,9,10\}/.
 <index scope="section.fd.general"/Finite Domains/
 
 <p>
-The integer limits are chosen such that addition and subtraction of two values within the limits can be done safely without numerical overflow. Also, changing the sign is always possible without overflow.
+The integer limits are chosen such that addition and subtraction of two values 
+within the limits can be done safely without numerical overflow. Also, changing 
+the sign is always possible without overflow.
 
 <list>
 <entry>
-<index class=module/FD<and>sup/
+<index class=module/GFD<and>sup/
 <<sup>>
 <synopsis>
 <<<
-FD.sup
+GFD.sup
 >>>
 <item>
 Largest allowed integer value. Constant value: 2 147 483 646
 <!-- In Mozart <<FD.sup>> is 134 217 726. -->
 
 <entry>
-<index class=module/FD<and>inf/
+<index class=module/GFD<and>inf/
 <<inf>>
 <synopsis>
 <<<
-FD.inf
+GFD.inf
 >>>
 <item>
 Smallest allowed integer value. Constant value: ~2 147 483 646
@@ -160,7 +203,7 @@ Smallest allowed integer value. Constant value: ~2 147 483 646
 
 
 <entry>
-<index class=module/FD<and>is/
+<index class=module/GFD<and>is/
 <<is>>
 <synopsis>
 <<<
@@ -177,45 +220,45 @@ tests whether ?_{V} is a finite domain variable. <!-- integer between 0 and <<FD
 <p>
 <list>
 <entry>
-<index class=module/FD<and>int/
+<index class=module/GFD<and>int/
 <<::>>
 <synopsis>
 <<<
 ??{D}::?+{Spec}
-{FD.int ?+{Spec} ??{D}}  
+{GFD.int ?+{Spec} ??{D}}  
 >>>
 <item>
 tells the constraint store that ?_{D} is an integer in ?_{Spec}. 
 
 <entry>
-<index class=module/FD<and>dom/
+<index class=module/GFD<and>dom/
 <<:::>>
 <synopsis>
 <<<
 ?_{Dv}:::?+{Spec}
-{FD.dom ?+{Spec} ??{Dv}}
+{GFD.dom ?+{Spec} ??{Dv}}
 >>>
 <item>
 tells the constraint store that ?_{Dv} is a vector of integers in
 ?_{Spec}. Waits until ?_{Dv} is constrained to a vector. 
 
 <entry>
-<index class=module/FD<and>list/
+<index class=module/GFD<and>list/
 <<list>>
 <synopsis>
 <<<
-{FD.list ?+{I} ?+{Spec} ??{Ds}}  
+{GFD.list ?+{I} ?+{Spec} ??{Ds}}  
 >>>
 <item>
 tells the constraint store that
 ?_{Ds} is a list of integers in ?_{Spec} of length ?_{I}.
 
 <entry>
-<index class=module/FD<and>tuple/
+<index class=module/GFD<and>tuple/
 <<tuple>>
 <synopsis>
 <<<
-{FD.tuple ?+{L} ?+{I} ?+{Spec} ??{Dt}}  
+{GFD.tuple ?+{L} ?+{I} ?+{Spec} ??{Dt}}  
 >>>
 <item>
 tells the constraint store that
@@ -223,11 +266,11 @@ tells the constraint store that
 and label ?_{L}. 
 
 <entry id="FD.record">
-<index class=module/FD<and>record/
+<index class=module/GFD<and>record/
 <<record>>
 <synopsis>
 <<<
-{FD.record ?+{L} ?+{Ls} ?+{Spec} ??{Dr}}  
+{GFD.record ?+{L} ?+{Ls} ?+{Spec} ??{Dr}}  
 >>>
 <item>
 tells the constraint store that
@@ -236,14 +279,14 @@ tells the constraint store that
 label ?_{L}. 
 
 <entry>
-<index class=module/FD<and>decl/
+<index class=module/GFD<and>decl/
 <<decl>>
 <synopsis>
 <<<
-{FD.decl ??{D}}  
+{GFD.decl ??{D}}  
 >>>
 <item>
-Abbreviates <<{FD.int FD.inf#FD.sup ?_{D}}>>.
+Abbreviates <<{GFD.int GFD.inf#GFD.sup ?_{D}}>>.
 </list>
 </section>
 
@@ -252,134 +295,134 @@ Abbreviates <<{FD.int FD.inf#FD.sup ?_{D}}>>.
 <p>
 <list>
 <entry>
-<index class=module/FD<and>reflect<and>min/
+<index class=module/GFD<and>reflect<and>min/
 <<reflect.min>>
 <synopsis>
 <<<
-{FD.reflect.min ?*{D1} ??{D2}}
+{GFD.reflect.min ?*{D1} ??{D2}}
 >>>
 <item>
 returns the current lower bound of ?_{D1}.
 
 <entry>
-<index class=module/FD<and>reflect<and>max/
+<index class=module/GFD<and>reflect<and>max/
 <<reflect.max>>
 <synopsis>
 <<<
-{FD.reflect.max ?*{D1} ??{D2}}
+{GFD.reflect.max ?*{D1} ??{D2}}
 >>>
 <item>
 returns the current upper bound of ?_{D1}.
 
 <entry>
-<index class=module/FD<and>reflect<and>med/
+<index class=module/GFD<and>reflect<and>med/
 <<reflect.med>>
 <synopsis>
 <<<
-{FD.reflect.med ?*{D1} ??{D2}}
+{GFD.reflect.med ?*{D1} ??{D2}}
 >>>
 <item>
 returns the median of the domain.
 
 <entry>
-<index class=module/FD<and>reflect<and>nextLarger/
+<index class=module/GFD<and>reflect<and>nextLarger/
 <<reflect.nextLarger>>
 <synopsis>
 <<<
-{FD.reflect.nextLarger ?*{D1} ?+{D2} ??{D3}}
+{GFD.reflect.nextLarger ?*{D1} ?+{D2} ??{D3}}
 >>>
 <item>
 returns the smallest integer in the domain of ?_{D1} which is larger than
 ?_{D2}. 
 
 <entry>
-<index class=module/FD<and>reflect<and>nextSmaller/
+<index class=module/GFD<and>reflect<and>nextSmaller/
 <<reflect.nextSmaller>>
 <synopsis>
 <<<
-{FD.reflect.nextSmaller ?*{D1} ?+{D2} ??{D3}}
+{GFD.reflect.nextSmaller ?*{D1} ?+{D2} ??{D3}}
 >>>
 <item>
 returns the largest integer in the domain of ?_{D1} which is smaller than
 ?_{D2}.
 
 <entry>
-<index class=module/FD<and>reflect<and>size/
+<index class=module/GFD<and>reflect<and>size/
 <<reflect.size>>
 <synopsis>
 <<<
-{FD.reflect.size ?*{D1} ??{D2}}
+{GFD.reflect.size ?*{D1} ??{D2}}
 >>>
 <item>
 returns the size of the current domain of ?_{D1}.
 
 <entry>
-<index class=module/FD<and>reflect<and>width/
+<index class=module/GFD<and>reflect<and>width/
 <<reflect.width>>
 <synopsis>
 <<<
-{FD.reflect.width ?*{D1} ??{D2}}
+{GFD.reflect.width ?*{D1} ??{D2}}
 >>>
 <item>
 returns width of domain (distance between maximum and minimum) ?_{D1}.
 
 
 <entry>
-<index class=module/FD<and>reflect<and>domList/
+<index class=module/GFD<and>reflect<and>domList/
 <<reflect.domList>>
 <synopsis>
 <<<
-{FD.reflect.domList ?*{D} ??{Ds}}  
+{GFD.reflect.domList ?*{D} ??{Ds}}  
 >>>
 <item>
 returns the current domain of ?_{D} as an ordered list of integers.
 
 <entry>
-<index class=module/FD<and>reflect<and>dom/
+<index class=module/GFD<and>reflect<and>dom/
 <<reflect.dom>>
 <synopsis>
 <<<
-{FD.reflect.dom ?*{D} ??{Spec}}
+{GFD.reflect.dom ?*{D} ??{Spec}}
 >>>
 <item>
 returns the current domain of  ?_{D} as a domain specification.
 
 <entry>
-<index class=module/FD<and>reflect<and>regretMin/
+<index class=module/GFD<and>reflect<and>regretMin/
 <<reflect.regretMin>>
 <synopsis>
 <<<
-{FD.reflect.regretMin ?*{D} ??{D2}}
+{GFD.reflect.regretMin ?*{D} ??{D2}}
 >>>
 <item>
 Return regret of domain minimum (distance to next larger value). 
 
 <entry>
-<index class=module/FD<and>reflect<and>regretMax/
+<index class=module/GFD<and>reflect<and>regretMax/
 <<reflect.regretMax>>
 <synopsis>
 <<<
-{FD.reflect.regretMax ?*{D} ??{D2}}
+{GFD.reflect.regretMax ?*{D} ??{D2}}
 >>>
 <item>
 Return regret of domain maximum (distance to next smaller value). 
 
 <entry>
-<index class=module/FD<and>reflect<and>nbSusps/
+<index class=module/GFD<and>reflect<and>nbSusps/
 <<reflect.nbSusps>>
 <synopsis>
 <<<
-{FD.reflect.nbSusps ?*{D} ??{I}}
+{GFD.reflect.nbSusps ?*{D} ??{I}}
 >>>
 <item>
 returns the current number of threads suspending on ?_{D}.
 
 <entry>
-<index class=module/FD<and>reflect<and>nbProp/
+<index class=module/GFD<and>reflect<and>nbProp/
 <<reflect.nbProp>>
 <synopsis>
 <<<
-{FD.reflect.nbProp ?*{D} ??{I}}
+{GFD.reflect.nbProp ?*{D} ??{I}}
 >>>
 <item>
 returns the current number of propagators related with ?_{D}.
@@ -430,6 +473,7 @@ than ?_{D2}.
 </section>
 -->
 <!-- ********************************************************************** -->
+<!--
 <section id="section.fd.prop"><title/Porpagators information/
 <p>
 Relation types for integer constraint variables:
@@ -444,7 +488,7 @@ Relation types for integer constraint variables:
 
 Any of the above mentioned relation can be passed as an argument to functions
 with ?_{Rt} as formal parameter.
-
+-->
 <!-- ********************************************************************** -->
 <section id="section.fd.consistency"><title/Consistency levels/
 <p>
@@ -460,17 +504,19 @@ required that a propagator achieves full domain-consistency or full
 bounds-consistency. It is more like: which level of consistency comes closest.
 
 <p>
-If in the description of a constraint below no consistency level is mentioned, the propagator for the constraint implements domain-consistency.
+If in the description of a constraint below no consistency level is mentioned, the 
+propagator for the constraint implements domain-consistency.
 
-<list class=enum>
-<item> <<FD.cl.val>>: Value consistency (naive).
-<item> <<FD.cl.bnd>>: Bounds consistency.
-<item> <<FD.cl.dom>>: Domain consistency.
-<item> <<FD.cl.def>>: The default consistency for a constraint.
-</list>
+<table>
+<tr><td/<<GFD.cl.val>>/ <td> Value consistency (naive).</td></tr>
+<tr><td/<<GFD.rt.bnd>>/ <td>  Bounds consistency. </td></tr>
+<tr><td/<<GFD.rt.dom>>/ <td> Domain consistency.</td></tr>
+<tr><td/<<GFD.rt.def>>/ <td> The default consistency for a constraint. </td></tr>
+</table>
 
-From now on every time a propagator takes an argumment ?_{Cl}, this will referr to
-a consistency level and can be one of the metioned above.
+Consistency levels can be specified in propagator posting procedures by associating
+one of the above values for the feature <<cl>>. 
+</section>
 
 <!-- ********************************************************************** -->
 <section id="section.fd.kind"><title/Propagation kinds/
@@ -478,15 +524,15 @@ a consistency level and can be one of the metioned above.
 Signals that a particular kind is used in propagation for the implementation of 
 a particular constraint. Possible values include:
 
-<list class=enum>
-<item> <<FD.pk.def>>: Make a default decision.
-<item><<FD.pk.speed>>: Prefer speed over memory consumption.
-<item> <<FD.pk.memory>>: Prefer little memory over speed.
-</list>
+<table>
+<tr><td/<<GFD.pk.def>>/ <td>  Make a default decision. </td></tr>
+<tr><td/<<GFD.pk.speed>>/ <td> Prefer speed over memory consumption. </td></tr>
+<tr><td/<<GFD.pk.memory>>/ <td> Prefer little memory over speed.</td></tr>
+</table>
 
-Every time a propagator takes ?_{Pk} as an argument, this will referr to a 
-propagation kind and can be one of the mentioned above.
-
+Propagator kinds can be specified in propagator posting procedures by associating
+one of the above values for the feature <<pk>>. 
+</section>
 
 <!-- ********************************************************************** -->
 <section id="section.fd.dom"><title/Domain constraints/
@@ -495,142 +541,64 @@ propagation kind and can be one of the mentioned above.
 
 <list>
 <entry>
-<index class=module/FD<and>dom/
-<<dom>>
+<index class=module/GFD<and>domP/
+<<domP>>
 <synopsis>
 <<<
-{FD.dom ?_{X} ?_{L} ?_{M}}
+{GFD.domP ?*{PE}}
 >>>
-<item> Propagates <math> L \leq X\leq M </math>
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
 
-
-<entry>
-<index class=module/FD<and>dom1/
-<<dom1>>
-<synopsis>
-<<<
-{FD.dom1 ?_{X} ?_{L} ?_{M}}
->>>
-<item> Propagates <math> L\leq X_i\leq M </math> for all <math>0\leq i<|x| </math>
-
-
-<entry>
-<index class=module/FD<and>dom3/
-<<dom3>>
-<synopsis>
-<<<
-{FD.dom3 ?_{X} ?_{S}}
->>>
-<item> Propagates <math> X\in S </math>, being S an IntSet.
-
-
-<entry>
-<index class=module/FD<and>dom4/
-<<dom4>>
-<synopsis>
-<<<
-{FD.dom4 ?_{X} ?_{S}}
->>>
-<item> Propagates <math> X_i\in S</math> for all <math>0\leq i<|X| </math>
-
-<entry>
-<index class=module/FD<and>dom5/
-<<dom5>>
-<synopsis>
-<<<
-{FD.dom5 ?_{X} ?_{L} ?_{M} ?_{B}}
->>>
-<item> Post propagator for <math> (L\leq X \leq M) \Leftrightarrow B</math>
-
-<entry>
-<index class=module/FD<and>dom6/
-<<dom6>>
-<synopsis>
-<<<
-{FD.dom6 ?_{X} ?_{S} ?_{B}}
->>>
-<item> Post propagator for <math> (X \in S) \Leftrightarrow B </math>
-
-
+<list class=enum>
+<item> <<post(X L M)>>: Post propagator for  <math> L \leq X\leq M </math>.
+<item> <<post(Lx L M)>>: Post prpagator for  <math> L\leq Lx_i\leq M </math> 
+for all <math>0\leq i<|x| </math>.
+<item> <<post(X S)>>: Propagates <math> X\in S </math>, being <<S>> a domain 
+specification.
+<item> <<post(Lx S)>>:  Propagates <math> Lx_i\in S</math> for all <math>0\leq i<|X| </math>, 
+being <<S>> a domain specification.
+<item> <<post(X L M B)>>: Post propagator for <math> (L\leq X \leq M) \Leftrightarrow B</math>, 
+being <<B>> a constraint boolean variable (REFERENCE).
+<item> <<post(X S B)>>:  Post propagator for <math> (X \in S) \Leftrightarrow B </math>.
 </list>
+</list>
+</section>
 
 <!-- ********************************************************************** -->
 <section id="section.fd.rel"><title/Simple relation constraints/
 
 <p>
+
 <list>
 <entry>
-<index class=module/FD<and>rel/
-<<rel>>
+<index class=module/GFD<and>relP/
+<<relP>>
 <synopsis>
 <<<
-{FD.rel ?_{Xv} ?_{Rt} ?_{Y}}
+{GFD.relP ?*{PE}}
 >>>
-<item> Post propagators for <math> X_i \sim_Rt Y </math> for all <math>0\leq i<|X| </math>. Supports both bounds (<<FD.cl.bnd>>) and domain-consistency (<<FD.cl.dom>>, default).
+<item> Post a relation propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
 
-<entry>
-<index class=module/FD<and>rel2/
-<<rel2>>
-<synopsis>
-<<<
-{FD.rel2 ?_{X} ?_{Rt} ?_{C}}
->>>
-<item> Propagates <math> X \sim_Rt C </math>
-
-<entry>
-<index class=module/FD<and>rel3/
-<<rel3>>
-<synopsis>
-<<<
-{FD.rel3 ?_{Xv} ?_{Rt} ?_{C}}
->>>
-<item> Propagates <math> X_i \sim_Rt C </math> for all <math> 0\leq i<|X|</math> 
-<entry>
-<index class=module/FD<and>rel4/
-<<rel4>>
-<synopsis>
-<<<
-{FD.rel4 ?_{X0} ?_{Rt} ?_{X1} ?_{B}}
->>>
-<item> Post propagator for <math> (X0 \sim_Rt X1)\Leftrightarrow B </math>. Supports both bounds (<<FD.cl.bnd>>) and domain-consistency (<<FD.cl.dom>>, default).
-
-<entry>
-<index class=module/FD<and>rel5/
-<<rel5>>
-<synopsis>
-<<<
-{FD.rel5 ?_{X} ?_{Rt} ?_{C} ?_{B}}
->>>
-<item> Post propagator for <math> (X \sim_Rt C)\Leftrightarrow B </math>. Supports both bounds (<<FD.cl.bnd>>) and domain-consistency (<<FD.cl.dom>>, default).
-
-<entry>
-<index class=module/FD<and>rel6/
-<<rel6>>
-<synopsis>
-<<<
-{FD.rel6 ?_{X} ?_{Rt}}
->>>
-<item> Post propagator for pairwise relation on  <<X>>. States that the elements of  ?_{X} are in the following relation:
-  <p>if  <<Rt=FD.rt.'=:'>>, then all elements of <<X>> must be equal. Supports both bounds (<<FD.cl.bnd>>) and domain-consistency (<<FD.cl.dom>>, default).
-  <p>if  <<Rt=FD.rt.'<:'>>,<<Rt=FD.rt.'=<:'>>, <<Rt=FD.rt.'>:'>>, or <<Rt=FD.rt.'>=:'>>, then the elements of <<X>> are ordered with respt to <<Rt>>. Supports domain-consistency (<<FD.cl.dom>>, default).
-  <p>if <<Rt=FD.rt.'\\=:'>>, then all elements of <<X>> must be pairwise distinct (corresponds to the distinct constraint). Supports value (\a icl = ICL_VAL, default), bounds (<<FD.cl.bnd>>), and domain-consistency (<<FD.cl.dom>>). Throws an exception of type Int::ArgumentSame, if <<X>> contains the same unassigned variable multiply.
-   
-
-
-<entry>
-<index class=module/FD<and>rel7/
-<<rel7>>
-<synopsis>
-<<<
-{FD.rel7 ?_{X} ?_{R} ?_{Y}}
->>>
-<item> Post propagator for relation R between \a X and \a Y. 
-    <p> Note that for the inequality relations this corresponds to
-    the lexical order between \a X and \a Y. Supports both bounds (<<FD.cl.bnd>>) and domain-consistency (<<FD.cl.dom>>, default). Throws an exception of type Int::ArgumentSizeMismatch, if \a X and \a Y are of different size.
-
-
+<list class=enum>
+<item> <<post(Lx Rt Y)>>: Post propagator for <math> Lx_i \sim_{Rt} Y </math> for all <math>0\leq i<|X| </math>. Supports both bounds (<<GFD.cl.bnd>>) and domain-consistency (<<GFD.cl.dom>>, default).
+<item> <<post(X Rt C)>>:  Propagates <math> X \sim_{Rt} C </math>.
+<item> <<post(Lx Rt C)>>: Propagates <math> Lx_i \sim_{Rt} C </math> for all <math> 0\leq i<|X|</math>. 
+<item> <<post(X0 Rt X1 B)>>: Post propagator for <math> (X0 \sim_{Rt} X1)\Leftrightarrow B </math>. Supports both bounds (<<GFD.cl.bnd>>) and domain-consistency (<<GFD.cl.dom>>, default).
+<item> <<post(X Rt C B)>>: Post propagator for <math> (X \sim_{Rt} C)\Leftrightarrow B </math>. Supports both bounds (<<FD.cl.bnd>>) and domain-consistency (<<FD.cl.dom>>, default).
+<item> <<post(Lx Rt)>>: Post propagator for pairwise relation on  <<Lx>>. States that the elements of  ?_{Lx} are in the following relation:
+<list class=enum>
+  <item> if <<rt:GFD.rt.'=:'>>, then all elements of <<Lx>> must be equal. Supports both bounds (<<GFD.cl.bnd>>) and domain-consistency (<<GFD.cl.dom>>, default).
+  <item>if <<rt:FD.rt.'<:'>>,<<rt:FD.rt.'=<:'>>, <<rt:FD.rt.'>:'>>, or <<rt:FD.rt.'>=:'>>, then the elements of <<Lx>> are ordered with respt to <<Rt>>. Supports domain-consistency (<<GFD.cl.dom>>, default).
+  <item>if <<rt:FD.rt.'\\=:'>>, then all elements of <<Lx>> must be pairwise distinct (corresponds to the distinct constraint). Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
 </list>
-   
+<item> <<post(X Rt Y)>>: Post propagator for relation <<Rt>> between  <<X>> and <<Y>>. 
+    <p> Note that for the inequality relations this corresponds to the lexical order between \a <<X>> and <<Y>>. Supports both bounds (<<cl:FD.cl.bnd>>) and domain-consistency (<<cl:FD.cl.dom>>, default). Throws an exception of type Int::ArgumentSizeMismatch, if <<X>> and <<Y>> are of different size.
+</list>
+</list>
+
+</section>
  
 <!-- ********************************************************************** -->
 <section id="section.fd.element"><title/Element constraints/
@@ -638,121 +606,84 @@ propagation kind and can be one of the mentioned above.
 
 <list>
 <entry>
-<index class=module/FD<and>element/
+<index class=module/GFD<and>element/
 <<element>>
 <synopsis>
 <<<
-{FD.element ?_{N} ?_{X0} ?_{X1}}
+{GFD.element ?*{PE}}
 >>>
-<item> Post propagator for <math> N_{X0}=X1 </math>. Being N a vector of integers and  X0 and X1  integer constraint variables. Throws an exception of type Int::OutOfLimits, if the integers in \a N exceed the limits in Int::Limits.
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
 
-<entry>
-<index class=module/FD<and>element2/
-<<element2>>
-<synopsis>
-<<<
-{FD.element2 ?_{N} ?_{X0} ?_{B}}
->>>
-<item> Post propagator for <math> N_{X0}=B </math>. Being N a vector of integers, X0 an integer constraint variable and B a boolean constraint variable. Throws an exception of type Int::OutOfLimits, if the integers in \a n exceed the limits in Int::Limits.
-
-<entry>
-<index class=module/FD<and>element3/
-<<element3>>
-<synopsis>
-<<<
-{FD.element3 ?_{N} ?_{X0} ?_{C}}
->>>
-<item> Post propagator for <math> N_{X0}=C </math>.  Being N a vector of integers, X0 an integer constraint variable and C an integer. Throws an exception of type Int::OutOfLimits, if the integers in \a n exceed the limits in Int::Limits.
-
-<entry>
-<index class=module/FD<and>element4/
-<<element4>>
-<synopsis>
-<<<
-{FD.element4 ?_{Xv} ?_{Y0} ?_{Y1}}
->>>
-<item> Post propagator for <math> Xv_{Y0}=Y1 </math>. Being Xv a vector of integer constraint variables and Y0 and Y1  integer constraint variables. Supports both bounds (<<FD.cl.bnd>>) and domain-consistency (<<FD.cl.dom>>, default).
-
-<entry>
-<index class=module/FD<and>element5/
-<<element5>>
-<synopsis>
-<<<
-{FD.element5 ?_{Xv} ?_{Y0} ?_{C}}
->>>
-<item> Post propagator for <math> Xv_{Y0}=C </math>. Being  Xv a vector of integer constraint variables, Y0 an integer constraint variable and C an integer value. Supports both bounds (<<FD.cl.bnd>>) and domain-consistency (<<FD.cl.dom>>, default).
-
-<entry>
-<index class=module/FD<and>element6/
-<<element6>>
-<synopsis>
-<<<
-{FD.element6 ?_{Bv} ?_{Y0} ?_{B}}
->>>
-<item>  Post propagator for <math> Bv_{Y0}=Y1 </math>. Being Bv a vector of boolean constraint variables, Y0 an integer constraint variable and B a boolean constraint variable.
-
-<entry>
-<index class=module/FD<and>element7/
-<<element7>>
-<synopsis>
-<<<
-{FD.element7 ?_{Bv} ?_{Y0} ?_{C}}
->>>
-<item>  Post propagator for <math>  Bv_{Y0}=C </math>. Being Bv a vector of boolean constraint variables, Y0 an integer constraint variable and C an integer constant.
+<list class=enum>
+<item> <<post(N X0 X1)>>:  Post propagator for <math> N_{X0}=X1 </math>. Being <<N>> a vector of integers and  <<X0>> and <<X1>>  integer constraint variables. Throws an exception of type Int::OutOfLimits, if the integers in  <<N>> exceed the limits in Int::Limits.
+<item> <<post(N X0 B)>>: Post propagator for <math> N_{X0}=B </math>. Being <<N>> a vector of integers, <<X0>> an integer constraint variable and <<B>> a boolean constraint variable. Throws an exception of type Int::OutOfLimits, if the integers in <<N>> exceed the limits in Int::Limits.
+<item> <<post(N X0 C)>>: Post propagator for <math> N_{X0}=C </math>.  Being <<N>> a vector of integers, <<X0>> an integer constraint variable and <<C>> an integer. Throws an exception of type Int::OutOfLimits, if the integers in <<N>> exceed the limits in Int::Limits.
+<item> <<post(Lx Y0 Y1)>>:  Post propagator for <math> Lx_{Y0}=Y1 </math>. Being <<Lx>> a vector of integer constraint variables and <<Y0>> and <<Y1>>  integer constraint variables. Supports both bounds (<<cl:GFD.cl.bnd>>) and domain-consistency (<<cl:GFD.cl.dom>>, default).
+<item> <<post(Lx Y0 C)>>:  Post propagator for <math> Lx_{Y0}=C </math>. Being  <<Lx>> a vector of integer constraint variables, <<Y0>> an integer constraint variable and <<C>> an integer value. Supports both bounds (<<cl:GFD.cl.bnd>>) and domain-consistency (<<cl:GFD.cl.dom>>, default).
+<item> <<post(Bv Y0 B)>>:  Post propagator for <math> Bv_{Y0}=Y1 </math>. Being <<Bv>> a vector of boolean constraint variables, <<Y0>> an integer constraint variable and <<B>> a boolean constraint variable.
+<item> <<post(Bv Y0 C)>>: Post propagator for <math>  Bv_{Y0}=C </math>. Being <<Bv>> a vector of boolean constraint variables, <<Y0>> an integer constraint variable and <<C>> an integer constant.
 </list>
-
-
+</list>
+</section>
 
 <!-- ********************************************************************** -->
 <section id="section.fd.distinct"><title/Distinct constraints/
 <p>
+
 <list>
 <entry>
-<index class=module/FD<and>distinct/
+<index class=module/GFD<and>distinct/
 <<distinct>>
 <synopsis>
 <<<
-{FD.distinct ?_{X}}
+{GFD.distinct ?*{PE}}
 >>>
-<item> Post propagator for <math> X_i\neq X_j </math> for all <math>0\leq i\neq j<|x|</math>. Supports value (\a icl = ICL_VAL, default), bounds (<<FD.cl.bnd>>), and domain-consistency (<<FD.cl.dom>>). Throws an exception of type Int::ArgumentSame, if \a x contains the same unassigned variable multiply.
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
 
-<entry>
-<index class=module/FD<and>distinct2/
-<<distinct2>>
-<synopsis>
-<<<
-{FD.distinct2 ?_{N} ?_{X}}
->>>
-<item> Post propagator for <math> X_i+N_i\neq X_j+N_j </math> for all <math>0\leq i\neq j<|x|</math>. Being N and X vectors of integers and integer constraint variables resp. Supports value (\a icl = ICL_VAL, default), bounds (<<FD.cl.bnd>>),  and domain-consistency (<<FD.cl.dom>>). Throws an exception of type Int::OutOfLimits, if the integers in \a n exceed the limits in Int::Limits or if the sum of \a n and \a x exceed the limits. Throws an exception of type Int::ArgumentSizeMismatch, if \a x and \a n are of different size. Throws an exception of type Int::ArgumentSame, if \a x contains the same unassigned variable multiply.
-
+<list class=enum>
+<item> <<post(Lx)>>: Post propagator for <math> Lx_i\neq Lx_j </math> for all <math>0\leq i\neq j<|x|</math>. Supports value (<<cl:GFD.cl.val>>), default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
+<item> <<post(N Lx)>>: Post propagator for <math> Lx_i+N_i\neq Lx_j+N_j </math> for all <math>0\leq i\neq j<|x|</math>. Being <<N>> and <<X>> vectors of integers and integer constraint variables resp. Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>),  and domain-consistency (<<cl:GFD.cl.dom>>). Throws an exception of type Int::OutOfLimits, if the integers in <<N>> exceed the limits in Int::Limits or if the sum of <<n>> and <<Lx>> exceed the limits. Throws an exception of type Int::ArgumentSizeMismatch, if <<Lx>> and <<N>> are of different size. Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply. 
 </list>
+</list>
+
+</section>
 
 <!-- ********************************************************************** -->
 <section id="section.fd.channel"><title/Channel constraints/
+</section>
 
 <!-- ********************************************************************** -->
 <section id="section.fd.graph"><title/Graph constraints/
+</section>
 
 <!-- ********************************************************************** -->
 <section id="section.fd.scheduling"><title/Scheduling constraints/
+</section>
 
 <!-- ********************************************************************** -->
 <section id="section.fd.sorted"><title/Sorted constraints/
+</section>
 
 <!-- ********************************************************************** -->
 <section id="section.fd.cardinality"><title/Cardinality constraints/
+</section>
 
 <!-- ********************************************************************** -->
 <section id="section.fd.extensional"><title/Extensional constraints/
+</section>
 
 <!-- ********************************************************************** -->
 <section id="section.fd.arithmetic"><title/Arithmetic constraints
+</section>
 
 <!-- ********************************************************************** -->
 <section id="section.fd.linear"><title/Linear constraints/
-
+</section>
 
 <!-- ********************************************************************** -->
+<!--
 <section id="section.fd.arithmetic2"><title/Generic Propagators/
 <p>
 The generic propagators <<FD.sum>>, <<FD.sumC>> and <<FD.sumCN>> do
@@ -1126,8 +1057,9 @@ supported, as for inequalities domain and bounds propagation are
 equivalent.
 </list>
 </section>
-
+-->
 <!-- ********************************************************************** -->
+<!--
 <section id="section.fd.nonlinear"><title/Symbolic Propagators/
 <p>
 The following propagators do domain propagation or amplify the store by
@@ -1256,8 +1188,9 @@ other values. For example,
 to <math/\{5,7\}/. 
 ?_{D1} is constrained to be greater than 0. 
 </list></section>
-
+-->
 <!-- ********************************************************************** -->
+<!--
 <section id="section.fd.bool"><title>0/1 Propagators</title>
 <p>
 Using the mapping from <<0>> and <<1>> to the truth values <def/false/ and
@@ -1347,8 +1280,9 @@ end
 ?_{D3} is the equivalence of ?_{D1} by ?_{D2} 
 (<Q/<math/{\tt D1}\leftrightarrow{\tt D2}//). 
 </list></section>
-
+-->
 <!-- ********************************************************************** -->
+<!--
 <section id="section.fd.reified"><title/Reified Constraints/
 <p>
 Reified constraints reflect the validity of a constraint ?{C} into a 0/1-valued
@@ -1498,8 +1432,9 @@ or D1 =<: D1 + ... + Dn
 end	
 >>>
 </list></section>
-
+-->
 <!-- ********************************************************************** -->
+<!--
 <section id="section.fd.misc"><title/Miscellaneous Propagators/
 <p>
 <list>
@@ -1846,7 +1781,7 @@ two tasks must overlap. This propagator is used in applications which
 shall be able to deal with overlapping tasks.
 
 </section>
-
+-->
 
 <!--
 **********************************************************************
@@ -2042,7 +1977,9 @@ For the naive distribution strategy, the following may be used.
 
 <!--
 **********************************************************************
---> <section id="section.fd.assignment"><title/Assigning Values/
+--> 
+<!--
+<section id="section.fd.assignment"><title/Assigning Values/
 <p>
 Special support is available for assigning particular values to
 vectors of variables. 
@@ -2077,6 +2014,7 @@ end>>>
 </list>
 </p>
 </section>
+-->
 
 </chapter>
 

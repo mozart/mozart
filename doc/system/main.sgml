@@ -195,7 +195,7 @@
     <Meta name="html.split"       value="section.fd.extensional">
     <Meta name="html.split"       value="section.fd.arithmetic">
     <Meta name="html.split"       value="section.fd.linear">
-
+    <Meta name="html.split"       value="section.fd.distribution">
 
 <!--    <Meta name="html.split"       value="section.fd.watching"> 
     <Meta name="html.split"       value="section.fd.arithmetic">
@@ -203,7 +203,7 @@
     <Meta name="html.split"       value="section.fd.bool">
     <Meta name="html.split"       value="section.fd.reified">
     <Meta name="html.split"       value="section.fd.misc">
-    <Meta name="html.split"       value="section.fd.distribution">
+
     <Meta name="html.split"       value="section.fd.assignment">
 
     <Meta name="html.split"       value="chapter.schedule">
