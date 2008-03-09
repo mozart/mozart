@@ -652,18 +652,140 @@ can be of the following forms:
 
 <!-- ********************************************************************** -->
 <section id="section.fd.channel"><title/Channel constraints/
+
+<p>
+
+<list>
+<entry>
+<index class=module/GFD<and>distinct/
+<<channel>>
+<synopsis>
+<<<
+{GFD.channel ?*{PE}}
+>>>
+<item> Post a channel propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(Lx Ly)>>: Post propagator for <math> Lx_i = j\leftrightarrow Ly_j=i</math> 
+for all <math>0\leq i<|x|</math>. 
+   <list class=enum>
+     <item>Supports domain (<<cl:GFD.cl.dom>>) and value propagation (all other values for a consistency level).
+   <item> Throws an exception of type Int::ArgumentSizeMismatch, if <<Lx>> and <<Ly>> are of different size.
+   <item> Throws an exception of type Int::ArgumentSame, if <<Lx>> or <<Ly>> contain the same unassigned variable multiply. Note that a variable can occur in both <<Lx>> and <<Ly>>, but not more than once in either <<Lx>> or <<Ly>>.
+</list>
+<item> <<post(B X)>>:  Post propagator for channeling a boolean and an integer variable <math>B = X</math>.
+<item> <<post(X B)>>: Post propagator for channeling an integer and a boolean variable <math> X = B</math>.
+<item> <<post(Lb Y O)>>: Post propagator for channeling Boolean and integer variables <math>Lb_i = 1\leftrightarrow Y=i+O</math>. Being <<Lb>> a vector of boolean variables. Throws an exception of type Int::ArgumentSame, if <<Lb>> contains the same unassigned variable multiply.
+</list>
+</list>
+
 </section>
 
 <!-- ********************************************************************** -->
 <section id="section.fd.graph"><title/Graph constraints/
+
+<p>
+
+<list>
+<entry>
+<index class=module/GFD<and>distinct/
+<<graph>>
+<synopsis>
+<<<
+{GFD.graph ?*{PE}}
+>>>
+<item> Post a graph propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(Lx)>>:  Post propagator such that <<Lx>> forms a circuit. <<Lx>> forms a circuit if the graph with edges <math> i \to j</math>  where <math>Lx_i=j</math> has a single cycle covering all nodes. Supports domain (<<cl:GFD.cl.dom>>) and value propagation (all other values for <<cl>>), where this refers to whether value or domain-consistent distinct in enforced on <<Lx>>. Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
+</list>
+</list>
+
+
 </section>
 
 <!-- ********************************************************************** -->
 <section id="section.fd.scheduling"><title/Scheduling constraints/
+
+
+<p>
+<list>
+<entry>
+<index class=module/GFD<and>distinct/
+<<cumulatives>>
+<synopsis>
+<<<
+{GFD.cumulatives ?*{PE}}
+>>>
+<item>
+This procedure creates propagators for the cumulatives constraint presented in 
+<em>"A new multi-resource cumulatives constraint with negative heights"</em>, 
+Nicolas Beldiceanu and Mats Carlsson, Principles and Practice of Constraint 
+Programming 2002. The constraint models a set of machines and a set of tasks that
+should be assigned to the machines. The machines have a positive resource limit and 
+the tasks each have a resource usage that can be either positive, negative, or zero. 
+The constraint is enforced over each point in time for a machine where there is at 
+least one task assigned.
+<p>
+The limit for a machine is either the maximum amount available at any given time 
+(\a at_most = true), or else the least amount to be used (\a at_most = false).
+
+<list class=enum>
+<item> <<Machine>>:  <math> Machine_i </math> is the machine assigned to task <math> i </math>
+<item> <<Start>>: <math>Start_i</math> is the start date assigned to task <math> i </math>
+<item> <<Duration>>: <math>Duration_i </math> is the duration of task <math> i </math>.
+<item> <<End>>: <math> End_i </math> is the end date assigned to task <math> i</math>.
+<item> <<Height>>: <math>Height_i </math> is the height is the amount of resources consumed by task <math> i</math>
+<item> <<Limit>>: <math>Limit_r </math> is the amount of resource available for machine <math> r </math>
+<item> <<At_most>>: <<At_most>> tells if the amount of resources used for a machine should be less than 
+the limit (<<At_most=true>>) or greater than the limit (<<At_most=false>>) 
+</list>
+<p>
+ Supports value-consistency only (<<cl:GFD.cl.val>>, default). An exception  Int::ArgumentSizeMismatch thrown if the sizes of the arguments representing tasks does not match. An exception Int::OutOfLimits thrown if any numerical argument is larger than <<GFD.sup>>  or less than <<GFD.inf>>.
+</list>
+<list class=enum>
+<item> <<post(Machine Start Duration End Height Limit At_most)>>: Post propagator for the cumulatives constraint. All parameters except <<At_most>> are vectors of finite domain variables.
+<item> <<post(Machine Start Duration End Height Limit At_most)>>: Post propagator for the cumulatives constraint. <<Machine>> and <<Limit>> are vectors of integers numbers, all others, except <<At_most>>, are vectors of finite domain variables.
+<item> <<post(Machine Start Duration End Height Limit At_most)>>: Post propagator for the cumulatives constraint. <<Duration>> and <<Limit>> are vectors of integers numbers, all others, except <<At_most>>, are vectors of finite domain variables.
+<item> <<post(Machine Start Duration End Height Limit At_most)>>: Post propagator for the cumulatives constraint. <<Machine>>, <<Duration>> and <<Limit>> are vectors of integers numbers, all others, except <<At_most>>, are vectors of finite domain variables.
+<item> <<post(Machine Start Duration End Height Limit At_most)>>: Post propagator for the cumulatives constraint. <<Height>> and <<Limit>> are vectors of integers numbers, all others, except <<At_most>>, are vectors of finite domain variables.
+<item> <<post(Machine Start Duration End Height Limit At_most)>>: Post propagator for the cumulatives constraint. <<Machine>>, <<Height>> and <<Limit>> are vectors of integers numbers, all others, except <<At_most>>, are vectors of finite domain variables.
+<item> <<post(Machine Start Duration End Height Limit At_most)>>: Post propagator for the cumulatives constraint. <<Duration>>, <<Height>> and <<Limit>> are vectors of integers numbers, all others, except <<At_most>>, are vectors of finite domain variables.
+<item> <<post(Machine Start Duration End Height Limit At_most)>>: Post propagator for the cumulatives constraint. <<Machine>>, <<Duration>>, <<Height>> and <<Limit>> are vectors of integers numbers, all others, except <<At_most>>, are vectors of finite domain variables.
+</list>
 </section>
 
 <!-- ********************************************************************** -->
 <section id="section.fd.sorted"><title/Sorted constraints/
+<p>
+
+<list>
+<entry>
+<index class=module/GFD<and>sorted/
+<<sorted>>
+<synopsis>
+<<<
+{GFD.sorted ?*{PE}}
+>>>
+<item> Post a sorted propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(Lx Ly)>>: Post propagator that <<Ly>> is <<Lx>> sorted in increasing order. Might throw the following exceptions:
+<list class=enum>
+<item> Int::ArgumentSizeMismatch, if <<Lx>> and <<Ly>> differ in size.
+<item> Int::ArgumentSame, if <<Lx>> or <<Ly>> contain shared unassigned variables.
+</list>
+<item> <<post(Lx Ly Lz)>>: Post propagator that <<Ly>> is <<Lx>> sorted in increasing order. The values 
+in <<Lz>> describe the sorting permutation, that is <math>\forall i\in\{0,\dots,|x|-1\}: x_i=y_{z_i} </math>. Might throw the following exceptions:
+<list class=enum>
+<item> Int::ArgumentSizeMismatch, if <<Lx>> and <<Ly>> differ in size.
+<item> Int::ArgumentSame, if <<Lx>> or <<Ly>> contain shared unassigned variables.
+</list>
+</list>
+</list>
 </section>
 
 <!-- ********************************************************************** -->
