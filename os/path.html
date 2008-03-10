@@ -111,8 +111,7 @@ objects are converted to strings where applicable
 <DD>initializes a path object from the string <CODE>S</CODE>.  <CODE>WIN</CODE>
 indicates that it should be considered a Windows-style path: this usually
 defaults to false, except on Windows where it defaults to true.
-<CODE>EXACT</CODE> indicates whether we should keep a terminal slash;
-the default is false.
+It is possible to indicate a directory by additing a terminal '/' or '\' (depending on OS). However, this slash/backslash is removed in the string output when <CODE>EXACT</CODE> is set to false, which is its default value. 
 <DT><CODE>{P initFromRecord(+R)}</CODE>
 <DD>initializes the path object from its record-based representation
 <DT><CODE>{P newFromRecord(R $)}</CODE>
@@ -121,8 +120,7 @@ class.  It's default definition is
 <CODE CLASS="DISPLAY">
 meth newFromRecord(R $)
    {New Path initFromRecord(R)}
-end
-</CODE>
+end</CODE>
 <DT><CODE>{P new(+S windows:WIN&lt;=ISWIN exact:EXACT&lt;=false)}</CODE>
 <DD>this method is also meant to be overriden to create derived
 instances from a string <CODE>S</CODE>
@@ -136,12 +134,15 @@ of the path
 <DT><CODE>{P isRelative($)}</CODE>
 <DD>returns true (resp. false) iff the path is absolute
 <DT><CODE>{P dirname($)}</CODE>
-<DD>returns a new path object representing the parent directory of <CODE>P</CODE>
-<DT><CODE>{P basenameString($)}</CODE>
-<DD>returns the string representation for the last component of <CODE>P</CODE>
+<DD>returns a new path object representing the parent directory of <CODE>P</CODE>. If <CODE>P</CODE> contains only a single component (i.e. <CODE>P</CODE> is a plain file) then dirname returns<CODE> nil</CODE>.
+<DD>
 <DT><CODE>{P basename($)}</CODE>
 <DD>returns a new path object representing just the last component
-of path <CODE>P</CODE>
+  of path <CODE>P</CODE>
+<DD>
+<DT><CODE>{P dirnameString($)}</CODE>
+<DD> returns the string representation for the parent directory of <CODE>P</CODE><DT><CODE>{P basenameString($)}</CODE>
+<DD>returns the string representation for the last component of <CODE>P</CODE>
 <DT><CODE>{P exists($)}</CODE>
 <DD>returns true iff path <CODE>P</CODE> exists
 <DT><CODE>{P stat($)}</CODE>
@@ -149,15 +150,18 @@ of path <CODE>P</CODE>
 <CODE>P</CODE>
 <DT><CODE>{P isDir($)}</CODE>
 <DT><CODE>{P isFile($)}</CODE>
-<DD>returns true iff <CODE>P</CODE> is a directory (resp. a regular file)
-<DT><CODE>{P size($)}</CODE>
+<DD>returns true iff <CODE>P</CODE> is a directory (resp. a regular file). Note that these methods only work for an actually existing file which is either an absolute path or relative to the current path (the implementation calls<CODE> stat</CODE>)<DT>
+<DT><CODE>{P isDir2($)}</CODE>
+<DT>
+<DT><CODE>{P isFile2($)}</CODE>
+<DD><CODE>isDir2</CODE> returns true if <CODE>P</CODE>  ends in a slash or backslash (depending on OS), and <CODE>isFile2</CODE> returns true if <CODE>P</CODE> does <em>not</em> end in a slash or backslash. Note that this is not a foolproof technique for checking for directories, but it works also for non-existing pathes<DT><CODE>{P size($)}</CODE>
 <DD>returns the size of file <CODE>P</CODE> in bytes
 <DT><CODE>{P mtime($)}</CODE>
-<DD>returns the time of last modification as an integer
+<DD>returns the time of the last modification as an integer
 <DT><CODE>{P resolve(+P2 $)}</CODE>
 <DD>returns a new path object that results from resolving <CODE>P2</CODE>
 relative to <CODE>P</CODE> (if <CODE>P2</CODE> is not a path, it is made
-into one)
+into one). In other words, <CODE>P2</CODE> is attached to the end of <CODE>P</CODE>. However, if <CODE>P2</CODE> is an absolute path, then it returns a path object only for <CODE>P2</CODE>. Note that resolve also 'appends' <CODE>P2</CODE> to <CODE>P</CODE> in case <CODE>P</CODE> is a regular file.  
 <DT><CODE>{P getcwd($)}</CODE>
 <DD>returns a path object representing the current working directory
 <DT><CODE>{P mkdir}</CODE>
@@ -178,6 +182,7 @@ omitted.  All other entries are resolved relative to <CODE>P</CODE>
 <DT><CODE>{P dropExtension($)}</CODE>
 <DD>returns a new path object with the extension of <CODE>P</CODE>, if any,
 omitted
+<dt>&nbsp;</dt>
 <DT><CODE>{P addExtension(+VS $)}</CODE>
 <DD>returns a new path object which is like <CODE>P</CODE> but with the
 extension <CODE>VS</CODE> added
