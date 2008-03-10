@@ -23,6 +23,7 @@ export
    Readdir
    Extension DropExtension AddExtension
    MaybeAddPlatform
+   Rmdir
 
 prepare
    VS2S = VirtualString.toString
@@ -53,13 +54,32 @@ prepare
       end
    end
 
-   fun {IsSlashOrBackslash C} C==&/ orelse C==&\\ end
-   fun {IsSlash C} C==&/ end
+   fun {IsWinDelimiter C} C==&/ orelse C==&\\ end
+   fun {IsPosixDelimiter C} C==&/ end
 
-   fun {SplitWindows S} {Split S IsSlashOrBackslash} end
-   fun {SplitPosix   S} {Split S IsSlash} end
+   fun {SplitWindows S} {Split S IsWinDelimiter} end
+   fun {SplitPosix   S} {Split S IsPosixDelimiter} end
 
    fun {PathToString P} {P toString($)} end
+
+   %% computes full path from given path instance info record
+   fun {ComputeString INFO}
+      Delimiter = if INFO.windows then '\\' else '/' end 
+      Drive = if INFO.drive==unit then nil else [[INFO.drive &:]] end
+      Initial = if INFO.slashinitial then [Delimiter] else nil end
+      Body = if INFO.components==nil
+	     then nil
+	     else INFO.components.1 | {Map INFO.components.2 fun {$ X} Delimiter#X end}
+	     end
+      Final = if (INFO.slashfinal andthen INFO.exact) then [Delimiter] else nil end
+   in
+      {VS2S
+       {FoldL % concatenate to single VS
+	{FoldL % remove all nil
+	 [Drive Initial Body Final] Append nil}
+	fun {$ X Y} X#Y end ""}}
+   end
+   
 import
    OS Property
    Shell at 'Shell.ozf'
@@ -77,6 +97,23 @@ define
    class Path
       feat !IS_PATH:unit
       attr
+	 %% info is record of form
+% 	  unit(
+%	     %% path as string (with or without optional terminal slash according to Exact)
+% 	     string       : STR
+% 	     %% B, defaults to true on windows
+% 	     windows      : WIN
+% 	     %% Win drive letter or unit
+% 	     drive        : Drive 
+% 	     %% B, true for path starting with slash/backslash
+% 	     slashinitial : SlashInitial
+% 	     %% B, true for path ending with slash/backslash 
+% 	     slashfinal   : SlashFinal
+% 	     %% list of strings dir names (and possibly basename) without starting and ending slash/backslash 
+% 	     components   : Items
+%	     %% B, indicates whether terminal slash is printed when transforming path back to string
+%            exact: Exact	 
+% 	     )
 	 info
 
 	 %% newFromRecord(+R ?P) makes it easier to create instances of
@@ -94,45 +131,58 @@ define
       end
 
       %% init(...) is the main user-oriented constructor
-      
+      %%
+      %% [TMP: implementation changed: exact has only influence of computation of output string with ComputeString. However, the SlashFinal is set nevertheless always to true when input path ends with slash]
+      %%
       meth init(S windows:WIN<=IS_WINDOWS exact:Exact<=false)
 	 STR1 = {VS2S S}
-	 STR2 =
-	 if Exact then STR1 else
-	    case {Reverse STR1}
-	    of nil then nil
-	    [] H|T then
-	       Pred = if IS_WINDOWS then IsSlashOrBackslash else IsSlash end
-	    in
-	       if {Pred H} then
-		  {Reverse {List.dropWhile T Pred}}
-	       else
-		  STR1
-	       end
-	    end	       
-	 end
-	 Drive
-	 NonDrive
-	 Items Items2 Items3
-	 SlashInitial
-	 SlashFinal
+	 IsLastCharSlash	% aux: B, denoting terminal slash
+	 STR2			% STR1 without terminal slash
+	 Drive			% Win Drive letter
+	 NonDrive		% aux: Path after Drive
+	 Items			% aux: path components with SlashInitial indicator
+	 Items2			% path components 
+	 SlashInitial		
+	 SlashFinal		
       in
+	 %% set IsLastCharSlash and STR2: 
+	 %% if Exact=false and STR1 is neither nil nor can be '/', then STR2 is STR without terminal slash, otherwise STR2 = STR1
+	 if {LLength STR1} < 2  % test for '/' and nil
+	 then
+	    IsLastCharSlash = false
+	    STR2 = STR1
+	 else LastChar = {Reverse STR1}.1
+	 in
+	    IsLastCharSlash = ((WIN andthen {IsWinDelimiter LastChar})
+			       orelse
+			       ({Not WIN} andthen {IsPosixDelimiter LastChar}))
+	    STR2 = if {Not Exact} andthen IsLastCharSlash
+		   then {Reverse {Reverse STR1}.2}
+		   else STR1
+		   end
+	 end
+	 %% set Drive and NonDrive
 	 if WIN then
-	    case STR2
-	    of C|&:|L then Drive=C    NonDrive=L
+	    case STR1
+	    of DriveLetter|&:|L then Drive=DriveLetter    NonDrive=L
 	    []      L then Drive=unit NonDrive=L
 	    end
-	 else Drive=unit NonDrive=STR2 end
+	 else Drive=unit NonDrive=STR1 end
+	 %% set Items
 	 Items = {if WIN then SplitWindows else SplitPosix end
 		  NonDrive}
+	 %% set SlashInitial and Items2 
 	 case Items
 	 of nil|L then SlashInitial=true Items2=L
 	 else SlashInitial=false Items2=Items
 	 end
-	 case {Reverse Items2}
-	 of nil|L then SlashFinal=true Items3={Reverse L}
-	 else SlashFinal=false Items3=Items2
+	 %% set SlashFinal
+	 %% [TMP: changed: Split never returns nil as last element if path ends in single slash/backslash..]
+	 if IsLastCharSlash
+	 then SlashFinal=true
+	 else SlashFinal=false
 	 end
+	 %% create path instance 
 	 {self initFromRecord(
 		  unit(
 		     string       : STR2
@@ -140,83 +190,64 @@ define
 		     drive        : Drive
 		     slashinitial : SlashInitial
 		     slashfinal   : SlashFinal
-		     components   : Items3
+		     components   : Items2
+		     exact        : Exact
 		     ))}
       end
+      
       meth toString($) @info.string end
       meth toAtom($) {S2A @info.string} end
       meth length($) {LLength @info.string} end
       meth isAbsolute($) @info.slashinitial end
       meth isRelative($) {Not Path,isAbsolute($)} end
+      meth dirnameString($)
+	 {{self dirname($)} toString($)}
+      end
       meth dirname($)
 	 INFO = @info
+	 COM = INFO.components
       in
-	 if INFO.slashfinal then
-	    {self newFromRecord({AdjoinAt INFO slashfinal false} $)}
-	 else
-	    COM = INFO.components
+	 if {LLength COM} == 1
+	 then {Make nil}
+	 else 
 	    STR
 	    INFO2 = {Adjoin INFO
 		     unit(
 			string       : STR
-			slashinitial :
-			   if COM==nil then false else INFO.slashinitial end
-			slashfinal   : false
+			slashfinal   :
+			   %% check for root
+			   if COM==nil then false else true end
 			components   :
 			   if COM==nil then nil
 			   else {Reverse {Reverse COM}.2} end
 			)}
 	 in
-	    Path,ComputeString(INFO2 STR)
+	    {ComputeString INFO2 STR}
 	    {self newFromRecord(INFO2 $)}
 	 end
       end
-      meth ComputeString(INFO $)
-	 INFO = @info
-	 DEV = INFO.drive
-	 INI = INFO.slashinitial
-	 FIN = INFO.slashfinal
-	 COM = INFO.components
-	 L1  = if DEV==unit then nil else [DEV &:] end
-	 L2  = if INI then L1#'/' else L1 end
-	 L3  = L2 # {FoldL COM
-		     fun {$ Accu C}
-			Accu#(if Accu==nil then C else Accu#'/'#C end)
-		     end nil}
-	 L4  = if FIN then L3#'/' else L3 end
-      in
-	 {VS2S L4}
-      end
+      %% [TMP: changed def: return plain string, not wrapped in a list]  
       meth basenameString($)
-	 INFO = @info
-      in
-	 if INFO.slashfinal then nil else
-	    case {Reverse INFO.components}
-	    of nil then nil
-	    [] H|_ then [H] end
-	 end
+	 {{self basename($)} toString($)}
       end
+      %% [TMP: changed def: UNIX basename always returns last component of path, even if path ends with dir]
       meth basename($)
 	 INFO = @info
-      in
-	 if INFO.slashfinal then
-	    {self new(nil $ window:INFO.windows)}
-	 else
-	    STR
-	    INFO2 = unit(
-		       string       : STR
+	 COM = INFO.components
+	 STR
+	 INFO2 = {Adjoin INFO
+		  unit(string       : STR
 		       drive        : unit
-		       slashinitial : false
-		       slashfinal   : false
+		       slashinitial :
+			  %% check for root case
+		          if COM==nil then INFO.slashinitial else false end
 		       components   :
-			  case {Reverse INFO.components}
-			  of nil then nil
-			  [] H|_ then [H] end
-		       windows      : INFO.windows)
-	 in
-	    Path,ComputeString(INFO2 STR)
-	    {self newFromRecord(INFO2 $)}
-	 end
+			  if COM==nil then nil
+			  else [{Reverse COM}.1] end
+		      )}
+      in
+	 {ComputeString INFO2 STR}
+	 {self newFromRecord(INFO2 $)}
       end
       meth exists($)
 	 try Path,stat(_) true catch _ then false end
@@ -227,8 +258,14 @@ define
       meth isDir($)
 	 (Path,stat($)).type == 'dir'
       end
+      meth isDir2($)
+	 @info.slashfinal orelse {self isRoot($)}
+      end
       meth isFile($)
 	 (Path,stat($)).type == 'reg'
+      end
+      meth isFile2($)
+	 {Not @info.slashfinal}
       end
       meth size($)
 	 (Path,stat($)).size
@@ -236,6 +273,9 @@ define
       meth mtime($)
 	 (Path,stat($)).mtime
       end
+      
+      %% tmp meth for debugging
+      /* meth getInfo($) @info end */
       meth GetInfo($) @info end
       meth resolve(X $)
 	 P = {Make X}
@@ -244,15 +284,14 @@ define
 	    INFO  = @info
 	    INFO2 = {P GetInfo($)}
 	    STR
-	    INFO3 = unit(
-		       string       : STR
-		       drive        : INFO.drive
-		       slashinitial : INFO.slashinitial
-		       slashfinal   : INFO2.slashfinal
-		       components   : {Append INFO.components INFO2.components}
-		       windows      : INFO.windows)
+	    INFO3 = {Adjoin INFO
+		     unit(
+			string       : STR
+			slashfinal   : INFO2.slashfinal
+			components   : {Append INFO.components INFO2.components}
+			)}
 	 in
-	    Path,ComputeString(INFO3 STR)
+	    {ComputeString INFO3 STR}
 	    {self newFromRecord(INFO3 $)}
 	 end
       end
@@ -280,12 +319,30 @@ define
 	 end
       end
       meth isRoot($)
-	 @info.components==nil
+	 @info.components==nil andthen @info.slashinitial
       end
       meth readdir($)
-	 for S in {OS.getDir @info.string} collect:COL do
-	    if S=="." orelse S==".." then skip else
-	       {COL Path,resolve(S $)}
+	 INFO = @info
+      in
+	 for S in {OS.getDir INFO.string} collect:COL do
+	    if S=="." orelse S==".." then skip
+	    else
+	       P_S = {Make S}
+	       STR_Result
+	       INFO_S = {P_S GetInfo($)}
+	       INFO_Result = {Adjoin INFO
+			      unit(string       : STR_Result
+				   slashfinal   : Slashfinal_Result
+				   components   : {Append INFO.components
+						   INFO_S.components})}
+	       %% if S is dir then set finalslash accordingly
+	       Slash = if INFO.exact then nil else
+			  if INFO.windows then '\\' else '/' end 
+		       end
+	       Slashfinal_Result = {OS.stat INFO.string#Slash#S}.type == 'dir'
+	    in
+	       {ComputeString INFO_Result STR_Result}
+	       {COL {self newFromRecord(INFO_Result $)}}
 	    end
 	 end
       end
@@ -341,7 +398,7 @@ define
    fun {Size       P} {{Make P} size($)} end
    fun {Mtime      P} {{Make P} mtime($)} end
    fun {Resolve P1 P2} {{{Make P1} resolve(P2 $)} toString($)} end
-   fun {Getcwd} {Make {OS.getCWD}} end
+   fun {Getcwd} {Make {OS.getCWD}#'/'} end
    proc {Mkdir     P} {{Make P} mkdir} end
    proc {Mkdirs    P} {{Make P} mkdirs} end
    fun {IsRoot     P} {{Make P} isRoot($)} end
