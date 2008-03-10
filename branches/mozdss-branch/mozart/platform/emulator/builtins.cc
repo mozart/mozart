@@ -448,13 +448,18 @@ OZ_Return arrayExchangeInline(TaggedRef t, TaggedRef i, TaggedRef value, TaggedR
   if (!oz_isArray(array)) {
     oz_typeError(0,"Array");
   }
-
   if (!oz_isSmallInt(index)) {
     oz_typeError(1,"smallInteger");
   }
 
   OzArray *ar = tagged2Array(array);
   CheckLocalBoard(ar,"array");
+
+  if (ar->isDistributed()) {
+    TaggedRef arg[] = { index, value };
+    return distArrayOp(OP_EXCHANGE, ar, arg, &old);
+  }
+
   old = ar->exchange(tagged2SmallInt(index),value);
   if (old) return PROCEED;
 
@@ -717,20 +722,13 @@ OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
       }
       return PROCEED;
     }
-    case Co_Array:
-      {
-	if (!oz_isSmallInt(f))
-	  goto no_feature;
-	tf = tagged2Array(t)->getArg(tagged2SmallInt(f));
-	if (tf == makeTaggedNULL()) 
-	  goto no_feature;
-	return PROCEED;
-      }
-    case Co_Dictionary:
-      tf = tagged2Dictionary(t)->getArg(f);
-      if (!tf)
-	goto no_feature;
-      return PROCEED;
+    case Co_Array: {
+      return arrayGetInline(t, f, tf);
+    }
+    case Co_Dictionary: {
+      extern OZ_Return dictionaryGetInline(OZ_Term, OZ_Term, OZ_Term&);
+      return dictionaryGetInline(t, f, tf);
+    }
     default:
       goto type_error_t;
     }
