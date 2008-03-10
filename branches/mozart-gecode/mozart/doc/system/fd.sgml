@@ -74,19 +74,10 @@ relations are summarized below.
 <tr><td/<<GFD.rt.'>:'>>/ <td> Greater (<math>></math>)</td></tr>
 </table>
 
-<!--
-<table>
-<tr/<td/<<A>>/<td/<<'=:'>> /<td/ <<'&gt;:'>> /<td/ <<'&gt;=:'>> /<td/ <<'&lt;:'>> /<td/ <<'=&lt;:'>> /<td/ <<'\\=:'>>//
-<tr/<td/<math>\sim_A</math> /<td/ <math>=</math> /<td/ <math>&gt;</math> /<td/ <math>\geq</math> /<td/ <math><</math> /<td/ <math>\leq</math> /<td/ <math>\neq</math>//
-</table>
--->
-
 <para><title/Lazy propagation/
 When a propagator is posted in a computation space it does not performs any
 domain pruning. This behavior allows the implementation of batch recomputation 
-enabled search engines (REF paper). Lazy propagation is only acheved in sub-spaces,
-it is, when on toplevel propagation is performe eagerly. To perform propagation
-in a sub-space you have to ask the space to do so by calling <<Space.ask>>.
+enabled search engines (REF paper). Lazy propagation is only acheved in sub-spaces, it is, when on toplevel propagation is performe eagerly. To perform propagation in a sub-space you have to ask the space to do so by calling <<Space.ask>>.
 
 <p>
 A propagator ceases to exist at least if all the variables it is posted
@@ -790,6 +781,39 @@ in <<Lz>> describe the sorting permutation, that is <math>\forall i\in\{0,\dots,
 
 <!-- ********************************************************************** -->
 <section id="section.fd.cardinality"><title/Cardinality constraints/
+<p>
+Domain consistency on the extended cardinality variables of the Global 
+Cardinality Propagator is only obtained if they are bounds consistent, 
+otherwise the problem of enforcing domain consistency on the cardinality 
+variables is NP-complete as proved by <em>Qumiper et. al. in Improved 
+Algorithms for the Global Cardinality Constraint</em>.
+
+<list>
+<entry>
+<index class=module/GFD<and>count/
+<<count>>
+<synopsis>
+<<<
+{GFD.count ?*{PE}}
+>>>
+<item> Post a count propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(Lx N Rt M)>>:  Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=N\}\sim_{Rt} M<math>. Supports domain-consistent propagation only.
+<item> <<post(Lx Y Rt M)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=y\}\sim_{Rt} M</math>. Supports domain-consistent propagation only.
+<item> <<post(Lx Y Rt M)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=Y_i\}\sim_{Rt} M</math>. Supports domain-consistent propagation only. Throws an exception of type Int::ArgumentSizeMismatch, if <<Lx>> and <<Y>> are of different size.
+<item> <<post(Lx N Rt Z)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=N\}\sim_{Rt} Z</math>. Supports domain-consistent propagation only.
+<item> <<post(Lx Y Rt Z)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=Y\}\sim_{Rt} Z</math>. Supports domain-consistent propagation only.
+<item> <<post(Lx Y Rt Z)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=Y_i\}\sim_{Rt} Z</math>. Supports domain-consistent propagation only. Throws an exception of type Int::ArgumentSizeMismatch, if <<Lx>> and <<Y>> are of different size.
+<item> <<post(Lx C)>>:  Posts a global count (cardinality) constraint. Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=j\}=C_j</math> and <math> \bigcup_i \{Lx_i\} \subseteq \{0,\ldots,|C|-1\}</math> (no other value occurs). Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
+<item> <<post(Lx C)>>: Posts a global count (cardinality) constraint. Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=j\}\in C_j</math> and <math> \bigcup_i \{Lx_i\} \subseteq \{0,\ldots,|C|-1\}</math> (no other value occurs). Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
+<item><<post(Lx C V)>>: Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=V_j\}=C_j</math> and <math>\bigcup_i \{Lx_i\} \subseteq \bigcup_j \{V_j\}</math> (no other value occurs). Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply. Throws an exception of type Int::ArgumentSizeMismatch, if  <<C>> and <<V>> are of different size.
+<item><<post(Lx C V)>>:  Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=V_j\}\in C_j</math> and <math>\bigcup_i \{Lx_i\} \subseteq \bigcup_j \{V_j\}</math> (no other value occurs). Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply. Throws an exception of type Int::ArgumentSizeMismatch, if <<C>> and <<V>> are of different size.
+<item><<post(Lx C V)>>:  Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=V_j\}\in C</math> and <math> \bigcup_i \{Lx_i\} \subseteq \bigcup_j \{V_j\}</math> (no other value occurs). Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). Throws an exception of type Int::ArgumentSame, if Lx contains the same unassigned variable multiply. Throws an exception of type Int::ArgumentSizeMismatch, if <<C>> and <<V>> are of different size.
+</list>
+</list>
+
 </section>
 
 <!-- ********************************************************************** -->
@@ -798,6 +822,77 @@ in <<Lz>> describe the sorting permutation, that is <math>\forall i\in\{0,\dots,
 
 <!-- ********************************************************************** -->
 <section id="section.fd.arithmetic"><title/Arithmetic constraints
+<p>
+
+<list>
+<entry>
+<index class=module/GFD<and>min/
+<<min>>
+<synopsis>
+<<<
+{GFD.min ?*{PE}}
+>>>
+<item> Post an arithmetic (min) propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(X0 X1 X2)>>: Post propagator for <math> \min\{X0,X1\}=X2</math>. Only bounds-consistency is supported.
+<item><<post(Lx Y)>>:  Post propagator for <math> \min Lx=Y</math>. Only bounds-consistency is supported.
+</list>
+
+<entry>
+<index class=module/GFD<and>max/
+<<max>>
+<synopsis>
+<<<
+{GFD.max ?*{PE}}
+>>>
+<item> Post an arithmetic (max) propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(X0 X1 X2)>>: Post propagator for <math> \max\{X0,X1\}=X2</math>. Only bounds-consistency is supported.
+<item><<post(Lx Y)>>:  Post propagator for <math> \max Lx=Y</math>. Only bounds-consistency is supported.
+</list>
+
+<entry>
+<index class=module/GFD<and>abs/
+<<abs>>
+<synopsis>
+<<<
+{GFD.abs ?*{PE}}
+>>>
+<item> ?_{PE} can be of the form <<post(X0 X1)>> meaning that <math> |X0|=X1 </math>. Only bounds-consistency is supported.
+
+<entry>
+<index class=module/GFD<and>mult/
+<<mult>>
+<synopsis>
+<<<
+{GFD.mult ?*{PE}}
+>>>
+<item> ?_{PE} can be of the form <<post(X0 X1 X2)>> meaning that <math> X0\cdot X1=X2 </math>. Only bounds-consistency is supported.
+
+<entry>
+<index class=module/GFD<and>sqr/
+<<sqr>>
+<synopsis>
+<<<
+{GFD.sqr ?*{PE}}
+>>>
+<item> ?_{PE} can be of the form <<post(X0 X1)>> meaning that <math> X0\cdot X0=X1</math>. Only bounds-consistency is supported.
+
+<entry>
+<index class=module/GFD<and>sqrt/
+<<sqrt>>
+<synopsis>
+<<<
+{GFD.sqrt ?*{PE}}
+>>>
+<item> ?_{PE} can be of the form <<post(X0 X1)>> meaning that <math>\lfloor\sqrt{X0}\rfloor=X1 </math>. Only bounds-consistency is supported.
+
+</list>
+
 </section>
 
 <!-- ********************************************************************** -->
