@@ -305,159 +305,102 @@ bool SuspendedLockRelease::gCollect() {
 
 
 
-/************************* SuspendedArrayGet *************************/
+/************************* SuspendedArrayOp *************************/
 
-SuspendedArrayGet::SuspendedArrayGet(Mediator* med, int idx,  OZ_Term var) :
-  SuspendedOperation(med), index(idx), result(var)
+SuspendedArrayOp::SuspendedArrayOp(Mediator* med, OperationTag _op,
+				   TaggedRef* a, TaggedRef* res) :
+  SuspendedOperation(med), op(_op)
 {
+  for (int i = 0; i < 2; i++) {
+    args[i] = i < OperationIn[_op] ? a[i] : makeTaggedNULL();
+  }
+  result = res ? (*res = oz_newVariable()) : makeTaggedNULL();
   suspend();
 }
 
-WakeRetVal SuspendedArrayGet::resumeDoLocal(DssOperationId*) {
-  ArrayMediator *pM = static_cast<ArrayMediator*>(getMediator());
-  OzArray* oza      = static_cast<OzArray*>(pM->getConst());
-  TaggedRef out = oza->getArg(index);
-  if (out) 
-    resumeUnify(result, out);
-  else 
-    resumeRaise(OZ_makeException(E_ERROR, E_KERNEL, "array", 2, oza, index));
-  return WRV_DONE;
-}
-
-WakeRetVal SuspendedArrayGet::resumeRemoteDone(PstInContainerInterface* pstin){
-  PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  OZ_Term answer = pst->a_term;
-  // Check if it's an exception
-  if (oz_isSRecord(answer) && tagged2SRecord(answer)->getLabel() == E_ERROR)
-      resumeRaise(answer);
-  else
-    resumeUnify(result, answer);
-  return WRV_DONE;
-}
-
-bool SuspendedArrayGet::gCollect(){
-  if (gc()) {
-    oz_gCollectTerm(result, result);
-    return true;
-  } else
-    return false;
-}
-
-
-
-/************************* SuspendedArrayPut *************************/
-
-SuspendedArrayPut::SuspendedArrayPut(Mediator* med, int idx, OZ_Term val) :
-  SuspendedOperation(med), index(idx), value(val)
-{
-  suspend();
-}
-
-WakeRetVal SuspendedArrayPut::resumeDoLocal(DssOperationId*) {
-  ArrayMediator *pM = static_cast<ArrayMediator*>(getMediator());
-  OzArray*oza       = static_cast<OzArray*>(pM->getConst());
-  TaggedRef *ar = oza->getRef();
-  if (oza->setArg(index,value))
-    resume();
-  else
-    resumeRaise(OZ_makeException(E_ERROR, E_KERNEL, "array", 2, oza, index));
-  return WRV_DONE;
-}
-
-WakeRetVal SuspendedArrayPut::resumeRemoteDone(PstInContainerInterface* pstin){
-  PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  
-  // If the result sent back is NULL, means everything went fine
-  if (pst == NULL) {
-    resume();
+WakeRetVal SuspendedArrayOp::resumeDoLocal(DssOperationId*) {
+  ArrayMediator* med = static_cast<ArrayMediator*>(getMediator());
+  OzArray* arr = static_cast<OzArray*>(med->getConst());
+  TaggedRef out;
+  int ret = arrayOperation(op, arr, args, &out);
+  if (ret == PROCEED) {
+    if (result) resumeUnify(result, out); else resume();
   } else {
-    // Check if it's an exception
-    OZ_Term answer = pst->a_term;
-    if (oz_isSRecord(answer) && tagged2SRecord(answer)->getLabel() == E_ERROR)
-      resumeRaise(answer);
+    Assert(ret == RAISE);
+    resumeRaise(am.getExceptionValue());
   }
   return WRV_DONE;
 }
 
-bool SuspendedArrayPut::gCollect() {
-  if (gc()) {
-    oz_gCollectTerm(value, value);
-    return true;
-  } else
-    return false;
-}
-
-
-/************************* SuspendedDictionaryGet *************************/
-
-SuspendedDictionaryGet::SuspendedDictionaryGet(Mediator* med, OZ_Term k,  OZ_Term var) :
-  SuspendedOperation(med), key(k), result(var)
-{
-  suspend();
-}
-
-WakeRetVal SuspendedDictionaryGet::resumeDoLocal(DssOperationId*) {
-  DictionaryMediator *dm = static_cast<DictionaryMediator*>(getMediator());
-  OzDictionary* ozD  = static_cast<OzDictionary*>(dm->getConst());
-  TaggedRef out = ozD->getArg(key);
-  if (out)
-    resumeUnify(result, out);
-  else
-    resumeRaise(OZ_makeException(E_SYSTEM, E_KERNEL, "dict", 2, ozD, key));
+WakeRetVal SuspendedArrayOp::resumeRemoteDone(PstInContainerInterface* pstin){
+  PstInContainer* pst = static_cast<PstInContainer*>(pstin);
+  if (pst == NULL) {
+    resume();
+  } else if (glue_isReturn(pst->a_term)) {
+    resumeUnify(result, glue_getData(pst->a_term));
+  } else {
+    resumeRaise(glue_getData(pst->a_term));
+  }
   return WRV_DONE;
 }
 
-WakeRetVal SuspendedDictionaryGet::resumeRemoteDone(PstInContainerInterface* pstin){
-  PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  OZ_Term answer = pst->a_term;
-  Assert(oz_isSRecord(answer));
-  SRecord* recAns = tagged2SRecord(answer);
-  if (recAns->getLabel() == OZ_atom("ok"))
-    resumeUnify(result, OZ_subtree(answer, makeTaggedSmallInt(1)));  
-  else if (recAns->getLabel() == E_ERROR)
-    resumeRaise(answer);
-  return WRV_DONE;
-}
-
-bool SuspendedDictionaryGet::gCollect(){
+bool SuspendedArrayOp::gCollect(){
   if (gc()) {
-    oz_gCollectTerm(key, key);
+    OZ_gCollectBlock(args, args, 2);
     oz_gCollectTerm(result, result);
     return true;
-  } else
-    return false;
+  }
+  return false;
 }
 
 
 
-/************************* SuspendedDictionaryPut *************************/
+/************************* SuspendedDictionaryOp *************************/
 
-SuspendedDictionaryPut::SuspendedDictionaryPut(Mediator* med, OZ_Term k, OZ_Term val) :
-  SuspendedOperation(med), key(k), value(val)
+SuspendedDictionaryOp::SuspendedDictionaryOp(Mediator* med, OperationTag _op,
+					     TaggedRef* a, TaggedRef* res) :
+  SuspendedOperation(med), op(_op)
 {
+  for (int i = 0; i < 3; i++) {
+    args[i] = i < OperationIn[_op] ? a[i] : makeTaggedNULL();
+  }
+  result = res ? (*res = oz_newVariable()) : makeTaggedNULL();
   suspend();
 }
 
-WakeRetVal SuspendedDictionaryPut::resumeDoLocal(DssOperationId*) {
-  DictionaryMediator *dm = static_cast<DictionaryMediator*>(getMediator());
-  OzDictionary* ozD = static_cast<OzDictionary*>(dm->getConst());
-  ozD->setArg(key, value);
-  resume();
+WakeRetVal SuspendedDictionaryOp::resumeDoLocal(DssOperationId*) {
+  DictionaryMediator* med = static_cast<DictionaryMediator*>(getMediator());
+  OzDictionary* dict = static_cast<OzDictionary*>(med->getConst());
+  TaggedRef out;
+  int ret = dictionaryOperation(op, dict, args, &out);
+  if (ret == PROCEED) {
+    if (result) resumeUnify(result, out); else resume();
+  } else {
+    Assert(ret == RAISE);
+    resumeRaise(am.getExceptionValue());
+  }
   return WRV_DONE;
 }
 
-WakeRetVal SuspendedDictionaryPut::resumeRemoteDone(PstInContainerInterface* pstin){
-  resume();
+WakeRetVal SuspendedDictionaryOp::resumeRemoteDone(PstInContainerInterface* pstin){
+  PstInContainer* pst = static_cast<PstInContainer*>(pstin);
+  if (pst == NULL) {
+    resume();
+  } else if (glue_isReturn(pst->a_term)) {
+    resumeUnify(result, glue_getData(pst->a_term));
+  } else {
+    resumeRaise(glue_getData(pst->a_term));
+  }
   return WRV_DONE;
 }
 
-bool SuspendedDictionaryPut::gCollect() {
+bool SuspendedDictionaryOp::gCollect(){
   if (gc()) {
-    oz_gCollectTerm(key, key);
-    oz_gCollectTerm(value, value);
+    OZ_gCollectBlock(args, args, 3);
+    oz_gCollectTerm(result, result);
     return true;
-  } else
-    return false;
+  }
+  return false;
 }
 
 
@@ -585,6 +528,56 @@ bool SuspendedObjectExchange::gCollect(){
     return true;
   } else
     return false;
+}
+
+
+
+/************************* SuspendedChunkOp *************************/
+
+SuspendedChunkOp::SuspendedChunkOp(Mediator* med, OperationTag _op,
+				   TaggedRef* a, TaggedRef* res) :
+  SuspendedOperation(med), op(_op)
+{
+  for (int i = 0; i < 2; i++) {
+    args[i] = i < OperationIn[_op] ? a[i] : makeTaggedNULL();
+  }
+  result = res ? (*res = oz_newVariable()) : makeTaggedNULL();
+  suspend();
+}
+
+WakeRetVal SuspendedChunkOp::resumeDoLocal(DssOperationId*) {
+  ChunkMediator* med = static_cast<ChunkMediator*>(getMediator());
+  SChunk* chunk = static_cast<SChunk*>(med->getConst());
+  TaggedRef out;
+  int ret = chunkOperation(op, chunk, args, &out);
+  if (ret == PROCEED) {
+    if (result) resumeUnify(result, out); else resume();
+  } else {
+    Assert(ret == RAISE);
+    resumeRaise(am.getExceptionValue());
+  }
+  return WRV_DONE;
+}
+
+WakeRetVal SuspendedChunkOp::resumeRemoteDone(PstInContainerInterface* pstin){
+  PstInContainer* pst = static_cast<PstInContainer*>(pstin);
+  if (pst == NULL) {
+    resume();
+  } else if (glue_isReturn(pst->a_term)) {
+    resumeUnify(result, glue_getData(pst->a_term));
+  } else {
+    resumeRaise(glue_getData(pst->a_term));
+  }
+  return WRV_DONE;
+}
+
+bool SuspendedChunkOp::gCollect(){
+  if (gc()) {
+    OZ_gCollectBlock(args, args, 2);
+    oz_gCollectTerm(result, result);
+    return true;
+  }
+  return false;
 }
 
 

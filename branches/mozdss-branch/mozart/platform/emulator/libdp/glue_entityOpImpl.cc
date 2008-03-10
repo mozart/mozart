@@ -234,62 +234,32 @@ OZ_Return distLockReleaseImpl(OzLock* lock, TaggedRef thr) {
 
 /******************************* Arrays *******************************/
 
-OZ_Return distArrayGetImpl(OzArray *oza, TaggedRef indx, TaggedRef &ans) {
-  ArrayMediator *me = static_cast<ArrayMediator*>(oza->getMediator());
+OZ_Return distArrayOpImpl(OperationTag op, OzArray *arr,
+			  TaggedRef* arg, TaggedRef* result) {
+  ArrayMediator *med = static_cast<ArrayMediator*>(arr->getMediator()); 
 
   // suspend if fault state not ok
-  if (me->getFaultState()) return me->suspendOnFault();
+  if (med->getFaultState()) return med->suspendOnFault();
 
-  // Before starting distributed operations, check the index
-  if (!oza->checkIndex(tagged2SmallInt(indx)))
-    return oz_raise(E_ERROR, E_KERNEL, "array", 2, makeTaggedConst(oza), indx);
-
+  // perform DSS operation
   DssThreadId *thrId = currentThreadId();
   PstOutContainerInterface** pstout;
-  OpRetVal cont = me->abstractOperation_Read(thrId, pstout);
-  if (pstout != NULL) *(pstout) = new PstOutContainer(indx);
+  OpRetVal ret = (OperationWrite[op] ?
+		  med->abstractOperation_Write(thrId, pstout) :
+		  med->abstractOperation_Read(thrId, pstout));
+  if (pstout)
+    *pstout = new PstOutContainer(glue_wrap(op, OperationIn[op], arg));
 
-  switch (cont) {
+  switch (ret) {
   case DSS_PROCEED:
-    ans = oza->getArg(tagged2SmallInt(indx));
-    if (ans) 
-      return PROCEED;
-    return oz_raise(E_ERROR, E_KERNEL, "array", 2, makeTaggedConst(oza), indx);
+    // perform locally
+    return arrayOperation(op, arr, arg, result);
   case DSS_SUSPEND:
-    ans = oz_newVariable();
-    new SuspendedArrayGet(me, tagged2SmallInt(indx), ans);
+    // create suspended operation
+    new SuspendedArrayOp(med, op, arg, result);
     return BI_REPLACEBICALL;
   default:
-    OZ_error("Unhandled error in distArrayGet");
-    return PROCEED;
-  }
-}
-
-OZ_Return distArrayPutImpl(OzArray *oza, TaggedRef indx, TaggedRef val) {
-  ArrayMediator *me = static_cast<ArrayMediator*>(oza->getMediator()); 
-
-  // suspend if fault state not ok
-  if (me->getFaultState()) return me->suspendOnFault();
-
-  // Before starting distributed operations, check the index
-  if (!oza->checkIndex(tagged2SmallInt(indx)))
-    return oz_raise(E_ERROR, E_KERNEL, "array", 2, makeTaggedConst(oza), indx);
-
-  DssThreadId *thrId = currentThreadId();
-  PstOutContainerInterface** pstout;
-  OpRetVal cont = me->abstractOperation_Write(thrId,pstout);
-  if (pstout != NULL) *(pstout) = new PstOutContainer(oz_cons(indx,val));
-
-  switch (cont) {
-  case DSS_PROCEED:
-    if (oza->setArg(tagged2SmallInt(indx),val)) 
-      return PROCEED;
-    return oz_raise(E_ERROR,E_KERNEL,"array",2,makeTaggedConst(oza),indx);
-  case DSS_SUSPEND:
-    new SuspendedArrayPut(me, tagged2SmallInt(indx), val);
-    return BI_REPLACEBICALL;
-  default:
-    OZ_error("Unhandled error in distArrayPut");
+    OZ_error("Unhandled error in distArrayOp");
     return PROCEED;
   }
 }
@@ -298,57 +268,33 @@ OZ_Return distArrayPutImpl(OzArray *oza, TaggedRef indx, TaggedRef val) {
 
 /**************************** Dictionaries ****************************/
 
-OZ_Return
-distDictionaryGetImpl(OzDictionary *ozD, TaggedRef key, TaggedRef &ans) {
-  DictionaryMediator *me =
-    static_cast<DictionaryMediator*>(ozD->getMediator());
+OZ_Return distDictionaryOpImpl(OperationTag op, OzDictionary *dict,
+			       TaggedRef* arg, TaggedRef* result) {
+  DictionaryMediator *med =
+    static_cast<DictionaryMediator*>(dict->getMediator()); 
 
   // suspend if fault state not ok
-  if (me->getFaultState()) return me->suspendOnFault();
+  if (med->getFaultState()) return med->suspendOnFault();
 
+  // perform DSS operation
   DssThreadId *thrId = currentThreadId();
   PstOutContainerInterface** pstout;
-  OpRetVal cont = me->abstractOperation_Read(thrId, pstout);
-  if (pstout != NULL) *(pstout) = new PstOutContainer(key);
+  OpRetVal ret = (OperationWrite[op] ?
+		  med->abstractOperation_Write(thrId, pstout) :
+		  med->abstractOperation_Read(thrId, pstout));
+  if (pstout)
+    *pstout = new PstOutContainer(glue_wrap(op, OperationIn[op], arg));
 
-  switch (cont) {
+  switch (ret) {
   case DSS_PROCEED:
-    ans = ozD->getArg(key);
-    if (ans) 
-      return PROCEED;
-    return oz_raise(E_ERROR, E_KERNEL, "dict", 2, makeTaggedConst(ozD), key);
+    // perform locally
+    return dictionaryOperation(op, dict, arg, result);
   case DSS_SUSPEND:
-    ans = oz_newVariable();
-    new SuspendedDictionaryGet(me, key, ans);
+    // create suspended operation
+    new SuspendedDictionaryOp(med, op, arg, result);
     return BI_REPLACEBICALL;
   default:
-    OZ_error("Unhandled error in distDictionaryGet");
-    return PROCEED;
-  }
-}
-
-OZ_Return
-distDictionaryPutImpl(OzDictionary *ozD, TaggedRef key, TaggedRef val) {
-  DictionaryMediator *me = 
-    static_cast<DictionaryMediator*>(ozD->getMediator()); 
-
-  // suspend if fault state not ok
-  if (me->getFaultState()) return me->suspendOnFault();
-
-  DssThreadId *thrId = currentThreadId();
-  PstOutContainerInterface** pstout;
-  OpRetVal cont = me->abstractOperation_Write(thrId, pstout);
-  if (pstout != NULL) *(pstout) = new PstOutContainer(oz_cons(key, val));
-
-  switch (cont) {
-  case DSS_PROCEED:
-    ozD->setArg(key, val);
-    return PROCEED;
-  case DSS_SUSPEND:
-    new SuspendedDictionaryPut(me, key, val);
-    return BI_REPLACEBICALL;
-  default:
-    OZ_error("Unhandled error in distDictionaryPut");
+    OZ_error("Unhandled error in distDictionaryOp");
     return PROCEED;
   }
 }
@@ -637,8 +583,8 @@ OZ_Return distVarMakeNeededImpl(TaggedRef *varPtr) {
 
 /**************************** Chunks ****************************/
 
-OZ_Return
-distChunkGetImpl(SChunk *chunk, TaggedRef key, TaggedRef &ans) {
+OZ_Return distChunkOpImpl(OperationTag op, SChunk *chunk,
+			  TaggedRef* arg, TaggedRef* result) {
   // precondition: the chunk is only a stub
   Assert(chunk->getValue() == makeTaggedNULL());
   ChunkMediator* med =
@@ -647,18 +593,19 @@ distChunkGetImpl(SChunk *chunk, TaggedRef key, TaggedRef &ans) {
   // suspend if fault state not ok
   if (med->getFaultState()) return med->suspendOnFault();
 
+  // perform DSS operation
   DssThreadId *thrId = currentThreadId();
   PstOutContainerInterface** pstout;
-  OpRetVal cont = med->abstractOperation_Read(thrId, pstout);
-  if (pstout != NULL) *(pstout) = new PstOutContainer(key);
+  OpRetVal ret = med->abstractOperation_Read(thrId, pstout);
+  if (pstout)
+    *pstout = new PstOutContainer(glue_wrap(op, OperationIn[op], arg));
 
-  switch (cont) {
+  switch (ret) {
   case DSS_SUSPEND:   // we cannot have DSS_PROCEED here!
-    ans = oz_newVariable();
-    new SuspendedGenericDot(med, key, ans);
+    new SuspendedChunkOp(med, op, arg, result);
     return BI_REPLACEBICALL;
   default:
-    OZ_error("Unhandled error in distChunkGet");
+    OZ_error("Unhandled error in distChunkOp");
     return PROCEED;
   }
 }
@@ -686,7 +633,7 @@ distClassGetImpl(OzClass *cls) {
     new SuspendedClassGet(med);
     return SUSPEND;
   default:
-    OZ_error("Unhandled error in distChunkGet");
+    OZ_error("Unhandled error in distClassGet");
     return PROCEED;
   }
 }
@@ -742,12 +689,10 @@ void initEntityOperations(){
   distLockRelease = &distLockReleaseImpl;
 
   // arrays
-  distArrayPut = &distArrayPutImpl;
-  distArrayGet = &distArrayGetImpl;
+  distArrayOp = &distArrayOpImpl;
 
   // dictionaries
-  distDictionaryPut = &distDictionaryPutImpl;
-  distDictionaryGet = &distDictionaryGetImpl;
+  distDictionaryOp = &distDictionaryOpImpl;
 
   // objects
   distObjectInvoke = &distObjectInvokeImpl;
@@ -762,7 +707,7 @@ void initEntityOperations(){
   distVarMakeNeeded = &distVarMakeNeededImpl;
 
   // chunks
-  distChunkGet = &distChunkGetImpl;
+  distChunkOp = &distChunkOpImpl;
 
   // classes
   distClassGet = &distClassGetImpl;

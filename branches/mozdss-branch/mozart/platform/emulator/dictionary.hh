@@ -728,4 +728,8 @@ OzDictionary *tagged2Dictionary(OZ_Term term)
   return (OzDictionary *) tagged2Const(term);
 }
 
+// dictionary operations
+OZ_Return
+dictionaryOperation(OperationTag, OzDictionary*, TaggedRef*, TaggedRef*);
+
 #endif

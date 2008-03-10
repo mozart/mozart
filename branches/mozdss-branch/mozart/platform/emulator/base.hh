@@ -351,6 +351,29 @@ class GName;
 
 class IONode;
 
+// Operations on tabular entities, like chunks, arrays, dictionaries
+enum OperationTag {
+  OP_MEMBER,                // key -> bool
+  OP_GET,                   // key -> val
+  OP_CONDGET,               // key x defval -> val
+  OP_PUT,                   // key x newval -> ()
+  OP_EXCHANGE,              // key x newval -> oldval
+  OP_CONDEXCHANGE,          // key x defval x newval -> oldval
+  OP_ISEMPTY,               // () -> bool
+  OP_REMOVE,                // key -> ()
+  OP_REMOVEALL,             // () -> ()
+  OP_KEYS,                  // () -> list
+  OP_ITEMS,                 // () -> list
+  OP_ENTRIES,               // () -> list
+  OP_CLONE,                 // () -> val
+  OP_TORECORD               // label -> val
+};
+
+// operation arity (how many inputs and outputs), and has it side effects?
+static int OperationIn[]    = { 1, 1, 2, 2, 2, 3, 0, 1, 0, 0, 0, 0, 0, 1 };
+static int OperationOut[]   = { 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1 };
+static int OperationWrite[] = { 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0 };
+
 void checkGC();
 
 // see version.sed

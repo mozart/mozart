@@ -76,12 +76,12 @@ extern OZ_Return (*distObjectExchange)(ObjectState*, TaggedRef,
 				       TaggedRef, TaggedRef&);
 
 // arrays
-extern OZ_Return (*distArrayGet)(OzArray*, TaggedRef, TaggedRef&);
-extern OZ_Return (*distArrayPut)(OzArray*, TaggedRef, TaggedRef);
+extern OZ_Return (*distArrayOp)(OperationTag, OzArray*,
+				TaggedRef*, TaggedRef*);
 
 // dictionaries
-extern OZ_Return (*distDictionaryGet)(OzDictionary*, TaggedRef, TaggedRef&);
-extern OZ_Return (*distDictionaryPut)(OzDictionary*, TaggedRef, TaggedRef);
+extern OZ_Return (*distDictionaryOp)(OperationTag, OzDictionary*,
+				     TaggedRef*, TaggedRef*);
 
 // distributed variables
 extern OZ_Return (*distVarBind)(OzVariable*, TaggedRef*, TaggedRef);
@@ -90,7 +90,8 @@ extern OZ_Return (*distVarUnify)(OzVariable*, TaggedRef*,
 extern OZ_Return (*distVarMakeNeeded)(TaggedRef*);
 
 // chunks
-extern OZ_Return (*distChunkGet)(SChunk*, TaggedRef, TaggedRef&);
+extern OZ_Return (*distChunkOp)(OperationTag, SChunk*,
+				TaggedRef*, TaggedRef*);
 
 // classes
 extern OZ_Return (*distClassGet)(OzClass*);

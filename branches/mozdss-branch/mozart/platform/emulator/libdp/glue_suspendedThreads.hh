@@ -165,49 +165,29 @@ public:
 
 
 // suspended array operations
-class SuspendedArrayGet: public SuspendedOperation {
+class SuspendedArrayOp: public SuspendedOperation {
 private:
-  int index;
-  OZ_Term result;
+  OperationTag op;
+  TaggedRef    args[2];
+  TaggedRef    result;
 public:
-  SuspendedArrayGet(Mediator*, int idx, OZ_Term);
+  SuspendedArrayOp(Mediator*, OperationTag, TaggedRef*, TaggedRef*);
   WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
-  bool gCollect();
-};
-
-class SuspendedArrayPut: public SuspendedOperation {
-private:
-  int index;
-  OZ_Term value;
-public:
-  SuspendedArrayPut(Mediator*, int idx, OZ_Term);
-  WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  WakeRetVal resumeRemoteDone(PstInContainerInterface*);
   bool gCollect();
 };
 
 
 // suspended dictionary operations
-class SuspendedDictionaryGet: public SuspendedOperation {
+class SuspendedDictionaryOp: public SuspendedOperation {
 private:
-  OZ_Term key;
-  OZ_Term result;
+  OperationTag op;
+  TaggedRef    args[3];
+  TaggedRef    result;
 public:
-  SuspendedDictionaryGet(Mediator*, OZ_Term, OZ_Term);
+  SuspendedDictionaryOp(Mediator*, OperationTag, TaggedRef*, TaggedRef*);
   WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
-  bool gCollect();
-};
-
-class SuspendedDictionaryPut: public SuspendedOperation {
-private:
-  OZ_Term key;
-  OZ_Term value;
-public:
-  SuspendedDictionaryPut(Mediator*, OZ_Term, OZ_Term);
-  WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  WakeRetVal resumeRemoteDone(PstInContainerInterface*);
   bool gCollect();
 };
 
@@ -244,6 +224,20 @@ public:
   SuspendedObjectExchange(Mediator*, OZ_Term, OZ_Term, OZ_Term);
   WakeRetVal resumeDoLocal(DssOperationId*);
   WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  bool gCollect();
+};
+
+
+// suspended chunk operations
+class SuspendedChunkOp: public SuspendedOperation {
+private:
+  OperationTag op;
+  TaggedRef    args[2];
+  TaggedRef    result;
+public:
+  SuspendedChunkOp(Mediator*, OperationTag, TaggedRef*, TaggedRef*);
+  WakeRetVal resumeDoLocal(DssOperationId*);
+  WakeRetVal resumeRemoteDone(PstInContainerInterface*);
   bool gCollect();
 };
 

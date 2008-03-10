@@ -2048,6 +2048,9 @@ OZ_Term oz_newChunk(Board *bb, OZ_Term val)
   return makeTaggedConst(new SChunk(bb, val));
 }
 
+// chunk operations, with two arrays for inputs and outputs
+OZ_Return chunkOperation(OperationTag, SChunk*, TaggedRef*, TaggedRef*);
+
 /*===================================================================
  * Arrays
  *=================================================================== */
@@ -2147,6 +2150,9 @@ OzArray *tagged2Array(TaggedRef term)
   Assert(oz_isArray(term));
   return (OzArray *) tagged2Const(term);
 }
+
+// array operations, with two arrays for inputs and outputs
+OZ_Return arrayOperation(OperationTag, OzArray*, TaggedRef*, TaggedRef*);
 
 
 /*===================================================================
