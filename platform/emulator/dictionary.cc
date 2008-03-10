@@ -605,7 +605,7 @@ OZ_Return dictionaryGetInline(OZ_Term d, OZ_Term k, OZ_Term &out)
 {
   GetDictAndKey(d,k,dict,key,NO);
   if (dict->isDistributed())
-    return (*distDictionaryGet)(dict, key, out);
+    return distDictionaryOp(OP_GET, dict, &key, &out);
 
   out = dict->getArg(key);
   if (out) {
@@ -639,8 +639,10 @@ OZ_Return dictionaryPutInline(OZ_Term d, OZ_Term k, OZ_Term value)
   OzDictionary *dict = tagged2Dictionary(dictaux);
   CheckLocalBoard(dict, "dict");
 
-  if (dict->isDistributed())
-    return (*distDictionaryPut)(dict, key, value);
+  if (dict->isDistributed()) {
+    OZ_Term arg[] = { key, value };
+    return distDictionaryOp(OP_PUT, dict, arg, NULL);
+  }
   dict->setArg(key,value);
   return PROCEED;
 }
@@ -729,4 +731,95 @@ OZ_Term registry_get(OZ_Term k)
 void registry_put(OZ_Term k,OZ_Term v)
 {
   tagged2Dictionary(system_registry)->setArg(k,v);
+}
+
+/*===================================================================
+ * OzDictionary operations
+ *=================================================================== */
+
+OZ_Return dictMember(OzDictionary* dict, TaggedRef* arg, TaggedRef* res) {
+  *res = dict->member(arg[0]);
+  return PROCEED;
+}
+
+OZ_Return dictGet(OzDictionary* dict, TaggedRef* arg, TaggedRef* res) {
+  *res = dict->getArg(arg[0]);
+  if (*res) return PROCEED;
+  return oz_raise(E_ERROR, E_KERNEL, "dict", 2, makeTaggedConst(dict), arg[0]);
+}
+
+OZ_Return dictCondGet(OzDictionary* dict, TaggedRef* arg, TaggedRef* res) {
+  TaggedRef out = dict->getArg(arg[0]);
+  *res = out ? out : arg[1];
+  return PROCEED;
+}
+
+OZ_Return dictPut(OzDictionary* dict, TaggedRef* arg, TaggedRef* res) {
+  dict->setArg(arg[0], arg[1]);
+  return PROCEED;
+}
+
+OZ_Return dictExchange(OzDictionary* dict, TaggedRef* arg, TaggedRef* res) {
+  if (dict->exchange(arg[0], arg[1], *res, false)) return PROCEED;
+  return oz_raise(E_ERROR, E_KERNEL, "dict", 2, makeTaggedConst(dict), arg[0]);
+}
+
+OZ_Return dictCondExchange(OzDictionary* dict, TaggedRef* arg, TaggedRef* res) {
+  if (!dict->exchange(arg[0], arg[1], *res, false)) {
+    *res = arg[2];
+  }
+  return PROCEED;
+}
+
+OZ_Return dictIsEmpty(OzDictionary* dict, TaggedRef* arg, TaggedRef* res) {
+  *res = dict->isEmpty() ? oz_true() : oz_false();
+  return PROCEED;
+}
+
+OZ_Return dictRemove(OzDictionary* dict, TaggedRef* arg, TaggedRef* res) {
+  dict->remove(arg[0]);
+  return PROCEED;
+}
+
+OZ_Return dictRemoveAll(OzDictionary* dict, TaggedRef* arg, TaggedRef* res) {
+  dict->removeAll();
+  return PROCEED;
+}
+
+OZ_Return dictKeys(OzDictionary* dict, TaggedRef* arg, TaggedRef* res) {
+  *res = dict->keys();
+  return PROCEED;
+}
+
+OZ_Return dictItems(OzDictionary* dict, TaggedRef* arg, TaggedRef* res) {
+  *res = dict->items();
+  return PROCEED;
+}
+
+OZ_Return dictEntries(OzDictionary* dict, TaggedRef* arg, TaggedRef* res) {
+  *res = dict->pairs();
+  return PROCEED;
+}
+
+OZ_Return dictClone(OzDictionary* dict, TaggedRef* arg, TaggedRef* res) {
+  *res = dict->clone(oz_rootBoard());
+  return PROCEED;
+}
+
+OZ_Return dictToRecord(OzDictionary* dict, TaggedRef* arg, TaggedRef* res) {
+  *res = dict->toRecord(arg[0]);
+  return PROCEED;
+}
+
+typedef OZ_Return (*OzDictionaryOperation)(OzDictionary*,
+					   TaggedRef*, TaggedRef*);
+
+static OzDictionaryOperation dict_op[] = {
+  dictMember, dictGet, dictCondGet, dictPut, dictExchange,
+  dictCondExchange, dictIsEmpty, dictRemove, dictRemoveAll, dictKeys,
+  dictItems, dictEntries, dictClone, dictToRecord };
+
+OZ_Return dictionaryOperation(OperationTag op, OzDictionary* dict,
+			      TaggedRef* arg, TaggedRef* res) {
+  return dict_op[op](dict, arg, res);
 }

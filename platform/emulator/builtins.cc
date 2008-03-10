@@ -399,7 +399,7 @@ OZ_Return arrayGetInline(TaggedRef t, TaggedRef i, TaggedRef &out)
   OzArray *ar = tagged2Array(array);
     
   if (ar->isDistributed())
-    return (*distArrayGet)(ar, index, out);
+    return distArrayOp(OP_GET, ar, &index, &out);
     
   out = ar->getArg(tagged2SmallInt(index));
   if (out)
@@ -426,8 +426,11 @@ OZ_Return arrayPutInline(TaggedRef t, TaggedRef i, TaggedRef value)
   OzArray *ar = tagged2Array(array);
   CheckLocalBoard(ar,"array");
 
-  if (ar->isDistributed())
-    return (*distArrayPut)(ar, index, value);
+  if (ar->isDistributed()) {
+    TaggedRef arg[] = { index, value };
+    return distArrayOp(OP_PUT, ar, arg, NULL);
+  }
+
   if (ar->setArg(tagged2SmallInt(index), value))
     return PROCEED;
   else
@@ -687,7 +690,7 @@ OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
     case Co_Chunk: {
       SChunk* chunk = tagged2SChunk(t);
       if (!chunk->getValue())   // chunk is a stub: call distribution
-	return (*distChunkGet)(chunk, f, tf);
+	return distChunkOp(OP_GET, chunk, &f, &tf);
       //
       tf = chunk->getFeature(f);
       if (tf == makeTaggedNULL()) goto no_feature;

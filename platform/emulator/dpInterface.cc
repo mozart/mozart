@@ -90,22 +90,15 @@ OZ_Return distObjectExchangeStub(ObjectState*, TaggedRef,
 }
 
 // arrays
-OZ_Return distArrayGetStub(OzArray*, TaggedRef, TaggedRef&) {
-  OZD_error("'distArrayGet' called without DP library?");
-  return PROCEED;
-}
-OZ_Return distArrayPutStub(OzArray*, TaggedRef, TaggedRef) {
-  OZD_error("'distArrayPut' called without DP library?");
+OZ_Return distArrayOpStub(OperationTag, OzArray*, TaggedRef*, TaggedRef*) {
+  OZD_error("'distArrayOp' called without DP library?");
   return PROCEED;
 }
 
 // dictionaries
-OZ_Return distDictionaryGetStub(OzDictionary*, TaggedRef, TaggedRef&) {
-  OZD_error("'distDictionaryGet' called without DP library?");
-  return PROCEED;
-}
-OZ_Return distDictionaryPutStub(OzDictionary*, TaggedRef, TaggedRef) {
-  OZD_error("'distDictionaryPut' called without DP library?");
+OZ_Return
+distDictionaryOpStub(OperationTag, OzDictionary*, TaggedRef*, TaggedRef*) {
+  OZD_error("'distDictionaryOp' called without DP library?");
   return PROCEED;
 }
 
@@ -124,8 +117,8 @@ OZ_Return distVarMakeNeededStub(TaggedRef*) {
 }
 
 // chunks
-OZ_Return distChunkGetStub(SChunk*, TaggedRef, TaggedRef&) {
-  OZD_error("'distChunkGet' called without DP library?");
+OZ_Return distChunkOpStub(OperationTag, SChunk*, TaggedRef*, TaggedRef*) {
+  OZD_error("'distChunkOp' called without DP library?");
   return PROCEED;
 }
 
@@ -200,16 +193,13 @@ OZ_Return (*distObjectExchange)(ObjectState*, TaggedRef, TaggedRef, TaggedRef&)
   = distObjectExchangeStub;
 
 // arrays
-OZ_Return (*distArrayGet)(OzArray*, TaggedRef, TaggedRef&)
-  = distArrayGetStub;
-OZ_Return (*distArrayPut)(OzArray*, TaggedRef, TaggedRef)
-  = distArrayPutStub;
+OZ_Return (*distArrayOp)(OperationTag, OzArray*, TaggedRef*, TaggedRef*)
+  = distArrayOpStub;
 
 // dictionaries
-OZ_Return (*distDictionaryGet)(OzDictionary*, TaggedRef, TaggedRef&)
-  = distDictionaryGetStub;
-OZ_Return (*distDictionaryPut)(OzDictionary*, TaggedRef, TaggedRef)
-  = distDictionaryPutStub;
+OZ_Return (*distDictionaryOp)(OperationTag, OzDictionary*,
+			      TaggedRef*, TaggedRef*)
+  = distDictionaryOpStub;
 
 // distributed variables
 OZ_Return (*distVarBind)(OzVariable*, TaggedRef*, TaggedRef)
@@ -220,8 +210,8 @@ OZ_Return (*distVarMakeNeeded)(TaggedRef*)
   = distVarMakeNeededStub;
 
 // chunks
-OZ_Return (*distChunkGet)(SChunk*, TaggedRef, TaggedRef&)
-  = distChunkGetStub;
+OZ_Return (*distChunkOp)(OperationTag, SChunk*, TaggedRef*, TaggedRef*)
+  = distChunkOpStub;
 
 // classes
 OZ_Return (*distClassGet)(OzClass*)

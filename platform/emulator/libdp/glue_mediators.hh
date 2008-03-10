@@ -309,6 +309,8 @@ public:
   ArrayMediator();
   ArrayMediator(TaggedRef);
 
+  AOcallback callback(DssThreadId*, DssOperationId*,
+		      PstInContainerInterface*, PstOutContainerInterface*&);
   virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
 				    PstInContainerInterface*,
 				    PstOutContainerInterface*&);
@@ -331,6 +333,8 @@ public:
   DictionaryMediator();
   DictionaryMediator(TaggedRef);
 
+  AOcallback callback(DssThreadId*, DssOperationId*,
+		      PstInContainerInterface*, PstOutContainerInterface*&);
   virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
 				    PstInContainerInterface*,
 				    PstOutContainerInterface*&);
@@ -522,5 +526,53 @@ public:
   virtual int  getMarshaledDataSize() const;
   virtual char *getPrintType() { return "procedure"; }
 };
+
+
+
+// utils: generic wrapping of operation parameters for the DSS
+inline
+TaggedRef glue_wrap(int op, int n, TaggedRef* arg) {
+  // build the record: '#'(op arg1 ... argn)
+  SRecord* rec = SRecord::newSRecord(AtomPair, n + 1);
+  rec->setArg(0, oz_int(op));
+  while (n--) rec->setArg(n + 1, arg[n]);
+  return makeTaggedSRecord(rec);
+}
+
+inline
+int glue_getOp(TaggedRef msg) {
+  return oz_intToC(tagged2SRecord(msg)->getArg(0));
+}
+
+inline
+TaggedRef* glue_getArgs(TaggedRef msg) {
+  return tagged2SRecord(msg)->getRef(1);
+}
+
+// generic wrapping of operation results for the DSS
+inline
+TaggedRef glue_return(TaggedRef res) {
+  return OZ_mkTuple(AtomOk, 1, res);
+}
+
+inline
+bool glue_isReturn(TaggedRef msg) {
+  return tagged2SRecord(msg)->getLabel() == AtomOk;
+}
+
+inline
+TaggedRef glue_raise(TaggedRef exc) {
+  return OZ_mkTuple(AtomFailed, 1, exc);
+}
+
+inline
+bool glue_isRaise(TaggedRef msg) {
+  return tagged2SRecord(msg)->getLabel() == AtomFailed;
+}
+
+inline
+TaggedRef glue_getData(TaggedRef msg) {   // result or exception
+  return tagged2SRecord(msg)->getArg(0);
+}
 
 #endif

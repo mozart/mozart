@@ -552,37 +552,37 @@ ArrayMediator::ArrayMediator(TaggedRef e) : ConstMediator(GLUE_ARRAY) {
 }
 
 AOcallback 
-ArrayMediator::callback_Write(DssThreadId*, DssOperationId*,
-			      PstInContainerInterface* pstin,
-			      PstOutContainerInterface*& answer)
+ArrayMediator::callback(DssThreadId*, DssOperationId*,
+			PstInContainerInterface* pstin,
+			PstOutContainerInterface*& answer)
 {
-  OzArray *oza = static_cast<OzArray*>(getConst());
-  TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
-  int index = tagged2SmallInt(oz_head(arg));
-  TaggedRef val = oz_tail(arg);
-  if (oza->setArg(index,val))
-    answer = NULL;
-  else
-    answer = new PstOutContainer(OZ_makeException(E_ERROR, E_KERNEL, "array",
-						  2, getEntity(), index));
+  OzArray* arr = static_cast<OzArray*>(getConst());
+  TaggedRef msg = static_cast<PstInContainer*>(pstin)->a_term;
+  OperationTag op = static_cast<OperationTag>(glue_getOp(msg));
+  TaggedRef out = makeTaggedNULL();
+  OZ_Return ret = arrayOperation(op, arr, glue_getArgs(msg), &out);
+
+  if (ret == PROCEED) {
+    answer = out ? new PstOutContainer(glue_return(out)) : NULL;
+  } else {
+    Assert(ret == RAISE);
+    answer = new PstOutContainer(glue_raise(am.getExceptionValue()));
+  }
   return AOCB_FINISH;
 }
 
 AOcallback
-ArrayMediator::callback_Read(DssThreadId*, DssOperationId*,
+ArrayMediator::callback_Write(DssThreadId* thr, DssOperationId* op,
+			      PstInContainerInterface* pstin,
+			      PstOutContainerInterface*& pstout) {
+  return callback(thr, op, pstin, pstout);
+}
+
+AOcallback
+ArrayMediator::callback_Read(DssThreadId* thr, DssOperationId* op,
 			     PstInContainerInterface* pstin,
-			     PstOutContainerInterface*& answer)
-{
-  OzArray *oza = static_cast<OzArray*>(getConst());
-  TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
-  int index = tagged2SmallInt(arg);
-  TaggedRef out = oza->getArg(index);
-  if (out)
-    answer = new PstOutContainer(out);
-  else 
-    answer = new PstOutContainer(OZ_makeException(E_ERROR, E_KERNEL, "array", 
-						  2, getEntity(), index));
-  return AOCB_FINISH;
+			     PstOutContainerInterface*& pstout) {
+  return callback(thr, op, pstin, pstout);
 }
 
 PstOutContainerInterface*
@@ -635,34 +635,37 @@ DictionaryMediator::DictionaryMediator(TaggedRef e) :
 }
 
 AOcallback 
-DictionaryMediator::callback_Write(DssThreadId*, DssOperationId*,
-				   PstInContainerInterface* pstin,
-				   PstOutContainerInterface*& answer)
+DictionaryMediator::callback(DssThreadId*, DssOperationId*,
+			     PstInContainerInterface* pstin,
+			     PstOutContainerInterface*& answer)
 {
-  OzDictionary *ozd = tagged2Dictionary(getEntity());
-  TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
-  TaggedRef key = oz_head(arg);
-  TaggedRef val = oz_tail(arg);
-  ozd->setArg(key,val);
-  answer = NULL;
+  OzDictionary* dict = static_cast<OzDictionary*>(getConst());
+  TaggedRef msg = static_cast<PstInContainer*>(pstin)->a_term;
+  OperationTag op = static_cast<OperationTag>(glue_getOp(msg));
+  TaggedRef out = makeTaggedNULL();
+  OZ_Return ret = dictionaryOperation(op, dict, glue_getArgs(msg), &out);
+
+  if (ret == PROCEED) {
+    answer = out ? new PstOutContainer(glue_return(out)) : NULL;
+  } else {
+    Assert(ret == RAISE);
+    answer = new PstOutContainer(glue_raise(am.getExceptionValue()));
+  }
   return AOCB_FINISH;
 }
 
 AOcallback
-DictionaryMediator::callback_Read(DssThreadId*, DssOperationId*,
+DictionaryMediator::callback_Write(DssThreadId* thr, DssOperationId* op,
+				   PstInContainerInterface* pstin,
+				   PstOutContainerInterface*& pstout) {
+  return callback(thr, op, pstin, pstout);
+}
+
+AOcallback
+DictionaryMediator::callback_Read(DssThreadId* thr, DssOperationId* op,
 				  PstInContainerInterface* pstin,
-				  PstOutContainerInterface*& answer)
-{
-  OzDictionary *ozd = tagged2Dictionary(getEntity()); 
-  TaggedRef key = static_cast<PstInContainer*>(pstin)->a_term;
-  TaggedRef out = ozd->getArg(key);
-  if (out) {
-    answer = new PstOutContainer(OZ_mkTupleC("ok", 1, out));
-  } else {
-    answer = new PstOutContainer(OZ_makeException(E_ERROR, E_KERNEL, "dict",
-						  2, getEntity(), key));
-  }
-  return AOCB_FINISH;
+				  PstOutContainerInterface*& pstout) {
+  return callback(thr, op, pstin, pstout);
 }
 
 PstOutContainerInterface*
@@ -1053,11 +1056,18 @@ AOcallback
 ChunkMediator::callback_Read(DssThreadId*, DssOperationId*,
 			     PstInContainerInterface* pstin,
 			     PstOutContainerInterface*& answer) {
-  // the only operation is '.'
   SChunk* chunk = static_cast<SChunk*>(getConst());
-  TaggedRef key = static_cast<PstInContainer*>(pstin)->a_term;
-  TaggedRef out = chunk->getFeature(key);
-  answer = out ? new PstOutContainer(out) : NULL;
+  TaggedRef msg = static_cast<PstInContainer*>(pstin)->a_term;
+  OperationTag op = static_cast<OperationTag>(glue_getOp(msg));
+  TaggedRef out = makeTaggedNULL();
+  OZ_Return ret = chunkOperation(op, chunk, glue_getArgs(msg), &out);
+
+  if (ret == PROCEED) {
+    answer = out ? new PstOutContainer(glue_return(out)) : NULL;
+  } else {
+    Assert(ret == RAISE);
+    answer = new PstOutContainer(glue_raise(am.getExceptionValue()));
+  }
   return AOCB_FINISH;
 }
 

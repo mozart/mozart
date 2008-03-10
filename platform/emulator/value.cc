@@ -1521,3 +1521,77 @@ TaggedRef oz_getPrintName(TaggedRef t) {
   return AtomEmpty;
 }
 
+/*===================================================================
+ * SChunk operations
+ *=================================================================== */
+
+OZ_Return chunkMember(SChunk* chunk, TaggedRef* arg, TaggedRef* res) {
+  TaggedRef out = chunk->getFeature(arg[0]);
+  *res = out ? oz_true() : oz_false();
+  return PROCEED;
+}
+
+OZ_Return chunkGet(SChunk* chunk, TaggedRef* arg, TaggedRef* res) {
+  *res = chunk->getFeature(arg[0]);
+  if (*res) return PROCEED;
+  return oz_raise(E_ERROR, E_KERNEL, "chunk", 2, makeTaggedConst(chunk), arg[0]);
+}
+
+OZ_Return chunkCondGet(SChunk* chunk, TaggedRef* arg, TaggedRef* res) {
+  TaggedRef out = chunk->getFeature(arg[0]);
+  *res = out ? out : arg[1];
+  return PROCEED;
+}
+
+OZ_Return chunkIllegal(SChunk* chunk, TaggedRef*, TaggedRef*) {
+  return oz_raise(E_ERROR, E_KERNEL, "chunk", 1, makeTaggedConst(chunk));
+}
+
+typedef OZ_Return (*SChunkOperation)(SChunk*, TaggedRef*, TaggedRef*);
+
+static SChunkOperation chunk_op[] = {
+  chunkMember, chunkGet, chunkCondGet, chunkIllegal, chunkIllegal,
+  chunkIllegal, chunkIllegal, chunkIllegal, chunkIllegal, chunkIllegal,
+  chunkIllegal, chunkIllegal, chunkIllegal, chunkIllegal };
+
+OZ_Return
+chunkOperation(OperationTag op, SChunk* ch, TaggedRef* arg, TaggedRef* res) {
+  return chunk_op[op](ch, arg, res);
+}
+
+/*===================================================================
+ * OzArray operations
+ *=================================================================== */
+
+OZ_Return arrayGet(OzArray* arr, TaggedRef* arg, TaggedRef* res) {
+  *res = arr->getArg(tagged2SmallInt(arg[0]));
+  if (*res) return PROCEED;
+  return oz_raise(E_ERROR, E_KERNEL, "array", 2, makeTaggedConst(arr), arg[0]);
+}
+
+OZ_Return arrayPut(OzArray* arr, TaggedRef* arg, TaggedRef* res) {
+  arr->setArg(tagged2SmallInt(arg[0]), arg[1]);
+  return PROCEED;
+}
+
+OZ_Return arrayExchange(OzArray* arr, TaggedRef* arg, TaggedRef* res) {
+  *res = arr->exchange(tagged2SmallInt(arg[0]), arg[1]);
+  if (*res) return PROCEED;
+  return oz_raise(E_ERROR, E_KERNEL, "array", 2, makeTaggedConst(arr), arg[0]);
+}
+
+OZ_Return arrayIllegal(OzArray* arr, TaggedRef* arg, TaggedRef* res) {
+  return oz_raise(E_ERROR, E_KERNEL, "array", 1, makeTaggedConst(arr));
+}
+
+typedef OZ_Return (*OzArrayOperation)(OzArray*, TaggedRef*, TaggedRef*);
+
+static OzArrayOperation array_op[] = {
+  arrayIllegal, arrayGet, arrayIllegal, arrayPut, arrayExchange,
+  arrayIllegal, arrayIllegal, arrayIllegal, arrayIllegal, arrayIllegal,
+  arrayIllegal, arrayIllegal, arrayIllegal, arrayIllegal };
+
+OZ_Return
+arrayOperation(OperationTag op, OzArray* arr, TaggedRef* arg, TaggedRef* res) {
+  return array_op[op](arr, arg, res);
+}
