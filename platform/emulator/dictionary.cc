@@ -517,14 +517,6 @@ OZ_BI_define(BIdictionaryNew,0,1)
   OZ_RETURN(makeTaggedConst(new OzDictionary(oz_currentBoard())));
 } OZ_BI_end
 
-OZ_BI_define(BIdictionaryKeys,1,1)
-{
-  oz_declareDictionaryIN(0,dict);
-
-  OZ_RETURN(dict->keys());
-} OZ_BI_end
-
-
 OZ_BI_define(BIdictionaryMarkSafe,1,0)
 {
   oz_declareDictionaryIN(0,dict);
@@ -533,9 +525,23 @@ OZ_BI_define(BIdictionaryMarkSafe,1,0)
 } OZ_BI_end
 
 
+OZ_BI_define(BIdictionaryKeys,1,1)
+{
+  oz_declareDictionaryIN(0,dict);
+
+  if (dict->isDistributed())
+    return distDictionaryOp(OP_KEYS, dict, NULL, &OZ_out(0));
+
+  OZ_RETURN(dict->keys());
+} OZ_BI_end
+
+
 OZ_BI_define(BIdictionaryEntries,1,1)
 {
   oz_declareDictionaryIN(0,dict);
+
+  if (dict->isDistributed())
+    return distDictionaryOp(OP_ENTRIES, dict, NULL, &OZ_out(0));
 
   OZ_RETURN(dict->pairs());
 } OZ_BI_end
@@ -545,6 +551,9 @@ OZ_BI_define(BIdictionaryItems,1,1)
 {
   oz_declareDictionaryIN(0,dict);
 
+  if (dict->isDistributed())
+    return distDictionaryOp(OP_ITEMS, dict, NULL, &OZ_out(0));
+
   OZ_RETURN(dict->items());
 } OZ_BI_end
 
@@ -552,6 +561,9 @@ OZ_BI_define(BIdictionaryItems,1,1)
 OZ_BI_define(BIdictionaryClone,1,1)
 {
   oz_declareDictionaryIN(0,dict);
+
+  if (dict->isDistributed())
+    return distDictionaryOp(OP_CLONE, dict, NULL, &OZ_out(0));
 
   OZ_RETURN(dict->clone(oz_currentBoard()));
 } OZ_BI_end
@@ -565,12 +577,18 @@ OZ_BI_define(BIdictionaryToRecord,2,1) {
 
   oz_declareDictionaryIN(1,dict);
 
+  if (dict->isDistributed())
+    return distDictionaryOp(OP_TORECORD, dict, &label, &OZ_out(0));
+
   OZ_RETURN(dict->toRecord(label));
 } OZ_BI_end
 
 
 OZ_BI_define(BIdictionaryIsEmpty,1,1) {
   oz_declareDictionaryIN(0,dict);
+
+  if (dict->isDistributed())
+    return distDictionaryOp(OP_ISEMPTY, dict, NULL, &OZ_out(0));
 
   OZ_RETURN(dict->isEmpty() ? oz_true() : oz_false());
 } OZ_BI_end
@@ -593,17 +611,24 @@ OZ_DECLAREBI_USEINLINEFUN1(BIisDictionary,isDictionaryInline)
   OzDictionary *dict = tagged2Dictionary(dictaux);                \
   if (checkboard)		 { CheckLocalBoard(dict,"dict"); }
 
+
 OZ_Return dictionaryMemberInline(OZ_Term d, OZ_Term k, OZ_Term &out)
 {
   GetDictAndKey(d,k,dict,key,NO);
+
+  if (dict->isDistributed())
+    return distDictionaryOp(OP_MEMBER, dict, &key, &out);
+
   out = dict->member(key);
   return PROCEED;
 }
 OZ_DECLAREBI_USEINLINEFUN2(BIdictionaryMember,dictionaryMemberInline)
 
+
 OZ_Return dictionaryGetInline(OZ_Term d, OZ_Term k, OZ_Term &out)
 {
   GetDictAndKey(d,k,dict,key,NO);
+
   if (dict->isDistributed())
     return distDictionaryOp(OP_GET, dict, &key, &out);
 
@@ -615,13 +640,18 @@ OZ_Return dictionaryGetInline(OZ_Term d, OZ_Term k, OZ_Term &out)
   }
   Assert(0);
 }
-
 OZ_DECLAREBI_USEINLINEFUN2(BIdictionaryGet,dictionaryGetInline)
 
 
 OZ_Return dictionaryCondGetInline(OZ_Term d, OZ_Term k, OZ_Term deflt, OZ_Term &out)
 {
   GetDictAndKey(d,k,dict,key,NO);
+
+  if (dict->isDistributed()) {
+    OZ_Term arg[] = { key, deflt };
+    return distDictionaryOp(OP_CONDGET, dict, arg, &out);
+  }
+
   out = dict->getArg(key);
   if (!out)
     out = deflt;
@@ -629,39 +659,45 @@ OZ_Return dictionaryCondGetInline(OZ_Term d, OZ_Term k, OZ_Term deflt, OZ_Term &
 }
 OZ_DECLAREBI_USEINLINEFUN3(BIdictionaryCondGet,dictionaryCondGetInline)
 
+
 OZ_Return dictionaryPutInline(OZ_Term d, OZ_Term k, OZ_Term value)
 {
-  //Code from the macro GetKeyAndDict included here
-  NONVAR(k,key);
-  if (!oz_isFeature(key)) { oz_typeError(1,"feature"); }
-  NONVAR(d,dictaux);
-  if (!oz_isDictionary(dictaux)) { oz_typeError(0,"Dictionary"); }
-  OzDictionary *dict = tagged2Dictionary(dictaux);
-  CheckLocalBoard(dict, "dict");
+  GetDictAndKey(d,k,dict,key,OK);
 
   if (dict->isDistributed()) {
     OZ_Term arg[] = { key, value };
     return distDictionaryOp(OP_PUT, dict, arg, NULL);
   }
+
   dict->setArg(key,value);
   return PROCEED;
 }
-
 OZ_DECLAREBI_USEINLINEREL3(BIdictionaryPut,dictionaryPutInline)
+
 
 OZ_Return dictionaryExchangeInline(OZ_Term d, OZ_Term k, OZ_Term value, OZ_Term& old)
 {
   GetDictAndKey(d,k,dict,key,OK);
+
+  if (dict->isDistributed()) {
+    OZ_Term arg[] = { key, value };
+    return distDictionaryOp(OP_EXCHANGE, dict, arg, &old);
+  }
   // do not create entry if it does not already exist
   if (dict->exchange(key,value,old,false)) return PROCEED;
   else return oz_raise(E_ERROR, E_KERNEL, "dict", 2, d, k);
 }
-
 OZ_DECLAREBI_USEINLINEFUN3(BIdictionaryExchange,dictionaryExchangeInline)
+
 
 OZ_Return dictionaryCondExchangeInline(OZ_Term d, OZ_Term k, OZ_Term deflt, OZ_Term value, OZ_Term& old)
 {
   GetDictAndKey(d,k,dict,key,OK);
+
+  if (dict->isDistributed()) {
+    OZ_Term arg[] = { key, value, deflt };
+    return distDictionaryOp(OP_CONDEXCHANGE, dict, arg, &old);
+  }
   // create entry if it does not already exist
   if (! dict->exchange(key,value,old,true)) {
     // if feature was non-existent, return default
@@ -669,12 +705,16 @@ OZ_Return dictionaryCondExchangeInline(OZ_Term d, OZ_Term k, OZ_Term deflt, OZ_T
   }
   return PROCEED;
 }
-
 OZ_DECLAREBI_USEINLINEFUN4(BIdictionaryCondExchange,dictionaryCondExchangeInline)
+
 
 OZ_Return dictionaryRemoveInline(OZ_Term d, OZ_Term k)
 {
   GetDictAndKey(d,k,dict,key,OK);
+
+  if (dict->isDistributed())
+    return distDictionaryOp(OP_REMOVE, dict, &key, NULL);
+
   dict->remove(key);
   return PROCEED;
 }
@@ -683,14 +723,19 @@ OZ_DECLAREBI_USEINLINEREL2(BIdictionaryRemove,dictionaryRemoveInline)
 
 OZ_BI_define(BIdictionaryRemoveAll,1,0)
 {
-  oz_declareNonvarIN(0,dict);
-  if (!oz_isDictionary(dict)) {
+  oz_declareNonvarIN(0,d);
+  if (!oz_isDictionary(d)) {
     oz_typeError(0,"Dictionary");
   }
+  OzDictionary* dict = tagged2Dictionary(d);
 
-  tagged2Dictionary(dict)->removeAll();
+  if (dict->isDistributed())
+    return distDictionaryOp(OP_REMOVEALL, dict, NULL, NULL);
+
+  dict->removeAll();
   return PROCEED;
 } OZ_BI_end
+
 
 OZ_BI_define(BIdictionaryWaitOr,1,1)
 {
