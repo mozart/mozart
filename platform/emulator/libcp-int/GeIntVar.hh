@@ -220,7 +220,7 @@ inline IntVar& get_IntVarInfo(OZ_Term v) {
 
 /*** Fuction for type checking of posting functions ***/
 /**
-		\brief Checks if the term is a intconlevel
+   \brief Checks if the term is a intconlevel
 */
 inline
 bool OZ_isIntConLevel(OZ_Term t) {
@@ -275,12 +275,45 @@ bool checkAll(OZ_Term t, bool (*checkOne)(OZ_Term)) {
 }
 
 
+inline
+bool checkSome(OZ_Term t, bool (*checkOne)(OZ_Term)) {
+  int sz = 0;
+  bool ret = false;
+  if(OZ_isCons(t)) {			
+    sz = OZ_length(t);
+    for(int i=0; OZ_isCons(t); t=OZ_tail(t))
+      if (checkOne(OZ_head(t))) 
+      	return true;
+    return false;
+  }
+  else if(OZ_isTuple(t)) {
+    sz=OZ_width(t);					
+    for(int i=0; i < sz; i++) {
+      OZ_Term _tmp = OZ_getArg(t,i);
+      if (checkOne(_tmp))
+      	return true;
+  	}
+    return false;
+  }
+  else if(OZ_isRecord(t)){
+    OZ_Term al = OZ_arityList(t);
+    sz = OZ_width(t);
+    IntArgs _array(sz);
+    for(int i = 0; OZ_isCons(al); al=OZ_tail(al))
+      if(checkOne(OZ_subtree(t,OZ_head(al))))
+      	return true;
+    return false;
+    
+  }
+  return false;
+}
+
 /**
    \brief Checks if the term is a IntVarArgs.
 */
 inline
 bool OZ_isIntVarArgs(OZ_Term t) {
-	return checkAll(t, &OZ_isGeIntVar); 
+	return checkSome(t, &OZ_isGeIntVar); 
 }
 
 /**
