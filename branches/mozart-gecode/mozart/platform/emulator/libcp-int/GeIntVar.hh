@@ -180,6 +180,10 @@ inline OZ_Term new_GeIntVarCompl(const IntSet& dom) {
  */
 inline 
 bool OZ_isGeIntVar(OZ_Term v) { 
+  if (OZ_isInt(v)) {
+    int i = OZ_intToC(v);
+    return i <= Gecode::Int::Limits::max && i >= Gecode::Int::Limits::min;
+  }
   OZ_Term v_local = OZ_deref(v);
   if (oz_isGeVar(v_local)) {
     GeVar<Int::IntVarImp,PC_INT_DOM> *gv = 
