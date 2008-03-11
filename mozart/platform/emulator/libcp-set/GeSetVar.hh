@@ -147,6 +147,10 @@ inline OZ_Term new_GeSetVar(IntSet glb,  IntSet lub) {
   OzVariable* ov   = extVar2Var(nv);
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
   int index        = sp->newVar(static_cast<VarImpBase*>(x.var()), ref);
+
+  if (oz_onToplevel())
+    oz_currentBoard()->getGenericSpace()->makeUnstable();
+
   nv->ensureValReflection();
   return ref;
 }
@@ -160,6 +164,10 @@ inline OZ_Term new_GeSetVar_init() {
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
   int index        = sp->newVar(static_cast<VarImpBase*>(x.var()), ref);
   nv->ensureValReflection();
+
+  if (oz_onToplevel())
+    oz_currentBoard()->getGenericSpace()->makeUnstable();
+
   return ref;
 }
 

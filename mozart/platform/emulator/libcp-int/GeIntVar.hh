@@ -148,6 +148,9 @@ inline OZ_Term new_GeIntVar(const IntSet& dom) {
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
   int index        = sp->newVar(static_cast<VarImpBase*>(x.var()), ref);
 
+  if (oz_onToplevel())
+    oz_currentBoard()->getGenericSpace()->makeUnstable();
+
   nv->ensureValReflection();
   return ref;
 }
@@ -163,6 +166,10 @@ inline OZ_Term new_GeIntVarCompl(const IntSet& dom) {
   OzVariable *ov   = extVar2Var(nv);
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
   int index        = sp->newVar(static_cast<VarImpBase*>(xcompl.var()), ref);
+
+  if (oz_onToplevel())
+    oz_currentBoard()->getGenericSpace()->makeUnstable();
+
   nv->ensureValReflection();
   return ref;
 }
