@@ -499,8 +499,29 @@ OZ_BI_define(BIlabel, 1, 1)
   case LTAG_PAIR(a,LTAG_LTUPLE0):  case LTAG_PAIR(a,LTAG_LTUPLE1): \
   case LTAG_PAIR(a,LTAG_SRECORD0): case LTAG_PAIR(a,LTAG_SRECORD1):
 
+
+// raph: I had to modify genericDot() because its implementation was
+// inadequate for distributed entities (like objects, chunks, arrays,
+// dictionaries).  The issue was that genericDot() did not know what
+// was the real language operation to perform.  This is problematic
+// since a distributed operation substitutes the current builtin by
+// another, and must therefore perform the right operation.  For
+// instance, BIhasFeature on an dictionary could raise an exception
+// because genericDot() is actually performing a Dictionary.get...
+//
+// We generalise genericDot() in the sense that it now implements
+// completely the three language operations Value.'.', CondSelect, and
+// HasFeature.  Its last argument now specifies which operation is
+// actually performed.  If the case of a CondSelect, the argument tf
+// must contain the default value for the operation.
+
+enum DotOp { DOT_DOT, DOT_CONDSELECT, DOT_HASFEATURE };
+
 inline
-OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
+OZ_Return genericDot(TaggedRef term, TaggedRef feat, TaggedRef &tf, DotOp op) {
+  TaggedRef t = term;
+  TaggedRef f = feat;
+  TaggedRef val = makeTaggedNULL();
   ltag_t t_t = tagged2ltag(t);
   ltag_t f_t = tagged2ltag(f);
  redo:
@@ -573,17 +594,14 @@ OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
   case LTAG_PAIR(LTAG_LTUPLE0,LTAG_SMALLINT):
   case LTAG_PAIR(LTAG_LTUPLE1,LTAG_SMALLINT):
     if (f == makeTaggedSmallInt(1)) {
-      tf = tagged2LTuple(t)->getHead();
-      return PROCEED;
+      val = tagged2LTuple(t)->getHead();
+    } else if (f == makeTaggedSmallInt(2)) {
+      val = tagged2LTuple(t)->getTail();
     }
-    if (f == makeTaggedSmallInt(2)) {
-      tf = tagged2LTuple(t)->getTail();
-      return PROCEED;
-    }
-    goto no_feature;
+    goto done;
   case LTAG_PAIR(LTAG_LTUPLE0,LTAG_LITERAL):
   case LTAG_PAIR(LTAG_LTUPLE1,LTAG_LITERAL):
-    goto no_feature;
+    goto done;
   case LTAG_PAIR(LTAG_LTUPLE0,LTAG_CONST0):
   case LTAG_PAIR(LTAG_LTUPLE1,LTAG_CONST0):
   case LTAG_PAIR(LTAG_LTUPLE0,LTAG_CONST1):
@@ -591,7 +609,7 @@ OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
     if (tagged2Const(f)->getType() != Co_BigInt)
       goto type_error_f;
     else
-      goto no_feature;
+      goto done;
 
     // SRecord
   case LTAG_PAIR(LTAG_SRECORD0,LTAG_CONST0):
@@ -600,33 +618,26 @@ OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
   case LTAG_PAIR(LTAG_SRECORD1,LTAG_CONST1):
     if (tagged2Const(f)->getType() != Co_BigInt)
       goto type_error_f;
-    tf = tagged2SRecord(t)->getBigIntFeatureInline(f);
-    if (tf == makeTaggedNULL())
-      goto no_feature;
-    return PROCEED;
+    val = tagged2SRecord(t)->getBigIntFeatureInline(f);
+    goto done;
   case LTAG_PAIR(LTAG_SRECORD0,LTAG_SMALLINT):
   case LTAG_PAIR(LTAG_SRECORD1,LTAG_SMALLINT):
-    tf = tagged2SRecord(t)->getSmallIntFeatureInline(f);
-    if (tf == makeTaggedNULL())
-      goto no_feature;
-    return PROCEED;
+    val = tagged2SRecord(t)->getSmallIntFeatureInline(f);
+    goto done;
   case LTAG_PAIR(LTAG_SRECORD0,LTAG_LITERAL):
   case LTAG_PAIR(LTAG_SRECORD1,LTAG_LITERAL):
-    tf = tagged2SRecord(t)->getLiteralFeatureInline(f);
-    if (tf == makeTaggedNULL())
-      goto no_feature;
-    return PROCEED;
+    val = tagged2SRecord(t)->getLiteralFeatureInline(f);
+    goto done;
 
     // Literal
   case LTAG_PAIR(LTAG_LITERAL,LTAG_CONST0):
   case LTAG_PAIR(LTAG_LITERAL,LTAG_CONST1):
     if (tagged2Const(f)->getType() != Co_BigInt)
       goto type_error_f;
-    else
-      goto no_feature;
+    /* fall through */
   case LTAG_PAIR(LTAG_LITERAL,LTAG_SMALLINT):
   case LTAG_PAIR(LTAG_LITERAL,LTAG_LITERAL):
-    goto no_feature;
+    goto done;
 
     // Variable
   case LTAG_PAIR(LTAG_VAR0,LTAG_CONST0):
@@ -641,13 +652,12 @@ OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
   case LTAG_PAIR(LTAG_VAR0,LTAG_LITERAL):
   case LTAG_PAIR(LTAG_VAR1,LTAG_LITERAL):
     switch (tagged2Var(t)->getType()) {
-    case OZ_VAR_OF:
-      {
-	int ret = tagged2GenOFSVar(t)->hasFeature(f,&tf);
-	if (ret == FAILED) 
-	  goto no_feature;
-	return ret;
-      }
+    case OZ_VAR_OF: {
+      // hasFeature() returns either PROCEED or SUSPEND
+      OZ_Return ret = tagged2GenOFSVar(t)->hasFeature(f,&val);
+      if (ret == SUSPEND) return SUSPEND;
+      goto done;
+    }
     case OZ_VAR_FD:
     case OZ_VAR_BOOL:
     case OZ_VAR_FS:
@@ -671,63 +681,86 @@ OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
     case Co_Extension:
       if (!oz_isChunkExtension(t))
 	goto type_error_t;
-      tf = tagged2Extension(t)->getFeatureV(f);
-      if (tf == makeTaggedNULL())
-	goto no_feature;
-      return PROCEED;
+      val = tagged2Extension(t)->getFeatureV(f);
+      goto done;
     case Co_Object: {
       OzObject* obj = tagged2Object(t);
-      if (!obj->isComplete())   // object is a stub: call distribution
+      if (!obj->isComplete()) {   // object is a stub: call distribution
+	Assert(op == DOT_DOT);   // only DOT is implemented
 	return (*distObjectGetFeature)(obj, f, tf);
+      }
       //
       OzClass* cls = obj->getClass();
       if (!cls->isComplete())   // class is necessary: call distribution
 	return (*distClassGet)(cls);
       //
-      tf = tagged2Object(t)->getFeature(f);
-      if (tf == makeTaggedNULL())
-	goto no_feature;
-      return PROCEED;
+      val = tagged2Object(t)->getFeature(f);
+      goto done;
     }
     case Co_Port:
     case Co_Lock:
-      goto no_feature;
+      goto done;
     case Co_Chunk: {
       SChunk* chunk = tagged2SChunk(t);
-      if (!chunk->getValue())   // chunk is a stub: call distribution
-	return distChunkOp(OP_GET, chunk, &f, &tf);
+      if (!chunk->getValue()) {   // chunk is a stub: call distribution
+	switch (op) {
+	case DOT_DOT:
+	  return distChunkOp(OP_GET, chunk, &f, &tf);
+	case DOT_CONDSELECT: {
+	  TaggedRef arg[] = { f, tf };
+	  return distChunkOp(OP_CONDGET, chunk, arg, &tf);
+	}
+	case DOT_HASFEATURE:
+	  return distChunkOp(OP_MEMBER, chunk, &f, &tf);
+	}
+	Assert(0);
+      }
       //
-      tf = chunk->getFeature(f);
-      if (tf == makeTaggedNULL()) goto no_feature;
-      return PROCEED;
+      val = chunk->getFeature(f);
+      goto done;
     }
     case Co_Class: {
       OzClass* cls = tagged2OzClass(t);
       if (!cls->isComplete())   // class is only a stub: call distribution
 	return (*distClassGet)(cls);
       //
-      tf = cls->classGetFeature(f);
-      if (tf == makeTaggedNULL()) {
+      val = cls->classGetFeature(f);
+      if (val == makeTaggedNULL()) {
 	TaggedRef cfs = oz_deref(cls->classGetFeature(NameOoFeat));
 	if (oz_isSRecord(cfs)) {
-	  tf = tagged2SRecord(cfs)->getFeature(f);
-	  if (tf) {
-	    TaggedRef dt = oz_deref(tf);
+	  val = tagged2SRecord(cfs)->getFeature(f);
+	  if (val) {
+	    TaggedRef dt = oz_deref(val);
 	    if (oz_isName(dt) && oz_eq(dt,NameOoFreeFlag))
-	      goto no_feature;
-	    return PROCEED;
+	      val = makeTaggedNULL();
 	  }
 	}
-	goto no_feature;
       }
-      return PROCEED;
+      goto done;
     }
     case Co_Array: {
-      return arrayGetInline(t, f, tf);
+      // check boundaries
+      if (!oz_isSmallInt(f) || !tagged2Array(t)->checkIndex(oz_intToC(f)))
+	goto done;
+      switch (op) {
+      case DOT_DOT:
+      case DOT_CONDSELECT:
+	return arrayGetInline(t, f, tf);
+      case DOT_HASFEATURE:
+	val = oz_unit();     // any value is fine, we are within boundaries
+	goto done;
+      }
     }
     case Co_Dictionary: {
       extern OZ_Return dictionaryGetInline(OZ_Term, OZ_Term, OZ_Term&);
-      return dictionaryGetInline(t, f, tf);
+      extern OZ_Return dictionaryCondGetInline(OZ_Term, OZ_Term, OZ_Term, OZ_Term&);
+      extern OZ_Return dictionaryMemberInline(OZ_Term, OZ_Term, OZ_Term&);
+
+      switch (op) {
+      case DOT_DOT:        return dictionaryGetInline(t, f, tf);
+      case DOT_CONDSELECT: return dictionaryCondGetInline(t, f, tf, tf);
+      case DOT_HASFEATURE: return dictionaryMemberInline(t, f, tf);
+      }
     }
     default:
       goto type_error_t;
@@ -743,20 +776,34 @@ OZ_Return genericDot(TaggedRef t, TaggedRef f, TaggedRef &tf, Bool isdot) {
  type_error_f:
   oz_typeError(1,"Feature");
 
- no_feature:
-  if (isdot)
+ done:
+  // this is the regular exit door; the operation determines the output
+  switch (op) {
+  case DOT_DOT:
+    if (val != makeTaggedNULL()) return (tf = val), PROCEED;
     return oz_raise(E_ERROR,E_KERNEL,".",2,t,f);
-  else
-    return FAILED;
+
+  case DOT_CONDSELECT:
+    if (val != makeTaggedNULL()) tf = val;
+    return PROCEED;
+
+  case DOT_HASFEATURE:
+    tf = val != makeTaggedNULL() ? oz_true() : oz_false();
+    return PROCEED;
+
+  default:
+    Assert(0);
+    return PROCEED;
+  }
 }
 
 // extern
 OZ_Return dotInline(TaggedRef term, TaggedRef fea, TaggedRef &out) {
-  return genericDot(term,fea,out,TRUE);
+  return genericDot(term, fea, out, DOT_DOT);
 }
 
 OZ_BI_define(BIdot,2,1) {
-  OZ_Return r = genericDot(OZ_in(0), OZ_in(1), OZ_out(0), TRUE);
+  OZ_Return r = genericDot(OZ_in(0), OZ_in(1), OZ_out(0), DOT_DOT);
   if (r == SUSPEND) {
     oz_suspendOnInArgs2;
   } else {
@@ -765,15 +812,12 @@ OZ_BI_define(BIdot,2,1) {
 } OZ_BI_end
   
 
-OZ_BI_define(BIhasFeature,2,1)
-{
-  TaggedRef dummy;
-  OZ_Return r = genericDot(OZ_in(0),OZ_in(1),dummy,FALSE);
-  switch (r) {
-  case PROCEED: OZ_RETURN(oz_true());
-  case FAILED : OZ_RETURN(oz_false());
-  case SUSPEND: oz_suspendOnInArgs2;
-  default     : return r;
+OZ_BI_define(BIhasFeature,2,1) {
+  OZ_Return r = genericDot(OZ_in(0), OZ_in(1), OZ_out(0), DOT_HASFEATURE);
+  if (r == SUSPEND) {
+    oz_suspendOnInArgs2;
+  } else {
+    return r;
   }
 } OZ_BI_end
 
@@ -784,17 +828,12 @@ OZ_BI_define(BIhasFeature,2,1)
  */
 
 OZ_BI_define(BImatchDefault,3,1) {
-  OZ_Return ret = genericDot(OZ_in(0),OZ_in(1),OZ_out(0),FALSE);
-  switch (ret) {
-  case PROCEED:
-    return PROCEED;
-  case FAILED:
-    OZ_out(0)=OZ_in(2);
-    return PROCEED;
-  case SUSPEND:
+  OZ_out(0) = OZ_in(2);
+  OZ_Return r = genericDot(OZ_in(0), OZ_in(1), OZ_out(0), DOT_CONDSELECT);
+  if (r == SUSPEND) {
     oz_suspendOnInArgs2;
-  default:
-    return ret;
+  } else {
+    return r;
   }
 } OZ_BI_end
 
@@ -2274,17 +2313,19 @@ OZ_BI_define(BItestRecordFeature,2,2)
 {
   oz_declareIN(0,val);
   oz_declareIN(1,patFeature);
-  TaggedRef out;
-  OZ_Return ret = genericDot(val,patFeature,out,FALSE);
+  TaggedRef out = makeTaggedNULL();
+  OZ_Return ret = genericDot(val,patFeature,out,DOT_CONDSELECT);
   switch (ret) {
   case SUSPEND:
     oz_suspendOnInArgs2;
-  case FAILED:
-    OZ_out(1) = oz_unit();
-    OZ_RETURN(oz_false());
   case PROCEED:
-    OZ_out(1) = out;
-    OZ_RETURN(oz_true());
+    if (out != makeTaggedNULL()) {
+      OZ_out(1) = out;
+      OZ_RETURN(oz_true());
+    } else {
+      OZ_out(1) = oz_unit();
+      OZ_RETURN(oz_false());
+    }
   default:
     return ret;
   }
@@ -4139,7 +4180,7 @@ OZ_BI_define(BIcatAccessOO,1,1)
     OZ_Term left = oz_left(cat);
     DEREF(left, leftptr);
     if (oz_isDictionary(left) || oz_isArray(left)) {
-      OZ_Return ret = genericDot(left, oz_right(cat), OZ_out(0), TRUE);
+      OZ_Return ret = genericDot(left, oz_right(cat), OZ_out(0), DOT_DOT);
       if (ret == SUSPEND && am.isEmptySuspendVarList()) {
 	oz_suspendOn(oz_right(cat));   // Must explicitly suspend on key
       }
@@ -4232,7 +4273,7 @@ OZ_BI_define(BIcatAccess,1,1)
     OZ_Term left = oz_left(cat);
     DEREF(left, leftptr);
     if (oz_isDictionary(left) || oz_isArray(left)) {
-      OZ_Return ret = genericDot(left, oz_right(cat), OZ_out(0), TRUE);
+      OZ_Return ret = genericDot(left, oz_right(cat), OZ_out(0), DOT_DOT);
       if (ret == SUSPEND && am.isEmptySuspendVarList()) {
 	oz_suspendOn(oz_right(cat));   // Must explicitly suspend on key
       }
