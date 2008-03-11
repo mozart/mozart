@@ -155,6 +155,10 @@ OZ_Term new_GeBoolVar(int min, int max) {
   int index        = sp->newVar(static_cast<VarImpBase*>(x.var()), ref);
 
   nv->ensureValReflection();
+
+  if (oz_onToplevel())
+    oz_currentBoard()->getGenericSpace()->makeUnstable();
+  
   return ref;
 }
 
