@@ -198,7 +198,7 @@ Smallest allowed integer value. Constant value: ~2 147 483 646
 <<is>>
 <synopsis>
 <<<
-{FD.is ?*{V} ??{B}}  
+{GFD.is ?*{V} ??{B}}  
 >>>
 <item>
 tests whether ?_{V} is a finite domain variable. <!-- integer between 0 and <<FD.sup>>. <<be_careful_the meaning is different>> -->
@@ -481,10 +481,11 @@ Any of the above mentioned relation can be passed as an argument to functions
 with ?_{Rt} as formal parameter.
 -->
 <!-- ********************************************************************** -->
-<section id="section.fd.consistency"><title/Consistency levels/
+<section id="section.fd.consistency"><title/Post functions/
 <p>
-Propagators API functions post propagators in the current computation space. All
-these functions takes as parammeters a consistency level and a propagator kind. 
+Propagators API functions post propagators in the current computation 
+space. All these functions takes as parammeters a <em>consistency level</em>
+ and a propagator kind. 
 Consistency level defines propgators semantic, for instance the bound consistency
 level indicates that the propagator only removes values from domain boundaries.
 
@@ -495,8 +496,7 @@ required that a propagator achieves full domain-consistency or full
 bounds-consistency. It is more like: which level of consistency comes closest.
 
 <p>
-If in the description of a constraint below no consistency level is mentioned, the 
-propagator for the constraint implements domain-consistency.
+If in the description of a constraint below no consistency level is mentioned, the propagator for the constraint implements domain-consistency.
 
 <table>
 <tr><td/<<GFD.cl.val>>/ <td> Value consistency (naive).</td></tr>
@@ -573,19 +573,20 @@ being <<B>> a constraint boolean variable (REFERENCE).
 can be of the following forms:
 
 <list class=enum>
-<item> <<post(Lx Rt Y)>>: Post propagator for <math> Lx_i \sim_{Rt} Y </math> for all <math>0\leq i<|X| </math>. Supports both bounds (<<GFD.cl.bnd>>) and domain-consistency (<<GFD.cl.dom>>, default).
+  <item> <<post(Lx Rt Y)>>: Post propagator for <math> Lx_i \sim_{Rt} Y </math> for all <math>0\leq i<|X| </math>. <p>Supports both bounds (<<GFD.cl.bnd>>) and domain-consistency (<<GFD.cl.dom>>, default).
 <item> <<post(X Rt C)>>:  Propagates <math> X \sim_{Rt} C </math>.
 <item> <<post(Lx Rt C)>>: Propagates <math> Lx_i \sim_{Rt} C </math> for all <math> 0\leq i<|X|</math>. 
-<item> <<post(X0 Rt X1 B)>>: Post propagator for <math> (X0 \sim_{Rt} X1)\Leftrightarrow B </math>. Supports both bounds (<<GFD.cl.bnd>>) and domain-consistency (<<GFD.cl.dom>>, default).
-<item> <<post(X Rt C B)>>: Post propagator for <math> (X \sim_{Rt} C)\Leftrightarrow B </math>. Supports both bounds (<<FD.cl.bnd>>) and domain-consistency (<<FD.cl.dom>>, default).
+<item> <<post(X0 Rt X1 B)>>: Post propagator for <math> (X0 \sim_{Rt} X1)\Leftrightarrow B </math>.<p>Supports both bounds (<<GFD.cl.bnd>>) and domain-consistency (<<GFD.cl.dom>>, default).
+<item> <<post(X Rt C B)>>: Post propagator for <math> (X \sim_{Rt} C)\Leftrightarrow B </math>. <p>Supports both bounds (<<FD.cl.bnd>>) and domain-consistency (<<FD.cl.dom>>, default).
 <item> <<post(Lx Rt)>>: Post propagator for pairwise relation on  <<Lx>>. States that the elements of  ?_{Lx} are in the following relation:
 <list class=enum>
-  <item> if <<rt:GFD.rt.'=:'>>, then all elements of <<Lx>> must be equal. Supports both bounds (<<GFD.cl.bnd>>) and domain-consistency (<<GFD.cl.dom>>, default).
-  <item>if <<rt:FD.rt.'<:'>>,<<rt:FD.rt.'=<:'>>, <<rt:FD.rt.'>:'>>, or <<rt:FD.rt.'>=:'>>, then the elements of <<Lx>> are ordered with respt to <<Rt>>. Supports domain-consistency (<<GFD.cl.dom>>, default).
-  <item>if <<rt:FD.rt.'\\=:'>>, then all elements of <<Lx>> must be pairwise distinct (corresponds to the distinct constraint). Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
+  <item> if <<rt:GFD.rt.'=:'>>, then all elements of <<Lx>> must be equal. 
+	<p>Supports both bounds (<<GFD.cl.bnd>>) and domain-consistency (<<GFD.cl.dom>>, default).
+<item>if <<rt:FD.rt.'<:'>>,<<rt:FD.rt.'=<:'>>, <<rt:FD.rt.'>:'>>, or <<rt:FD.rt.'>=:'>>, then the elements of <<Lx>> are ordered with respt to <<Rt>>. <p>Supports domain-consistency (<<GFD.cl.dom>>, default).
+  <item>if <<rt:FD.rt.'\\=:'>>, then all elements of <<Lx>> must be pairwise distinct (corresponds to the distinct constraint). <p>Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). <p>Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
 </list>
 <item> <<post(X Rt Y)>>: Post propagator for relation <<Rt>> between  <<X>> and <<Y>>. 
-    <p> Note that for the inequality relations this corresponds to the lexical order between \a <<X>> and <<Y>>. Supports both bounds (<<cl:FD.cl.bnd>>) and domain-consistency (<<cl:FD.cl.dom>>, default). Throws an exception of type Int::ArgumentSizeMismatch, if <<X>> and <<Y>> are of different size.
+    <p> Note that for the inequality relations this corresponds to the lexical order between \a <<X>> and <<Y>>. <p>Supports both bounds (<<cl:FD.cl.bnd>>) and domain-consistency (<<cl:FD.cl.dom>>, default). <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<X>> and <<Y>> are of different size.
 </list>
 </list>
 
@@ -607,11 +608,11 @@ can be of the following forms:
 can be of the following forms:
 
 <list class=enum>
-<item> <<post(N X0 X1)>>:  Post propagator for <math> N_{X0}=X1 </math>. Being <<N>> a vector of integers and  <<X0>> and <<X1>>  integer constraint variables. Throws an exception of type Int::OutOfLimits, if the integers in  <<N>> exceed the limits in Int::Limits.
-<item> <<post(N X0 B)>>: Post propagator for <math> N_{X0}=B </math>. Being <<N>> a vector of integers, <<X0>> an integer constraint variable and <<B>> a boolean constraint variable. Throws an exception of type Int::OutOfLimits, if the integers in <<N>> exceed the limits in Int::Limits.
-<item> <<post(N X0 C)>>: Post propagator for <math> N_{X0}=C </math>.  Being <<N>> a vector of integers, <<X0>> an integer constraint variable and <<C>> an integer. Throws an exception of type Int::OutOfLimits, if the integers in <<N>> exceed the limits in Int::Limits.
-<item> <<post(Lx Y0 Y1)>>:  Post propagator for <math> Lx_{Y0}=Y1 </math>. Being <<Lx>> a vector of integer constraint variables and <<Y0>> and <<Y1>>  integer constraint variables. Supports both bounds (<<cl:GFD.cl.bnd>>) and domain-consistency (<<cl:GFD.cl.dom>>, default).
-<item> <<post(Lx Y0 C)>>:  Post propagator for <math> Lx_{Y0}=C </math>. Being  <<Lx>> a vector of integer constraint variables, <<Y0>> an integer constraint variable and <<C>> an integer value. Supports both bounds (<<cl:GFD.cl.bnd>>) and domain-consistency (<<cl:GFD.cl.dom>>, default).
+<item> <<post(N X0 X1)>>:  Post propagator for <math> N_{X0}=X1 </math>. Being <<N>> a vector of integers and  <<X0>> and <<X1>>  integer constraint variables. <p>Throws an exception of type Int::OutOfLimits, if the integers in  <<N>> exceed the limits in Int::Limits.
+<item> <<post(N X0 B)>>: Post propagator for <math> N_{X0}=B </math>. Being <<N>> a vector of integers, <<X0>> an integer constraint variable and <<B>> a boolean constraint variable. <p>Throws an exception of type Int::OutOfLimits, if the integers in <<N>> exceed the limits in Int::Limits.
+<item> <<post(N X0 C)>>: Post propagator for <math> N_{X0}=C </math>.  Being <<N>> a vector of integers, <<X0>> an integer constraint variable and <<C>> an integer. <p>Throws an exception of type Int::OutOfLimits, if the integers in <<N>> exceed the limits in Int::Limits.
+<item> <<post(Lx Y0 Y1)>>:  Post propagator for <math> Lx_{Y0}=Y1 </math>. Being <<Lx>> a vector of integer constraint variables and <<Y0>> and <<Y1>>  integer constraint variables. <p>Supports both bounds (<<cl:GFD.cl.bnd>>) and domain-consistency (<<cl:GFD.cl.dom>>, default).
+<item> <<post(Lx Y0 C)>>:  Post propagator for <math> Lx_{Y0}=C </math>. Being  <<Lx>> a vector of integer constraint variables, <<Y0>> an integer constraint variable and <<C>> an integer value. <p>Supports both bounds (<<cl:GFD.cl.bnd>>) and domain-consistency (<<cl:GFD.cl.dom>>, default).
 <item> <<post(Bv Y0 B)>>:  Post propagator for <math> Bv_{Y0}=Y1 </math>. Being <<Bv>> a vector of boolean constraint variables, <<Y0>> an integer constraint variable and <<B>> a boolean constraint variable.
 <item> <<post(Bv Y0 C)>>: Post propagator for <math>  Bv_{Y0}=C </math>. Being <<Bv>> a vector of boolean constraint variables, <<Y0>> an integer constraint variable and <<C>> an integer constant.
 </list>
@@ -634,8 +635,8 @@ can be of the following forms:
 can be of the following forms:
 
 <list class=enum>
-<item> <<post(Lx)>>: Post propagator for <math> Lx_i\neq Lx_j </math> for all <math>0\leq i\neq j<|x|</math>. Supports value (<<cl:GFD.cl.val>>), default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
-<item> <<post(N Lx)>>: Post propagator for <math> Lx_i+N_i\neq Lx_j+N_j </math> for all <math>0\leq i\neq j<|x|</math>. Being <<N>> and <<X>> vectors of integers and integer constraint variables resp. Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>),  and domain-consistency (<<cl:GFD.cl.dom>>). Throws an exception of type Int::OutOfLimits, if the integers in <<N>> exceed the limits in Int::Limits or if the sum of <<n>> and <<Lx>> exceed the limits. Throws an exception of type Int::ArgumentSizeMismatch, if <<Lx>> and <<N>> are of different size. Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply. 
+<item> <<post(Lx)>>: Post propagator for <math> Lx_i\neq Lx_j </math> for all <math>0\leq i\neq j<|x|</math>. <p>Supports value (<<cl:GFD.cl.val>>), default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). <p>Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
+<item> <<post(N Lx)>>: Post propagator for <math> Lx_i+N_i\neq Lx_j+N_j </math> for all <math>0\leq i\neq j<|x|</math>. Being <<N>> and <<X>> vectors of integers and integer constraint variables resp. <p>Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>),  and domain-consistency (<<cl:GFD.cl.dom>>). <p>Throws an exception of type Int::OutOfLimits, if the integers in <<N>> exceed the limits in Int::Limits or if the sum of <<n>> and <<Lx>> exceed the limits. <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<Lx>> and <<N>> are of different size. <p>Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply. 
 </list>
 </list>
 
@@ -667,7 +668,7 @@ for all <math>0\leq i<|x|</math>.
 </list>
 <item> <<post(B X)>>:  Post propagator for channeling a boolean and an integer variable <math>B = X</math>.
 <item> <<post(X B)>>: Post propagator for channeling an integer and a boolean variable <math> X = B</math>.
-<item> <<post(Lb Y O)>>: Post propagator for channeling Boolean and integer variables <math>Lb_i = 1\leftrightarrow Y=i+O</math>. Being <<Lb>> a vector of boolean variables. Throws an exception of type Int::ArgumentSame, if <<Lb>> contains the same unassigned variable multiply.
+<item> <<post(Lb Y O)>>: Post propagator for channeling Boolean and integer variables <math>Lb_i = 1\leftrightarrow Y=i+O</math>. Being <<Lb>> a vector of boolean variables. <p>Throws an exception of type Int::ArgumentSame, if <<Lb>> contains the same unassigned variable multiply.
 </list>
 </list>
 
@@ -690,7 +691,7 @@ for all <math>0\leq i<|x|</math>.
 can be of the following forms:
 
 <list class=enum>
-<item> <<post(Lx)>>:  Post propagator such that <<Lx>> forms a circuit. <<Lx>> forms a circuit if the graph with edges <math> i \to j</math>  where <math>Lx_i=j</math> has a single cycle covering all nodes. Supports domain (<<cl:GFD.cl.dom>>) and value propagation (all other values for <<cl>>), where this refers to whether value or domain-consistent distinct in enforced on <<Lx>>. Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
+<item> <<post(Lx)>>:  Post propagator such that <<Lx>> forms a circuit. <<Lx>> forms a circuit if the graph with edges <math> i \to j</math>  where <math>Lx_i=j</math> has a single cycle covering all nodes. <p>Supports domain (<<cl:GFD.cl.dom>>) and value propagation (all other values for <<cl>>), where this refers to whether value or domain-consistent distinct in enforced on <<Lx>>. <p>Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
 </list>
 </list>
 
@@ -800,17 +801,17 @@ Algorithms for the Global Cardinality Constraint</em>.
 can be of the following forms:
 
 <list class=enum>
-<item> <<post(Lx N Rt M)>>:  Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=N\}\sim_{Rt} M<math>. Supports domain-consistent propagation only.
-<item> <<post(Lx Y Rt M)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=y\}\sim_{Rt} M</math>. Supports domain-consistent propagation only.
-<item> <<post(Lx Y Rt M)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=Y_i\}\sim_{Rt} M</math>. Supports domain-consistent propagation only. Throws an exception of type Int::ArgumentSizeMismatch, if <<Lx>> and <<Y>> are of different size.
-<item> <<post(Lx N Rt Z)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=N\}\sim_{Rt} Z</math>. Supports domain-consistent propagation only.
-<item> <<post(Lx Y Rt Z)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=Y\}\sim_{Rt} Z</math>. Supports domain-consistent propagation only.
-<item> <<post(Lx Y Rt Z)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=Y_i\}\sim_{Rt} Z</math>. Supports domain-consistent propagation only. Throws an exception of type Int::ArgumentSizeMismatch, if <<Lx>> and <<Y>> are of different size.
-<item> <<post(Lx C)>>:  Posts a global count (cardinality) constraint. Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=j\}=C_j</math> and <math> \bigcup_i \{Lx_i\} \subseteq \{0,\ldots,|C|-1\}</math> (no other value occurs). Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
-<item> <<post(Lx C)>>: Posts a global count (cardinality) constraint. Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=j\}\in C_j</math> and <math> \bigcup_i \{Lx_i\} \subseteq \{0,\ldots,|C|-1\}</math> (no other value occurs). Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
-<item><<post(Lx C V)>>: Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=V_j\}=C_j</math> and <math>\bigcup_i \{Lx_i\} \subseteq \bigcup_j \{V_j\}</math> (no other value occurs). Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply. Throws an exception of type Int::ArgumentSizeMismatch, if  <<C>> and <<V>> are of different size.
-<item><<post(Lx C V)>>:  Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=V_j\}\in C_j</math> and <math>\bigcup_i \{Lx_i\} \subseteq \bigcup_j \{V_j\}</math> (no other value occurs). Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply. Throws an exception of type Int::ArgumentSizeMismatch, if <<C>> and <<V>> are of different size.
-<item><<post(Lx C V)>>:  Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=V_j\}\in C</math> and <math> \bigcup_i \{Lx_i\} \subseteq \bigcup_j \{V_j\}</math> (no other value occurs). Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). Throws an exception of type Int::ArgumentSame, if Lx contains the same unassigned variable multiply. Throws an exception of type Int::ArgumentSizeMismatch, if <<C>> and <<V>> are of different size.
+<item> <<post(Lx N Rt M)>>:  Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=N\}\sim_{Rt} M</math>. <p>Supports domain-consistent propagation only.
+<item> <<post(Lx Y Rt M)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=y\}\sim_{Rt} M</math>. <p>Supports domain-consistent propagation only.
+<item> <<post(Lx Y Rt M)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=Y_i\}\sim_{Rt} M</math>. <p>Supports domain-consistent propagation only. <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<Lx>> and <<Y>> are of different size.
+<item> <<post(Lx N Rt Z)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=N\}\sim_{Rt} Z</math>. <p>Supports domain-consistent propagation only.
+<item> <<post(Lx Y Rt Z)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=Y\}\sim_{Rt} Z</math>. <p>Supports domain-consistent propagation only.
+<item> <<post(Lx Y Rt Z)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=Y_i\}\sim_{Rt} Z</math>. <p>Supports domain-consistent propagation only. <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<Lx>> and <<Y>> are of different size.
+<item> <<post(Lx C)>>:  Posts a global count (cardinality) constraint. Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=j\}=C_j</math> and <math> \bigcup_i \{Lx_i\} \subseteq \{0,\ldots,|C|-1\}</math> (no other value occurs). <p>Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). <p>Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
+<item> <<post(Lx C)>>: Posts a global count (cardinality) constraint. Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=j\}\in C_j</math> and <math> \bigcup_i \{Lx_i\} \subseteq \{0,\ldots,|C|-1\}</math> (no other value occurs). <p>Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). <p>Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
+<item><<post(Lx C V)>>: Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=V_j\}=C_j</math> and <math>\bigcup_i \{Lx_i\} \subseteq \bigcup_j \{V_j\}</math> (no other value occurs). <p>Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). <p>Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply. <p>Throws an exception of type Int::ArgumentSizeMismatch, if  <<C>> and <<V>> are of different size.
+<item><<post(Lx C V)>>:  Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=V_j\}\in C_j</math> and <math>\bigcup_i \{Lx_i\} \subseteq \bigcup_j \{V_j\}</math> (no other value occurs). <p>Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). <p>Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply. <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<C>> and <<V>> are of different size.
+<item><<post(Lx C V)>>:  Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=V_j\}\in C</math> and <math> \bigcup_i \{Lx_i\} \subseteq \bigcup_j \{V_j\}</math> (no other value occurs). <p>Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). <p>Throws an exception of type Int::ArgumentSame, if Lx contains the same unassigned variable multiply. <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<C>> and <<V>> are of different size.
 </list>
 </list>
 
@@ -897,6 +898,52 @@ can be of the following forms:
 
 <!-- ********************************************************************** -->
 <section id="section.fd.linear"><title/Linear constraints/
+<p>
+All variants for linear constraints over integer variables share
+the following properties:
+<list class=enum>
+<item> Bounds-consistency (over the real numbers) is supported for
+       all constraints (actually, for disequlities always domain-consistency
+       is used as it is cheaper). Domain-consistency is supported for all
+       non-reified constraint. As bounds-consistency for inequalities
+       coincides with domain-consistency, the only real variation is for 
+       linear equations. Domain-consistent linear equations have exponential 
+       complexity, so use with care!
+<item> Variables occurring multiply in the argument arrays are replaced
+       by a single occurrence: for example, <math>ax+bx</math> becomes
+       <math>(a+b)x</math>.
+<item> If in the above simplification the value for <math>(a+b)</math> (or for
+       <math>a</math> and <math>b</math>) exceeds the limits for integers as
+       defined in Int::Limits, an exception of type Int::OutOfLimits is thrown.
+<item>Assume the constraint <math>\sum_{i=0}^{|x|-1}a_i\cdot x_i\sim_r c</math>.
+       If  <math>|c|+\sum_{i=0}^{|x|-1}a_i\cdot x_i</math> exceeds the maximal
+       available precision (at least <math>2^{48}</math>), an exception of
+       type Int::OutOfLimits is thrown.
+<item>In all other cases, the created propagators are accurate (that
+       is, they will not silently overflow during propagation).
+</list>
+
+<list>
+<entry>
+<index class=module/GFD<and>linear/
+<<linear>>
+<synopsis>
+<<<
+{GFD.linear ?*{PE}}
+>>>
+<item> Post a linear propagator according to the post especification ?_{PE}. ?_{PE} can be of the following forms:
+
+<list class=enum>
+<item> <<post(Lx Rt C)>>: Post propagator for <math>\sum_{i=0}^{|Lx|-1}Lx_i\sim_{Rt} C</math>.
+<item><<post(Lx Rt Y)>>:  Post propagator for <math>\sum_{i=0}^{|Lx|-1}Lx_i\sim_{Rt} Y</math>
+<item> <<post(Lx Rt C B)>>:  Post propagator for <math>\left(\sum_{i=0}^{|Lx|-1}Lx_i\sim_{Rt} C\right)\Leftrightarrow B </math>
+<item> <<post(Lx Rt Y B)>>: Post propagator for <math>\left(\sum_{i=0}^{|Lx|-1}Lx_i\sim_{Rt} Y\right)\Leftrightarrow B</math>
+<item> <<post(A Lx Rt C)>>: Post propagator for <math>\sum_{i=0}^{|Lx|-1}A_i\cdot Lx_i\sim_{Rt} C</math>. <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<A>> and <<Lx>> are of different size.
+<item><<post(A Lx Rt Y)>>: Post propagator for <math>\sum_{i=0}^{|Lx|-1}A_i\cdot Lx_i\sim_{Rt} Y</math>. <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<A>> and <<Lx>> are of different size.
+<item> <<post(A L Rt C B)>>: Post propagator for <math>\left(\sum_{i=0}^{|Lx|-1}A_i\cdot Lx_i\sim_{Rt} C\right)\Leftrightarrow B</math>. <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<A>> and <<Lx>> are of different size.
+<item><<post(A Lx Rt Y B)>>:  Post propagator for <math>\left(\sum_{i=0}^{|Lx|-1}A_i\cdot Lx_i\sim_{Rt} Y\right)\Leftrightarrow B</math>. <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<A>> and <<Lx>> are of different size.
+</list>
+</list>
 </section>
 
 <!-- ********************************************************************** -->
