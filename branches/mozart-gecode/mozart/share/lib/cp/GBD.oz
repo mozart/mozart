@@ -241,6 +241,8 @@ define
    {GBDP.gbd_rel_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
       []  6 then
    {GBDP.gbd_rel_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
+      []  4 then
+   {GBDP.gbd_rel_4 Sc.1 Sc.2 Sc.cl Sc.pk}
       else
    raise malformed('Rel constraint post') end
       end
@@ -252,7 +254,7 @@ define
    in
       case W
       of 5 then
-   {GBDP.gbd_linearl_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+   {GBDP.gbd_linear_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
       []  6 then
    {GBDP.gbd_linear_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
       [] 7 then

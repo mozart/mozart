@@ -286,7 +286,7 @@ BoolVar* declareBV(OZ_Term p, GenericSpace *s) {
  
  
 /**
-   ############################## Domain declaration ##############################
+   ############################## Domain declaration ##########################
 */
 
 /** 
