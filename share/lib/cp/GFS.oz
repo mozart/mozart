@@ -3,7 +3,8 @@
 %%%     Alberto Delgado <adelgado@cic.puj.edu.co>
 %%%
 %%%  Contributors:
-%%% 	Andres Felipe Barco (anfelbar@univalle.edu.co)
+%%%     Andres Felipe Barco (anfelbar@univalle.edu.co)
+%%%     Gustavo A. Gomez Farhat (gafarhat@univalle.edu.co)
 %%%
 %%% Copyright:
 %%%     Alberto Delgado, 2007
@@ -76,7 +77,20 @@ export
    partition  : Partition
    
    %Gecode propagators
+   sequence: Sequence
+   sequentialUnion : SequentialUnion
+   atMostOne: AtMostOne
+   min: Min
+   max: Max
+   match: Match
+   channel: Channel
    cardinality: Cardinality
+   %weights: Weights 
+   selectUnion: SelectUnion
+   selectInter: SelectInter
+   selectInterIn: SelectInterIn
+   selectDisjoint: SelectDisjoint
+   selectSet: SelectSet
    %rel: Rel
    
 define
@@ -106,9 +120,26 @@ define
    DistinctN
    Partition
 
-   %% Gecode ropagators
-   Cardinality= GFSP.gfs_cardinality_2
+   %% Gecode propagators
    Rel
+   Sequence
+   SequentialUnion
+   
+   AtMostOne
+
+   Min
+   Max
+   Match
+   Channel
+   Cardinality
+   %Weights
+
+   SelectUnion
+   SelectInter
+   SelectInterIn
+   SelectDisjoint
+   SelectSet
+   
 in
    local
       fun {Decl}
@@ -288,8 +319,161 @@ in
 	    raise malformed('Rel constraint post') end
 	 end
       end
+      
+      proc{Sequence Sc}
+	 W = {Record.width Sc}
+      in
+	 case W
+	 of 1 then
+	    {GFSP.gfs_sequence_1 Sc.1}
+	 else
+	    raise malformed('Sequence constraint post') end
+	 end
+      end
 
+      proc{SequentialUnion Sc}
+	 W = {Record.width Sc}
+      in
+	 case W
+	 of 2 then
+	    {GFSP.gfs_sequentialUnion_2 Sc.1 Sc.2}
+	 else
+	    raise malformed('SequentialUnion constraint post') end
+	 end
+      end
+
+      proc{AtMostOne Sc}
+	 W = {Record.width Sc}
+      in
+	 case W
+	 of 2 then
+	    {GFSP.gfs_atMostOne_2 Sc.1 Sc.2}
+	 else
+	    raise malformed('AtMostOne constraint post') end
+	 end
+      end
+
+      proc{Min Sc}
+	 W = {Record.width Sc}
+      in
+	 case W
+	 of 2 then
+	    {GFSP.gfs_min_2 Sc.1 Sc.2}
+	 else
+	    raise malformed('Min constraint post') end
+	 end
+      end
+
+      proc{Max Sc}
+	 W = {Record.width Sc}
+      in
+	 case W
+	 of 2 then
+	    {GFSP.gfs_max_2 Sc.1 Sc.2}
+	 else
+	    raise malformed('Max constraint post') end
+	 end
+      end
+
+      proc{Match Sc}
+	 W = {Record.width Sc}
+      in
+	 case W
+	 of 2 then
+	    {GFSP.gfs_match_2 Sc.1 Sc.2}
+	 else
+	    raise malformed('Match constraint post') end
+	 end
+      end
+
+      proc{Channel Sc}
+	 W = {Record.width Sc}
+      in
+	 case W
+	 of 2 then
+	    {GFSP.gfs_channel_2 Sc.1 Sc.2}
+	 else
+	    raise malformed('Channel constraint post') end
+	 end
+      end
+
+      proc{Cardinality Sc}
+	 W = {Record.width Sc}
+      in
+	 case W
+	 of 2 then
+	    {GFSP.gfs_cardinality_2 Sc.1 Sc.2}
+	 else
+	    raise malformed('Cardinality constraint post') end
+	 end
+      end
+
+%       proc{Weights Sc}
+% 	 W = {Record.width Sc}
+%       in
+% 	 case W
+% 	 of 4 then
+% 	    {GFSP.gfs_weights_4 Sc.1 Sc.2 Sc.3 Sc.4}
+% 	 else
+% 	    raise malformed('Weights constraint post') end
+% 	 end
+%       end
+
+      proc{SelectUnion Sc}
+	 W = {Record.width Sc}
+      in
+	 case W
+	 of 3 then
+	    {GFSP.gfs_selectUnion_3 Sc.1 Sc.2 Sc.3}
+	 else
+	    raise malformed('SelectUnion constraint post') end
+	 end
+      end
+
+      proc{SelectInter Sc}
+	 W = {Record.width Sc}
+      in
+	 case W
+	 of 3 then
+	    {GFSP.gfs_selectInter_3 Sc.1 Sc.2 Sc.3}
+	 else
+	    raise malformed('SelectInter constraint post') end
+	 end
+      end
+
+      proc{SelectInterIn Sc}
+	 W = {Record.width Sc}
+      in
+	 case W
+	 of 4 then
+	    {GFSP.gfs_selectInterIn_3 Sc.1 Sc.2 Sc.3 Sc.4}
+	 else
+	    raise malformed('SelectInterIn constraint post') end
+	 end
+      end
+
+      proc{SelectDisjoint Sc}
+	 W = {Record.width Sc}
+      in
+	 case W
+	 of 2 then
+	    {GFSP.gfs_selectDisjoint_2 Sc.1 Sc.2}
+	 else
+	    raise malformed('SelectDisjoint constraint post') end
+	 end
+      end
+
+      proc{SelectSet Sc}
+	 W = {Record.width Sc}
+      in
+	 case W
+	 of 3 then
+	    {GFSP.gfs_selectSet_3 Sc.1 Sc.2 Sc.3}
+	 else
+	    raise malformed('SelectSet constraint post') end
+	 end
+      end
+      
    end   
-
      
 end

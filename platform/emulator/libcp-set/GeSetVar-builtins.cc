@@ -5,7 +5,7 @@
  *
  *  Contributing authors:
  *     Alejandro Arbelaez <aarbelaez@puj.edu.co>
- *	   Andres Felipe Barco <anfelbar@univalle.edu.co>
+ *     Andres Felipe Barco <anfelbar@univalle.edu.co>
  *
  *  Copyright:
  *     Gustavo Gutierrez, 2006
@@ -114,7 +114,7 @@ OZ_BI_end
 
 
 /** 
- * \brief Restrict cardilatity to a value.
+ * \brief Restrict cardinality to a value.
  * 
  */
 OZ_BI_define(card,2,0)
@@ -127,7 +127,7 @@ OZ_BI_end
 
 
 /** 
- * \brief Restrict cardilatity to an interval of values.
+ * \brief Restrict cardinality to an interval of values.
  * 
  */
 OZ_BI_define(card_Int,3,0)
