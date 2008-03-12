@@ -40,6 +40,11 @@ $module_name          = "GBD";
 
 ## Builtins Propagators
 
+'gbd_rel_4' => { in => ['+value', '+value', '+value', '+value'],
+  out=>[],
+  bi => gbd_rel_4 }
+,
+
 'gbd_rel_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
 	bi => gbd_rel_5 }

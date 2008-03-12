@@ -35,6 +35,7 @@
 #include "GeSetVar.hh"
 #include "builtins.hh"
 #include "../libcp-int/GeIntVar.hh"
+#include "../libcp-int/IntVarMacros.hh"
 
 
 
