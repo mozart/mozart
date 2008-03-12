@@ -431,22 +431,24 @@ bool OZ_isDFA(OZ_Term _t){
 }
 
 /**
-   \brief Checks if the term is a BoolVarArgs.
+   \brief Checks if a term \a t is a BoolVar or a compatible
+   (int 0 or 1).
 */
 inline
 bool isBoolVarArg(OZ_Term t) {
-	if (!OZ_isGeBoolVar(OZ_head(t))){
-		if(OZ_intToC(OZ_head(t)) == 1 || OZ_intToC(OZ_head(t)) == 0) 
-			return true;
-      	else 
-			return false;
-	} else 
-		return true;
+  if (OZ_isGeBoolVar(t))
+    return true;
+  else
+    if (OZ_isInt(t)) {
+      int b = OZ_intToC(t);
+      return (b==1 || b==0) ? true : false;
+    } else
+      return false;
 }
 
 inline
 bool OZ_isBoolVarArgs(OZ_Term t) {
-	return checkAll(t, &isBoolVarArg); 
+	return checkSome(t, &isBoolVarArg); 
 }
 
 /**
