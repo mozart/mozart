@@ -69,11 +69,10 @@ extern OZ_Return (*distLockRelease)(OzLock*, TaggedRef);
 
 // objects
 extern OZ_Return (*distObjectInvoke)(OzObject*, TaggedRef);
-extern OZ_Return (*distObjectGetFeature)(OzObject*, TaggedRef, TaggedRef&);
-extern OZ_Return (*distObjectAccess)(ObjectState*, TaggedRef, TaggedRef&);
-extern OZ_Return (*distObjectAssign)(ObjectState*, TaggedRef, TaggedRef);
-extern OZ_Return (*distObjectExchange)(ObjectState*, TaggedRef,
-				       TaggedRef, TaggedRef&);
+extern OZ_Return (*distObjectOp)(OperationTag, OzObject*,
+				 TaggedRef*, TaggedRef*);
+extern OZ_Return (*distObjectStateOp)(OperationTag, ObjectState*,
+				      TaggedRef*, TaggedRef*);
 
 // arrays
 extern OZ_Return (*distArrayOp)(OperationTag, OzArray*,

@@ -712,12 +712,12 @@ AOcallback
 ObjectMediator::callback_Read(DssThreadId*, DssOperationId*,
 			      PstInContainerInterface* operation,
 			      PstOutContainerInterface*& answer) {
-  // read operations are: invoke, get
-  TaggedRef arg = static_cast<PstInContainer*>(operation)->a_term;
-  Assert(OZ_isTuple(arg));
-  if (OZ_label(arg) == oz_atom("invoke")) {
-    TaggedRef meth = OZ_getArg(arg, 0);
-    TaggedRef tid  = OZ_getArg(arg, 1);     // the caller's thread id
+  TaggedRef msg = static_cast<PstInContainer*>(operation)->a_term;
+  Assert(OZ_isTuple(msg));
+  if (OZ_label(msg) == oz_atom("invoke")) {
+    // object invocation
+    TaggedRef meth = OZ_getArg(msg, 0);
+    TaggedRef tid  = OZ_getArg(msg, 1);     // the caller's thread id
     Thread* thread = oz_ThreadToAliveC(tid); // the corresponding local thread
     TaggedRef ret  = oz_newVariable();      // return variable
     Assert(thread);
@@ -726,13 +726,21 @@ ObjectMediator::callback_Read(DssThreadId*, DssOperationId*,
     thread->pushCall(getRPC(), refs);
     // wake up thread
     if (thread->isSuspended()) oz_wakeupThread(thread);
-    answer = new PstOutContainer(ret);
+    answer = new PstOutContainer(glue_return(ret));
 
-  } else if (OZ_label(arg) == oz_atom("get")) {
-    OzObject* obj = tagged2Object(getEntity());
-    TaggedRef key = OZ_getArg(arg, 0);
-    TaggedRef old = obj->getFeature(key);
-    if (old) answer = new PstOutContainer(old);
+  } else {
+    // feature operations
+    OzObject* obj = static_cast<OzObject*>(getConst());
+    OperationTag op = toOperationTag(glue_getOp(msg));
+    TaggedRef out = makeTaggedNULL();
+    OZ_Return ret = objectOperation(op, obj, glue_getArgs(msg), &out);
+
+    if (ret == PROCEED) {
+      answer = out ? new PstOutContainer(glue_return(out)) : NULL;
+    } else {
+      Assert(ret == RAISE);
+      answer = new PstOutContainer(glue_raise(am.getExceptionValue()));
+    }
   }
   return AOCB_FINISH;
 }
@@ -763,46 +771,38 @@ ObjectStateMediator::ObjectStateMediator(TaggedRef e) :
   setEntity(e);
 }
 
-AOcallback
-ObjectStateMediator::callback_Write(DssThreadId*, DssOperationId*,
-			       PstInContainerInterface* operation,
-			       PstOutContainerInterface*& answer) {
-  ObjectState* state = tagged2ObjectState(getEntity());
-  // write operations are: assign, exchange
-  TaggedRef arg = static_cast<PstInContainer*>(operation)->a_term;
-  Assert(OZ_isTuple(arg));
-  if (OZ_label(arg) == oz_atom("assign")) {
-    TaggedRef key = OZ_getArg(arg, 0);
-    TaggedRef val = OZ_getArg(arg, 1);
-    if (state->setFeature(key, val)) {
-      answer = new PstOutContainer(oz_nil());
-    }
-  } else if (OZ_label(arg) == oz_atom("exchange")) {
-    TaggedRef key = OZ_getArg(arg, 0);
-    TaggedRef val = OZ_getArg(arg, 1);
-    TaggedRef old = state->getFeature(key);
-    if (old) {
-      state->setFeature(key, val);
-      answer = new PstOutContainer(old);
-    }
+AOcallback 
+ObjectStateMediator::callback(DssThreadId*, DssOperationId*,
+			     PstInContainerInterface* pstin,
+			     PstOutContainerInterface*& answer)
+{
+  ObjectState* state = static_cast<ObjectState*>(getConst());
+  TaggedRef msg = static_cast<PstInContainer*>(pstin)->a_term;
+  OperationTag op = toOperationTag(glue_getOp(msg));
+  TaggedRef out = makeTaggedNULL();
+  OZ_Return ret = ostateOperation(op, state, glue_getArgs(msg), &out);
+
+  if (ret == PROCEED) {
+    answer = out ? new PstOutContainer(glue_return(out)) : NULL;
+  } else {
+    Assert(ret == RAISE);
+    answer = new PstOutContainer(glue_raise(am.getExceptionValue()));
   }
   return AOCB_FINISH;
 }
 
 AOcallback
-ObjectStateMediator::callback_Read(DssThreadId*, DssOperationId*,
-			      PstInContainerInterface* operation,
-			      PstOutContainerInterface*& answer) {
-  ObjectState* state = tagged2ObjectState(getEntity());
-  // read operations are: access
-  TaggedRef arg = static_cast<PstInContainer*>(operation)->a_term;
-  Assert(OZ_isTuple(arg));
-  if (OZ_label(arg) == oz_atom("access")) {
-    TaggedRef key = OZ_getArg(arg, 0);
-    TaggedRef val = state->getFeature(key);
-    if (val) answer = new PstOutContainer(val);
-  }
-  return AOCB_FINISH;
+ObjectStateMediator::callback_Write(DssThreadId* thr, DssOperationId* op,
+				    PstInContainerInterface* pstin,
+				    PstOutContainerInterface*& pstout) {
+  return callback(thr, op, pstin, pstout);
+}
+
+AOcallback
+ObjectStateMediator::callback_Read(DssThreadId* thr, DssOperationId* op,
+				   PstInContainerInterface* pstin,
+				   PstOutContainerInterface*& pstout) {
+  return callback(thr, op, pstin, pstout);
 }
 
 PstOutContainerInterface*
@@ -1121,6 +1121,6 @@ ProcedureMediator::callback_Read(DssThreadId*, DssOperationId*,
   // wake up thread
   if (thread->isSuspended()) oz_wakeupThread(thread);
   //
-  answer = new PstOutContainer(ret);
+  answer = new PstOutContainer(glue_return(ret));
   return AOCB_FINISH;
 }

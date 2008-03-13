@@ -192,38 +192,29 @@ public:
 };
 
 
-// object operations
-class SuspendedObjectAccess: public SuspendedOperation {
+// suspended object operations (on features)
+class SuspendedObjectOp: public SuspendedOperation {
 private:
-  OZ_Term key;
-  OZ_Term result;     // a variable
+  OperationTag op;
+  TaggedRef    args[2];
+  TaggedRef    result;
 public:
-  SuspendedObjectAccess(Mediator*, OZ_Term, OZ_Term);
+  SuspendedObjectOp(Mediator*, OperationTag, TaggedRef*, TaggedRef*);
   WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  WakeRetVal resumeRemoteDone(PstInContainerInterface*);
   bool gCollect();
 };
 
-class SuspendedObjectAssign: public SuspendedOperation {
+// suspended object state operations
+class SuspendedObjectStateOp: public SuspendedOperation {
 private:
-  OZ_Term key;
-  OZ_Term value;
+  OperationTag op;
+  TaggedRef    args[2];
+  TaggedRef    result;
 public:
-  SuspendedObjectAssign(Mediator*, OZ_Term, OZ_Term);
+  SuspendedObjectStateOp(Mediator*, OperationTag, TaggedRef*, TaggedRef*);
   WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
-  bool gCollect();
-};
-
-class SuspendedObjectExchange: public SuspendedOperation {
-private:
-  OZ_Term key;
-  OZ_Term newVal;
-  OZ_Term oldVal;     // a variable
-public:
-  SuspendedObjectExchange(Mediator*, OZ_Term, OZ_Term, OZ_Term);
-  WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  WakeRetVal resumeRemoteDone(PstInContainerInterface*);
   bool gCollect();
 };
 

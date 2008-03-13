@@ -686,8 +686,16 @@ OZ_Return genericDot(TaggedRef term, TaggedRef feat, TaggedRef &tf, DotOp op) {
     case Co_Object: {
       OzObject* obj = tagged2Object(t);
       if (!obj->isComplete()) {   // object is a stub: call distribution
-	Assert(op == DOT_DOT);   // only DOT is implemented
-	return (*distObjectGetFeature)(obj, f, tf);
+	switch (op) {
+	case DOT_DOT:
+	  return distObjectOp(OP_GET, obj, &f, &tf);
+	case DOT_CONDSELECT: {
+	  TaggedRef arg[] = { f, tf };
+	  return distObjectOp(OP_CONDGET, obj, arg, &tf);
+	}
+	case DOT_HASFEATURE:
+	  return distObjectOp(OP_MEMBER, obj, &f, &tf);
+	}
       }
       //
       OzClass* cls = obj->getClass();
@@ -3835,7 +3843,7 @@ OZ_Return objectAccess(OzObject* obj, TaggedRef fea, TaggedRef &res) {
   ObjectState* state = obj->getState();
 
   if (state->isDistributed())
-    return (*distObjectAccess)(state, fea, res);
+    return distObjectStateOp(OP_GET, state, &fea, &res);
 
   TaggedRef t = state->getFeature(fea);
   if (t) {
@@ -3852,8 +3860,10 @@ OZ_Return objectAssign(OzObject* obj, TaggedRef fea, TaggedRef val) {
   Assert(obj->isComplete());
   ObjectState* state = obj->getState();
 
-  if (state->isDistributed())
-    return (*distObjectAssign)(state, fea, val);
+  if (state->isDistributed()) {
+    TaggedRef arg[] = { fea, val };
+    return distObjectStateOp(OP_PUT, state, arg, NULL);
+  }
 
   if (state->setFeature(fea, val)) return PROCEED;
   oz_typeError(0,"(valid) Feature");
@@ -3867,8 +3877,10 @@ OZ_Return objectExchange(OzObject* obj, TaggedRef fea,
   Assert(obj->isComplete());
   ObjectState* state = obj->getState();
 
-  if (state->isDistributed())
-    return (*distObjectExchange)(state, fea, val, old);
+  if (state->isDistributed()) {
+    TaggedRef arg[] = { fea, val };
+    return distObjectStateOp(OP_PUT, state, arg, &old);
+  }
 
   TaggedRef t = state->getFeature(fea);
   if (t) {
