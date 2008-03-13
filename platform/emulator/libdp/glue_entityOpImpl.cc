@@ -332,124 +332,64 @@ OZ_Return distObjectInvokeImpl(OzObject* obj, TaggedRef meth) {
   }
 }
 
-// select an object feature
-OZ_Return
-distObjectGetFeatureImpl(OzObject* obj, TaggedRef key, TaggedRef &res) {
-  ObjectMediator* med = static_cast<ObjectMediator*>(obj->getMediator());
+// other object operations (on features)
+OZ_Return distObjectOpImpl(OperationTag op, OzObject *obj,
+			   TaggedRef* arg, TaggedRef* result) {
+  Assert(!OperationWrite[op]);     // only read operations
+  ObjectMediator* med = static_cast<ObjectMediator*>(obj->getMediator()); 
 
   // suspend if fault state not ok
   if (med->getFaultState()) return med->suspendOnFault();
 
-  DssThreadId *thrId = currentThreadId();
+  // perform DSS operation
+  DssThreadId* thrId = currentThreadId();
   PstOutContainerInterface** pstout;
-  OpRetVal cont = med->abstractOperation_Read(thrId, pstout);
-  if (pstout != NULL)
-    *pstout = new PstOutContainer(OZ_mkTupleC("get", 1, key));
+  OpRetVal ret = med->abstractOperation_Read(thrId, pstout);
+  if (pstout)
+    *pstout = new PstOutContainer(glue_wrap(op, OperationIn[op], arg));
 
-  switch (cont) {
-  case DSS_PROCEED:   // local case not handled here!
-    Assert(0);
-    return PROCEED;
-  case DSS_SUSPEND:
-    res = oz_newVariable();
-    new SuspendedGenericDot(med, key, res);
-    return BI_REPLACEBICALL;
-  default:
-    OZ_error("Unhandled error in distObjectGetFeature");
-    return PROCEED;
-  }
-}
-
-// read an object attribute
-OZ_Return distObjectAccessImpl(ObjectState* state,
-			       TaggedRef key, TaggedRef &res) {
-  ObjectStateMediator* med =
-    static_cast<ObjectStateMediator*>(state->getMediator());
-
-  // suspend if fault state not ok
-  if (med->getFaultState()) return med->suspendOnFault();
-
-  DssThreadId *thrId = currentThreadId();
-  PstOutContainerInterface** pstout;
-  OpRetVal cont = med->abstractOperation_Read(thrId, pstout);
-  if (pstout != NULL)
-    *pstout = new PstOutContainer(OZ_mkTupleC("access", 1, key));
-
-  switch (cont) {
+  switch (ret) {
   case DSS_PROCEED:
-    res = state->getFeature(key);
-    if (res)
-      return PROCEED;
-    oz_typeError(0,"(valid) Feature");
+    // perform locally
+    return objectOperation(op, obj, arg, result);
   case DSS_SUSPEND:
-    res = oz_newVariable();
-    new SuspendedObjectAccess(med, key, res);
+    // create suspended operation
+    new SuspendedObjectOp(med, op, arg, result);
     return BI_REPLACEBICALL;
   default:
-    OZ_error("Unhandled error in distObjectAccess");
+    OZ_error("Unhandled error in distObjectOp");
     return PROCEED;
   }
 }
 
-// write an object attribute
-OZ_Return distObjectAssignImpl(ObjectState* state,
-			       TaggedRef key, TaggedRef val) {
-  ObjectStateMediator* med =
-    static_cast<ObjectStateMediator*>(state->getMediator());
+// object state operations
+OZ_Return distObjectStateOpImpl(OperationTag op, ObjectState *state,
+				TaggedRef* arg, TaggedRef* result) {
+  ObjectStateMediator *med =
+    static_cast<ObjectStateMediator*>(state->getMediator()); 
 
   // suspend if fault state not ok
   if (med->getFaultState()) return med->suspendOnFault();
 
+  // perform DSS operation
   DssThreadId *thrId = currentThreadId();
   PstOutContainerInterface** pstout;
-  OpRetVal cont = med->abstractOperation_Write(thrId, pstout);
-  if (pstout != NULL)
-    *pstout = new PstOutContainer(OZ_mkTupleC("assign", 2, key, val));
+  OpRetVal ret = (OperationWrite[op] ?
+		  med->abstractOperation_Write(thrId, pstout) :
+		  med->abstractOperation_Read(thrId, pstout));
+  if (pstout)
+    *pstout = new PstOutContainer(glue_wrap(op, OperationIn[op], arg));
 
-  switch (cont) {
-  case DSS_PROCEED: {
-    bool ret = state->setFeature(key, val);
-    if (ret) return PROCEED;
-    oz_typeError(0,"(valid) Feature");
-  }
-  case DSS_SUSPEND:
-    new SuspendedObjectAssign(med, key, val);
-    return BI_REPLACEBICALL;
-  default:
-    OZ_error("Unhandled error in distObjectAssign");
-    return PROCEED;
-  }
-}
-
-// exchange an object attribute
-OZ_Return distObjectExchangeImpl(ObjectState* state, TaggedRef key,
-				 TaggedRef newVal, TaggedRef &oldVal) {
-  ObjectStateMediator* med =
-    static_cast<ObjectStateMediator*>(state->getMediator());
-
-  // suspend if fault state not ok
-  if (med->getFaultState()) return med->suspendOnFault();
-
-  DssThreadId *thrId = currentThreadId();
-  PstOutContainerInterface** pstout;
-  OpRetVal cont = med->abstractOperation_Write(thrId, pstout);
-  if (pstout != NULL)
-    *pstout = new PstOutContainer(OZ_mkTupleC("exchange", 2, key, newVal));
-
-  switch (cont) {
+  switch (ret) {
   case DSS_PROCEED:
-    oldVal = state->getFeature(key);
-    if (oldVal) {
-      state->setFeature(key, newVal);
-      return PROCEED;
-    }
-    oz_typeError(0,"(valid) Feature");
+    // perform locally
+    return ostateOperation(op, state, arg, result);
   case DSS_SUSPEND:
-    oldVal = oz_newVariable();
-    new SuspendedObjectExchange(med, key, newVal, oldVal);
+    // create suspended operation
+    new SuspendedObjectStateOp(med, op, arg, result);
     return BI_REPLACEBICALL;
   default:
-    OZ_error("Unhandled error in distObjectAssign");
+    OZ_error("Unhandled error in distObjectStateOp");
     return PROCEED;
   }
 }
@@ -696,10 +636,8 @@ void initEntityOperations(){
 
   // objects
   distObjectInvoke = &distObjectInvokeImpl;
-  distObjectGetFeature = &distObjectGetFeatureImpl;
-  distObjectAccess = &distObjectAccessImpl;
-  distObjectAssign = &distObjectAssignImpl;
-  distObjectExchange = &distObjectExchangeImpl;
+  distObjectOp = &distObjectOpImpl;
+  distObjectStateOp = &distObjectStateOpImpl;
 
   // variables
   distVarBind = &distVarBindImpl;

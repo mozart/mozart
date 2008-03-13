@@ -2240,7 +2240,7 @@ LBLdispatcher:
       ObjectState* state = self->getState();
 
       if (state->isDistributed()) {     // call distribution layer
-	OZ_Return res = distObjectAccess(state, fea, XPC(2));
+	OZ_Return res = distObjectStateOp(OP_GET, state, &fea, &XPC(2));
 	switch(res) {
 	case PROCEED: {
 	  DISPATCH(5);
@@ -2286,7 +2286,8 @@ LBLdispatcher:
       }
 
       if (state->isDistributed()) {     // call distribution layer
-	OZ_Return res = distObjectAssign(state, fea, XPC(2));
+	TaggedRef arg[] = { fea, XPC(2) };
+	OZ_Return res = distObjectStateOp(OP_PUT, state, arg, NULL);
 	switch(res) {
 	case PROCEED: {
 	  DISPATCH(5);
