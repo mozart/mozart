@@ -3879,7 +3879,7 @@ OZ_Return objectExchange(OzObject* obj, TaggedRef fea,
 
   if (state->isDistributed()) {
     TaggedRef arg[] = { fea, val };
-    return distObjectStateOp(OP_PUT, state, arg, &old);
+    return distObjectStateOp(OP_EXCHANGE, state, arg, &old);
   }
 
   TaggedRef t = state->getFeature(fea);
