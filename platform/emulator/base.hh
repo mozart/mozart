@@ -369,6 +369,11 @@ enum OperationTag {
   OP_TORECORD               // label -> val
 };
 
+inline OperationTag toOperationTag(int op) {
+  Assert(op >= 0 && op <= OP_TORECORD);
+  return static_cast<OperationTag>(op);
+}
+
 // operation arity (how many inputs and outputs), and has it side effects?
 static int OperationIn[]    = { 1, 1, 2, 2, 2, 3, 0, 1, 0, 0, 0, 0, 0, 1 };
 static int OperationOut[]   = { 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1 };

@@ -558,7 +558,7 @@ ArrayMediator::callback(DssThreadId*, DssOperationId*,
 {
   OzArray* arr = static_cast<OzArray*>(getConst());
   TaggedRef msg = static_cast<PstInContainer*>(pstin)->a_term;
-  OperationTag op = static_cast<OperationTag>(glue_getOp(msg));
+  OperationTag op = toOperationTag(glue_getOp(msg));
   TaggedRef out = makeTaggedNULL();
   OZ_Return ret = arrayOperation(op, arr, glue_getArgs(msg), &out);
 
@@ -641,7 +641,7 @@ DictionaryMediator::callback(DssThreadId*, DssOperationId*,
 {
   OzDictionary* dict = static_cast<OzDictionary*>(getConst());
   TaggedRef msg = static_cast<PstInContainer*>(pstin)->a_term;
-  OperationTag op = static_cast<OperationTag>(glue_getOp(msg));
+  OperationTag op = toOperationTag(glue_getOp(msg));
   TaggedRef out = makeTaggedNULL();
   OZ_Return ret = dictionaryOperation(op, dict, glue_getArgs(msg), &out);
 
@@ -1058,7 +1058,7 @@ ChunkMediator::callback_Read(DssThreadId*, DssOperationId*,
 			     PstOutContainerInterface*& answer) {
   SChunk* chunk = static_cast<SChunk*>(getConst());
   TaggedRef msg = static_cast<PstInContainer*>(pstin)->a_term;
-  OperationTag op = static_cast<OperationTag>(glue_getOp(msg));
+  OperationTag op = toOperationTag(glue_getOp(msg));
   TaggedRef out = makeTaggedNULL();
   OZ_Return ret = chunkOperation(op, chunk, glue_getArgs(msg), &out);
 
