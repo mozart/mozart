@@ -1812,6 +1812,9 @@ ObjectState* tagged2ObjectState(TaggedRef t) {
   return (ObjectState*) tagged2Const(t);
 }
 
+// object state operations, with two arrays for inputs and outputs
+OZ_Return ostateOperation(OperationTag, ObjectState*, TaggedRef*, TaggedRef*);
+
 // Objects no longer use a GName.  The object is serialized by its
 // mediator.
 
@@ -1974,6 +1977,9 @@ OzObject *tagged2Object(TaggedRef term)
   Assert(oz_isObject(term));
   return (OzObject *)tagged2Const(term);
 }
+
+// object operations (not state), with two arrays for inputs and outputs
+OZ_Return objectOperation(OperationTag, OzObject*, TaggedRef*, TaggedRef*);
 
 /*===================================================================
  * SChunk

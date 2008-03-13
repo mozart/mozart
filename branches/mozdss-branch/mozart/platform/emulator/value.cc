@@ -1522,6 +1522,84 @@ TaggedRef oz_getPrintName(TaggedRef t) {
 }
 
 /*===================================================================
+ * ObjectState operations
+ *=================================================================== */
+
+OZ_Return ostateGet(ObjectState* state, TaggedRef* arg, TaggedRef* res) {
+  *res = state->getFeature(arg[0]);
+  if (*res) return PROCEED;
+  return oz_raise(E_ERROR, E_KERNEL, "object state", 2,
+		  makeTaggedConst(state), arg[0]);
+}
+
+OZ_Return ostatePut(ObjectState* state, TaggedRef* arg, TaggedRef* res) {
+  if (state->setFeature(arg[0], arg[1])) return PROCEED;
+  return oz_raise(E_ERROR, E_KERNEL, "object state", 2,
+		  makeTaggedConst(state), arg[0]);
+}
+
+OZ_Return ostateExchange(ObjectState* state, TaggedRef* arg, TaggedRef* res) {
+  *res = state->setFeature(arg[0], arg[1]);
+  if (*res) return PROCEED;
+  return oz_raise(E_ERROR, E_KERNEL, "object state", 2,
+		  makeTaggedConst(state), arg[0]);
+}
+
+OZ_Return ostateIllegal(ObjectState* state, TaggedRef*, TaggedRef*) {
+  return oz_raise(E_ERROR, E_KERNEL, "object state", 1, makeTaggedConst(state));
+}
+
+typedef OZ_Return (*OstateOperation)(ObjectState*, TaggedRef*, TaggedRef*);
+
+static OstateOperation ostate_op[] = {
+  ostateIllegal, ostateGet, ostateIllegal, ostatePut, ostateExchange,
+  ostateIllegal, ostateIllegal, ostateIllegal, ostateIllegal, ostateIllegal,
+  ostateIllegal, ostateIllegal, ostateIllegal, ostateIllegal };
+
+OZ_Return ostateOperation(OperationTag op, ObjectState* state,
+			  TaggedRef* arg, TaggedRef* res) {
+  return ostate_op[op](state, arg, res);
+}
+
+/*===================================================================
+ * OzObject operations
+ *=================================================================== */
+
+OZ_Return objectMember(OzObject* obj, TaggedRef* arg, TaggedRef* res) {
+  TaggedRef out = obj->getFeature(arg[0]);
+  *res = out ? oz_true() : oz_false();
+  return PROCEED;
+}
+
+OZ_Return objectGet(OzObject* obj, TaggedRef* arg, TaggedRef* res) {
+  *res = obj->getFeature(arg[0]);
+  if (*res) return PROCEED;
+  return oz_raise(E_ERROR, E_KERNEL, "object", 2, makeTaggedConst(obj), arg[0]);
+}
+
+OZ_Return objectCondGet(OzObject* obj, TaggedRef* arg, TaggedRef* res) {
+  TaggedRef out = obj->getFeature(arg[0]);
+  *res = out ? out : arg[1];
+  return PROCEED;
+}
+
+OZ_Return objectIllegal(OzObject* obj, TaggedRef*, TaggedRef*) {
+  return oz_raise(E_ERROR, E_KERNEL, "object", 1, makeTaggedConst(obj));
+}
+
+typedef OZ_Return (*ObjectOperation)(OzObject*, TaggedRef*, TaggedRef*);
+
+static ObjectOperation object_op[] = {
+  objectMember, objectGet, objectCondGet, objectIllegal, objectIllegal,
+  objectIllegal, objectIllegal, objectIllegal, objectIllegal, objectIllegal,
+  objectIllegal, objectIllegal, objectIllegal, objectIllegal };
+
+OZ_Return objectOperation(OperationTag op, OzObject* obj,
+			  TaggedRef* arg, TaggedRef* res) {
+  return object_op[op](obj, arg, res);
+}
+
+/*===================================================================
  * SChunk operations
  *=================================================================== */
 
