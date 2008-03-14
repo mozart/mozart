@@ -1525,151 +1525,103 @@ TaggedRef oz_getPrintName(TaggedRef t) {
  * ObjectState operations
  *=================================================================== */
 
-OZ_Return ostateGet(ObjectState* state, TaggedRef* arg, TaggedRef* res) {
-  *res = state->getFeature(arg[0]);
-  if (*res) return PROCEED;
-  return oz_raise(E_ERROR, E_KERNEL, "object state", 2,
-		  makeTaggedConst(state), arg[0]);
-}
-
-OZ_Return ostatePut(ObjectState* state, TaggedRef* arg, TaggedRef* res) {
-  if (state->setFeature(arg[0], arg[1])) return PROCEED;
-  return oz_raise(E_ERROR, E_KERNEL, "object state", 2,
-		  makeTaggedConst(state), arg[0]);
-}
-
-OZ_Return ostateExchange(ObjectState* state, TaggedRef* arg, TaggedRef* res) {
-  *res = state->setFeature(arg[0], arg[1]);
-  if (*res) return PROCEED;
-  return oz_raise(E_ERROR, E_KERNEL, "object state", 2,
-		  makeTaggedConst(state), arg[0]);
-}
-
-OZ_Return ostateIllegal(ObjectState* state, TaggedRef*, TaggedRef*) {
-  return oz_raise(E_ERROR, E_KERNEL, "object state", 1, makeTaggedConst(state));
-}
-
-typedef OZ_Return (*OstateOperation)(ObjectState*, TaggedRef*, TaggedRef*);
-
-static OstateOperation ostate_op[] = {
-  ostateIllegal, ostateGet, ostateIllegal, ostatePut, ostateExchange,
-  ostateIllegal, ostateIllegal, ostateIllegal, ostateIllegal, ostateIllegal,
-  ostateIllegal, ostateIllegal, ostateIllegal, ostateIllegal };
-
 OZ_Return ostateOperation(OperationTag op, ObjectState* state,
 			  TaggedRef* arg, TaggedRef* res) {
-  return ostate_op[op](state, arg, res);
+  switch (op) {
+  case OP_GET:
+    if (*res = state->getFeature(arg[0])) return PROCEED;
+    break;
+  case OP_PUT:
+    if (state->setFeature(arg[0], arg[1])) return PROCEED;
+    break;
+  case OP_EXCHANGE:
+    if (*res = state->setFeature(arg[0], arg[1])) return PROCEED;
+    break;
+  default:
+    // invalid operation
+    return oz_raise(E_ERROR,E_KERNEL,"object state",1,makeTaggedConst(state));
+  }
+  // the operation has failed
+  return oz_raise(E_ERROR, E_KERNEL, "object state", 2,
+		  makeTaggedConst(state), arg[0]);
 }
 
 /*===================================================================
  * OzObject operations
  *=================================================================== */
 
-OZ_Return objectMember(OzObject* obj, TaggedRef* arg, TaggedRef* res) {
-  TaggedRef out = obj->getFeature(arg[0]);
-  *res = out ? oz_true() : oz_false();
-  return PROCEED;
-}
-
-OZ_Return objectGet(OzObject* obj, TaggedRef* arg, TaggedRef* res) {
-  *res = obj->getFeature(arg[0]);
-  if (*res) return PROCEED;
-  return oz_raise(E_ERROR, E_KERNEL, "object", 2, makeTaggedConst(obj), arg[0]);
-}
-
-OZ_Return objectCondGet(OzObject* obj, TaggedRef* arg, TaggedRef* res) {
-  TaggedRef out = obj->getFeature(arg[0]);
-  *res = out ? out : arg[1];
-  return PROCEED;
-}
-
-OZ_Return objectIllegal(OzObject* obj, TaggedRef*, TaggedRef*) {
-  return oz_raise(E_ERROR, E_KERNEL, "object", 1, makeTaggedConst(obj));
-}
-
-typedef OZ_Return (*ObjectOperation)(OzObject*, TaggedRef*, TaggedRef*);
-
-static ObjectOperation object_op[] = {
-  objectMember, objectGet, objectCondGet, objectIllegal, objectIllegal,
-  objectIllegal, objectIllegal, objectIllegal, objectIllegal, objectIllegal,
-  objectIllegal, objectIllegal, objectIllegal, objectIllegal };
-
 OZ_Return objectOperation(OperationTag op, OzObject* obj,
 			  TaggedRef* arg, TaggedRef* res) {
-  return object_op[op](obj, arg, res);
+  switch (op) {
+  case OP_MEMBER: {
+    TaggedRef out = obj->getFeature(arg[0]);
+    *res = out ? oz_true() : oz_false();
+    return PROCEED;
+  }
+  case OP_GET: {
+    if (*res = obj->getFeature(arg[0])) return PROCEED;
+    return oz_raise(E_ERROR, E_KERNEL, "object", 2,
+		    makeTaggedConst(obj), arg[0]);
+  }
+  case OP_CONDGET: {
+    TaggedRef out = obj->getFeature(arg[0]);
+    *res = out ? out : arg[1];
+    return PROCEED;
+  }
+  default:
+    // invalid operation
+    return oz_raise(E_ERROR, E_KERNEL, "object", 1, makeTaggedConst(obj));
+  }
 }
 
 /*===================================================================
  * SChunk operations
  *=================================================================== */
 
-OZ_Return chunkMember(SChunk* chunk, TaggedRef* arg, TaggedRef* res) {
-  TaggedRef out = chunk->getFeature(arg[0]);
-  *res = out ? oz_true() : oz_false();
-  return PROCEED;
-}
-
-OZ_Return chunkGet(SChunk* chunk, TaggedRef* arg, TaggedRef* res) {
-  *res = chunk->getFeature(arg[0]);
-  if (*res) return PROCEED;
-  return oz_raise(E_ERROR, E_KERNEL, "chunk", 2, makeTaggedConst(chunk), arg[0]);
-}
-
-OZ_Return chunkCondGet(SChunk* chunk, TaggedRef* arg, TaggedRef* res) {
-  TaggedRef out = chunk->getFeature(arg[0]);
-  *res = out ? out : arg[1];
-  return PROCEED;
-}
-
-OZ_Return chunkIllegal(SChunk* chunk, TaggedRef*, TaggedRef*) {
-  return oz_raise(E_ERROR, E_KERNEL, "chunk", 1, makeTaggedConst(chunk));
-}
-
-typedef OZ_Return (*SChunkOperation)(SChunk*, TaggedRef*, TaggedRef*);
-
-static SChunkOperation chunk_op[] = {
-  chunkMember, chunkGet, chunkCondGet, chunkIllegal, chunkIllegal,
-  chunkIllegal, chunkIllegal, chunkIllegal, chunkIllegal, chunkIllegal,
-  chunkIllegal, chunkIllegal, chunkIllegal, chunkIllegal };
-
 OZ_Return
-chunkOperation(OperationTag op, SChunk* ch, TaggedRef* arg, TaggedRef* res) {
-  return chunk_op[op](ch, arg, res);
+chunkOperation(OperationTag op, SChunk* chunk, TaggedRef* arg, TaggedRef* res) {
+  switch (op) {
+  case OP_MEMBER: {
+    TaggedRef out = chunk->getFeature(arg[0]);
+    *res = out ? oz_true() : oz_false();
+    return PROCEED;
+  }
+  case OP_GET: {
+    if (*res = chunk->getFeature(arg[0])) return PROCEED;
+    return oz_raise(E_ERROR, E_KERNEL, "chunk", 2,
+		    makeTaggedConst(chunk), arg[0]);
+  }
+  case OP_CONDGET: {
+    TaggedRef out = chunk->getFeature(arg[0]);
+    *res = out ? out : arg[1];
+    return PROCEED;
+  }
+  default:
+    // invalid operation
+    return oz_raise(E_ERROR, E_KERNEL, "chunk", 1, makeTaggedConst(chunk));
+  }
 }
 
 /*===================================================================
  * OzArray operations
  *=================================================================== */
 
-OZ_Return arrayGet(OzArray* arr, TaggedRef* arg, TaggedRef* res) {
-  *res = arr->getArg(tagged2SmallInt(arg[0]));
-  if (*res) return PROCEED;
-  return oz_raise(E_ERROR, E_KERNEL, "array", 2, makeTaggedConst(arr), arg[0]);
-}
-
-OZ_Return arrayPut(OzArray* arr, TaggedRef* arg, TaggedRef* res) {
-  arr->setArg(tagged2SmallInt(arg[0]), arg[1]);
-  return PROCEED;
-}
-
-OZ_Return arrayExchange(OzArray* arr, TaggedRef* arg, TaggedRef* res) {
-  *res = arr->exchange(tagged2SmallInt(arg[0]), arg[1]);
-  if (*res) return PROCEED;
-  return oz_raise(E_ERROR, E_KERNEL, "array", 2, makeTaggedConst(arr), arg[0]);
-}
-
-OZ_Return arrayIllegal(OzArray* arr, TaggedRef* arg, TaggedRef* res) {
-  return oz_raise(E_ERROR, E_KERNEL, "array", 1, makeTaggedConst(arr));
-}
-
-typedef OZ_Return (*OzArrayOperation)(OzArray*, TaggedRef*, TaggedRef*);
-
-static OzArrayOperation array_op[] = {
-  arrayIllegal, arrayGet, arrayIllegal, arrayPut, arrayExchange,
-  arrayIllegal, arrayIllegal, arrayIllegal, arrayIllegal, arrayIllegal,
-  arrayIllegal, arrayIllegal, arrayIllegal, arrayIllegal };
-
 OZ_Return
 arrayOperation(OperationTag op, OzArray* arr, TaggedRef* arg, TaggedRef* res) {
-  return array_op[op](arr, arg, res);
+  switch (op) {
+  case OP_GET:
+    if (*res = arr->getArg(tagged2SmallInt(arg[0]))) return PROCEED;
+    break;
+  case OP_PUT:
+    arr->setArg(tagged2SmallInt(arg[0]), arg[1]);
+    return PROCEED;
+  case OP_EXCHANGE:
+    if (*res = arr->exchange(tagged2SmallInt(arg[0]), arg[1])) return PROCEED;
+    break;
+  default:
+    // invalid operation
+    return oz_raise(E_ERROR, E_KERNEL, "array", 1, makeTaggedConst(arr));
+  }
+  // the operation failed
+  return oz_raise(E_ERROR, E_KERNEL, "array", 2, makeTaggedConst(arr), arg[0]);
 }
