@@ -7,9 +7,9 @@ import
 	initIPConnection
 	setRPC
 	setAnnotation
-	kill:Kill
-	break:Break
-	getFaultStream:GetFaultStream) at 'x-oz://boot/Glue'
+	kill
+	break
+	getFaultStream) at 'x-oz://boot/Glue'
    Property
    DPDefaults(listen:DefaultListenFunc init)
    Error
@@ -211,8 +211,20 @@ define
 	    raise dp('annotation format error' Annot) end
 	 end
 	 %% now set annotation with the parameters
+	 {Init}
 	 {Glue.setAnnotation E PN AA RC0+RC1+RC2}
       end
    end
-
+   proc{Kill X}
+      {Init}
+      {Glue.kill X}
+   end
+   proc{Break X}
+      {Init}
+      {Glue.break X}
+   end
+   fun{GetFaultStream X}
+      {Init}
+      {Glue.getFaultStream X}
+   end
 end
