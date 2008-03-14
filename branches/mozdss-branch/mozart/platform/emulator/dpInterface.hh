@@ -60,8 +60,7 @@ extern Bool (*isPerdioInitialized)();
 extern OZ_Return (*distPortSend)(OzPort*, TaggedRef);
 
 // cells
-extern OZ_Return (*distCellAccess)(OzCell*, TaggedRef&);
-extern OZ_Return (*distCellExchange)(OzCell*, TaggedRef&, TaggedRef);
+extern OZ_Return (*distCellOp)(OperationTag, OzCell*, TaggedRef*, TaggedRef*);
 
 // locks
 extern OZ_Return (*distLockTake)(OzLock*, TaggedRef);

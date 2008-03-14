@@ -2688,6 +2688,10 @@ OzCell *tagged2Cell(TaggedRef term)
   Assert(oz_isCell(term));
   return (OzCell *) tagged2Const(term);
 }
+
+// cell operations, with two arrays for inputs and outputs
+// (note: input arity of 'op' is OperationIn[op]-1)
+OZ_Return cellOperation(OperationTag, OzCell*, TaggedRef*, TaggedRef*);
                   
 /*===================================================================
  * Port          

@@ -1625,3 +1625,25 @@ arrayOperation(OperationTag op, OzArray* arr, TaggedRef* arg, TaggedRef* res) {
   // the operation failed
   return oz_raise(E_ERROR, E_KERNEL, "array", 2, makeTaggedConst(arr), arg[0]);
 }
+
+/*===================================================================
+ * OzCell operations
+ *=================================================================== */
+
+OZ_Return
+cellOperation(OperationTag op, OzCell* cell, TaggedRef* arg, TaggedRef* res) {
+  switch (op) {
+  case OP_GET:
+    *res = cell->getValue();
+    return PROCEED;
+  case OP_PUT:
+    cell->setValue(arg[0]);
+    return PROCEED;
+  case OP_EXCHANGE:
+    *res = cell->exchangeValue(arg[0]);
+    return PROCEED;
+  default:
+    // invalid operation
+    return oz_raise(E_ERROR, E_KERNEL, "cell", 1, makeTaggedConst(cell));
+  }
+}

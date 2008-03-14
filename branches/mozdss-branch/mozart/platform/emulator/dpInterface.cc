@@ -47,12 +47,8 @@ OZ_Return distPortSendStub(OzPort *p, TaggedRef msg) {
 }
 
 // cells
-OZ_Return distCellAccessStub(OzCell*, TaggedRef&) {
-  OZD_error("'distCellAccess' called without DP library?");
-  return PROCEED;
-}
-OZ_Return distCellExchangeStub(OzCell*, TaggedRef&, TaggedRef) {
-  OZD_error("'distCellExchange' called without DP library?");
+OZ_Return distCellOpStub(OperationTag, OzCell*, TaggedRef*, TaggedRef*) {
+  OZD_error("'distCellOp' called without DP library?");
   return PROCEED;
 }
 
@@ -162,10 +158,8 @@ OZ_Return (*distPortSend)(OzPort*, TaggedRef)
   = distPortSendStub;
 
 // cells
-OZ_Return (*distCellAccess)(OzCell*, TaggedRef&)
-  = distCellAccessStub;
-OZ_Return (*distCellExchange)(OzCell*, TaggedRef&, TaggedRef)
-  = distCellExchangeStub;
+OZ_Return (*distCellOp)(OperationTag, OzCell*, TaggedRef*, TaggedRef*)
+  = distCellOpStub;
 
 // locks
 OZ_Return (*distLockTake)(OzLock*, TaggedRef)

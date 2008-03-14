@@ -120,25 +120,18 @@ public:
 
 
 // suspended cell operations
-class SuspendedCellAccess: public SuspendedOperation {
+class SuspendedCellOp: public SuspendedOperation {
 private:
-  OZ_Term result;   // must be an Oz variable
+  OperationTag op;
+  TaggedRef    args[1];
+  TaggedRef    result;
 public:
-  SuspendedCellAccess(Mediator*, OZ_Term);
+  SuspendedCellOp(Mediator*, OperationTag, TaggedRef*, TaggedRef*);
   WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  WakeRetVal resumeRemoteDone(PstInContainerInterface*);
   bool gCollect();
 };
 
-class SuspendedCellExchange: public SuspendedOperation {
-private:
-  OZ_Term newValue, result;
-public:
-  SuspendedCellExchange(Mediator*, OZ_Term, OZ_Term);
-  WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
-  bool gCollect();
-};
 
 
 // suspended lock operations

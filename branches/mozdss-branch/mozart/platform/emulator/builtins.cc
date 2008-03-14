@@ -3405,7 +3405,7 @@ OZ_Return accessCell(OZ_Term term, OZ_Term &out)
 {
   OzCell *cell = tagged2Cell(term);
   if (cell->isDistributed())
-    return (*distCellAccess)(cell, out);
+    return distCellOp(OP_GET, cell, NULL, &out);
   out = cell->getValue();
   return PROCEED;
 }
@@ -3413,11 +3413,9 @@ OZ_Return accessCell(OZ_Term term, OZ_Term &out)
 OZ_Return assignCell(OZ_Term term, OZ_Term val)
 {
   OzCell *cell = tagged2Cell(term);
-  if (cell->isDistributed()) {
-    OZ_Term old;
-    return (*distCellExchange)(cell, old, val);
-  }
   CheckLocalBoard(cell,"cell");
+  if (cell->isDistributed())
+    return distCellOp(OP_PUT, cell, &val, NULL);
   cell->setValue(val);
   return PROCEED;
 }
@@ -3426,9 +3424,9 @@ OZ_Return exchangeCell(OZ_Term term, OZ_Term newVal, OZ_Term &oldVal)
 {
   Assert(!oz_isVar(newVal));
   OzCell *cell = tagged2Cell(term);
-  if (cell->isDistributed())
-    return (*distCellExchange)(cell, oldVal, newVal);
   CheckLocalBoard(cell,"cell");
+  if (cell->isDistributed())
+    return distCellOp(OP_EXCHANGE, cell, &newVal, &oldVal);
   oldVal = cell->exchangeValue(newVal);
   return PROCEED;
 }
