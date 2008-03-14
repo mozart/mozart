@@ -228,8 +228,11 @@ inline IntVar& get_IntVarInfo(OZ_Term v) {
 */
 inline
 bool OZ_isIntConLevel(OZ_Term t) {
-	int icl = OZ_intToC(t);
-	return icl == 0 || icl == 1 || icl == 2 || icl == 3 ? true : false;
+  if(OZ_isInt(t)){
+	  int icl = OZ_intToC(t);
+	  return icl == 0 || icl == 1 || icl == 2 || icl == 3 ? true : false;
+  }
+  return false; 
 }
 
 /**
@@ -238,8 +241,11 @@ bool OZ_isIntConLevel(OZ_Term t) {
 
 inline
 bool OZ_isPropKind(OZ_Term t) {
-	int pk = OZ_intToC(t);
-	return pk == 0 || pk == 1 || pk == 2 ? true : false;
+  if(OZ_isInt(t)){
+	  int pk = OZ_intToC(t);
+	  return pk == 0 || pk == 1 || pk == 2 ? true : false;
+  }
+  return false; 
 }
 
 /**
@@ -249,7 +255,7 @@ bool OZ_isPropKind(OZ_Term t) {
 inline
 bool checkAll(OZ_Term t, bool (*checkOne)(OZ_Term)) {
   int sz = 0;
-  if(OZ_isCons(t)) {			
+  if(OZ_isCons(t)) {
     sz = OZ_length(t);
     for(int i=0; OZ_isCons(t); t=OZ_tail(t))
       if (!checkOne(OZ_head(t)))
@@ -283,7 +289,7 @@ inline
 bool checkSome(OZ_Term t, bool (*checkOne)(OZ_Term)) {
   int sz = 0;
   bool ret = false;
-  if(OZ_isCons(t)) {			
+  if(OZ_isCons(t)) {
     sz = OZ_length(t);
     for(int i=0; OZ_isCons(t); t=OZ_tail(t))
       if (checkOne(OZ_head(t))) 
@@ -334,8 +340,11 @@ bool OZ_isSetVarArgs(OZ_Term t) {
 */
 inline
 bool OZ_isIntRelType(OZ_Term t){
-	int v = OZ_intToC(t);
-	return v == 0 | v == 1 || v == 2 || v == 3 || v == 4 || v == 5 ? true : false;
+  if(OZ_isInt(t)){
+	  int v = OZ_intToC(t);
+	  return v == 0 | v == 1 || v == 2 || v == 3 || v == 4 || v == 5 ? true : false;
+  }
+  return false; 
 }
 
 // this function is needed to cast int to bool.
@@ -436,19 +445,19 @@ bool OZ_isDFA(OZ_Term _t){
 */
 inline
 bool isBoolVarArg(OZ_Term t) {
-  if (OZ_isGeBoolVar(t))
-    return true;
-  else
-    if (OZ_isInt(t)) {
-      int b = OZ_intToC(t);
-      return (b==1 || b==0) ? true : false;
-    } else
-      return false;
+ if (OZ_isGeBoolVar(t))
+   return true;
+ else
+   if (OZ_isInt(t)) {
+     int b = OZ_intToC(t);
+     return (b==1 || b==0) ? true : false;
+   } else
+     return false;
 }
 
 inline
 bool OZ_isBoolVarArgs(OZ_Term t) {
-	return checkSome(t, &isBoolVarArg); 
+       return checkSome(t, &isBoolVarArg);
 }
 
 /**
