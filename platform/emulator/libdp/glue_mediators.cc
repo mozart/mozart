@@ -411,6 +411,40 @@ CellMediator::CellMediator(TaggedRef e) : ConstMediator(GLUE_CELL) {
   setEntity(e);
 }
 
+AOcallback 
+CellMediator::callback(DssThreadId*, DssOperationId*,
+		       PstInContainerInterface* pstin,
+		       PstOutContainerInterface*& answer)
+{
+  OzCell *cell = tagged2Cell(getEntity());
+  TaggedRef msg = static_cast<PstInContainer*>(pstin)->a_term;
+  OperationTag op = toOperationTag(glue_getOp(msg));
+  TaggedRef out = makeTaggedNULL();
+  OZ_Return ret = cellOperation(op, cell, glue_getArgs(msg), &out);
+
+  if (ret == PROCEED) {
+    answer = out ? new PstOutContainer(glue_return(out)) : NULL;
+  } else {
+    Assert(ret == RAISE);
+    answer = new PstOutContainer(glue_raise(am.getExceptionValue()));
+  }
+  return AOCB_FINISH;
+}
+
+AOcallback
+CellMediator::callback_Write(DssThreadId* thr, DssOperationId* op,
+			     PstInContainerInterface* pstin,
+			     PstOutContainerInterface*& pstout) {
+  return callback(thr, op, pstin, pstout);
+}
+
+AOcallback
+CellMediator::callback_Read(DssThreadId* thr, DssOperationId* op,
+			    PstInContainerInterface* pstin,
+			    PstOutContainerInterface*& pstout) {
+  return callback(thr, op, pstin, pstout);
+}
+
 PstOutContainerInterface *
 CellMediator::retrieveEntityRepresentation() {
   OzCell *cell = tagged2Cell(getEntity());
@@ -430,27 +464,6 @@ CellMediator::installEntityRepresentation(PstInContainerInterface* pstIn){
   PstInContainer *pst = static_cast<PstInContainer*>(pstIn);
   OzCell *cell = tagged2Cell(getEntity());
   cell->setValue(pst->a_term);
-}
-
-AOcallback
-CellMediator::callback_Write(DssThreadId*, DssOperationId*,
-			     PstInContainerInterface* pstin,
-			     PstOutContainerInterface*& answer){
-  OzCell *cell = tagged2Cell(getEntity());
-  TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
-  TaggedRef out = cell->exchangeValue(arg);
-  answer = new PstOutContainer(out);
-  return AOCB_FINISH;
-}
-
-AOcallback
-CellMediator::callback_Read(DssThreadId*, DssOperationId*,
-			    PstInContainerInterface* pstin,
-			    PstOutContainerInterface*& answer){
-  OzCell *cell = tagged2Cell(entity);
-  TaggedRef out =cell->getValue();
-  answer = new PstOutContainer(out);
-  return AOCB_FINISH;
 }
 
 

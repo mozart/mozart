@@ -163,68 +163,50 @@ bool SuspendedDummy::gCollect() {
 
 
 
-/************************* SuspendedCellAccess *************************/
+/************************* SuspendedCellOp *************************/
 
-SuspendedCellAccess::SuspendedCellAccess(Mediator* med, OZ_Term var) :
-  SuspendedOperation(med), result(var)
+SuspendedCellOp::SuspendedCellOp(Mediator* med, OperationTag _op,
+				 TaggedRef* a, TaggedRef* res) :
+  SuspendedOperation(med), op(_op)
 {
+  args[0] = OperationIn[_op]-1 > 1 ? a[0] : makeTaggedNULL();
+  result = res ? (*res = oz_newVariable()) : makeTaggedNULL();
   suspend();
 }
 
-WakeRetVal SuspendedCellAccess::resumeDoLocal(DssOperationId*) {
-  CellMediator *pM = static_cast<CellMediator*>(getMediator());
-  OzCell *cell     = static_cast<OzCell*>(pM->getConst());
-  OZ_Term contents = cell->getValue();
-  resumeUnify(result,contents); // no exceptions here.
-  return WRV_DONE; 
-}
-
-WakeRetVal SuspendedCellAccess::resumeRemoteDone(PstInContainerInterface* pstin){
-  PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  resumeUnify(result, pst->a_term); 
-  return WRV_DONE; 
-}
-
-bool SuspendedCellAccess::gCollect(){
-  if (gc()) {
-    oz_gCollectTerm(result, result);
-    return true; 
-  } else
-    return false; 
-}
-
-
-
-/************************* SuspendedCellExchange *************************/
-
-SuspendedCellExchange::SuspendedCellExchange(Mediator* med,
-					     OZ_Term newVal, OZ_Term ans) :
-  SuspendedOperation(med), newValue(newVal), result(ans)
-{
-  suspend();
-}
-
-WakeRetVal SuspendedCellExchange::resumeDoLocal(DssOperationId*) {
-  CellMediator *pM = static_cast<CellMediator*>(getMediator());
-  OzCell *cell     = static_cast<OzCell*>(pM->getConst());
-  OZ_Term contents = cell->exchangeValue(newValue); 
-  resumeUnify(result, contents); // no exceptions here
-  return WRV_DONE; 
-}
-
-WakeRetVal SuspendedCellExchange::resumeRemoteDone(PstInContainerInterface* pstin) {
-  PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  resumeUnify(result, pst->a_term);
+WakeRetVal SuspendedCellOp::resumeDoLocal(DssOperationId*) {
+  CellMediator* med = static_cast<CellMediator*>(getMediator());
+  OzCell* cell = static_cast<OzCell*>(med->getConst());
+  TaggedRef out;
+  int ret = cellOperation(op, cell, args, &out);
+  if (ret == PROCEED) {
+    if (result) resumeUnify(result, out); else resume();
+  } else {
+    Assert(ret == RAISE);
+    resumeRaise(am.getExceptionValue());
+  }
   return WRV_DONE;
 }
 
-bool SuspendedCellExchange::gCollect(){
+WakeRetVal SuspendedCellOp::resumeRemoteDone(PstInContainerInterface* pstin){
+  PstInContainer* pst = static_cast<PstInContainer*>(pstin);
+  if (pst == NULL) {
+    resume();
+  } else if (glue_isReturn(pst->a_term)) {
+    resumeUnify(result, glue_getData(pst->a_term));
+  } else {
+    resumeRaise(glue_getData(pst->a_term));
+  }
+  return WRV_DONE;
+}
+
+bool SuspendedCellOp::gCollect(){
   if (gc()) {
-    oz_gCollectTerm(newValue, newValue);
+    oz_gCollectTerm(args[0], args[0]);
     oz_gCollectTerm(result, result);
-    return true; 
-  } else
-    return false; 
+    return true;
+  }
+  return false;
 }
 
 

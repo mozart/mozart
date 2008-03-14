@@ -269,6 +269,8 @@ public:
   CellMediator();
   CellMediator(TaggedRef);
 
+  AOcallback callback(DssThreadId*, DssOperationId*,
+		      PstInContainerInterface*, PstOutContainerInterface*&);
   virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
 				    PstInContainerInterface*,
 				    PstOutContainerInterface*&);
