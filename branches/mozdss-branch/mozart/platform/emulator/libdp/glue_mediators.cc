@@ -147,7 +147,7 @@ Mediator *glue_getMediator(TaggedRef entity) {
 Mediator::Mediator(GlueTag t) :
   active(TRUE), attached(FALSE), collected(FALSE),
   dss_gc_status(DSS_GC_NONE), type(t), faultState(GLUE_FAULT_NONE),
-  annotation(emptyAnnotation),
+  annotation(),
   entity(makeTaggedNULL()),
   faultStream(makeTaggedNULL()),
   faultCtlVar(makeTaggedNULL()),
@@ -189,7 +189,7 @@ Mediator::setProxy(CoordinatorAssistant* p) {
       AccessArchitecture aa;
       RCalg rc;
       p->getParameters(pn, aa, rc);
-      annotation = makeAnnotation(pn, aa, rc);
+      annotation = Annotation(pn, aa, rc);
     }
     // attach mediator to entity if required
     if (hasEntity() && !attached) attach();

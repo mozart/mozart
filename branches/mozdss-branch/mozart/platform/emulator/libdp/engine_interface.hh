@@ -43,17 +43,14 @@ struct Annotation {
   ProtocolName       pn : PN_NBITS;
   AccessArchitecture aa : AA_NBITS;
   RCalg              rc : RC_ALG_NBITS;
+
+  // default constructor, make an empty annotation
+  Annotation() : pn(PN_NO_PROTOCOL), aa(AA_NO_ARCHITECTURE), rc(RC_ALG_NONE) {}
+
+  // constructor for a specific annotation
+  Annotation(ProtocolName _pn, AccessArchitecture _aa, RCalg _rc) :
+    pn(_pn), aa(_aa), rc(_rc) {}
 };
-
-const Annotation emptyAnnotation = { PN_NO_PROTOCOL,
-				     AA_NO_ARCHITECTURE,
-				     RC_ALG_NONE };
-
-inline
-Annotation makeAnnotation(ProtocolName pn, AccessArchitecture aa, RCalg rc) {
-  Annotation annot = { pn, aa, rc };
-  return annot;
-}
 
 void setAnnotation(TaggedRef, Annotation);
 Annotation getAnnotation(TaggedRef);

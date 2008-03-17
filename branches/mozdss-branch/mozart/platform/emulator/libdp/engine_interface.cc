@@ -180,7 +180,7 @@ void initDP(int port, int ip, int id)
   // initialize default annotations
   const AccessArchitecture aa = AA_STATIONARY_MANAGER;
   const RCalg              rc = RC_ALG_WRC;
-  setDefaultAnnotation(GLUE_NONE,       emptyAnnotation);
+  setDefaultAnnotation(GLUE_NONE,       Annotation());
   setDefaultAnnotation(GLUE_PORT,       PN_SIMPLE_CHANNEL,  aa, rc);
   setDefaultAnnotation(GLUE_CELL,       PN_MIGRATORY_STATE, aa, rc);
   setDefaultAnnotation(GLUE_LOCK,       PN_MIGRATORY_STATE, aa, rc);
