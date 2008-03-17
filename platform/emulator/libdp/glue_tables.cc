@@ -167,7 +167,7 @@ void setDefaultAnnotation(GlueTag type, Annotation annotation) {
 
 void setDefaultAnnotation(GlueTag type, ProtocolName pn,
 			  AccessArchitecture aa, RCalg rc) {
-  setDefaultAnnotation(type, makeAnnotation(pn, aa, rc));
+  setDefaultAnnotation(type, Annotation(pn, aa, rc));
 }
 
 
