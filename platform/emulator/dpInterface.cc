@@ -35,8 +35,7 @@
 #include "os.hh"
 
 //
-Bool isPerdioInitializedStub()
-{
+Bool dpReadyStub() {
   return (NO);
 }
 
@@ -151,7 +150,7 @@ Bool distHandlerDeInstallStub(unsigned short x,unsigned short y,
 // Link interface function pointers against stubs;
 
 //
-Bool (*isPerdioInitialized)() = isPerdioInitializedStub;
+Bool (*dpReady)() = dpReadyStub;
 
 // ports
 OZ_Return (*distPortSend)(OzPort*, TaggedRef)
