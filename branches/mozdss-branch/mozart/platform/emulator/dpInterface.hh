@@ -39,7 +39,7 @@
 // The function pointers are assigned once the glue layer is loaded.
 
 //
-extern Bool (*isPerdioInitialized)();
+extern Bool (*dpReady)();
 
 
 
