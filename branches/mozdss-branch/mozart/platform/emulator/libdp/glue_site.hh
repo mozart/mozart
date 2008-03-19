@@ -78,7 +78,6 @@ private:
   bool      disposed:1;    // flag set when GlueSite must be deleted
 
   OZ_Term info;            // site info (a ByteString)
-  int     infov;           // version number (for handling info changes)
 
   int rtt_avg;         // average rtt
   int rtt_mdev;        // median deviation of rtt
