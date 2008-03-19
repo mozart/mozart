@@ -56,8 +56,6 @@ namespace _msl_internal{ //Start namespace
   // **********************************************************************
   // *   SECTION :: BaseSite object methods                               *
   // **********************************************************************
-
-  const int BUILD_SIZE = 512;
   
 #ifdef DEBUG_CHECK
   int Site::a_allocated=0;
@@ -330,16 +328,18 @@ namespace _msl_internal{ //Start namespace
     delete [] a_MarshaledRepresentation;
     a_version++;
 
-    BYTE* start = new BYTE[BUILD_SIZE];
-    BYTE* buf_start = start + 4 + CIPHER_BLOCK_BYTES;
+    const int BUILD_SIZE = 2048;        // should be larger than necessary
+    static BYTE buffer[BUILD_SIZE];     // temporary buffer to build MR
+    static BYTE digest[PLAIN_BLOCK_BYTES - 4];
+
+    BYTE* buf_start = buffer + 4 + CIPHER_BLOCK_BYTES;
     BYTE* str_rep = a_key->getStringRep();
     //printf("I_KEY:");gf_printBuf(a_key->getStringRep(),RSA_MARSHALED_REPRESENTATION);
     int len = RSA_MARSHALED_REPRESENTATION; // for compiler to know key_len
-    BYTE  digest[PLAIN_BLOCK_BYTES - 4];
     DssSimpleWriteBuffer dswb(buf_start, BUILD_SIZE - (4 + CIPHER_BLOCK_BYTES));
 
     // **** start marshaling of to-be-signed area ****
-    dswb.m_putInt(0xFFFFFFFF);
+    dswb.m_putInt(0xFFFFFFFF);          // padding, will store length (*)
     gf_Marshal8bitInt(&dswb, len);
     gf_Marshal8bitInt(&dswb, a_secChannel);
     dswb.m_putInt(a_version);  // printf("version:%x\n",a_version);
@@ -347,26 +347,24 @@ namespace _msl_internal{ //Start namespace
     a_csSite->marshalCsSite( &dswb);
 
     len = dswb.getUsed(); // reuse len as buf_len
-    gf_integer2char(buf_start, len);  //printf("buf_len:%d\n",len);
+    gf_integer2char(buf_start, len);    // (*) store length
     // ********** calculate digest and sign **********
     md5.digest(buf_start,len);
     md5.final(digest);
     gf_integer2char(&digest[MD5_SIZE],    random_u32());
 
     
-    DebugCode(int rLen =) a_key->encrypt_text(start + 4, digest, PLAIN_BLOCK_BYTES - 4);
+    DebugCode(int rLen =) a_key->encrypt_text(buffer + 4, digest, PLAIN_BLOCK_BYTES - 4);
     Assert(rLen == CIPHER_BLOCK_BYTES);
-    gf_integer2char(start, a_shortId);
+    gf_integer2char(buffer, a_shortId);
     //printf("pk:%x\n",getPrimKey());
 
-    // ********* DONE, save in MarshaledRepr *********
-
+    // ********* DONE, save in a_MarshaledRepresentation *********
     a_MRlength = len + (4 + CIPHER_BLOCK_BYTES);
-    //printf("MR_length:%d\n",a_MRlength);
     a_MarshaledRepresentation = new BYTE[a_MRlength];
-    memcpy(a_MarshaledRepresentation, start, a_MRlength);
-    // printf("SIGN (IMR)\n");  gf_printBuf(a_MarshaledRepresentation, a_MRlength);
-    dswb.hook(start, BUILD_SIZE);
+    memcpy(a_MarshaledRepresentation, buffer, a_MRlength);
+
+    dswb.drop();     // detach buffer from dswb, otherwise it will delete it
   }
 
   void Site::m_virtualCircuitEstablished(int len, DSite *dstSite[]){
