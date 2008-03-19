@@ -28,6 +28,7 @@
 #include "pickle.hh"
 #include "cac.hh"
 #include "var_readonly.hh"
+#include "bytedata.hh"
 #include "glue_site.hh"
 #include "glue_base.hh"
 #include "glue_buffer.hh"
@@ -72,16 +73,15 @@ TaggedRef fs2atom(const DSiteState &state) {
 
 /****************************** GlueSite ******************************/
 
-GlueSite::GlueSite(DSite* site, int ip, int port, int id) :
+GlueSite::GlueSite(DSite* site) :
   dsite(site),
   ozsite(makeTaggedNULL()),
   faultstream(makeTaggedNULL()),
   next(gSiteList),
   gcmarked(false),
   disposed(false),
-  a_ipAddress(ip),
-  a_portNum(port),
-  a_idNum(id),
+  info(OZ_mkByteString("", 0)),
+  infov(0),
   rtt_avg(0),
   rtt_mdev(0),
   rtt_timeout(RTT_INIT)
@@ -109,20 +109,12 @@ OZ_Term GlueSite::getFaultStream() {
   return oz_cons(getFaultState(), faultstream);
 }
 
-OZ_Term GlueSite::m_getInfo() {
-  static char ip[16];
-  //a_ipAddress is in network byte order!
-  unsigned int ip_addr=ntohl(a_ipAddress);
-  sprintf(ip,"%d.%d.%d.%d",
-	  (ip_addr/(256*256*256))%256,
-	  (ip_addr/(256*256))%256,
-	  (ip_addr/256)%256,
-	  ip_addr%256);
-  return OZ_recordInit(oz_atom("site"),
-		       oz_cons(oz_pairAA("ip", ip),
-		       oz_cons(oz_pairAI("port", a_portNum),
-		       oz_cons(oz_pairAI("id", a_idNum),
-		       oz_nil()))));
+void GlueSite::setInfo(OZ_Term val) {
+  Assert(oz_isByteString(val));
+  info = val;
+  infov++;               // important: increment version number!
+  Assert(dsite);
+  dsite->m_invalidateMarshaledRepresentation();
 }
 
 void
@@ -134,6 +126,7 @@ GlueSite::m_setConnection(DssChannel* vc) {
 void
 GlueSite::m_gcRoots() {
   oz_gCollectTerm(faultstream, faultstream);
+  oz_gCollectTerm(info, info);
 }
 
 void
@@ -148,18 +141,25 @@ GlueSite::m_gcFinal() {
 
 void    
 GlueSite::marshalCsSite( DssWriteBuffer* const buf){
-  putInt(buf, a_ipAddress); 
-  putInt(buf, a_portNum); 
-  putInt(buf, a_idNum);
+  // marshal version number, then info size and contents
+  ByteString* bs = tagged2ByteString(info);
+  putInt(buf, infov);
+  putInt(buf, bs->getWidth());
+  putStr(buf, (char*) bs->getData(), bs->getWidth());
 }
 
 void    
 GlueSite::updateCsSite( DssReadBuffer* const buf){
-  // here we can check that the address hasn't changed since we
-  // last heard of the site
-  (void) getInt(buf); 
-  (void) getInt(buf);
-  (void) getInt(buf);
+  // update info if more recent
+  int v = getInt(buf);
+  if (v > infov) {
+    ByteString* bs = new ByteString(getInt(buf));
+    getStr(buf, (char*) bs->getData(), bs->getWidth());
+    info = makeTaggedExtension(bs);
+    infov = v;
+  } else {
+    cleanStr(buf, getInt(buf));
+  }
 }
 
 void    
@@ -282,21 +282,8 @@ OZ_Term OzSite::typeV(void) {
 }
 
 OZ_Term OzSite::printV(int depth) {
-  if (depth == 0) {
-    return OZ_atom("<site>");
-  } else {
-    static char str[16];
-    //a_ipAddress is in network byte order!
-    unsigned int ip_addr=ntohl(a_gSite->getIpNum());
-    sprintf(str, "%d.%d.%d.%d",
-	    (ip_addr/(256*256*256))%256,
-	    (ip_addr/(256*256))%256,
-	    (ip_addr/256)%256,
-	    ip_addr%256);
-    return OZ_mkTupleC("#", 7, oz_atom("<site "), oz_atom(str), oz_atom(":"),
-		       oz_int(a_gSite->getPortNum()), oz_atom(":"),
-		       oz_int(a_gSite->getIdNum()), oz_atom(">"));
-  }
+  if (depth == 0) return OZ_atom("<site>");
+  return OZ_mkTupleC("#", 3, oz_atom("<site "), gsite->getInfo(), oz_atom(">"));
 }
 
 OZ_Term OzSite::printLongV(int depth, int offset) {
@@ -308,7 +295,7 @@ OZ_Extension *OzSite::gCollectV(void) {
 }
 
 void OzSite::gCollectRecurseV(void) {
-  a_gSite->m_gcMark();
+  gsite->m_gcMark();
 }
 
 OZ_Extension *OzSite::sCloneV(void) {
@@ -318,13 +305,30 @@ OZ_Extension *OzSite::sCloneV(void) {
 
 void OzSite::sCloneRecurseV(void) {}
 
-OZ_Return OzSite::getFeatureV(OZ_Term feat, OZ_Term& value) {
+OZ_Term OzSite::getFeatureV(OZ_Term feat) {
   Assert(feat == oz_deref(feat));
-  if (feat == AtomInfo) {
-    value = a_gSite->m_getInfo();
-    return PROCEED;
+  return (feat == AtomInfo ? gsite->getInfo() : makeTaggedNULL());
+}
+
+OZ_Return OzSite::getFeatureV(OZ_Term feat, OZ_Term& value) {
+  OZ_Term r = getFeatureV(feat);
+  if (r) return (value = r), PROCEED;
+  return oz_raise(E_ERROR,E_KERNEL,".",2,makeTaggedExtension(this),feat);
+}
+
+OZ_Return OzSite::putFeatureV(OZ_Term feat, OZ_Term value) {
+  Assert(feat == oz_deref(feat));
+  // first check whether value is a VirtualString
+  OZ_Term aux;
+  if (!OZ_isVirtualString(value, &aux)) {
+    if (aux) { OZ_suspendOn(aux); }
+    oz_typeError(value, "VirtualString");
   }
-  return OZ_FAILED;
+  // convert it to a ByteString, and assign it to info
+  int len;
+  char* str = OZ_vsToC(value, &len);
+  gsite->setInfo(OZ_mkByteString(str, len));
+  return PROCEED;
 }
 
 
@@ -333,12 +337,12 @@ OZ_Return OzSite::getFeatureV(OZ_Term feat, OZ_Term& value) {
 // create a serialized representation. The oz-object does thus not serialize
 // a thing. It is completly done by the DSS. 
 int OzSite::minNeededSpace() {
-  return a_gSite->getDSite()->m_getMarshaledSize();
+  return gsite->getDSite()->m_getMarshaledSize();
 }
 
 void OzSite::pickleV(MarshalerBuffer* mb, GenTraverser*) {
   GlueMarshalerBuffer gmb(mb);
-  a_gSite->getDSite()->m_marshalDSite(&gmb);
+  gsite->getDSite()->m_marshalDSite(&gmb);
 }
 
 static
@@ -353,7 +357,7 @@ OZ_Term unmarshalOzSite(MarshalerBuffer *mb, Builder*) {
 
 void OzSite::marshalSuspV(OZ_Term te, ByteBuffer *bs, GenTraverser *gt) {
   GlueWriteBuffer *gwb = static_cast<GlueWriteBuffer *>(bs);
-  (a_gSite->getDSite())->m_marshalDSite(gwb);
+  (gsite->getDSite())->m_marshalDSite(gwb);
 }
 
 static

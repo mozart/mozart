@@ -326,8 +326,9 @@ namespace _msl_internal{ //Start namespace
 
   void 
   Site::m_invalidateMarshaledRepresentation(){
-    Assert(a_MarshaledRepresentation == NULL);
-    delete [] a_MarshaledRepresentation; // should be the same size but one never knows...
+    // deallocate if renewed implementation
+    if (a_MarshaledRepresentation)
+      delete [] a_MarshaledRepresentation;
     BYTE* start = new BYTE[BUILD_SIZE];
     BYTE* buf_start = start + 4 + CIPHER_BLOCK_BYTES;
     BYTE* str_rep = a_key->getStringRep();

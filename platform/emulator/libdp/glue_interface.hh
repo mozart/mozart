@@ -48,13 +48,13 @@ class ComService: public ComServiceInterface{
 public:
   MsgnLayer* a_msgnLayer; 
   
-  ComService(int ip, int port, int id);
-  ~ComService();
+  ComService();
+  ~ComService() {}
 
   virtual ExtDataContainerInterface* m_createExtDataContainer(BYTE);
   
   // The CsSite Object
-  virtual CsSiteInterface* unmarshalCsSite(DSite* Ds, DssReadBuffer* const buf); 
+  virtual CsSiteInterface* unmarshalCsSite(DSite*, DssReadBuffer* const buf); 
   virtual CsSiteInterface *connectSelfReps(MsgnLayer*, DSite*); 
   
   // Mark all DSites used by the CSC. 
@@ -63,10 +63,9 @@ public:
 
 
 
-
-
 // defined in engine_interface together with inits
 extern MAP* glue_dss_connection;
 extern DSS_Object* dss;
 extern ComService* glue_com_connection; 
+
 #endif //GLUE_INTERFACE

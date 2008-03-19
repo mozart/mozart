@@ -40,12 +40,7 @@ define
       {{Property.get 'dp.resolver'}.Scheme Uri}.site
    end
    fun{DistributedURIs S}
-      Info={Value.condSelect S info badInfo}
-   in
-      [{VirtualString.toString
-	"oz-site://s("#Info.ip#";"#
-	{Int.toString Info.port}#";"
-	#{Int.toString Info.id}#")"}]
+      [{VirtualString.toString S.info}]
    end
    fun{AllURIs S}
       {DPService.send S 'oz:URIs' getAll($)}
