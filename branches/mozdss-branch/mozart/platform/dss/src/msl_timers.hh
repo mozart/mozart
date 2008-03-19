@@ -85,6 +85,7 @@ namespace _msl_internal{ //Start namespace
       a_time(time), a_contain(t), a_args(arg)
     {
       Assert(time > 0);
+      Assert(reinterpret_cast<unsigned int>(arg) % 4 == 0);
       DebugCode(a_allocated++);
     };
 

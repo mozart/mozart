@@ -40,8 +40,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+
 void doPortSend(OzPort *port, TaggedRef val, Board*);
-OZ_Return accessCell(OZ_Term cell, OZ_Term &out);
+
+/****************************** MAP ******************************/
 
 /* From DSS */
 MAP::MAP() :
@@ -122,24 +124,20 @@ MAP::kbr_newResp(int start, int stop, int n, PstInContainerInterface* pstin){
 
 
 
+/************************* ComService *************************/
 
-ComService::ComService(int ip, int port, int id) {
-  thisGSite = new GlueSite(NULL, ip, port, id);
+ComService::ComService() {
+  thisGSite = new GlueSite(NULL);
 } 
 
-
-ComService::~ComService(){;}
-
-// Create a SiteAddress object from the representation found in 
-// the readbuffer. Connect the new object to the passed DssSite
-// object. 
+// Create a GlueSite object from the representation found in the
+// readbuffer, and connect it to the passed DSite.
 CsSiteInterface*
-ComService::unmarshalCsSite(DSite* name, DssReadBuffer* const buf) {
-  int ip   = getInt(buf);
-  int port = getInt(buf);
-  int id   = getInt(buf);
-  GlueSite* gs = new GlueSite(name, ip, port, id);
+ComService::unmarshalCsSite(DSite* s, DssReadBuffer* const buf) {
+  GlueSite* gs = new GlueSite(s);
+  gs->updateCsSite(buf);
 
+  // notify the application layer
   OZ_Term command = OZ_recordInit(oz_atom("new_site"),
 				  oz_cons(oz_pair2(oz_int(1), gs->getOzSite()),
 					  oz_nil()));
@@ -147,7 +145,7 @@ ComService::unmarshalCsSite(DSite* name, DssReadBuffer* const buf) {
   return gs;
 }
 
-    
+// connect thisGSite to its DSite    
 CsSiteInterface *ComService::connectSelfReps(MsgnLayer *msg, DSite* ds){ 
   a_msgnLayer = msg; 
   thisGSite->setDSite(ds);

@@ -77,16 +77,15 @@ private:
   bool      gcmarked:1;    // flag set by OzSite
   bool      disposed:1;    // flag set when GlueSite must be deleted
 
-  int a_ipAddress; // In network byte order
-  int a_portNum; 
-  int a_idNum; // ip+port+id identifies the site.
+  OZ_Term info;            // site info (a ByteString)
+  int     infov;           // version number (for handling info changes)
 
   int rtt_avg;         // average rtt
   int rtt_mdev;        // median deviation of rtt
   int rtt_timeout;     // adaptive timeout for detecting tempFail
 
 public:
-  GlueSite(DSite*, int ip, int port, int id);
+  GlueSite(DSite*);
   ~GlueSite();
 
   // get DSite/OzSite
@@ -102,10 +101,8 @@ public:
   bool isDisposed() const { return disposed; }
 
   // glue-specific information
-  int getIpNum() { return a_ipAddress; }
-  int getPortNum() { return a_portNum; }
-  int getIdNum() { return a_idNum; }
-  OZ_Term m_getInfo();
+  OZ_Term getInfo() { return info; }
+  void    setInfo(OZ_Term);
 
   // channels
   void m_setConnection(DssChannel* vc);
@@ -154,12 +151,12 @@ void cleanStr(DssReadBuffer *buf, int len);
 
 class OzSite: public OZ_Extension {
 private:
-  GlueSite *a_gSite;
+  GlueSite *gsite;
 
 public:
-  OzSite(GlueSite* gs) : a_gSite(gs) {}
+  OzSite(GlueSite* gs) : gsite(gs) {}
 
-  GlueSite* getGlueSite() const { return a_gSite; }
+  GlueSite* getGlueSite() const { return gsite; }
 
   virtual int           getIdV(void);
 
@@ -172,7 +169,9 @@ public:
   virtual OZ_Term       printLongV(int depth = 10, int offset = 0);
   virtual OZ_Term       typeV(void);
   virtual OZ_Boolean    isChunkV(void) { return OZ_TRUE; }
-  virtual OZ_Return	getFeatureV(OZ_Term,OZ_Term&);
+  virtual OZ_Term       getFeatureV(OZ_Term);
+  virtual OZ_Return	getFeatureV(OZ_Term, OZ_Term&);
+  virtual OZ_Return	putFeatureV(OZ_Term, OZ_Term);
   //
   virtual OZ_Boolean    toBePickledV() { return (OZ_TRUE); }
   virtual void          pickleV(MarshalerBuffer *mb, GenTraverser *gt);
@@ -190,10 +189,14 @@ Bool oz_isOzSite(TaggedRef ref) {
 }
 
 inline
-GlueSite* ozSite2GlueSite(TaggedRef ref) {
+OzSite* tagged2OzSite(TaggedRef ref) {
   Assert(oz_isOzSite(ref));
-  OzSite* os = static_cast<OzSite*>(OZ_getExtension(ref));
-  return os->getGlueSite();
+  return static_cast<OzSite*>(OZ_getExtension(ref));
+}
+
+inline
+GlueSite* ozSite2GlueSite(TaggedRef ref) {
+  return tagged2OzSite(ref)->getGlueSite();
 }
 
 inline

@@ -59,7 +59,7 @@ Annotation getAnnotation(TaggedRef);
 
 /* DP initialization */
 
-void initDP(int port, int ip, int id);
+void initDP();
 
 #endif
 

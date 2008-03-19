@@ -4,7 +4,8 @@ import
    Glue(setSiteState
 	setConnection
 	acceptConnection
-	initIPConnection
+	getThisSite
+	initDP
 	setRPC
 	setAnnotation
 	kill
@@ -40,7 +41,7 @@ define
       if {Not InitializedC:=N} then
 	 InStream
 	 DistributedURIs={@ListenFuncC {NewPort InStream}}
-	 IP#Port#ID={ExtractDistributedInfo DistributedURIs}
+	 Info={ExtractDistributedInfo DistributedURIs}
       in
 	 {Glue.setRPC proc {$ P Args Ret}
 			 try
@@ -50,12 +51,8 @@ define
 			    Ret={Value.failed E}
 			 end
 		      end}
-	 {Glue.initIPConnection IP Port ID
-	  {NewPort thread
-		      for M in $ do
-			 {ProcessDSS M}
-		      end
-		   end}}
+	 {Glue.initDP {NewPort thread {ForAll $ ProcessDSS} end}}
+	 {Glue.getThisSite}.info := Info
 	 thread
 	    {ForAll InStream DoAccept}
 	 end
@@ -65,27 +62,18 @@ define
    fun{ExtractDistributedInfo DistributedURIs}
       case DistributedURIs
       of [VH] andthen H={VirtualString.toString VH} in {List.isPrefix "oz-site://s(" H} then
-	 Info={List.takeWhile {List.drop H {Length "oz-site://s("}} fun{$ C}C\=&)end}
-	 [Ip PortS IdS]={String.tokens Info &;}
-      in
-	 Ip#{String.toInt PortS}#{String.toInt IdS}
+	 H
       [] URIs then
 	 {Exception.raiseError dp(dssLimit distributedURI URIs)}
 	 unit
       end
-   end
-   fun{MakeURIFromInfo Info}
-      {VirtualString.toString
-       "oz-site://s("#Info.ip#";"#
-       {Int.toString Info.port}#";"
-       #{Int.toString Info.id}#")"}
    end
    proc{ProcessDSS M}
       case M
       of connect(ToSite) then
 	 {System.show connect}
 	 thread
-	    URI={MakeURIFromInfo ToSite.info}
+	    URI={VirtualString.toString ToSite.info}
 	    ConnectMeths={{Property.get 'dp.resolver'}.'oz-site' URI}.connect
 	 in
 	    if {Not {DoConnect ToSite ConnectMeths}} then

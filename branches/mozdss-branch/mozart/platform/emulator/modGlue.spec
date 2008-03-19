@@ -43,13 +43,11 @@
 				  out => ['+port'],
 				  BI  => BImsToPort},
 
-     # initialize the IP module.  The arguments are: ip address of the
-     # site (as a string), ip port number, an identifier, and an Oz
-     # port.  The latter is used by the Glue to request connections,
-     # etc.
-     'initIPConnection'      => { in  => ['+string','+int','+int','+port'],
+     # initialize the DP module.  The port in argument is used by the
+     # Glue to request connections, etc.
+     'initDP'                => { in  => ['+port'],
 	                          out => [],
-				  BI  => BIinitIPConnection},
+				  BI  => BIinitDP},
 
      # establish a connection to a site (1st arg) with the given
      # socket descriptor (2nd arg)
@@ -190,16 +188,15 @@
                                   out => ['+value'],
 				  BI => BIgetThisSite},
 
-     # return site information (ip address, ip port, identifier);
-     # currently has the form of a record
-     #
-     #      site(ip:   <ip address (atom)>
-     #           port: <ip port number>
-     #           id:   <id number>)
-     #
+     # return site information (a byte string)
      'getSiteInfo'           => { in => ['+value'],
                                   out => ['+value'],
 				  BI => BIgetSiteInfo},
+
+     # set site information (info must be a virtual string)
+     'setSiteInfo'           => { in => ['+value','+value'],
+                                  out => [],
+				  BI => BIsetSiteInfo},
 
      # return the connection status of the given site, as a record
      #

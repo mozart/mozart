@@ -241,20 +241,16 @@ OZ_BI_define(BImigrateManager,1,0){
 }OZ_BI_end
 
 
-OZ_BI_define(BIinitIPConnection,4,0)
-{
-  oz_declareProperStringIN(0,addr);
-  oz_declareIntIN(1, port);
-  oz_declareIntIN(2, id);
-  oz_declareNonvarIN(3,ozPort);
+ // initialization of DP module
+OZ_BI_define(BIinitDP, 1, 0) {
+  oz_declareNonvarIN(0, port);
+  if (!oz_isPort(port)) { oz_typeError(0, "port"); }
 
-  g_connectPort = ozPort;
+  g_connectPort = port;
   OZ_protect(&g_connectPort);
 
-  int ip = (int)inet_addr(addr);  
-  initDP(port, ip, id); 
-  
-  return OZ_ENTAILED;
+  initDP();
+  return PROCEED;
 } OZ_BI_end
 
 
@@ -802,11 +798,18 @@ OZ_BI_define(BIgetThisSite,0,1){
 }OZ_BI_end
 
 
-/* Get the site info*/
+/* Get/Set the site info*/
 OZ_BI_define(BIgetSiteInfo,1,1){
   oz_declareNonvarIN(0, site);
   if (!oz_isOzSite(site)) return OZ_typeError(0, "site");
-  OZ_RETURN(ozSite2GlueSite(site)->m_getInfo());
+  OZ_RETURN(ozSite2GlueSite(site)->getInfo());
+}OZ_BI_end
+
+OZ_BI_define(BIsetSiteInfo,2,0){
+  oz_declareNonvarIN(0, site);
+  if (!oz_isOzSite(site)) return OZ_typeError(0, "site");
+  oz_declareNonvarIN(1, value);
+  return tagged2OzSite(site)->putFeatureV(AtomInfo, value);
 }OZ_BI_end
 
 
