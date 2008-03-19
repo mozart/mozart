@@ -81,7 +81,6 @@ GlueSite::GlueSite(DSite* site) :
   gcmarked(false),
   disposed(false),
   info(OZ_mkByteString("", 0)),
-  infov(0),
   rtt_avg(0),
   rtt_mdev(0),
   rtt_timeout(RTT_INIT)
@@ -111,9 +110,8 @@ OZ_Term GlueSite::getFaultStream() {
 
 void GlueSite::setInfo(OZ_Term val) {
   Assert(oz_isByteString(val));
-  info = val;
-  infov++;               // important: increment version number!
   Assert(dsite);
+  info = val;
   dsite->m_invalidateMarshaledRepresentation();
 }
 
@@ -141,25 +139,16 @@ GlueSite::m_gcFinal() {
 
 void    
 GlueSite::marshalCsSite( DssWriteBuffer* const buf){
-  // marshal version number, then info size and contents
   ByteString* bs = tagged2ByteString(info);
-  putInt(buf, infov);
   putInt(buf, bs->getWidth());
   putStr(buf, (char*) bs->getData(), bs->getWidth());
 }
 
 void    
 GlueSite::updateCsSite( DssReadBuffer* const buf){
-  // update info if more recent
-  int v = getInt(buf);
-  if (v > infov) {
-    ByteString* bs = new ByteString(getInt(buf));
-    getStr(buf, (char*) bs->getData(), bs->getWidth());
-    info = makeTaggedExtension(bs);
-    infov = v;
-  } else {
-    cleanStr(buf, getInt(buf));
-  }
+  ByteString* bs = new ByteString(getInt(buf));
+  getStr(buf, (char*) bs->getData(), bs->getWidth());
+  info = makeTaggedExtension(bs);
 }
 
 void    

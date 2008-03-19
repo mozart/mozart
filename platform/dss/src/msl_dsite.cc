@@ -71,7 +71,7 @@ namespace _msl_internal{ //Start namespace
     a_comObj(NULL),
     a_csSite(NULL),
     a_state(DSite_OK),
-    a_version(1),
+    a_version(0),
     a_MarshaledRepresentation(NULL),
     a_MRlength(-1),
     a_secChannel(sec),
@@ -326,9 +326,10 @@ namespace _msl_internal{ //Start namespace
 
   void 
   Site::m_invalidateMarshaledRepresentation(){
-    // deallocate if renewed implementation
-    if (a_MarshaledRepresentation)
-      delete [] a_MarshaledRepresentation;
+    // cleanup, and increment a_version
+    delete [] a_MarshaledRepresentation;
+    a_version++;
+
     BYTE* start = new BYTE[BUILD_SIZE];
     BYTE* buf_start = start + 4 + CIPHER_BLOCK_BYTES;
     BYTE* str_rep = a_key->getStringRep();
@@ -474,7 +475,6 @@ namespace _msl_internal{ //Start namespace
 	    // 3,Check that signature is not the same with different
 	    // sign (o-wise we're in deep shit and ahve to check our
 	    // prime generator as well as randomizer)
-	    DebugCode(if(found->a_version != version) dssError("Site identity problem - key's are equal"));
 	    if(found->a_version < version){ // skip all other
 	      //update here (should check if ok)
 	      (found->a_csSite)->updateCsSite( &dsrb);
