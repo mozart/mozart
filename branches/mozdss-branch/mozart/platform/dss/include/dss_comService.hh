@@ -204,6 +204,7 @@ public:
 class CsSiteInterface {
 public:
   CsSiteInterface();
+  virtual int  getCsSiteSize() = 0;     // size of marshaled CsSite
   virtual void marshalCsSite( DssWriteBuffer* const buf) = 0; 
   virtual void updateCsSite( DssReadBuffer* const buf) = 0; 
   virtual void disposeCsSite() = 0; 

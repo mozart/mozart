@@ -310,17 +310,16 @@ namespace _msl_internal{ //Start namespace
   }
 
 
-  // ********************** Marshaled representation layout ***********************
+  // *************** Marshaled representation layout ***************
   //
-  //
-  // start      00 : PRIM_KEY(4)         - used for hashing 
-  //            04 : SIGNED_DIGEST(32)   - signature of the "rest of the buffer"
-  // buf_start  36 : LENGTH_OF_BUFFER(4) - length of the "rest of..."
-  //               : LENGTH_OF_RSA(1)
-  //               : USE_SECURED_CHANNELS(1)
-  //               : VERSION_OF_CSC_DATA(4)
-  //               : RSA_REP(X == LENGTH_OF_RSA)
-  //               : CSC_REP(Y)
+  // head: - PRIM_KEY (4)             - used for hashing 
+  //       - SIGNED_DIGEST (32)       - signature of the body
+  // body: - LENGTH_OF_BUFFER (4)     - length of the body
+  //       - LENGTH_OF_RSA (1)        - see RSA_REP below
+  //       - USE_SECURED_CHANNELS (1) - boolean flag
+  //       - VERSION_OF_CSC_DATA (4)  - version number
+  //       - RSA_REP (LENGTH_OF_RSA)  - RSA key
+  //       - CSC_REP (CSC_SIZE)       - CsSite representation
 
   void 
   Site::m_invalidateMarshaledRepresentation(){
@@ -328,43 +327,38 @@ namespace _msl_internal{ //Start namespace
     delete [] a_MarshaledRepresentation;
     a_version++;
 
-    const int BUILD_SIZE = 2048;        // should be larger than necessary
-    static BYTE buffer[BUILD_SIZE];     // temporary buffer to build MR
-    static BYTE digest[PLAIN_BLOCK_BYTES - 4];
-
-    BYTE* buf_start = buffer + 4 + CIPHER_BLOCK_BYTES;
-    BYTE* str_rep = a_key->getStringRep();
-    //printf("I_KEY:");gf_printBuf(a_key->getStringRep(),RSA_MARSHALED_REPRESENTATION);
-    int len = RSA_MARSHALED_REPRESENTATION; // for compiler to know key_len
-    DssSimpleWriteBuffer dswb(buf_start, BUILD_SIZE - (4 + CIPHER_BLOCK_BYTES));
-
-    // **** start marshaling of to-be-signed area ****
-    dswb.m_putInt(0xFFFFFFFF);          // padding, will store length (*)
-    gf_Marshal8bitInt(&dswb, len);
-    gf_Marshal8bitInt(&dswb, a_secChannel);
-    dswb.m_putInt(a_version);  // printf("version:%x\n",a_version);
-    dswb.writeToBuffer(str_rep, len);
-    a_csSite->marshalCsSite( &dswb);
-
-    len = dswb.getUsed(); // reuse len as buf_len
-    gf_integer2char(buf_start, len);    // (*) store length
-    // ********** calculate digest and sign **********
-    md5.digest(buf_start,len);
-    md5.final(digest);
-    gf_integer2char(&digest[MD5_SIZE],    random_u32());
-
-    
-    DebugCode(int rLen =) a_key->encrypt_text(buffer + 4, digest, PLAIN_BLOCK_BYTES - 4);
-    Assert(rLen == CIPHER_BLOCK_BYTES);
-    gf_integer2char(buffer, a_shortId);
-    //printf("pk:%x\n",getPrimKey());
-
-    // ********* DONE, save in a_MarshaledRepresentation *********
-    a_MRlength = len + (4 + CIPHER_BLOCK_BYTES);
+    // allocate a new a_MarshaledRepresentation
+    int head_len = SIZE_INT + CIPHER_BLOCK_BYTES;
+    int body_len = (2*SIZE_INT + 2 + RSA_MARSHALED_REPRESENTATION +
+		    a_csSite->getCsSiteSize());
+    a_MRlength = head_len + body_len;
     a_MarshaledRepresentation = new BYTE[a_MRlength];
-    memcpy(a_MarshaledRepresentation, buffer, a_MRlength);
 
-    dswb.drop();     // detach buffer from dswb, otherwise it will delete it
+    BYTE* head = a_MarshaledRepresentation;
+    BYTE* body = head + head_len;
+
+    // fill in body with a DssWriteBuffer
+    DssSimpleWriteBuffer buf(body, body_len);
+    buf.m_putInt(body_len);
+    buf.m_putByte(RSA_MARSHALED_REPRESENTATION);
+    buf.m_putByte(a_secChannel);
+    buf.m_putInt(a_version);
+    buf.writeToBuffer(a_key->getStringRep(), RSA_MARSHALED_REPRESENTATION);
+    a_csSite->marshalCsSite(&buf);
+    Assert(buf.getUsed() == body_len);
+    buf.drop();     // detach buffer from body (to avoid deallocation)
+
+    // compute body signature (and pad with random data)
+    static BYTE digest[PLAIN_BLOCK_BYTES - SIZE_INT];
+    md5.compute_digest(digest, body, body_len);
+    for (int i = MD5_SIZE; i < PLAIN_BLOCK_BYTES - SIZE_INT; i += SIZE_INT)
+      gf_integer2char(digest + i, random_u32());
+
+    // write header
+    gf_integer2char(head, a_shortId);
+    DebugCode(int rlen = )
+      a_key->encrypt_text(head + SIZE_INT, digest, PLAIN_BLOCK_BYTES-SIZE_INT);
+    Assert(rlen == CIPHER_BLOCK_BYTES);
   }
 
   void Site::m_virtualCircuitEstablished(int len, DSite *dstSite[]){
@@ -433,40 +427,38 @@ namespace _msl_internal{ //Start namespace
     BYTE* marshaled_representation = new BYTE[len];
     buf->readFromBuffer(marshaled_representation,len);
     buf->commitRead(len);
-    //printf("SIGN (U)\n");  gf_printBuf(marshaled_representation,len);
-    //printf("SIGN (U)\n");  gf_printBuf(marshaled_representation+4,CIPHER_BLOCK_BYTES);
-    u32 pk  = gf_char2integer(marshaled_representation); //printf("pk:%x\n",pk);
+    u32 pk  = gf_char2integer(marshaled_representation);
     Site *found = m_findDigest(pk, marshaled_representation+4);
  
     // verify found against malicious addresses
     if (found == NULL){
       // these were accounted for in the prev len check, now recheck buffer
-      DssSimpleReadBuffer
-	dsrb(marshaled_representation + 4 + CIPHER_BLOCK_BYTES,
-	     len - (4 + CIPHER_BLOCK_BYTES));
+      int head_len = SIZE_INT + CIPHER_BLOCK_BYTES;
+      DssSimpleReadBuffer body(marshaled_representation+head_len, len-head_len);
 
-      int  buf_len = dsrb.m_getInt();             //printf("buf_len:%d\n",buf_len);
-      int  key_len = gf_Unmarshal8bitInt(&dsrb);  //printf("key_len:%d\n",key_len); 
-      bool sec     = gf_Unmarshal8bitInt(&dsrb);  //printf("use sec:%s\n",gf_bool2string(sec));
-      u32 version  = dsrb.m_getInt();             //printf("version:%x\n",version);
-
+      int body_len = body.m_getInt();
+      int key_len  = body.m_getByte();
+      bool sec     = body.m_getByte();
+      u32 version  = body.m_getInt();
       Assert(key_len == RSA_MARSHALED_REPRESENTATION);
-      if(dsrb.availableData() == (buf_len - 10) &&
-	 buf_len >  RSA_MARSHALED_REPRESENTATION + 4 &&
-	 key_len == RSA_MARSHALED_REPRESENTATION){
+
+      if (body.availableData() + 2 + 2*SIZE_INT == body_len &&
+	  body_len > RSA_MARSHALED_REPRESENTATION + SIZE_INT &&
+	  key_len == RSA_MARSHALED_REPRESENTATION) {
 	
-	RSA_public* key = new RSA_public(dsrb.m_getReadPos(),key_len);
-	dsrb.commitRead(key_len);
-	//printf("U_KEY:");gf_printBuf(key->getStringRep(),RSA_MARSHALED_REPRESENTATION);
+	RSA_public* key = new RSA_public(body.m_getReadPos(),key_len);
+	body.commitRead(key_len);
 	
 	// ok now we have a key, verify the buffer,
-	BYTE digest[PLAIN_BLOCK_BYTES];
-	int decrypt_sign = key->decrypt_text(digest, marshaled_representation + 4, CIPHER_BLOCK_BYTES);
-	//printf("DIGEST:");gf_printBuf(key->getStringRep(),RSA_MARSHALED_REPRESENTATION);
-	if(decrypt_sign == (PLAIN_BLOCK_BYTES - 4) &&
-	   md5.compare(digest, marshaled_representation + 4 + CIPHER_BLOCK_BYTES, buf_len)){
-	  // now we only have to guard from a malicious site address (i.e. the original site is evil)
-	  // check if the site is here but has changed address
+	static BYTE digest[PLAIN_BLOCK_BYTES];
+	int decrypt_sign =
+	  key->decrypt_text(digest, marshaled_representation + SIZE_INT,
+			    CIPHER_BLOCK_BYTES);
+	if (decrypt_sign == (PLAIN_BLOCK_BYTES - SIZE_INT) &&
+	    md5.compare(digest, marshaled_representation + head_len, body_len)){
+	  // now we only have to guard from a malicious site address
+	  // (i.e. the original site is evil).  Check if the site is
+	  // here but has changed address
 	  found = m_findSiteKey(pk,*key);
 	  if(found != NULL){
 	    Assert(found->a_version != version);
@@ -475,7 +467,7 @@ namespace _msl_internal{ //Start namespace
 	    // prime generator as well as randomizer)
 	    if(found->a_version < version){ // skip all other
 	      //update here (should check if ok)
-	      (found->a_csSite)->updateCsSite( &dsrb);
+	      (found->a_csSite)->updateCsSite( &body);
 	      found->a_MarshaledRepresentation = marshaled_representation;
 	      found->a_MRlength = len;
 	      found->a_version  = version;
@@ -483,11 +475,12 @@ namespace _msl_internal{ //Start namespace
 	      delete [] marshaled_representation;
 	    delete key; // we had it already....
 	  } else {
-	    found = new Site(pk, key, a_msgnLayerEnv, sec, version, marshaled_representation, len);
-	    //printf("found new site:%p\n",static_cast<void*>(found));
+	    found = new Site(pk, key, a_msgnLayerEnv, sec, version,
+			     marshaled_representation, len);
 	    insert(found);
 	    // should check here too
-	    CsSiteInterface *cs = a_msgnLayerEnv->a_comService->unmarshalCsSite(found, &dsrb);
+	    CsSiteInterface *cs =
+	      a_msgnLayerEnv->a_comService->unmarshalCsSite(found, &body);
 	    if(cs)
 	      found->m_setCsSite(cs);
 	    else
@@ -497,12 +490,12 @@ namespace _msl_internal{ //Start namespace
 	    found->m_stateChange(DSite_GLOBAL_PRM);
 
 	  // OK, leave this place
-	  dsrb.drop();
+	  body.drop();
 	  return found; 
 	}
 	delete key;
       }
-      dsrb.drop();
+      body.drop();
     }
     delete [] marshaled_representation;
     return found;
