@@ -137,6 +137,11 @@ GlueSite::m_gcFinal() {
   }
 }
 
+int
+GlueSite::getCsSiteSize() {
+  return SIZE_INT + tagged2ByteString(info)->getWidth();
+}
+
 void    
 GlueSite::marshalCsSite( DssWriteBuffer* const buf){
   ByteString* bs = tagged2ByteString(info);

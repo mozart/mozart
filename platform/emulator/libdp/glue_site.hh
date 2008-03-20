@@ -113,13 +113,14 @@ public:
   void m_gcFinal();
 
   // CsSiteInterface
-  virtual void    marshalCsSite( DssWriteBuffer* const buf);
-  virtual void    updateCsSite( DssReadBuffer* const buf); 
-  virtual void    disposeCsSite(); 
+  virtual int  getCsSiteSize();
+  virtual void marshalCsSite( DssWriteBuffer* const buf);
+  virtual void updateCsSite( DssReadBuffer* const buf); 
+  virtual void disposeCsSite(); 
 
-  virtual void    working(); 
-  virtual void    reportRTT(int);
-  virtual void    reportTimeout(int);
+  virtual void working(); 
+  virtual void reportRTT(int);
+  virtual void reportTimeout(int);
 
   virtual void reportFaultState(DSiteState);
 
