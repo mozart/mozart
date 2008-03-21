@@ -34,12 +34,19 @@
 // implementation of DSS channels, using sockets
 class SocketChannel : public DssChannel {
 private:
-  int fd;                          // socket file descriptor
+  int fd_in;                       // file descriptor (for reading)
+  int fd_out;                      // file descriptor (for writing)
   bool lost;                       // true when connection lost
   DssChannelCallback* worker;      // callback object
 
+  SocketChannel() {}
+  SocketChannel(SocketChannel&) {}
+
 public:
-  SocketChannel(int _fd) : fd(_fd), lost(false), worker(NULL) {}
+  SocketChannel(int fd) :
+    fd_in(fd), fd_out(fd), lost(false), worker(NULL) {}
+  SocketChannel(int in, int out) :
+    fd_in(in), fd_out(out), lost(false), worker(NULL) {}
   ~SocketChannel();
 
   virtual bool setCallback(DssChannelCallback*);

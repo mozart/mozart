@@ -108,11 +108,14 @@ define
 	 try
 	    case Conn
 	    of fd(FD) then
-	       {Glue.setConnection ToSite FD}
+	       {Glue.setConnection ToSite fd(FD FD)}
 	       true
-	    [] sock(Sock) then FD in
-	       {Sock getDesc(FD FD)}
-	       {Glue.setConnection ToSite FD}
+	    [] fd(FD0 FD1) then
+	       {Glue.setConnection ToSite Conn}
+	       true
+	    [] sock(Sock) then FD0 FD1 in
+	       {Sock getDesc(FD0 FD1)}
+	       {Glue.setConnection ToSite fd(FD0 FD1)}
 	       true
 	    [] none then
 	       true
@@ -136,10 +139,12 @@ define
       try
 	 case X
 	 of fd(FD) then
-	    {Glue.acceptConnection FD}
-	 [] sock(Sock) then FD in
-	    {Sock getDesc(FD FD)}
-	    {Glue.acceptConnection FD}
+	    {Glue.acceptConnection fd(FD FD)}
+	 [] fd(FD0 FD1) then
+	    {Glue.acceptConnection X}
+	 [] sock(Sock) then FD0 FD1 in
+	    {Sock getDesc(FD0 FD1)}
+	    {Glue.acceptConnection fd(FD0 FD1)}
 	 end
       catch E then
 	 {PrintError E}

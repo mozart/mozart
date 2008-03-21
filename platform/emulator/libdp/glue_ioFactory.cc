@@ -71,7 +71,8 @@ Bool glue_io_write(int fd, void *arg){
 /************************* SocketChannel *************************/
 
 SocketChannel::~SocketChannel() {
-  osclose(fd);
+  osclose(fd_in);
+  if (fd_out != fd_in) osclose(fd_out);
 }
 
 void
@@ -89,45 +90,35 @@ SocketChannel::setCallback(DssChannelCallback* cbk) {
 void
 SocketChannel::registerRead(bool on) {
   if (on) {
-    OZ_registerReadHandler(fd, glue_io_read, this);
+    OZ_registerReadHandler(fd_in, glue_io_read, this);
   } else {
-    OZ_unregisterRead(fd);
+    OZ_unregisterRead(fd_in);
   }
 }
 
 void
 SocketChannel::registerWrite(bool on) {
   if (on) {
-    OZ_registerWriteHandler(fd, glue_io_write, this);
+    OZ_registerWriteHandler(fd_out, glue_io_write, this);
   } else {
-    OZ_unregisterWrite(fd);
+    OZ_unregisterWrite(fd_out);
   }
 }
 
 int
 SocketChannel::read(void* buf, const unsigned int& len) {
-  while (true) {
-    int ret = osread(fd, buf, len);
-    if (ret > 0) return ret;         // normal return
-    switch (classifyError()) {
-    case EC_GO_AHEAD: continue;      // read was interrupted, retry
-    case EC_LOST:     lost = true;   // connection is lost
-    default:          return 0;
-    }
-  }
+  int ret = ossaferead(fd_in, (char*) buf, len);
+  if (ret > 0) return ret;         // normal return
+  if (classifyError() == EC_LOST) lost = true;
+  return 0;
 }
 
 int
 SocketChannel::write(void* buf, const unsigned int& len) {
-  while (true) {
-    int ret = oswrite(fd, buf, len);
-    if (ret >= 0) return ret;        // normal return
-    switch (classifyError()) {
-    case EC_GO_AHEAD: continue;      // write was interrupted, retry
-    case EC_LOST:     lost = true;   // connection is lost
-    default:          return 0; 
-    }
-  }
+  int ret = ossafewrite(fd_out, (char*) buf, len);
+  if (ret >= 0) return ret;        // normal return
+  if (classifyError() == EC_LOST) lost = true;
+  return 0;
 }
 
 bool

@@ -49,15 +49,15 @@
 	                          out => [],
 				  BI  => BIinitDP},
 
-     # establish a connection to a site (1st arg) with the given
-     # socket descriptor (2nd arg)
-     'setConnection'         => { in  => ['+value','+int'],
+     # establish a connection to a site (1st arg) with the given pair
+     # of file descriptors (2nd arg)
+     'setConnection'         => { in  => ['+value','+int#+int'],
                                   out => [],
 				  BI  => BIsetConnection},
 
      # establish an anonymous connection with the given socket
      # descriptor
-     'acceptConnection'      => { in  => ['+int'],
+     'acceptConnection'      => { in  => ['+int#+int'],
                                   out => [],
 				  BI  => BIacceptConnection},
 
