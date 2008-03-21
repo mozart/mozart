@@ -82,6 +82,23 @@ int LEN = 0;								\
   if (!OZ_isNil(arg)) return OZ_typeError(ARG,"list(site)");		\
 }
 
+#define oz_expectInt(VAR,REF,ERROR)		\
+  int VAR;					\
+  {						\
+    TaggedRef _VAR = oz_safeDeref(REF);		\
+    if (oz_isVarOrRef(_VAR)) {			\
+      OZ_suspendOn(_VAR);			\
+    } else if (oz_isSmallInt(_VAR)) {		\
+      VAR = tagged2SmallInt(_VAR);		\
+    } else if (oz_isBigInt(_VAR)) {		\
+      VAR = tagged2BigInt(_VAR)->getInt();	\
+    } else {					\
+      ERROR;					\
+    }						\
+  }
+
+
+
 inline 
 int dssIsCons(OZ_Term list, OZ_Term *hd, OZ_Term *tl) { 
   if (!OZ_isCons(list)) {
@@ -146,30 +163,36 @@ OZ_BI_define(BIhandoverRoute,2,0) {
 }OZ_BI_end
 
 
-// create a connection for the given site, with the given file descriptor
+// create a connection for the given site, with the given pair of file
+// descriptors
 OZ_BI_define(BIsetConnection,2,0){
   oz_declareNonvarIN(0,site);
-  OZ_declareInt(1,fd);
-  if (!oz_isOzSite(site)) return OZ_typeError(0, "site");
+  if (!oz_isOzSite(site)) oz_typeError(0, "site");
+  oz_declareSTupleIN(1, pair);
+  if (pair->getWidth() != 2) oz_typeError(1, "pair of ints");
+  oz_expectInt(fd0, pair->getArg(0), oz_typeError(1, "pair of ints"));
+  oz_expectInt(fd1, pair->getArg(1), oz_typeError(1, "pair of ints"));
 
-  DssChannel* channel = new SocketChannel(fd);
+  DssChannel* channel = new SocketChannel(fd0, fd1);
   ozSite2GlueSite(site)->m_setConnection(channel);
 
   // notify the DP port
-  OZ_Term ack = OZ_recordInit(oz_atom("connection_received"),
-			      oz_cons(oz_pair2(oz_int(1),site),
-				      oz_cons(oz_pair2(oz_int(2),OZ_int(fd)),
-					      oz_nil())));
+  OZ_Term ack = OZ_mkTupleC("connection_received", 2, site, OZ_in(1));
   doPortSend(tagged2Port(g_connectPort),ack,NULL);
   return PROCEED;
 
 }OZ_BI_end
 
 
-// hand over an anonymous connection to the DSS (arg is a file descriptor)
+// hand over an anonymous connection to the DSS (arg is a pair of file
+// descriptors)
 OZ_BI_define(BIacceptConnection,1,0){
-  OZ_declareInt(0,fd);
-  DssChannel* channel = new SocketChannel(fd);
+  oz_declareSTupleIN(0, pair);
+  if (pair->getWidth() != 2) oz_typeError(0, "pair of ints");
+  oz_expectInt(fd0, pair->getArg(0), oz_typeError(0, "pair of ints"));
+  oz_expectInt(fd1, pair->getArg(1), oz_typeError(0, "pair of ints"));
+
+  DssChannel* channel = new SocketChannel(fd0, fd1);
   glue_com_connection->a_msgnLayer->m_anonymousChannelEstablished(channel); 
   return PROCEED;
 }OZ_BI_end
