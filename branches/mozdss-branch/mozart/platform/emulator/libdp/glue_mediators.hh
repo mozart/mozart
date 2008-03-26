@@ -250,6 +250,7 @@ public:
   PortMediator();
   PortMediator(TaggedRef);
 
+  virtual bool annotate(Annotation);
   virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
 				    PstInContainerInterface*);
   virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
@@ -270,6 +271,7 @@ public:
   CellMediator();
   CellMediator(TaggedRef);
 
+  virtual bool annotate(Annotation);
   AOcallback callback(DssThreadId*, DssOperationId*,
 		      PstInContainerInterface*, PstOutContainerInterface*&);
   virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
@@ -292,6 +294,7 @@ public:
   LockMediator();
   LockMediator(TaggedRef);
 
+  virtual bool annotate(Annotation);
   virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
 				    PstInContainerInterface*,
 				    PstOutContainerInterface*&);
@@ -312,6 +315,7 @@ public:
   ArrayMediator();
   ArrayMediator(TaggedRef);
 
+  virtual bool annotate(Annotation);
   AOcallback callback(DssThreadId*, DssOperationId*,
 		      PstInContainerInterface*, PstOutContainerInterface*&);
   virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
@@ -336,6 +340,7 @@ public:
   DictionaryMediator();
   DictionaryMediator(TaggedRef);
 
+  virtual bool annotate(Annotation);
   AOcallback callback(DssThreadId*, DssOperationId*,
 		      PstInContainerInterface*, PstOutContainerInterface*&);
   virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
@@ -358,6 +363,7 @@ public:
   ObjectMediator();
   ObjectMediator(TaggedRef);
 
+  virtual bool annotate(Annotation);
   virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
 				   PstInContainerInterface*,
 				   PstOutContainerInterface*&);
@@ -374,6 +380,7 @@ public:
   ObjectStateMediator();
   ObjectStateMediator(TaggedRef);
 
+  virtual bool annotate(Annotation);
   AOcallback callback(DssThreadId*, DssOperationId*,
 		      PstInContainerInterface*, PstOutContainerInterface*&);
   virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
@@ -396,6 +403,7 @@ public:
   OzThreadMediator();
   OzThreadMediator(TaggedRef);
 
+  virtual bool annotate(Annotation);
   virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
 				    PstInContainerInterface*,
 				    PstOutContainerInterface*&);
@@ -417,6 +425,7 @@ public:
   OzVariableMediator(TaggedRef);
   
   virtual void attach();
+  virtual bool annotate(Annotation);
   virtual void gCollectPrepare();   // overrides Mediator::gCollectPrepare()
   virtual char *getPrintType() { return "var"; }
 
@@ -447,6 +456,7 @@ public:
   UnusableMediator();
   UnusableMediator(TaggedRef);
 
+  virtual bool annotate(Annotation);
   virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
 				   PstInContainerInterface*,
 				   PstOutContainerInterface*&);
@@ -483,6 +493,7 @@ public:
   TokenMediator(GlueTag);
   virtual void attach() {}     // always detached (because of gname)
   virtual void detach() {}
+  virtual bool annotate(Annotation);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);
 };

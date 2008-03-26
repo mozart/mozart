@@ -52,6 +52,11 @@ public:
   Annotation(ProtocolName _pn, AccessArchitecture _aa, RCalg _rc) :
     pn(_pn), aa(_aa), rc(_rc) {}
 
+  // return whether the protocol can be used for the given type of entity
+  bool hasMutableProtocol() const;
+  bool hasImmutableProtocol() const;
+  bool hasTransientProtocol() const;
+
   // parse an Oz term representing an annotation; upon success, the
   // attributes are set and the method returns PROCEED
   OZ_Return parseTerm(TaggedRef);

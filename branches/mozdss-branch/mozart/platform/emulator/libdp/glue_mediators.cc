@@ -217,7 +217,7 @@ Mediator::completeAnnotation() {
 }
 
 bool Mediator::annotate(Annotation a) {
-  // check compatibility
+  // check incremental compatibility
   if (a.pn && annotation.pn && a.pn != annotation.pn) return false;
   if (a.aa && annotation.aa && a.aa != annotation.aa) return false;
   if (a.rc && annotation.rc && a.rc != annotation.rc) return false;
@@ -394,6 +394,12 @@ PortMediator::PortMediator(TaggedRef e) : ConstMediator(GLUE_PORT) {
   setEntity(e);
 }
 
+bool PortMediator::annotate(Annotation a) {
+  // check protocol
+  if (a.pn && a.pn != PN_SIMPLE_CHANNEL) return false;
+  return Mediator::annotate(a);
+}
+
 AOcallback
 PortMediator::callback_Write(DssThreadId*, DssOperationId*,
 			     PstInContainerInterface* pstin)
@@ -421,6 +427,10 @@ CellMediator::CellMediator() : ConstMediator(GLUE_CELL) {}
 
 CellMediator::CellMediator(TaggedRef e) : ConstMediator(GLUE_CELL) {
   setEntity(e);
+}
+
+bool CellMediator::annotate(Annotation a) {
+  return a.hasMutableProtocol() && Mediator::annotate(a);
 }
 
 AOcallback 
@@ -486,6 +496,10 @@ LockMediator::LockMediator() : ConstMediator(GLUE_LOCK) {}
 
 LockMediator::LockMediator(TaggedRef e) : ConstMediator(GLUE_LOCK) {
   setEntity(e);
+}
+
+bool LockMediator::annotate(Annotation a) {
+  return a.hasMutableProtocol() && Mediator::annotate(a);
 }
 
 AOcallback 
@@ -576,6 +590,10 @@ ArrayMediator::ArrayMediator(TaggedRef e) : ConstMediator(GLUE_ARRAY) {
   setEntity(e);
 }
 
+bool ArrayMediator::annotate(Annotation a) {
+  return a.hasMutableProtocol() && Mediator::annotate(a);
+}
+
 AOcallback 
 ArrayMediator::callback(DssThreadId*, DssOperationId*,
 			PstInContainerInterface* pstin,
@@ -659,6 +677,10 @@ DictionaryMediator::DictionaryMediator(TaggedRef e) :
   setEntity(e);
 }
 
+bool DictionaryMediator::annotate(Annotation a) {
+  return a.hasMutableProtocol() && Mediator::annotate(a);
+}
+
 AOcallback 
 DictionaryMediator::callback(DssThreadId*, DssOperationId*,
 			     PstInContainerInterface* pstin,
@@ -733,6 +755,15 @@ ObjectMediator::ObjectMediator(TaggedRef e) : ConstMediator(GLUE_OBJECT) {
   setEntity(e);
 }
 
+bool ObjectMediator::annotate(Annotation a) {
+  if (a.hasImmutableProtocol()) {   // annotate the object
+    return Mediator::annotate(a);
+  } else {   // annotate its state instead
+    TaggedRef state = tagged2Object(entity)->getStateTerm();
+    return state && glue_getMediator(state)->annotate(a);
+  }
+}
+
 AOcallback
 ObjectMediator::callback_Read(DssThreadId*, DssOperationId*,
 			      PstInContainerInterface* operation,
@@ -794,6 +825,10 @@ ObjectStateMediator::ObjectStateMediator() : ConstMediator(GLUE_OBJECTSTATE) {}
 ObjectStateMediator::ObjectStateMediator(TaggedRef e) :
   ConstMediator(GLUE_OBJECTSTATE) {
   setEntity(e);
+}
+
+bool ObjectStateMediator::annotate(Annotation a) {
+  return a.hasMutableProtocol() && Mediator::annotate(a);
 }
 
 AOcallback 
@@ -859,6 +894,11 @@ OzThreadMediator::OzThreadMediator() : ConstMediator(GLUE_THREAD) {}
 
 OzThreadMediator::OzThreadMediator(TaggedRef e) : ConstMediator(GLUE_THREAD) {
   setEntity(e);
+}
+
+bool OzThreadMediator::annotate(Annotation a) {
+  // currently: no valid annotation
+  return a.pn == PN_NO_PROTOCOL && Mediator::annotate(a);
 }
 
 AOcallback
@@ -930,6 +970,10 @@ void OzVariableMediator::attach() {
   OzVariable* var = tagged2Var(*tagged2Ref(getEntity()));
   var->setMediator(this);
   attached = true;
+}
+
+bool OzVariableMediator::annotate(Annotation a) {
+  return a.hasTransientProtocol() && Mediator::annotate(a);
 }
 
 void OzVariableMediator::gCollectPrepare() {
@@ -1040,6 +1084,10 @@ UnusableMediator::UnusableMediator(TaggedRef e) : ConstMediator(GLUE_UNUSABLE) {
   setEntity(e);
 }
 
+bool UnusableMediator::annotate(Annotation a) {
+  return a.hasImmutableProtocol() && Mediator::annotate(a);
+}
+
 AOcallback
 UnusableMediator::callback_Read(DssThreadId*, DssOperationId*,
 				PstInContainerInterface*,
@@ -1053,6 +1101,10 @@ UnusableMediator::callback_Read(DssThreadId*, DssOperationId*,
 /************************* TokenMediator *************************/
 
 TokenMediator::TokenMediator(GlueTag type) : ConstMediator(type) {}
+
+bool TokenMediator::annotate(Annotation a) {
+  return a.hasImmutableProtocol() && Mediator::annotate(a);
+}
 
 PstOutContainerInterface* TokenMediator::retrieveEntityRepresentation() {
   // send the entity, but in the immediate mode
