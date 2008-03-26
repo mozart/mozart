@@ -216,6 +216,18 @@ Mediator::completeAnnotation() {
   }
 }
 
+bool Mediator::annotate(Annotation a) {
+  // check compatibility
+  if (a.pn && annotation.pn && a.pn != annotation.pn) return false;
+  if (a.aa && annotation.aa && a.aa != annotation.aa) return false;
+  if (a.rc && annotation.rc && a.rc != annotation.rc) return false;
+  // tell attributes (when present)
+  if (a.pn) annotation.pn = a.pn;
+  if (a.aa) annotation.aa = a.aa;
+  if (a.rc) annotation.rc = a.rc;
+  return true;
+}
+
 bool Mediator::isImmediate() {
   completeAnnotation();
   return annotation.pn == PN_IMMEDIATE;
