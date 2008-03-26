@@ -121,6 +121,43 @@ void gcGlueFinalImpl()
 
 /************************* Annotations *************************/
 
+bool Annotation::hasMutableProtocol() const {
+  switch (pn) {
+  case PN_NO_PROTOCOL:
+  case PN_SIMPLE_CHANNEL:
+  case PN_MIGRATORY_STATE:
+  case PN_PILGRIM_STATE:
+  case PN_EAGER_INVALID:
+    return true;
+  default:
+    return false;
+  }
+}
+
+bool Annotation::hasImmutableProtocol() const {
+  switch (pn) {
+  case PN_NO_PROTOCOL:
+  case PN_SIMPLE_CHANNEL:
+  case PN_IMMEDIATE:
+  case PN_IMMUTABLE_EAGER:
+  case PN_IMMUTABLE_LAZY:
+    return true;
+  default:
+    return false;
+  }
+}
+
+bool Annotation::hasTransientProtocol() const {
+  switch (pn) {
+  case PN_NO_PROTOCOL:
+  case PN_TRANSIENT:
+  case PN_TRANSIENT_REMOTE:
+    return true;
+  default:
+    return false;
+  }
+}
+
 // those macros make the parsing slighly more readable
 #define CHECKPROT(VAR,NAME,VALUE)				\
   if (strcmp(VAR, NAME) == 0) {					\
