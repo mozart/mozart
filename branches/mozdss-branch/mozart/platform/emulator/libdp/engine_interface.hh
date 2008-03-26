@@ -60,9 +60,6 @@ public:
   TaggedRef toTerm();
 };
 
-void setAnnotation(TaggedRef, Annotation);
-Annotation getAnnotation(TaggedRef);
-
 
 
 /* DP initialization */
