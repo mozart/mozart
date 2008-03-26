@@ -229,25 +229,6 @@ TaggedRef Annotation::toTerm() {
 }
 
 
-void setAnnotation(TaggedRef entity, Annotation a) {
-  // take the mediator of entity, and store annotation
-  entity = oz_safeDeref(entity);
-  if (oz_isObject(entity) && a.pn != PN_SIMPLE_CHANNEL) {
-    // set the annotation to the state
-    glue_getMediator(tagged2Object(entity)->getStateTerm())->setAnnotation(a);
-    // the protocol annotation was only valid for the state
-    a.pn = PN_NO_PROTOCOL;
-  }
-  glue_getMediator(entity)->setAnnotation(a);
-}
-
-Annotation getAnnotation(TaggedRef entity) {
-  // create a mediator if necessary
-  entity = oz_safeDeref(entity);
-  return glue_getMediator(entity)->getAnnotation();
-}
-
-
 
 /************************* Time stuff *************************/
 
