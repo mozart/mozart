@@ -182,6 +182,7 @@ public:
   Annotation getAnnotation() const { return annotation; }
   void setAnnotation(const Annotation& a) { annotation = a; }
   void completeAnnotation();
+  virtual bool annotate(Annotation);     // return true if successful
 
   // hook for the marshaler: complete the annotation if necessary, and
   // return true if the immediate protocol is used.

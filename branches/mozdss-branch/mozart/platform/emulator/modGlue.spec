@@ -86,17 +86,15 @@
                                   out => [],
                                   BI  => BIsetRPC},
 
-     # return the annotation (coordination, protocol, and gc
-     # parameters in DSS) of a given entity
+     # return the annotation of a given entity (as a list)
      'getAnnotation'         => { in  => ['value'],
-                                  out => ['+int','+int','+int'],
+                                  out => ['+list'],
                                   BI  => BIgetAnnotation},
 
-     # set the annotation (coordination, protocol, and gc parameters
-     # in DSS) of a given entity; the operation is a incremental tell
-     'setAnnotation'         => { in  => ['value','+int','+int','+int'],
+     # annotate an entity
+     'annotate'              => { in  => ['value','+list'],
                                   out => [],
-                                  BI  => BIsetAnnotation},
+				  BI  => BIannotate},
 
      # return the fault stream of an entity
      'getFaultStream'        => { in  => ['value'],

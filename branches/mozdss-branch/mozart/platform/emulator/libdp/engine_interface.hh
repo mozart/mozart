@@ -39,7 +39,8 @@
 
 /* Annotations */
 
-struct Annotation {
+class Annotation {
+public:
   ProtocolName       pn : PN_NBITS;
   AccessArchitecture aa : AA_NBITS;
   RCalg              rc : RC_ALG_NBITS;
@@ -50,6 +51,13 @@ struct Annotation {
   // constructor for a specific annotation
   Annotation(ProtocolName _pn, AccessArchitecture _aa, RCalg _rc) :
     pn(_pn), aa(_aa), rc(_rc) {}
+
+  // parse an Oz term representing an annotation; upon success, the
+  // attributes are set and the method returns PROCEED
+  OZ_Return parseTerm(TaggedRef);
+
+  // convert annotation to an Oz term
+  TaggedRef toTerm();
 };
 
 void setAnnotation(TaggedRef, Annotation);

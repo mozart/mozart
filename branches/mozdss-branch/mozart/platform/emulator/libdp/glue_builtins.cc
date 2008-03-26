@@ -528,88 +528,49 @@ OZ_BI_define(BIsetRPC,1,0) {
 
 /******************** Annotations and faults ********************/
 
-OZ_BI_define(BIsetAnnotation,4,0)
-{
-  // raph: For the sake of simplicity, the list of annotations is
-  // parsed by DPControl.annotate.  The latter calls this builtin with
-  // three integers (pn, aa, rc).  The builtin only checks the
-  // consistency of the annotation for the given entity.
-  oz_declareSafeDerefIN(0,entity);
-  oz_declareIntIN(1,pn);
-  oz_declareIntIN(2,aa);
-  oz_declareIntIN(3,rc);
+OZ_BI_define(BIannotate,2,0) {
+  oz_declareSafeDerefIN(0, entity);
+  oz_declareNonvarIN(1, list);
+  // check list
+  TaggedRef var;
+  if (!OZ_isList(list, &var)) {
+    if (var == 0) oz_typeError(1, "list");
+    oz_suspendOn(var);
+  }
+  // parse list
+  Annotation a;
+  OZ_Return ret = a.parseTerm(list);
+  if (ret != PROCEED) return ret;
 
-  if (oz_isOzSite(entity)) { // special case: sites
-    if (pn == PN_NO_PROTOCOL || pn == PN_IMMEDIATE) return PROCEED;
-    return oz_raise(E_SYSTEM, AtomDp, "incorrect protocol", 0);
+  // handle special case: sites
+  if (oz_isOzSite(entity)) {
+    if (a.pn == PN_NO_PROTOCOL || a.pn == PN_IMMEDIATE) return PROCEED;
+    return oz_raise(E_SYSTEM, AtomDp, "annotation", 2, entity, list);
   }
 
-  Annotation a = getAnnotation(entity);
-
-  // check incrementality and consistency
-  if (pn != PN_NO_PROTOCOL) {
-    if (a.pn != PN_NO_PROTOCOL && a.pn != pn) goto incremental_error;
-    // check protocol consistency (quite rough, not complete yet)
-    switch (pn) {
-    case PN_NO_PROTOCOL: break;
-    case PN_SIMPLE_CHANNEL:
-      if (!oz_isConst(entity)) goto protocol_error;
-      break;
-    case PN_MIGRATORY_STATE:
-    case PN_PILGRIM_STATE:
-    case PN_EAGER_INVALID:
-    case PN_LAZY_INVALID:
-      if (!oz_isConst(entity)) goto protocol_error;
-      break;
-    case PN_TRANSIENT:
-    case PN_TRANSIENT_REMOTE:
-      if (!oz_isVarOrRef(entity)) goto protocol_error;
-      break;
-    case PN_IMMEDIATE:
-    case PN_IMMUTABLE_LAZY:
-    case PN_IMMUTABLE_EAGER:
-      if (!oz_isConst(entity)) goto protocol_error;
-      break;
-    default:
-      goto protocol_error;
-    }
-    a.pn = static_cast<ProtocolName>(pn);
+  // get entity mediator, and annotate
+  Mediator* med = glue_getMediator(entity);
+  if (med) {
+    if (med->annotate(a)) return PROCEED;
+    return oz_raise(E_SYSTEM, AtomDp, "annotation", 2, entity, list);
   }
-  if (aa != AA_NO_ARCHITECTURE) {
-    if (a.aa != AA_NO_ARCHITECTURE && a.aa != aa) goto incremental_error;
-    a.aa = static_cast<AccessArchitecture>(aa);
-  }
-  if (rc != RC_ALG_NONE) {
-    if (a.rc != RC_ALG_NONE && a.rc != rc) goto incremental_error;
-    a.rc = static_cast<RCalg>(rc);
-  }
-
-  // set annotation
-  setAnnotation(entity, a);
-  return PROCEED;
-
- incremental_error:
-  return oz_raise(E_SYSTEM, AtomDp, "non-incremental annotation", 0);
-
- protocol_error:
-  return oz_raise(E_SYSTEM, AtomDp, "incorrect protocol", 0);
+  return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
 
 } OZ_BI_end
 
 
-OZ_BI_define(BIgetAnnotation,1,3)
-{
+OZ_BI_define(BIgetAnnotation,1,1) {
   oz_declareSafeDerefIN(0,entity);
+  Annotation a;
   if (oz_isOzSite(entity)) { // special case: sites
-    OZ_out(0) = oz_int(PN_IMMEDIATE);
-    OZ_out(1) = oz_int(AA_NO_ARCHITECTURE);
-    OZ_out(2) = oz_int(RC_ALG_NONE);
+    a = Annotation(PN_IMMEDIATE, AA_NO_ARCHITECTURE, RC_ALG_NONE);
+  } else {
+    Mediator* med = glue_getMediator(entity);
+    if (!med)
+      return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
+    a = med->getAnnotation();
   }
-  Annotation a = getAnnotation(entity);
-  OZ_out(0) = oz_int(a.pn);
-  OZ_out(1) = oz_int(a.aa);
-  OZ_out(2) = oz_int(a.rc);
-  return PROCEED;
+  OZ_RETURN(a.toTerm());
 } OZ_BI_end
 
 

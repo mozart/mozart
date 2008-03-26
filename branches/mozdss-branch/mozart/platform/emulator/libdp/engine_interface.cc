@@ -121,6 +121,114 @@ void gcGlueFinalImpl()
 
 /************************* Annotations *************************/
 
+// those macros make the parsing slighly more readable
+#define CHECKPROT(VAR,NAME,VALUE)				\
+  if (strcmp(VAR, NAME) == 0) {					\
+    if (pn != PN_NO_PROTOCOL && pn != VALUE) goto error;	\
+    pn = VALUE;							\
+    continue;							\
+  }
+#define CHECHARCH(VAR,NAME,VALUE)				\
+  if (strcmp(VAR, NAME) == 0) {					\
+    if (aa != AA_NO_ARCHITECTURE && aa != VALUE) goto error;	\
+    aa = VALUE;							\
+    continue;							\
+  }
+
+OZ_Return Annotation::parseTerm(TaggedRef term) {
+  Assert(OZ_isList(term, NULL));
+  // traverse the list and parse elements
+  TaggedRef list;
+  for (list = term; oz_isCons(list); list = oz_deref(oz_tail(list))) {
+    TaggedRef elem = oz_safeDeref(oz_head(list));
+    if (oz_isVarOrRef(elem)) oz_suspendOn(elem);
+    Assert(!oz_isVarOrRef(elem));
+    if (oz_isAtom(elem)) {
+      const char* name = tagged2Literal(elem)->getPrintName();
+      // check for consistency protocols
+      CHECKPROT(name, "stationary", PN_SIMPLE_CHANNEL);
+      CHECKPROT(name, "migratory", PN_MIGRATORY_STATE);
+      CHECKPROT(name, "pilgrim", PN_PILGRIM_STATE);
+      CHECKPROT(name, "replicated", PN_EAGER_INVALID);
+      CHECKPROT(name, "variable", PN_TRANSIENT);
+      CHECKPROT(name, "reply", PN_TRANSIENT_REMOTE);
+      CHECKPROT(name, "immediate", PN_IMMEDIATE);
+      CHECKPROT(name, "eager", PN_IMMUTABLE_EAGER);
+      CHECKPROT(name, "lazy", PN_IMMUTABLE_LAZY);
+      // check for gc protocols
+      if (strcmp(name, "persistent") == 0) {
+	if (rc & ~RC_ALG_PERSIST) goto error;
+	rc = RC_ALG_PERSIST;
+	continue;
+      }
+      if (strcmp(name, "refcount") == 0) {
+	if (rc & RC_ALG_PERSIST) goto error;
+	rc = static_cast<RCalg>(rc | RC_ALG_WRC);
+	continue;
+      }
+      if (strcmp(name, "lease") == 0) {
+	if (rc & RC_ALG_PERSIST) goto error;
+	rc = static_cast<RCalg>(rc | RC_ALG_TL);
+	continue;
+      }
+    } else if (oz_isTuple(elem)) {
+      SRecord* rec = tagged2SRecord(elem);
+      const char* label = tagged2Literal(rec->getLabel())->getPrintName();
+      if (strcmp(label, "access") == 0 && rec->getWidth() == 1) {
+	TaggedRef arg = oz_safeDeref(rec->getArg(0));
+	if (oz_isVarOrRef(arg)) oz_suspendOn(arg);
+	Assert(!oz_isVarOrRef(arg));
+	if (oz_isAtom(arg)) {
+	  const char* name = tagged2Literal(arg)->getPrintName();
+	  CHECHARCH(name, "stationary", AA_STATIONARY_MANAGER);
+	  CHECHARCH(name, "migratory", AA_MIGRATORY_MANAGER);
+	}
+      }
+    }
+    // element cannot be parsed
+    goto error;
+  }
+  Assert(oz_isNil(list));
+  return PROCEED;
+
+ error:
+  return oz_raise(E_SYSTEM, AtomDp, "annotation", 1, term);
+}
+
+
+TaggedRef Annotation::toTerm() {
+  TaggedRef list = oz_nil();
+  if (rc) {   // push DGC annotation
+    if (rc & RC_ALG_PERSIST) list = oz_cons(oz_atom("persistent"), list);
+    if (rc & RC_ALG_TL)      list = oz_cons(oz_atom("lease"), list);
+    if (rc & RC_ALG_WRC)     list = oz_cons(oz_atom("refcount"), list);
+  }
+  switch (aa) {   // push access architecture annotation
+  case AA_STATIONARY_MANAGER:
+    list = oz_cons(OZ_mkTupleC("access", 1, oz_atom("stationary")), list);
+    break;
+  case AA_MIGRATORY_MANAGER:
+    list = oz_cons(OZ_mkTupleC("access", 1, oz_atom("migratory")), list);
+    break;
+  default:
+    break;
+  }
+  switch (pn) {   // push protocol annotation
+  case PN_SIMPLE_CHANNEL:   list = oz_cons(oz_atom("stationary"), list); break;
+  case PN_MIGRATORY_STATE:  list = oz_cons(oz_atom("migratory"), list); break;
+  case PN_PILGRIM_STATE:    list = oz_cons(oz_atom("pilgrim"), list); break;
+  case PN_EAGER_INVALID:    list = oz_cons(oz_atom("replicated"), list); break;
+  case PN_TRANSIENT:        list = oz_cons(oz_atom("variable"), list); break;
+  case PN_TRANSIENT_REMOTE: list = oz_cons(oz_atom("reply"), list); break;
+  case PN_IMMEDIATE:        list = oz_cons(oz_atom("immediate"), list); break;
+  case PN_IMMUTABLE_EAGER:  list = oz_cons(oz_atom("eager"), list); break;
+  case PN_IMMUTABLE_LAZY:   list = oz_cons(oz_atom("lazy"), list); break;
+  default: break;
+  }
+  return list;
+}
+
+
 void setAnnotation(TaggedRef entity, Annotation a) {
   // take the mediator of entity, and store annotation
   entity = oz_safeDeref(entity);
