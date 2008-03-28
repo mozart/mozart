@@ -958,11 +958,15 @@ OzVariableMediator::OzVariableMediator(TaggedRef e) :
   TaggedRef v = *tagged2Ref(e);
   setEntity(e);
   attach();
-  if (!oz_isFree(v) && !oz_isReadOnly(v)) {
-    // the variable is neither free nor read-only; see comment above
-    TaggedRef r = oz_readOnlyView(e);
-    OzVariable* rv = tagged2Var(*tagged2Ref(r));
-    rv->setMediator(this);
+  if (!oz_isFree(v)) {
+    // only free vars can use protocol PN_TRANSIENT_REMOTE
+    annotation.pn = PN_TRANSIENT;
+    if (!oz_isReadOnly(v)) {
+      // the variable is neither free nor read-only; see comment above
+      TaggedRef r = oz_readOnlyView(e);
+      OzVariable* rv = tagged2Var(*tagged2Ref(r));
+      rv->setMediator(this);
+    }
   }
 }
 
