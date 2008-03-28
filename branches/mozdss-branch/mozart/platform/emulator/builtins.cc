@@ -3241,7 +3241,7 @@ OZ_BI_define(BInewPort,0,2)
   return PROCEED;
 } OZ_BI_end
 
-//#define FAST_DOPORTSEND
+#define FAST_DOPORTSEND
 
 #ifdef FAST_DOPORTSEND
 void doPortSend(OzPort *port, TaggedRef val, Board * home) {
@@ -3314,8 +3314,8 @@ void doPortSend(OzPort *port, TaggedRef val, Board * home) {
 extern 
 OZ_Return (*OZ_checkSituatedness)(Board *,TaggedRef *);
 
-
-OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val)
+// the parameter 'var' below is used by BIsendRecvPort (defaults to 0)
+OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val, OZ_Term var)
 {
   Assert(oz_isPort(prt));
 
@@ -3338,7 +3338,7 @@ OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val)
       oz_newThreadInject(prt_home)->pushCall(BI_send,RefsArray::make(prt,val));
       return PROCEED;
     } else {
-      return (*distPortSend)(port, val);
+      return distPortSend(port, val, var);
     }
   } 
   doPortSend(port, val, sc_required ? prt_home : (Board *) NULL);
@@ -3368,11 +3368,9 @@ OZ_BI_define(BIsendRecvPort,2,1)
 
   TaggedRef rv = 
     oz_newVariable(tagged2Port(prt)->getBoardInternal()->derefBoard());
-
   TaggedRef ms = oz_pair2(val,rv);
 
-  OZ_Return s = oz_sendPort(prt,ms);
-
+  OZ_Return s = oz_sendPort(prt, ms, rv);
   if (s != PROCEED)
     return s;
 

@@ -40,7 +40,7 @@ Bool dpReadyStub() {
 }
 
 // ports
-OZ_Return distPortSendStub(OzPort *p, TaggedRef msg) {
+OZ_Return distPortSendStub(OzPort *p, TaggedRef msg, TaggedRef) {
   OZD_error("'distPortSend' called without DP library?");
   return PROCEED;
 }
@@ -153,7 +153,7 @@ Bool distHandlerDeInstallStub(unsigned short x,unsigned short y,
 Bool (*dpReady)() = dpReadyStub;
 
 // ports
-OZ_Return (*distPortSend)(OzPort*, TaggedRef)
+OZ_Return (*distPortSend)(OzPort*, TaggedRef, TaggedRef)
   = distPortSendStub;
 
 // cells

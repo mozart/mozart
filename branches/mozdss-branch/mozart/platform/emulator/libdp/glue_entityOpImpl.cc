@@ -43,12 +43,17 @@
 
 /******************************* Ports ********************************/
 
-OZ_Return distPortSendImpl(OzPort *p, TaggedRef msg) {
+OZ_Return distPortSendImpl(OzPort *p, TaggedRef msg, TaggedRef var) {
   Assert(p->isDistributed());
   PortMediator *me = static_cast<PortMediator*>(p->getMediator());
 
   // A port never blocks.  In case of permanent failure, just skip.
   if (me->getFaultState() > GLUE_FAULT_TEMP) return PROCEED;
+
+  if (var) {   // var should be annotated as a reply variable
+    Annotation a(PN_TRANSIENT_REMOTE, AA_NO_ARCHITECTURE, RC_ALG_NONE);
+    glue_getMediator(var)->annotate(a);
+  }
 
   PstOutContainerInterface** pstout;
   OpRetVal cont = me->abstractOperation_Write(pstout);

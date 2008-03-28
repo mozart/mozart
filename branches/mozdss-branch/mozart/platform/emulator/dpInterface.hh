@@ -57,7 +57,7 @@ extern Bool (*dpReady)();
 //  - the operation suspended, typically because of a fault (SUSPEND)
 
 // ports
-extern OZ_Return (*distPortSend)(OzPort*, TaggedRef);
+extern OZ_Return (*distPortSend)(OzPort*, TaggedRef, TaggedRef);
 
 // cells
 extern OZ_Return (*distCellOp)(OperationTag, OzCell*, TaggedRef*, TaggedRef*);
