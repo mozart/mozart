@@ -513,7 +513,7 @@ void oz_gCollectTerm(TaggedRef & f, TaggedRef & t) {
 }
 
 // builtins.cc
-OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val);
+OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val, OZ_Term var = 0);
 
 // var_simple.cc, readonly.cc
 OZ_Term oz_newSimpleVar(Board *bb);
