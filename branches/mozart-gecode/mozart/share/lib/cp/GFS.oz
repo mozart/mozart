@@ -43,13 +43,20 @@ import
 
 prepare
    %%This record must reflect the SetRelType in gecode/set.hh
-   Rt = '#'('=:':0    %Equality
-	    '\\=:':1  %Disequality
-	    '<:':2    %SubSet
-	    '>:':3    %SuperSet
-	    '||:':4   %Disjoint
-	    '^:':5    %complement
+    Rt = '#'('=:'    :0    %Equality
+	          '\\=:'  :1    %Disequality
+	          '<:'    :2    %SubSet
+	          '>:'    :3    %SuperSet
+	          '||:'   :4    %Disjoint
+	          '^:'    :5    %complement
 	   )
+     
+   %%This record must reflect the SetOpType in gecode/set.hh
+   SOP = '#'(unionOP       :0    % Union.
+            disjointOP    :1    % Disjoint union.
+            intersectOP   :2    % Intersection
+            differenceOP  :3    % Difference.
+     )
 
 export
    %% Telling domains
@@ -92,6 +99,12 @@ export
    selectDisjoint: SelectDisjoint
    selectSet: SelectSet
    %rel: Rel
+   
+   %% Set relation types
+   rt:    Rt
+
+   %% Set operations
+   so:    SOP
    
 define
    %FsDecl = GFS.set

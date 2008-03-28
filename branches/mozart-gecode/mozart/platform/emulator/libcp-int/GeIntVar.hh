@@ -6,7 +6,7 @@
  *     Alejandro Arbelaez <aarbelaez@cic.puj.edu.co>
  *
  *  Contributing authors:
- *		Andres Felipe Barco <anfelbar@univalle.edu.co>
+ *     Andres Felipe Barco <anfelbar@univalle.edu.co>
  *  Copyright:
  *    Alberto Delgado, 2006-2007
  *    Alejandro Arbelaez, 2006-2007
@@ -68,7 +68,7 @@ public:
   
   /**
      \brief Put in out a text representation of the variable.
-   */
+  */
   void toStream(ostream &out);
 
   GeVarType type() { return getType(); }
@@ -177,7 +177,7 @@ inline OZ_Term new_GeIntVarCompl(const IntSet& dom) {
 /**
    \brief Checks if the OZ_Term v represents a integer constraint
    variable in the store.
- */
+*/
 inline 
 bool OZ_isGeIntVar(OZ_Term v) { 
   if (OZ_isInt(v)) {
@@ -209,7 +209,7 @@ GeIntVar* get_GeIntVar(OZ_Term v, bool cgv = true) {
    space unstable.
 */
 inline IntVar& get_IntVar(OZ_Term v) {
-    return get_GeIntVar(v)->getIntVar();
+  return get_GeIntVar(v)->getIntVar();
 }
 
 /**
@@ -229,28 +229,50 @@ inline IntVar& get_IntVarInfo(OZ_Term v) {
 inline
 bool OZ_isIntConLevel(OZ_Term t) {
   if(OZ_isInt(t)){
-	  int icl = OZ_intToC(t);
-	  return icl == 0 || icl == 1 || icl == 2 || icl == 3 ? true : false;
+    int icl = OZ_intToC(t);
+    return icl == ICL_VAL 
+      || icl == ICL_BND 
+      || icl == ICL_DOM 
+      || icl == ICL_DEF ? true : false;
   }
   return false; 
 }
 
 /**
-		\brief Checks if the term is a propKind
+   \brief Checks if the term is a propKind
 */
 
 inline
 bool OZ_isPropKind(OZ_Term t) {
   if(OZ_isInt(t)){
-	  int pk = OZ_intToC(t);
-	  return pk == 0 || pk == 1 || pk == 2 ? true : false;
+    int pk = OZ_intToC(t);
+    return pk == PK_DEF 
+      || pk == PK_SPEED 
+      || pk == PK_MEMORY ? true : false;
   }
   return false; 
 }
 
 /**
-	\brief Iterates over a mozart vector (list, tuple or record) \a t and
-	test if every element satisfies \a checkOne.
+   \brief Checks if the term is a IntRelType.
+*/
+inline
+bool OZ_isIntRelType(OZ_Term t){
+  if(OZ_isInt(t)){
+    int v = OZ_intToC(t);
+    return v == IRT_EQ 
+      || v == IRT_NQ 
+      || v == IRT_LQ 
+      || v == IRT_LE 
+      || v == IRT_GQ 
+      || v == IRT_GR ? true : false;
+  }
+  return false; 
+}
+
+/**
+   \brief Iterates over a mozart vector (list, tuple or record) \a t and
+   test if every element satisfies \a checkOne.
 */
 inline
 bool checkAll(OZ_Term t, bool (*checkOne)(OZ_Term)) {
@@ -268,7 +290,7 @@ bool checkAll(OZ_Term t, bool (*checkOne)(OZ_Term)) {
       OZ_Term _tmp = OZ_getArg(t,i);
       if (!checkOne(_tmp))
       	return false;
-  	}
+    }
     return true;
   }
   else if(OZ_isRecord(t)){
@@ -280,8 +302,8 @@ bool checkAll(OZ_Term t, bool (*checkOne)(OZ_Term)) {
       	return false;
     return true;
     
-   }
-    return false;
+  }
+  return false;
 }
 
 
@@ -302,7 +324,7 @@ bool checkSome(OZ_Term t, bool (*checkOne)(OZ_Term)) {
       OZ_Term _tmp = OZ_getArg(t,i);
       if (checkOne(_tmp))
       	return true;
-  	}
+    }
     return false;
   }
   else if(OZ_isRecord(t)){
@@ -323,29 +345,17 @@ bool checkSome(OZ_Term t, bool (*checkOne)(OZ_Term)) {
 */
 inline
 bool OZ_isIntVarArgs(OZ_Term t) {
-	return checkSome(t, &OZ_isGeIntVar); 
+  return checkSome(t, &OZ_isGeIntVar); 
 }
 
 /**
-		\brief Checks if the term is a SetVarArgs.
+   \brief Checks if the term is a SetVarArgs.
 */
 inline
 bool OZ_isSetVarArgs(OZ_Term t) {
-	return checkAll(t,&OZ_isGeSetVar);
+  return checkAll(t,&OZ_isGeSetVar);
 }
 
-
-/**
-		\brief Checks if the term is a IntRelType.
-*/
-inline
-bool OZ_isIntRelType(OZ_Term t){
-  if(OZ_isInt(t)){
-	  int v = OZ_intToC(t);
-	  return v == 0 | v == 1 || v == 2 || v == 3 || v == 4 || v == 5 ? true : false;
-  }
-  return false; 
-}
 
 // this function is needed to cast int to bool.
 inline
@@ -356,58 +366,58 @@ bool IsInt(OZ_Term t) { return OZ_isInt(t);}
 */
 inline
 bool OZ_isIntArgs(OZ_Term t) {
-	// TODO: Why the old definition requiered to test for a literal??
-	return checkAll(t, &IsInt); 
+  // TODO: Why the old definition requiered to test for a literal??
+  return checkAll(t, &IsInt); 
 }
 /*
-inline
-bool OZ_isIntArgs(OZ_Term t){
+  inline
+  bool OZ_isIntArgs(OZ_Term t){
   if(OZ_isLiteral(t)) {
-    OZ_Term d = OZ_deref(t);
-    if(OZ_isInt(d)) return true;
-    else return false;
+  OZ_Term d = OZ_deref(t);
+  if(OZ_isInt(d)) return true;
+  else return false;
   }
   else if(OZ_isCons(t)) {
-    for(int i=0; OZ_isCons(t); t=OZ_tail(t))
-    {
-    	OZ_Term d = OZ_head(t);
-    	if(!OZ_isInt(d)) return false;
-    }
-    return true;
+  for(int i=0; OZ_isCons(t); t=OZ_tail(t))
+  {
+  OZ_Term d = OZ_head(t);
+  if(!OZ_isInt(d)) return false;
+  }
+  return true;
   }
   else if(OZ_isTuple(t)) {
-    int sz=OZ_width(t);
-    for(int i=0; i < sz; i++) {
-      OZ_Term tmp = OZ_getArg(t,i);
-      if(!OZ_isInt(tmp)) return false;
-    }
-    return true;
+  int sz=OZ_width(t);
+  for(int i=0; i < sz; i++) {
+  OZ_Term tmp = OZ_getArg(t,i);
+  if(!OZ_isInt(tmp)) return false;
+  }
+  return true;
   }
   else if(OZ_isRecord(t)){
-    OZ_Term al = OZ_arityList(t);
-    for(int i = 0; OZ_isCons(al); al=OZ_tail(al)){
-    	if(!OZ_isInt(OZ_subtree(t,OZ_head(al)))) return false;
-		}
-		return true;
+  OZ_Term al = OZ_arityList(t);
+  for(int i = 0; OZ_isCons(al); al=OZ_tail(al)){
+  if(!OZ_isInt(OZ_subtree(t,OZ_head(al)))) return false;
   }
-	return false;
-}
+  return true;
+  }
+  return false;
+  }
 */
 /**
-		\brief Checks if the term is a TupleSet.
+   \brief Checks if the term is a TupleSet.
 */
 inline
 bool OZ_isTupleSet(OZ_Term v){
-	if(OZ_isCons(v)){
-		for (int i = 0; OZ_isCons(v); v=OZ_tail(v), i++) {
-			OZ_Term _val = OZ_head(v);
-    	if (!OZ_isIntArgs(_val)) {
-    		return false;
-    	}				
-		}
-		return true;
-	}
+  if(OZ_isCons(v)){
+    for (int i = 0; OZ_isCons(v); v=OZ_tail(v), i++) {
+      OZ_Term _val = OZ_head(v);
+      if (!OZ_isIntArgs(_val)) {
 	return false;
+      }				
+    }
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -434,7 +444,7 @@ bool OZ_isDFA(OZ_Term _t){
     for(int i=0; OZ_isCons(_tl); _tl=OZ_tail(_tl)) {
       if(!OZ_isTransitionS(OZ_head(_tl))) return false;
     }
-  	return true;
+    return true;
   }
   return false;
 }
@@ -445,19 +455,21 @@ bool OZ_isDFA(OZ_Term _t){
 */
 inline
 bool isBoolVarArg(OZ_Term t) {
- if (OZ_isGeBoolVar(t))
-   return true;
- else
-   if (OZ_isInt(t)) {
-     int b = OZ_intToC(t);
-     return (b==1 || b==0) ? true : false;
-   } else
-     return false;
+  if (OZ_isGeBoolVar(t))
+    return true;
+  else
+    if (OZ_isInt(t)) {
+      int b = OZ_intToC(t);
+      return (b==1 || b==0) ? true : false;
+    } else
+      return false;
 }
 
 inline
 bool OZ_isBoolVarArgs(OZ_Term t) {
-       return checkSome(t, &isBoolVarArg);
+  //return checkSome(t, &isBoolVarArg);
+  //we don't want to have an array with boolvars and intvars or viceversa.
+  return checkAll(t, &isBoolVarArg);
 }
 
 /**
