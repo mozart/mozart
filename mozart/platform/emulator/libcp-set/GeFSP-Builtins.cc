@@ -69,7 +69,7 @@ OZ_BI_define(gfs_projector_4,4,0){
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
   CHECK_POST(home);
 }OZ_BI_end
@@ -124,7 +124,7 @@ OZ_BI_define(gfs_projector_5,5,0){
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
   CHECK_POST(home);
 }OZ_BI_end
@@ -139,7 +139,7 @@ OZ_BI_define(gfs_dom_3,3,0){
   DeclareGeSetVar(0, __s, home);
   DeclareSetRelType(1, __r);
 
-  bool posted = false;
+
 
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
      OZ_isInt(OZ_in(2))){
@@ -150,7 +150,7 @@ OZ_BI_define(gfs_dom_3,3,0){
     DeclareInt2(2, __i);
     try{
       Gecode::dom(home, __s, __r, __i);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -165,16 +165,16 @@ OZ_BI_define(gfs_dom_3,3,0){
     DECLARE_INT_SET(2, __is);
     try{
       Gecode::dom(home, __s, __r, __is);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
 
@@ -184,7 +184,7 @@ OZ_BI_define(gfs_dom_4,4,0){
   DeclareGeSetVar(0, __s, home);
   DeclareSetRelType(1, __r);
   
-  bool posted = false;
+
   
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
      OZ_isInt(OZ_in(2)) && OZ_isInt(OZ_in(3))){
@@ -196,7 +196,7 @@ OZ_BI_define(gfs_dom_4,4,0){
     DeclareInt2(3, __j);
     try{
       Gecode::dom(home, __s, __r, __i, __j);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -212,7 +212,7 @@ OZ_BI_define(gfs_dom_4,4,0){
     DeclareGeBoolVar(3, __b, home);
     try{
       Gecode::dom(home, __s, __r, __i, __b);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -229,16 +229,16 @@ OZ_BI_define(gfs_dom_4,4,0){
     DeclareGeBoolVar(3, __b, home);
     try{
       Gecode::dom(home, __s, __r, __is, __b);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
 
@@ -251,7 +251,7 @@ OZ_BI_define(gfs_dom_5,5,0){
   DeclareInt2(3, __j);
   DeclareGeBoolVar(4, __b, home);
 
-  bool posted = false;
+
 
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
      OZ_isInt(OZ_in(2)) && OZ_isInt(OZ_in(3)) && OZ_isGeBoolVar(OZ_in(4))){
@@ -262,13 +262,13 @@ OZ_BI_define(gfs_dom_5,5,0){
     */
     try{
       Gecode::dom(home, __x, __r, __i, __j, __b);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
 
@@ -279,7 +279,7 @@ OZ_BI_define(gfs_dom_5,5,0){
 OZ_BI_define(gfs_rel_3,3,0){
   DeclareGSpace(home);
   
-  bool posted = false;
+
 
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2))){
@@ -289,7 +289,7 @@ OZ_BI_define(gfs_rel_3,3,0){
 
     try{
       Gecode::rel(home, __x, __r, __y);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -302,7 +302,7 @@ OZ_BI_define(gfs_rel_3,3,0){
     DeclareGeIntVar(2, __x, home);
     try{
       Gecode::rel(home, __s, __r, __x);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -315,7 +315,7 @@ OZ_BI_define(gfs_rel_3,3,0){
     DeclareGeSetVar(2, __s, home);
     try{
       Gecode::rel(home, __x, __r, __s);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -328,7 +328,7 @@ OZ_BI_define(gfs_rel_3,3,0){
     DeclareGeIntVar(2, __x, home);
     try{
       Gecode::rel(home, __s, __r, __x);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -341,7 +341,7 @@ OZ_BI_define(gfs_rel_3,3,0){
     DeclareGeSetVar(2, __s, home);
     try{
       Gecode::rel(home, __x, __r, __s);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -354,7 +354,7 @@ OZ_BI_define(gfs_rel_3,3,0){
     DeclareGeSetVar(2, __y, home);
     try{
       Gecode::rel(home, __op, __x, __y);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -367,23 +367,23 @@ OZ_BI_define(gfs_rel_3,3,0){
     DeclareGeSetVar(2, __y, home);
     try{
       Gecode::rel(home, __op, __x, __y);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
 
 OZ_BI_define(gfs_rel_4,4,0){
   DeclareGSpace(home);
   
-  bool posted = false;
+
 
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3))){
@@ -393,7 +393,7 @@ OZ_BI_define(gfs_rel_4,4,0){
     DeclareGeBoolVar(3, __b, home);
     try{
       Gecode::rel(home, __x, __r, __y, __b);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -407,7 +407,7 @@ OZ_BI_define(gfs_rel_4,4,0){
     DeclareGeBoolVar(3, __b, home);
     try{
       Gecode::rel(home, __s, __r, __x, __b);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -421,7 +421,7 @@ OZ_BI_define(gfs_rel_4,4,0){
     DeclareGeBoolVar(3, __b, home);
     try{
       Gecode::rel(home, __x, __r, __s, __b);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -435,7 +435,7 @@ OZ_BI_define(gfs_rel_4,4,0){
     DeclareGeSetVar(3, __y, home);
     try{
       Gecode::rel(home, __op, __x, __z, __y);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -449,16 +449,16 @@ OZ_BI_define(gfs_rel_4,4,0){
     DeclareGeSetVar(3, __y, home);
     try{
       Gecode::rel(home, __op, __x, __z, __y);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
  
@@ -467,7 +467,7 @@ OZ_BI_define(gfs_rel_5,5,0){
   DeclareSetOpType(1, __op);
   DeclareSetRelType(3, __r);
   
-  bool posted = false;
+
 
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetOpType(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2)) && OZ_isSetRelType(OZ_in(3)) && 
@@ -477,7 +477,7 @@ OZ_BI_define(gfs_rel_5,5,0){
     DeclareGeSetVar(4, __z, home);
     try{
       Gecode::rel(home, __x, __op, __y, __r, __z);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -491,7 +491,7 @@ OZ_BI_define(gfs_rel_5,5,0){
     DeclareGeSetVar(4, __z, home);
     try{
       Gecode::rel(home, __x, __op, __y, __r, __z);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -505,7 +505,7 @@ OZ_BI_define(gfs_rel_5,5,0){
     DeclareGeSetVar(4, __z, home);
     try{
       Gecode::rel(home, __x, __op, __y, __r, __z);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -519,7 +519,7 @@ OZ_BI_define(gfs_rel_5,5,0){
     DECLARE_INT_SET(4, __z);
     try{
       Gecode::rel(home, __x, __op, __y, __r, __z);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -533,7 +533,7 @@ OZ_BI_define(gfs_rel_5,5,0){
     DECLARE_INT_SET(4, __z);
     try{
       Gecode::rel(home, __x, __op, __y, __r, __z);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -547,16 +547,16 @@ OZ_BI_define(gfs_rel_5,5,0){
     DECLARE_INT_SET(4, __z);
     try{
       Gecode::rel(home, __x, __op, __y, __r, __z);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
  
@@ -595,7 +595,7 @@ OZ_BI_define(gfs_rel_5,5,0){
 OZ_BI_define(gfs_sequence_1,1,0){
   DeclareGSpace(home);
   
-  bool posted = false;
+
   
   if(OZ_isSetVarArgs(OZ_in(0))){
     /*
@@ -605,23 +605,23 @@ OZ_BI_define(gfs_sequence_1,1,0){
     DECLARE_SETVARARGS(0, __x, home);
     try{
       Gecode::sequence(home, __x);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
 
 OZ_BI_define(gfs_sequentialUnion_2,2,0){
   DeclareGSpace(home);
   
-  bool posted = false;
+
   
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1))){
     /*
@@ -633,16 +633,16 @@ OZ_BI_define(gfs_sequentialUnion_2,2,0){
     DeclareGeSetVar(1, __x, home);
     try{
       Gecode::sequentialUnion(home, __y, __x);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
 
@@ -653,7 +653,7 @@ OZ_BI_define(gfs_sequentialUnion_2,2,0){
 OZ_BI_define(atmostOne_2,2,0){
   DeclareGSpace(home);
   
-  bool posted = false;
+
   
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1))){
     /*
@@ -667,13 +667,13 @@ OZ_BI_define(atmostOne_2,2,0){
 
     try{
       Gecode::atmostOne(home, __x, __c);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
 
@@ -684,7 +684,7 @@ OZ_BI_define(atmostOne_2,2,0){
 OZ_BI_define(gfs_min_2,2,0){
   DeclareGSpace(home);
 
-  bool posted = false;
+
 
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1))){
     /*
@@ -697,23 +697,23 @@ OZ_BI_define(gfs_min_2,2,0){
     
     try{
       Gecode::min(home, __s, __x);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
 
 OZ_BI_define(gfs_match_2,2,0){
   DeclareGSpace(home);
   
-  bool posted = false;
+
   
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1))){
     /*
@@ -726,23 +726,23 @@ OZ_BI_define(gfs_match_2,2,0){
 
     try{
       Gecode::match(home, __s, __x);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
 
 OZ_BI_define(gfs_channel_2,2,0){
   DeclareGSpace(home);
 
-  bool posted = false;
+
 
   if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isSetVarArgs(OZ_in(1))){
     /*
@@ -754,7 +754,7 @@ OZ_BI_define(gfs_channel_2,2,0){
     DECLARE_SETVARARGS(1, __y, home);
     try{
       Gecode::channel(home, __x, __y);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -769,23 +769,23 @@ OZ_BI_define(gfs_channel_2,2,0){
     DeclareGeSetVar(1, __y, home);
     try{
       Gecode::channel(home, __x, __y);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
 
 OZ_BI_define(gfs_cardinality_2,2,0){
   DeclareGSpace(home);
   
-  bool posted = false;
+
   
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1))){
     /*
@@ -796,23 +796,23 @@ OZ_BI_define(gfs_cardinality_2,2,0){
     DeclareGeIntVar(1, __x, home);
     try{
       Gecode::cardinality(home, __s, __x);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
 
 OZ_BI_define(gfs_max_2,2,0){
   DeclareGSpace(home);
 
-  bool posted = false;
+
 
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1))){
     /*
@@ -824,23 +824,23 @@ OZ_BI_define(gfs_max_2,2,0){
     DeclareGeIntVar(1, __x, home);
     try{
       Gecode::max(home, __s, __x);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
 
 // OZ_BI_define(gfs_weights_4,4,0){
 //   DeclareGSpace(home);
 
-//   bool posted = false;
+// 
 
 //   if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) &&
 //      OZ_isGeSetVar(OZ_in(2)) && OZ_isGeIntVar(OZ_in(3))){
@@ -856,16 +856,16 @@ OZ_BI_define(gfs_max_2,2,0){
     
 //     try{
 //       Gecode::weights(home, __elements, __weights, __x, __y);
-//       posted = true;
+// 
 //     }
 //     catch(Exception e){
 //       RAISE_GE_EXCEPTION(e);
 //     }
 //   }
 //   else{
-//     OZ_typeError(0, "Malformed Propagator");
+//     return OZ_typeError(0, "Malformed Propagator");
 //   }
-//   Assert(posted);
+// 
 //   CHECK_POST(home);
 // }OZ_BI_end
 
@@ -875,7 +875,7 @@ OZ_BI_define(gfs_max_2,2,0){
 OZ_BI_define(gfs_selectUnion_3,3,0){
   DeclareGSpace(home);
   
-  bool posted = false;
+
   
   DeclareGeSetVar(1, __y, home);
   DeclareGeSetVar(2, __z, home);
@@ -889,7 +889,7 @@ OZ_BI_define(gfs_selectUnion_3,3,0){
     DECLARE_SETVARARGS(0, __x, home);
     try{
       Gecode::selectUnion(home, __x, __y, __z);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -905,23 +905,23 @@ OZ_BI_define(gfs_selectUnion_3,3,0){
     DECLARE_INT_SET_ARGS(0, __s);
     try{
       Gecode::selectUnion(home, __s, __y, __z);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
 
 OZ_BI_define(gfs_selectInterIn_4,4,0){
   DeclareGSpace(home);
 
-  bool posted = false;
+
 
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2)) && OZ_isIntSet(OZ_in(3))){ 
@@ -939,23 +939,23 @@ OZ_BI_define(gfs_selectInterIn_4,4,0){
     
     try{
       Gecode::selectInterIn(home, __x, __y, __z, __u);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
 
 OZ_BI_define(gfs_selectSet_3,3,0){
   DeclareGSpace(home);
   
-  bool posted = false;
+
 
   DeclareGeIntVar(1, __y, home);
   DeclareGeSetVar(2, __z, home);
@@ -971,7 +971,7 @@ OZ_BI_define(gfs_selectSet_3,3,0){
     DECLARE_SETVARARGS(0, __x, home);
     try{
       Gecode::selectSet(home, __x, __y, __z);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -988,23 +988,23 @@ OZ_BI_define(gfs_selectSet_3,3,0){
     DECLARE_INT_SET_ARGS(0, __s);
     try{
       Gecode::selectSet(home, __s, __y, __z);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
 
 OZ_BI_define(gfs_selectInter_3,3,0){
   DeclareGSpace(home);
   
-  bool posted = false;
+
   
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2))){
@@ -1022,23 +1022,23 @@ OZ_BI_define(gfs_selectInter_3,3,0){
     
     try{
       Gecode::selectInter(home, __x, __y, __z);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
 
 OZ_BI_define(gfs_selectDisjoint_2,2,0){
   DeclareGSpace(home);
 
-  bool posted = false;
+
 
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1))){
     /*
@@ -1051,16 +1051,16 @@ OZ_BI_define(gfs_selectDisjoint_2,2,0){
 
     try{
       Gecode::selectDisjoint(home, __x, __y);
-      posted = true;
+
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else{
-    OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator");
   }
-  Assert(posted);
+
   CHECK_POST(home);
 }OZ_BI_end
 

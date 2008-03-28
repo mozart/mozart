@@ -319,7 +319,12 @@ inline OZ_Term isIn_GeSetVar(OZ_Term V1, int val, OZ_Term VBool)
 inline
 bool OZ_isSetRelType(OZ_Term t){
 	int v = OZ_intToC(t);
-	return v == 0 || v == 1 || v == 2 || v == 3 || v == 4 || v == 5 ? true : false;
+	return v == SRT_EQ 
+      || v == SRT_NQ
+      || v == SRT_SUB
+      || v == SRT_SUP 
+      || v == SRT_DISJ
+      || v == SRT_CMPL ? true : false;
 }
 
 /**
@@ -328,7 +333,10 @@ bool OZ_isSetRelType(OZ_Term t){
 inline
 bool OZ_isSetOpType(OZ_Term t){
 	int v = OZ_intToC(t);
-	return v == 0 || v == 1 || v == 2 || v == 3 || v == 4 ? true : false;
+	return v == SOT_UNION 
+      || v == SOT_DUNION
+      || v == SOT_INTER
+      || v == SOT_MINUS ? true : false;
 }
 
 void gesvp_init(void);
