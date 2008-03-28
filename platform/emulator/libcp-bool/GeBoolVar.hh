@@ -212,9 +212,15 @@ inline BoolVar& get_BoolVarInfo(OZ_Term v) {
 */
 inline
 bool OZ_isBoolOpType(OZ_Term t){
-	int v = OZ_intToC(t);
-	// see GBD.oz for details about number's mean.
-	return v == 0 || v == 1 || v == 2 || v == 3 || v == 4 ? true : false;
+  if(OZ_isInt(t)){
+	  int v = OZ_intToC(t);
+	  // see GBD.oz for details about number's mean.
+	  return v == BOT_AND 
+        || v == BOT_OR 
+        || v == BOT_IMP 
+        || v == BOT_EQV 
+        || v == BOT_XOR ? true : false;
+  }else return false; 
 }
 
 void gebvp_init(void);
