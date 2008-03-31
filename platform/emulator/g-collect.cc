@@ -1109,9 +1109,14 @@ void AM::gCollect(int msgLevel)
   // the weak dictionaries that is not marked is
   // otherwise inaccessible and should be finalized
 
-  gCollectWeakDictionariesContent();
-  weakReviveStack.recurse();    // copy stuff scheduled for finalization
-  cacStack.gCollectRecurse();
+  // raph: The loop below is necessary for finalizing correctly weak
+  // dictionaries that are be revived by other weak dictionaries.
+
+  while (gCollectWeakDictionariesHasMore()) {
+    gCollectWeakDictionariesContent();
+    weakReviveStack.recurse();      // copy stuff scheduled for finalization
+    cacStack.gCollectRecurse();
+  }
 
   // Erik+kost: All local roots must be processed at this point!
   (*gCollectBorrowTableUnusedFrames)();
