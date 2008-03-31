@@ -32,7 +32,7 @@
 #define __GEOZ_INT_VAR_BUILTINS_CC__
 
 #include "IntVarMacros.hh"
-//#include "MozProp/MozProp.cc"
+
 
 
 

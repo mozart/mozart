@@ -25,10 +25,11 @@
  *
  */
 
-#ifndef __GEOZ_BOOLVAR_PROP_BUILTINS_CC__
-#define __GEOZ_BOOLVAR_PROP_BUILTINS_CC__
+#ifndef __GEOZ_SETVAR_PROP_BUILTINS_CC__
+#define __GEOZ_SETVAR_PROP_BUILTINS_CC__
 
 #include "SetVarMacros.hh"
+
 
 /**
     Projector constraints
