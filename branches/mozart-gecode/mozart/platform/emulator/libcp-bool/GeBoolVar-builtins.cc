@@ -30,6 +30,7 @@
 #include "BoolVarMacros.hh"
 
 
+
 using namespace Gecode;
 using namespace Gecode::Int;
 

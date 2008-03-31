@@ -28,8 +28,8 @@
 #ifndef __GEOZ_BOOLVAR_PROP_BUILTINS_CC__
 #define __GEOZ_BOOLVAR_PROP_BUILTINS_CC__
 
-//#include "GeBDP-Builtins.hh"
 #include "BoolVarMacros.hh"
+
 
 
 OZ_BI_define(gbd_rel_5,5,0){
