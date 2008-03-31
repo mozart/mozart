@@ -30,7 +30,7 @@
 #ifndef __GEOZ_INT_PROP_BUILTINS_CC__
 #define __GEOZ_INT_PROP_BUILTINS_CC__
 
-#include "IntVarMacros.hh" 
+#include "IntVarMacros.hh"
 
 using namespace Gecode;
 using namespace Gecode::Int;
