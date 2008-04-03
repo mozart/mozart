@@ -374,9 +374,9 @@ namespace _dss_internal{ //Start namespace
   void
   ProtocolTransientRemoteManager::m_siteStateChange(DSite* s,
 						    const FaultState& state) {
-    if (isRegisteredProxy(s) && state == FS_GLOBAL_PERM) {
+    if (isRegisteredProxy(s) && (state & FS_PERM)) {
       deregisterProxy(s);
-      if (s == a_current) makePermFail();
+      if (s == a_current) makePermFail(state);
     }
   }
 
