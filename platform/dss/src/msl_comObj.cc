@@ -307,7 +307,7 @@ namespace _msl_internal { //Start namespace
     sendProbePing();
     if(a_probeIntervalTimer == NULL){
       e_timers->setTimer(a_probeIntervalTimer,a_maxrtt,
-			 if_comObj_sendProbePing, static_cast<void*>(this));
+			 if_comObj_sendProbePing, this);
     }
   }
 
@@ -318,7 +318,7 @@ namespace _msl_internal { //Start namespace
     a_ackExpiration.increaseTime(a_msgAckTimeOut);
     if (a_ackTimer == NULL)
       e_timers->setTimer(a_ackTimer,a_msgAckTimeOut,
-			 if_comObj_sendAckTimer, static_cast<void*>(this));
+			 if_comObj_sendAckTimer, this);
     
   }
 
@@ -1044,15 +1044,14 @@ namespace _msl_internal { //Start namespace
       u32 ticket = dsrb->m_getInt();
       Assert(a_sec.a_ticket == 0);
 
-      if(strncmp(reinterpret_cast<char*>(version2),
-		 reinterpret_cast<char*>(const_cast<BYTE*>(dss_version)), 3) == 0){ // ok send our data
+      if(strncmp((char*) version2, (char*) dss_version, 3) == 0){ // ok send our data
 	  
 	m_setCState(OPENING_WF_NEGOTIATE);
 
 	DssSimpleWriteBuffer dswb(new BYTE[256], 256);
 	
 	// *********** COLLECT INFO *********
-	dswb.writeToBuffer(const_cast<BYTE*>(dss_version),3); // 3
+	dswb.writeToBuffer(dss_version,3); // 3
 	// site + site-version number
 	a_mslEnv->a_mySite->m_marshalDSite(&dswb); // X size
 	
@@ -1180,7 +1179,7 @@ namespace _msl_internal { //Start namespace
     // *********** COLLECT INFO *********
   
     // DSS version
-    dswb->writeToBuffer(const_cast<BYTE*>(dss_version),3); // 3
+    dswb->writeToBuffer(dss_version,3); // 3
 
     // crypto settings
     Assert(a_sec.a_ticket == 0);
@@ -1215,9 +1214,9 @@ namespace _msl_internal { //Start namespace
     DssSimpleReadBuffer  dsrb2;
 
     if(dsrb != NULL && dsrb->canRead(1+3)){
-          dsrb->m_readOutBuffer(version2,3);
+      dsrb->m_readOutBuffer(version2,3);
       
-      if(strncmp(reinterpret_cast<char*>(version2), reinterpret_cast<char*>(const_cast<BYTE*>(dss_version)), 3) == 0 &&
+      if(strncmp((char*) version2, (char*) dss_version, 3) == 0 &&
 	 (dsrb->canRead(1+4)) && // SIZE OF DSITE
 	 ((s1 = a_mslEnv->a_siteHT->m_unmarshalSite(dsrb)) != NULL) &&
 	 (s1->m_getFaultState() != FS_GLOBAL_PERM)
@@ -1372,7 +1371,7 @@ namespace _msl_internal { //Start namespace
     dssLog(DLL_ALL,"COMMUNICATION (%p): Closed remote, setting timer", this);
     e_timers->setTimer(a_reopentimer,
 		       (a_mslEnv->a_ipIsbehindFW)?a_mslEnv->m_getFirewallReopenTimeout():a_mslEnv->m_getReopenRemoteTimeout(),
-		       if_comObj_reopen, static_cast<void*>(this));
+		       if_comObj_reopen, this);
   }
 
 } //End namespace
