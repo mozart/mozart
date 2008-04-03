@@ -116,7 +116,7 @@ namespace _msl_internal{
     a_immediateEvents->m_appendEvent(new LoopBackEvent(msg)); 
   }
 
-  void MsgnLayerEnv::m_stateChange(Site *s, const DSiteState& state){
+  void MsgnLayerEnv::m_stateChange(Site *s, const FaultState& state){
     DSite *ds = static_cast<DSite*>(s); 
     a_clbck->m_stateChange(ds, state); 
   }

@@ -366,14 +366,14 @@ namespace _dss_internal{ //Start namespace
 
   // interpret a site failure
   FaultState
-  ProtocolOnceOnlyProxy::siteStateChanged(DSite* s, const DSiteState& state) {
+  ProtocolOnceOnlyProxy::siteStateChanged(DSite* s, const FaultState& state) {
     if (getStatus() <= TRANS_STATUS_WAITING &&
 	(a_proxy->m_getCoordinatorSite() == s)) {
       switch (state) {
-      case DSite_OK:         return FS_PROT_STATE_OK;
-      case DSite_TMP:        return FS_PROT_STATE_TMP_UNAVAIL;
-      case DSite_GLOBAL_PRM:
-      case DSite_LOCAL_PRM:  makePermFail(); return FS_PROT_STATE_PRM_UNAVAIL;
+      case FS_OK:          return FS_STATE_OK;
+      case FS_TEMP:        return FS_STATE_TEMP;
+      case FS_LOCAL_PERM:  makePermFail(state); return FS_STATE_LOCAL_PERM;
+      case FS_GLOBAL_PERM: makePermFail(state); return FS_STATE_GLOBAL_PERM;
       default:
 	dssError("Unknown DSite state %d for %s",state,s->m_stringrep());
       }

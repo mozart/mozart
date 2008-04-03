@@ -60,7 +60,7 @@ namespace _dss_internal{ //Start namespace
     
     void m_makeGCpreps();
 
-    virtual void m_siteStateChange(DSite *, const DSiteState&); 
+    virtual void m_siteStateChange(DSite *, const FaultState&); 
 
     char *m_stringrep();
   };
@@ -103,7 +103,7 @@ namespace _dss_internal{ //Start namespace
     virtual DSS_GC getDssDGCStatus();
 
     // ***************** Failures *******************************
-    virtual void m_siteStateChange(DSite *, const DSiteState&); 
+    virtual void m_siteStateChange(DSite *, const FaultState&); 
     virtual void m_noCoordAtDest(DSite* sender, MessageType mtt, MsgContainer* msg);
     // *************** MISC *************************
     

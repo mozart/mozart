@@ -207,7 +207,7 @@ OZ_BI_define(BIconnFailed,2,0) {
   if (!oz_isOzSite(site)) return OZ_typeError(0, "site");
   
   if (oz_eq(reason, oz_atom("perm"))) {
-    ozSite2DSite(site)->m_stateChange(DSite_GLOBAL_PRM);
+    ozSite2DSite(site)->m_stateChange(FS_GLOBAL_PERM);
   } 
   else if (oz_eq(reason, oz_atom("temp"))) {
     // This could be reported to the comObj, but the comObj also
@@ -234,8 +234,7 @@ OZ_BI_define(BIsetSiteState, 2, 0) {
     return oz_raise(E_SYSTEM, AtomDp, "invalid fault state", 1, state);
 
   // translate GlueFaultState to DSiteState (HACK!)
-  static DSiteState dfs[] =
-    { DSite_OK, DSite_TMP, DSite_LOCAL_PRM, DSite_GLOBAL_PRM };
+  static FaultState dfs[] = { FS_OK, FS_TEMP, FS_LOCAL_PERM, FS_GLOBAL_PERM };
   // set new state
   ozSite2DSite(site)->m_stateChange(dfs[fs]);
   return PROCEED;
@@ -618,9 +617,8 @@ OZ_BI_define(BIsetFaultState,2,0)
     return PROCEED;
   }
   if (oz_isOzSite(entity)) {
-    // translate GlueFaultState to DSiteState (HACK!)
-    static DSiteState dfs[] =
-      { DSite_OK, DSite_TMP, DSite_LOCAL_PRM, DSite_GLOBAL_PRM };
+    // translate GlueFaultState to FaultState (HACK!)
+    static FaultState dfs[] = { FS_OK, FS_TEMP, FS_LOCAL_PERM, FS_GLOBAL_PERM };
     // set new state
     ozSite2DSite(entity)->m_stateChange(dfs[fs]);
     return PROCEED;
@@ -659,8 +657,8 @@ OZ_BI_define(BIbreak,1,0)
     med->setFaultState(GLUE_FAULT_LOCAL);
     return PROCEED;
   }
-  if (oz_isOzSite(entity)) {   // put site to state DSite_LOCAL_PRM
-    ozSite2DSite(entity)->m_stateChange(DSite_LOCAL_PRM);
+  if (oz_isOzSite(entity)) {   // put site to state FS_LOCAL_PERM
+    ozSite2DSite(entity)->m_stateChange(FS_LOCAL_PERM);
     return PROCEED;
   }
   return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);

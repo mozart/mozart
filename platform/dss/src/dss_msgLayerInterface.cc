@@ -214,7 +214,7 @@ namespace _dss_internal{
   
   
   void
-  DssMslClbk::m_stateChange(DSite* s, const DSiteState& state){
+  DssMslClbk::m_stateChange(DSite* s, const FaultState& state){
     m_getEnvironment()->a_proxyTable->m_siteStateChange(s, state); 
     m_getEnvironment()->a_coordinatorTable->m_siteStateChange(s, state); 
 

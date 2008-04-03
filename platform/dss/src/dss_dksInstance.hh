@@ -61,7 +61,7 @@ namespace _dss_internal{
     void m_addDksInstance(DksInstance*); 
     
     void m_gcResources();
-    void m_siteStateChane(DSite* s, const DSiteState& state);
+    void m_siteStateChane(DSite* s, const FaultState& state);
     MACRO_NO_DEFAULT_CONSTRUCTORS(DksInstanceHT); 
   };
   

@@ -197,7 +197,7 @@ Mediator::setProxy(CoordinatorAssistant* p) {
     if (faultState == GLUE_FAULT_PERM) {
       abstractOperation_Kill();     // globalizing a failed entity...
     } else {
-      p->setRegisteredFS(FS_PROT_MASK);   // register fault reporting
+      p->setRegisteredFS(FS_STATE_MASK);   // register fault reporting
       if (faultStream) abstractOperation_Monitor();
     }
   } else {
@@ -349,11 +349,12 @@ void
 Mediator::reportFaultState(const FaultState& fs) {
   if (faultState != GLUE_FAULT_PERM) {
     // determine new fault state
-    GlueFaultState s = GLUE_FAULT_NONE;
-    if (fs & FS_PROT_STATE_TMP_UNAVAIL) s = GLUE_FAULT_TEMP;
-    if (fs & FS_PROT_STATE_PRM_UNAVAIL) s = GLUE_FAULT_PERM;
-
-    setFaultState(s);
+    switch (fs) {
+    case FS_OK:          setFaultState(GLUE_FAULT_NONE); return;
+    case FS_TEMP:        setFaultState(GLUE_FAULT_TEMP); return;
+    case FS_LOCAL_PERM:  setFaultState(GLUE_FAULT_LOCAL); return;
+    case FS_GLOBAL_PERM: setFaultState(GLUE_FAULT_PERM); return;
+    }
   }
 }
 

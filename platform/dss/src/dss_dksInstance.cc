@@ -131,7 +131,7 @@ namespace  _dss_internal{
     checkSize();
   }
   void 
-  DksInstanceHT::m_siteStateChane(DSite* s, const DSiteState& state){
+  DksInstanceHT::m_siteStateChane(DSite* s, const FaultState& state){
     for (DksInstance* n = getFirst() ; n; n = getNext(n)) {
       n->nodeFailed(s, state, NULL); 
     }

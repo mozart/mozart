@@ -69,7 +69,7 @@ namespace _dss_internal{ //Start namespace
     bool m_initRemoteProt(DssReadBuffer*); 
 
     // check fault state
-    virtual FaultState siteStateChanged(DSite*, const DSiteState&);
+    virtual FaultState siteStateChanged(DSite*, const FaultState&);
   };
 
 } //End namespace

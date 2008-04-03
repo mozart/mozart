@@ -121,30 +121,40 @@ enum DSS_GC{
 
 
 
-// FaultState describe the fault status of entities.  Bit masking is
-// used, both for registration and reporting.  The programmer must
-// register to which fault states she wants to be notified.  See
-// CoordinatorAssistant::setRegisteredFS().  The fault notification
-// may combine an access architecture state with a protocol-level
-// state.
+// FaultState describe the fault status of entities and sites.  In
+// order to simplify registration and reporting, bit masking is used,
+// so every state corresponds to one bit.
+//
+// Our model defines the following four states: FS_OK means no failure
+// detected; FS_TEMP is a failure suspicion, the state may go back to
+// FS_OK; FS_LOCAL_PERM is a permanent crash for the current site (but
+// other sites may be not affected); FS_GLOBAL_PERM is a permanent
+// crash for all sites (global guarantee).
 typedef unsigned int FaultState;
-const int FS_NBITS = 8;     // must be consistent with values below
+const FaultState FS_OK          = 1;
+const FaultState FS_TEMP        = 2;
+const FaultState FS_LOCAL_PERM  = 4;
+const FaultState FS_GLOBAL_PERM = 8;
 
-// access architecture fault states
-const FaultState FS_AA_MASK                = 0x0F;
-const FaultState FS_AA_HOME_OK             = 0x01;
-const FaultState FS_AA_HOME_TMP_UNAVAIL    = 0x02;
-const FaultState FS_AA_HOME_PRM_UNAVAIL    = 0x04;
-const FaultState FS_AA_HOME_REMOVED        = 0x08;
+// other useful bit masks
+const FaultState FS_MASK        = 0xF;
+const FaultState FS_PERM        = FS_LOCAL_PERM | FS_GLOBAL_PERM;
+const int FS_NBITS = 4;
 
-// protocol-level fault states
-const FaultState FS_PROT_MASK              = 0xF0;
-const FaultState FS_PROT_STATE_OK          = 0x10;
-const FaultState FS_PROT_STATE_TMP_UNAVAIL = 0x20;
-const FaultState FS_PROT_STATE_PRM_UNAVAIL = 0x40;
+// Entities have two fault states: one for their access architecture
+// (coordination level), and one for their state (protocol level).
+// They are combined into one fault state by bit-shifting.
+const FaultState FS_COORD_OK          = FS_OK          << FS_NBITS;
+const FaultState FS_COORD_TEMP        = FS_TEMP        << FS_NBITS;
+const FaultState FS_COORD_LOCAL_PERM  = FS_LOCAL_PERM  << FS_NBITS;
+const FaultState FS_COORD_GLOBAL_PERM = FS_GLOBAL_PERM << FS_NBITS;
+const FaultState FS_COORD_MASK        = FS_MASK        << FS_NBITS;
 
-// shorthand
-const FaultState FS_ALL_OK = FS_AA_HOME_OK | FS_PROT_STATE_OK;
+const FaultState FS_STATE_OK          = FS_OK;
+const FaultState FS_STATE_TEMP        = FS_TEMP;
+const FaultState FS_STATE_LOCAL_PERM  = FS_LOCAL_PERM;
+const FaultState FS_STATE_GLOBAL_PERM = FS_GLOBAL_PERM;
+const FaultState FS_STATE_MASK        = FS_MASK;
 
 
 

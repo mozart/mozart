@@ -147,7 +147,7 @@ namespace _dss_internal{ //Start namespace
     
     
     // ******************* Failure handlers ************************
-    virtual void m_siteStateChange(DSite *, const DSiteState&);
+    virtual void m_siteStateChange(DSite *, const FaultState&);
     virtual void m_undeliveredCoordMsg(DSite* dest, MessageType mtt,MsgContainer* msg);
     virtual void m_undeliveredProxyMsg(DSite* dest, MessageType mtt,MsgContainer* msg); 
     virtual void m_noCoordAtDest(DSite* sender, MessageType mtt, MsgContainer* msg); 
@@ -184,8 +184,8 @@ namespace _dss_internal{ //Start namespace
 
   protected:
     ProxyStatus    a_ps:3;             // 3 needed for Windows!
-    FaultState     a_currentFS   :FS_NBITS;
-    FaultState     a_registeredFS:FS_NBITS;
+    FaultState     a_currentFS   :2*FS_NBITS;
+    FaultState     a_registeredFS:2*FS_NBITS;
     ProtocolProxy* a_prot;             // The execution protocol
     RemoteReference*     a_remoteRef;              // NULL indicates that the proxy shares reference with the coordinator. 
   public:
@@ -287,7 +287,7 @@ namespace _dss_internal{ //Start namespace
     virtual void    m_receiveAsMsg(MsgContainer *msgC, DSite* sender)=0;
 
     // ***************** Failures *******************************
-    virtual void m_siteStateChange(DSite *, const DSiteState&); 
+    virtual void m_siteStateChange(DSite *, const FaultState&); 
     virtual void m_undeliveredCoordMsg(DSite* dest, MessageType mtt,MsgContainer* msg);
     virtual void m_undeliveredProxyMsg(DSite* dest, MessageType mtt,MsgContainer* msg); 
     virtual void m_noCoordAtDest(DSite* sender, MessageType mtt, MsgContainer* msg); 
@@ -324,7 +324,7 @@ namespace _dss_internal{ //Start namespace
 
     Coordinator *m_find(NetIdentity ni) { return lookup(ni.hashCode(), ni); }
     
-    void m_siteStateChange(DSite *, const DSiteState&);
+    void m_siteStateChange(DSite *, const FaultState&);
     // ******************  GC ***********************
     void m_gcResources(); // And also cleanup to some extent
     
@@ -346,7 +346,7 @@ namespace _dss_internal{ //Start namespace
 
     Proxy *m_find(NetIdentity ni) { return lookup(ni.hashCode(), ni); }
     
-    void m_siteStateChange(DSite *, const DSiteState&);
+    void m_siteStateChange(DSite *, const FaultState&);
     // ******************  GC ***********************
     void m_gcResources();
     

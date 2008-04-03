@@ -124,7 +124,7 @@ namespace _dss_internal{ //Start namespace
 
   // ******************* Failure handlers ************************
   void
-  Coordinator::m_siteStateChange(DSite *, const DSiteState&){
+  Coordinator::m_siteStateChange(DSite *, const FaultState&){
     // currently the coordinator does not bother...
   }
 
@@ -152,7 +152,7 @@ namespace _dss_internal{ //Start namespace
   Proxy::Proxy(NetIdentity ni, const AccessArchitecture& a,
 	       ProtocolProxy* const prot, DSS_Environment* const env) :
     AS_Node(ni,a,env), BucketHashNode<Proxy>(), a_ps(PROXY_STATUS_UNSET),
-    a_currentFS(FS_ALL_OK), a_registeredFS(0),
+    a_currentFS(FS_COORD_OK | FS_STATE_OK), a_registeredFS(0),
     a_prot(prot), a_remoteRef(NULL),
     a_coordinator(NULL), a_abstractEntity(NULL)
   {
@@ -166,8 +166,8 @@ namespace _dss_internal{ //Start namespace
   Proxy::updateFaultState(FaultState fs) {
     Assert(fs);
     // first complete the missing parts
-    if ((fs & FS_AA_MASK) == 0)   fs |= getFaultState() & FS_AA_MASK;
-    if ((fs & FS_PROT_MASK) == 0) fs |= getFaultState() & FS_PROT_MASK;
+    if ((fs & FS_COORD_MASK) == 0) fs |= getFaultState() & FS_COORD_MASK;
+    if ((fs & FS_STATE_MASK) == 0) fs |= getFaultState() & FS_STATE_MASK;
     if (fs != a_currentFS) {
       // this is a real change, make the update
       a_currentFS = fs;
@@ -293,7 +293,7 @@ namespace _dss_internal{ //Start namespace
 
 
   // ******************* Failure handlers ************************
-  void Proxy::m_siteStateChange(DSite *, const DSiteState&){
+  void Proxy::m_siteStateChange(DSite *, const FaultState&){
     // just ignore it.  (Don't tell anyone we do this!)
   }
   void Proxy::m_undeliveredCoordMsg(DSite* dest, MessageType mtt,MsgContainer* msg){
@@ -365,7 +365,7 @@ namespace _dss_internal{ //Start namespace
   }
 
   void
-  CoordinatorTable::m_siteStateChange(DSite *s, const DSiteState& newState) {
+  CoordinatorTable::m_siteStateChange(DSite *s, const FaultState& newState) {
     for (Coordinator* c = getFirst() ; c; c = getNext(c)) {
       c->m_siteStateChange(s,newState);
     }
@@ -389,7 +389,7 @@ namespace _dss_internal{ //Start namespace
   // ******************************************************************************
   
   void
-  ProxyTable::m_siteStateChange(DSite *s, const DSiteState& newState){
+  ProxyTable::m_siteStateChange(DSite *s, const FaultState& newState){
     for (Proxy* p = getFirst() ; p; p = getNext(p)) {
       p->m_siteStateChange(s,newState); 
     }

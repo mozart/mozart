@@ -72,7 +72,7 @@ namespace _dss_internal{ //Start namespace
     void sendMigrateInfo(::MsgContainer*); 
 
     // check for failed proxies
-    void m_siteStateChange(DSite*, const DSiteState&);
+    void m_siteStateChange(DSite*, const FaultState&);
   };
 
 
@@ -123,7 +123,7 @@ namespace _dss_internal{ //Start namespace
     void localInitatedOperationCompleted(){ Assert(0); } 
 
     // check fault state
-    virtual FaultState siteStateChanged(DSite*, const DSiteState&);
+    virtual FaultState siteStateChanged(DSite*, const FaultState&);
   };
 
 } //End namespace

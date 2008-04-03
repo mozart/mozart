@@ -80,7 +80,7 @@ namespace _dss_internal{ //Start namespace
     // Called when the state of a site changes.  It is up to the
     // protocol to deduce if it is affected by the site.  By default
     // it removes failed sites from a_proxies.
-    virtual void m_siteStateChange(DSite*, const DSiteState&);
+    virtual void m_siteStateChange(DSite*, const FaultState&);
 
     // basic protocol functionalities
     int getStatus() const { return a_status >> 1; }
@@ -153,7 +153,7 @@ namespace _dss_internal{ //Start namespace
 
     // Called when the state of a site changes. It is up to the
     // protocol to deduce if it is affected by the site. 
-    virtual FaultState siteStateChanged(DSite*, const DSiteState&) {
+    virtual FaultState siteStateChanged(DSite*, const FaultState&) {
       return 0; }
 
     //located in dss_access.cc, the only placed accessed from
@@ -174,7 +174,7 @@ namespace _dss_internal{ //Start namespace
     OpRetVal protocol_Deregister();   // send PROT_DEREGISTER to manager
 
     bool isPermFail() const { return a_status & 1; }
-    void makePermFail();
+    void makePermFail(FaultState s = FS_GLOBAL_PERM);
     OpRetVal protocol_Kill();      // send PROT_PERMFAIL to manager
 
     // Templates to build and send messages

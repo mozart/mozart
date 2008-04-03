@@ -395,22 +395,6 @@ namespace _dss_internal{ //Start namespace
     sprintf(buf,"MIGRATORY [Status:%d Ref:%s]\n", a_ms, a_homeRef->m_stringrep());
     return buf;
   }
-  
-  // **********************' FAILURE ******************************
-  
-  void CoordinatorFwdChain::m_msgUnsent(DSite*s, MsgContainer* msg){
-    ;
-  }
-  void CoordinatorFwdChain::m_siteStateChange(DSite *, const DSiteState&){
-    ;
-  }
-  
-  void CoordinatorFwdChain::m_noCoordAtDest(DSite* sender, MessageType mtt, MsgContainer* msg){
-    ;
-  }
-  void CoordinatorFwdChain::m_noProxyAtDest(DSite* sender, MessageType mtt, MsgContainer* msg){
-    ;
-  }
 
   
 
@@ -752,21 +736,5 @@ namespace _dss_internal{ //Start namespace
   ProxyFwdChain::m_updateRemote(DSite* s){
     printf("we must fix the update remote\n"); 
   }
-  // ***************** Failures *******************************
-  void ProxyFwdChain::m_siteStateChange(DSite *, const DSiteState&){
-    ;
-  }
-  void ProxyFwdChain::m_msgUnsent(DSite*s, MsgContainer* msg){
-    ;
-  }
-  
-  void ProxyFwdChain::m_noCoordAtDest(DSite* sender, MessageType mtt, MsgContainer* msg){
-    ;
-  }
-  void ProxyFwdChain::m_noProxyAtDest(DSite* sender, MessageType mtt, MsgContainer* msg){
-    ;
-  }
-
-  
 
 } //End namespace 
