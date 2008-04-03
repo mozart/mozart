@@ -67,7 +67,7 @@ namespace _dss_internal{ //Start namespace
   public:
     // ************* Functions provided as callbacks to the MsgnLayer 
     virtual void m_MessageReceived(MsgContainer* const msgC,DSite* const sender);
-    virtual void m_stateChange(DSite*, const DSiteState&); 
+    virtual void m_stateChange(DSite*, const FaultState&); 
     virtual void m_unsentMessages(DSite* s, MsgContainer* msgs);
     virtual ExtDataContainerInterface* m_createExtDataContainer(BYTE); 
     DssMslClbk(DSS_Environment *env);

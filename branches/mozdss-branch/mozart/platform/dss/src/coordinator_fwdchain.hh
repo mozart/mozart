@@ -98,14 +98,9 @@ namespace _dss_internal{ //Start namespace
 
     void m_makeGCpreps();
     char *m_stringrep();
-    // ******************  FAILURE ***************************
-    
-    virtual void    m_msgUnsent(DSite*s, MsgContainer* msg);
-    virtual void    m_siteStateChange(DSite *, const DSiteState&);
-    
-    virtual void m_noCoordAtDest(DSite* sender, MessageType mtt, MsgContainer* msg); 
-    virtual void m_noProxyAtDest(DSite* sender, MessageType mtt, MsgContainer* msg); 
 
+    // ******************  FAILURE ***************************
+    // not implemented
   };
 
 
@@ -168,12 +163,9 @@ namespace _dss_internal{ //Start namespace
     char *m_stringrep();
 
     virtual DSS_GC getDssDGCStatus();
-    // ***************** Failures *******************************
-    virtual void    m_siteStateChange(DSite *, const DSiteState&);
-    virtual void    m_msgUnsent(DSite*s, MsgContainer* msg); 
-    
-    virtual void m_noCoordAtDest(DSite* sender, MessageType mtt, MsgContainer* msg); 
-    virtual void m_noProxyAtDest(DSite* sender, MessageType mtt, MsgContainer* msg); 
+
+    // ***************** FAILURES *******************************
+    // not implemented...
 
     // *************** INTERACTION *************************************
     virtual bool manipulateCNET(void* arg); 

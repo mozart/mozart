@@ -66,7 +66,7 @@ namespace _dss_internal{ //Start namespace
 						  PstOutContainerInterface*) {}
     virtual void localInitatedOperationCompleted() {}
 
-    virtual FaultState siteStateChanged(DSite*, const DSiteState&);
+    virtual FaultState siteStateChanged(DSite*, const FaultState&);
   };
 
 

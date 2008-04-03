@@ -79,7 +79,7 @@ namespace _msl_internal { //Start namespace
     "ping"
   };
 
-#define DSS_VERSION "0#5"
+#define DSS_VERSION "0#6"
   
   
   
@@ -1220,7 +1220,7 @@ namespace _msl_internal { //Start namespace
       if(strncmp(reinterpret_cast<char*>(version2), reinterpret_cast<char*>(const_cast<BYTE*>(dss_version)), 3) == 0 &&
 	 (dsrb->canRead(1+4)) && // SIZE OF DSITE
 	 ((s1 = a_mslEnv->a_siteHT->m_unmarshalSite(dsrb)) != NULL) &&
-	 (s1->m_getFaultState() != DSite_GLOBAL_PRM)
+	 (s1->m_getFaultState() != FS_GLOBAL_PERM)
 	 ){
 	len = dsrb->m_getInt();
 	if(dsrb->availableData() == len){

@@ -64,7 +64,7 @@ namespace _msl_internal{ //Start namespace
     MsgnLayerEnv*    a_msgnLayerEnv; 
     ComObj*          a_comObj;
     CsSiteInterface* a_csSite;
-    DSiteState       a_state;
+    FaultState       a_state;
     u32              a_version;
     BYTE*            a_MarshaledRepresentation;
     int              a_MRlength;
@@ -129,7 +129,7 @@ namespace _msl_internal{ //Start namespace
     virtual int m_getMarshaledSize() const;
 
     virtual void  m_makeGCpreps() { a_isGcMarked = true; }
-    virtual DSiteState  m_getFaultState() const {return a_state;}
+    virtual FaultState  m_getFaultState() const {return a_state;}
     virtual char*       m_stringrep();
     virtual bool m_sendMsg(::MsgContainer *);
     virtual bool operator<(const ::DSite& s); 
@@ -141,7 +141,7 @@ namespace _msl_internal{ //Start namespace
 
     virtual ConnectivityStatus m_getChannelStatus();
     virtual void m_connectionEstablished(DssChannel*);  
-    virtual void m_stateChange(DSiteState newState);
+    virtual void m_stateChange(FaultState newState);
     virtual void m_virtualCircuitEstablished(int len , DSite *route[]);
     virtual void m_takeDownConnection();
     virtual void m_monitorRTT(int maxrtt);

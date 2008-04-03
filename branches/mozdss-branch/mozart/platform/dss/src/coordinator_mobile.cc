@@ -246,7 +246,7 @@ namespace _dss_internal{ //Start namespace
   
   // ******************* Failure handlers ************************
   void     
-  CoordinatorMobile::m_siteStateChange(DSite *s , const DSiteState& st){
+  CoordinatorMobile::m_siteStateChange(DSite *s , const FaultState& st){
     printf("CoordinatorMobile::m_siteStateChange -- dont care\n"); 
   }
   
@@ -468,10 +468,11 @@ namespace _dss_internal{ //Start namespace
     msg->pushIntVal(a_epoch); 
     return msg; 
   }
-   // ****************** FAILURES ************************
+
+  // ****************** FAILURES ************************
   void
-  ProxyMobile::m_siteStateChange(DSite *s, const DSiteState& st){
-    if(s == a_coordSite && (st == DSite_GLOBAL_PRM || st == DSite_LOCAL_PRM)){
+  ProxyMobile::m_siteStateChange(DSite *s, const FaultState& state) {
+    if (s == a_coordSite && (state & FS_PERM)) {
       a_fl_coordLost = true;
       a_coordSite = NULL; 
       m_locateCoordinator();
@@ -509,7 +510,7 @@ namespace _dss_internal{ //Start namespace
   
   void 
   ProxyMobile::m_noProxyAtDest(DSite* sender, MessageType mtt, MsgContainer* msg){
-    ;
+    delete msg;
   }
 
   // **************** MOBILITY METHODS *******************

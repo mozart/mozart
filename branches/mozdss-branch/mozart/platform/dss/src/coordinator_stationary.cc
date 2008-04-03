@@ -100,7 +100,7 @@ namespace _dss_internal{ //Start namespace
   }
 
   void
-  CoordinatorStationary::m_siteStateChange(DSite* s, const DSiteState& state) {
+  CoordinatorStationary::m_siteStateChange(DSite* s, const FaultState& state) {
     // simply notify the protocol manager
     a_prot->m_siteStateChange(s, state);
   }
@@ -156,8 +156,8 @@ namespace _dss_internal{ //Start namespace
     bool trailingState = m_getProtocol()->m_initRemoteProt(bs);
 		
     DSite *hs = m_getGUIdSite(); 
-    DSiteState state = hs->m_getFaultState();
-    if(state != DSite_OK){
+    FaultState state = hs->m_getFaultState();
+    if (state != FS_OK) {
       m_siteStateChange(hs,state);
     }
     return trailingState;
@@ -272,23 +272,18 @@ namespace _dss_internal{ //Start namespace
 
     
   void
-  ProxyStationary::m_siteStateChange(DSite* s, const DSiteState& state) {
+  ProxyStationary::m_siteStateChange(DSite* s, const FaultState& state) {
     FaultState fs = 0;     // fault state changes
 
     // Access Architecture part
     Assert(s != m_getEnvironment()->a_myDSite);
     if (s == m_getGUIdSite()) {
-      // The Home site of the entity is affected. This directly
-      // affects the proxy. If the home site is unaccessable for any
+      // The coordination site of the entity is affected. This directly
+      // affects the proxy.  If the coordinator is unaccessible for any
       // reason the proxy cannot guarante its functionality.
-      switch(state){
-      case DSite_OK:         fs = FS_AA_HOME_OK;          break;
-      case DSite_TMP:        fs = FS_AA_HOME_TMP_UNAVAIL; break;
-      case DSite_GLOBAL_PRM:
-      case DSite_LOCAL_PRM:  fs = FS_AA_HOME_PRM_UNAVAIL; break;
-      default:
-	dssError("Unknown DSite state %d for %s",state,s->m_stringrep());
-      }
+      Assert(FS_COORD_OK == FS_OK << FS_NBITS);
+      // state == FS_X  =>  fs = FS_COORD_X
+      fs = state << FS_NBITS;
     }
 
     // Protocol part
@@ -298,9 +293,11 @@ namespace _dss_internal{ //Start namespace
     if (fs) updateFaultState(fs);
   }
   
-    void 
-  ProxyStationary::m_noCoordAtDest(DSite* sender, MessageType mtt, MsgContainer* msg){
-      m_siteStateChange(m_getGUIdSite(), DSite_LOCAL_PRM); 
+  void 
+  ProxyStationary::m_noCoordAtDest(DSite*, MessageType, MsgContainer* msg) {
+    // we have lost the coordinator
+    delete msg;
+    m_siteStateChange(m_getGUIdSite(), FS_GLOBAL_PERM); 
   }
   
 }

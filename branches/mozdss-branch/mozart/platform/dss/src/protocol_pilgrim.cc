@@ -245,8 +245,8 @@ namespace _dss_internal{ //Start namespace
 
   void
   ProtocolPilgrimManager::m_siteStateChange(DSite* s,
-					    const DSiteState &state) {
-    if (!isPermFail() && state >= DSite_GLOBAL_PRM && isRegisteredProxy(s))
+					    const FaultState &state) {
+    if (!isPermFail() && state == FS_GLOBAL_PERM && isRegisteredProxy(s))
       m_removeFailed(s);
   }
 
@@ -451,17 +451,17 @@ namespace _dss_internal{ //Start namespace
 
   // interpret site failures
   FaultState
-  ProtocolPilgrimProxy::siteStateChanged(DSite* s, const DSiteState& state) {
+  ProtocolPilgrimProxy::siteStateChanged(DSite* s, const FaultState& state) {
     if (isPermFail()) return 0;
     if (s == a_proxy->m_getCoordinatorSite()) {
       switch (state) {
-      case DSite_OK:         return FS_PROT_STATE_OK;
-      case DSite_GLOBAL_PRM:
-      case DSite_LOCAL_PRM:  m_lostToken(); return FS_PROT_STATE_PRM_UNAVAIL;
-      default:               return 0;
+      case FS_OK:          return FS_STATE_OK;
+      case FS_LOCAL_PERM:  makePermFail(state); return FS_STATE_LOCAL_PERM;
+      case FS_GLOBAL_PERM: m_lostToken(); return FS_STATE_GLOBAL_PERM;
+      default:             return 0;
       }
     }
-    if (s == a_successor && state >= DSite_GLOBAL_PRM) {
+    if (s == a_successor && state == FS_GLOBAL_PERM) {
       a_successor = NULL;
       sendToManager(PLGM_FAILED, s);
     }

@@ -72,7 +72,7 @@ public: // system wide settings
   
   bool                       a_ipIsbehindFW;
 public:
-  void m_stateChange(Site*, const DSiteState&);
+  void m_stateChange(Site*, const FaultState&);
   void m_unsentMessages(Site*, MsgCnt*);  
   void m_loopBack(MsgCnt*); 
   void m_appendImmediateEvent(Event*); 

@@ -68,7 +68,7 @@ namespace _msl_internal{ //Start namespace
     a_msgnLayerEnv(env),
     a_comObj(NULL),
     a_csSite(NULL),
-    a_state(DSite_OK),
+    a_state(FS_OK),
     a_version(0),
     a_MarshaledRepresentation(NULL),
     a_MRlength(-1),
@@ -86,7 +86,7 @@ namespace _msl_internal{ //Start namespace
     a_msgnLayerEnv(env),
     a_comObj(NULL),
     a_csSite(NULL),
-    a_state(DSite_OK),
+    a_state(FS_OK),
     a_version(ver),
     a_MarshaledRepresentation(MRstr),
     a_MRlength(MRlen),
@@ -169,7 +169,7 @@ namespace _msl_internal{ //Start namespace
       return false; 
     }
     if(a_isRemote == false) return false; 
-    if(a_comObj == NULL || a_state == DSite_GLOBAL_PRM) return true; 
+    if(a_comObj == NULL || a_state & FS_PERM) return true; 
     if(a_comObj->canBeFreed()) {
       delete a_comObj;
       a_comObj = NULL; 
@@ -181,7 +181,7 @@ namespace _msl_internal{ //Start namespace
   bool
   Site::m_connect(){
     if (a_isRemote == false || a_comObj != NULL) return true;
-    if (a_state == DSite_GLOBAL_PRM) return false; 
+    if (a_state & FS_PERM) return false; 
     a_comObj=new ComObj(this, a_msgnLayerEnv);
     printf("Monitor!\n"); 
     return true;
@@ -192,11 +192,10 @@ namespace _msl_internal{ //Start namespace
       a_msgnLayerEnv->m_loopBack(msgC);
       return true; 
     }
-    if (a_state == DSite_GLOBAL_PRM)
-      {
-	delete msgC;
-	return false; 
-      }
+    if (a_state & FS_PERM) {
+      delete msgC;
+      return false; 
+    }
     if(a_comObj == NULL)
       a_comObj=new ComObj(this, a_msgnLayerEnv);
     a_comObj->m_send(msgC, MSG_PRIO_MEDIUM);
@@ -219,42 +218,42 @@ namespace _msl_internal{ //Start namespace
     a_comObj->handover(channel);
   }
 
-  void Site::m_stateChange(DSiteState stat){
-    switch(stat){
-    case DSite_GLOBAL_PRM:
-      {
-	if (a_state == DSite_GLOBAL_PRM) return;
-	a_state = DSite_GLOBAL_PRM;
-	MsgCnt *msgs = NULL; 
-	if (a_comObj) {
-	  msgs = a_comObj->m_clearQueues();
-	  delete a_comObj;
-	  a_comObj = NULL;
-	}
-	a_msgnLayerEnv->m_stateChange(this, a_state);
-	a_msgnLayerEnv->m_unsentMessages(this, msgs); 
-	break; 
+  void Site::m_stateChange(FaultState s){
+    switch (s) {
+    case FS_LOCAL_PERM:
+      if (a_state == FS_LOCAL_PERM) return;
+      // fall through
+    case FS_GLOBAL_PERM: {
+      if (a_state == FS_GLOBAL_PERM) return;
+      a_state = s;
+      MsgCnt *msgs = NULL;
+      if (a_comObj) {
+	msgs = a_comObj->m_clearQueues();
+	delete a_comObj;
+	a_comObj = NULL;
       }
-    case DSite_TMP:
-      {
-	if (a_state == DSite_TMP) return;	
-	a_state = DSite_TMP;
-	a_msgnLayerEnv->m_stateChange(this, a_state);
-	break;
-      }
-    case DSite_OK:
-      {
-	if (a_state == DSite_OK) return;	
-	a_state = DSite_OK; 
-	a_msgnLayerEnv->m_stateChange(this, a_state);
-	break;
-      }
+      a_msgnLayerEnv->m_stateChange(this, a_state);
+      a_msgnLayerEnv->m_unsentMessages(this, msgs); 
+      break;
+    }
+    case FS_TEMP: {
+      if (a_state != FS_OK) return;
+      a_state = FS_TEMP;
+      a_msgnLayerEnv->m_stateChange(this, a_state);
+      break;
+    }
+    case FS_OK: {
+      if (a_state != FS_TEMP) return;
+      a_state = FS_OK;
+      a_msgnLayerEnv->m_stateChange(this, a_state);
+      break;
+    }
     default: 
       dssError("Not handled fault state\n"); 
       return;
     }
     // notify CsSite
-    if (a_csSite) a_csSite->reportFaultState(stat);
+    if (a_csSite) a_csSite->reportFaultState(s);
   }
 
   // Faults
@@ -278,7 +277,7 @@ namespace _msl_internal{ //Start namespace
       // other site
       Assert(a_MarshaledRepresentation != NULL);
       Assert(buf->canWrite(a_MRlength+1));
-      gf_Marshal8bitInt(buf, (a_state == DSite_GLOBAL_PRM ?
+      gf_Marshal8bitInt(buf, (a_state == FS_GLOBAL_PERM ?
 			      DMT_SITE_PERM : DMT_SITE_OK));
       gf_MarshalNumber(buf, a_MRlength);
       buf->writeToBuffer(a_MarshaledRepresentation, a_MRlength);
@@ -481,14 +480,15 @@ namespace _msl_internal{ //Start namespace
 	    // should check here too
 	    CsSiteInterface *cs =
 	      a_msgnLayerEnv->a_comService->unmarshalCsSite(found, &body);
-	    if(cs)
+	    if (cs) {
 	      found->m_setCsSite(cs);
-	    else
-	      found->m_stateChange(DSite_GLOBAL_PRM); // KILL IT SINCE WE HAVE NO CS INFO
+	    } else {   // no CsSiteInterface means no communication...
+	      found->m_stateChange(FS_LOCAL_PERM);
+	    }
 	  }
-	  if (type == DMT_SITE_PERM && found->m_getFaultState() != DSite_GLOBAL_PRM)
-	    found->m_stateChange(DSite_GLOBAL_PRM);
-
+	  if (type == DMT_SITE_PERM) {
+	    found->m_stateChange(FS_GLOBAL_PERM);
+	  }
 	  // OK, leave this place
 	  body.drop();
 	  return found; 

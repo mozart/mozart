@@ -122,7 +122,7 @@ public:
   virtual void reportRTT(int);
   virtual void reportTimeout(int);
 
-  virtual void reportFaultState(DSiteState);
+  virtual void reportFaultState(FaultState);
 
   virtual DssChannel *establishConnection();
   virtual void receivedMsg(MsgContainer*);

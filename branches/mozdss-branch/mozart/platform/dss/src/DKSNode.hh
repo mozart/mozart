@@ -204,7 +204,7 @@ namespace _dss_internal{
 
     void setCallBackService(DKS_userClass*);
     
-    void nodeFailed(DSite*, DSiteState, MsgContainer*);
+    void nodeFailed(DSite*, FaultState, MsgContainer*);
     
     void m_joinNetwork(DSite *entry);
     

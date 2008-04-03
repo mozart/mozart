@@ -59,7 +59,7 @@ namespace _dss_internal{
     //Markup sites and remove perms
     Position<Pair<DSite*, int> > pos(a_siteList);
     while (pos()) {
-      if ((*pos).first->m_getFaultState() != DSite_GLOBAL_PRM) {
+      if ((*pos).first->m_getFaultState() & FS_PERM == 0) {
 	(*pos).first->m_makeGCpreps();
 	pos++;
       } else {

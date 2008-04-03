@@ -75,7 +75,7 @@ namespace _dss_internal{ //Start namespace
     virtual DSS_GC  m_getDssDGCStatus();
     
     // ******************* Failure handlers ************************
-    virtual void    m_siteStateChange(DSite *, const DSiteState&);
+    virtual void    m_siteStateChange(DSite *, const FaultState&);
 
     virtual void m_undeliveredProxyMsg(DSite*, MessageType mtt, MsgContainer* msg);
     virtual void m_undeliveredCoordMsg(DSite*, MessageType mtt, MsgContainer* msg);
@@ -132,7 +132,7 @@ namespace _dss_internal{ //Start namespace
     virtual ::MsgContainer *m_createProxyRefMsg();
     // ****************** FAILURES ************************
     
-    virtual void m_siteStateChange(DSite *, const DSiteState&) ;
+    virtual void m_siteStateChange(DSite *, const FaultState&) ;
     virtual void m_undeliveredCoordMsg(DSite* dest, MessageType mtt,MsgContainer* msg);
     virtual void m_undeliveredProxyMsg(DSite* dest, MessageType mtt,MsgContainer* msg);
     virtual void m_noCoordAtDest(DSite* sender, MessageType mtt, MsgContainer* msg) ; 

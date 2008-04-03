@@ -59,12 +59,12 @@ void cleanStr(DssReadBuffer *buf, int len){
     buf->getByte(); 
 }
 
-TaggedRef fs2atom(const DSiteState &state) {
+TaggedRef fs2atom(const FaultState &state) {
   switch (state) {
-  case DSite_OK:         return AtomOk;
-  case DSite_TMP:        return AtomTempFail;
-  case DSite_LOCAL_PRM:  return AtomLocalFail;
-  case DSite_GLOBAL_PRM: return AtomPermFail;
+  case FS_OK:          return AtomOk;
+  case FS_TEMP:        return AtomTempFail;
+  case FS_LOCAL_PERM:  return AtomLocalFail;
+  case FS_GLOBAL_PERM: return AtomPermFail;
   }
   Assert(0);
 }
@@ -171,10 +171,10 @@ GlueSite::working() {
 void
 GlueSite::reportRTT(int rtt) {
   switch (dsite->m_getFaultState()) {
-  case DSite_TMP:
-    dsite->m_stateChange(DSite_OK);
+  case FS_TEMP:
+    dsite->m_stateChange(FS_OK);
     // fall through
-  case DSite_OK:
+  case FS_OK:
     if (rtt > RTT_UPPERBOUND) rtt = RTT_UPPERBOUND;
     if (rtt_avg) {
       int err = rtt - rtt_avg;
@@ -195,14 +195,14 @@ GlueSite::reportRTT(int rtt) {
 void
 GlueSite::reportTimeout(int timeout) {
   switch (dsite->m_getFaultState()) {
-  case DSite_OK:  dsite->m_stateChange(DSite_TMP);
-  case DSite_TMP: dsite->m_monitorRTT(rtt_timeout);
+  case FS_OK:   dsite->m_stateChange(FS_TEMP);
+  case FS_TEMP: dsite->m_monitorRTT(rtt_timeout);
   default: break;     // (stop monitoring when permfailed)
   }
 }
 
 void
-GlueSite::reportFaultState(DSiteState state) {
+GlueSite::reportFaultState(FaultState state) {
   if (faultstream) {
     OZ_Term head = fs2atom(state);
     OZ_Term tail = oz_newReadOnly(oz_rootBoard());

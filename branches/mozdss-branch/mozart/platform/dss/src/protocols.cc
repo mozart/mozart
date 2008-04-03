@@ -82,8 +82,9 @@ namespace _dss_internal{
     while (n--) registerProxy(msg->popDSiteVal());
   }
 
-  void ProtocolManager::m_siteStateChange(DSite* s, const DSiteState& state) {
-    if (state >= DSite_GLOBAL_PRM) a_proxies.remove(s);
+  void ProtocolManager::m_siteStateChange(DSite* s, const FaultState& state) {
+    // ignore proxies in states FS_LOCAL_PERM or FS_GLOBAL_PERM
+    if (state & FS_PERM) a_proxies.remove(s);
   }
 
   void ProtocolManager::makePermFail() {
@@ -114,9 +115,11 @@ namespace _dss_internal{
     return DSS_SKIP;
   }
 
-  void ProtocolProxy::makePermFail() {
-    a_status = (a_status & ~3) | 1;   // permfailed and deregistered
-    a_proxy->updateFaultState(FS_PROT_STATE_PRM_UNAVAIL);
+  void ProtocolProxy::makePermFail(FaultState s) {
+    if (s == FS_GLOBAL_PERM) {
+      a_status = (a_status & ~3) | 1;   // permfailed and deregistered
+      a_proxy->updateFaultState(FS_STATE_GLOBAL_PERM);
+    }
     while (!a_susps.isEmpty()) a_susps.pop()->resumeFailed();
   }
 

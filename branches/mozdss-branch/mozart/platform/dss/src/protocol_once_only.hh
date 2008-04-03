@@ -108,7 +108,7 @@ namespace _dss_internal{ //Start namespace
     virtual void localInitatedOperationCompleted() { Assert(0); }
 
     // check fault state
-    virtual FaultState siteStateChanged(DSite*, const DSiteState&);
+    virtual FaultState siteStateChanged(DSite*, const FaultState&);
   };
 
 } //End namespace

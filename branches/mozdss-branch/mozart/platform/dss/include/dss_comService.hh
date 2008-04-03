@@ -123,14 +123,6 @@ const int MSG_PRIO_MEDIUM = 2;
 const int MSG_PRIO_LOW    = 1;
 
 
-enum DSiteState{
-  DSite_OK         = 0xAA, 
-  DSite_TMP        = 0xBB, 
-  DSite_GLOBAL_PRM = 0xCC,
-  DSite_LOCAL_PRM  = 0xDD
-};
-
-
 
 // interface of DSS communication channels; their implementation is
 // provided by the user
@@ -174,7 +166,7 @@ public:
   virtual unsigned int m_getShortId() = 0; 
   
   //***************  APP methods  *******************************
-  virtual DSiteState  m_getFaultState() const = 0; 
+  virtual FaultState m_getFaultState() const = 0; 
   
   //***************  CSC methods: ******************************'
   virtual void m_connectionEstablished(DssChannel* con) = 0; 
@@ -186,7 +178,7 @@ public:
   // rtt monitoring is stopped.
   virtual void m_monitorRTT(int maxrtt) = 0;
 
-  virtual void m_stateChange(DSiteState newState) = 0; 
+  virtual void m_stateChange(FaultState newState) = 0; 
   virtual void m_takeDownConnection() = 0; 
   virtual ConnectivityStatus  m_getChannelStatus() = 0;
   // instruct DSite that CsSite has changed M-R
@@ -214,7 +206,7 @@ public:
   virtual void reportRTT(int rtt) = 0;
   virtual void reportTimeout(int maxrtt) = 0;
 
-  virtual void reportFaultState(DSiteState) = 0;
+  virtual void reportFaultState(FaultState) = 0;
 
   virtual DssChannel *establishConnection() = 0;
   virtual void receivedMsg(MsgContainer*) = 0;
@@ -271,7 +263,7 @@ class AppMslClbkInterface
 {
 public:
   virtual void m_MessageReceived(MsgContainer* const msgC,DSite* const sender) = 0; 
-  virtual void m_stateChange(DSite*, const DSiteState&) = 0; 
+  virtual void m_stateChange(DSite*, const FaultState&) = 0; 
   virtual void m_unsentMessages(DSite* s, MsgContainer* msgs) = 0; 
   virtual ExtDataContainerInterface* m_createExtDataContainer(BYTE) = 0; 
 };

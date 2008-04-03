@@ -76,7 +76,7 @@ namespace _dss_internal{ //Start namespace
 
     void msgReceived(::MsgContainer*, DSite*);
     void makeGCpreps();
-    void m_siteStateChange(DSite*, const DSiteState&);
+    void m_siteStateChange(DSite*, const FaultState&);
 
   private: 
     bool m_isLazy() const { return getStatus(); }
@@ -123,7 +123,7 @@ namespace _dss_internal{ //Start namespace
     { Assert(0); }
     void localInitatedOperationCompleted(){Assert(0);} 
 
-    virtual FaultState siteStateChanged(DSite*, const DSiteState&);
+    virtual FaultState siteStateChanged(DSite*, const FaultState&);
 
   private:
     bool m_isLazy() const { return getStatus() & 1; }

@@ -1277,14 +1277,12 @@ namespace _dss_internal{
   }
   
 
-    void DKSNode::nodeFailed(DSite* site, DSiteState s, MsgContainer* msg){
+    void DKSNode::nodeFailed(DSite* site, FaultState s, MsgContainer* msg){
     DksSite deadNode;  
     
-    if (s!=DSite_GLOBAL_PRM && s!=DSite_LOCAL_PRM)
-      return ; 
+    if (s & FS_PERM == 0) return; 
     
-    if (a_status != DNS_INSIDE) 
-      return ; 
+    if (a_status != DNS_INSIDE) return; 
     
     for (int l=a_log_K_N; l>=1; l--) // find DksNode associated with site
       {
