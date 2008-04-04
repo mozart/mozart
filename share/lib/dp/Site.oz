@@ -1,3 +1,25 @@
+%%%
+%%% Authors:
+%%%   Yves Jaradin (yves.jaradin@uclouvain.be)
+%%%
+%%% Copyright:
+%%%   Yves Jaradin, 2008
+%%%
+%%% Last change:
+%%%   $Date: 2008-03-19 15:03:37 +0100 (Wed, 19 Mar 2008) $ by $Author: raph $
+%%%   $Revision: 16898 $
+%%%
+%%% This file is part of Mozart, an implementation
+%%% of Oz 3
+%%%    http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%    http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
 functor
 import
    Glue at 'x-oz://boot/Glue'
