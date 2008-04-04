@@ -1,6 +1,5 @@
 functor
 import
-   System
    Glue(setSiteState
 	setConnection
 	acceptConnection
@@ -73,7 +72,6 @@ define
    proc{ProcessDSS M}
       case M
       of connect(ToSite) then
-	 {System.show connect}
 	 thread
 	    URI={VirtualString.toString ToSite.info}
 	    ConnectMeths={{Property.get 'dp.resolver'}.'oz-site' URI}.connect
