@@ -1,3 +1,25 @@
+%%%
+%%% Authors:
+%%%   Yves Jaradin (yves.jaradin@uclouvain.be)
+%%%
+%%% Copyright:
+%%%   Yves Jaradin, 2008
+%%%
+%%% Last change:
+%%%   $Date: 2008-03-06 13:33:44 +0100 (Thu, 06 Mar 2008) $ by $Author: yjaradin $
+%%%   $Revision: 16860 $
+%%%
+%%% This file is part of Mozart, an implementation
+%%% of Oz 3
+%%%    http://www.mozart-oz.org
+%%%
+%%% See the file "LICENSE" or
+%%%    http://www.mozart-oz.org/LICENSE.html
+%%% for information on usage and redistribution
+%%% of this file, and for a DISCLAIMER OF ALL
+%%% WARRANTIES.
+%%%
+
 functor
 import
    Finalize
