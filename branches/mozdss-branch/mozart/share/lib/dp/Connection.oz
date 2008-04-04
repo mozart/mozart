@@ -7,8 +7,8 @@
 %%%   Yves Jaradin, 2008
 %%%
 %%% Last change:
-%%%   $Date$ by $Author$
-%%%   $Revision$
+%%%   $Date: 2008-03-06 15:46:11 +0100 $ by $Author: yjaradin $
+%%%   $Revision: 16863 $
 %%%
 %%% This file is part of Mozart, an implementation
 %%% of Oz 3
