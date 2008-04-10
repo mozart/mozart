@@ -41,6 +41,7 @@ import
    DPService
 export
    Init
+   InitWith
    Prepare
    Initialized
    service:DPService
@@ -82,6 +83,12 @@ define
 	 end
       end
       N=true
+   end
+   %% initialize DP with user settings (ip, portnum, etc)
+   proc {InitWith Settings}
+      {Property.put 'dp.listenerParams'
+       {Adjoin {Property.get 'dp.listenerParams'} Settings}}
+      {Init}
    end
    fun{ExtractDistributedInfo DistributedURIs}
       case DistributedURIs
