@@ -216,12 +216,12 @@ define
       end
       {Property.put 'dp.firewalled' false}
       {Property.put 'dp.resolver' Resolvers}
-      {Property.put 'dp.defaultListenerParams' default}
+      {Property.put 'dp.listenerParams' default}
    end
    fun{Listen IncomingP}
       Ip Port Id Uri Serv Params
    in
-      Params={Property.get 'dp.defaultListenerParams'}
+      Params={Property.get 'dp.listenerParams'}
       Serv={New Open.socket init()}
       Ip={DoGetIp {Value.condSelect Params ip best}}
       Port={DoBind Serv {Value.condSelect Params port 'from'(9000)}}
