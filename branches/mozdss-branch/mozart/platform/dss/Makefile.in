@@ -44,8 +44,8 @@ all: @ENVTYPE@
 lib@ENV@.so: $(OBJS@ENV@)
 	@DYNLD@ -o $@ $(OBJS@ENV@) $(LIBS)
 
-lib@ENV@.a: lib@ENV@.a($(OBJS@ENV@))
-	$(RANLIB) $@
+lib@ENV@.a: $(OBJS@ENV@)
+	$(AR) -rc $@ $(OBJS@ENV@) && $(RANLIB) $@
 
 bootstrap: all
 
