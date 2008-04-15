@@ -92,7 +92,7 @@ define
    end
    fun{ExtractDistributedInfo DistributedURIs}
       case DistributedURIs
-      of [VH] andthen H={VirtualString.toString VH} in {List.isPrefix "oz-site://s(" H} then
+      of [VH] andthen H={VirtualString.toString VH} in {List.isPrefix "oz-site://" H} then
 	 H
       [] URIs then
 	 {Exception.raiseError dp(dssLimit distributedURI URIs)}

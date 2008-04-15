@@ -112,9 +112,9 @@ define
    in
       try
 	 for U in URIs  return:Return do
-	    if {List.isPrefix "oz-site://s(" U} then
+	    if {List.isPrefix "oz-site://" U} then
 	       {Return {VirtualString.toAtom
-			"oz-ticket"#{List.drop U {Length "oz-site"}}#"?"#T}}
+			'oz-ticket'#{List.drop U {Length "oz-site"}}#'/'#T}}
 	    end
 	 end
       catch _ then
@@ -125,11 +125,11 @@ define
    fun {ParseTicket VS}
       T={VirtualString.toString VS}
    in
-      if {List.isPrefix "oz-ticket://s(" T} then URI TId in
-	 {List.takeDropWhile {List.drop T {Length "oz-ticket"}}
-	  fun {$ C} C\=&? end
+      if {List.isPrefix "oz-ticket://" T} then URI TId in
+	 {List.takeDropWhile {List.drop T {Length "oz-ticket://"}}
+	  fun {$ C} C\=&/ end
 	  URI _|TId}
-	 ("oz-site"#URI)#{String.toInt TId}
+	 ('oz-site://'#URI)#{String.toInt TId}
       else
 	 {Exception.raiseError dp(ticket parse T)}
 	 unit

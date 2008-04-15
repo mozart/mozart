@@ -55,7 +55,7 @@ define
       [] dp(dssLimit distributedURI URIs) then
 	 error(kind:T
 	       msg:'The DSS has a limit of only one distributed URI'#
-	       ' of the form oz-site://s(<ip>;<port>;<id>)'
+	       ' of the form oz-site://<ip>:<port>:<id>'
 	       items:[hint(l:'found URIs' m:list(URIs ', '))])
       [] dp(dss unknownNotification M) then
 	 error(kind:T

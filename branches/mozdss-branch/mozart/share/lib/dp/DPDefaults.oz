@@ -66,9 +66,9 @@ define
       meth init(U)
 	 [Ip PortS Id]={String.tokens
 			{List.takeWhile
-			 {List.drop U {Length "oz-site://s("}}
-			 fun{$C}C\=&) end}
-			&;}in
+			 {List.drop U {Length "oz-site://"}}
+			 fun{$C}C\=&/ end}
+			&:}in
 	 Open.socket,init()
 	 id:=Id
 	 {self connect(host:Ip port:{String.toInt PortS})}
@@ -216,7 +216,8 @@ define
       end
       {Property.put 'dp.firewalled' false}
       {Property.put 'dp.resolver' Resolvers}
-      {Property.put 'dp.listenerParams' default}
+      {Property.put 'dp.listenerParams'
+       default(id: ({OS.time} mod 257)*65536+{OS.getPID} )}
    end
    fun{Listen IncomingP}
       Ip Port Id Uri Serv Params
@@ -226,7 +227,7 @@ define
       Ip={DoGetIp {Value.condSelect Params ip best}}
       Port={DoBind Serv {Value.condSelect Params port 'from'(9000)}}
       Id={Value.condSelect Params id 0}
-      Uri={VirtualString.toString "oz-site://s("#Ip#";"#Port#";"#Id#")"}
+      Uri={VirtualString.toString 'oz-site://'#Ip#':'#Port#':'#Id}
       {Serv listen()}
       thread
 	 for OzS from fun{$}{Serv accept(accepted:$ acceptClass:OzSimpleProto)}end do
