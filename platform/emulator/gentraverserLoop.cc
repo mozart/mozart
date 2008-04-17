@@ -272,6 +272,9 @@ void TRAVERSERCLASS::doit()
               (TraverserBinaryAreaProcessor) lookupPtr();
             Assert(proc > (TraverserBinaryAreaProcessor) 0xf);
             // 'proc' is preserved in stack;
+            ensureFree(2);
+            // The statement above ensures that the stack won't resize.
+            // When the stack resizes, the pointer se becomes invalid!
             StackEntry *se = putPtrSERef(0);
             putInt(taggedBATask);       // pre-cooked;
 
