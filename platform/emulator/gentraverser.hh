@@ -249,12 +249,14 @@ public:
 
   //
   // And yet we update stack entries:
-  StackEntry* putPtrSERef(void *ptr) {
+  long putPtrSERef(void *ptr) {
     checkConsistency();
     *tos = ptr;
-    return (tos++);
+    // do not return a pointer here, since resizing the stack makes
+    // the returned pointer invalid!  use a difference instead:
+    return (tos++) - array;
   }
-  void updateSEPtr(StackEntry* se, void *ptr) { *se = ptr; }
+  void updateSEPtr(long pos, void *ptr) { *(array + pos) = ptr; }
   //
   void dropEntry() { tos--; }
   void dropEntries(int n) { tos -= n; }
