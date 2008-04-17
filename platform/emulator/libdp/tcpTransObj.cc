@@ -189,7 +189,8 @@ inline void TCPTransObj::marshal(MsgContainer *msgC, int acknum) {
   writeBuffer->setSite(site);
   msgC->marshal(writeBuffer, tcptransController);
 
-  Assert(writeBuffer->availableSpace()>=1); // Room for trailer?
+  Assert(writeBuffer->availableSpace()>=0); // Room for trailer?
+  // the test above ensures one byte trailer is available (see byteBuffer.hh)
   if(msgC->checkFlag(MSG_HAS_MARSHALCONT)) {
     globalContCounter++;
     comObj->msgPartlySent(msgC);
