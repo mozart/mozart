@@ -55,7 +55,7 @@ OZ_Return distPortSendImpl(OzPort *p, TaggedRef msg, TaggedRef var) {
     glue_getMediator(var)->annotate(a);
   }
 
-  PstOutContainerInterface** pstout;
+  PstOutContainerInterface** pstout = NULL;
   OpRetVal cont = me->abstractOperation_Write(pstout);
   if (pstout != NULL) *(pstout) = new PstOutContainer(msg);
 
@@ -94,7 +94,7 @@ OZ_Return distCellOpImpl(OperationTag op, OzCell *cell,
 
   // perform DSS operation
   DssThreadId *thrId = currentThreadId();
-  PstOutContainerInterface** pstout;
+  PstOutContainerInterface** pstout = NULL;
   OpRetVal ret = (OperationWrite[op] ?
 		  med->abstractOperation_Write(thrId, pstout) :
 		  med->abstractOperation_Read(thrId, pstout));
@@ -126,7 +126,7 @@ OZ_Return distLockTakeImpl(OzLock* lock, TaggedRef thr) {
   if (me->getFaultState()) return me->suspendOnFault();
 
   DssThreadId *thrId = currentThreadId();
-  PstOutContainerInterface** pstout;
+  PstOutContainerInterface** pstout = NULL;
   OpRetVal cont = me->abstractOperation_Write(thrId, pstout);
   if (pstout != NULL)
     *(pstout) = new PstOutContainer(oz_cons(oz_atom("take"), thr));
@@ -164,7 +164,7 @@ OZ_Return distLockReleaseImpl(OzLock* lock, TaggedRef thr) {
   if (me->getFaultState() == GLUE_FAULT_PERM) return PROCEED;
 
   DssThreadId *thrId = currentThreadId();
-  PstOutContainerInterface** pstout;
+  PstOutContainerInterface** pstout = NULL;
   OpRetVal cont = me->abstractOperation_Write(thrId, pstout);
   if (pstout != NULL)
     *(pstout) = new PstOutContainer(oz_cons(oz_atom("release"), thr));
@@ -205,7 +205,7 @@ OZ_Return distArrayOpImpl(OperationTag op, OzArray *arr,
 
   // perform DSS operation
   DssThreadId *thrId = currentThreadId();
-  PstOutContainerInterface** pstout;
+  PstOutContainerInterface** pstout = NULL;
   OpRetVal ret = (OperationWrite[op] ?
 		  med->abstractOperation_Write(thrId, pstout) :
 		  med->abstractOperation_Read(thrId, pstout));
@@ -240,7 +240,7 @@ OZ_Return distDictionaryOpImpl(OperationTag op, OzDictionary *dict,
 
   // perform DSS operation
   DssThreadId *thrId = currentThreadId();
-  PstOutContainerInterface** pstout;
+  PstOutContainerInterface** pstout = NULL;
   OpRetVal ret = (OperationWrite[op] ?
 		  med->abstractOperation_Write(thrId, pstout) :
 		  med->abstractOperation_Read(thrId, pstout));
@@ -273,7 +273,7 @@ OZ_Return distObjectInvokeImpl(OzObject* obj, TaggedRef meth) {
   if (med->getFaultState()) return med->suspendOnFault();
 
   DssThreadId *thrId = currentThreadId();
-  PstOutContainerInterface** pstout;
+  PstOutContainerInterface** pstout = NULL;
   OpRetVal cont = med->abstractOperation_Read(thrId, pstout);
   if (pstout != NULL) {
     Thread* thr = oz_currentThread();
@@ -305,7 +305,7 @@ OZ_Return distObjectOpImpl(OperationTag op, OzObject *obj,
 
   // perform DSS operation
   DssThreadId* thrId = currentThreadId();
-  PstOutContainerInterface** pstout;
+  PstOutContainerInterface** pstout = NULL;
   OpRetVal ret = med->abstractOperation_Read(thrId, pstout);
   if (pstout)
     *pstout = new PstOutContainer(glue_wrap(op, OperationIn[op], arg));
@@ -335,7 +335,7 @@ OZ_Return distObjectStateOpImpl(OperationTag op, ObjectState *state,
 
   // perform DSS operation
   DssThreadId *thrId = currentThreadId();
-  PstOutContainerInterface** pstout;
+  PstOutContainerInterface** pstout = NULL;
   OpRetVal ret = (OperationWrite[op] ?
 		  med->abstractOperation_Write(thrId, pstout) :
 		  med->abstractOperation_Read(thrId, pstout));
@@ -385,7 +385,7 @@ OZ_Return distVarBindImpl(OzVariable *ov, TaggedRef *varPtr, TaggedRef val) {
   }
 
   // otherwise ask the abstract entity
-  PstOutContainerInterface** pstout;
+  PstOutContainerInterface** pstout = NULL;
   OpRetVal cont = med->abstractOperation_Bind(NULL, pstout);
 
   // allocate PstOutContainer if required
@@ -461,7 +461,7 @@ OZ_Return distVarMakeNeededImpl(TaggedRef *varPtr) {
   if (!med->isDistributed()) return PROCEED;
 
   // otherwise ask the abstract entity
-  PstOutContainerInterface** pstout;
+  PstOutContainerInterface** pstout = NULL;
   OpRetVal cont = med->abstractOperation_Append(NULL, pstout);
 
   // allocate PstOutContainer if required
@@ -497,7 +497,7 @@ OZ_Return distChunkOpImpl(OperationTag op, SChunk *chunk,
 
   // perform DSS operation
   DssThreadId *thrId = currentThreadId();
-  PstOutContainerInterface** pstout;
+  PstOutContainerInterface** pstout = NULL;
   OpRetVal ret = med->abstractOperation_Read(thrId, pstout);
   if (pstout)
     *pstout = new PstOutContainer(glue_wrap(op, OperationIn[op], arg));
@@ -527,7 +527,7 @@ distClassGetImpl(OzClass *cls) {
   if (med->getFaultState()) return med->suspendOnFault();
 
   DssThreadId *thrId = currentThreadId();
-  PstOutContainerInterface** pstout;
+  PstOutContainerInterface** pstout = NULL;
   OpRetVal cont = med->abstractOperation_Read(thrId, pstout);
 
   switch (cont) {
@@ -555,7 +555,7 @@ OZ_Return distProcedureCallImpl(Abstraction* a, TaggedRef args) {
   if (med->getFaultState()) return med->suspendOnFault();
 
   DssThreadId *thrId = currentThreadId();
-  PstOutContainerInterface** pstout;
+  PstOutContainerInterface** pstout = NULL;
   OpRetVal cont = med->abstractOperation_Read(thrId, pstout);
   if (pstout != NULL) {
     Thread* thr = oz_currentThread();

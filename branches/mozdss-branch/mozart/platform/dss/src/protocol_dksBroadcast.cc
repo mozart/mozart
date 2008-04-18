@@ -65,12 +65,14 @@ void ProtocolDksBcManager::makeGCpreps(){
     a_dks = new DksInstance(256, 2, 1, this, env); 
   }
   
-  OpRetVal ProtocolDksBcProxy::m_broadCast(PstOutContainerInterface** &pst, const AbsOp& aop){
+  OpRetVal
+  ProtocolDksBcProxy::operationAppend(GlobalThread*,
+				      PstOutContainerInterface** &pst) {
     if (a_isFunctional){
       PstDataContainer *pdc = new PstDataContainer(a_proxy->m_getEnvironment(), 
 						   pst);
       printf("protocol dksBroadcast %d\n", (int) pst); 
-      DssDksBcMessage *msg = new DssDksBcMessage(pdc, static_cast<int>(aop)); 
+      DssDksBcMessage *msg = new DssDksBcMessage(pdc, AO_OO_UPDATE); 
       a_dks->m_broadcastRing(msg);
     }else{
       // a_unsentMsgs.append(makePair(pst, (int) aop));

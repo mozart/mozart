@@ -60,6 +60,9 @@ namespace _dss_internal{ //Start namespace
     
     OpRetVal protocol_Synch(GlobalThread* const th_id, ::PstOutContainerInterface**& msg, const AbsOp& aop);
     OpRetVal protocol_Asynch(::PstOutContainerInterface**& msg, const AbsOp& aop);
+    virtual OpRetVal operationRead(GlobalThread*, PstOutContainerInterface**&);
+    virtual OpRetVal operationWrite(GlobalThread*, PstOutContainerInterface**&);
+    virtual OpRetVal operationWrite(PstOutContainerInterface**&);
     
     void do_operation(DSite*, GlobalThread*, AbsOp, PstInContainerInterface*);
     void remoteInitatedOperationCompleted(DssOperationId*, PstOutContainerInterface*); 

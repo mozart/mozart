@@ -365,6 +365,18 @@ namespace _dss_internal{ //Start namespace
     a_susps.append(id);
     return DSS_SUSPEND;
   }
+
+  OpRetVal
+  ProtocolPilgrimProxy::operationRead(GlobalThread* thr,
+				      PstOutContainerInterface**& out) {
+    return protocol_Access(thr, out);
+  }
+
+  OpRetVal
+  ProtocolPilgrimProxy::operationWrite(GlobalThread* thr,
+				       PstOutContainerInterface**& out) {
+    return protocol_Access(thr, out);
+  }
   
   
   void

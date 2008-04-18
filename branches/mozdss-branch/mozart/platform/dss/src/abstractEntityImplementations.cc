@@ -79,57 +79,13 @@ void AbstractEntity::localInitatedOperationCompleted() {
 OpRetVal AbstractEntity::abstractOperation_Kill() {
   if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
-  switch (pp->getProtocolName()) {
-  case PN_SIMPLE_CHANNEL:
-    return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Kill();
-  case PN_MIGRATORY_STATE:
-    return static_cast<ProtocolMigratoryProxy*>(pp)->protocol_Kill();
-  case PN_TRANSIENT:
-    return static_cast<ProtocolOnceOnlyProxy*>(pp)->protocol_Kill();
-  case PN_TRANSIENT_REMOTE:
-    return static_cast<ProtocolTransientRemoteProxy*>(pp)->protocol_Kill();
-  case PN_EAGER_INVALID:
-    return static_cast<ProtocolEagerInvalidProxy*>(pp)->protocol_Kill();
-  case PN_PILGRIM_STATE:
-    return static_cast<ProtocolPilgrimProxy*>(pp)->protocol_Kill();
-  case PN_LAZY_INVALID:
-    return static_cast<ProtocolLazyInvalidProxy*>(pp)->protocol_Kill();
-  case PN_IMMUTABLE_LAZY:
-    return static_cast<ProtocolImmutableLazyProxy*>(pp)->protocol_Kill();
-  case PN_IMMUTABLE_EAGER:
-    return static_cast<ProtocolImmutableEagerProxy*>(pp)->protocol_Kill();
-  default: 
-    Assert(0); 
-  }
-  return DSS_INTERNAL_ERROR_SEVERE;
+  return pp->operationKill();
 }
 
 OpRetVal AbstractEntity::abstractOperation_Monitor() {
   if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
-  switch (pp->getProtocolName()) {
-  case PN_SIMPLE_CHANNEL:
-    return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Register();
-  case PN_MIGRATORY_STATE:
-    return static_cast<ProtocolMigratoryProxy*>(pp)->protocol_Register();
-  case PN_TRANSIENT:
-    return static_cast<ProtocolOnceOnlyProxy*>(pp)->protocol_Register();
-  case PN_TRANSIENT_REMOTE:
-    return static_cast<ProtocolTransientRemoteProxy*>(pp)->protocol_Register();
-  case PN_EAGER_INVALID:
-    return static_cast<ProtocolEagerInvalidProxy*>(pp)->protocol_Register();
-  case PN_PILGRIM_STATE:
-    return static_cast<ProtocolPilgrimProxy*>(pp)->protocol_Register();
-  case PN_LAZY_INVALID:
-    return static_cast<ProtocolLazyInvalidProxy*>(pp)->protocol_Register();
-  case PN_IMMUTABLE_LAZY:
-    return static_cast<ProtocolImmutableLazyProxy*>(pp)->protocol_Register();
-  case PN_IMMUTABLE_EAGER:
-    return static_cast<ProtocolImmutableEagerProxy*>(pp)->protocol_Register();
-  default: 
-    Assert(0); 
-  }
-  return DSS_INTERNAL_ERROR_SEVERE;
+  return pp->operationMonitor();
 }
 
 
@@ -144,22 +100,7 @@ MutableAbstractEntity::abstractOperation_Read(DssThreadId *id,
 {
   if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
-  GlobalThread* gid = static_cast<GlobalThread*>(id);
-  switch (pp->getProtocolName()) {
-  case PN_SIMPLE_CHANNEL:
-    return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Synch(gid,out,AO_STATE_READ);
-  case PN_MIGRATORY_STATE:
-    return static_cast<ProtocolMigratoryProxy*>(pp)->protocol_Access(gid,out);
-  case PN_EAGER_INVALID:
-    return static_cast<ProtocolEagerInvalidProxy*>(pp)->protocol_Read(gid,out);
-  case PN_LAZY_INVALID:
-    return static_cast<ProtocolLazyInvalidProxy*>(pp)->protocol_Read(gid,out);
-  case PN_PILGRIM_STATE:
-    return static_cast<ProtocolPilgrimProxy*>(pp)->protocol_Access(gid,out);
-  default: 
-    Assert(0);
-  }
-  return DSS_INTERNAL_ERROR_SEVERE;
+  return pp->operationRead(static_cast<GlobalThread*>(id), out);
 }
 
 OpRetVal
@@ -168,22 +109,7 @@ MutableAbstractEntity::abstractOperation_Write(DssThreadId *id,
 {
   if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
-  GlobalThread* gid = static_cast<GlobalThread*>(id);
-  switch (pp->getProtocolName()) {
-  case PN_SIMPLE_CHANNEL:
-    return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Synch(gid,out,AO_STATE_WRITE);
-  case PN_MIGRATORY_STATE:
-    return static_cast<ProtocolMigratoryProxy*>(pp)->protocol_Access(gid,out);
-  case PN_EAGER_INVALID:
-    return static_cast<ProtocolEagerInvalidProxy*>(pp)->protocol_Write(gid,out);
-  case PN_LAZY_INVALID:
-    return static_cast<ProtocolLazyInvalidProxy*>(pp)->protocol_Write(gid,out);
-  case PN_PILGRIM_STATE:
-    return static_cast<ProtocolPilgrimProxy*>(pp)->protocol_Access(gid,out);
-  default: 
-    Assert(0);
-  }
-  return DSS_INTERNAL_ERROR_SEVERE;
+  return pp->operationWrite(static_cast<GlobalThread*>(id), out);
 }
 
 
@@ -198,27 +124,14 @@ RelaxedMutableAbstractEntity::abstractOperation_Read(DssThreadId *id,
 {
   if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
-  GlobalThread* gid = static_cast<GlobalThread*>(id); 
-  switch (pp->getProtocolName()) {
-  case PN_SIMPLE_CHANNEL:
-    return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Synch(gid,out,AO_STATE_READ);
-  default:
-    Assert(0);
-  }
-  return DSS_INTERNAL_ERROR_SEVERE;
+  return pp->operationRead(static_cast<GlobalThread*>(id), out);
 }
 
 OpRetVal
 RelaxedMutableAbstractEntity::abstractOperation_Write(PstOutContainerInterface**& out){
   if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
-  switch (pp->getProtocolName()) {
-  case PN_SIMPLE_CHANNEL:
-    return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Asynch(out,AO_STATE_WRITE);
-  default:
-    Assert(0);
-  }
-  return DSS_INTERNAL_ERROR_SEVERE;
+  return pp->operationWrite(out);
 }
 
 
@@ -233,16 +146,7 @@ MonotonicAbstractEntity::abstractOperation_Bind(DssThreadId *id,
 {
   if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
-  GlobalThread* gid = static_cast<GlobalThread*>(id); 
-  switch (pp->getProtocolName()) {
-  case PN_TRANSIENT:
-    return static_cast<ProtocolOnceOnlyProxy*>(pp)->protocol_Terminate(gid,out,AO_OO_BIND);
-  case PN_TRANSIENT_REMOTE:
-    return static_cast<ProtocolTransientRemoteProxy*>(pp)->protocol_Terminate(gid,out,AO_OO_BIND);
-  default:
-    Assert(0);
-  }
-  return DSS_INTERNAL_ERROR_SEVERE;
+  return pp->operationBind(static_cast<GlobalThread*>(id), out);
 }
   
 OpRetVal 
@@ -251,18 +155,7 @@ MonotonicAbstractEntity::abstractOperation_Append(DssThreadId *id,
 {
   if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
-  GlobalThread* gid = static_cast<GlobalThread*>(id); 
-  switch (pp->getProtocolName()) {
-  case PN_TRANSIENT:
-    return static_cast<ProtocolOnceOnlyProxy*>(pp)->protocol_Update(gid,out,AO_OO_UPDATE);
-  case PN_TRANSIENT_REMOTE:
-    return static_cast<ProtocolTransientRemoteProxy*>(pp)->protocol_Update(gid,out,AO_OO_UPDATE);
-  case PN_DKSBROADCAST:
-    return static_cast<ProtocolDksBcProxy*>(pp)-> m_broadCast(out,AO_OO_UPDATE);
-  default:
-    Assert(0);
-  }
-  return DSS_INTERNAL_ERROR_SEVERE;
+  return pp->operationAppend(static_cast<GlobalThread*>(id), out);
 }
 
 
@@ -277,23 +170,7 @@ ImmutableAbstractEntity::abstractOperation_Read(DssThreadId *id,
 {
   if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
-  GlobalThread* gid = static_cast<GlobalThread*>(id); 
-  switch (pp->getProtocolName()) {
-  case PN_SIMPLE_CHANNEL:
-    return static_cast<ProtocolSimpleChannelProxy*>(pp)->protocol_Synch(gid,out,AO_STATE_READ);
-  case PN_IMMUTABLE_LAZY:
-    out = NULL;
-    return static_cast<ProtocolImmutableLazyProxy*>(pp)->protocol_Access(gid);
-  case PN_IMMUTABLE_EAGER:
-    out = NULL;
-    return static_cast<ProtocolImmutableEagerProxy*>(pp)->protocol_Access(gid);
-  case PN_IMMEDIATE:
-    out = NULL;
-    return static_cast<ProtocolImmediateProxy*>(pp)->protocol_send(gid);
-  default:
-    Assert(0);
-  }
-  return DSS_INTERNAL_ERROR_SEVERE;
+  return pp->operationRead(static_cast<GlobalThread*>(id), out);
 }
 
 

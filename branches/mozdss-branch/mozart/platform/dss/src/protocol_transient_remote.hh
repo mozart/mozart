@@ -42,7 +42,7 @@ namespace _dss_internal{ //Start namespace
 
   // for buffered requests
   struct TR_request {
-    int type; int aop; PstOutContainerInterface* pst; GlobalThread* thr;
+    int type; PstOutContainerInterface* pst; GlobalThread* thr;
     void makeGCpreps() { if (thr) thr->m_makeGCpreps(); }
     void dispose() { if (pst) pst->dispose(); }
   };
@@ -99,13 +99,9 @@ namespace _dss_internal{ //Start namespace
     void setToken(bool b) {
       ProtocolProxy::setStatus((getStatus() << 1) | (b ? 1 : 0)); }
 
-    OpRetVal protocol_Terminate(GlobalThread* const th_id,
-				::PstOutContainerInterface**& msg,
-				const AbsOp& aop);
-    OpRetVal protocol_Update(GlobalThread* const th_id,
-			     ::PstOutContainerInterface**& msg,
-			     const AbsOp& aop);
-    OpRetVal protocol_Kill();
+    virtual OpRetVal operationBind(GlobalThread*, PstOutContainerInterface**&);
+    virtual OpRetVal operationAppend(GlobalThread*,PstOutContainerInterface**&);
+    virtual OpRetVal operationKill();
 
     bool isWeakRoot() { return !a_susps.isEmpty(); }
 

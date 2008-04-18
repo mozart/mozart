@@ -84,13 +84,9 @@ namespace _dss_internal{ //Start namespace
     ProtocolOnceOnlyProxy();
     ~ProtocolOnceOnlyProxy();
     
-    OpRetVal protocol_Terminate(GlobalThread* const th_id,
-				::PstOutContainerInterface**& msg,
-				const AbsOp& aop);
-    OpRetVal protocol_Update(GlobalThread* const th_id,
-			     ::PstOutContainerInterface**& msg,
-			     const AbsOp& aop);
-    OpRetVal protocol_Kill();
+    virtual OpRetVal operationBind(GlobalThread*, PstOutContainerInterface**&);
+    virtual OpRetVal operationAppend(GlobalThread*,PstOutContainerInterface**&);
+    virtual OpRetVal operationKill();
 
     virtual bool isWeakRoot() { return !a_susps.isEmpty(); }
 

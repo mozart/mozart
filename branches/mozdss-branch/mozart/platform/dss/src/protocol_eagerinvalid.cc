@@ -310,7 +310,7 @@ namespace _dss_internal{ //Start namespace
   }
 
   OpRetVal
-  ProtocolInvalidProxy::protocol_Read(GlobalThread* const th_id,
+  ProtocolInvalidProxy::operationRead(GlobalThread* th_id,
 				      PstOutContainerInterface**& msg){
     dssLog(DLL_BEHAVIOR,"EagerInvalidProxy::Read");
     msg = NULL;
@@ -323,7 +323,7 @@ namespace _dss_internal{ //Start namespace
   }
 
   OpRetVal
-  ProtocolInvalidProxy::protocol_Write(GlobalThread* const th_id,
+  ProtocolInvalidProxy::operationWrite(GlobalThread* th_id,
 				       PstOutContainerInterface**& msg){
     dssLog(DLL_BEHAVIOR,"EagerInvalidProxy::Write");
     msg = NULL;

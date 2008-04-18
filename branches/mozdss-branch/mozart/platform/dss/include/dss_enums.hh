@@ -177,21 +177,23 @@ enum ProtocolName {
   PN_NO_PROTOCOL     = 0, // Don't use, only here for internal debugging 
   PN_SIMPLE_CHANNEL  = 1, 
   PN_MIGRATORY_STATE = 2,
-  PN_TRANSIENT       = 3, 
-  PN_TRANSIENT_REMOTE= 4,  
-  PN_EAGER_INVALID   = 5,
-  PN_REMOTE_EXEC     = 6, 
-  PN_SES_MIG_STATE   = 7, 
-  PN_MIG_LCK_STATE   = 8, 
-  PN_PILGRIM_STATE   = 9,
-  PN_LAZY_INVALID    = 10,
-  PN_IMMUTABLE_LAZY  = 11,
-  PN_IMMUTABLE_EAGER = 12,
-  PN_IMMEDIATE       = 13,
-  PN_DKSBROADCAST    = 14,
+  PN_PILGRIM_STATE   = 3,
+  PN_EAGER_INVALID   = 4,
+  PN_LAZY_INVALID    = 5,
+  PN_TRANSIENT       = 6, 
+  PN_TRANSIENT_REMOTE= 7,  
+  PN_IMMUTABLE_LAZY  = 8,
+  PN_IMMUTABLE_EAGER = 9,
+  PN_IMMEDIATE       = 10,
+  PN_DKSBROADCAST    = 11,
+  PN_SITED           = 12,
   PN_MASK            = 0xF   // bit mask
 };
 const int PN_NBITS = 4;     // must be consistent with PN_MASK
+
+// PN_SITED is similar to PN_SIMPLE_CHANNEL, except that no language
+// operation is defined for remote proxies (no read, write, or kill).
+// Fault monitoring is available, however.
 
 
 

@@ -164,11 +164,12 @@ namespace _dss_internal{ //Start namespace
   }
 
   OpRetVal
-  ProtocolImmutableEagerProxy::protocol_Access(GlobalThread* const th_id){
+  ProtocolImmutableEagerProxy::operationRead(GlobalThread* thr,
+					     PstOutContainerInterface**&) {
     if (isPermFail()) return DSS_RAISE;
     if (getStatus()) return DSS_PROCEED;
     // the state is coming, be patient...
-    a_susps.append(th_id);
+    a_susps.append(thr);
     return DSS_SUSPEND;
   }
 

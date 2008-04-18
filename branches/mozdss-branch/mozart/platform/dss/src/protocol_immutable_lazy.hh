@@ -49,7 +49,7 @@ namespace _dss_internal{ //Start namespace
     ProtocolImmutableLazyProxy() :
       ProtocolImmutableProxy(PN_IMMUTABLE_LAZY) {}
 
-    OpRetVal protocol_Access(GlobalThread* const th_id);
+    virtual OpRetVal operationRead(GlobalThread*, PstOutContainerInterface**&);
   };
 
 } //End namespace

@@ -366,6 +366,18 @@ namespace _dss_internal{ //Start namespace
     }
   }
 
+  OpRetVal
+  ProtocolMigratoryProxy::operationRead(GlobalThread* thr,
+					PstOutContainerInterface**& out) {
+    return protocol_Access(thr, out);
+  }
+
+  OpRetVal
+  ProtocolMigratoryProxy::operationWrite(GlobalThread* thr,
+					 PstOutContainerInterface**& out) {
+    return protocol_Access(thr, out);
+  }
+
   
   void
   ProtocolMigratoryProxy::msgReceived(::MsgContainer* msg, DSite* sender){

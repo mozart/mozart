@@ -35,12 +35,13 @@ namespace _dss_internal{ //Start namespace
   /******************** ProtocolImmutableLazyProxy ********************/
 
   OpRetVal
-  ProtocolImmutableLazyProxy::protocol_Access(GlobalThread* const th_id) {
+  ProtocolImmutableLazyProxy::operationRead(GlobalThread* thr,
+					    PstOutContainerInterface**&) {
     if (isPermFail()) return DSS_RAISE;
     if (getStatus()) return DSS_PROCEED;
     // ask manager if necessary, and wait
     if (a_susps.isEmpty()) m_requestState();
-    a_susps.append(th_id);
+    a_susps.append(thr);
     return DSS_SUSPEND;
   }
 

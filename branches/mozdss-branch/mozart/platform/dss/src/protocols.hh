@@ -133,6 +133,15 @@ namespace _dss_internal{ //Start namespace
     // ** SERVICES **
     inline Proxy       *getProxy() { return a_proxy; }
     inline ProtocolName getProtocolName() { return p_name; }
+
+    // ** ENTITY OPERATIONS **
+    virtual OpRetVal operationMonitor();
+    virtual OpRetVal operationKill();
+    virtual OpRetVal operationRead(GlobalThread*, PstOutContainerInterface**&);
+    virtual OpRetVal operationWrite(GlobalThread*, PstOutContainerInterface**&);
+    virtual OpRetVal operationWrite(PstOutContainerInterface**&);
+    virtual OpRetVal operationBind(GlobalThread*, PstOutContainerInterface**&);
+    virtual OpRetVal operationAppend(GlobalThread*,PstOutContainerInterface**&);
     
     // ** PROTOCOL OPERATIONS **
     virtual void msgReceived(MsgContainer*,DSite*)=0;
