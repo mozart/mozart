@@ -42,6 +42,7 @@
 #include "protocol_immutable_lazy.hh"   
 #include "protocol_transient_remote.hh"
 #include "protocol_lazyinvalid.hh"
+#include "protocol_sited.hh"
 
 namespace _dss_internal{ 
 
@@ -215,6 +216,10 @@ namespace _dss_internal{
       pprox = new ProtocolDksBcProxy();
       static_cast<ProtocolDksBcProxy*>(pprox)->m_initHome(env); 
       break;
+    case PN_SITED:
+      pman  = new ProtocolSitedManager();
+      pprox = new ProtocolSitedProxy();
+      break; 
     default:
       pman = NULL;
       pprox = NULL;
@@ -236,6 +241,7 @@ namespace _dss_internal{
     case PN_IMMUTABLE_EAGER:  return new ProtocolImmutableEagerProxy();
     case PN_IMMEDIATE:        return new ProtocolImmediateProxy();
     case PN_DKSBROADCAST:     return new ProtocolDksBcProxy();
+    case PN_SITED:            return new ProtocolSitedProxy();
     default: Assert(0); return NULL;
     }
   }
