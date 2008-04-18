@@ -79,7 +79,7 @@ namespace _msl_internal { //Start namespace
     "ping"
   };
 
-#define DSS_VERSION "0#6"
+#define DSS_VERSION "0#7"
   
   
   

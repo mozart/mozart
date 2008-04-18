@@ -128,6 +128,42 @@ namespace _dss_internal{
     return DSS_SKIP;
   }
 
+  // ** Entity operations: default implementation
+  OpRetVal
+  ProtocolProxy::operationMonitor() {
+    return protocol_Register();
+  }
+
+  OpRetVal
+  ProtocolProxy::operationKill() {
+    return protocol_Kill();
+  }
+
+  OpRetVal
+  ProtocolProxy::operationRead(GlobalThread*, PstOutContainerInterface**&) {
+    return DSS_INTERNAL_ERROR_NO_OP;
+  }
+
+  OpRetVal
+  ProtocolProxy::operationWrite(GlobalThread*, PstOutContainerInterface**&) {
+    return DSS_INTERNAL_ERROR_NO_OP;
+  }
+
+  OpRetVal
+  ProtocolProxy::operationWrite(PstOutContainerInterface**&) {
+    return DSS_INTERNAL_ERROR_NO_OP;
+  }
+
+  OpRetVal
+  ProtocolProxy::operationBind(GlobalThread*, PstOutContainerInterface**&) {
+    return DSS_INTERNAL_ERROR_NO_OP;
+  }
+
+  OpRetVal
+  ProtocolProxy::operationAppend(GlobalThread*, PstOutContainerInterface**&) {
+    return DSS_INTERNAL_ERROR_NO_OP;
+  }
+
   /****************************************************************/
 
   // create a pair manager-proxy (on home site)

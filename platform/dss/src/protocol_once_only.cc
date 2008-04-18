@@ -79,11 +79,11 @@ namespace _dss_internal{ //Start namespace
   //
   //
   // Message formats (optional parameters are between square brackets):
-  //    OO_BIND AbsOp Pst [GlobalThread]
+  //    OO_BIND Pst [GlobalThread]
   //    OO_BOUND
   //    OO_REDIRECT Pst
-  //    OO_UPDATE_REQUEST AbsOp Pst [GlobalThread]
-  //    OO_UPDATE AbsOp Pst [GlobalThread]
+  //    OO_UPDATE_REQUEST Pst [GlobalThread]
+  //    OO_UPDATE Pst [GlobalThread]
 
   namespace{
     // In the message descriptions, "PM" means a message sent by a
@@ -127,7 +127,7 @@ namespace _dss_internal{ //Start namespace
     // send an update for changes if necessary
     ::PstOutContainerInterface *ans;
     a_coordinator->m_doe(AO_OO_CHANGES, NULL, NULL, NULL, ans);
-    if (ans != NULL) sendToProxy(s, OO_UPDATE, AO_OO_UPDATE, ans);
+    if (ans != NULL) sendToProxy(s, OO_UPDATE, ans);
   }
 
   // send an OO_REDIRECT message to proxy at site s
@@ -161,12 +161,11 @@ namespace _dss_internal{ //Start namespace
       dssLog(DLL_BEHAVIOR,"ONCE ONLY (%p): Received Bind",this);
       if (isPermFail() || getStatus() == TRANS_STATUS_BOUND) break;
       // do the callback in order to bind
-      AbsOp aop = static_cast<AbsOp>(msg->popIntVal());
       PstInContainerInterface* arg = gf_popPstIn(msg);
       GlobalThread* tid = (msg->m_isEmpty() ? NULL : popThreadId(msg));
       Assert(a_coordinator->m_getProxy() != NULL);
       PstOutContainerInterface* ans = NULL;
-      a_coordinator->m_doe(aop, tid, NULL, arg, ans);
+      a_coordinator->m_doe(AO_OO_BIND, tid, NULL, arg, ans);
       setStatus(TRANS_STATUS_BOUND);
       // send OO_REDIRECT to all proxies
       while (!a_proxies.isEmpty()) sendRedirect(a_proxies.pop());
@@ -182,17 +181,16 @@ namespace _dss_internal{ //Start namespace
     }
     case OO_UPDATE_REQUEST: {
       if (isPermFail() || getStatus() == TRANS_STATUS_BOUND) break;
-      int aop = msg->popIntVal();
       PstInContainerInterface* arg = gf_popPstIn(msg);
       GlobalThread* tid = (msg->m_isEmpty() ? NULL : popThreadId(msg));
       PstOutContainerInterface* ans = arg->loopBack2Out();
       // send OO_UPDATE to all proxies except requester
       for (Position<DSite*> p(a_proxies); p(); p++) {
-	if ((*p) != s) sendToProxy(*p, OO_UPDATE, aop, ans->duplicate());
+	if ((*p) != s) sendToProxy(*p, OO_UPDATE, ans->duplicate());
       }
       // send OO_UPDATE to requester (with GlobalThread if provided)
-      if (tid) sendToProxy(s, OO_UPDATE, aop, ans, tid);
-      else sendToProxy(s, OO_UPDATE, aop, ans);
+      if (tid) sendToProxy(s, OO_UPDATE, ans, tid);
+      else sendToProxy(s, OO_UPDATE, ans);
       break; 
     }
     default: 
@@ -220,10 +218,8 @@ namespace _dss_internal{ //Start namespace
 
   // initiate a bind
   OpRetVal
-  ProtocolOnceOnlyProxy::protocol_Terminate(GlobalThread* const th_id,
-					    ::PstOutContainerInterface**& msg,
-					    const AbsOp& aop)
-  {
+  ProtocolOnceOnlyProxy::operationBind(GlobalThread* th_id,
+				       PstOutContainerInterface**& msg) {
     msg = NULL;   // default
     if (isPermFail()) return DSS_RAISE;
     switch (getStatus()) {
@@ -237,8 +233,8 @@ namespace _dss_internal{ //Start namespace
 	return DSS_PROCEED;
       }
       // send an OO_BIND message to the manager
-      if (th_id) sendToManager(OO_BIND, aop, UnboundPst(msg), th_id);
-      else sendToManager(OO_BIND, aop, UnboundPst(msg));
+      if (th_id) sendToManager(OO_BIND, UnboundPst(msg), th_id);
+      else sendToManager(OO_BIND, UnboundPst(msg));
       setStatus(TRANS_STATUS_WAITING);
       // fall through
     case TRANS_STATUS_WAITING:
@@ -252,10 +248,8 @@ namespace _dss_internal{ //Start namespace
 
   // initiate an update
   OpRetVal 
-  ProtocolOnceOnlyProxy::protocol_Update(GlobalThread* const th_id,
-					 ::PstOutContainerInterface**& msg,
-					 const AbsOp& aop)
-  {
+  ProtocolOnceOnlyProxy::operationAppend(GlobalThread* th_id,
+					 PstOutContainerInterface**& msg) {
     msg = NULL;   // default
     if (isPermFail()) return DSS_RAISE;
     switch (getStatus()) {
@@ -263,8 +257,8 @@ namespace _dss_internal{ //Start namespace
       // send an OO_UPDATE_REQUEST message to the manager.  This
       // request is useless if we already attempted to bind the
       // transient, since the binding will succeed before this update.
-      if (th_id) sendToManager(OO_UPDATE_REQUEST, aop, UnboundPst(msg), th_id);
-      else sendToManager(OO_UPDATE_REQUEST, aop, UnboundPst(msg));
+      if (th_id) sendToManager(OO_UPDATE_REQUEST, UnboundPst(msg), th_id);
+      else sendToManager(OO_UPDATE_REQUEST, UnboundPst(msg));
       // fall through
     case TRANS_STATUS_WAITING:
       // suspend the current thread until an answer comes back
@@ -277,10 +271,10 @@ namespace _dss_internal{ //Start namespace
 
   // kill the entity
   OpRetVal
-  ProtocolOnceOnlyProxy::protocol_Kill() {
+  ProtocolOnceOnlyProxy::operationKill() {
     if (!isPermFail() && getStatus() < TRANS_STATUS_WAITING) {
       setStatus(TRANS_STATUS_WAITING);   // later requests will never succeed
-      return ProtocolProxy::protocol_Kill();
+      return protocol_Kill();
     }
     return DSS_SKIP;
   }
@@ -304,10 +298,9 @@ namespace _dss_internal{ //Start namespace
     }
     case OO_UPDATE: {
       // do the callback in order to update
-      AbsOp aop = static_cast<AbsOp>(msg->popIntVal());
       PstInContainerInterface* cont = gf_popPstIn(msg);
       PstOutContainerInterface* ans;
-      a_proxy->m_doe(aop, NULL, NULL, cont, ans);
+      a_proxy->m_doe(AO_OO_UPDATE, NULL, NULL, cont, ans);
       // resume calling thread if this is a confirmation
       if (!msg->m_isEmpty()) {
 	GlobalThread* tid = popThreadId(msg);

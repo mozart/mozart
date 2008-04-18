@@ -114,6 +114,8 @@ namespace _dss_internal{ //Start namespace
     
     OpRetVal protocol_Access(GlobalThread* const,
 			     ::PstOutContainerInterface**&);
+    virtual OpRetVal operationRead(GlobalThread*, PstOutContainerInterface**&);
+    virtual OpRetVal operationWrite(GlobalThread*, PstOutContainerInterface**&);
 
     void makeGCpreps();
     void msgReceived(::MsgContainer*,DSite*);

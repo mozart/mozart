@@ -65,7 +65,8 @@ namespace _dss_internal{ //Start namespace
   ProtocolImmediateProxy::msgReceived(MsgContainer *msg, DSite* u) {}
 
   OpRetVal
-  ProtocolImmediateProxy::protocol_send(GlobalThread* const th_id){
+  ProtocolImmediateProxy::operationRead(GlobalThread*,
+					PstOutContainerInterface**&) {
     return DSS_PROCEED;
   }
 

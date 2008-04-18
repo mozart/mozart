@@ -56,7 +56,7 @@ namespace _dss_internal{ //Start namespace
   private:
     ProtocolDksBcProxy(const ProtocolDksBcProxy&); 
   public: // Exposed to the abstract entity
-    OpRetVal m_broadCast(PstOutContainerInterface** &, const AbsOp& aop); 
+    virtual OpRetVal operationAppend(GlobalThread*,PstOutContainerInterface**&);
     ProtocolDksBcProxy();
   public: // From DksBcClass
     virtual void m_receivedBroadcast(DksBcMessage*);
@@ -93,6 +93,10 @@ namespace _dss_internal{ //Start namespace
     virtual void remoteInitatedOperationCompleted(DssOperationId* opId,
 						  ::PstOutContainerInterface* pstOut); 
     virtual void localInitatedOperationCompleted(); 
+
+    // entity operations
+    virtual OpRetVal operationMonitor() { return DSS_INTERNAL_ERROR_NO_OP; }
+    virtual OpRetVal operationKill() { return DSS_INTERNAL_ERROR_NO_OP; }
   };
 
 

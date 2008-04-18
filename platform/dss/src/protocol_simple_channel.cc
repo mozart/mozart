@@ -200,6 +200,23 @@ namespace _dss_internal{ //Start namespace
     return DSS_SKIP;
   }
 
+  OpRetVal
+  ProtocolSimpleChannelProxy::operationRead(GlobalThread* thr,
+					    PstOutContainerInterface**& out) {
+    return protocol_Synch(thr, out, AO_STATE_READ);
+  }
+
+  OpRetVal
+  ProtocolSimpleChannelProxy::operationWrite(GlobalThread* thr,
+					     PstOutContainerInterface**& out) {
+    return protocol_Synch(thr, out, AO_STATE_WRITE);
+  }
+
+  OpRetVal
+  ProtocolSimpleChannelProxy::operationWrite(PstOutContainerInterface**& out) {
+    return protocol_Asynch(out, AO_STATE_WRITE);
+  }
+
   FaultState
   ProtocolSimpleChannelProxy::siteStateChanged(DSite* s,
 					       const FaultState& state) {

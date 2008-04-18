@@ -52,8 +52,11 @@ namespace _dss_internal{ //Start namespace
     
     virtual bool marshal_protocol_info(DssWriteBuffer *buf, DSite *);
     virtual bool dispose_protocol_info(DssReadBuffer *buf); //töm bufferten
-    OpRetVal protocol_send(GlobalThread* const th_id);
     virtual bool m_initRemoteProt(DssReadBuffer*); 
+
+    virtual OpRetVal operationMonitor() { return DSS_INTERNAL_ERROR_NO_OP; }
+    virtual OpRetVal operationKill() { return DSS_INTERNAL_ERROR_NO_OP; }
+    virtual OpRetVal operationRead(GlobalThread*, PstOutContainerInterface**&);
   };
 
 

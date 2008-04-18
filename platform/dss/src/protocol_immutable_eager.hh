@@ -87,7 +87,7 @@ namespace _dss_internal{ //Start namespace
 
     virtual bool m_initRemoteProt(DssReadBuffer*); 
 
-    OpRetVal protocol_Access(GlobalThread* const th_id);
+    virtual OpRetVal operationRead(GlobalThread*, PstOutContainerInterface**&);
   };
 
 } //End namespace

@@ -111,10 +111,8 @@ namespace _dss_internal{ //Start namespace
     bool m_initRemoteProt(DssReadBuffer*);
     ~ProtocolInvalidProxy();
 
-    OpRetVal protocol_Read(GlobalThread* const th_id,
-			   PstOutContainerInterface**& msg);
-    OpRetVal protocol_Write(GlobalThread* const th_id,
-			    PstOutContainerInterface**& msg);
+    virtual OpRetVal operationRead(GlobalThread*, PstOutContainerInterface**&);
+    virtual OpRetVal operationWrite(GlobalThread*, PstOutContainerInterface**&);
 
     void msgReceived(::MsgContainer*,DSite*);
 
