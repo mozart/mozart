@@ -1060,7 +1060,7 @@ public:
   PTYPE arg = (PTYPE) *(frame - bsFrameSize - 1);
 
 #define EnsureBTSpace(frame,n)                          \
-  frame = ensureFree(frame, n * bsFrameSize);
+  frame = ensureFree(frame, (n) * bsFrameSize);
 #define EnsureBTSpace1Frame(frame)                      \
   frame = ensureFree(frame, bsFrameSize);
 #define SetBTFrame(frame)                               \
@@ -2035,7 +2035,7 @@ public:
       buildValue(v);
     } else {
       OZ_Term vt = oz_newVariable(oz_rootBoard());
-      setTerm(vt, n);           // a reference to, of course;
+      fillTermSafe(vt, n);              // a reference to, of course;
       buildValue(vt);
     }
   }
