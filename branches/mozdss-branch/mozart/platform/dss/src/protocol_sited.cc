@@ -38,8 +38,8 @@ namespace _dss_internal{ //Start namespace
 
   OpRetVal
   ProtocolSitedProxy::operationKill() {
-    return (isHomeProxy() ? (makePermFail(), DSS_SKIP) :
-	    DSS_INTERNAL_ERROR_NO_OP);
+    if (isHomeProxy()) makePermFail();
+    return DSS_SKIP;
   }
 
   OpRetVal
@@ -56,7 +56,7 @@ namespace _dss_internal{ //Start namespace
 
   OpRetVal
   ProtocolSitedProxy::operationWrite(PstOutContainerInterface**&) {
-    return isHomeProxy() ? DSS_PROCEED : DSS_INTERNAL_ERROR_NO_OP;
+    return isHomeProxy() ? DSS_PROCEED : DSS_SKIP;
   }
 
   FaultState
