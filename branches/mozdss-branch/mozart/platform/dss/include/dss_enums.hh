@@ -191,9 +191,9 @@ enum ProtocolName {
 };
 const int PN_NBITS = 4;     // must be consistent with PN_MASK
 
-// PN_SITED is similar to PN_SIMPLE_CHANNEL, except that no language
-// operation is defined for remote proxies (no read, write, or kill).
-// Fault monitoring is available, however.
+// PN_SITED provides no actual protocol.  The home proxy has full
+// access to the entity, while remote proxies have no access at all.
+// Remote proxies can only detect when the home site fails.
 
 
 
