@@ -119,7 +119,7 @@ Mediator *glue_getMediator(TaggedRef entity) {
 
     case Co_Builtin:
       if (static_cast<Builtin*>(ct)->isSited())
-	return lookupMediator<UnusableMediator>(entity);
+	return getCTWHMediator<UnusableMediator>(ct);
       break;   // other builtins don't have a mediator
 
     case Co_Extension:
@@ -130,7 +130,7 @@ Mediator *glue_getMediator(TaggedRef entity) {
 
       // fall through, other extensions are unusables
     case Co_Resource:
-      return lookupMediator<UnusableMediator>(entity);
+      return getCTWHMediator<UnusableMediator>(ct);
 
     default:
       break;
@@ -754,6 +754,9 @@ ObjectMediator::ObjectMediator() : ConstMediator(GLUE_OBJECT) {}
 
 ObjectMediator::ObjectMediator(TaggedRef e) : ConstMediator(GLUE_OBJECT) {
   setEntity(e);
+  // if its class is sited, annotate the object as sited
+  if (tagged2Object(e)->getClass()->isSited())
+    setAnnotation(Annotation(PN_SITED, AA_NO_ARCHITECTURE, RC_ALG_NONE));
 }
 
 bool ObjectMediator::annotate(Annotation a) {
@@ -1087,6 +1090,8 @@ UnusableMediator::UnusableMediator() : ConstMediator(GLUE_UNUSABLE) {}
 
 UnusableMediator::UnusableMediator(TaggedRef e) : ConstMediator(GLUE_UNUSABLE) {
   setEntity(e);
+  // the entity is sited by definition
+  setAnnotation(Annotation(PN_SITED, AA_NO_ARCHITECTURE, RC_ALG_NONE));
 }
 
 bool UnusableMediator::annotate(Annotation a) {
@@ -1161,6 +1166,9 @@ ClassMediator::ClassMediator() : TokenMediator(GLUE_CLASS) {}
 
 ClassMediator::ClassMediator(TaggedRef e) : TokenMediator(GLUE_CLASS) {
   setEntity(e);
+  // annotate the class as sited if it has property 'sited'
+  if (tagged2OzClass(e)->isSited())
+    setAnnotation(Annotation(PN_SITED, AA_NO_ARCHITECTURE, RC_ALG_NONE));
 }
 
 AOcallback
@@ -1181,6 +1189,9 @@ ProcedureMediator::ProcedureMediator() : TokenMediator(GLUE_PROCEDURE) {}
 ProcedureMediator::ProcedureMediator(TaggedRef e) :
   TokenMediator(GLUE_PROCEDURE) {
   setEntity(e);
+  // if the procedure is sited, annotate it as sited
+  if (tagged2Abstraction(e)->getPred()->isSited())
+    setAnnotation(Annotation(PN_SITED, AA_NO_ARCHITECTURE, RC_ALG_NONE));
 }
 
 AOcallback

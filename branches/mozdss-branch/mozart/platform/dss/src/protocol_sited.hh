@@ -68,7 +68,6 @@ namespace _dss_internal{ //Start namespace
     void localInitatedOperationCompleted() { Assert(0); }
 
     void msgReceived(::MsgContainer*,DSite*) {}
-    bool m_initRemoteProt(DssReadBuffer*) {}
 
     // check fault state
     virtual FaultState siteStateChanged(DSite*, const FaultState&);
