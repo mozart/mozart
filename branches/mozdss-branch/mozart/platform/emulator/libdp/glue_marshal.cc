@@ -79,6 +79,15 @@ void glue_globalizeEntity(TaggedRef entity) {
   it does not exist yet.  In case the entity exists, it simply
   disposes the data from the buffer.
 
+
+  Note.  Sited entities cheat a bit with that scheme.  A sited entity
+  marshals itself as an unusable (with the GlueTag GLUE_UNUSABLE),
+  such that it is unmarshaled as an unusable resource on remote sites.
+  Note also that sited entities do not serialize entity-specific data.
+  Therefore one must be careful when unmarshaling a sited entity on
+  its home site: the mediator should not try to unmarshal entity-
+  specific data, because it is not present!
+
 */
 
 // marshal an entity
