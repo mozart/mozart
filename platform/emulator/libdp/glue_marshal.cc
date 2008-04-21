@@ -87,12 +87,17 @@ bool glue_marshalEntity(TaggedRef entity, ByteBuffer *bs) {
   Mediator* med = glue_getMediator(entity);
   if (!med->isDistributed()) med->globalize();
 
-  // marshal coordination proxy and mediator type
+  // marshal coordination proxy
   bool immediate = med->getCoordinatorAssistant()->marshal(buf, PMF_ORDINARY);
-  bs->put(med->getType());
 
-  // marshal entity-specific data
-  med->marshalData(bs);
+  // marshal mediator type and entity-specific data
+  if (med->getAnnotation().pn == PN_SITED) {
+    // special case: sited entities marshal themselves as unusables
+    bs->put(GLUE_UNUSABLE);
+  } else {
+    bs->put(med->getType());
+    med->marshalData(bs);
+  }
 
   return immediate;
 }
@@ -114,8 +119,13 @@ bool glue_unmarshalEntity(ByteBuffer *bs, TaggedRef &entity) {
   if (!med) { // create mediator
     med = glue_newMediator(tag);
     med->setProxy(proxy);
+    med->unmarshalData(bs);
+  } else {
+    // Sited entities have nothing to unmarshal, so we do not call
+    // unmarshalData() if the entity was marshaled as an unusable.
+    // This avoids a sited procedure to unmarshal a GName, etc.
+    if (tag != GLUE_UNUSABLE) med->unmarshalData(bs);
   }
-  med->unmarshalData(bs);
   entity = med->getEntity();
 
   return immediate;
@@ -127,8 +137,10 @@ int glue_getMarshaledSize(TaggedRef entity) {
   Mediator* med = glue_getMediator(entity);
   if (!med->isDistributed()) med->globalize();
 
-  return (med->getCoordinatorAssistant()->getMarshaledSize(PMF_ORDINARY) +
-	  med->getMarshaledDataSize() + 1);
+  int psize = med->getCoordinatorAssistant()->getMarshaledSize(PMF_ORDINARY);
+  int esize = (med->getAnnotation().pn == PN_SITED ? 1 :
+	       med->getMarshaledDataSize() + 1);
+  return (psize + esize);
 }
 
 

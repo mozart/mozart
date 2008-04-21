@@ -128,6 +128,7 @@ bool Annotation::hasMutableProtocol() const {
   case PN_MIGRATORY_STATE:
   case PN_PILGRIM_STATE:
   case PN_EAGER_INVALID:
+  case PN_SITED:
     return true;
   default:
     return false;
@@ -141,6 +142,7 @@ bool Annotation::hasImmutableProtocol() const {
   case PN_IMMEDIATE:
   case PN_IMMUTABLE_EAGER:
   case PN_IMMUTABLE_LAZY:
+  case PN_SITED:
     return true;
   default:
     return false;
@@ -192,6 +194,7 @@ OZ_Return Annotation::parseTerm(TaggedRef term) {
       CHECKPROT(name, "immediate", PN_IMMEDIATE);
       CHECKPROT(name, "eager", PN_IMMUTABLE_EAGER);
       CHECKPROT(name, "lazy", PN_IMMUTABLE_LAZY);
+      CHECKPROT(name, "sited", PN_SITED);
       // check for gc protocols
       if (strcmp(name, "persistent") == 0) {
 	if (rc & ~RC_ALG_PERSIST) goto error;
@@ -260,6 +263,7 @@ TaggedRef Annotation::toTerm() {
   case PN_IMMEDIATE:        list = oz_cons(oz_atom("immediate"), list); break;
   case PN_IMMUTABLE_EAGER:  list = oz_cons(oz_atom("eager"), list); break;
   case PN_IMMUTABLE_LAZY:   list = oz_cons(oz_atom("lazy"), list); break;
+  case PN_SITED:            list = oz_cons(oz_atom("sited"), list); break;
   default: break;
   }
   return list;
@@ -322,7 +326,7 @@ void initDP()
   setDefaultAnnotation(GLUE_THREAD,     PN_SIMPLE_CHANNEL,  aa, rc);
   setDefaultAnnotation(GLUE_VARIABLE,   PN_TRANSIENT,       aa, rc);
   setDefaultAnnotation(GLUE_READONLY,   PN_TRANSIENT,       aa, rc);
-  setDefaultAnnotation(GLUE_UNUSABLE,   PN_SIMPLE_CHANNEL,  aa, rc);
+  setDefaultAnnotation(GLUE_UNUSABLE,   PN_SITED,           aa, rc);
   setDefaultAnnotation(GLUE_CHUNK,      PN_IMMEDIATE,       aa, rc);
   setDefaultAnnotation(GLUE_CLASS,      PN_IMMEDIATE,       aa, rc);
   setDefaultAnnotation(GLUE_PROCEDURE,  PN_IMMEDIATE,       aa, rc);
