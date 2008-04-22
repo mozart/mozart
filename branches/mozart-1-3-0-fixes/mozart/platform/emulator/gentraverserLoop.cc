@@ -272,13 +272,13 @@ void TRAVERSERCLASS::doit()
 	      (TraverserBinaryAreaProcessor) lookupPtr();
 	    Assert(proc > (TraverserBinaryAreaProcessor) 0xf);
 	    // 'proc' is preserved in stack;
-	    StackEntry *se = putPtrSERef(0);
+	    long pos = putPtrSERef(0);
 	    putInt(taggedBATask);	// pre-cooked;
 
 	    //
 	    if (!(*proc)(this, arg)) {
 	      // not yet done - restore the argument back;
-	      updateSEPtr(se, arg);
+	      updateSEPtr(pos, arg);
 	    }
 	    // ... otherwise do nothing: the empty task will be
 	    // discarded later - 
