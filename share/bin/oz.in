@@ -102,7 +102,7 @@ case "$cmd" in
 	fi
 	url=$1
 	shift
-	exec "$OZEMULATOR" $OZGUI -u $url -- "$@"
+	exec "$OZEMULATOR" $OZGUI -u "$url" -- "$@"
 	;;
 
    oztool)
