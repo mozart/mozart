@@ -39,7 +39,8 @@ inline bool WeakDictionary::isEmpty()
 // it is computed anew at each GC by copying.  creating
 // a new weak dictionary also adds it to this list.
 
-static OZ_Term weakList;
+static OZ_Term weakList = 0;
+// raph: weakList == 0 means that the module has not been initialized
 
 void weakdict_init(void) {
   weakList = AtomNil;
@@ -65,7 +66,8 @@ WeakDictionary::WeakDictionary(OZ_Term srm)
 // GC marks.  That list is also used to detect weak dictionaries
 // that are revived by the finalization mechanism.
 
-static OZ_Term previousWeakList;
+static OZ_Term previousWeakList = 0;
+// raph: before initialization, weakList == previousWeakList must hold
 
 // kost@ : close down in the presence of distribution: we want to dump
 // all the locally accessible entities (so that all the proxies could
@@ -78,6 +80,7 @@ void gDropWeakDictionaries()
 
 void gCollectWeakDictionariesInit()
 {
+  if (weakList == 0) return;
   previousWeakList = weakList;
   weakList = AtomNil;
 }
@@ -91,6 +94,7 @@ void gCollectWeakDictionariesInit()
 
 void gCollectWeakDictionariesPreserve()
 {
+  if (weakList == 0) return;
   // we simply go through the list of previously known
   // dictionaries and collect those that have not yet been
   // collected and that verify the 3 conditions above
@@ -123,6 +127,7 @@ bool gCollectWeakDictionariesHasMore() {
 
 void gCollectWeakDictionariesContent()
 {
+  if (weakList == 0) return;
   // This is called after the 1st gc phase has completed.
   // all data reachable outside of weak dictionaries has
   // been marked and copied.  Entries in a weak dictionary
