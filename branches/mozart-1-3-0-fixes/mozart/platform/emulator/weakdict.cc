@@ -39,31 +39,12 @@ inline bool WeakDictionary::isEmpty()
 // it is computed anew at each GC by copying.  creating
 // a new weak dictionary also adds it to this list.
 
-static OZ_Term weakList;
-
-void weakdict_init(void) {
-  weakList = AtomNil;
-}
-
-WeakDictionary::WeakDictionary(DynamicTable*t, OZ_Term s)
-  : OZ_Extension(), table(t), stream(s)
-{
-  weakList = oz_cons(OZ_extension(this), weakList);
-}
-
-WeakDictionary::WeakDictionary(OZ_Term srm)
-  : OZ_Extension(), stream(srm)
-{
-  table = DynamicTable::newDynamicTable(DictDefaultSize);
-  weakList = oz_cons(OZ_extension(this), weakList);
-}
-
+static OZ_Term weakList = 0;
 
 // at the very start of GC, we must save the list of currently
 // known weak dictionaries.  We can then process this list at
 // any point prior to finalization provided we also check for
-// GC marks.  That list is also used to detect weak dictionaries
-// that are revived by the finalization mechanism.
+// GC marks.
 
 static OZ_Term previousWeakList;
 
@@ -73,13 +54,13 @@ static OZ_Term previousWeakList;
 // (their streams cannot be processed anyway).
 void gDropWeakDictionaries()
 {
-  weakList = AtomNil;
+  weakList = 0;
 }
 
 void gCollectWeakDictionariesInit()
 {
   previousWeakList = weakList;
-  weakList = AtomNil;
+  weakList = 0;
 }
 
 // All previously known dictionaries that
@@ -95,6 +76,7 @@ void gCollectWeakDictionariesPreserve()
   // dictionaries and collect those that have not yet been
   // collected and that verify the 3 conditions above
 
+  if (previousWeakList==0) return;
   for (;previousWeakList!=AtomNil;
        previousWeakList=oz_tail(previousWeakList))
     {
@@ -110,15 +92,6 @@ void gCollectWeakDictionariesPreserve()
 	// next time
 	oz_gCollectTerm(t,t);
     }
-
-  // From now on, previousWeakList refers to the first weak dictionary
-  // in the list of which the contents has been finalized.
-  Assert(previousWeakList == AtomNil);
-}
-
-bool gCollectWeakDictionariesHasMore() {
-  // Are there dictionaries in the list that have not been finalized yet?
-  return weakList != previousWeakList;
 }
 
 void gCollectWeakDictionariesContent()
@@ -129,22 +102,20 @@ void gCollectWeakDictionariesContent()
   // now point either to marked values (that have already
   // been copied to the new heap) or to unmarked values
   // (which are no longer reachable from outside).
-  //
-  // Note: The dictionaries that have not been finalized yet, are the
-  // ones between weakList and previousWeakList.
-  Assert(weakList != previousWeakList);
-  for (OZ_Term curr = weakList; curr != previousWeakList; curr=oz_tail(curr))
+  if (weakList==0) return;
+  for (OZ_Term curr=weakList;curr!=AtomNil;curr=oz_tail(curr))
     _tagged2WeakDictionary(oz_head(curr))->weakGC();
-  previousWeakList = weakList;
-  // Revived dictionaries will appear in front of previousWeakList.
 }
 
 OZ_Extension* WeakDictionary::gCollectV()
 {
   // copy to the new heap and enter into known list
   // WeakDictionary's gcRecurseV does nothing.
-  // the real work is done in gCollectWeakDictionariesContent().
-  return new WeakDictionary(table,stream);
+  // the real worked is done in gCollectWeakDictionaries.
+  WeakDictionary* d = new WeakDictionary(table,stream);
+  if (weakList==0) weakList=AtomNil;
+  weakList = oz_cons(OZ_extension(d),weakList);
+  return d;
 }
 
 OZ_Extension* WeakDictionary::sCloneV() {
@@ -214,6 +185,8 @@ OZ_BI_define(weakdict_new,0,2)
   WeakDictionary* wd = new WeakDictionary(srm);
   OZ_out(0) = srm;
   OZ_out(1) = OZ_extension(wd);
+  if (weakList==0) weakList=AtomNil;
+  weakList = oz_cons(OZ_out(1),weakList);
   return PROCEED;
 }
 OZ_BI_end
