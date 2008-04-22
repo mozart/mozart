@@ -8,7 +8,6 @@
 extern void gDropWeakDictionaries(void);
 extern void gCollectWeakDictionariesInit(void);
 extern void gCollectWeakDictionariesPreserve(void);
-extern bool gCollectWeakDictionariesHasMore(void);
 extern void gCollectWeakDictionariesContent(void);
 
 class WeakDictionary : public OZ_Extension {
@@ -17,10 +16,15 @@ private:
   OZ_Term stream;
   friend void gCollectWeakDictionariesPreserve(void);
   friend void gCollectWeakDictionariesContent(void);
-  WeakDictionary() : OZ_Extension() {}
 public:
-  WeakDictionary(DynamicTable*t,OZ_Term s);
-  WeakDictionary(OZ_Term srm);
+  WeakDictionary() : OZ_Extension() {}
+  WeakDictionary(DynamicTable*t,OZ_Term s)
+    : OZ_Extension(),table(t),stream(s) {}
+  WeakDictionary(OZ_Term srm)
+    : OZ_Extension(),stream(srm)
+    {
+      table = DynamicTable::newDynamicTable(DictDefaultSize);
+    }
   virtual int getIdV() { return OZ_E_WEAKDICTIONARY; }
   virtual OZ_Term typeV() { return OZ_atom("weakDictionary"); }
   virtual OZ_Extension* gCollectV();
