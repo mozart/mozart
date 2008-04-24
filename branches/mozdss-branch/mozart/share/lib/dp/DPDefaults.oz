@@ -64,11 +64,8 @@ define
 	 id
 	 closeLock
       meth init(U)
-	 [Ip PortS Id]={String.tokens
-			{List.takeWhile
-			 {List.drop U {Length "oz-site://"}}
-			 fun{$C}C\=&/ end}
-			&:}in
+	 Ip#PortS#Id={DecomposeURI U}
+      in
 	 Open.socket,init()
 	 id:=Id
 	 {self connect(host:Ip port:{String.toInt PortS})}
@@ -227,7 +224,7 @@ define
       Ip={DoGetIp {Value.condSelect Params ip best}}
       Port={DoBind Serv {Value.condSelect Params port 'from'(9000)}}
       Id={Value.condSelect Params id 0}
-      Uri={VirtualString.toString 'oz-site://'#Ip#':'#Port#':'#Id}
+      Uri={ComposeURI Ip Port Id}
       {Serv listen()}
       thread
 	 for OzS from fun{$}{Serv accept(accepted:$ acceptClass:OzSimpleProto)}end do
@@ -333,6 +330,18 @@ define
 	 'global'
       end
    end
+
+   %% compose/decompose a site URI
+   fun {ComposeURI IP PN ID}
+      {VirtualString.toString 'oz-site://'#IP#':'#PN#'/'#ID}
+   end
+   fun {DecomposeURI URI}
+      IP PN ID in
+      {String.token {String.token {List.drop URI PrefixLen} &: IP} &/ PN ID}
+      IP#PN#ID
+   end
+   PrefixLen={Length "oz-site://"}
+
    fun{Encode Xs}
       case Xs
       of nil then nil
