@@ -107,14 +107,14 @@ define
    end
 
    %% utils: create and parse tickets
-   fun {MakeTicket T}
+   fun {MakeTicket Key}
       URIs={Site.allURIs {Site.this}}
    in
       try
 	 for U in URIs  return:Return do
 	    if {List.isPrefix "oz-site://" U} then
 	       {Return {VirtualString.toAtom
-			'oz-ticket'#{List.drop U {Length "oz-site"}}#'/'#T}}
+			'oz-ticket'#{List.drop U {Length "oz-site"}}#"#"#Key}}
 	    end
 	 end
       catch _ then
@@ -125,11 +125,10 @@ define
    fun {ParseTicket VS}
       T={VirtualString.toString VS}
    in
-      if {List.isPrefix "oz-ticket://" T} then URI TId in
-	 {List.takeDropWhile {List.drop T {Length "oz-ticket://"}}
-	  fun {$ C} C\=&/ end
-	  URI _|TId}
-	 ('oz-site://'#URI)#{String.toInt TId}
+      if {List.isPrefix "oz-ticket://" T} then URI Key in
+	 %% assumption: the character '#' is not used in the URI
+	 {String.token {List.drop T {Length "oz-ticket://"}} &# URI Key}
+	 ('oz-site://'#URI)#{String.toInt Key}
       else
 	 {Exception.raiseError dp(ticket parse T)}
 	 unit
