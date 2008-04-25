@@ -2,6 +2,9 @@
 %%% Authors:
 %%%   Yves Jaradin (yves.jaradin@uclouvain.be)
 %%%
+%%% Contributors:
+%%%   Raphael Collet (raphael.collet@uclouvain.be)
+%%%
 %%% Copyright:
 %%%   Yves Jaradin, 2008
 %%%
@@ -28,10 +31,13 @@ import
    Property
    Pickle
    Site
+
 export
    Init
    Listen
+
 define
+   %% serialize/deserialize messages in Channel
    fun{Ser M Tail}
       case M
       of nil then &<|&>|Tail
@@ -58,55 +64,36 @@ define
 	 {Deser T X|S.2}
       end
    end
-   class OzSimpleProto
-      from Open.socket
+
+   %% A Channel wraps a socket connection to communicate with a site
+   class Channel from Open.socket
       attr
 	 id
-	 closeLock
+	 closeable: true     % set to false by unHook()
+
       meth init(U)
-	 Ip#PortS#Id={DecomposeURI U}
+	 Ip#PortNum#Id={DecomposeURI U}
       in
 	 Open.socket,init()
 	 id:=Id
-	 {self connect(host:Ip port:{String.toInt PortS})}
-	 closeLock:={NewLock}
-	 local
-	    FD
-	    L=@closeLock
-	 in
-	    {self getDesc(FD FD)}
-	    {Finalize.register self proc{$ _}
-				       {Wait 3000} %Should be configurable
-				       lock L then
-					  {OS.close FD}
-				       end
-				    end}
-	 end
+	 {self connect(host:Ip port:{String.toInt PortNum})}
+	 {Finalize.register self proc {$ C} {C close} end}
       end
       meth dOpen(X Y)
 	 Open.socket,dOpen(X Y)
-	 closeLock:={NewLock}
-	 local
-	    FD
-	    L=@closeLock
-	 in
-	    {self getDesc(FD FD)}
-	    {Finalize.register self proc{$ _}
-				       {Wait 3000} %Should be configurable
-				       lock L then
-					  {OS.close FD}
-				       end
-				    end}
-	 end
+	 {Finalize.register self proc {$ C} {C close} end}
+      end
+      meth close(...)=M
+	 if @closeable then Open.socket,M end
       end
       meth unHook()
-	 R in
-	 thread lock @closeLock then R=unit {Wait _} end end
-	 {Wait R}
+	 closeable:=false
       end
+
       meth getId($)
 	 @id
       end
+
       meth sendMsg(M)
 	 {self send(vs:{Ser M nil})}
       end
@@ -145,138 +132,151 @@ define
 	 SerF==SerW
       end
    end
+
+   %% define default settings for DP module
    proc{Init}
       Resolvers={NewDictionary}
    in
-      Resolvers.'oz-site':=
-      fun{$ Uri}
-	 OzS
-      in
-	 try
-	    Answer
-	 in
-	    OzS={New OzSimpleProto init(Uri)}
-	    {OzS sendMsg(["get" Uri])}
-	    Answer={OzS receiveMsg($)}
-	    case Answer
-	    of ["ok" !Uri PSite Meths] then
-	       s(site:{Pickle.unpack {Decode PSite}}
-		 connect:
-		    {Map Meths
-		     fun{$ M}
-			case M
-			of ["uri" Uri] then
-			   fun{$}
-			      Scheme={String.toAtom {List.takeWhile Uri fun{$C}C\=&:end}}
-			   in
-			      {{Property.get 'dp.resolver'}.Scheme Uri}.connect
-			   end
-			[] ["direct"] then
-			   fun{$}
-			      {OzS sendMsg(["connect"])}
-			      if {OzS receiveMsgForce("accept" $)} then
-				 {OzS unHook()}
-				 [sock(OzS)]
-			      else
-				 [ignore]
-			      end
-			   end
-			[] ["reverse"] then
-			   if{Not {Property.get 'dp.firewalled'}} then
-			      fun{$}
-				 {OzS sendMsg(["reverseConnect" {Site.allURIs {Site.this}}])}
-				 [none]
-			      end
-			   else
-			      ignore
-			   end
-			[] M then
-			   {Exception.raiseError dp(line unknownConnMeth M)}
-			   ignore
-			end
-		     end})
-	    [] ["dead" !Uri PSite] then
-	       s(site:{Pickle.unpack {Decode PSite}}
-		 connect:[permFail])
-	    else
-	       s(site:{Value.failed siteNotReachable}
-		 connect:nil)
-	    end
-	 catch E=system(os(os "connect" ...) ...) then
-	    if {OzS getId($)}==0 then
-	       s(site:{Value.failed siteIsDead}
-		 connect:[permFail])	       
-	    else
-	       raise E end
-	    end
-	 end
-      end
+      Resolvers.'oz-site':=GetConnectMeths
       {Property.put 'dp.firewalled' false}
       {Property.put 'dp.resolver' Resolvers}
       {Property.put 'dp.listenerParams'
-       default(id: ({OS.time} mod 257)*65536+{OS.getPID} )}
+       default(id: 'h'#(({OS.time} mod 257)*65536+{OS.getPID}) )}
    end
-   fun{Listen IncomingP}
-      Ip Port Id Uri Serv Params
+
+   %% connect to a site URI, and return the available connection
+   %% methods to that site
+   fun {GetConnectMeths Uri}
+      Chan
    in
+      try
+	 Chan={New Channel init(Uri)}
+	 {Chan sendMsg(["get" Uri])}     % send request: <get Uri>
+	 case {Chan receiveMsg($)}
+	 of ["ok" !Uri PSite Meths] then     % successful reply
+	    s(site:{Pickle.unpack {Decode PSite}}
+	      connect:{Map Meths
+		       fun{$ M}
+			  case M
+			  of ["uri" Uri] then
+			     {ConnectToUri Uri}
+			  [] ["direct"] then
+			     {ConnectDirect Chan}
+			  [] ["reverse"] then
+			     {ConnectReverse Chan}
+			  [] M then
+			     {Exception.raiseError dp(line unknownConnMeth M)}
+			     ignore
+			  end
+		       end})
+	 [] ["dead" !Uri PSite] then     % site is dead, cannot connect
+	    s(site:{Pickle.unpack {Decode PSite}}
+	      connect:[permFail])
+	 else
+	    s(site:{Value.failed siteNotReachable}
+	      connect:nil)
+	 end
+      catch system(os(os "connect" ...) ...) andthen {IsCritical Uri} then
+	 s(site:{Value.failed siteIsDead}
+	   connect:[permFail])	       
+      [] _ then
+	 s(site:{Value.failed siteNotReachable}
+	   connect:nil)
+      end
+   end
+   fun {ConnectToUri Uri}
+      fun {$}
+	 Scheme={String.toAtom {String.token Uri &: $ _}}
+      in
+	 {{Property.get 'dp.resolver'}.Scheme Uri}.connect
+      end
+   end
+   fun {ConnectDirect Chan}
+      fun {$}
+	 {Chan sendMsg(["connect"])}     % send request: <connect>
+	 if {Chan receiveMsgForce("accept" $)} then
+	    %% accepted: the channel can be used as a connection
+	    {Chan unHook()}
+	    [sock(Chan)]
+	 else
+	    [ignore]
+	 end
+      end
+   end
+   fun {ConnectReverse Chan}
+      if {Property.get 'dp.firewalled'} then ignore else
+	 fun {$}
+	    {Chan sendMsg(["reverseConnect" {Site.allURIs {Site.this}}])}
+	    [none]
+	 end
+      end
+   end
+
+   %% launch site connection server on the current site
+   fun {Listen IncomingP}
+      Server={New Open.socket init()}
       Params={Property.get 'dp.listenerParams'}
-      Serv={New Open.socket init()}
-      Ip={DoGetIp {Value.condSelect Params ip best}}
-      Port={DoBind Serv {Value.condSelect Params port 'from'(9000)}}
-      Id={Value.condSelect Params id 0}
-      Uri={ComposeURI Ip Port Id}
-      {Serv listen()}
-      thread
-	 for OzS from fun{$}{Serv accept(accepted:$ acceptClass:OzSimpleProto)}end do
-	    thread
-	       case {OzS receiveMsg($)}
-	       of ["get" !Uri] then
-		  Meths=[["direct"] ["reverse"]] in
-		  {OzS sendMsg(["ok" Uri {Encode{ByteString.toString {Pickle.pack {Site.this}}}} Meths])}
-		  case
-		     try{OzS receiveMsg($)}
-		     catch error(dp(line dropped)...) then dropped
-		     end
+      IP={DoGetIp {Value.condSelect Params ip best}}
+      PN={DoBind Server {Value.condSelect Params port 'from'(9000)}}
+      ID={Value.condSelect Params id 0}
+      Uri={ComposeURI IP PN ID}
+      proc {Serve Chan}
+	 thread
+	    try
+	       case {Chan receiveMsg($)}
+	       of ["get" !Uri] then     % receive request <get Uri>
+		  PSite={Encode {ByteString.toString {Pickle.pack {Site.this}}}}
+		  Meths=[["direct"] ["reverse"]]
+	       in
+		  {Chan sendMsg(["ok" Uri PSite Meths])}     % reply with data
+		  case {Chan receiveMsg($)}
 		  of ["connect"] then
-		     {OzS sendMsg("accept")}
-		     {OzS unHook()}
-		     {Send IncomingP sock(OzS)}
+		     {Chan sendMsg("accept")}
+		     {Chan unHook()}
+		     {Send IncomingP sock(Chan)}
 		  [] ["reverseConnect" Uris] then
-		     for U in Uris continue:C break:B do
-			try
-			   S={Site.resolve U}in
+		     for U in Uris   break:Break do
+			try S={Site.resolve U} in
 			   {Wait S}
-			   {Site.allURIs S _}%Force connect
+			   {Site.allURIs S _}     % Force connect
+			   {Break}
 			catch _ then
-			   {C}
+			   skip          % try next Uri
 			end
-			{B}
 		     end
-		  [] dropped then
-		     skip
 		  end
 	       end
+	    catch _ then
+	       skip     % in case of an error, we simply drop the channel
 	    end
 	 end
       end
+   in
+      {Server listen()}
+      thread
+	 %% infinite loop; create a Channel for every incoming connection
+	 for do {Serve {Server accept(accepted:$ acceptClass:Channel)}} end
+      end
       [Uri]
    end
+
+   %% bind Socket S to a port, following the specification D
    fun{DoBind S D}
       case D
       of 'from'(X) then
 	 try
-	    {S bind(takePort:X)}
-	    X
+	    {S bind(takePort:X)} X
 	 catch _ then
 	    {DoBind S 'from'(X+1)}
 	 end
       [] free then
 	 {S bind(port:$)}
       [] exact(X) then
-	 {S bind(takePort:X)}
-	 X
+	 {S bind(takePort:X)} X
       end
    end
+
+   %% extract an IP address, following specification D
    fun{DoGetIp D}
       case D
       of exact(Ip) then
@@ -287,48 +287,51 @@ define
 	 {BestIp {OS.getHostByName {OS.uName}.nodename}.addrList}
       end
    end
-   fun{BestIp IPs}
-      {Sort IPs fun{$ X Y}
-		   EX={EvalIp X}
-		   EY={EvalIp Y}
-		in
-		   (EX=='global' andthen EY\='global')
-		   orelse
-		   (EX=='private' andthen EY\='global' andthen EY\='private')
-		   orelse
-		   (EX=='local' andthen EY\='global' andthen EY\='private' andthen EY\='local')
-		   orelse
-		   (EX=='loopback' andthen EY=='reserved')
-		end}.1
+
+   %% return the best IP address to connect in the list
+   fun {BestIp IPs}
+      X|T={Map IPs CategorizeIP}
+   in
+      {FoldL T Best2 X}.2
    end
-   fun{EvalIp IP} %RFC3330
-      case IP
-      of &1|&0|&.|_ then 'private'
-      [] &1|&2|&7|&.|_ then 'loopback'
-      [] &1|&6|&9|&.|&2|&5|&4|_ then 'local'
-      [] &1|&7|&2|&.|T then
-	 case T
-	 of &1|&6|&.|_ then 'private'
-	 [] &1|&7|&.|_ then 'private'
-	 [] &1|&8|&.|_ then 'private'
-	 [] &1|&9|&.|_ then 'private'
-	 [] &2|_|&.|_ then 'private'
-	 [] &3|&0|&.|_ then 'private'
-	 [] &3|&1|&.|_ then 'private'
-	 end
-      [] &1|&9|&2|&.|&1|&6|&8|&.|_ then 'private'
-      [] &2|&2|&4|&.|_ then 'multicast'
-      [] &2|&2|&5|&.|_ then 'multicast'
-      [] &2|&2|&6|&.|_ then 'multicast'
-      [] &2|&2|&7|&.|_ then 'multicast'
-      [] &2|&2|&8|&.|_ then 'multicast'
-      [] &2|&2|&9|&.|_ then 'multicast'
-      [] &2|&3|_|&.|_ then 'multicast'
-      [] &2|&4|_|&.|_ then 'reserved'
-      [] &2|&5|_|&.|_ then 'reserved'
-      else
-	 'global'
-      end
+   fun {Best2 (C1#_)=CIP1 (C2#_)=CIP2}
+      if (C2=='global' andthen C1\='global') orelse
+	 (C2=='private' andthen C1\='global' andthen C1\='private') orelse
+	 (C2=='local' andthen C1\='global' andthen
+	  C1\='private' andthen C1\='local') orelse
+	 (C2=='loopback' andthen C1=='reserved')
+      then CIP2 else CIP1 end
+   end
+
+   %% adjoin a category to the given IP address, following RFC3330
+   fun {CategorizeIP IP}
+      (case IP
+       of &1|&0|&.|_ then 'private'
+       [] &1|&2|&7|&.|_ then 'loopback'
+       [] &1|&6|&9|&.|&2|&5|&4|_ then 'local'
+       [] &1|&7|&2|&.|T then
+	  case T
+	  of &1|&6|&.|_ then 'private'
+	  [] &1|&7|&.|_ then 'private'
+	  [] &1|&8|&.|_ then 'private'
+	  [] &1|&9|&.|_ then 'private'
+	  [] &2|_|&.|_ then 'private'
+	  [] &3|&0|&.|_ then 'private'
+	  [] &3|&1|&.|_ then 'private'
+	  end
+       [] &1|&9|&2|&.|&1|&6|&8|&.|_ then 'private'
+       [] &2|&2|&4|&.|_ then 'multicast'
+       [] &2|&2|&5|&.|_ then 'multicast'
+       [] &2|&2|&6|&.|_ then 'multicast'
+       [] &2|&2|&7|&.|_ then 'multicast'
+       [] &2|&2|&8|&.|_ then 'multicast'
+       [] &2|&2|&9|&.|_ then 'multicast'
+       [] &2|&3|_|&.|_ then 'multicast'
+       [] &2|&4|_|&.|_ then 'reserved'
+       [] &2|&5|_|&.|_ then 'reserved'
+       else
+	  'global'
+       end)#IP
    end
 
    %% compose/decompose a site URI
@@ -342,6 +345,13 @@ define
    end
    PrefixLen={Length "oz-site://"}
 
+   %% tell whether the Uri is critical to connect to the site
+   fun {IsCritical URI}
+      %% it is the case when the site id starts with letter 'h'
+      case {DecomposeURI URI}.3 of &h|_ then true else false end
+   end
+
+   %% encode/decode a string of bytes
    fun{Encode Xs}
       case Xs
       of nil then nil
