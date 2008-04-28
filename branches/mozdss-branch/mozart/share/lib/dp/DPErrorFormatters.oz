@@ -40,47 +40,48 @@ define
       case E
       of dp(line badChar C) then
 	 error(kind:T
-	       msg:'The character '#[C]#' is not allowed in pre-DSS messages.')
+	       msg:'The character '#[C]#' is not allowed in pre-DSS messages')
       [] dp(line dropped) then
 	 error(kind:T
-	       msg:'Connection dropped unexpectedly before passing it to the DSS.')
+	       msg:'Connection dropped unexpectedly before passing it to the DSS')
       [] dp(line unknownConnMeth M) then
 	 error(kind:T
-	       msg:'Unknown connection method.'
+	       msg:'Unknown connection method'
 	       items:[hint(l:'method' m:oz(M))])
       [] dp(connection noLuck ToSite URIs) then
 	 error(kind:T
-	       msg:'Unable to open a connection to site '#
-	       oz(ToSite)#' using the URIs '#list(URIs ', '))
+	       msg:'Unable to open a connection to site with the given URIs'
+	       items: (hint(l:'site' m:oz(ToSite)) |
+		       {Map URIs fun {$ URI} hint(l:'URI' m:URI) end}))
       [] dp(dssLimit distributedURI URIs) then
 	 error(kind:T
-	       msg:'The DSS has a limit of only one distributed URI'#
-	       ' of the form oz-site://<ip>:<port>:<id>'
-	       items:[hint(l:'found URIs' m:list(URIs ', '))])
+	       msg:'Site URIs expected format is: oz-site://<ip>:<port>/<id>'
+	       items:{Map URIs fun {$ URI} hint(l:'URI' m:URI) end})
       [] dp(dss unknownNotification M) then
 	 error(kind:T
-	       msg:'Received an unexpected DSS notification.'
+	       msg:'Received an unexpected DSS notification'
 	       items:[hint(l:'notification' m:oz(M))])
       [] dp(service unknownMessage S M) then
 	 error(kind:T
-	       msg:'The service '#oz(S)#' received an unexpected message.'
+	       msg:'The service '#oz(S)#' received an unexpected message'
 	       items:[hint(l:'message' m:oz(M))])
       [] dp(service localOnly S M) then
 	 error(kind:T
-	       msg:'The service '#oz(S)#' rejected a remote message.'
+	       msg:'The service '#oz(S)#' rejected a remote message'
 	       items:[hint(l:'message' m:oz(M))
 		      line('This message is only allowed locally.')])
-      [] dp(ticket bad T) then
+      [] dp(ticket bad Ticket) then
 	 error(kind:T
-	       msg:'The ticket '#T#' is unknown or retracted.')
+	       msg:'Ticket is unknown or has been retracted'
+	       items:[hint(l:'ticket' m:Ticket)])
       [] dp(ticket make URIs) then
 	 error(kind:T
-	       msg:'Unable to find a suitable URI to make a ticket.'
-	       items:[hint(l:'found URIs' m:list(URIs ', '))])
-      [] dp(ticket parse T) then
+	       msg:'Unable to find a suitable URI to make a ticket'
+	       items:{Map URIs fun {$ URI} hint(l:'URI' m:URI) end})
+      [] dp(ticket parse Ticket) then
 	 error(kind:T
-	       msg:'Unable to parse ticket '#T)
-	 
+	       msg:'Unable to parse ticket'
+	       items:[hint(l:'ticket' m:Ticket)])
       [] dp(generic _ Msg Hints) then
 	 error(kind: T
 	       msg: Msg
