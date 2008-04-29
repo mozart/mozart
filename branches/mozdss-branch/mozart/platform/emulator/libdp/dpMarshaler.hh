@@ -503,6 +503,9 @@ public:
     return (new DistributedVarPatch(*this));
   }
   virtual void gCollectRecurseV() { gcRecurseOVP(); }
+
+  // status is checked by marshaler (check for failed values)
+  virtual VarStatus checkStatusV() { return EVAR_STATUS_UNKNOWN; }
 };
 
 inline
