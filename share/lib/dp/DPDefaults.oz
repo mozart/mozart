@@ -272,10 +272,11 @@ define
 	       {Sess sendMsg(["ok" Uri PSite Meths])}     % reply with data
 	       {Loop}     % ready for next request
 	       
-	    [] ["connect"] then
+	    [] ["connect"] then FD0 FD1 in
 	       {Sess sendMsg("accept")}
 	       {Sess unHook()}
-	       {Send IncomingP sock(Sess)}
+	       {Sess getDesc(FD0 FD1)}
+	       {Send IncomingP fd(FD0 FD1)}
 	       
 	    [] ["reverseConnect" Uris] then
 	       for U in Uris   break:Break do
