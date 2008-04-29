@@ -104,9 +104,9 @@ define
       of connect(ToSite) then
 	 thread
 	    URI={VirtualString.toString ToSite.info}
-	    ConnectMeths={{Property.get 'dp.resolver'}.'oz-site' URI}.connect
+	    Connect={{Property.get 'dp.resolver'}.'oz-site' URI}.connect
 	 in
-	    if {Not {DoConnect ToSite ConnectMeths}} then
+	    if {Not {DoConnect ToSite Connect}} then
 	       {Exception.raiseError dp(connection noLuck ToSite [URI])}
 	    end
 	 end
@@ -129,40 +129,30 @@ define
 	 {PrintError {Exception.error dp(dss unknownNotification M)}}
       end
    end
-   NextConnect={NewName}
-   fun{DoConnect ToSite ConnS}
-      case ConnS
-      of nil then
-	 false
-      [] Conn|ConnT then
-	 try
-	    case Conn
-	    of fd(FD) then
-	       {Glue.setConnection ToSite fd(FD FD)}
-	       true
-	    [] fd(FD0 FD1) then
-	       {Glue.setConnection ToSite Conn}
-	       true
-	    [] sock(Sock) then FD0 FD1 in
-	       {Sock getDesc(FD0 FD1)}
-	       {Glue.setConnection ToSite fd(FD0 FD1)}
-	       true
-	    [] none then
-	       true
-	    [] ignore then
-	       raise NextConnect end
-	    [] permFail then
-	       {Glue.setSiteState ToSite permFail}
-	       true
-	    [] P andthen {IsProcedure P} then
-	       {DoConnect ToSite {P}}orelse raise NextConnect end
-	    end
-	 catch !NextConnect then
-	    {DoConnect ToSite ConnT}
-	 [] E then
-	    {PrintError E}
-	    {DoConnect ToSite ConnT}
+   fun{DoConnect ToSite Connect}
+      try
+	 case {Connect default}
+	 of fd(FD) then
+	    {Glue.setConnection ToSite fd(FD FD)}
+	    true
+	 [] fd(FD0 FD1) then
+	    {Glue.setConnection ToSite fd(FD0 FD1)}
+	    true
+	 [] sock(Sock) then FD0 FD1 in
+	    {Sock getDesc(FD0 FD1)}
+	    {Glue.setConnection ToSite fd(FD0 FD1)}
+	    true
+	 [] none then
+	    true
+	 [] ignore then
+	    false
+	 [] permFail then
+	    {Glue.setSiteState ToSite permFail}
+	    true
 	 end
+      catch E then
+	 {PrintError E}
+	 false
       end
    end
    proc{DoAccept X}
