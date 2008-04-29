@@ -37,39 +37,49 @@ export
    Listen
 
 define
-   %% serialize/deserialize messages in Channel
-   fun{Ser M Tail}
+   %% a small abstraction for caching sessions and resolutions
+   fun {NewCache Generate}
+      Cache={NewCell nil}
+      proc {Take K L ?Lout ?Res}
+	 case L of X|T then
+	    if X.1==K then Lout=T Res=[X.2] else Lout=X|{Take K T $ Res} end
+	 else Lout=nil Res=nil end
+      end
+   in
+      {Finalize.everyGC proc {$} Cache:=nil end}
+      cache(get: fun {$ K}
+		    L T in L=Cache:=T
+		    case {Take K L T} of [X] then X else {Generate K} end
+		 end
+	    put: proc {$ K X}
+		    L T in T=Cache:=(K#X)|T
+		 end)
+   end
+
+   %% format/parse messages in Session
+   fun{BuildMsg M Tail}
       case M
       of nil then &<|&>|Tail
-      [] _|_ then &<|{FoldL M fun{$ Acc X}{Ser X $ Acc}end $ &>|Tail}
+      [] _|_ then &<|{FoldL M fun {$ Acc X} {BuildMsg X $ Acc} end $ &>|Tail}
       [] &< then {Exception.raiseError dp(line badChar &<)} unit
       [] &> then {Exception.raiseError dp(line badChar &>)} unit
-      else
-	 M|Tail
+      else M|Tail
       end
    end
-   proc{Deser T S}
+   proc{ParseMsg T S}
       case T
-      of nil then
-	 S.1=nil
-	 S.2=nil
-      [] &<|T then X Y in
-	 S.1=X|Y
-	 {Deser T X|Y|S.2}
-      [] &>|T then
-	 S.1=nil
-	 {Deser T S.2}
-      [] H|T then X in
-	 S.1=H|X
-	 {Deser T X|S.2}
+      of nil then S.1=nil S.2=nil
+      [] &<|T then X Y in S.1=X|Y {ParseMsg T X|Y|S.2}
+      [] &>|T then S.1=nil {ParseMsg T S.2}
+      [] H|T then X in S.1=H|X {ParseMsg T X|S.2}
       end
    end
 
-   %% A Channel wraps a socket connection to communicate with a site
-   class Channel from Open.socket
+   %% A Session wraps a socket connection to communicate with a site
+   class Session from Open.socket
       attr
 	 id
-	 closeable: true     % set to false by unHook()
+	 owner: true     % whether the session owns its file descriptors
 
       meth init(U)
 	 Ip#PortNum#Id={DecomposeURI U}
@@ -84,10 +94,11 @@ define
 	 {Finalize.register self proc {$ C} {C close} end}
       end
       meth close(...)=M
-	 if @closeable then Open.socket,M end
+	 %% don't close if the session has been unhooked
+	 if @owner then Open.socket,M end
       end
       meth unHook()
-	 closeable:=false
+	 owner:=false
       end
 
       meth getId($)
@@ -95,120 +106,151 @@ define
       end
 
       meth sendMsg(M)
-	 {self send(vs:{Ser M nil})}
+	 {self send(vs:{BuildMsg M nil})}
       end
       meth receiveMsg($)
 	 {self Receive("" $)}
       end
       meth Receive(I $)
-	 L
-	 SerF={Append I Open.socket,read(list:$ len:L)}
+	 L Str={Append I Open.socket,read(list:$ len:L)}
       in
 	 try
-	    {Deser SerF [$]|nil}
+	    {ParseMsg Str [$]|nil}
 	 catch _ then
 	    if L>0 then
-	       {self Receive(SerF $)}
+	       {self Receive(Str $)}
 	    else
 	       {Exception.raiseError dp(line dropped)} unit
 	    end
 	 end
       end
       meth ReceiveN(N $)
-	 L T SerF=Open.socket,read(list:$ tail:T size:N len:L)
+	 L T Str=Open.socket,read(list:$ tail:T size:N len:L)
       in
 	 if N<L then
 	    T={self ReceiveN(N-L $)}
 	 else
 	    T=nil
 	 end
-	 SerF
+	 Str
       end
       meth receiveMsgForce(M $)
-	 SerW={Ser M nil}
-	 LL={Length SerW}
-	 SerF={self ReceiveN(LL $)}
+	 Expected={BuildMsg M nil}
+	 LL={Length Expected}
+	 Str={self ReceiveN(LL $)}
       in
-	 SerF==SerW
+	 Str==Expected
       end
    end
+
+   %% cache wrappers
+   SessionCache={NewCache fun {$ URI} {New Session init(URI)} end}
+   fun {GetSession URI} {SessionCache.get URI} end
+   proc {PutSession URI Sess} {SessionCache.put URI Sess} end
 
    %% define default settings for DP module
    proc{Init}
       Resolvers={NewDictionary}
    in
-      Resolvers.'oz-site':=GetConnectMeths
+      Resolvers.'oz-site':=Resolve
       {Property.put 'dp.firewalled' false}
       {Property.put 'dp.resolver' Resolvers}
       {Property.put 'dp.listenerParams'
        default(id: 'h'#(({OS.time} mod 257)*65536+{OS.getPID}) )}
    end
 
-   %% connect to a site URI, and return the available connection
-   %% methods to that site
-   fun {GetConnectMeths Uri}
-      Chan
-   in
+   %% resolve a site URI; this returns a record s(site:S connect:C),
+   %% where S is the site corresponding to the URI, and C is a unary
+   %% function that returns a valid connection to that site
+   proc {Resolve URI ?Res}
+      Res={ResolveCache.get URI}
+      {ResolveCache.put URI Res}     % keep that stuff in the cache
+   end
+
+   ResolveCache={NewCache DoResolve}
+   fun {DoResolve URI}
       try
-	 Chan={New Channel init(Uri)}
-	 {Chan sendMsg(["get" Uri])}     % send request: <get Uri>
-	 case {Chan receiveMsg($)}
-	 of ["ok" !Uri PSite Meths] then     % successful reply
-	    s(site:{Pickle.unpack {Decode PSite}}
-	      connect:{Map Meths
-		       fun{$ M}
-			  case M
-			  of ["uri" Uri] then
-			     {ConnectToUri Uri}
-			  [] ["direct"] then
-			     {ConnectDirect Chan}
-			  [] ["reverse"] then
-			     {ConnectReverse Chan}
-			  [] M then
-			     {Exception.raiseError dp(line unknownConnMeth M)}
-			     ignore
-			  end
-		       end})
-	 [] ["dead" !Uri PSite] then     % site is dead, cannot connect
-	    s(site:{Pickle.unpack {Decode PSite}}
-	      connect:[permFail])
-	 else
-	    s(site:{Value.failed siteNotReachable}
-	      connect:nil)
-	 end
-      catch system(os(os "connect" ...) ...) andthen {IsCritical Uri} then
-	 s(site:{Value.failed siteIsDead}
-	   connect:[permFail])	       
-      [] _ then
-	 s(site:{Value.failed siteNotReachable}
-	   connect:nil)
-      end
-   end
-   fun {ConnectToUri Uri}
-      fun {$}
-	 Scheme={String.toAtom {String.token Uri &: $ _}}
+	 Sess={GetSession URI}
       in
-	 {{Property.get 'dp.resolver'}.Scheme Uri}.connect
+	 {Sess sendMsg(["get" URI])}     % send request: <get URI>
+	 case {Sess receiveMsg($)}
+	 of ["ok" !URI PSite Meths] then S in     % successful reply
+	    {PutSession URI Sess}
+	    S={Pickle.unpack {Decode PSite}}
+	    s(site:S connect:{MakeConnect URI S Meths})
+	 [] ["dead" !URI PSite] then     % site is dead, cannot connect
+	    {PutSession URI Sess}
+	    s(site:{Pickle.unpack {Decode PSite}} connect:FailConnect)
+	 end
+      catch system(os(os "connect" ...) ...) andthen {IsCritical URI} then
+	 s(site:{Value.failed siteIsDead} connect:FailConnect)
+      [] _ then
+	 s(site:{Value.failed siteNotReachable} connect:NoConnect)
       end
    end
-   fun {ConnectDirect Chan}
-      fun {$}
-	 {Chan sendMsg(["connect"])}     % send request: <connect>
-	 if {Chan receiveMsgForce("accept" $)} then
-	    %% accepted: the channel can be used as a connection
-	    {Chan unHook()}
-	    [sock(Chan)]
-	 else
-	    [ignore]
+
+   %% make a connect function for the given site and connection methods
+   fun {MakeConnect URI S Meths}
+      fun {$ Preferences}
+	 %% currently ignore user preferences
+	 for M in Meths   return:Return   default:none do
+	    try
+	       case M
+	       of ["uri" OtherURI] then
+		  raise success({ConnectToURI OtherURI Preferences}) end
+	       [] ["direct"] then
+		  raise success({ConnectDirect URI}) end
+	       [] ["reverse"] then
+		  raise success({ConnectReverse URI}) end
+	       end
+	    catch success(X) then
+	       %% this turnaround is necessary because Return is
+	       %% implemented by raising an exception...
+	       {Return X}
+	    [] _ then
+	       skip          % try next method
+	    end
 	 end
       end
    end
-   fun {ConnectReverse Chan}
+
+   %% "connects" to a failed site
+   fun {FailConnect _}
+      permFail
+   end
+
+   %% "connects" to an unreachable site
+   fun {NoConnect _}
+      none
+   end
+
+   %% connect with a given URI
+   fun {ConnectToURI URI Preferences}
+      Scheme={String.toAtom {String.token URI &: $ _}}
+      Connect={{Property.get 'dp.resolver'}.Scheme URI}.connect
+   in
+      {Connect Preferences}
+   end
+
+   %% ask for a direct connection to the URI
+   fun {ConnectDirect URI}
+      Sess={GetSession URI} FD0 FD1
+   in
+      {Sess sendMsg(["connect"])}     % send request: <connect>
+      {Sess receiveMsgForce("accept" true)}
+      %% accepted: the session can be used as a connection
+      {Sess unHook()}
+      {Sess getDesc(FD0 FD1)}
+      fd(FD0 FD1)
+   end
+
+   %% ask for a reverse connection
+   fun {ConnectReverse URI}
       if {Property.get 'dp.firewalled'} then ignore else
-	 fun {$}
-	    {Chan sendMsg(["reverseConnect" {Site.allURIs {Site.this}}])}
-	    [none]
-	 end
+	 Sess={GetSession URI}
+      in
+	 {Sess sendMsg(["reverseConnect" {Site.allURIs {Site.this}}])}
+	 none
       end
    end
 
@@ -220,42 +262,51 @@ define
       PN={DoBind Server {Value.condSelect Params port 'from'(9000)}}
       ID={Value.condSelect Params id 0}
       Uri={ComposeURI IP PN ID}
-      proc {Serve Chan}
-	 thread
-	    try
-	       case {Chan receiveMsg($)}
-	       of ["get" !Uri] then     % receive request <get Uri>
-		  PSite={Encode {ByteString.toString {Pickle.pack {Site.this}}}}
-		  Meths=[["direct"] ["reverse"]]
-	       in
-		  {Chan sendMsg(["ok" Uri PSite Meths])}     % reply with data
-		  case {Chan receiveMsg($)}
-		  of ["connect"] then
-		     {Chan sendMsg("accept")}
-		     {Chan unHook()}
-		     {Send IncomingP sock(Chan)}
-		  [] ["reverseConnect" Uris] then
-		     for U in Uris   break:Break do
-			try S={Site.resolve U} in
-			   {Wait S}
-			   {Site.allURIs S _}     % Force connect
-			   {Break}
-			catch _ then
-			   skip          % try next Uri
-			end
-		     end
+      proc {Serve Sess}
+	 proc {Loop}
+	    case {Sess receiveMsg($)}
+	    of ["get" !Uri] then     % receive request <get Uri>
+	       PSite={Encode {ByteString.toString {Pickle.pack {Site.this}}}}
+	       Meths=[["direct"] ["reverse"]]
+	    in
+	       {Sess sendMsg(["ok" Uri PSite Meths])}     % reply with data
+	       {Loop}     % ready for next request
+	       
+	    [] ["connect"] then
+	       {Sess sendMsg("accept")}
+	       {Sess unHook()}
+	       {Send IncomingP sock(Sess)}
+	       
+	    [] ["reverseConnect" Uris] then
+	       for U in Uris   break:Break do
+		  try S={Site.resolve U} in
+		     {Wait S}
+		     {Site.allURIs S _}     % Force connect
+		     raise success end
+		  catch success then
+		     %% this turnaround is necessary because Break
+		     %% is implemented by raising an exception...
+		     {Break}
+		  [] _ then
+		     skip          % try next Uri
 		  end
 	       end
+	    end
+	 end
+      in
+	 thread
+	    try
+	       {Loop}
 	    catch _ then
-	       skip     % in case of an error, we simply drop the channel
+	       {Sess close}     % protocol error: we simply drop the session
 	    end
 	 end
       end
    in
       {Server listen()}
       thread
-	 %% infinite loop; create a Channel for every incoming connection
-	 for do {Serve {Server accept(accepted:$ acceptClass:Channel)}} end
+	 %% infinite loop; create a Session for every incoming connection
+	 for do {Serve {Server accept(accepted:$ acceptClass:Session)}} end
       end
       [Uri]
    end
