@@ -102,11 +102,11 @@ namespace _dss_internal{ //Start namespace
     bool isReachable(void) const { return getStatus() & 4; }
     bool isColoring(void) const { return getStatus() & 8; }
     bool isStrict(void) const { return getStatus() & 16; }
-    void hasToken(bool b) { setStatus((getStatus() & ~1) || (b ? 1 : 0)); }
-    void isInRing(bool b) { setStatus((getStatus() & ~2) || (b ? 2 : 0)); }
-    void isReachable(bool b) { setStatus((getStatus() & ~4) || (b ? 4 : 0)); }
-    void isColoring(bool b) { setStatus((getStatus() & ~8) || (b ? 8 : 0)); }
-    void isStrict(bool b) { setStatus((getStatus() & ~16) || (b ? 16 : 0)); }
+    void hasToken(bool b) { setStatus((getStatus() & ~1) | (b ? 1 : 0)); }
+    void isInRing(bool b) { setStatus((getStatus() & ~2) | (b ? 2 : 0)); }
+    void isReachable(bool b) { setStatus((getStatus() & ~4) | (b ? 4 : 0)); }
+    void isColoring(bool b) { setStatus((getStatus() & ~8) | (b ? 8 : 0)); }
+    void isStrict(bool b) { setStatus((getStatus() & ~16) | (b ? 16 : 0)); }
 
     DSite*        a_successor;    // successor in the ring
     int           a_freeRounds;   // how many "free rounds" before leaving

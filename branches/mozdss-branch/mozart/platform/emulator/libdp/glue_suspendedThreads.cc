@@ -169,7 +169,8 @@ SuspendedCellOp::SuspendedCellOp(Mediator* med, OperationTag _op,
 				 TaggedRef* a, TaggedRef* res) :
   SuspendedOperation(med), op(_op)
 {
-  args[0] = OperationIn[_op]-1 > 1 ? a[0] : makeTaggedNULL();
+  // cell operations have at most one argument
+  args[0] = OperationIn[_op]-1 > 0 ? a[0] : makeTaggedNULL();
   result = res ? (*res = oz_newVariable()) : makeTaggedNULL();
   suspend();
 }
