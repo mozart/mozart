@@ -1430,6 +1430,7 @@ void lockRelease(OzLock* lock) {
     Assert(oz_isRootBoard(oz_currentBoard()));
     (void) (*distLockRelease)(lock, t);
   }
+  Assert(am.isEmptySuspendVarList());
 }
 
 /*===================================================================
