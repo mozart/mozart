@@ -172,6 +172,7 @@ OZ_Return distLockReleaseImpl(OzLock* lock, TaggedRef thr) {
   switch(cont) {
   case DSS_PROCEED:
     lock->release(thr);
+    am.emptySuspendVarList();     // make sure we don't suspend here...
     return PROCEED;
   case DSS_SKIP:
     Assert(0); 
