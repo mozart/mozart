@@ -770,9 +770,9 @@ a closed file or window; or failing to open a connection between two Mozart proc
 </LIST>
 
 
-<P>The exact format of Mozart system-exceptions is in an experimental
-state and therefore the user is advised to rely only on the label, as
-in the following example:
+<P>The following example demonstrates how to catch a failure exception
+by its label only. This is the recommended method, for it is less
+dependent on implementation details.
 
 <<<
 proc {One X} X=1 end
