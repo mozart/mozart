@@ -71,7 +71,28 @@
     <synopsis>
       <<{Combinator.'or' ?+{T}}>>
     <item>
-      implements disjunction.
+      implements disjunction. ?_{T} is a tuple of either nullary or unary
+      procedures. The special syntax statement
+
+      <<<
+      or ?_{S1}
+      [] ?_{S2}
+      [] ?_{S3} then ?_{S4}
+      end
+      >>>
+
+        corresponds to the following
+
+    <<<
+    local
+       proc {C1} ?_{S1} end
+       proc {C2} ?_{S2} end
+       fun {C3} ?_{S3} proc {$} ?_{S4} end end
+    in
+       {Combinator.'or' C1#C2#C3}
+    end
+   >>>
+
 
     <entry><<'choice'>>
       <index class=tails/<<Combinator>><And><<'choice'>>/
