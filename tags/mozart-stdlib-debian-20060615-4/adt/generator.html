@@ -1,0 +1,93 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+<HEAD>
+<!-- EDIT -->
+<TITLE>Mozart Standard Library: Generators</TITLE>
+<STYLE>
+BODY {
+	background-color: white;
+	margin-left	: 2cm;
+	margin-right	: 2cm;
+	font-family	: tahoma,arial,helvetica,sans-serif;
+}
+H1 {
+	text-align	: center;
+	color		: #9B0000;
+}
+H2 {	color		: #FF9933; }
+H4 {	color		: slateblue; }
+H3 {	color		: #881155; }
+H5 {	color		: darkslateblue; }
+CODE {	color		: #663366; }
+CODE,TT {
+	font-family	: "lucida console",courier,monospace;
+}
+CODE.DISPLAY {
+	display		: block;
+	white-space	: pre;
+	margin-left	: 2cm;
+	margin-top	: 1em;
+	margin-bottom	: 1em;
+}
+P.AUTHOR {
+	text-align	: center;
+	font-weight	: bold;
+}
+SPAN.MODULE {
+	color		: steelblue;
+}
+A {	color		: steelblue; }
+SPAN.COMMENT      { color: #B22222; }
+SPAN.KEYWORD      { color: #A020F0; }
+SPAN.STRING       { color: #BC8F8F; }
+SPAN.FUNCTIONNAME { color: #0000FF; }
+SPAN.TYPE         { color: #228B22; }
+SPAN.VARIABLENAME { color: #B8860B; }
+SPAN.REFERENCE    { color: #5F9EA0; }
+SPAN.BUILTIN      { color: #DA70D6; }
+</STYLE>
+</HEAD>
+<BODY>
+<!-- EDIT -->
+<H1>Generators</H1>
+<P CLASS="AUTHOR">Denys Duchier</P>
+<DL>
+  <DT><B>module</B>
+  <DD><SPAN CLASS="MODULE">x-oz://system/adt/Generators.ozf</SPAN>
+</DL>
+<HR>
+
+<P>This module provides very experimental support for generators.  Generators
+can be used in the <CODE>for</CODE> loop with the <CODE>from</CODE>
+keywords.  Be warned that this design could very well change in the future.
+
+<H2>Exports</H2>
+<DL>
+<DT><CODE>{Generator.concat [G1 ... Gn] ?G}</CODE>
+<DD>creates a new generator <CODE>G</CODE> which is the concatenation of generators
+<CODE>G1</CODE> through <CODE>Gn</CODE>
+<DT><CODE>{Generator.tails +L ?G}</CODE>
+<DD>creates a generator <CODE>G</CODE> that produces all non-empty tails
+of list <CODE>L</CODE>
+<DT><CODE>{Generator.count +From +To +By ?G}</CODE>
+<DD>creates a generator <CODE>G</CODE> that produces all integers
+starting at <CODE>From<CODE> and ending at most at <CODE>To</CODE>
+by steps of <CODE>By</CODE>.  Whether we count up or down depends on
+the sign of <CODE>By</CODE>
+<DT><CODE>{Generator.member +L ?G}</CODE>
+<DD>creates a generator <CODE>G</CODE> that produces the elements
+of list <CODE>L</CODE>
+<DT><CODE>{Generator.keys +M ?G}</CODE>
+<DD>creates a generator <CODE>G</CODE> that produces the keys of mapping
+<CODE>M</CODE>.  The latter can be a record, an array, or a dictionary.
+<DT><CODE>{Generator.items +M ?G}</CODE>
+<DD>creates a generator <CODE>G</CODE> that produces the values of mapping
+<CODE>M</CODE>.  The latter can be a record, an array, or a dictionary.
+<DT><CODE>{Generator.entries +M ?G}</CODE>
+<DD>creates a generator <CODE>G</CODE> that produces the entries of mapping
+<CODE>M</CODE>.  The latter can be a record, an array, or a dictionary.
+</DL>
+
+<HR>
+</BODY>
+</HTML>

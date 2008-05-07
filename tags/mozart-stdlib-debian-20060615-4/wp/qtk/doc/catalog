@@ -1,0 +1,3 @@
+DOCTYPE BOOK "ozdoc.dtd"
+SYSTEM ozdoc.dtd "ozdoc.dtd"
+SGMLDECL "ozdoc.dcl"

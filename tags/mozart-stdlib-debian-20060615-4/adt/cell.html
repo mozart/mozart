@@ -1,0 +1,90 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+<HEAD>
+<!-- EDIT -->
+<TITLE>Mozart Standard Library: Functional Cells</TITLE>
+<STYLE>
+BODY {
+	background-color: white;
+	margin-left	: 2cm;
+	margin-right	: 2cm;
+	font-family	: tahoma,arial,helvetica,sans-serif;
+}
+H1 {
+	text-align	: center;
+	color		: #9B0000;
+}
+H2 {	color		: #FF9933; }
+H4 {	color		: slateblue; }
+H3 {	color		: #881155; }
+H5 {	color		: darkslateblue; }
+CODE {	color		: #663366; }
+CODE,TT {
+	font-family	: "lucida console",courier,monospace;
+}
+CODE.DISPLAY {
+	display		: block;
+	white-space	: pre;
+	margin-left	: 2cm;
+	margin-top	: 1em;
+	margin-bottom	: 1em;
+}
+P.AUTHOR {
+	text-align	: center;
+	font-weight	: bold;
+}
+SPAN.MODULE {
+	color		: steelblue;
+}
+A {	color		: steelblue; }
+SPAN.COMMENT      { color: #B22222; }
+SPAN.KEYWORD      { color: #A020F0; }
+SPAN.STRING       { color: #BC8F8F; }
+SPAN.FUNCTIONNAME { color: #0000FF; }
+SPAN.TYPE         { color: #228B22; }
+SPAN.VARIABLENAME { color: #B8860B; }
+SPAN.REFERENCE    { color: #5F9EA0; }
+SPAN.BUILTIN      { color: #DA70D6; }
+</STYLE>
+</HEAD>
+<BODY>
+<!-- EDIT -->
+<H1>Functional Cells</H1>
+<P CLASS="AUTHOR">Denys Duchier</P>
+<DL>
+  <DT><B>module</B>
+  <DD><SPAN CLASS="MODULE">x-oz://system/adt/Cell.ozf</SPAN>
+</DL>
+<HR>
+
+<P>This is a functional wrapper around the standard cell datatype.
+
+<H2>Exports</H2>
+
+<P>The module exports only one function: a <CODE>New</CODE> constructor
+
+<DL>
+<DT><CODE>{Cell.new V}</CODE>
+<DD>creates a new instance of a functional cell, initialized with
+value <CODE>V</CODE>.
+</DL>
+
+<H2>Instance API</H2>
+
+<P>Each functional cell instance <CODE>C</CODE> has the following features:
+<DL>
+<DT><CODE>{C.get ?V}</CODE>
+<DD>return the current value <CODE>V</CODE> of <CODE>C</CODE>
+<DT><CODE>{C.put  V}</CODE>
+<DD>set the current value of <CODE>C</CODE> to <CODE>V</CODE>
+<DT><CODE>{C.getPut Old New}</CODE>
+<DD>atomically, gets the current value <CODE>Old</CODE> of <CODE>C</CODE>
+and replaces it with <CODE>New</CODE>
+<DT><CODE>{C.clone ?C2}</CODE>
+<DD>returns a new functional cell instance, initialized with <CODE>C</CODE>'s
+current value
+</DL>
+
+<HR>
+</BODY>
+</HTML>

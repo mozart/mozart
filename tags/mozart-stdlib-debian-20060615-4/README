@@ -1,0 +1,12 @@
+To install the Mozart Standard Library, you should have Mozart already
+installed on your system. Let us assume that Mozart is installed in
+$PREFIX. 
+
+Now, to build the Standard Library, it is a good idea to do it in a
+different directory from the sources. Let us consider $STDLIB for the
+sources and $BUILD_STDLIB for building. You should do the following:
+
+cd $BUILD_STDLIB
+$STDLIB/configure --prefix=$PREFIX
+make
+make install

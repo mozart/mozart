@@ -1,0 +1,163 @@
+<package>
+  <head>
+    <title>XML Parser</title>
+    <mogul>mogul:/duchier/xml/parser</mogul>
+    <version>0.1</version>
+    <author>
+      <name>Denys Duchier</name>
+      <email>duchier@ps.uni-sb.de</email>
+      <www>http://www.ps.uni-sb.de/~duchier/</www>
+    </author>
+    <blurb>namespace aware XML parser</blurb>
+    <provides>x-ozlib://duchier/xml/Parser.ozf</provides>
+  </head>
+
+  <section>
+    <title>Introduction</title>
+    <p>The <code>Parser</code> module implements a namespace-aware XML
+    parser that additionally understands the optional <code>DOCTYPE</code>
+    declaration just enough to respect <code>ENTITY</code>
+    declarations.  For example, if you place the following entity
+    declarations in your document's <code>DOCTYPE</code>:</p>
+<code.display>
+&lt;!ENTITY section1 SYSTEM "foo/baz.xml"&gt;
+&lt;!ENTITY w3 "http://www.w3.org"&gt;
+</code.display>
+    <p>then any occurence of entity reference
+    <code>&amp;section1;</code> causes the contents of file
+    <file>foo/baz.xml</file> to be <em>included</em> and any
+    occurrence of entity reference <code>&amp;w3;</code> is
+    expanded into <code>http://www.w3.org</code>.  The parser is also
+    able to strip whitespace text nodes on the fly according to a
+    user specification.</p>
+  </section>
+
+  <section>
+    <title>API</title>
+    <p>The <oz>Parser</oz> modules exports the following
+    procedures:</p>
+    <dlist>
+      <item>
+        <label><oz>{Parser.parse +Spec ?Tree}</oz></label>
+	<p>this function takes as input a user specification
+	<oz>Spec</oz> and returns a parsed document in the form of a
+	<oz>Tree</oz>.  <oz>Spec</oz> is a record with the following
+	optional features:</p>
+	<dlist compact="yes">
+	  <item>
+	    <label><oz>string:S</oz></label>
+	    <label><oz>url:URL</oz></label>
+	    <label><oz>file:FILE</oz></label>
+	    <p>input may be read from a string <oz>S</oz>, or from a
+	    <oz>URL</oz> or a <oz>FILE</oz></p>
+	  </item>
+	  <item>
+	    <label><oz>context:CTX</oz></label>
+	    <p>a namespace context (see below) may be supplied explicitly</p>
+	  </item>
+	  <item>
+	    <label><oz>strip:STRIP</oz></label>
+	    <p><oz>STRIP</oz> is a table indicating for which elements
+	    the parser should strip isolated whitespace text nodes.</p>
+	  </item>
+	</dlist>
+      </item>
+      <item>
+        <label><oz>{Parser.newContext ?CTX}</oz></label>
+	<p>creates and returns a new namespace context.  A context is
+	an abstract datatype implemented as a record whose features
+	are its methods.  The methods intended for the application
+	programmer are:</p>
+	<dlist compact="yes">
+	  <item>
+	    <label><oz>{CTX.putPrefix +PREFIX +URI}</oz></label>
+	    <p>adds to the context <oz>CTX</oz> the declaration that
+	    associates namespace prefix <oz>PREFIX</oz> with namespace
+	    uri <oz>URI</oz>; both these values should be virtual
+	    strings</p>
+	  </item>
+	  <item>
+	    <label><oz>{CTX.intern +USR ?SYS}</oz></label>
+	    <p><oz>USR</oz> is a string representing a name with
+	    possibly a namespace prefix.  The return value
+	    <oz>SYS</oz> is the unique internal representation of the
+	    corresponding expanded name; this is a record
+	    <oz>qname( uri:URI name:LOC xname:XLOC )</oz>
+	    where <oz>URI</oz> is the uri of the namespace,
+	    <oz>LOC</oz> the local part of the name, and <oz>XLOC</oz>
+	    is the full expanded name.  <oz>XLOC</oz> is just
+	    <oz>LOC</oz> when <oz>URI</oz> is empty and is formed by
+	    the concatenation of <oz>LOC</oz> followed by <oz>' @ '</oz>
+	    followed by <oz>URI</oz> otherwise.  All three values are
+	    atoms. <oz>XLOC</oz> may be used as a key that uniquely
+	    identifies the name.</p>
+	  </item>
+	  <item>
+	    <label><oz>{CTX.clone ?CTX2}</oz></label>
+	    <p>creates and returns a copy <oz>CTX2</oz> of
+	    <oz>CTX</oz> where new namespace prefix declarations may
+	    be independently added.</p>
+	  </item>
+	</dlist>
+      </item>
+      <item>
+        <label><oz>{Parser.noParent +TREE1 ?TREE2}</oz></label>
+	<p>the representation of each node include a <oz>parent</oz>
+	feature pointing to its parent.  This makes it difficult to
+	display the trees in the <tool>Inspector</tool>.  The
+	<oz>NoParent</oz> recursively removes the <oz>parent</oz>
+	feature and you should typically invoke it on a tree and
+	inspect the result.</p>
+      </item>
+    </dlist>
+  </section>
+
+  <section>
+    <title>Example</title>
+    <p>Consider a file <file>example.xml</file> with the following
+    contents:</p>
+<code.display>
+&lt;doc xmlns="my/name/space"&gt;
+  &lt;title&gt;Hello World&lt;/title&gt;
+  &lt;p&gt;
+        &lt;em&gt;text&lt;/em&gt;
+  &lt;/p&gt;
+&lt;/doc&gt;
+</code.display>
+<p>Now let's parse it, with no frills:</p>
+<oz.display>
+declare [P]={Link ['x-ozlib://duchier/xml/Parser.ozf']}
+{Inspect {P.noParent {P.parse init(file:'example.xml')}}}
+</oz.display>
+    <image.center src="fig1.gif"/>
+    <p>We see that there is white space before the <code>title</code>
+    element, between the <code>title</code> and the <code>p</code>, after
+    the <code>p</code>, and inside the <code>p</code> on either side
+    of the <code>em</code>.  We are now going to tell the parser that
+    it should strip the white space nodes between the children of
+    <code>doc</code>.</p>
+    <p>We create a context <oz>CTX</oz>, add to it the declaration
+    that prefix <code>foo</code> corresponds to namespace uri
+    <code>my/name/space</code>, obtain the internal representation of
+    name <code>doc</code> in this namespace, and add an entry for it
+    in the <oz>STRIP</oz> table:</p>
+<oz.display>
+declare
+CTX={P.newContext}
+{CTX.putPrefix 'foo' 'my/name/space'}
+STRIP={NewDictionary}
+STRIP.({CTX.intern "foo:doc"}.xname) := true
+{Inspect {P.noParent {P.parse init(file:'example.xml' context:CTX strip:STRIP)}}}
+</oz.display>
+    <image.center src="fig2.gif"/>
+    <p>as expected, the white space nodes between the children of
+    <code>doc</code> were removed, but those surrounding
+    <code>em</code> in <code>p</code> were preserved.  We can
+    additionally strip those too as follows:</p>
+<oz.display>
+STRIP.({CTX.intern "foo:p"}.xname) := true
+{Inspect {P.noParent {P.parse init(file:'example.xml' context:CTX strip:STRIP)}}}
+</oz.display>
+   <image.center src="fig3.gif"/>
+  </section>
+</package>

@@ -1,0 +1,8 @@
+This example shows the checkbutton widget.
+
+A checkbutton widget is a on/off switch. The state of the switch is true when it is on, else it is false.
+
+- The init parameter sets the initial state of the switch.
+- The handle parameter allows to specify a variable that can change the state of the switch at any time.
+- The return parameter specify a variable that will be binded to the value (true or false) of the checkbutton when the window is closed.
+- The action parameter specify a command to execute just after the switch has changed its state because of a user input.
