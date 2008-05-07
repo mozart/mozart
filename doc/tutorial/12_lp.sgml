@@ -46,6 +46,10 @@ For more advanced constraint solving techniques, the reader may
 look to the companion tutorial on constraint programming in Oz.
 
 
+<P CLASS=WARNING>Please note that the material
+in this chapter is still incomplete.
+
+
 <SECTION><TITLE/Constraint Stores/
 <P>Oz threads share a store where variable bindings are stored in the
 form of equalities: <MATH>X_1=U_1, \ldots, X_n=U_n</MATH> where
