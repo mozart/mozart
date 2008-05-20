@@ -22,7 +22,6 @@
 
 functor
 import
-%   Fault(install)
    TestMisc
    DP
 export
@@ -35,7 +34,6 @@ define
    fun {Start EntityProtocol}
       proc {$}
 	 Managers
-%      Watched
       in
 	 try
 	    local
@@ -60,7 +58,7 @@ define
 		  {Controller L R 1}
 	       end
 	       if L == R then
-	       % Controller mission completed
+		  %% Controller mission completed
 		  {Thread.terminate ControllerThread}
 	       else
 		  raise dp_variable_test_failed end
@@ -71,7 +69,6 @@ define
 	    raise X end
 	 end
 	 {TestMisc.gcAll Managers}
-%      {TestMisc.deinstallWatchers Watched}
 	 {TestMisc.listApply Managers close}
       end
    end
@@ -145,7 +142,6 @@ define
 			    proc {Start L R Cell ForkingSpeed NrOfPhases
 				  Error}
 			       MemCell = {NewCell ok} in
-%			       Watch = Id
 			       try
 				  {Process L R 1 ForkingSpeed
 				   NrOfPhases ForkingSpeed}
