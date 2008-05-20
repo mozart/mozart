@@ -66,7 +66,7 @@ define
    %% Initialize distribution with desired settings before Connection.take
    local
       S1 = if Args.ip\=default then [ip#exact(Args.ip)] else nil end
-      S2 = if Args.port\=0 then [port#'from'(Args.port)] else nil end
+      S2 = if Args.port\=0 then [port#exact(Args.port)] else nil end
       S3 = [firewall#Args.firewall]
       Settings = {AdjoinList settings {Flatten [S1 S2 S3]}}
    in
