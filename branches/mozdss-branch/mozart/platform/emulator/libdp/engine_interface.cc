@@ -201,7 +201,7 @@ OZ_Return Annotation::parseTerm(TaggedRef term) {
 	rc = RC_ALG_PERSIST;
 	continue;
       }
-      if (strcmp(name, "refcount") == 0) {
+      if (strcmp(name, "credit") == 0) {
 	if (rc & RC_ALG_PERSIST) goto error;
 	rc = static_cast<RCalg>(rc | RC_ALG_WRC);
 	continue;
@@ -241,7 +241,7 @@ TaggedRef Annotation::toTerm() {
   if (rc) {   // push DGC annotation
     if (rc & RC_ALG_PERSIST) list = oz_cons(oz_atom("persistent"), list);
     if (rc & RC_ALG_TL)      list = oz_cons(oz_atom("lease"), list);
-    if (rc & RC_ALG_WRC)     list = oz_cons(oz_atom("refcount"), list);
+    if (rc & RC_ALG_WRC)     list = oz_cons(oz_atom("credit"), list);
   }
   switch (aa) {   // push access architecture annotation
   case AA_STATIONARY_MANAGER:
