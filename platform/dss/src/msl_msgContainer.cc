@@ -134,6 +134,12 @@ namespace _msl_internal{ //Start namespace
     while (true) {
       if (bb->availableData() == 0) {
 	setFlag(MSG_HAS_UNMARSHALCONT);
+	// We suspend between two fields, so the next field is empty.
+	// We must set its field type explicitly, in order to avoid to
+	// reinterpret it once the unmarshaling continues.  See the
+	// cases below that checkFlag(MSG_HAS_UNMARSHALCONT).
+	checkSize();
+	a_fields[a_nof_fields].a_ft = FT_ERROR;
 	return true;
       }
       
@@ -161,7 +167,7 @@ namespace _msl_internal{ //Start namespace
 	DssCompoundTerm *dac;
 
 	checkSize();
-	if (checkFlag(MSG_HAS_UNMARSHALCONT)) {
+	if (checkFlag(MSG_HAS_UNMARSHALCONT) && a_fields[a_nof_fields].a_ft) {
 	  // continue with current one
 	  dac = static_cast<DssCompoundTerm*>(a_fields[a_nof_fields].a_arg);
 	  // The marshaler always sets the DCT type. NOT USED
@@ -172,6 +178,7 @@ namespace _msl_internal{ //Start namespace
 	  a_fields[a_nof_fields].a_arg = dac;
 	  a_fields[a_nof_fields].a_ft  = FT_DCT;
 	}
+	Assert(dac);
 	env->a_srcSite = source; 
 	bool m_res = dac->unmarshal(bb, env);
 	env->a_srcSite = NULL; 
@@ -186,11 +193,12 @@ namespace _msl_internal{ //Start namespace
       }
       case TYPE_MSG: {
 	checkSize();
-	if( checkFlag(MSG_CLEAR)){
+	if (checkFlag(MSG_CLEAR)){
 	  a_fields[a_nof_fields].a_arg = new MsgCnt(); 
 	  a_fields[a_nof_fields].a_ft  = FT_MSGC;  
 	}
 	MsgCnt *msg = static_cast<MsgCnt*>(a_fields[a_nof_fields].a_arg);
+	Assert(msg);
 	
 	if (msg->deserialize(bb, source, env)) {
 	  setFlag(MSG_CLEAR);
@@ -208,7 +216,7 @@ namespace _msl_internal{ //Start namespace
 	ExtDataContainerInterface *dac;
 	
 	checkSize();
-	if (checkFlag(MSG_HAS_UNMARSHALCONT)){
+	if (checkFlag(MSG_HAS_UNMARSHALCONT) && a_fields[a_nof_fields].a_ft){
 	  // continue with current one
 	  dac = static_cast<ExtDataContainerInterface*>(a_fields[a_nof_fields].a_arg);
 	  // The marshaler always sets the DCT type. NOT USED
@@ -224,6 +232,7 @@ namespace _msl_internal{ //Start namespace
 	  }
 	  a_fields[a_nof_fields].a_arg = dac;
 	}
+	Assert(dac);
 	env->a_srcSite = source; 
 	bool m_res = dac->unmarshal(bb);
 	env->a_srcSite = NULL; 

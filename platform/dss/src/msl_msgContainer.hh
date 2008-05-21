@@ -81,10 +81,13 @@ namespace _msl_internal{ //Start namespace
     FT_MSGC
   };
 
-  typedef struct {
+  struct MsgField {
     void *a_arg;    // The value 
     FieldType a_ft; // Type information
-  } MsgField;
+#ifdef DEBUG_CHECK
+    MsgField() : a_ft(FT_ERROR), a_arg(NULL) {}
+#endif
+  };
 
 
   // ************************* MESSAGE CONTAINER **************************
