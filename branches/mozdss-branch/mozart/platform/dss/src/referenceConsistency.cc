@@ -352,36 +352,26 @@ namespace _dss_internal{ //Start namespace
   // when all are merged the algorithms in "old" are removed
   void RemoteReference::m_mergeAlgorithms(DssReadBuffer*bs){
     int len = gf_Unmarshal8bitInt(bs); //  1: load length
-    RCalg type;
-    GCalgorithm *tmpNext, *tmpNew = NULL;  
-  
-    for(int i = 0; i < len; i++){  //     For all marshaled algorithms
-      type = static_cast<RCalg>(gf_Unmarshal8bitInt(bs));  // 2: load type
+    GCalgorithm *new_algs = NULL;
     
-      GCalgorithm **tmpOld = &a_algs;
-      while ((*tmpOld) != NULL){ //        Find alg
-	if(type == (*tmpOld)->a_type) break;
-	tmpOld = &((*tmpOld)->a_next);
-      }
-
-      if ((*tmpOld) == NULL){ 
-	// No alg, clean out info.
-	// This is acheived by looking at what the algs would have done
-	//  and then.. 
-	sf_cleanType(type,bs);
-	//Might want to tell sender... or not
+    for (int i = 0; i < len; i++) {   // For all marshaled algorithms
+      RCalg type = static_cast<RCalg>(gf_Unmarshal8bitInt(bs)); // 2: load type
+      GCalgorithm* tmp = m_takeAlg(type);     // take alg out of list
+      if (tmp) {
+	// insert in new list, and 3: get info
+	tmp->a_next = new_algs;
+	new_algs = tmp;
+	static_cast<RemoteGCalgorithm*>(tmp)->m_mergeReferenceInfo(bs);
       } else {
-	tmpNext = (*tmpOld)->a_next;      // save next from old ones
-	(*tmpOld)->a_next = tmpNew;       // hook algorithm on New list 
-	tmpNew    = (*tmpOld);            //
-	(*tmpOld) = tmpNext;             // and close list of old ones
-	static_cast<RemoteGCalgorithm*>(tmpNew)->m_mergeReferenceInfo(bs); //   3: Get info
+	// No alg, clean out info.  This is acheived by looking at
+	// what the algs would have done and then...
+	sf_cleanType(type, bs);
       }
     }
-    // remove old algs
+    
+    // remove remaining old algs
     t_deleteList(a_algs);
-
-    a_algs = tmpNew;
+    a_algs = new_algs;
   }
 
 
