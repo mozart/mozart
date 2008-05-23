@@ -61,6 +61,17 @@ namespace _dss_internal{ // Start namespace
       for(; tmp->a_type != alg; tmp = tmp->a_next);
       return tmp;
     }
+
+    // same as above, but remove the algorithm from the list
+    inline GCalgorithm* m_takeAlg(const RCalg& alg) {
+      GCalgorithm** curPtr = &a_algs;
+      GCalgorithm* cur;
+      while (cur = *curPtr) {
+	if (cur->a_type == alg) { *curPtr = cur->a_next; return cur; }
+	curPtr = &(cur->a_next);
+      }
+      return NULL;
+    }
   
     
     // ******************* MISC *************************
