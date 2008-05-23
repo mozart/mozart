@@ -133,13 +133,7 @@ namespace _msl_internal{ //Start namespace
     
     while (true) {
       if (bb->availableData() == 0) {
-	setFlag(MSG_HAS_UNMARSHALCONT);
-	// We suspend between two fields, so the next field is empty.
-	// We must set its field type explicitly, in order to avoid to
-	// reinterpret it once the unmarshaling continues.  See the
-	// cases below that checkFlag(MSG_HAS_UNMARSHALCONT).
-	checkSize();
-	a_fields[a_nof_fields].a_ft = FT_ERROR;
+	setFlag(MSG_HAS_UNMARSHALCONT);     // suspended outside a field
 	return true;
       }
       
@@ -167,7 +161,8 @@ namespace _msl_internal{ //Start namespace
 	DssCompoundTerm *dac;
 
 	checkSize();
-	if (checkFlag(MSG_HAS_UNMARSHALCONT) && a_fields[a_nof_fields].a_ft) {
+	if (checkFlag(MSG_HAS_UNMARSHALCONT) && a_suspf) {
+	  Assert(a_fields[a_nof_fields].a_ft == FT_DCT);
 	  // continue with current one
 	  dac = static_cast<DssCompoundTerm*>(a_fields[a_nof_fields].a_arg);
 	  // The marshaler always sets the DCT type. NOT USED
@@ -183,30 +178,30 @@ namespace _msl_internal{ //Start namespace
 	bool m_res = dac->unmarshal(bb, env);
 	env->a_srcSite = NULL; 
 	if (m_res) {
-	  setFlag(MSG_CLEAR);
 	  a_nof_fields++; // commit
 	  continue;
 	} else {
-	  setFlag(MSG_HAS_UNMARSHALCONT);
+	  setFlag(MSG_HAS_UNMARSHALCONT, true);   // suspended inside a field
 	  return true; 
 	}
       }
       case TYPE_MSG: {
 	checkSize();
-	if (checkFlag(MSG_CLEAR)){
+	if (!a_suspf) {
 	  a_fields[a_nof_fields].a_arg = new MsgCnt(); 
 	  a_fields[a_nof_fields].a_ft  = FT_MSGC;  
 	}
 	MsgCnt *msg = static_cast<MsgCnt*>(a_fields[a_nof_fields].a_arg);
-	Assert(msg);
+	Assert(a_fields[a_nof_fields].a_ft == FT_MSGC && msg);
 	
-	if (msg->deserialize(bb, source, env)) {
-	  setFlag(MSG_CLEAR);
+	if (msg->deserialize(bb, source, env) && msg->checkFlag(MSG_CLEAR)) {
+	  Assert(!msg->m_isEmpty());
+	  // raph: I don't understand the purpose of the following statement
 	  msg->popIntVal(); // removing the stop marker
 	  a_nof_fields++; // commit
 	  continue; 
 	} else {
-	  setFlag(MSG_HAS_UNMARSHALCONT);
+	  setFlag(MSG_HAS_UNMARSHALCONT, true);   // suspended inside a field
 	  return true; 
 	}
       }
@@ -216,7 +211,9 @@ namespace _msl_internal{ //Start namespace
 	ExtDataContainerInterface *dac;
 	
 	checkSize();
-	if (checkFlag(MSG_HAS_UNMARSHALCONT) && a_fields[a_nof_fields].a_ft){
+	if (checkFlag(MSG_HAS_UNMARSHALCONT) && a_suspf){
+	  Assert(a_fields[a_nof_fields].a_ft == FT_ADC ||
+		 a_fields[a_nof_fields].a_ft == FT_SDC);
 	  // continue with current one
 	  dac = static_cast<ExtDataContainerInterface*>(a_fields[a_nof_fields].a_arg);
 	  // The marshaler always sets the DCT type. NOT USED
@@ -237,11 +234,10 @@ namespace _msl_internal{ //Start namespace
 	bool m_res = dac->unmarshal(bb);
 	env->a_srcSite = NULL; 
 	if (m_res) {
-	  setFlag(MSG_CLEAR);
 	  a_nof_fields++; // commit
 	  continue;
 	} else {
-	  setFlag(MSG_HAS_UNMARSHALCONT);
+	  setFlag(MSG_HAS_UNMARSHALCONT, true);   // suspended inside a field
 	  return true; 
 	}
       }

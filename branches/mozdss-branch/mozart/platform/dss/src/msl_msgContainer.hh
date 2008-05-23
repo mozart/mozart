@@ -84,9 +84,6 @@ namespace _msl_internal{ //Start namespace
   struct MsgField {
     void *a_arg;    // The value 
     FieldType a_ft; // Type information
-#ifdef DEBUG_CHECK
-    MsgField() : a_ft(FT_ERROR), a_arg(NULL) {}
-#endif
   };
 
 
@@ -100,6 +97,7 @@ namespace _msl_internal{ //Start namespace
 
   private:
     MsgFlags        a_flag:3;      // Windows adapted
+    bool            a_suspf:1;     // whether suspended *inside* a field
     MsgField*       a_fields;      // fields array, resized when needed
     int             a_num;         //queue number?? ZACHARIAS
     bool            a_internalMsg; 
@@ -164,7 +162,9 @@ namespace _msl_internal{ //Start namespace
   public: // control methods(flags and msgnums)
     inline void setMsgNum(const int& num) { a_num = num; }
     inline int  getMsgNum() { return a_num; }
-    inline void setFlag(  const MsgFlags& flag) { a_flag = flag; }
+    inline void setFlag(const MsgFlags& flag, const bool suspf = false) {
+      a_flag = flag; a_suspf = suspf;
+    }
     inline bool checkFlag(const MsgFlags& flag) { return (a_flag == flag); }
     inline bool m_isInternalMsg(){ return a_internalMsg; }
     
