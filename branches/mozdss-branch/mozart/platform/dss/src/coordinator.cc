@@ -128,22 +128,11 @@ namespace _dss_internal{ //Start namespace
     // currently the coordinator does not bother...
   }
 
-  void  
-  Coordinator::m_undeliveredCoordMsg(DSite* dest, MessageType mtt,MsgContainer* msg){
-    delete msg; 
-  }
-  void  
-  Coordinator::m_undeliveredProxyMsg(DSite* dest, MessageType mtt,MsgContainer* msg){
-    delete msg; 
-  }
-  void  
-  Coordinator::m_noCoordAtDest(DSite* sender, MessageType mtt, MsgContainer* msg){
-    delete msg; 
-  }
-  void  
-  Coordinator::m_noProxyAtDest(DSite* sender, MessageType mtt, MsgContainer* msg){
-    delete msg; 
-  }
+  // by default they do nothing:
+  void Coordinator::m_undeliveredCoordMsg(DSite*, MessageType, MsgContainer*) {}
+  void Coordinator::m_undeliveredProxyMsg(DSite*, MessageType, MsgContainer*) {}
+  void Coordinator::m_noCoordAtDest(DSite*, MessageType, MsgContainer*) {}
+  void Coordinator::m_noProxyAtDest(DSite*, MessageType, MsgContainer*) {}
 
 
 
@@ -296,21 +285,15 @@ namespace _dss_internal{ //Start namespace
   void Proxy::m_siteStateChange(DSite *, const FaultState&){
     // just ignore it.  (Don't tell anyone we do this!)
   }
-  void Proxy::m_undeliveredCoordMsg(DSite* dest, MessageType mtt,MsgContainer* msg){
-    delete msg; 
-  }
-  void Proxy::m_undeliveredProxyMsg(DSite* dest, MessageType mtt,MsgContainer* msg){
-    delete msg; 
-  }
-  void Proxy::m_noCoordAtDest(DSite* sender, MessageType mtt, MsgContainer* msg){
-    delete msg; 
-  }
-  void Proxy::m_noProxyAtDest(DSite* sender, MessageType mtt, MsgContainer* msg){
-    delete msg; 
-  }
+
+  // by default they do nothing:
+  void Proxy::m_undeliveredCoordMsg(DSite*, MessageType, MsgContainer*) {}
+  void Proxy::m_undeliveredProxyMsg(DSite*, MessageType, MsgContainer*) {}
+  void Proxy::m_noCoordAtDest(DSite*, MessageType, MsgContainer*) {}
+  void Proxy::m_noProxyAtDest(DSite*, MessageType, MsgContainer*) {}
+
+
   // ************* Communication ********************
-  
-  
   bool 
   Proxy:: m_sendToProxy(DSite* dest, ::MsgContainer* msg){
     return dest->m_sendMsg(msg); 

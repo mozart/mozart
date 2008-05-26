@@ -246,9 +246,9 @@ namespace _dss_internal{ //Start namespace
        a_prot->msgReceived(msgC,fromsite);
      }
      else if(a_ms == MANAGER_STATUS_WAITING)
-       m_queueProtMessage(msgC,fromsite);
+       m_queueProtMessage(msgC->reincarnate(),fromsite);
      else
-       m_forwardMessage(msgC,fromsite,m_getCoordSite()); 
+       m_forwardMessage(msgC->reincarnate(),fromsite,m_getCoordSite()); 
    }
 
 
@@ -343,7 +343,7 @@ namespace _dss_internal{ //Start namespace
     case MA_FORWARD:{
       DSite* from = msgC->popDSiteVal();
       if (a_ms == MANAGER_STATUS_REF_INC || a_ms == MANAGER_STATUS_REF_COM){
-	m_forwardMessage(msgC,from,m_getCoordSite());
+	m_forwardMessage(msgC->reincarnate(),from,m_getCoordSite());
       }
       else {
 
@@ -351,7 +351,7 @@ namespace _dss_internal{ //Start namespace
 	  m_sendRefUpdateProxy(from); 
 	  a_prot->msgReceived(msgC,from);
 	}
-	else m_queueProtMessage(msgC,from);
+	else m_queueProtMessage(msgC->reincarnate(),from);
       }
       break;
     }

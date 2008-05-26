@@ -43,7 +43,7 @@ namespace _dss_internal{
   DssMslClbk::m_noDestProxy2Proxy(MsgContainer *msgC, DSite *sender){
     MsgContainer *msgCret = m_getEnvironment()->a_msgnLayer->createAppSendMsgContainer();
     msgCret->pushIntVal(M_PROXY_PROXY_NODEST);
-    msgCret->pushMsgC(msgC); 
+    msgCret->pushMsgC(msgC->reincarnate());
     sender->m_sendMsg(msgCret);
    }
   
@@ -52,7 +52,7 @@ namespace _dss_internal{
   DssMslClbk::m_noDestProxy2Coord(MsgContainer *msgC, DSite *sender){
     MsgContainer *msgCret = m_getEnvironment()->a_msgnLayer->createAppSendMsgContainer();
     msgCret->pushIntVal(M_PROXY_COORD_NODEST);
-    msgCret->pushMsgC(msgC); 
+    msgCret->pushMsgC(msgC->reincarnate());
     sender->m_sendMsg(msgCret);
   }
 
@@ -61,7 +61,7 @@ namespace _dss_internal{
   DssMslClbk::m_noDestCoord2Proxy(MsgContainer *msgC, DSite *sender){
     MsgContainer *msgCret = m_getEnvironment()->a_msgnLayer->createAppSendMsgContainer();
     msgCret->pushIntVal(M_COORD_PROXY_NODEST);
-    msgCret->pushMsgC(msgC); 
+    msgCret->pushMsgC(msgC->reincarnate());
     sender->m_sendMsg(msgCret);
   }
 
@@ -69,7 +69,7 @@ namespace _dss_internal{
   DssMslClbk::m_noDestCoord2Coord(MsgContainer *msgC, DSite *sender){
     MsgContainer *msgCret = m_getEnvironment()->a_msgnLayer->createAppSendMsgContainer();
     msgCret->pushIntVal(M_COORD_COORD_NODEST);
-    msgCret->pushMsgC(msgC); 
+    msgCret->pushMsgC(msgC->reincarnate());
     sender->m_sendMsg(msgCret);
   }
   

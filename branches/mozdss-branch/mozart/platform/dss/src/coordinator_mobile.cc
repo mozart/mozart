@@ -483,7 +483,7 @@ namespace _dss_internal{ //Start namespace
   void 
   ProxyMobile::m_undeliveredCoordMsg(DSite*, MessageType mtt, MsgContainer* msg){
     // We only store messages addressed to the coordinator
-    a_unsentMsgs.append(msg); 
+    a_unsentMsgs.append(msg->reincarnate()); 
     if(!a_fl_coordLost){
       a_fl_coordLost = true;
       a_coordSite = NULL;
@@ -492,15 +492,12 @@ namespace _dss_internal{ //Start namespace
   }
   
   void 
-  ProxyMobile::m_undeliveredProxyMsg(DSite*, MessageType mtt, MsgContainer* msg){
-    delete msg; 
-  }
+  ProxyMobile::m_undeliveredProxyMsg(DSite*, MessageType, MsgContainer*) {}
 
-  
   void 
   ProxyMobile::m_noCoordAtDest(DSite* sender, MessageType mtt, MsgContainer* msg){
     printf("ProxyMobile::m_noCoordAtDest\n"); 
-    a_unsentMsgs.append(msg); 
+    a_unsentMsgs.append(msg->reincarnate()); 
     if(!a_fl_coordLost){
       a_fl_coordLost = true;
       a_coordSite = NULL;
@@ -509,9 +506,7 @@ namespace _dss_internal{ //Start namespace
   }
   
   void 
-  ProxyMobile::m_noProxyAtDest(DSite* sender, MessageType mtt, MsgContainer* msg){
-    delete msg;
-  }
+  ProxyMobile::m_noProxyAtDest(DSite*, MessageType, MsgContainer*) {}
 
   // **************** MOBILITY METHODS *******************
     

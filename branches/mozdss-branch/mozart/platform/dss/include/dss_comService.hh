@@ -255,6 +255,9 @@ public:
   virtual void m_convert2Send() = 0; 
   virtual void m_convert2Rec() = 0; 
   virtual void m_extMakeGCpreps() = 0;
+
+  // create a copy of this message, with all fields moved to the copy
+  virtual MsgContainer* reincarnate() = 0;
 };
 
 

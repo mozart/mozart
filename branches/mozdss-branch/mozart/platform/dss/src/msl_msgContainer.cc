@@ -212,8 +212,10 @@ namespace _msl_internal{ //Start namespace
 	
 	if (msg->deserialize(bb, source, env) && msg->checkFlag(MSG_CLEAR)) {
 	  Assert(!msg->m_isEmpty());
-	  // raph: I don't understand the purpose of the following statement
-	  msg->popIntVal(); // removing the stop marker
+	  // raph: The following statement removes the integer tag
+	  // corresponding to a MslMessageType (C_APPLICATION).  It is
+	  // necessary, otherwise upper layers can be confused!
+	  msg->popIntVal(); // removing initial field
 	  a_nof_fields++; // commit
 	  continue; 
 	} else {
@@ -499,6 +501,18 @@ namespace _msl_internal{ //Start namespace
   int MsgCnt::peekMslMessageType() {
     Assert(a_fields[0].a_ft == FT_NUMBER);
     return reinterpret_cast<int>(a_fields[0].a_arg);
+  }
+
+  MsgContainer* MsgCnt::reincarnate() {
+    MsgCnt* msg = new MsgCnt();
+    resetCounter();
+    // move all fields from this to msg
+    while (!m_isEmpty()) {
+      FieldType ft = m_getFT();
+      void* arg = m_popDropVal();
+      msg->m_pushVal(arg, ft);
+    }
+    return msg;
   }
 
   //******************* DUPLICATED ******************************'

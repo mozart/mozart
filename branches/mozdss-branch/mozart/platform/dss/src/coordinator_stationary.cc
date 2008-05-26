@@ -296,7 +296,6 @@ namespace _dss_internal{ //Start namespace
   void 
   ProxyStationary::m_noCoordAtDest(DSite*, MessageType, MsgContainer* msg) {
     // we have lost the coordinator
-    delete msg;
     m_siteStateChange(m_getGUIdSite(), FS_GLOBAL_PERM); 
   }
   
