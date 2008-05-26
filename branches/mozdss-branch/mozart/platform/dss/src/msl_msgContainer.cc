@@ -211,11 +211,6 @@ namespace _msl_internal{ //Start namespace
 	Assert(a_fields[a_nof_fields].a_ft == FT_MSGC && msg);
 	
 	if (msg->deserialize(bb, source, env) && msg->checkFlag(MSG_CLEAR)) {
-	  Assert(!msg->m_isEmpty());
-	  // raph: The following statement removes the integer tag
-	  // corresponding to a MslMessageType (C_APPLICATION).  It is
-	  // necessary, otherwise upper layers can be confused!
-	  msg->popIntVal(); // removing initial field
 	  a_nof_fields++; // commit
 	  continue; 
 	} else {
