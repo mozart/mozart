@@ -226,6 +226,7 @@ namespace _msl_internal{ //Start namespace
     virtual void m_convert2Rec(); 
     virtual void m_extMakeGCpreps(); 
     virtual int peekMslMessageType();
+    virtual MsgContainer* reincarnate();
 
     // ***************************** 
     MACRO_NO_DEFAULT_CONSTRUCTORS(MsgCnt); 
