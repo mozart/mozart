@@ -75,8 +75,9 @@ namespace _dss_internal{
   
   void   
   DssMslClbk::m_MessageReceived(::MsgContainer* const msgC,DSite* const sender){
-        MessageType mt = static_cast<MessageType>(msgC->popIntVal());
-	dssLog(DLL_BEHAVIOR,"RECEIVE: %p, %d message from %p",m_getEnvironment()->a_myDSite, mt,sender);
+    MessageType mt = static_cast<MessageType>(msgC->popIntVal());
+    dssLog(DLL_BEHAVIOR,"RECEIVE: %p, %d message from %p",
+	   m_getEnvironment()->a_myDSite, mt, sender);
     switch (mt) {
     case M_PROXY_COORD_PROTOCOL:
       {
@@ -162,41 +163,45 @@ namespace _dss_internal{
 	break; 
       }
     case M_PROXY_PROXY_NODEST:
-	{ 
-	  MsgContainer * msg = msgC->popMsgC(); 
-	  MessageType mtt = static_cast<MessageType>(msg->popIntVal());
-	  NetIdentity ni = gf_popNetIdentity(msg);
-	  Proxy *pe   = m_getEnvironment()->a_proxyTable->m_find(ni);
-	  if (pe) pe->m_noProxyAtDest(sender, mtt, msg);
-	  break; 
-	}
-      case M_COORD_PROXY_NODEST:
-	{ 
-	  MsgContainer * msg = msgC->popMsgC(); 
-	  MessageType mtt = static_cast<MessageType>(msg->popIntVal());
-	  NetIdentity ni = gf_popNetIdentity(msg);
-	  Coordinator *me = m_getEnvironment()->a_coordinatorTable->m_find(ni);
-	  if(me) me->m_noProxyAtDest(sender, mtt, msg); 
-	  break; 
-	}
-      case M_PROXY_COORD_NODEST:
-	{ 
-	  MsgContainer * msg = msgC->popMsgC(); 
-	  MessageType mtt = static_cast<MessageType>(msg->popIntVal());
-	  NetIdentity ni = gf_popNetIdentity(msg);
-	  Proxy *pe   = m_getEnvironment()->a_proxyTable->m_find(ni);
-	  if (pe) pe->m_noCoordAtDest(sender, mtt, msg);
-	  break; 
-	}
+      { 
+	MsgContainer * msg = msgC->popMsgC(); 
+	msg->popIntVal();     // remove msl tag
+	MessageType mtt = static_cast<MessageType>(msg->popIntVal());
+	NetIdentity ni = gf_popNetIdentity(msg);
+	Proxy *pe   = m_getEnvironment()->a_proxyTable->m_find(ni);
+	if (pe) pe->m_noProxyAtDest(sender, mtt, msg);
+	break; 
+      }
+    case M_COORD_PROXY_NODEST:
+      { 
+	MsgContainer * msg = msgC->popMsgC(); 
+	msg->popIntVal();     // remove msl tag
+	MessageType mtt = static_cast<MessageType>(msg->popIntVal());
+	NetIdentity ni = gf_popNetIdentity(msg);
+	Coordinator *me = m_getEnvironment()->a_coordinatorTable->m_find(ni);
+	if(me) me->m_noProxyAtDest(sender, mtt, msg); 
+	break; 
+      }
+    case M_PROXY_COORD_NODEST:
+      { 
+	MsgContainer * msg = msgC->popMsgC(); 
+	msg->popIntVal();     // remove msl tag
+	MessageType mtt = static_cast<MessageType>(msg->popIntVal());
+	NetIdentity ni = gf_popNetIdentity(msg);
+	Proxy *pe   = m_getEnvironment()->a_proxyTable->m_find(ni);
+	if (pe) pe->m_noCoordAtDest(sender, mtt, msg);
+	break; 
+      }
     case M_COORD_COORD_NODEST:
-	{ 
-	  MsgContainer * msg = msgC->popMsgC(); 
-	  MessageType mtt = static_cast<MessageType>(msg->popIntVal());
-	  NetIdentity ni = gf_popNetIdentity(msg);
-	  Coordinator *me = m_getEnvironment()->a_coordinatorTable->m_find(ni);
-	  if(me) me->m_noCoordAtDest(sender, mtt, msg); 
-	  break; 
-	}
+      { 
+	MsgContainer * msg = msgC->popMsgC(); 
+	msg->popIntVal();     // remove msl tag
+	MessageType mtt = static_cast<MessageType>(msg->popIntVal());
+	NetIdentity ni = gf_popNetIdentity(msg);
+	Coordinator *me = m_getEnvironment()->a_coordinatorTable->m_find(ni);
+	if(me) me->m_noCoordAtDest(sender, mtt, msg); 
+	break; 
+      }
       
     case M_DKS_MSG:
       {
@@ -209,8 +214,7 @@ namespace _dss_internal{
     }
 
     dssLog(DLL_BEHAVIOR,"RECEIVE: Message handled (%d) from %x",mt,sender);
-    
-    ;}
+  }
   
   
   void
