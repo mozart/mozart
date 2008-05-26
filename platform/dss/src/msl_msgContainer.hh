@@ -98,9 +98,9 @@ namespace _msl_internal{ //Start namespace
   private:
     MsgFlags        a_flag:3;      // Windows adapted
     bool            a_suspf:1;     // whether suspended *inside* a field
+    bool            a_internalMsg:1; 
     MsgField*       a_fields;      // fields array, resized when needed
     int             a_num;         //queue number?? ZACHARIAS
-    bool            a_internalMsg; 
     DSS_LongTime    a_sendTime;
 
     // Counters

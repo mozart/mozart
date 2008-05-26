@@ -67,16 +67,18 @@ namespace _msl_internal{ //Start namespace
   // Constructors/Destructor
 
   MsgCnt::MsgCnt() :
-    a_flag(MSG_CLEAR), a_num(-1), a_internalMsg(false), a_sendTime(),
-    a_max_fields(INITIAL_SIZE), a_nof_fields(0), a_current(0), a_next(NULL)
+    a_flag(MSG_CLEAR), a_suspf(false), a_internalMsg(false), a_num(-1),
+    a_sendTime(), a_max_fields(INITIAL_SIZE), a_nof_fields(0), a_current(0),
+    a_next(NULL)
   {
     a_fields = new MsgField[a_max_fields];
     DebugCode(a_allocated++);
   }
   
   MsgCnt::MsgCnt(int Type, bool internal) :
-    a_flag(MSG_CLEAR), a_num(-1), a_internalMsg(internal), a_sendTime(),
-    a_max_fields(INITIAL_SIZE), a_nof_fields(0), a_current(0), a_next(NULL)
+    a_flag(MSG_CLEAR), a_suspf(false), a_internalMsg(internal), a_num(-1),
+    a_sendTime(), a_max_fields(INITIAL_SIZE), a_nof_fields(0), a_current(0),
+    a_next(NULL)
   {
     a_fields = new MsgField[a_max_fields];
     DebugCode(a_allocated++);
@@ -86,10 +88,22 @@ namespace _msl_internal{ //Start namespace
   MsgCnt::~MsgCnt() {
     DebugCode(a_allocated--);
     for (int i = 0; i < a_nof_fields; i++) { // while a valid FT
-      if(a_fields[i].a_ft == FT_DCT && a_fields[i].a_arg != NULL)
-	static_cast<DssCompoundTerm*>(a_fields[i].a_arg)->dispose(); 
-      if(a_fields[i].a_ft >= FT_ADC && a_fields[i].a_arg != NULL)
-	static_cast<ExtDataContainerInterface*>(a_fields[i].a_arg)->dispose(); 
+      if (a_fields[i].a_arg != NULL) { // dispose field
+	switch (a_fields[i].a_ft) {
+	case FT_DCT:
+	  static_cast<DssCompoundTerm*>(a_fields[i].a_arg)->dispose();
+	  break;
+	case FT_ADC:
+	case FT_SDC:
+	  static_cast<ExtDataContainerInterface*>(a_fields[i].a_arg)->dispose();
+	  break;
+	case FT_MSGC:
+	  delete static_cast<MsgCnt*>(a_fields[i].a_arg);
+	  break;
+	default:
+	  break;
+	}
+      }
     }
     delete [] a_fields;
   }
@@ -115,6 +129,8 @@ namespace _msl_internal{ //Start namespace
     for (int i = 0; i < a_nof_fields; i++) { //For all unmarshaled stuff...
       if (a_fields[i].a_ft == FT_SITE) { // The only resource in need of gc 
 	static_cast<Site*>(a_fields[i].a_arg)->m_makeGCpreps();
+      } else if (a_fields[i].a_ft == FT_MSGC) {
+	static_cast<MsgCnt*>(a_fields[i].a_arg)->m_makeGCpreps();
       }
     }
   }
@@ -363,10 +379,20 @@ namespace _msl_internal{ //Start namespace
     if (checkFlag(MSG_HAS_MARSHALCONT)) {
       setFlag(MSG_CLEAR);
       for (int i = 0; i < a_nof_fields; i++) {
-	if (a_fields[i].a_ft == FT_DCT)
+	switch (a_fields[i].a_ft) {
+	case FT_DCT:
 	  static_cast<DssCompoundTerm*>(a_fields[i].a_arg)->resetMarshaling();
-	if (a_fields[i].a_ft >= FT_ADC)
+	  break;
+	case FT_ADC:
+	case FT_SDC:
 	  static_cast<ExtDataContainerInterface*>(a_fields[i].a_arg)->resetMarshaling();
+	  break;
+	case FT_MSGC:
+	  static_cast<MsgCnt*>(a_fields[i].a_arg)->resetMarshaling();
+	  break;
+	default:
+	  break;
+	}
       }
     }
   }
