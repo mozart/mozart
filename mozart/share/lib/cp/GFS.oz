@@ -3,8 +3,8 @@
 %%%     Alberto Delgado <adelgado@cic.puj.edu.co>
 %%%
 %%%  Contributors:
-%%%     Andres Felipe Barco (anfelbar@univalle.edu.co)
-%%%     Gustavo A. Gomez Farhat (gafarhat@univalle.edu.co)
+%%%     Andres Felipe Barco <anfelbar@univalle.edu.co>
+%%%     Gustavo A. Gomez Farhat <gafarhat@univalle.edu.co>
 %%%
 %%% Copyright:
 %%%     Alberto Delgado, 2007
@@ -31,7 +31,7 @@ require
 	     vectorToList:   VectorToList
 	     vectorToTuple:  VectorToTuple
 	     %vectorMap:      VectorMap
-	     %expand:         Expand
+	     expand:         ExpandList
 	     %formatOrigin:   FormatOrigin
 	    )
    
@@ -40,37 +40,29 @@ import
    GFSP at 'x-oz://boot/GFSP'
    GFB at 'x-oz://boot/GBD'
    Space
+   GFD
 
 prepare
    %%This record must reflect the SetRelType in gecode/set.hh
-    Rt = '#'('=:'    :0    %Equality
-	          '\\=:'  :1    %Disequality
-	          '<:'    :2    %SubSet
-	          '>:'    :3    %SuperSet
-	          '||:'   :4    %Disjoint
-	          '^:'    :5    %complement
+   Rt = '#'('=:'    :0    %Equality
+	    '\\=:'  :1    %Disequality
+	    '<:'    :2    %SubSet
+	    '>:'    :3    %SuperSet
+	    '||:'   :4    %Disjoint
+	    '^:'    :5    %Complement
 	   )
-     
+   
    %%This record must reflect the SetOpType in gecode/set.hh
    SOP = '#'(unionOP       :0    % Union.
-            disjointOP    :1    % Disjoint union.
-            intersectOP   :2    % Intersection
-            differenceOP  :3    % Difference.
-     )
+	     disjointOP    :1    % Disjoint union.
+	     intersectOP   :2    % Intersection
+	     differenceOP  :3    % Difference.
+	    )
 
 export
-   %% Telling domains
-   var  : Var
-   is   : IsVar
-   sup  : Sup
-   inf  : Inf
-   compl : Compl
-   isIn  :  IsIn
-   complIn : ComplIn
-   include : Include
-   exclude : Exclude
-   carVal  : CardVal
-   carInt  : CardInt
+%%% Classify as in the Mozart docs
+   % Finite Set Interval Variables
+   var : Var
    diff    : Diff 
    intersect  :  Inter
    intersectN :  InterN
@@ -82,17 +74,31 @@ export
    distinct   : Dist
    distinctN  : DistinctN
    partition  : Partition
+   reified: GFSReified
+   
+
+   % Finite Set Intervals
+   inf  : Inf
+   sup  : Sup
+   compl : Compl
+   complIn : ComplIn
+   include : Include
+   exclude : Exclude
+   card: Card
+   cardRange: CardRange
+   isIn  :  IsIn
    
    %Gecode propagators
    sequence: Sequence
    sequentialUnion : SequentialUnion
    atMostOne: AtMostOne
+   dom: Dom
+   
    min: Min
    max: Max
    match: Match
    channel: Channel
-   cardinality: Cardinality
-   %weights: Weights 
+   weights: Weights 
    selectUnion: SelectUnion
    selectInter: SelectInter
    selectInterIn: SelectInterIn
@@ -108,7 +114,7 @@ export
    
 define
    %FsDecl = GFS.set
-   IsVar = GFSB.isVar
+   GFSisVar = GFSB.isVar
    Sup = {GFSB.sup}
    Inf = {GFSB.inf}
    Var
@@ -116,10 +122,11 @@ define
    ComplIn = GFSB.complIn
    Include = GFSB.incVal
    Exclude = GFSB.excVal
-   CardVal = GFSB.cardVal
-   CardInt = GFSB.cardInt
+   %CardVal = GFSB.cardVal
+   %CardInt = GFSB.cardInt
    IsIn
-   
+   Card
+   CardRange
    %% Propagators
    Diff = GFSP.diff
    Inter = GFSP.intersect
@@ -132,20 +139,21 @@ define
    DisjointN
    DistinctN
    Partition
-
+   GFSReified
+   ReifiedInclude
+   
    %% Gecode propagators
    Rel
    Sequence
    SequentialUnion
    
    AtMostOne
-
+   Dom
    Min
    Max
    Match
    Channel
-   Cardinality
-   %Weights
+   Weights
 
    SelectUnion
    SelectInter
@@ -266,31 +274,76 @@ in
 	 {FsRecord L As GFSB.bounds Dom1 Dom2}
       end
       
-     
+      
       
       
    in     
-      Var = var(decl : Decl
-		bounds : GFSB.bounds
-		upperBound : Upper
-		lowerBound : Lower
-		list: '#'(decl : FsListDecl
-			  bounds : FsListBounds
-			  upperBound : FsListUpperBound
-			  lowerBound : FsListLowerBound
+      Var = var(
+	       is: GFSisVar 
+	       decl : Decl
+	       bounds : GFSB.bounds
+	       upperBound : Upper
+	       lowerBound : Lower
+	       list: '#'(decl : FsListDecl
+			 bounds : FsListBounds
+			 upperBound : FsListUpperBound
+			 lowerBound : FsListLowerBound
+			)
+	       tuple: '#'(decl: FsTupleDecl
+			  bounds : FsTupleBounds
+			  upperBound : FsTupleUpperBound
+			  lowerBound : FsTupleLowerBound
 			 )
-		tuple: '#'(decl: FsTupleDecl
-			   bounds : FsTupleBounds
-			   upperBound : FsTupleUpperBound
-			   lowerBound : FsTupleLowerBound
-			  )
-		record: '#'(decl: FsRecordDecl
-			    bounds : FsRecordBounds
-			    upperBound : FsRecordUpperBound
-			    lowerBound : FsRecordLowerBound
-			   )		
+	       record: '#'(decl: FsRecordDecl
+			   bounds : FsRecordBounds
+			   upperBound : FsRecordUpperBound
+			   lowerBound : FsRecordLowerBound
+			  )		
 	       )
 
+      GFSReified = reified(
+		     % isIn:
+% 			     FSIsInReif
+% 			  areIn:
+% 			     proc {$ W S BList}
+% 				WList = {ExpandList
+% 					 {FSGetGlb {FSB.'value.make' W}}}
+% 			     in
+% 				BList
+% 				= {FD.list {Length WList} 0#1}
+% 				= {Map WList fun {$ E} {FSIsInReif E S} end}
+% 			     end
+		      include:
+			 ReifiedInclude
+			  % bounds:
+% 			     FSP.'reified.bounds'
+% 			  boundsN:
+% 			     FSP.'reified.boundsN'
+% 			  partition:
+% 			     proc {$ SVs Is GSet Rs}
+% 				Rs = {Map Is fun {$ I} {FD.int [0 I]} end}
+% 				{FSP.'reified.partition' SVs GSet Rs}
+% 			     end
+% 			  equal:
+% 			     FSEqualReif
+		      )
+      
+      
+      proc{Dom Sc}
+	 W = {Record.width Sc}
+      in
+	 case W
+	 of 3 then
+	    {GFSP.gfs_dom_3 Sc.1 Sc.2 Sc.3}
+	 []  4 then
+	    {GFSP.gfs_dom_4 Sc.1 Sc.2 Sc.3 Sc.4}
+	 []  5 then
+	    {GFSP.gfs_dom_5 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5}
+	 else
+	    raise malformed('Dom constraint post') end
+	 end
+      end
+      
       proc {DisjointN Mv}
 	 for I in 1..{List.lenght Mv} do
 	    for J in I.. {List.lenght Mv} do
@@ -409,29 +462,40 @@ in
 	    raise malformed('Channel constraint post') end
 	 end
       end
-
-      proc{Cardinality Sc}
+      
+      proc{Card Sc}
 	 W = {Record.width Sc}
       in
 	 case W
 	 of 2 then
 	    {GFSP.gfs_cardinality_2 Sc.1 Sc.2}
 	 else
-	    raise malformed('Cardinality constraint post') end
+	    raise malformed('Card constraint post') end
 	 end
       end
-
-%       proc{Weights Sc}
-% 	 W = {Record.width Sc}
-%       in
-% 	 case W
-% 	 of 4 then
-% 	    {GFSP.gfs_weights_4 Sc.1 Sc.2 Sc.3 Sc.4}
-% 	 else
-% 	    raise malformed('Weights constraint post') end
-% 	 end
-%       end
-
+      
+      proc{CardRange Sc}
+	 W = {Record.width Sc}
+      in
+	 case W
+	 of 3 then
+	    {GFSP.gfs_cardinality_3 Sc.1 Sc.2 Sc.3}
+	 else
+	    raise malformed('CardRange constraint post') end
+	 end
+      end  
+      
+      proc{Weights Sc}
+	 W = {Record.width Sc}
+      in
+	 case W
+	 of 4 then
+	    {GFSP.gfs_weights_4 Sc.1 Sc.2 Sc.3 Sc.4}
+	 else
+	    raise malformed('Weights constraint post') end
+	 end
+      end
+      
       proc{SelectUnion Sc}
 	 W = {Record.width Sc}
       in
@@ -459,7 +523,7 @@ in
       in
 	 case W
 	 of 4 then
-	    {GFSP.gfs_selectInterIn_3 Sc.1 Sc.2 Sc.3 Sc.4}
+	    {GFSP.gfs_selectInterIn_4 Sc.1 Sc.2 Sc.3 Sc.4}
 	 else
 	    raise malformed('SelectInterIn constraint post') end
 	 end
@@ -486,7 +550,31 @@ in
 	    raise malformed('SelectSet constraint post') end
 	 end
       end
+
+      proc{ReifiedInclude Sc B}
+	 W = {Record.width Sc}
+      in
+	 case W
+	 of 2 then
+	    {GFSP.gfs_reifiedInclude_3 Sc.1 Sc.2 B}
+	 else
+	    raise malformed('ReifiedInclude constraint post') end
+	 end
+      end
+
       
    end   
-     
+
+%    local
+%       \insert GeSetVarDist
+%    in
+%       FsDistribute = SetVarDistribute
+%    end
+   
+   % local
+%       \insert GeSetVarDistBR
+%    in
+%       FsDistributeBR = GFSDistribute
+%    end
+   
 end

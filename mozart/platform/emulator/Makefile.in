@@ -1,11 +1,12 @@
+#
 #  Authors:
-#    Michael Mehl (mehl@dfki.de)
+#    Michael Mehl <mehl@dfki.de>
 # 
 #  Contributors:
-#    Alberto Delgado (adelgado@cic.puj.edu.co)
-#    Alejandro Arbelaez (aarbelaez@cic.puj.edu.co)
-#    Gustavo Gutierrez (ggutierrez@cic.puj.edu.co)
-# 			Andrés Felipe Barco (anfelbar@univalle.edu.co)
+#    Alberto Delgado <adelgado@cic.puj.edu.co>
+#    Alejandro Arbelaez <aarbelaez@cic.puj.edu.co>
+#    Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
+#    Andrés Felipe Barco <anfelbar@univalle.edu.co>
 # 
 #  Copyright:
 #    Michael Mehl, 1998
@@ -14,7 +15,7 @@
 #    Gustavo Gutierrez, 2006-2007
 # 
 #  Last change:
-#    $Date:$ by $Author: 
+#    $Date$ by $Author: 
 #    $Revision$
 # 
 #  This file is part of Mozart, an implementation 
@@ -47,7 +48,7 @@ MODULE_NAMES =							\
 	CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat \
 	Win32 Profile OsTime ZlibIO 
 
-### add to built with gecode ###
+### added to build with gecode ###
 MODULE_NAMES += GFDB GBDB GFSB GFDP GBDP GFSP
 
 
@@ -78,7 +79,7 @@ SUBDIRS=	libdp libfd libfset
 OZVERSION=	$(SRCTOP)/OZVERSION
 
 
-### dirs to built with gecode ###
+### dirs to build with gecode ###
 SUBDIRS+=libcp-int
 SUBDIRS+=libcp-bool
 SUBDIRS+=libcp-set
@@ -104,7 +105,7 @@ MODSPECS= \
 	ZlibIO \
 	$(BIMODSPECS) \
 	$(DENYS_SPECS) \
-	GFDB GFDP GBDB GBDP GFSB GFSP # specs to built with  gecode
+	GFDB GFDP GBDB GBDP GFSB GFSP # specs to build with gecode
 
 MODINTERS = $(MODSPECS:%=mod%-if.cc)
 
@@ -300,17 +301,17 @@ libVirtualSite.a VirtualSite.so-$(PLATFORM):
 .PHONY: libFDP.a FDP.so-$(PLATFORM) libSchedule.a Schedule.so-$(PLATFORM)
 libFDP.a FDP.so-$(PLATFORM) libSchedule.a Schedule.so-$(PLATFORM):
 	cd libfd; $(MAKE) ../$@
-	
+
 .PHONY: libFSP.a FSP.so-$(PLATFORM)
 libFSP.a FSP.so-$(PLATFORM):
 	cd libfset; $(MAKE) ../$@
 
-### GeOz libs, to built with gecode ###
+### GeOz libs, to build with gecode ###
 
 .PHONY: libGFDB.a GFDB.so-$(PLATFORM)
 libGFDB.a GFDB.so-$(PLATFORM):
 	cd libcp-int; $(MAKE) ../$@
-	
+
 .PHONY: libGFDP.a GFDP.so-$(PLATFORM)
 libGFDP.a GFDP.so-$(PLATFORM):
 	cd libcp-int; $(MAKE) ../$@
@@ -330,7 +331,7 @@ libGFSB.a GFSB.so-$(PLATFORM):
 .PHONY: libGFSP.a GFSP.so-$(PLATFORM)
 libGFSP.a GFSP.so-$(PLATFORM):
 	cd libcp-set; $(MAKE) ../$@
-	
+
 ### end GeOz libs ### 
 
 ZlibIO.so-$(PLATFORM): $(ZLIBIOOBJS)
@@ -653,8 +654,3 @@ veryclean::
 distclean::
 	-rm -f OZCONF.h conf-others.h config.cache config.log config.status \
 		Makefile.rules Makefile.vars Makefile makefile oztool.sh .gdbinit
-
-
-
-
-

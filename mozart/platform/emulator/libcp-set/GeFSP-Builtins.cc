@@ -140,8 +140,6 @@ OZ_BI_define(gfs_dom_3,3,0){
   DeclareGeSetVar(0, __s, home);
   DeclareSetRelType(1, __r);
 
-
-
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
      OZ_isInt(OZ_in(2))){
     /*
@@ -270,6 +268,28 @@ OZ_BI_define(gfs_dom_5,5,0){
     }
   }
 
+  CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(gfs_cardinality_3,3,0){
+  DeclareGSpace(home);
+
+  DeclareGeSetVar(0, __x, home);
+  DeclareInt2(1, __i);
+  DeclareInt2(2, __j);
+
+  if(OZ_isGeSetVar(OZ_in(0)) && OZ_isInt(OZ_in(1)) && OZ_isInt(OZ_in(2))){
+    /*
+      void Gecode::cardinality (Space *home, SetVar x, unsigned int i, unsigned int j)
+      Propagates $ i \leq |s| \leq j $. 
+    */
+    try{
+      Gecode::cardinality(home, __x, __i, __j);
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+  }
   CHECK_POST(home);
 }OZ_BI_end
 
@@ -529,9 +549,9 @@ OZ_BI_define(gfs_rel_5,5,0){
   else if(OZ_isIntSet(OZ_in(0)) && OZ_isSetOpType(OZ_in(1)) && 
 	  OZ_isGeSetVar(OZ_in(2)) && OZ_isSetRelType(OZ_in(3)) && 
 	  OZ_isIntSet(OZ_in(4))){
-    DECLARE_INT_SET(0, __x);
+    DECLARE_INT_SET3(__x, val, 0);
     DeclareGeSetVar(2, __y, home);
-    DECLARE_INT_SET(4, __z);
+    DECLARE_INT_SET3(__z, val1, 4);
     try{
       Gecode::rel(home, __x, __op, __y, __r, __z);
 
@@ -544,8 +564,8 @@ OZ_BI_define(gfs_rel_5,5,0){
 	  OZ_isIntSet(OZ_in(2)) && OZ_isSetRelType(OZ_in(3)) && 
 	  OZ_isIntSet(OZ_in(4))){
     DeclareGeSetVar(0, __x, home);
-    DECLARE_INT_SET(2, __y);
-    DECLARE_INT_SET(4, __z);
+    DECLARE_INT_SET3(__y, val, 2);
+    DECLARE_INT_SET3(__z, val2, 4);
     try{
       Gecode::rel(home, __x, __op, __y, __r, __z);
 
@@ -813,8 +833,6 @@ OZ_BI_define(gfs_cardinality_2,2,0){
 OZ_BI_define(gfs_max_2,2,0){
   DeclareGSpace(home);
 
-
-
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1))){
     /*
       void Gecode::max (Space *home, SetVar s, IntVar x)
@@ -838,46 +856,40 @@ OZ_BI_define(gfs_max_2,2,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-// OZ_BI_define(gfs_weights_4,4,0){
-//   DeclareGSpace(home);
-
-// 
-
-//   if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) &&
-//      OZ_isGeSetVar(OZ_in(2)) && OZ_isGeIntVar(OZ_in(3))){
-//     /*
-//       void Gecode::weights (Space *home, const IntArgs &elements, 
-//       const IntArgs &weights, SetVar x, IntVar y)
-//       Post propagator for $y = \mathrm{weight}(x)$. 
-//     */
-//     DECLARE_INTARGS(0, __elements);
-//     DECLARE_INTARGS(1, __weights);
-//     DeclareGeSetVar(2, __x, home);
-//     DeclareGeIntVar(3, __y, home);
+OZ_BI_define(gfs_weights_4,4,0){
+  DeclareGSpace(home);
+  
+  if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntArgs(OZ_in(1)) &&
+     OZ_isGeSetVar(OZ_in(2)) && OZ_isGeIntVar(OZ_in(3))){
+    /*
+      void Gecode::weights (Space *home, const IntArgs &elements, 
+      const IntArgs &weights, SetVar x, IntVar y)
+      Post propagator for $y = \mathrm{weight}(x)$. 
+    */
+    DECLARE_INTARGS(0, __elements);
+    DECLARE_INTARGS(1, __weights);
+    DeclareGeSetVar(2, __x, home);
+    DeclareGeIntVar(3, __y, home);
     
-//     try{
-//       Gecode::weights(home, __elements, __weights, __x, __y);
-// 
-//     }
-//     catch(Exception e){
-//       RAISE_GE_EXCEPTION(e);
-//     }
-//   }
-//   else{
-//     return OZ_typeError(0, "Malformed Propagator");
-//   }
-// 
-//   CHECK_POST(home);
-// }OZ_BI_end
+    try{
+      Gecode::weights(home, __elements, __weights, __x, __y);
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+  }
+  else{
+    return OZ_typeError(0, "Malformed Propagator");
+  }
+  CHECK_POST(home);
+}OZ_BI_end
 
 /**
     Selection constraints
 */
 OZ_BI_define(gfs_selectUnion_3,3,0){
   DeclareGSpace(home);
-  
-
-  
+    
   DeclareGeSetVar(1, __y, home);
   DeclareGeSetVar(2, __z, home);
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && 
@@ -1053,6 +1065,29 @@ OZ_BI_define(gfs_selectDisjoint_2,2,0){
     try{
       Gecode::selectDisjoint(home, __x, __y);
 
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+  }
+  else{
+    return OZ_typeError(0, "Malformed Propagator");
+  }
+
+  CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(gfs_reifiedInclude_3,3,0){
+  DeclareGSpace(home);
+  int result;
+
+  if(OZ_isInt(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2))){
+    DeclareInt2(0, __i);
+    DeclareGeSetVar(1, __s, home);
+    DeclareGeBoolVar(2, __b, home);
+
+    try{
+      Gecode::dom(home, __s, Gecode::SRT_SUP, __i, __b);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
