@@ -41,7 +41,7 @@ OZ_BI_define(gfd_dom_5,5,0){
   DeclarePropKind(4, __PK_DEF);
 
   Assert(OZ_isPropKind(OZ_in(4)));
-  Assert( OZ_isIntConLevel(OZ_in(3)));
+  Assert(OZ_isIntConLevel(OZ_in(3)));
 
   if( OZ_isGeIntVar(OZ_in(0)) && OZ_isInt(OZ_in(1)) && OZ_isInt(OZ_in(2)) ){
     // dom(Space* home, IntVar x, int l, int m, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
@@ -88,7 +88,7 @@ OZ_BI_define(gfd_dom_5,5,0){
 OZ_BI_define(gfd_dom_4,4,0){
   DeclareGSpace(home);
   Assert(OZ_isPropKind(OZ_in(4)));
-  Assert( OZ_isIntConLevel(OZ_in(3)));
+  Assert(OZ_isIntConLevel(OZ_in(3)));
 
   if(OZ_isGeIntVar(OZ_in(0)) && OZ_isIntSet(OZ_in(1)) ){
     //  dom(Space* home, IntVar x, const IntSet& s, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
@@ -150,7 +150,7 @@ OZ_BI_define(gfd_rel_5,5,0){
   DeclareIntConLevel(3, __ICL_DEF);
   DeclarePropKind(4, __PK_DEF);
   
-  Assert( OZ_isIntConLevel(OZ_in(3)) &&  OZ_isPropKind(OZ_in(4)) && OZ_isIntRelType(OZ_in(1)));
+  Assert(OZ_isIntConLevel(OZ_in(3)) &&  OZ_isPropKind(OZ_in(4)) && OZ_isIntRelType(OZ_in(1)));
   if(OZ_isGeIntVar(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) ){
     //   rel(Space* home, IntVar x0, IntRelType r, IntVar x1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     DeclareGeIntVar(0, __x, home);
@@ -162,7 +162,7 @@ OZ_BI_define(gfd_rel_5,5,0){
       RAISE_GE_EXCEPTION(e);
     }
   } 
-  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) ){
+  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2))){
     // rel(Space* home, const IntVarArgs& x, IntRelType r, IntVar y, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     DECLARE_INTVARARGS(0, __x, home);
     DeclareGeIntVar(2, __y, home);
@@ -184,7 +184,7 @@ OZ_BI_define(gfd_rel_5,5,0){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isInt(OZ_in(2)) ){
+  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isInt(OZ_in(2))){
     //  rel(Space* home, const IntVarArgs& x, IntRelType r, int c, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     DECLARE_INTVARARGS(0, __x, home);
     DeclareInt2(2, __c);
@@ -195,7 +195,7 @@ OZ_BI_define(gfd_rel_5,5,0){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isIntVarArgs(OZ_in(2)) ){
+  else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isIntVarArgs(OZ_in(2))){
     //  rel(Space* home, const IntVarArgs& x, IntRelType r, const IntVarArgs& y, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     DECLARE_INTVARARGS(0, __x, home);
     DECLARE_INTVARARGS(2, __y, home);
@@ -223,7 +223,7 @@ OZ_BI_define(gfd_rel_6,6,0){
   DeclareIntConLevel(4, __ICL_DEF);
   DeclarePropKind(5, __PK_DEF);
 
-  if(OZ_isGeIntVar(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3)) ){
+  if(OZ_isGeIntVar(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3))){
     //  rel(Space* home, IntVar x0, IntRelType r, IntVar x1, BoolVar b, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     DeclareGeIntVar(2, __x1, home);
     try{
@@ -233,7 +233,7 @@ OZ_BI_define(gfd_rel_6,6,0){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  else if(OZ_isGeIntVar(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isInt(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3)) ){
+  else if(OZ_isGeIntVar(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isInt(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3))){
     // rel(Space* home, IntVar x, IntRelType r, int c, BoolVar b, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     DeclareInt2(2, __c);
     try{
@@ -1681,7 +1681,7 @@ OZ_BI_define(gfd_abs_2,2,0){
 OZ_BI_define(gfd_linear_5,5,0){
   DeclareGSpace(home);
   
-  Assert( OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4)));
+  Assert(OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4)));
   DeclareIntConLevel(3, __ICL_DEF);
   DeclarePropKind(4, __PK_DEF);
   

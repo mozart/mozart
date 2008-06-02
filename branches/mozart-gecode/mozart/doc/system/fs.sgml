@@ -647,7 +647,7 @@ D}_i/ of ?{Ds} reifies the presence of the corresponding element
 <item>
 ?{D2} reifies the presence of ?{D1} in the set ?{M}. This propagator
 detects in contrast to <<FS.reified.isIn>> earlier if ?{D1} is or is not
-constained  in ?{M}.
+contained in ?{M}.
 
 <entry>
 <index class=module/FS<and>reified<and>equal/

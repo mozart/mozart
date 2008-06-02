@@ -1624,3 +1624,30 @@ changequote([,])
   OZLOADWIN="$oz_cv_OZLOADWIN"
   AC_SUBST(OZLOADWIN)
 ])
+
+AC_DEFUN([AC_PROG_LATEX2PNG],[
+AC_CHECK_PROGS(latex2png,[latex2png],no)
+if test $latex2png = "no" ;
+then
+        ifelse($#,0,[AC_MSG_ERROR([Unable to find the latex2png application])],
+        $1)
+fi
+])
+
+AC_DEFUN([AC_PROG_LATEX],[
+AC_CHECK_PROGS(latex,[latex],no)
+if test $latex = "no" ;
+then
+        ifelse($#,0,[AC_MSG_ERROR([Unable to find the latex application])],
+        $1)
+fi
+])
+
+AC_DEFUN([AC_PROG_PNMTOPNG],[
+AC_CHECK_PROGS(pnmtopng,[pnmtopng],no)
+if test $pnmtopng = "no" ;
+then
+        ifelse($#,0,[AC_MSG_ERROR([Unable to find the pnmtopng application])],
+        $1)
+fi
+])

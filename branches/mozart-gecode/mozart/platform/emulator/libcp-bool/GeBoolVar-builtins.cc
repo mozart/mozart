@@ -110,7 +110,7 @@ OZ_BI_define(boolvar_getZero,1,1)
 OZ_BI_end
 
 /** 
- * \brief Returns the maximum elemen in the domain
+ * \brief Returns the maximum element in the domain
  * 
  * @param intvar_getOne
  * @param 0 A reference to the variable 

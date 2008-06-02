@@ -269,8 +269,9 @@ inline OZ_Return exc_GeSetVarVal(OZ_Term V1,  int val){
     return PROCEED;
 }
 
+/* These propagators are included in Gecode
 
-
+/*
 inline OZ_Return cardInt_GeSetVar(OZ_Term V1,  int min,  int max){
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
   SetView Var(get_SetVar(V1));  
@@ -294,7 +295,7 @@ inline OZ_Return card_GeSetVarVal(OZ_Term V1,  int val){
     return PROCEED;
   }
 }
-
+*/
 
 inline OZ_Term isIn_GeSetVar(OZ_Term V1, int val, OZ_Term VBool)
 {

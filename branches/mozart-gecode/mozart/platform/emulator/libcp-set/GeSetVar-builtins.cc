@@ -44,8 +44,8 @@ using namespace Gecode::Set;
  */
 OZ_BI_define(new_bounds,2,1)
 {
-  DECLARE_INT_SET(0,dom);   // the glb of the SetVar
-  DECLARE_INT_SET(1,dom2);   // the lub of the SetVar
+  DECLARE_INT_SET3(dom, val, 0);   // the glb of the SetVar
+  DECLARE_INT_SET3(dom2, val1, 1);   // the lub of the SetVar
   OZ_RETURN(new_GeSetVar(dom,dom2));
 }
 OZ_BI_end
@@ -117,26 +117,26 @@ OZ_BI_end
  * \brief Restrict cardinality to a value.
  * 
  */
-OZ_BI_define(card,2,0)
-{
-  DeclareInt(0,cardValue,"The parameter has to be a value");
-  return card_GeSetVarVal(OZ_in(1),cardValue);
+// OZ_BI_define(card,2,0)
+// {
+//   DeclareInt(0,cardValue,"The parameter has to be a value");
+//   return card_GeSetVarVal(OZ_in(1),cardValue);
   
-}
-OZ_BI_end
+// }
+// OZ_BI_end
 
 
 /** 
  * \brief Restrict cardinality to an interval of values.
  * 
  */
-OZ_BI_define(card_Int,3,0)
-{
-  DeclareInt(0,minValue,"The parameter has to be a value");
-  DeclareInt(1,maxValue,"The parameter has to be a value");
-  return cardInt_GeSetVar(OZ_in(1),minValue,maxValue);  
-}
-OZ_BI_end
+// OZ_BI_define(card_Int,3,0)
+// {
+//   DeclareInt(0,minValue,"The parameter has to be a value");
+//   DeclareInt(1,maxValue,"The parameter has to be a value");
+//   return cardInt_GeSetVar(OZ_in(1),minValue,maxValue);  
+// }
+// OZ_BI_end
 
 /** 
  * \brief 

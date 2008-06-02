@@ -33,10 +33,6 @@
 
 #include "IntVarMacros.hh"
 
-
-
-
-
 using namespace Gecode;
 using namespace Gecode::Int;
 
@@ -97,7 +93,7 @@ OZ_BI_end
 
 
 /** 
- * \brief Returns the minimum elemen in the domain
+ * \brief Returns the minimum element in the domain
  * 
  * @param intvar_getMin 
  * @param 0 A reference to the variable 
@@ -111,7 +107,7 @@ OZ_BI_define(intvar_getMin,1,1)
 OZ_BI_end
 
 /** 
- * \brief Returns the maximum elemen in the domain
+ * \brief Returns the maximum element in the domain
  * 
  * @param intvar_getMin 
  * @param 0 A reference to the variable 
@@ -138,7 +134,7 @@ OZ_BI_define(intvar_getSize,1,1)
 OZ_BI_end
 
 /**
- *\brief Return the oz domain \a OZ_in(0)
+ *\brief Returns the oz domain \a OZ_in(0)
  * @param 0 A reference to the variable
  */
 /* I have to think in a better way to do this method*/
@@ -167,7 +163,7 @@ OZ_BI_end
 
 
 /**
- * \brief Return the oz domain of \a OZ_in(0) in a ordered list of integers
+ * \brief Returns the oz domain of \a OZ_in(0) in a ordered list of integers
  * @param 0 A reference to the variable
  * @param 1 List that represent the oz domain of the first parameter
  */
@@ -188,7 +184,7 @@ OZ_BI_define(int_domList,1,1)
 OZ_BI_end
 
 /**
- * \brief Return the next integer that \a OZ_in(1) in the GeIntVar \a OZ_in(0)
+ * \brief Returns the next integer that \a OZ_in(1) in the GeIntVar \a OZ_in(0)
  * @param 0 A reference to the variable
  * @param 1 integer
  */
@@ -213,7 +209,7 @@ OZ_BI_define(int_nextLarger,2,1)
 OZ_BI_end
 
 /**
- * \brief Return the small integer that \a OZ_in(1) in the GeIntVar \a OZ_in(0)
+ * \brief Returns the small integer that \a OZ_in(1) in the GeIntVar \a OZ_in(0)
  * @param 0 A reference to the variable
  * @param 1 integer
  */

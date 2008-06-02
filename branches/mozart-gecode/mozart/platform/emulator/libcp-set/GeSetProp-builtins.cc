@@ -2,10 +2,11 @@
  *  Main authors:
  *     Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
  *     Alberto Delgado <adelgado@cic.puj.edu.co> 
- *     Alejandro Arbelaez (aarbelaez@cic.puj.edu.co)
+ *     Alejandro Arbelaez <aarbelaez@cic.puj.edu.co>
  *
  *  Contributing authors:
- *		Andres Felipe Barco <anfelbar@univalle.edu.co>
+ *     Andres Felipe Barco <anfelbar@univalle.edu.co>
+ *
  *  Copyright:
  *    Alberto Delgado, 2006-2007
  *    Alejandro Arbelaez, 2006-2007
@@ -166,9 +167,9 @@ OZ_BI_define(set_distinct,2,0)
   CHECK_POST(gs);
 } OZ_BI_end
 
+
 #ifndef MODULES_LINK_STATIC
 #include "../modGFSP-if.cc"
 #endif
-
 
 #endif
