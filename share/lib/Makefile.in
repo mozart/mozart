@@ -291,7 +291,7 @@ GroundZip.ozf: compiler/GroundZip.oz
 Builtins.ozf: compiler/Builtins.oz GroundZip.ozf compiler-Builtins.oz
 
 Unnester.ozf: compiler/Unnester.oz compiler/TupleSyntax.oz \
-	compiler/BindingAnalysis.oz compiler/UnnestFD.oz
+	compiler/BindingAnalysis.oz compiler/UnnestFD.oz FD.ozf
 
 Annotate.ozf: compiler/Annotate.oz
 

@@ -22,7 +22,7 @@ the variable is <Em>constrained</Em>, here by a finite domain
 constraint. This information is stored right at the variable. To
 provide a generic scheme to associate self-defined constraints with a
 variable in the constraint store, such a variable has a pointer of
-type <<(OZ_Ct *)>>, pointing to an constraint instance of the self-defined
+type <<(OZ_Ct *)>>, pointing to a constraint instance of the self-defined
 constraint system. That is done by defining new constraints as
 subclasses of <<OZ_Ct>>.
 
@@ -41,12 +41,12 @@ propagators to notify, the propagator has to memorize the constraints
 present in the constraint store before the propagation algorithm
 modified the store. The class <<OZ_CtProfile>> serves that purpose by
 providing a generic interface (used in <<OZ_CtVar>>) to store
-characteristic information of a constraint sufficient to derive what
-propagator have to be notified.
+characteristic information of a constraint sufficient to derive which
+propagators have to be notified.
 
 <P> The notification of propagators is realized by wake-up lists
 associated with the constrained variable. Depending on the kind of
-constraint system there different events a propagator wants to be
+constraint system there will be different events a propagator may want to be
 notified upon. For each event there is a wake-up list. The wake-up
 events of a constraint system are determined by an object of a
 subclass of <<OZ_CtDefinition>>. Hence, upon creation of a new
@@ -56,7 +56,7 @@ variables with generic constraints.
 
 <P> The following sections explain in detail how a constraint system
 can be implemented using the provided abstractions briefly mentioned in
-th section.
+this section.
 
 </SubSection>
 
@@ -67,7 +67,7 @@ th section.
     <Title/Overview over Generic Part of the &cpi;/
 
 <P>
-The &cpi; provides for abstractions to implement constraint systems
+The &cpi; provides abstractions to implement constraint systems
 from scratch.  Five classes provide the required functionality. They
 allow to implement new constraint system at a high level of
 abstraction without sacrificing efficiency (e.g., it is
@@ -208,7 +208,8 @@ is to be defined appropriately.
 <P>
 Further, <<RIDefinition>> allows the runtime system to determine the
 number of possible events causing suspending computation to be woken
-up. There are two possible events when suspending computation wants to
+up. There are two possible events for which a suspending computation
+may want to
 be notified: the lower bound is increased or the upper bound is
 decreased (or both). Therefore, two wake-up lists are used (see
 <<getNoOfWakeUpLists()>>).
@@ -379,7 +380,7 @@ The class <<RIEexpect>> can now be used to define foreign functions
 that impose propagators on their parameters.
 
 <<<
-OZ_C_proc_begin(ri_lessEq, 2)
+OZ_BI_define(ri_lessEq, 2, 0)
 {
   OZ_EXPECTED_TYPE("real interval, real interval");
 
@@ -391,7 +392,7 @@ OZ_C_proc_begin(ri_lessEq, 2)
   return pe.impose(new RILessEq(OZ_args[0], 
                                 OZ_args[1]));
 }
-OZ_C_proc_end
+OZ_BI_end
 >>>
 
 The propagator class <<RILessEq>> is partly defined next.

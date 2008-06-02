@@ -1,5 +1,7 @@
 ### -*-perl-*-
 
+$module_init_fun_name = "weakdict_init";
+
 %builtins_all =
     (
      'is'		=> { in  => ['+value'],

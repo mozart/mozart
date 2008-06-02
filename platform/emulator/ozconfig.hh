@@ -55,10 +55,10 @@ public:
   int gcVerbosity;            // GC verbosity level
   int codeGCcycles;           // after that many GCs a code GC will be done
 
-  int heapThreshold;
-  int heapMinSize;
-  int heapFree;
-  int heapTolerance;
+  unsigned int heapThreshold;
+  unsigned int heapMinSize;
+  unsigned int heapFree;
+  unsigned int heapTolerance;
 
   int stackMinSize;
 

@@ -892,7 +892,7 @@ For a set <math/S/ of tasks we define
 <table class=dyptic>
 <tr/<td/<math/\Est{S} =  \min(\{\Est{T}|\ T \in S\})///
 <tr/<td/<math/\Lct{S} = \max(\{\Lct{T}|\ T \in S\})///
-<tr/<td/<math/\Dur{S} = \sum\limits_{T \in S} \Dur{S}///
+<tr/<td/<math/\Dur{S} = \sum\limits_{T \in S} \Dur{T}///
 </table>
 <p>
 
