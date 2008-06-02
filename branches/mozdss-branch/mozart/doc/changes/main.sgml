@@ -58,6 +58,12 @@
   <Front>
     <meta name="proglang.mode" arg1="oz" arg2="oz-mode">
 
+    <meta name="html.split"       value="chapter.m132">
+    <meta name="html.split"	  value="section.m132.changes">
+    <meta name="html.split"	  value="section.m132.usability">
+    <meta name="html.split"	  value="section.m132.maintainability">
+    <meta name="html.split"	  value="section.m132.internal">
+
     <meta name="html.split"       value="chapter.m131">
     <meta name="html.split"	  value="section.m131.mogul">
     <meta name="html.split"	  value="section.m131.changes">
@@ -105,6 +111,121 @@
       This documents gives a brief overview of the changes between different Mozart versions.
     </Abstract>
   <Body>
+
+  <chapter id="chapter.m132">
+   <title/Mozart 1.3.2/
+   
+   <p>Mozart 1.3.2 is a bug-fix and maintenance release. One of the
+   main fixes is adding compatibility with gcc compilers newer than
+   3.3.x, including the 4.x series.
+   <p>
+
+   <section id="section.m132.changes" proglang=sh>
+      <title/Changes in Oz, Mozart libraries and UI/
+
+      <subsection><title/Dictionaries/
+      <p>Copying of dictionaries was broken. Fixed. (bug 1352)</p>
+      </subsection>
+      
+      <subsection><title/FSF/
+      <p>Mozart added to the FSF directory. (bug 1207)</p>
+      </subsection>
+
+      <subsection><title/Application module/
+      <p><code/Application.getGuiArgs/ now returns arguments as
+      documented. (bug 1691)</p>
+      </subsection>
+
+      <subsection><title/Psql Contribution/
+      <p>The contribution to work with PostgreSQL is working again. To
+      build it use <code/--enable-contrib-psql/ during configuration.</p>
+      </subsection>
+
+   </section>
+
+   <section id="section.m132.usability">
+      <title/Changes in the implementation that affect usability and performance/
+      <subsection><title/Oz Compiler/
+      <p>
+        <list>
+        <item> Keyword <code/native/ has been removed from class's
+        properties. This implies a change in the module <code/Open/ in
+        contributions, fixing a runtime error (bug 1277).
+
+        <item> A warning is triggered when a non-valid property is
+        added after keyword <code/fun/ in function definitions. This
+        prevents programmers from creating eager functions when
+        keyword <code/lazy/ is misspelled (bug 1437).
+
+        <item> Added <<--warnshadow>> option to compiler to emit warning
+        message when variables in an outer scope are shadowed (bug 1707).
+
+        </list>
+      </p>
+      </subsection>
+
+      <subsection><title/Garbage Collection/
+      <p>
+        <list>
+	<item> Indexes have been fixed to work with RAM memory bigger
+	that 1GB.
+        </list>
+      </p>
+      </subsection>
+
+      <subsection><title/Distribution Layer/
+      <p>
+        <list>
+        <item> <code/NewPort/ does not block anymore when using a
+        distributed variable for the stream. Currently, the builtin
+        receives one input and one output, but it should change to two
+        outputs in a future release (bug 1521).
+
+        <item>Problem with sockets generating 'segmentation fault'
+        with P2PS is fixed (bugs 1304, 1339).
+
+        <item>Failed assertion in the Owner table fixed (bug 1461).
+        </list>
+      </p>
+      </subsection>
+
+   </section>
+
+   <section id="section.m132.maintainability">
+      <title/Changes in the implementation that affect maintainability and portability
+
+      <p>
+      <list>
+      <item> Mozart 1.3.1 compiles with gcc up to version
+      3.3.x. Mozart 1.3.2 add compatibility to build using gcc newer
+      than 3.3.x and up to 4.1.x
+
+      <item> Succesful build reported on MacOSX/intel after fixing
+      configuration. (bug 1859)
+      </list>
+      </p>
+
+   </section>
+
+   <section id="section.m132.internal">
+      <title/More Bug Fixes/
+
+      <p>
+      <list>
+      <item> Error messages: 1429, 1816
+      <item> XML related: 1333
+      <item> GCC Compiler: 1636
+      <item> RPM building: 1649
+      <item> Reflect module: 1839
+      <item> FloatToString: 1869
+      <item> Emacs OPI related: 1890
+      <item> Tools: 1332, 1459, 1775
+      <item> Documentation: 590, 991, 1371, 1445, 1374, 1375, 1419, 1466, 1479, 1614, 1660, 1818, 1820, 1832
+      </list>  
+      </p>
+   </section>
+
+  </chapter>
 
   <chapter id="chapter.m131">
     <title/Mozart 1.3.1/
@@ -192,6 +313,11 @@ ozmake --config=put --archive=http://www.mozart-oz.org/mogul/pkg/1.2.5/source
         <title/Unification/
 	<p>Failure in the unification of OFS (open feature structures)
 	did not always untrail properly (bug 1314)
+      <subsection id="sec.m131.distribution">
+        <title/Distribution Subsystem/
+	<p>Distributed resources (distributed entities without a consistency
+        protocol represented by a special resource token on remote sites)
+        handled inproperly during local garbage collection (bug 1304)
 
     <section id="section.m131.internal">
       <title/Changes in the implementation that affect maintainability and portability/

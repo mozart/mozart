@@ -78,13 +78,13 @@ case "$cmd" in
 		exit 1
 	    fi
 	fi
-	if ( $OZEMACS --version | grep XEmacs > /dev/null 2>&1 )
+	if ( "$OZEMACS" --version | grep XEmacs > /dev/null 2>&1 )
 	then
-	    exec $OZEMACS \
+	    exec "$OZEMACS" \
 		    --eval '(setq load-path (cons "'$OZHOME'/share/elisp" load-path))' \
 		    -l oz.elc -f run-oz "$@"
 	else
-	    exec $OZEMACS -L "$OZHOME/share/elisp" -l oz.elc -f run-oz "$@"
+	    exec "$OZEMACS" -L "$OZHOME/share/elisp" -l oz.elc -f run-oz "$@"
 	fi
 	;;
 
@@ -102,7 +102,7 @@ case "$cmd" in
 	fi
 	url=$1
 	shift
-	exec "$OZEMULATOR" $OZGUI -u $url -- "$@"
+	exec "$OZEMULATOR" $OZGUI -u "$url" -- "$@"
 	;;
 
    oztool)

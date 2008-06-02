@@ -122,7 +122,8 @@
 	<Synopsis>
 	  <<{Record.adjoin ?+{R1} ?+{R2} ??{R3}}>>
 	<Item>
-	  returns the result of adjoining ?_{R2} to&nbsp;?_{R1}.
+	  returns the result of adjoining ?_{R2} to&nbsp;?_{R1}. Note
+          that features and label in R2 take precedence over R1.
 	<P>
 	  For example,
 	  <<<{Adjoin a(a b c: 1) b(4 b: 3 c: 2)}>>>
