@@ -3,7 +3,7 @@
  *     Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
  *     Alberto Delgado <adelgado@cic.puj.edu.co> 
  *     Alejandro Arbelaez <aarbelaez@cic.puj.edu.co>
- *     Andres Felipe Barco (anfelbar@univalle.edu.co)
+ *     Andres Felipe Barco <anfelbar@univalle.edu.co>
  *
  *  Copyright:
  *    Alberto Delgado, 2006-2007

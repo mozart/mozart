@@ -46,6 +46,12 @@ OZ_PATH_PROG(OZDOC,ozdoc,OZDOC=$BUILDTOP/doc/utilities/ozdoc$EXE_EXT)
 AC_SUBST(OZENGINE)
 AC_SUBST(OZDOC)
 
+AC_PROG_LATEX2PNG([AC_MSG_ERROR("You need the latex2png program to build the documentation. It is available at http://sourceforge.net/projects/latex2rtf/")])
+
+AC_PROG_LATEX([AC_MSG_ERROR("You need LaTeX to build the documentation. It is available at http://www.latex-project.org/")])
+
+AC_PROG_PNMTOPNG([AC_MSG_ERROR("You need the pnmtopng program included in the netpbm package. It is available at http://netpbm.sourceforge.net/")])
+
 AC_MSG_CHECKING(for --with-java-bin)
 AC_ARG_WITH(java-bin,
   [--with-java-bin='DIR'

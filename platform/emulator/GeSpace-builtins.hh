@@ -20,21 +20,21 @@
    \brief Test if \a s points to something different from \a NULL
    \attention This macro can be called by the <code>DECLARE_SPACE</code> macro only.
 */ 
-#define CHECK_SPACE(s)  \
-	if (!s) OZ_RETURN(OZ_raiseC("InvalidSpace",0))
+#define CHECK_SPACE(s)					\
+  if (!s) OZ_RETURN(OZ_raiseC("InvalidSpace",0))
 
 /**
    \def DECLARE_SPACE(s, arg)
    \brief Declares \a s to be the GeSpace referenced by <code>OZ_in(arg)</code>
    \attention The order of the parameters should be swaped to be compliant with the Mozart standar
 */
-#define DECLARE_SPACE(s, arg)  \
-        GenericSpace *s = extVar2Var(arg)->getBoardInternal->getGenericSpace();   \
-	CHECK_SPACE(s) 
+#define DECLARE_SPACE(s, arg)						\
+  GenericSpace *s = extVar2Var(arg)->getBoardInternal->getGenericSpace(); \
+  CHECK_SPACE(s) 
 
 	
-#define DeclareGSpace(sp) \
-	GenericSpace *sp = oz_currentBoard()->getGenericSpace()
+#define DeclareGSpace(sp)					\
+  GenericSpace *sp = oz_currentBoard()->getGenericSpace()
 
 	
 /*
@@ -43,13 +43,13 @@
   early failure detection and checks if the space sp becomes failed
   after propoagator posting.
 */
-#define CHECK_POST(sp)                  \
-  if(sp->failed())                     \
-return FAILED;                     \
-else                                 \
-if(sp->isStable())                 \
-sp->makeUnstable();              \
-return PROCEED;
+#define CHECK_POST(sp)				\
+  if(sp->failed())				\
+    return FAILED;				\
+  else						\
+    if(sp->isStable())				\
+      sp->makeUnstable();			\
+  return PROCEED;
 
 
  

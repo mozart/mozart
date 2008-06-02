@@ -5,8 +5,8 @@
 %%%     Alejandro Arbelaez <aarbelaez@puj.edu.co>
 %%%
 %%%  Contributors:
-%%%     Andres Felipe Barco (anfelbar@univalle.edu.co)
-%%%     Gustavo A. Gomez Farhat (gafarhat@univalle.edu.co)
+%%%     Andres Felipe Barco <anfelbar@univalle.edu.co>
+%%%     Gustavo A. Gomez Farhat <gafarhat@univalle.edu.co>
 %%%
 %%% Copyright:
 %%%     Gustavo Gutierrez, 2006
