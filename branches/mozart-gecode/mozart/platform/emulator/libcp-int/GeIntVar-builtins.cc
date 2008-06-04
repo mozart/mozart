@@ -2,10 +2,12 @@
  *  Main authors:
  *     Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
  *     Alberto Delgado <adelgado@cic.puj.edu.co> 
- *     Alejandro Arbelaez (aarbelaez@cic.puj.edu.co)
+ *     Alejandro Arbelaez <aarbelaez@cic.puj.edu.co>
  *
  *  Contributing authors:
- *			Andres Felipe Barco (anfelbar@univalle.edu.co)
+ *     Andres Felipe Barco <anfelbar@univalle.edu.co>
+ *     Gustavo A. Gomez Farhat <gafarhat@univalle.edu.co>
+ *
  *  Copyright:
  *    Alberto Delgado, 2006-2007
  *    Alejandro Arbelaez, 2006-2007
@@ -109,7 +111,7 @@ OZ_BI_end
 /** 
  * \brief Returns the maximum element in the domain
  * 
- * @param intvar_getMin 
+ * @param intvar_getMax 
  * @param 0 A reference to the variable 
  * @param 1 The maximum of the domain 
  */

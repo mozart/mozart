@@ -75,7 +75,6 @@ export
    distinctN  : DistinctN
    partition  : Partition
    reified: GFSReified
-   
 
    % Finite Set Intervals
    inf  : Inf
@@ -87,6 +86,9 @@ export
    card: Card
    cardRange: CardRange
    isIn  :  IsIn
+
+   % Finite Set Constants
+   value: GFSValue   
    
    %Gecode propagators
    sequence: Sequence
@@ -141,7 +143,9 @@ define
    Partition
    GFSReified
    ReifiedInclude
-   
+   GFSValue
+   GFSValueMake = GFSB.'gfs_valueMake_2'
+
    %% Gecode propagators
    Rel
    Sequence
@@ -300,6 +304,21 @@ in
 			   lowerBound : FsRecordLowerBound
 			  )		
 	       )
+
+      GFSValue = value(
+		    % empty:
+% 		       {FSSetValue nil}
+% 		    universal:
+% 		       {FSSetValue FSUniversalRefl}
+% 		    singl:
+% 		       fun {$ N} {FSSetValue [N]} end
+		    make:
+		       GFSValueMake
+		    % is:
+% 		       FSisValue
+% 		    toString:
+% 		       FSvalueToString
+		    )
 
       GFSReified = reified(
 		     % isIn:
