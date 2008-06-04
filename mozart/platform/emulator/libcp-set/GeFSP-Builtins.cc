@@ -1079,7 +1079,6 @@ OZ_BI_define(gfs_selectDisjoint_2,2,0){
 
 OZ_BI_define(gfs_reifiedInclude_3,3,0){
   DeclareGSpace(home);
-  int result;
 
   if(OZ_isInt(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2))){
     DeclareInt2(0, __i);
