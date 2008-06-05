@@ -105,7 +105,7 @@ namespace _msl_internal { //Start namespace
     return comObj;
   }
 
-  const int MSG_ACK_TIMEOUT = 1000;
+  const int MSG_ACK_TIMEOUT = 100;
   const int MSG_ACK_LENGTH  = 200;
 
   // ***************************************************************************
