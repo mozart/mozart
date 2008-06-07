@@ -81,6 +81,18 @@ define
       {Delay After} {Thread.state T}=State
    end
 
+   %% an alternative version of spawn, for threads that should block forever
+   proc {SpawnF P ?Check ?T}
+      N={NewName} Z
+   in
+      {Finalize.register N proc {$ _} Z=unit end}
+      thread {Thread.this T} {P} Z=N end
+      proc {Check}
+	 {System.gcDo} {System.gcDo} {System.gcDo}
+	 {IsDet Z true} Z=unit
+      end
+   end
+
 
 
    %% tempFail with synchronous operation
@@ -97,32 +109,35 @@ define
    end
 
    %% localFail with synchronous operation
-   proc {BreakCell} S E T in
+   proc {BreakCell} S E T Check in
       {StartServer S E}
       {DP.break E.cell}
       {CheckEntity E.cell localFail}
-      T={Spawn proc {$} {Assign E.cell foo} end}
+      T={SpawnF proc {$} {Assign E.cell foo} end Check}
       {CheckThread T 300 blocked}
+      {Check}
       {S close}
    end
 
    %% permFail (with Kill) with synchronous operation
-   proc {KillCell} S E T in
+   proc {KillCell} S E T Check in
       {StartServer S E}
       {DP.kill E.cell}
       {CheckEntity E.cell permFail}
-      T={Spawn proc {$} {Assign E.cell foo} end}
+      T={SpawnF proc {$} {Assign E.cell foo} end Check}
       {CheckThread T 300 blocked}
+      {Check}
       {S close}
    end
 
    %% permFail with synchronous operation
-   proc {PermFailCell} S E T in
+   proc {PermFailCell} S E T Check in
       {StartServer S E}
       {MakeSite E.pid permFail}
       {CheckEntity E.cell permFail}
-      T={Spawn proc {$} {Assign E.cell foo} end}
+      T={SpawnF proc {$} {Assign E.cell foo} end Check}
       {CheckThread T 300 blocked}
+      {Check}
    end
 
    %% tempFail with asynchronous operation
@@ -169,23 +184,14 @@ define
    end
 
    Return=
-   dp([fault_synchronous_tempFail(TempFailCell keys:[fault])
-       fault_synchronous_permFail(PermFailCell keys:[fault])
-       fault_synchronous_break(BreakCell keys:[fault])
-       fault_synchronous_kill(KillCell keys:[fault])
-       fault_asynchronous_tempFail(TempFailPort keys:[fault])
-       fault_asynchronous_permFail(PermFailPort keys:[fault])
-       fault_asynchronous_break(BreakPort keys:[fault])
-       fault_asynchronous_kill(KillPort keys:[fault])
+   dp([fault([tempFail([synchronous(TempFailCell keys:[fault])
+			asynchronous(TempFailPort keys:[fault])])
+	      permFail([synchronous(PermFailCell keys:[fault])
+			asynchronous(PermFailPort keys:[fault])])
+	      break([synchronous(BreakCell keys:[fault])
+		     asynchronous(BreakPort keys:[fault])])
+	      kill([synchronous(KillCell keys:[fault])
+		    asynchronous(KillPort keys:[fault])])
+	     ])
       ])
 end
-
-
-
-
-
-
-
-
-
-
