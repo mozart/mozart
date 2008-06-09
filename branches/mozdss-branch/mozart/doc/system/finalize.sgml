@@ -47,8 +47,11 @@ no longer referenced, we would like the memory to be automatically
 freed.
     </list>
 This is the purpose of <em/finalization/: to execute a cleanup action
-when a computational object is no longer referenced. The Oz
-finalization facility was inspired by the article <ref.extern to=
+when a computational object is no longer referenced.
+  <p>Mozart proposes two finalization mechanisms, one being
+<em/pre-mortem/, and the other one being <em/post-mortem/.  The
+pre-mortem finalization facility was inspired by the
+article <ref.extern to=
 "ftp://ftp.cs.indiana.edu/pub/scheme-repository/doc/pubs/guardians.ps.gz"
 >Guardians in a Generation-Based Garbage Collector</ref.extern>
 (R. Kent Dybvig, Carl Bruggeman, David Eby, June 1993).  It is built
@@ -57,6 +60,11 @@ key="section.chunks.weakdictionaries">): each weak dictionary is
 associated with a <em/finalization stream/ on which pairs
 <code/Key#Value/ appear when <code/Value/ becomes unreachable except
 through one or more weak dictionaries.
+  <p>We recommend to use the post-mortem finalization facility when
+possible.  The reason is that it gives stronger guarantees: upon
+finalization, there is no possibility for a value to remain in memory,
+it is already gone.  Except, of course, if the value is brought back
+in memory via distribution or unpickling (<ptr to="chapter.pickle">).
   <p>Note that since instances of the same stateless value are
 indistinguishable, we cannot
 tell the difference between one instance of the integer 7 and another one.
@@ -76,7 +84,10 @@ are atoms: since they remain in the global atom table, they are currently
 considered to
 always be reachable.  This might change if we implement garbage collection
 of the atom table.
-<list>
+
+<section>
+  <title>Pre-mortem finalization facilities</title>
+  <list>
       <entry/<code/Finalize.guardian/
       <index/<code/Finalize/<and><code/guardian///
       <synopsis/<code/{Finalize.guardian ?+{Finalizer} ??{Register}}//
@@ -128,7 +139,23 @@ in {Finalize.register DO DO} end
 in other words, we create a procedure <code/DO/ and register it using
 itself as its own handler.  When invoked, it calls <code/P/ and
 registers itself again.
-      </list>
+  </list>
+</section>
+
+<section>
+  <title>Post-mortem finalization facilities</title>
+  <list>
+    <entry/<code/Finalize.postmortem/
+    <index/<code/Finalize/<and><code/postmortem///
+    <synopsis/<code/{Finalize.postmortem ?_{X} ?+{P} ?_{Y}}//
+    <item>This statement registers the value ?_{X} for post-mortem
+finalization.  ?_{X} and ?_{Y} can be any value or variable, while
+?_{P} must be a port.  Once the garbage collector detects that ?_{X}
+has become unreachable, it sends the value ?_{Y} on the port ?_{P}.
+In other words, it looks like the statement <code/{Send ?_{P} ?_{Y}}/
+is executed automatically once ?_{X} disappears from memory.
+  </list>
+</section>
 </Chapter>
 <!--
 Local Variables:
