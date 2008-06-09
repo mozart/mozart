@@ -512,6 +512,9 @@ void oz_gCollectTerm(TaggedRef & f, TaggedRef & t) {
   OZ_gCollectBlock(&f, &t, 1);
 }
 
+// register a triple (entity, port, item) for post-mortem finalization
+void registerPostMortem(TaggedRef, TaggedRef, TaggedRef);
+
 // builtins.cc
 OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val, OZ_Term var = 0);
 

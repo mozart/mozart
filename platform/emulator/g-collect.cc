@@ -2,6 +2,9 @@
  *  Authors:
  *    Christian Schulte <schulte@ps.uni-sb.de>
  * 
+ *  Contributors:
+ *    Raphael Collet (raphael.collet@uclouvain.be)
+ * 
  *  Copyright:
  *    Christian Schulte, 1999
  * 
@@ -150,6 +153,74 @@ Bool oz_unprotect(TaggedRef *ref) {
 void oz_unprotectAllOnExit() {
   extRefs = (ExtRefNode *) 0;
 }
+
+
+
+/*
+ * Post-mortem finalization
+ *
+ * The stuff below maintains a list of post-mortem triples.  Each
+ * triple consists in an entity E, a port P, and an item I.  Once E
+ * becomes unreachable, I is sent on port P, and the triple is removed
+ * from the list.
+ */
+
+class PostMortemTriple {
+public:
+  USEHEAPMEMORY;
+
+  TaggedRef entity, port, item;
+  PostMortemTriple* next;
+
+  PostMortemTriple(TaggedRef e, TaggedRef p, TaggedRef i, PostMortemTriple* n):
+    entity(e), port(p), item(i), next(n) {}
+};
+
+static PostMortemTriple* pm_list = NULL;
+
+// register a triple for post-mortem finalization
+void registerPostMortem(TaggedRef entity, TaggedRef port, TaggedRef item) {
+  pm_list = new PostMortemTriple(entity, port, item, pm_list);
+}
+
+// mark ports and items (at the beginning of GC)
+void gcPostMortemRoots() {
+  PostMortemTriple* t = pm_list;
+  pm_list = NULL;
+  for (; t; t = t->next) {	// rebuild pm_list in the new heap
+    oz_gCollectTerm(t->port, t->port);
+    oz_gCollectTerm(t->item, t->item);
+    registerPostMortem(t->entity, t->port, t->item);
+  }
+}
+
+// check which entities must be finalized (at the very end of GC)
+void gcPostMortemCheck() {
+  for (PostMortemTriple* t = pm_list; t; t = t->next) {
+    if (isGCMarkedTerm(t->entity)) {
+      oz_gCollectTerm(t->entity, t->entity);
+    } else {
+      t->entity = makeTaggedNULL();     // nullify refs to dead entities
+    }
+  }
+}
+
+// perform finalization of dead entities (after GC)
+void gcPostMortemFinalize() {
+  PostMortemTriple** tptr = &pm_list;
+  PostMortemTriple* t;
+  while (t = *tptr) {
+    if (t->entity != makeTaggedNULL()) {
+      tptr = &(t->next);
+    } else {
+      OZ_Return ret = oz_sendPort(t->port, t->item);
+      Assert(ret == PROCEED);
+      *tptr = t->next;		// drop post-mortem triple t from list
+    }
+  }
+}
+
+
 
 /*
  * Garbage collection needs to be aware of certain objects, e.g.,
@@ -1092,6 +1163,7 @@ void AM::gCollect(int msgLevel)
 
   PrTabEntry::gCollectPrTabEntries();
   ExtRefNode::gCollect();
+  gcPostMortemRoots();
   cacStack.gCollectRecurse();
 
   gCollectDeferWatchers();
@@ -1135,6 +1207,7 @@ void AM::gCollect(int msgLevel)
 
   Assert(cacStack.isEmpty());
 
+  gcPostMortemCheck();
   gnameTable.gCollectGNameTable();
   //   MERGECON gcPerdioFinal();
   gCollectSiteTable();
@@ -1163,6 +1236,8 @@ void AM::gCollect(int msgLevel)
 
   vf.exit();
   cacStack.exit();
+
+  gcPostMortemFinalize();
 
   //  malloc_stats();
   DebugCode(uFillNode = 0;);
