@@ -73,24 +73,27 @@ define
    end
 
    %% spawn a new thread
-   proc {Spawn P ?T}
-      thread {Thread.this T} {P} end
+   TID={WeakDictionary.new _}
+   {WeakDictionary.close TID}
+   fun {Spawn P}
+      N={NewName} T F in
+      {WeakDictionary.put TID N T}
+      thread {Thread.this T} {P} F=terminated end
+      spawned(id:N final:F)
    end
-   %% check the thread's state after some delay
-   proc {CheckThread T After State}
-      {Delay After} {Thread.state T}=State
-   end
-
-   %% an alternative version of spawn, for threads that should block forever
-   proc {SpawnF P ?Check ?T}
-      N={NewName} Z
-   in
-      {Finalize.register N proc {$ _} Z=unit end}
-      thread {Thread.this T} {P} Z=N end
-      proc {Check}
-	 {System.gcDo} {System.gcDo} {System.gcDo}
-	 {IsDet Z true} Z=unit
+   %% check the state of thread T
+   fun {GetState T}
+      {System.gcDo} {System.gcDo} {System.gcDo}
+      try
+	 {Thread.state {WeakDictionary.get TID T.id}}
+      catch _ then
+	 %% T is no longer in TID, therefore the thread is gone
+	 if {IsFree T.final} then T.final=blockedForever end
+	 T.final
       end
+   end
+   proc {CheckThread T D S}
+      {Delay D} {GetState T}=S
    end
 
 
@@ -113,9 +116,8 @@ define
       {StartServer S E}
       {DP.break E.cell}
       {CheckEntity E.cell localFail}
-      T={SpawnF proc {$} {Assign E.cell foo} end Check}
-      {CheckThread T 300 blocked}
-      {Check}
+      T={Spawn proc {$} {Assign E.cell foo} end}
+      {CheckThread T 300 blockedForever}
       {S close}
    end
 
@@ -124,9 +126,8 @@ define
       {StartServer S E}
       {DP.kill E.cell}
       {CheckEntity E.cell permFail}
-      T={SpawnF proc {$} {Assign E.cell foo} end Check}
-      {CheckThread T 300 blocked}
-      {Check}
+      T={Spawn proc {$} {Assign E.cell foo} end}
+      {CheckThread T 300 blockedForever}
       {S close}
    end
 
@@ -135,9 +136,8 @@ define
       {StartServer S E}
       {MakeSite E.pid permFail}
       {CheckEntity E.cell permFail}
-      T={SpawnF proc {$} {Assign E.cell foo} end Check}
-      {CheckThread T 300 blocked}
-      {Check}
+      T={Spawn proc {$} {Assign E.cell foo} end}
+      {CheckThread T 300 blockedForever}
    end
 
    %% tempFail with asynchronous operation
