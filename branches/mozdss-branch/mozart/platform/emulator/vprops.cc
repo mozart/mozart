@@ -1025,12 +1025,26 @@ OZ_Term   VirtualProperty::get()        { Assert(0); return NameUnit; }
 OZ_Return VirtualProperty::set(OZ_Term) { Assert(0); return FAILED  ; }
 
 static OZ_Term vprop_registry;
-OZ_Term system_registry;	// eventually make it static [TODO]
+static OZ_Term system_registry;
 
+// add a virtual property in vprop_registry
+void VirtualProperty::add(const char* s) {
+  tagged2Dictionary(vprop_registry)->setArg(oz_atomNoDup(s),
+					    OZ_makeForeignPointer(this));
+}
+// add an emulator property in vprop_registry
 inline
 void VirtualProperty::add(const char * s, const int p) {
   tagged2Dictionary(vprop_registry)->setArg(oz_atomNoDup(s),
 					    makeTaggedSmallInt(p));
+}
+
+// get/put properties in system_registry
+OZ_Term registry_get(OZ_Term k) {
+  return (tagged2Dictionary(system_registry)->getArg(k));
+}
+void registry_put(OZ_Term k,OZ_Term v) {
+  tagged2Dictionary(system_registry)->setArg(k,v);
 }
 
 // in addition to the usual OZ_Return values, the following

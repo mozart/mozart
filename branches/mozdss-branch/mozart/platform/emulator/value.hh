@@ -2922,16 +2922,12 @@ OZ_Term oz_string(const char *s, const int len, const OZ_Term tail);
  * Service Registry
  *=================================================================== */
 
-extern OZ_Term system_registry;
-
 extern OZ_Term registry_get(OZ_Term);
-inline OZ_Term registry_get(char*s)
-{
+inline OZ_Term registry_get(char*s) {
   return registry_get(oz_atom(s));
 }
 extern void registry_put(OZ_Term,OZ_Term);
-inline void registry_put(char*s,OZ_Term v)
-{
+inline void registry_put(char*s,OZ_Term v) {
   registry_put(oz_atom(s),v);
 }
 
