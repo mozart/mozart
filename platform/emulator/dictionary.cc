@@ -767,17 +767,6 @@ OZ_BI_define(BIdictionaryWaitOr,1,1)
   
 } OZ_BI_end
 
-//
-OZ_Term registry_get(OZ_Term k)
-{
-  return (tagged2Dictionary(system_registry)->getArg(k));
-}
-
-void registry_put(OZ_Term k,OZ_Term v)
-{
-  tagged2Dictionary(system_registry)->setArg(k,v);
-}
-
 /*===================================================================
  * OzDictionary operations
  *=================================================================== */
