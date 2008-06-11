@@ -30,6 +30,7 @@
 
 #include "engine_interface.hh"
 #include "builtins.hh"
+#include "vprops.hh"
 #include "pstContainer.hh"
 #include "glue_tables.hh"
 
@@ -160,6 +161,18 @@ bool Annotation::hasTransientProtocol() const {
   }
 }
 
+bool Annotation::adjoin(const Annotation &a) {
+  // check incremental compatibility
+  if (a.pn && pn && a.pn != pn) return false;
+  if (a.aa && aa && a.aa != aa) return false;
+  if (a.rc && rc && a.rc != rc) return false;
+  // tell attributes (when present)
+  if (a.pn) pn = a.pn;
+  if (a.aa) aa = a.aa;
+  if (a.rc) rc = a.rc;
+  return true;
+}
+
 // those macros make the parsing slighly more readable
 #define CHECKPROT(VAR,NAME,VALUE)				\
   if (strcmp(VAR, NAME) == 0) {					\
@@ -211,7 +224,9 @@ OZ_Return Annotation::parseTerm(TaggedRef term) {
 	rc = static_cast<RCalg>(rc | RC_ALG_TL);
 	continue;
       }
-    } else if (oz_isTuple(elem)) {
+    }
+    /*
+      else if (oz_isTuple(elem)) {
       SRecord* rec = tagged2SRecord(elem);
       const char* label = tagged2Literal(rec->getLabel())->getPrintName();
       if (strcmp(label, "access") == 0 && rec->getWidth() == 1) {
@@ -225,6 +240,7 @@ OZ_Return Annotation::parseTerm(TaggedRef term) {
 	}
       }
     }
+    */
     // element cannot be parsed
     goto error;
   }
@@ -243,6 +259,7 @@ TaggedRef Annotation::toTerm() {
     if (rc & RC_ALG_TL)      list = oz_cons(oz_atom("lease"), list);
     if (rc & RC_ALG_WRC)     list = oz_cons(oz_atom("credit"), list);
   }
+  /*
   switch (aa) {   // push access architecture annotation
   case AA_STATIONARY_MANAGER:
     list = oz_cons(OZ_mkTupleC("access", 1, oz_atom("stationary")), list);
@@ -253,6 +270,7 @@ TaggedRef Annotation::toTerm() {
   default:
     break;
   }
+  */
   switch (pn) {   // push protocol annotation
   case PN_SIMPLE_CHANNEL:   list = oz_cons(oz_atom("stationary"), list); break;
   case PN_MIGRATORY_STATE:  list = oz_cons(oz_atom("migratory"), list); break;
@@ -268,6 +286,36 @@ TaggedRef Annotation::toTerm() {
   }
   return list;
 }
+
+
+
+/************************* Default Annotations *************************/
+
+// Default annotations are get/set as system properties in module
+// Property.  Those properties are implemented as virtual properties,
+// see vprops.hh.
+
+class AnnotationProperty : public VirtualProperty {
+private:
+  GlueTag type;
+
+public:
+  AnnotationProperty(const GlueTag tag) : type(tag) {}
+
+  virtual OZ_Term get() {
+    return getDefaultAnnotation(type).toTerm();
+  }
+  virtual OZ_Return set(OZ_Term t) {
+    Annotation a;
+    OZ_Return ret = a.parseTerm(t);
+    if (ret == PROCEED) {
+      if (!glue_validProtocol(a.pn, type) || !a.isComplete())
+	return oz_raise(E_SYSTEM, AtomDp, "annotation", 1, t);
+      setDefaultAnnotation(type, a);
+    }
+    return ret;
+  }
+};
 
 
 
@@ -330,6 +378,22 @@ void initDP()
   setDefaultAnnotation(GLUE_CHUNK,      PN_IMMEDIATE,       aa, rc);
   setDefaultAnnotation(GLUE_CLASS,      PN_IMMEDIATE,       aa, rc);
   setDefaultAnnotation(GLUE_PROCEDURE,  PN_IMMEDIATE,       aa, rc);
+
+  // make them available in module Property
+  (new AnnotationProperty(GLUE_PORT))->add("dp.annotation.port");
+  (new AnnotationProperty(GLUE_CELL))->add("dp.annotation.cell");
+  (new AnnotationProperty(GLUE_LOCK))->add("dp.annotation.lock");
+  (new AnnotationProperty(GLUE_OBJECT))->add("dp.annotation.object");
+  (new AnnotationProperty(GLUE_OBJECTSTATE))->add("dp.annotation.state");
+  (new AnnotationProperty(GLUE_ARRAY))->add("dp.annotation.array");
+  (new AnnotationProperty(GLUE_DICTIONARY))->add("dp.annotation.dictionary");
+  // no property for GLUE_THREAD
+  (new AnnotationProperty(GLUE_VARIABLE))->add("dp.annotation.variable");
+  (new AnnotationProperty(GLUE_READONLY))->add("dp.annotation.readonly");
+  (new AnnotationProperty(GLUE_UNUSABLE))->add("dp.annotation.unusable");
+  (new AnnotationProperty(GLUE_CHUNK))->add("dp.annotation.chunk");
+  (new AnnotationProperty(GLUE_CLASS))->add("dp.annotation.class");
+  (new AnnotationProperty(GLUE_PROCEDURE))->add("dp.annotation.procedure");
 
   // create mediator table
   mediatorTable     = new MediatorTable();

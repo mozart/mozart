@@ -46,7 +46,8 @@ public:
   RCalg              rc : RC_ALG_NBITS;
 
   // default constructor, make an empty annotation
-  Annotation() : pn(PN_NO_PROTOCOL), aa(AA_NO_ARCHITECTURE), rc(RC_ALG_NONE) {}
+  Annotation() :
+    pn(PN_NO_PROTOCOL), aa(AA_STATIONARY_MANAGER), rc(RC_ALG_NONE) {}
 
   // constructor for a specific annotation
   Annotation(ProtocolName _pn, AccessArchitecture _aa, RCalg _rc) :
@@ -56,6 +57,14 @@ public:
   bool hasMutableProtocol() const;
   bool hasImmutableProtocol() const;
   bool hasTransientProtocol() const;
+
+  // check whether the annotation is complete (all parameters defined)
+  bool isComplete() const { return pn && aa && rc; }
+
+  // incrementally adjoin the given annotation to this one; return
+  // true if successful (with annotation updated), false otherwise
+  // (with annotation unchanged).
+  bool adjoin(const Annotation&);
 
   // parse an Oz term representing an annotation; upon success, the
   // attributes are set and the method returns PROCEED

@@ -48,6 +48,40 @@ static int medIdCntr = 1;
 
 
 
+/************************* glue_validProtocol *************************/
+
+bool glue_validProtocol(const ProtocolName pn, const GlueTag tag) {
+  if (pn == PN_NO_PROTOCOL) return true;
+  switch (tag) {
+  case GLUE_PORT:
+  case GLUE_THREAD:
+    return pn == PN_SIMPLE_CHANNEL;
+  case GLUE_CELL:
+  case GLUE_LOCK:
+  case GLUE_OBJECTSTATE:
+  case GLUE_ARRAY:
+  case GLUE_DICTIONARY:
+    return (1 << pn) & (1 << PN_SIMPLE_CHANNEL | 1 << PN_MIGRATORY_STATE |
+			1 << PN_PILGRIM_STATE | 1 << PN_EAGER_INVALID |
+			1 << PN_LAZY_INVALID | 1 << PN_SITED);
+  case GLUE_VARIABLE:
+  case GLUE_READONLY:
+    return (1 << pn) & (1 << PN_TRANSIENT | 1 << PN_TRANSIENT_REMOTE);
+  case GLUE_UNUSABLE:
+  case GLUE_CHUNK:
+  case GLUE_CLASS:
+  case GLUE_OBJECT:
+  case GLUE_PROCEDURE:
+    return (1 << pn) & (1 << PN_SIMPLE_CHANNEL | 1 << PN_IMMUTABLE_LAZY |
+			1 << PN_IMMUTABLE_EAGER | 1 << PN_IMMEDIATE |
+			1 << PN_SITED);
+  default:
+    return false;
+  }
+}
+
+
+
 /************************* glue_newMediator *************************/
 
 Mediator *glue_newMediator(GlueTag tag) {
@@ -208,7 +242,7 @@ Mediator::setProxy(CoordinatorAssistant* p) {
 
 void
 Mediator::completeAnnotation() {
-  if (!annotation.pn || !annotation.aa || !annotation.rc) {
+  if (!annotation.isComplete()) {
     Annotation def = getDefaultAnnotation(getType());
     if (!annotation.pn) annotation.pn = def.pn;
     if (!annotation.aa) annotation.aa = def.aa;
@@ -217,15 +251,7 @@ Mediator::completeAnnotation() {
 }
 
 bool Mediator::annotate(Annotation a) {
-  // check incremental compatibility
-  if (a.pn && annotation.pn && a.pn != annotation.pn) return false;
-  if (a.aa && annotation.aa && a.aa != annotation.aa) return false;
-  if (a.rc && annotation.rc && a.rc != annotation.rc) return false;
-  // tell attributes (when present)
-  if (a.pn) annotation.pn = a.pn;
-  if (a.aa) annotation.aa = a.aa;
-  if (a.rc) annotation.rc = a.rc;
-  return true;
+  return glue_validProtocol(a.pn, getType()) && annotation.adjoin(a);
 }
 
 bool Mediator::isImmediate() {
@@ -395,12 +421,6 @@ PortMediator::PortMediator(TaggedRef e) : ConstMediator(GLUE_PORT) {
   setEntity(e);
 }
 
-bool PortMediator::annotate(Annotation a) {
-  // check protocol
-  if (a.pn && a.pn != PN_SIMPLE_CHANNEL) return false;
-  return Mediator::annotate(a);
-}
-
 AOcallback
 PortMediator::callback_Write(DssThreadId*, DssOperationId*,
 			     PstInContainerInterface* pstin)
@@ -428,10 +448,6 @@ CellMediator::CellMediator() : ConstMediator(GLUE_CELL) {}
 
 CellMediator::CellMediator(TaggedRef e) : ConstMediator(GLUE_CELL) {
   setEntity(e);
-}
-
-bool CellMediator::annotate(Annotation a) {
-  return a.hasMutableProtocol() && Mediator::annotate(a);
 }
 
 AOcallback 
@@ -497,10 +513,6 @@ LockMediator::LockMediator() : ConstMediator(GLUE_LOCK) {}
 
 LockMediator::LockMediator(TaggedRef e) : ConstMediator(GLUE_LOCK) {
   setEntity(e);
-}
-
-bool LockMediator::annotate(Annotation a) {
-  return a.hasMutableProtocol() && Mediator::annotate(a);
 }
 
 AOcallback 
@@ -591,10 +603,6 @@ ArrayMediator::ArrayMediator(TaggedRef e) : ConstMediator(GLUE_ARRAY) {
   setEntity(e);
 }
 
-bool ArrayMediator::annotate(Annotation a) {
-  return a.hasMutableProtocol() && Mediator::annotate(a);
-}
-
 AOcallback 
 ArrayMediator::callback(DssThreadId*, DssOperationId*,
 			PstInContainerInterface* pstin,
@@ -676,10 +684,6 @@ DictionaryMediator::DictionaryMediator() : ConstMediator(GLUE_DICTIONARY) {}
 DictionaryMediator::DictionaryMediator(TaggedRef e) :
   ConstMediator(GLUE_DICTIONARY) {
   setEntity(e);
-}
-
-bool DictionaryMediator::annotate(Annotation a) {
-  return a.hasMutableProtocol() && Mediator::annotate(a);
 }
 
 AOcallback 
@@ -831,10 +835,6 @@ ObjectStateMediator::ObjectStateMediator(TaggedRef e) :
   setEntity(e);
 }
 
-bool ObjectStateMediator::annotate(Annotation a) {
-  return a.hasMutableProtocol() && Mediator::annotate(a);
-}
-
 AOcallback 
 ObjectStateMediator::callback(DssThreadId*, DssOperationId*,
 			     PstInContainerInterface* pstin,
@@ -898,11 +898,6 @@ OzThreadMediator::OzThreadMediator() : ConstMediator(GLUE_THREAD) {}
 
 OzThreadMediator::OzThreadMediator(TaggedRef e) : ConstMediator(GLUE_THREAD) {
   setEntity(e);
-}
-
-bool OzThreadMediator::annotate(Annotation a) {
-  // currently: no valid annotation
-  return a.pn == PN_NO_PROTOCOL && Mediator::annotate(a);
 }
 
 AOcallback
@@ -978,10 +973,6 @@ void OzVariableMediator::attach() {
   OzVariable* var = tagged2Var(*tagged2Ref(getEntity()));
   var->setMediator(this);
   attached = true;
-}
-
-bool OzVariableMediator::annotate(Annotation a) {
-  return a.hasTransientProtocol() && Mediator::annotate(a);
 }
 
 void OzVariableMediator::gCollectPrepare() {
@@ -1094,10 +1085,6 @@ UnusableMediator::UnusableMediator(TaggedRef e) : ConstMediator(GLUE_UNUSABLE) {
   setAnnotation(Annotation(PN_SITED, AA_NO_ARCHITECTURE, RC_ALG_NONE));
 }
 
-bool UnusableMediator::annotate(Annotation a) {
-  return a.hasImmutableProtocol() && Mediator::annotate(a);
-}
-
 AOcallback
 UnusableMediator::callback_Read(DssThreadId*, DssOperationId*,
 				PstInContainerInterface*,
@@ -1111,10 +1098,6 @@ UnusableMediator::callback_Read(DssThreadId*, DssOperationId*,
 /************************* TokenMediator *************************/
 
 TokenMediator::TokenMediator(GlueTag type) : ConstMediator(type) {}
-
-bool TokenMediator::annotate(Annotation a) {
-  return a.hasImmutableProtocol() && Mediator::annotate(a);
-}
 
 PstOutContainerInterface* TokenMediator::retrieveEntityRepresentation() {
   // send the entity, but in the immediate mode
