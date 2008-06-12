@@ -87,6 +87,7 @@ of the atom table.
 
 <section>
   <title>Pre-mortem finalization facilities</title>
+  <p>
   <list>
       <entry/<code/Finalize.guardian/
       <index/<code/Finalize/<and><code/guardian///
@@ -144,6 +145,7 @@ registers itself again.
 
 <section>
   <title>Post-mortem finalization facilities</title>
+  <p>
   <list>
     <entry/<code/Finalize.postmortem/
     <index/<code/Finalize/<and><code/postmortem///
