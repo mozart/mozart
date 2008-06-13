@@ -26,15 +26,6 @@ define
       {Wait V}
    end
 
-   fun {Count L}
-      {CountAcc L count}
-   end
-   fun {CountAcc L Acc}
-      case L of X|T then
-	 {CountAcc T {AdjoinAt Acc X {CondSelect Acc X 0}+1}}
-      else Acc end
-   end
-
    proc {Postmortem}
       class Dummy
 	 attr foo

@@ -39,7 +39,6 @@ import
    Remote(manager)
    Connection
    TestMisc(localHost)
-   System
 export
    Return
 
@@ -53,7 +52,6 @@ define
    dp([
        maxi(
 	  proc{$}
-	     Ans
 	     ClientPort Ticket1 Ticket2 
 	     S CC = {NewCell false}
 	     LocalHost = TestMisc.localHost in

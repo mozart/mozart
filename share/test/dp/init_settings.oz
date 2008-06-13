@@ -9,7 +9,6 @@ import
    Remote
    Connection
    Pickle
-   System(show:Show)
    OS(tmpnam unlink)
 export
    Return

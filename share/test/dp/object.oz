@@ -24,7 +24,6 @@ functor
 import
    TestMisc
    System
-   DP
 export
    Return
 define
