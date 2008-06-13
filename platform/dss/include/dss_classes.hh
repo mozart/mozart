@@ -73,6 +73,7 @@ public:
 class DSSDLLSPEC ThreadMediator{
 public:
   ThreadMediator();
+  virtual ~ThreadMediator() {}
   virtual WakeRetVal resumeDoLocal(DssOperationId*)=0;
   virtual WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin)=0;
   virtual WakeRetVal resumeFailed()=0;
@@ -86,6 +87,7 @@ private:
 
 public: 
   DssThreadId():a_thread(NULL){}
+  virtual ~DssThreadId() {}
   void setThreadMediator(ThreadMediator* t) { a_thread = t; }
   ThreadMediator* getThreadMediator() { return a_thread; }
 
@@ -176,7 +178,7 @@ public:
 // as shown.
 //
 //                            AbstractEntity
-//                               /      \
+//                               /      \.
 //                      virtual /        \ virtual
 //            MutableAbstractEntity      MyEntity
 //                              \        /
@@ -277,6 +279,8 @@ public:
 
 class DSSDLLSPEC CoordinatorAssistant {
 public:
+  virtual ~CoordinatorAssistant() {}
+
   virtual AbstractEntity* getAbstractEntity() const = 0;
   virtual void getParameters(ProtocolName&,AccessArchitecture&,RCalg&) const=0;
 
@@ -313,6 +317,7 @@ public:
 class DSSDLLSPEC PstInContainerInterface{
 public:
   PstInContainerInterface();
+  virtual ~PstInContainerInterface() {}
   virtual bool unmarshal(DssReadBuffer*) = 0; 
   virtual void dispose() = 0;
   virtual PstOutContainerInterface* loopBack2Out() = 0;
@@ -321,6 +326,7 @@ public:
 class DSSDLLSPEC PstOutContainerInterface{
 public:
   PstOutContainerInterface();
+  virtual ~PstOutContainerInterface() {}
   virtual bool marshal(DssWriteBuffer*) = 0;
   virtual void resetMarshaling() = 0;
   virtual void dispose() = 0;
@@ -346,6 +352,7 @@ public:
 class DSSDLLSPEC Mediation_Object{
 public:
   Mediation_Object();
+  virtual ~Mediation_Object() {}
 
   virtual PstInContainerInterface* createPstInContainer()=0;
   virtual void GL_error(const char* const format, ...)=0;
@@ -357,9 +364,9 @@ public:
 class DSSDLLSPEC GlobalNameInterface{
 protected:
   void* a_ref;
+  virtual ~GlobalNameInterface() {}
 public:
-  GlobalNameInterface(void*& ref):
-    a_ref(ref){;}
+  GlobalNameInterface(void*& ref) : a_ref(ref) {}
   void setRef(void* ref) { a_ref = ref;}
   void* getRef(){ return a_ref; }  
   virtual void marshal(DssWriteBuffer* bb)=0;
@@ -370,6 +377,7 @@ public:
 
 class DSSDLLSPEC KbrCallbackInterface{
 public:
+  virtual ~KbrCallbackInterface() {}
   virtual void m_kbrMessage(int key, PstInContainerInterface*)                    = 0;
   virtual PstOutContainerInterface* m_kbrDivideResp(int start, int stop, int n)   = 0; 
   virtual void m_kbrNewResp(int start, int stop, int n, PstInContainerInterface*) = 0; 
@@ -378,6 +386,8 @@ public:
 };
 
 class DSSDLLSPEC KbrInstance{
+protected:
+  virtual ~KbrInstance() {}
 public: 
   virtual void m_setCallback(KbrCallbackInterface*)         = 0;
   virtual KbrCallbackInterface* m_getCallback()             = 0;

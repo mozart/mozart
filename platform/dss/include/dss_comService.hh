@@ -70,6 +70,9 @@ public:
 
 
 class  DssReadBuffer{
+protected:
+  virtual ~DssReadBuffer() {}
+
 public:
   virtual int availableData() const = 0; 
   virtual bool canRead(size_t wanted) const = 0;
@@ -83,6 +86,9 @@ public:
 };
 
 class  DssWriteBuffer{
+protected:
+  virtual ~DssWriteBuffer() {}
+
 public:
   virtual int availableSpace() const = 0;
   virtual bool canWrite(size_t wanted) const = 0;
@@ -128,6 +134,8 @@ const int MSG_PRIO_LOW    = 1;
 // provided by the user
 class DssChannel {
 public:
+  virtual ~DssChannel() {}
+
   // set callback object (when data available)
   virtual bool setCallback(DssChannelCallback*) = 0;
 
@@ -145,6 +153,8 @@ public:
 
 // interface of channel readers/writers; provided by the DSS
 class DssChannelCallback{
+protected:
+  virtual ~DssChannelCallback() {}
 public:
   virtual void connectionLost()     = 0;
   virtual bool readDataAvailable()  = 0;
@@ -155,6 +165,9 @@ public:
 
 // interface of site representation; provided by the DSS
 class DSite{
+protected:
+  virtual ~DSite() {}
+
 public:
   //*************** General Methods *****************************
   virtual void m_marshalDSite(DssWriteBuffer*) = 0; 
@@ -187,7 +200,6 @@ public:
   // identity of the site
   virtual unsigned char* m_getId(int &len) = 0;
   virtual CsSiteInterface* m_getCsSiteRep() = 0; 
-  
 };
 
 // interface of sites provided by the user; it implements the specific
@@ -196,6 +208,7 @@ public:
 class CsSiteInterface {
 public:
   CsSiteInterface();
+  virtual ~CsSiteInterface() {}
   virtual int  getCsSiteSize() = 0;     // size of marshaled CsSite
   virtual void marshalCsSite( DssWriteBuffer* const buf) = 0; 
   virtual void updateCsSite( DssReadBuffer* const buf) = 0; 
@@ -216,6 +229,8 @@ public:
 
 
 class ExtDataContainerInterface{
+protected:
+  virtual ~ExtDataContainerInterface() {}
 public:
   virtual BYTE getType() = 0; 
   virtual bool marshal(DssWriteBuffer *bb)=0;
@@ -235,6 +250,8 @@ typedef unsigned int (*TimerWakeUpProc)(void *);
 
 class MsgContainer{
 public:
+  virtual ~MsgContainer() {}
+
   virtual void pushDSiteVal(DSite*) = 0;
   virtual void pushIntVal(int) = 0; 
   virtual void pushADC(ExtDataContainerInterface*) = 0; 
@@ -265,6 +282,7 @@ public:
 class AppMslClbkInterface
 {
 public:
+  virtual ~AppMslClbkInterface() {}
   virtual void m_MessageReceived(MsgContainer* const msgC,DSite* const sender) = 0; 
   virtual void m_stateChange(DSite*, const FaultState&) = 0; 
   virtual void m_unsentMessages(DSite* s, MsgContainer* msgs) = 0; 
@@ -274,6 +292,7 @@ public:
 class ComServiceInterface{
 public:
   ComServiceInterface();
+  virtual ~ComServiceInterface() {}
 
   // The CsSite Object
   virtual CsSiteInterface* unmarshalCsSite(DSite* Ds, DssReadBuffer* const buf) = 0; 
