@@ -132,7 +132,7 @@ define
    fun{DoConnect ToSite Connect}
       try
 	 case {Connect default}
-	 of X=fd(FD0 FD1) then
+	 of X=fd(_ _) then
 	    {Glue.setConnection ToSite X}
 	    true
 	 [] none then
@@ -151,7 +151,7 @@ define
    proc{DoAccept X}
       try
 	 case X
-	 of fd(FD0 FD1) then
+	 of fd(_ _) then
 	    {Glue.acceptConnection X}
 	 end
       catch E then
