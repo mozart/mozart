@@ -52,7 +52,7 @@ define
 		    case {Take K L T} of [X] then X else {Generate K} end
 		 end
 	    put: proc {$ K X}
-		    L T in T=Cache:=(K#X)|T
+		    T in T=Cache:=(K#X)|T
 		 end)
    end
 
