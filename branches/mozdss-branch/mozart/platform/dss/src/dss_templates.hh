@@ -400,8 +400,8 @@ public:
   void init(SimpleList<T> &s) { curPtr = &(s.first); }
 
   Position() : curPtr(NULL) {}
-  Position(SimpleList<T> &s) { init(s); }
-  Position(SimpleList<T> *s) { init(*s); }
+  Position(SimpleList<T> &s) : curPtr(&(s.first)) {}
+  Position(SimpleList<T> *s) : curPtr(&(s->first)) {}
 
   // check whether the position is empty, and return the element
   bool hasElement() const { return *curPtr; }
@@ -449,8 +449,8 @@ public:
   void operator() (SimpleList<T> &s) { init(s); }
   bool operator() () const { return hasElement(); }
   T&   operator*  () const { return element(); }
-  void operator++ (int) { next(); }
-  void operator++ () { next(); }
+  Position<T> operator++ (int) { next(); return *this; }
+  Position<T>& operator++ () { next(); return *this; }
   bool operator== (Position<T> const &p) { return curPtr == p.curPtr; }
 };
 

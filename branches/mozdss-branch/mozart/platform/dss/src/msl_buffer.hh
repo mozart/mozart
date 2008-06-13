@@ -48,7 +48,7 @@ namespace _msl_internal{ //Start namespace
     size_t size;     // size (in bytes) of the buffer
 
     // those are not allowed
-    SimpleBuffer(const SimpleBuffer&) { Assert(0); }
+    SimpleBuffer(const SimpleBuffer&):buf(NULL),pos(NULL),size(0){ Assert(0); }
     SimpleBuffer& operator= (const SimpleBuffer&) { return *this; }
 
   public:
@@ -162,7 +162,7 @@ namespace _msl_internal{ //Start namespace
 
     // not allowed
     CircularBuffer(const CircularBuffer&)
-      : buf(NULL), end(NULL), size(0), used(0), getpos(NULL), putpos(NULL) {}
+      : buf(NULL), end(NULL), size(0), getpos(NULL), putpos(NULL), used(0) {}
     CircularBuffer& operator= (const CircularBuffer&) { return *this; }
 
   protected:
@@ -173,7 +173,7 @@ namespace _msl_internal{ //Start namespace
 
   public:
     CircularBuffer(BYTE* const &b, const size_t& sz)
-      : buf(b), end(b + sz), size(sz), used(0), getpos(b), putpos(b) {}
+      : buf(b), end(b + sz), size(sz), getpos(b), putpos(b), used(0) {}
     virtual ~CircularBuffer() { delete [] buf; }
 
     // space total/used/available
