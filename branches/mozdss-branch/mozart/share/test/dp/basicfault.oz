@@ -30,7 +30,7 @@ functor
 import
    DP
    Remote(manager)
-   OS System Finalize
+   OS System
    TestMisc(localHost)
 export
    Return
@@ -112,7 +112,7 @@ define
    end
 
    %% localFail with synchronous operation
-   proc {BreakCell} S E T Check in
+   proc {BreakCell} S E T in
       {StartServer S E}
       {DP.break E.cell}
       {CheckEntity E.cell localFail}
@@ -122,7 +122,7 @@ define
    end
 
    %% permFail (with Kill) with synchronous operation
-   proc {KillCell} S E T Check in
+   proc {KillCell} S E T in
       {StartServer S E}
       {DP.kill E.cell}
       {CheckEntity E.cell permFail}
@@ -132,8 +132,8 @@ define
    end
 
    %% permFail with synchronous operation
-   proc {PermFailCell} S E T Check in
-      {StartServer S E}
+   proc {PermFailCell} E T in
+      {StartServer _ E}
       {MakeSite E.pid permFail}
       {CheckEntity E.cell permFail}
       T={Spawn proc {$} {Assign E.cell foo} end}
@@ -175,8 +175,8 @@ define
    end
 
    %% permFail with asynchronous operation
-   proc {PermFailPort} S E T in
-      {StartServer S E}
+   proc {PermFailPort} E T in
+      {StartServer _ E}
       {MakeSite E.pid permFail}
       {CheckEntity E.port permFail}
       T={Spawn proc {$} {Send E.port foo} end}
