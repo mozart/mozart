@@ -2133,12 +2133,7 @@ void Board::_cacRecurse() {
   lpq._cac();
 
   OZ_cacBlock(&script,&script,3);
-  OZ_cacBlock(&cmtQSync,&cmtQSync,1);
   OZ_cacBlock(&branching,&branching,1);
-#ifdef S_CLONE
-  Assert(!isWaiting());
-#endif
-  OZ_cacBlock(&stabilityVar,&stabilityVar,1);
 
   cacStack.pushSuspList(&suspList);
   Distributor * d = getDistributor();
