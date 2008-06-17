@@ -463,26 +463,6 @@ Bool Board::cacIsAlive(void) {
   } while (1);
 
 }
-/*
-  inline
-  bool Board::isWaiting(void) {
-  //TaggedRef st = getStabilityVar();
-  //return st != taggedVoidValue && st != AtomNil;
-  return oz_isReadOnly(oz_deref(getStabilityVar()));
-  }
-
-  inline
-  bool Board::hasGetChoice(void) {
-  //oz_isReadOnly(oz_deref(getCSync()));
-  //TaggedRef cs = getCSync();
-  //return cs != taggedVoidValue && cs != AtomNil;
-  return oz_isReadOnly(oz_deref(getCSync()));
-  }
-*/
-inline
-TaggedRef Board::getStabilityVar(void) {
-  return stabilityVar;
-}
 
 // These prototypes are needed to inline ensureLateThread.
 OZ_Return oz_var_addQuietSusp(TaggedRef*, Suspendable *);
