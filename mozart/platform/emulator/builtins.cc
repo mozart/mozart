@@ -183,7 +183,7 @@ OZ_BI_define(BIwaitStatus,2,1)
 		    && oz_eq(status,what)));
 } OZ_BI_end
 
-
+// TODO: remove this as no longer needed
 OZ_BI_define(BIwaitGetChoice,1,0) {
   TaggedRef answer = OZ_in(0);
   DEREF(answer,answer_ptr);
@@ -195,10 +195,12 @@ OZ_BI_define(BIwaitGetChoice,1,0) {
   
   Board *bb = oz_currentBoard();
   // Reset branching to not repeat the same branch further.
-   bb->setBranching(AtomNil);
+	printf("waitgetchoice ***** resumed\n");fflush(stdout);
+   //bb->setBranching(AtomNil);
   return PROCEED;
 } OZ_BI_end
 
+// TODO: remove this as no longer needed
 OZ_BI_define(BIbindCSync,1,0) {
   oz_currentBoard()->commitB(OZ_in(0));
   return PROCEED;

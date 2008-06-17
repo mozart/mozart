@@ -147,6 +147,12 @@ void Board::scheduleNonMono(void) {
 
 inline
 Bool Board::isStable(void) {
+
+  if (!bq->isEmpty()) {
+    printf("isStable BQ is not empty\n");fflush(stdout);
+    return NO;
+  }
+
   if (hasRunnableThreads()){
     //printf("isStable 1\n");fflush(stdout);
     return NO;

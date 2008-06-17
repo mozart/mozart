@@ -452,7 +452,7 @@ void Board::clearSuspList(Suspendable * killSusp) {
  */
 
 void Board::checkStability(void) {
-	//printf("Board::checkStability \n"); fflush(stdout);
+//	printf("Board::checkStability \n"); fflush(stdout);
 	Assert(!isRoot() && !isFailed() && !isCommitted());
 	Assert(this == oz_currentBoard());
 	crt--;
@@ -473,60 +473,55 @@ void Board::checkStability(void) {
 
 	  
 			if (d) {
-				Assert(branching==AtomNil);
-				int n = d->getAlternatives();
-
-				if (n == 1) {
-					if (d->commit(this,1) == 0)
-						setDistributor(NULL);
+				Assert(bq->isEmpty());
+				int keep = d->notifyStable(this);
+					//printf("Board::checkStability %s\n keep %d\n %s \n",OZ_toC(branching,10,10),keep,OZ_toC(getStatus(),10,10)); fflush(stdout);
+				if (keep == -1) {
+					//	printf("Board::checkStability Old distributor\n"); fflush(stdout);
+					int n = d->getAlternatives();
+					if (n == 1) {
+						//printf("Board::checkStability Old one alternative distributor\n"); fflush(stdout);
+						if (d->commit(this,1) == 0) {
+							//printf("Board::checkStability Old distributor will be dropped\n"); fflush(stdout);
+							setDistributor(NULL);
+						}
+					} else {
+						trail.popMark();
+						Assert(!oz_onToplevel() || trail.isEmptyChunk());
+						am.setCurrent(pb, pb->getOptVar());
+						bindStatus(genBranch());
+					}					
 				} else {
-					trail.popMark();
-					Assert(!oz_onToplevel() || trail.isEmptyChunk());
-					am.setCurrent(pb, pb->getOptVar());
-					//printf("antes del bind1\n");fflush(stdout);
-					//bindStatus(genAlt(n));
-					bindStatus(genBranch());
+					//printf("Board::checkStability New distributor %d\n",keep); fflush(stdout);
+					if (keep == 0) {
+						//printf("Board::checkStability New distributor not keep\n"); fflush(stdout);
+						Assert(bq->isEmpty());
+						setDistributor(NULL);
+					} else {
+						//printf("Board::checkStability New distributor not implemented\n"); fflush(stdout);
+						//printf("branching: %s\n",OZ_toC(branching,100,100));fflush(stdout);
+						trail.popMark();
+						Assert(!oz_onToplevel() || trail.isEmptyChunk());
+						am.setCurrent(pb, pb->getOptVar());
+						bindStatus(genBranch());
+					}
+					//printf("Branching: %s\n", OZ_toC(branching,10,10));fflush(stdout);
 				}
 				Assert(!oz_onToplevel() || trail.isEmptyChunk());
-      
+				
 			} else {
-				if (isWaiting()) {
-					// A waitStable is present
-					TaggedRef st = getStabilityVar();
-					DEREF(st,stPtr);
-					oz_bindReadOnly(stPtr,AtomNil);
-				} else if (branching == AtomNil && oz_isReadOnly(oz_deref(getCSync()))) {
-					// A getChoice can be resumed.
-					//printf("CS->commit brnching nil\n");fflush(stdout);
-					bindCSync(AtomNil);
-				} else if (branching != AtomNil && OZ_tail(branching) == AtomNil && oz_isReadOnly(oz_deref(getCSync()))) {
-					/* When there is only one alternative left, an optimization 
-						is to commit it in the space from here and no wait until
-						a separate thread do that..
-					*/
-					//printf("CS->commit optimization\n");fflush(stdout);
-					bindCSync(OZ_head(branching));
-					branching = AtomNil;
-				} else if (branching != AtomNil) { // Hay distribuidor
-					Assert(!getDistributor());
-					//printf("branching: %s\n",OZ_toC(branching,100,100));fflush(stdout);
-					trail.popMark();
-					Assert(!oz_onToplevel() || trail.isEmptyChunk());
-					am.setCurrent(pb, pb->getOptVar());
-					bindStatus(genBranch());
-				}  else {
-					// succeeded
-					trail.popMark();
-					Assert(!oz_onToplevel() || trail.isEmptyChunk());
-					am.setCurrent(pb, pb->getOptVar());
-	  
-					if(gespace!=NULL) {
-						bool testGe = getGenericSpace(true)->isEntailed();
-						bindStatus(genSucceeded( (getSuspCount() == 0 && testGe) ) );
-					}
-					else {
-						bindStatus(genSucceeded( getSuspCount() == 0 ) );
-					}
+				//printf("CS-> *******Succeded case *******\n");fflush(stdout);
+				// succeeded
+				trail.popMark();
+				Assert(!oz_onToplevel() || trail.isEmptyChunk());
+				am.setCurrent(pb, pb->getOptVar());
+				
+				if(gespace!=NULL) {
+					bool testGe = getGenericSpace(true)->isEntailed();
+					bindStatus(genSucceeded( (getSuspCount() == 0 && testGe) ) );
+				}
+				else {
+					bindStatus(genSucceeded( getSuspCount() == 0 ) );
 				}
 				Assert(!oz_onToplevel() || trail.isEmptyChunk());
 			}
@@ -536,7 +531,7 @@ void Board::checkStability(void) {
 		setScript(trail.unwind(this));
 		Assert(!oz_onToplevel() || trail.isEmptyChunk());
 		am.setCurrent(pb, pb->getOptVar());
-  
+		
 		if (n == 0) {
 			// No runnable threads: suspended      
 			TaggedRef newVar = oz_newReadOnly(pb);
@@ -561,7 +556,7 @@ void Board::checkStability(void) {
 					susp = *suspPtr;
 				}
 			}
-
+			
 			bindStatus(genSuspended(newVar));
 			setStatus(newVar);
 			pb->decRunnableThreads();
@@ -821,31 +816,26 @@ void Board::unsetGlobalMarks(void) {
 
 void Board::commitB(TaggedRef c) {
 	// 	this method is called from the BI_bindCSync builtin
-	
-  /* If there is a thread waiting so CQSync must be bind to c.
-     otherwise c must be enqueued
-  */
-  if (hasGetChoice() && !isWaiting()) 
-    bindCSync(c);
-  else 
-    bq->enqueue(c);
+	// if there is a distributor in the space then call commit directly
+	Distributor *d = getDistributor();
+	if (d) {
+		//printf("CommitB when distributor is present %s\n",OZ_toC(c,100,100));fflush(stdout);
+		if(d->commitBranch(this, c) == 0) {
+			//printf("CommitB distributor can be removed\n");fflush(stdout);
+			setDistributor(NULL);
+		}
+	} else {
+		// Committed branch is stored in the branches queue
+		//printf("CommitB whit **NO** distributor present (BR) %s\n",OZ_toC(c,100,100));fflush(stdout);
+		bq->enqueue(c);
+	}
 }
 
-void Board::getChoice(void) {
-  /* A getChoice cannot happend if there is another pending
-     getChoice in the space
-  */
-  Assert(!hasGetChoice());
-  clearCSync();  
-  /* If the branching queue is empty then the thread runing getChoice
-     will suspend on CQSync. Otherwise CQSync will be bound to the
-     first element of the queue.
-  */
-  if (!bq->isEmpty()) 
-    bindCSync(bq->dequeue());
-}
+// TODO: remove this method
+void Board::getChoice(void) { Assert(false); }
 
 void Board::setBranching(TaggedRef b) {
+//	printf("Called set branching\n");fflush(stdout);
   branching = b;
 }
 
