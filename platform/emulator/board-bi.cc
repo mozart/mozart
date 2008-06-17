@@ -628,8 +628,9 @@ OZ_BI_define(BIcommitB2Space,2,0) {
 // 0: Branching description
 OZ_BI_define(BIbranchSpace,1,0) {
   Board * bb = oz_currentBoard();
- 
-  if(bb->getDistributor()) {
+	
+// TODO: Think about this case.
+//  if(bb->getDistributor()) {
     /*
       If isWaiting returns true is because some thread
       is waiting on space stability. In this case this
@@ -637,10 +638,10 @@ OZ_BI_define(BIbranchSpace,1,0) {
       This means that {Space.branch B} will block until
       {Space.waitStable} has been run.
     */
-    TaggedRef st = bb->getStabilityVar();
-    DEREF(st,stPtr);
-    oz_suspendOn(makeTaggedRef(stPtr));
-  }
+//    TaggedRef st = bb->getStabilityVar();
+//    DEREF(st,stPtr);
+//    oz_suspendOn(makeTaggedRef(stPtr));
+//  }
   Assert(!bb->getDistributor());
   
   TaggedRef bd = OZ_in(0);
@@ -701,10 +702,12 @@ OZ_BI_define(BIgetChoiceSpace,0,1) {
 	BranchQueue *bq = bb->getBranchQueue();
 	if (bq->isEmpty()) {
 		//printf("BIgetChoice: empty branch queue -> creating new distributor\n");fflush(stdout);
+		// TODO: return by replace by call
 		BaseDistributor *bd = new BaseDistributor(bb);
 		bb->setDistributor(bd);
 		answer = bd->getVar();
 	} else {
+		// TODO: return by proceed
 		answer = bq->dequeue();
 	}
 	

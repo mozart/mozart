@@ -98,10 +98,8 @@ void newRelink(OzVariable *globalVar,  OzVariable *localVar, Board *sb)
 
 
 Board::Board() 
-  : suspCount(0), dist(0), cmtQSync(taggedVoidValue), 
-    stabilityVar(taggedVoidValue),crt(0), suspList(0), 
-    nonMonoSuspList(0),status(taggedVoidValue), 
-    rootVar(taggedVoidValue), script(taggedVoidValue), 
+  : suspCount(0), dist(0), crt(0), suspList(0), nonMonoSuspList(0),
+    status(taggedVoidValue), rootVar(taggedVoidValue), script(taggedVoidValue), 
     parent(NULL), flags(BoTag_Root)
 {
   //printf("BOARD: called constructor %p\n",this);fflush(stdout);
@@ -117,8 +115,7 @@ Board::Board()
 
 
 Board::Board(Board * p) 
-  : suspCount(0), dist(0), stabilityVar(taggedVoidValue),
-    crt(0), suspList(0), nonMonoSuspList(0),
+  : suspCount(0), dist(0), crt(0), suspList(0), nonMonoSuspList(0),
     script(taggedVoidValue), parent(p), flags(0)
 {
   //printf("BOARD: copy constructor %p parent: %p\n",this,p);fflush(stdout);
@@ -141,7 +138,6 @@ Board::Board(Board * p)
     lateThread = NULL;
   }
   branching = AtomNil;
-  cmtQSync = AtomNil;
   bq = new BranchQueue();
 #ifdef CS_PROFILE
   orig_start  = (int32 *) NULL;
@@ -170,22 +166,6 @@ void Board::clearStatus() {
     return;
   status = oz_newReadOnly(getParent());
 }
-
-/**
- Those functions (isWaiting and hasGetChoice) should be inlined
- the problem is that oz_isReadInly is not defined at board.icc.
- using BoardTags is a possible solution.
-*/
-//inline
-bool Board::isWaiting(void) {
-  return oz_isReadOnly(oz_deref(getStabilityVar()));
-}
-
-//inline
-bool Board::hasGetChoice(void) {
-  return oz_isReadOnly(oz_deref(getCSync()));
-}
-
 
 /*
  * Propagator queue
@@ -566,29 +546,6 @@ void Board::checkStability(void) {
 } 
 
 // Branching
-void Board::clearCSync(void) {
-  if (oz_isReadOnly(oz_deref(getCSync())))
-    return;
-  cmtQSync = oz_newReadOnly(this);
-}
-
-void Board::bindCSync(TaggedRef c) {
-  TaggedRef s = getCSync();
-  if (oz_isReadOnly(oz_deref(s))){
-    Assert(tagged2Var(oz_deref(s))->getBoardInternal() == oz_currentBoard());
-    DEREF(s,sPtr);
-    oz_bindReadOnly(sPtr,c);
-    clearStatus();
-  }
-}
-
-void Board::setWaiting(void) {
-  TaggedRef st = getStabilityVar();
-  Assert(!oz_isReadOnly(oz_deref(st)));
-  stabilityVar = oz_newReadOnly(this);
-}
-
-// must be at board.hh
 
 void Board::fail(void) {
   Board * pb = getParent();
@@ -830,9 +787,6 @@ void Board::commitB(TaggedRef c) {
 		bq->enqueue(c);
 	}
 }
-
-// TODO: remove this method
-void Board::getChoice(void) { Assert(false); }
 
 void Board::setBranching(TaggedRef b) {
 //	printf("Called set branching\n");fflush(stdout);
