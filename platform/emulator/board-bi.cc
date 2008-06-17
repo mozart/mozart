@@ -41,11 +41,100 @@
  *
  */
 
+inline
+void telleq(Board * bb, const TaggedRef a, const TaggedRef b) {
+	oz_newThreadInject(bb)->pushCall(BI_Unify,RefsArray::make(a,b));
+}
+
+
 
 inline
 void bindreadonly(Board * bb, const TaggedRef a, const TaggedRef b) {
   oz_newThreadInject(bb)->pushCall(BI_bindReadOnly,RefsArray::make(a,b));
 }
+
+class BaseDistributor : public Distributor {
+protected:
+	TaggedRef var;
+	
+public:
+	
+	BaseDistributor(Board * bb) {
+		Assert(!bb->getDistributor());
+		var    = oz_newVariable(bb);
+	}
+	
+	void dispose(void) {
+		oz_freeListDispose(this, sizeof(BaseDistributor));
+	}
+	
+	TaggedRef getVar(void) {
+		return var;
+	}
+	
+	virtual int getAlternatives(void) {
+		Assert(false);
+		return 0;
+	}
+	virtual int commit(Board * bb, int n) {
+		Assert(false);
+		dispose();
+		return 0;
+	}
+	
+	virtual int commit(Board * bb, int l, int r) {
+		Assert(false);
+		return 1;
+	}
+	
+	/*
+	 The retrn value indicates if the distributor should be kept or
+	 not. Returning 1 will make the distributor to be preserved. 
+	 Returning 0 will remove it from the board.
+	 */
+	virtual int notifyStable(Board *bb) {
+		if (bb->getBranching() == AtomNil) {
+			/*
+			 Stability is detected an a waitStable can be resumed. It is up to the
+			 builtin to perform error detection.
+			 */
+			//printf("****called to notiyStable of new dist.\n");fflush(stdout);
+			//printf("notifyStable branchng es nil\n");fflush(stdout);
+			(void) oz_unify(var,AtomNil);
+			//telleq(bb,var,AtomNil);
+			dispose();
+			return 0;			
+		} 
+		return 1;
+	}
+	
+	virtual int commitBranch(Board *bb, TaggedRef branch) {
+		telleq(bb,var,branch);
+		bb->setBranching(AtomNil);
+		dispose();
+		return 0;
+	}
+	
+	virtual Distributor * gCollect(void) {
+		BaseDistributor * t = 
+		(BaseDistributor *) oz_hrealloc(this,sizeof(BaseDistributor));
+		
+		oz_gCollectTerm(var, t->var);
+		
+		return (Distributor *) t;
+	}
+	
+	virtual Distributor * sClone(void) {
+		BaseDistributor * t = 
+		(BaseDistributor *) oz_hrealloc(this,sizeof(BaseDistributor));
+		
+		OZ_sCloneBlock(&var, &(t->var), 1);
+		
+		return (Distributor *) t;
+	}
+	
+};
+
 
 // 
 // First class spaces (the builtin interface)
@@ -420,24 +509,15 @@ OZ_BI_define(BIwaitStableSpace, 0, 0) {
 
   RefsArray * args = RefsArray::allocate(1,NO);
   args->setArg(0,OZ_out(0));
-
   if (bb->isRoot()) {
     args->setArg(0,oz_newVariable(bb));
-  } else if (bb->hasGetChoice()) {
-    printf("Space....getChoice\n");fflush(stdout);
-    // No concurrent getChoice sanity test.
-    return oz_raise(E_ERROR,E_KERNEL,"spaceGetChoice", 0);
-  }  else if (bb->isWaiting()) {
-    printf("Space....waitStable\n");fflush(stdout);
-    // No concurrent waitStable sanity test.
-    //args->setArg(0,bb->getStabilityVar());
-    return oz_raise(E_ERROR,E_KERNEL,"spaceWaitStable", 0); 
   } else if (bb->getDistributor()) {
-    printf("Space....distributor\n");fflush(stdout);
+    //printf("Space....distributor\n");fflush(stdout);
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
   } else {
-    bb->setWaiting();
-    args->setArg(0,bb->getStabilityVar());
+	  BaseDistributor *bd = new BaseDistributor(bb);
+	  bb->setDistributor(bd);
+	  args->setArg(0,bd->getVar());
   }
   
   am.prepareCall(BI_wait, args);
@@ -485,6 +565,7 @@ OZ_BI_define(BIkillSpace, 1, 0) {
 // 0: Space to apply branch to
 // 1: Branching description
 OZ_BI_define(BIcommitB2Space,2,0) {
+	//printf("commitB2 builtin\n");fflush(stdout);
 	/*
 		This builtin sets the branching attribute of the board to a desired 
 		value. It does not require to install the space so stability is not 
@@ -504,21 +585,7 @@ OZ_BI_define(BIcommitB2Space,2,0) {
 	if (!bb->isAdmissible())
 		return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
 	
-	if(bb->isWaiting()) {
-		/*
-			If isWaiting returns true is because some thread
-			is waiting on space stability. In this case this
-			thread must suspends until waitStable has been run.
-			This means that {Space.branch B} will block until
-			{Space.waitStable} has been run.
-		*/
-		TaggedRef st = bb->getStabilityVar();
-		DEREF(st,stPtr);
-		oz_suspendOn(makeTaggedRef(stPtr));
-	}
-	Assert(!bb->isWaiting());
-
-	if (!bb->hasGetChoice())
+	if (!bb->getDistributor())
     	return oz_raise(E_ERROR,E_KERNEL,"spaceNoChoice",1,tagged_space);
 	
 	TaggedRef bd = OZ_in(1);
@@ -540,14 +607,17 @@ OZ_BI_define(BIcommitB2Space,2,0) {
 		//printf("From commitB2 but doing the same as commitB\n");fflush(stdout);
 		bd = OZ_head(bd);
 		
-		RefsArray * args = RefsArray::allocate(1,NO);
-		args->setArg(0,bd);
+		//RefsArray * args = RefsArray::allocate(1,NO);
+		//args->setArg(0,bd);
 		// *** (overhead??) ***
-		oz_newThreadInject(bb)->pushCall(BI_bindCSync,args);
+		
+		//oz_newThreadInject(bb)->pushCall(BI_bindCSync,args);
+		bb->commitB(bd);
 		bb->clearStatus();
 		return BI_PREEMPT;
 	}
-	
+	Assert(false);
+	// TODO: this assertion is never rised
 	bb->setBranching(bd);
 	bb->patchBranchStatus(bd);
 	
@@ -559,7 +629,7 @@ OZ_BI_define(BIcommitB2Space,2,0) {
 OZ_BI_define(BIbranchSpace,1,0) {
   Board * bb = oz_currentBoard();
  
-  if(bb->isWaiting()) {
+  if(bb->getDistributor()) {
     /*
       If isWaiting returns true is because some thread
       is waiting on space stability. In this case this
@@ -571,7 +641,7 @@ OZ_BI_define(BIbranchSpace,1,0) {
     DEREF(st,stPtr);
     oz_suspendOn(makeTaggedRef(stPtr));
   }
-  Assert(!bb->isWaiting());
+  Assert(!bb->getDistributor());
   
   TaggedRef bd = OZ_in(0);
   DEREF(bd, bd_ptr);
@@ -579,11 +649,13 @@ OZ_BI_define(BIbranchSpace,1,0) {
 	if (oz_isVarOrRef(bd)) 
 		oz_suspendOn(makeTaggedRef(bd_ptr));
 	
-  bb->setBranching(bd);
+	//Assert(false);
+	bb->setBranching(bd);
   return PROCEED;
 }OZ_BI_end
 
 OZ_BI_define(BIcommitBSpace,2,0) {
+	//printf("commitB builtin\n");fflush(stdout);
   declareSpace;
 
   TaggedRef bd = OZ_in(1);
@@ -605,33 +677,44 @@ OZ_BI_define(BIcommitBSpace,2,0) {
     return oz_raise(E_ERROR,E_KERNEL,"spaceAdmissible",1,tagged_space);
 
 
-  RefsArray * args = RefsArray::allocate(1,NO);
-  args->setArg(0,OZ_in(1));
+	//RefsArray * args = RefsArray::allocate(1,NO);
+	//args->setArg(0,OZ_in(1));
   // *** (overhead??) ***
-  oz_newThreadInject(sb)->pushCall(BI_bindCSync,args);
-  sb->clearStatus();
+	//oz_newThreadInject(sb)->pushCall(BI_bindCSync,args);
+	sb->commitB(OZ_in(1));
+	sb->clearStatus();
   return BI_PREEMPT;
 }OZ_BI_end
 
 OZ_BI_define(BIgetChoiceSpace,0,1) {
+	
   Board * bb = oz_currentBoard();
   //printf("BIgetChoice: \n");fflush(stdout);
   
-  if (oz_isReadOnly(oz_deref(bb->getCSync()))) {
-    // There is a getChoice already present in the space
-    return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);    
-  }
+	if (bb->getDistributor()) {
+		printf("BIgetChoice: a distributor is present\n");fflush(stdout);
+		// There is a getChoice already present in the space
+		return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);    
+	}
 
-  bb->getChoice();
-
-  TaggedRef answer = bb->getCSync(); 
-
+	TaggedRef answer;
+	BranchQueue *bq = bb->getBranchQueue();
+	if (bq->isEmpty()) {
+		//printf("BIgetChoice: empty branch queue -> creating new distributor\n");fflush(stdout);
+		BaseDistributor *bd = new BaseDistributor(bb);
+		bb->setDistributor(bd);
+		answer = bd->getVar();
+	} else {
+		answer = bq->dequeue();
+	}
+	
   OZ_out(0) = answer;
   
   RefsArray * args = RefsArray::allocate(1,NO);
   args->setArg(0,OZ_out(0));
 
-  am.prepareCall(BI_waitGetChoice, args);
+  //am.prepareCall(BI_waitGetChoice, args);
+	am.prepareCall(BI_wait, args);
 
   return BI_REPLACEBICALL;
 }OZ_BI_end
@@ -646,16 +729,29 @@ OZ_BI_define(BIchooseSpace, 1, 1) {
 
   Board * bb = oz_currentBoard();
 
+
   bb->setBranching(l);
-  bb->getChoice();
 
-  OZ_out(0) = bb->getCSync(); 
-
+	// Create a new distributor in the space if needed
+	TaggedRef answer;
+	BranchQueue *bq = bb->getBranchQueue();
+	if (bq->isEmpty()) {
+		//printf("BIgetChoice: empty branch queue -> creating new distributor\n");fflush(stdout);
+		BaseDistributor *bd = new BaseDistributor(bb);
+		bb->setDistributor(bd);
+		answer = bd->getVar();
+	} else {
+		answer = bq->dequeue();
+	}
+	
+  OZ_out(0) = answer;
+  
   RefsArray * args = RefsArray::allocate(1,NO);
   args->setArg(0,OZ_out(0));
-
-  am.prepareCall(BI_waitGetChoice, args);
-
+	
+  //am.prepareCall(BI_waitGetChoice, args);
+	am.prepareCall(BI_wait, args);
+	
   return BI_REPLACEBICALL;
 } OZ_BI_end
 

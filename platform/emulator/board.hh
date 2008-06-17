@@ -365,14 +365,6 @@ private:
   */
   TaggedRef stabilityVar;
 
-  /**
-     \brief Returns the branching queue. This method
-     is used during grabage collection or space 
-     cloning.
-  */
-  BranchQueue * getBranchQueue(void) { 
-    return bq;
-  }
   
   /**
      \brief Sets the branching queue of the board to b.
@@ -392,6 +384,15 @@ public:
     dist = d;
   }
   
+	/**
+     \brief Returns the branching queue. This method
+     is used during grabage collection or space 
+     cloning.
+	 */
+	BranchQueue * getBranchQueue(void) { 
+		return bq;
+	}
+	
   /**
      \brief Returns the synchronization variable
   */

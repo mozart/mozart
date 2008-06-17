@@ -30,3 +30,11 @@
 int Distributor::commit(Board *, int, int r) {
   return (r > 2) ? -2 : 2;
 }
+
+int Distributor::notifyStable(Board *) {
+	return -1;
+}
+
+int Distributor::commitBranch(Board *, TaggedRef) {
+	return 0;
+}
