@@ -55,6 +55,11 @@ void bindreadonly(Board * bb, const TaggedRef a, const TaggedRef b) {
 
 class BaseDistributor : public Distributor {
 protected:
+	
+	/*
+	 This attribute is used to suspend until stability is reached or
+	 a commit operation is performed. 
+	 */
 	TaggedRef var;
 	
 public:
@@ -70,21 +75,6 @@ public:
 	
 	TaggedRef getVar(void) {
 		return var;
-	}
-	
-	virtual int getAlternatives(void) {
-		Assert(false);
-		return 0;
-	}
-	virtual int commit(Board * bb, int n) {
-		Assert(false);
-		dispose();
-		return 0;
-	}
-	
-	virtual int commit(Board * bb, int l, int r) {
-		Assert(false);
-		return 1;
 	}
 	
 	/*
@@ -108,6 +98,11 @@ public:
 		return 1;
 	}
 	
+	/*
+	 \brief Commit a brach to the distributor. This will be bound \a var to 
+	 \a branch. As this distributor only contains one variable to represent either
+	 getChoice or waitStable precense, after commit the object can be disposed.
+	 */
 	virtual int commitBranch(Board *bb, TaggedRef branch) {
 		telleq(bb,var,branch);
 		bb->setBranching(AtomNil);

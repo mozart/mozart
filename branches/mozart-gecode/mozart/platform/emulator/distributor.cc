@@ -27,6 +27,16 @@
 
 #include "distributor.hh"
 
+int Distributor::getAlternatives() {
+	printf("Called abstract class getAlternatives\n");fflush(stdout);
+	return 0;
+}
+
+int Distributor::commit(Board *, int ) {
+	printf("Called abstract class commit\n");fflush(stdout);
+	return 0;
+}
+
 int Distributor::commit(Board *, int, int r) {
   return (r > 2) ? -2 : 2;
 }
