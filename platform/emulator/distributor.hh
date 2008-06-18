@@ -34,9 +34,13 @@ class Distributor {
 public:
   USEFREELISTMEMORY;
   
-  virtual int getAlternatives(void) = 0;
+	// TODO: this function is to be deprecated
+  virtual int getAlternatives(void);
 
-  virtual int commit(Board *, int) = 0;
+	// TODO: this function is to be deprecated
+  virtual int commit(Board *, int);
+	
+	// TODO: this function is to be derecated
   virtual int commit(Board *, int, int);
 
 	/*
