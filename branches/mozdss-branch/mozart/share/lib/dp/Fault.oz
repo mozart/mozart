@@ -28,6 +28,7 @@ functor
 
 import
    System(showError: ShowError)
+   DP
 
 export
    getEntityCond:     GetEntityCond
@@ -63,8 +64,25 @@ define
       {Defunct 'Fault.deInstall'} true
    end
 
-   fun {InstallWatcher _ _ _}
-      {Defunct 'Fault.installWatcher'} true
+   fun {InstallWatcher Entity FStates WatcherProc}
+      if {List.all FStates
+	  fun {$ S} {Member S [tempFail permFail]} end}
+      then
+	 proc {Loop FS}
+	    case FS of F|Fr then
+	       if {Member F FStates} then
+		  thread {WatcherProc Entity F(info:state)} end
+	       else
+		  {Loop Fr}
+	       end
+	    else skip end
+	 end
+      in
+	 {DP.getFaultStream Entity thread {Loop} end}
+	 true
+      else
+	 false
+      end
    end
    fun {DeInstallWatcher _ _ _}
       {Defunct 'Fault.deInstallWatcher'} true
