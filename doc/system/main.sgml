@@ -335,13 +335,13 @@
 
   <Part id="Part.Distributed">
     <Title/Distributed Programming/
+    &chapter.dp;
     &chapter.connection;
     &chapter.remote;
     &chapter.urlurl;
     &chapter.resolve;
-    &chapter.dp;
-    &chapter.fault;
     &chapter.discovery;
+    &chapter.fault;
     &chapter.dpinit;
     &chapter.dpstatistics;
   </Part>
