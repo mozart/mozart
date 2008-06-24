@@ -330,13 +330,15 @@ define
 
    %% extract an IP address, following specification D
    fun{DoGetIp D}
-      case D
-      of exact(Ip) then
-	 Ip
-      [] dns(N) then
-	 {OS.getHostByName N}.addrList.1
-      [] best then
-	 {BestIp {OS.getHostByName {OS.uName}.nodename}.addrList}
+      if {String.is D} then D else
+	 case D
+	 of exact(Ip) then
+	    Ip
+	 [] dns(N) then
+	    {OS.getHostByName N}.addrList.1
+	 [] best then
+	    {BestIp {OS.getHostByName {OS.uName}.nodename}.addrList}
+	 end
       end
    end
 
