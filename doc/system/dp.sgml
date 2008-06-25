@@ -385,6 +385,14 @@ default only ?_{S} knows that fault state for ?_{X}.  If ?_{X} is
 removed by the garbage collector of ?_{S}, then its fault state on
 ?_{S} vanishes.  In that case, if ?_{X} is reintroduced later to
 ?_{S}, it might be considered in state <<ok>> again.</item>
+
+  <item>Since version 1.4.0, the fault state <<tempFail>> is triggered
+based on an adaptive timeout.  The system monitors its site
+connections, and determines an average round-trip time and deviation
+for each connection.  Because the mechanism is adaptive, it requires
+some time to find appropriate values.  Therefore the failure detection
+can sometimes appear too sensitive, and sometimes a bit sloppy.</item>
+
 </list>
 
 <!--
