@@ -244,6 +244,100 @@
        retryTime*.
     </P>
 
+    <Subsubsection class=unnumbered id="section.property.dp.annotation">
+      <Title/Default annotations: <<dp.annotation>>/
+
+      <P>
+	<Table id="table.prop.dp.annotation">
+          <Tr><Th/Field/ <Th/Mutable/ <Th/Type/ <Th/Explanation/</Tr>
+          <Tr>
+            <Td/<<port>>/
+            <Td/yes/
+            <Td/list of atoms/
+            <Td/Default annotation for ports./
+          </Tr>
+          <Tr>
+            <Td/<<cell>>/
+            <Td/yes/
+            <Td/list of atoms/
+            <Td/Default annotation for cells./
+          </Tr>
+          <Tr>
+            <Td/<<'lock'>>/
+            <Td/yes/
+            <Td/list of atoms/
+            <Td/Default annotation for locks./
+          </Tr>
+          <Tr>
+            <Td/<<object>>/
+            <Td/yes/
+            <Td/list of atoms/
+            <Td/Default annotation for objects (their immutable part)./
+          </Tr>
+          <Tr>
+            <Td/<<state>>/
+            <Td/yes/
+            <Td/list of atoms/
+            <Td/Default annotation for the state of objects (their mutable part)./
+          </Tr>
+          <Tr>
+            <Td/<<array>>/
+            <Td/yes/
+            <Td/list of atoms/
+            <Td/Default annotation for arrays./
+          </Tr>
+          <Tr>
+            <Td/<<dictionary>>/
+            <Td/yes/
+            <Td/list of atoms/
+            <Td/Default annotation for dictionaries./
+          </Tr>
+          <Tr>
+            <Td/<<variable>>/
+            <Td/yes/
+            <Td/list of atoms/
+            <Td/Default annotation for variables./
+          </Tr>
+          <Tr>
+            <Td/<<readonly>>/
+            <Td/yes/
+            <Td/list of atoms/
+            <Td/Default annotation for read-only futures./
+          </Tr>
+          <Tr>
+            <Td/<<unusable>>/
+            <Td/yes/
+            <Td/list of atoms/
+            <Td/Default annotation for unusables (sited resources)./
+          </Tr>
+          <Tr>
+            <Td/<<chunk>>/
+            <Td/yes/
+            <Td/list of atoms/
+            <Td/Default annotation for chunks./
+          </Tr>
+          <Tr>
+            <Td/<<'class'>>/
+            <Td/yes/
+            <Td/list of atoms/
+            <Td/Default annotation for classes./
+          </Tr>
+          <Tr>
+            <Td/<<procedure>>/
+            <Td/yes/
+            <Td/list of atoms/
+            <Td/Default annotation for procedures./
+          </Tr>
+	</Table>
+      </P>
+      <P>
+	When setting default annotations, make sure that the
+	annotation you give is complete and consistent with the
+	corresponding type.
+      </P>
+
+    </Subsubsection>
+
   </Subsection>
   
   <Subsection class=unnumbered id="section.property.dplog">
