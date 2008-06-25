@@ -52,6 +52,7 @@
     <Author.Extern to="author.db" key="Peter.VanRoy">
     <Author.Extern to="author.db" key="Seif.Haridi">
     <Author.Extern to="author.db" key="Per.Brand">
+    <Author.Extern to="author.db" key="Raphael.Collet">
     <Comic>
       <Picture.Choice>
 	<Picture.Extern to="tutorial.gif" type=gif>
