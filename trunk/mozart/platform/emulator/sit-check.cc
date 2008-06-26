@@ -243,53 +243,32 @@ int ConstTerm::checkSituatedness(void) {
     return OK;
 
   switch (getType()) {
-  case Co_Extension: {
-    OZ_Extension * ex = const2Extension(this);
-    Assert(ex);
-    Board * bb = (Board *) (ex->__getSpaceInternal());
-    if (!bb || ISGOOD(bb))
-      return OK;
-    MARKFIELD(this);
-    return NO;
-  }
-  break;
 
     /*
      * ConstTermWithHome
      *
      */
+  case Co_Extension:
   case Co_Abstraction: 
   case Co_Chunk:
   case Co_Array:
   case Co_Dictionary:
   case Co_Class: 
+  case Co_Object: 
+  case Co_ObjectState:
+  case Co_Cell:
+  case Co_Port:  
+  case Co_Space:
+  case Co_Lock:
     { 
       ConstTermWithHome * ctwh = (ConstTermWithHome *) this;
-      if (!ctwh->hasGName() && !ISGOOD(ctwh->getSubBoardInternal())) {
+      if (!ctwh->isDistributed() && !ctwh->hasGName() &&
+	  !ISGOOD(ctwh->getSubBoardInternal())) {
 	MARKFIELD(this);
 	return NO;
       }
     }
     break;
-
-    /*
-     * Tertiary
-     *
-     */
-
-  case Co_Object: 
-  case Co_Cell:
-  case Co_Port:  
-  case Co_Space:
-  case Co_Lock:
-    {
-      Tertiary * t = (Tertiary *) this;
-      if (t->isLocal() && !ISGOOD(t->getBoardLocal())) {
-	MARKFIELD(this);
-	return NO;
-      }
-    }
-    
 
   default:
     break;

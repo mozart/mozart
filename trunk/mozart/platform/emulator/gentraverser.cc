@@ -360,12 +360,17 @@ repeat:
       GetBTTaskPtr1(frame, GName*, gname);
 
       //
-      OZ_Term chunkTerm;
-      SChunk *sc = new SChunk(am.currentBoard(), 0);
-      sc->setGName(gname);
-      chunkTerm = makeTaggedConst(sc);
-      overwriteGName(gname, chunkTerm);
-      sc->import(value);
+      OZ_Term chunkTerm = gname->getValue();
+      if (chunkTerm) {
+	SChunk* sc = tagged2SChunk(chunkTerm);
+	if (!sc->getValue()) sc->import(value);
+      } else {
+	SChunk *sc = new SChunk(am.currentBoard(), 0);
+	sc->setGName(gname);
+	chunkTerm = makeTaggedConst(sc);
+	overwriteGName(gname, chunkTerm);
+	sc->import(value);
+      }
 
       //
       if (doMemo) {
@@ -384,29 +389,21 @@ repeat:
   case BT_classFeatures:
     {
       Assert(oz_isSRecord(value));
-      GetBTTaskPtr1(frame, ObjectClass*, cl);
+      GetBTTaskPtr1(frame, OzClass*, cl);
       GetBTTaskArg2(frame, int, flags);
       DiscardBTFrame(frame);
 
       //
-      SRecord *feat = tagged2SRecord(value);
-      TaggedRef ff = feat->getFeature(NameOoFeat);
-      //
-      cl->import(value,
-		 feat->getFeature(NameOoFastMeth),
-		 oz_isSRecord(ff) ? ff : makeTaggedNULL(),
-		 feat->getFeature(NameOoDefaults),
-		 flags);
-
-      //
-      // Observe: it can overwrite the gname's binding even without
-      // any lazy protocols, just due to the concurrency & suspendable
-      // unmarshaling!! The same holds of course for other "named"
-      // data structures, notably - objects and procedures.
-      GName *gn = cl->getGName();
-      OZ_Term ct = makeTaggedConst(cl);
-      overwriteGName(gn, ct);
-      gn->gcOn();
+      if (!cl->isComplete()) {
+	SRecord *feat = tagged2SRecord(value);
+	TaggedRef ff = feat->getFeature(NameOoFeat);
+	//
+	cl->import(value,
+		   feat->getFeature(NameOoFastMeth),
+		   oz_isSRecord(ff) ? ff : makeTaggedNULL(),
+		   feat->getFeature(NameOoDefaults),
+		   flags);
+      }
       //
       value = makeTaggedConst(cl);
       GetBTTaskTypeNoDecl(frame, type);
@@ -439,13 +436,16 @@ repeat:
       //
       GetBTFramePtr1(frame, GName*, gname);
 
+      // raph: objects are no longer marshaled this way
+      Assert(0);
+      /*
       // 'value' is the free record (incompete by now, - see also
       // gentraverserLoop.cc, case Co_Object):
       SRecord *feat = oz_isNil(value) ?
 	(SRecord *) NULL : tagged2SRecord(value);
       OzLock *lock = oz_isNil(lockTerm) ? 
 	(OzLock *) NULL : (OzLock *) tagged2Const(lockTerm);
-      Object *o = new Object(oz_rootBoard(), gname, state, feat, lock);
+      OzObject *o = new OzObject(oz_rootBoard());
       OZ_Term objTerm = makeTaggedConst(o);
       overwriteGName(gname, objTerm);
       if (doMemo) {
@@ -457,6 +457,8 @@ repeat:
 
       //
       value = objTerm;
+      */
+      value = makeTaggedNULL();
       GetBTTaskTypeNoDecl(frame, type);
       goto repeat;
     }
@@ -491,23 +493,34 @@ repeat:
       GetBTFrameArg2(frame, int, gsize);
       DiscardBTFrame(frame);
 
-      //
-      Assert(gname);		// must be an unknown procedure here;
-      OZ_Term procTerm;
-      // kost@ : 'flags' are obviously not used (otherwise something
-      // would not work: flags are not passed as e.g. 'file' is);
-      PrTabEntry *pr = new PrTabEntry(name, mkTupleWidth(arity),
-				      file, line, column,
-				      oz_nil(), maxX);
-      Assert(pc != NOCODE && gsize >= 0);
-      pr->setPC(pc);
-      pr->setGSize(gsize);
+      // the procedure might be (partially or totally) known
+      Assert(gname);
+      OZ_Term procTerm = gname->getValue();
+      Abstraction* pp;
 
-      //
-      Abstraction *pp = Abstraction::newAbstraction(pr, am.currentBoard());
-      procTerm = makeTaggedConst(pp);
-      pp->setGName(gname);
-      overwriteGName(gname, procTerm);
+      if (procTerm) {
+	pp = tagged2Abstraction(procTerm);
+      } else {
+	pp = new Abstraction(am.currentBoard(), arity);
+	procTerm = makeTaggedConst(pp);
+	pp->setGName(gname);
+	overwriteGName(gname, procTerm);
+      }
+
+      // build predicate if not known yet
+      if (!pp->getPred()) {
+	// kost@ : 'flags' are obviously not used (otherwise something
+	// would not work: flags are not passed as e.g. 'file' is);
+	PrTabEntry *pr = new PrTabEntry(name, mkTupleWidth(arity),
+					file, line, column,
+					oz_nil(), maxX);
+	Assert(pc != NOCODE && gsize >= 0);
+	pr->setPC(pc);
+	pr->setGSize(gsize);
+
+	pp->setPred(pr);
+      }
+      Assert(pp->getPred());
 
       //
       if (doMemo) {
@@ -526,6 +539,7 @@ repeat:
 	}
 	break;			// BT_proc:
       } else {
+	Assert(pp->isComplete());
 	value = makeTaggedConst(pp);
 	GetBTTaskTypeNoDecl(frame, type);
 	goto repeat;
@@ -551,6 +565,7 @@ repeat:
       GetBTTaskArg2(frame, int, ind);
       DiscardBTFrame(frame);
       pp->initG(ind, value);
+      pp->setComplete();
       //
       CrazyDebug(incDebugNODES(););
       value = makeTaggedConst(pp);
@@ -965,7 +980,7 @@ void Builder::dbgWrap()
       break;
 
       //
-      // 'ObjectClass' is already there:
+      // 'OzClass' is already there:
     case BT_classFeatures:
       NextBTFrame(frame);
       break;			// case;

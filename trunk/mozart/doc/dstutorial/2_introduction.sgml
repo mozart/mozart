@@ -85,11 +85,11 @@ key="chapter.pickle"/<<Pickle>>/ allows an application
 to store and retrieve
 arbitrary stateless data from files and URLs.
 <ITEM> The module
-<index/<<Fault>> module/
-<index id=idx.modulefault/module<and>system<and><<Fault>>/
+<index/<<DP>> module/
+<index id=idx.moduledp/module<and>system<and><<DP>>/
 <ref.extern to="ozdoc:system"
-key="chapter.fault"/<<Fault>>/ gives the basic primitives
-for fault detection and handling.
+key="chapter.dp"/<<DP>>/ gives the basic primitives for configuring
+the distribution of entities, and fault detection and handling.
 </LIST>
 The first three modules, <ref.extern to="ozdoc:system"
 key="chapter.connection"/<<Connection>>/, <ref.extern to="ozdoc:system"
@@ -102,16 +102,15 @@ key="chapter.connection"/<<Connection>>/ has just two basic operations:
 offering a ticket and taking a ticket.
 
 <P>The fourth module, <ref.extern to="ozdoc:system"
-key="chapter.fault"/<<Fault>>/, is the base on which
+key="chapter.dp"/<<DP>>/, is the base on which
 fault-tolerant abstractions are built.
 The current module provides complete fault-detection ability
 for both site and network failures
 and has hooks that allow to build efficient fault-tolerant
 abstractions within the Oz language.
-This release provides a few of the most useful abstractions
-to get you started.
-The development of more powerful ones is still ongoing research.
-They will be provided in upcoming releases.
+The underlying model of that module is a both simplified and
+improved version of the former module
+<ref.extern to="ozdoc:system" key="chapter.fault"/<<Fault>>/.
 
 <P>This tutorial gives an informal but precise specification
 of both the distribution model and the failure model.

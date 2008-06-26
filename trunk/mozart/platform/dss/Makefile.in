@@ -1,0 +1,77 @@
+# Includes necessary flags and environment
+
+SRCDIR	=@srcdir@/src
+VPATH   = $(SRCDIR)
+INCS    = -I. -I@srcdir@/include
+
+include ./Makefile.vars
+
+# Sources
+SRCBSE = base.cc
+
+SRCMSL = msl_timers.cc mslBase.cc	\
+	msl_buffer.cc msl_serialize.cc msl_prioQueues.cc	\
+	msl_crypto.cc msl_dct.cc msgnLayer.cc	\
+	msl_msgContainer.cc msl_dsite.cc msl_comObj.cc 		\
+	msl_transObj.cc msl_tcpTransObj.cc			\
+	msl_endRouter.cc msl_interRouter.cc 
+
+SRCDSS = dssBase.cc dss_interface.cc dss_msgLayerInterface.cc		\
+	dss_largeMessages.cc dss_global_name.cc protocols.cc		\
+	coordinator.cc referenceConsistency.cc				\
+	abstractEntityImplementations.cc dss_threads.cc			\
+	protocol_once_only.cc protocol_migratory.cc			\
+	protocol_simple_channel.cc protocol_eagerinvalid.cc		\
+	protocol_pilgrim.cc protocol_transient_remote.cc		\
+	protocol_immediate.cc dss_netId.cc protocol_immutable_lazy.cc	\
+	protocol_immutable_eager.cc protocol_sited.cc			\
+	coordinator_stationary.cc coordinator_fwdchain.cc		\
+	coordinator_mobile.cc dgc.cc dgc_rc.cc dgc_rl2.cc dgc_fwrc.cc	\
+	dgc_irc.cc dgc_rl1.cc dgc_tl.cc dss_rl_siteHandler.cc		\
+	DKSNode.cc dss_psDKS.cc dss_dksInstance.cc dss_dssDks.cc	\
+	protocol_dksBroadcast.cc dss_dksBackbone.cc
+
+REALSRC = $(SRCMSL:%=$(SRCDIR)/%) $(SRCDSS:%=$(SRCDIR)/%)
+
+OBJSBSE = $(SRCBSE:%.cc=%.o)
+OBJSMSL = $(OBJSBSE) $(SRCMSL:%.cc=%.o) # Messaging contains Base also
+OBJSDSS	= $(OBJSMSL) $(SRCDSS:%.cc=%.o) # and DSS both Base and Messaging
+
+
+all: @ENVTYPE@
+	@UTILS@
+	@EXAMPLES@
+
+lib@ENV@.so: $(OBJS@ENV@)
+	@DYNLD@ -o $@ $(OBJS@ENV@) $(LIBS)
+
+lib@ENV@.a: $(OBJS@ENV@)
+	$(AR) -rc $@ $(OBJS@ENV@) && $(RANLIB) $@
+
+bootstrap: all
+
+clean veryclean distclean:: local-clean
+
+local-clean:
+	rm -f *~ *.o @ENVTYPE@
+	@UTILS@
+	@EXAMPLES@
+
+distclean:: local-distclean
+
+local-distclean:
+	-rm -f Makefile config.*
+
+install: all
+	mkdir -p @prefix@
+	mkdir -p @prefix@/include
+	mkdir -p @prefix@/lib
+	@INSTALL@ @ENVTYPE@ @prefix@/lib; @EXAMPLES@
+	@COPY_HEADERS@
+
+depend:: $(REALSRC)
+	$(DEPEND) $^ > Makefile.deps
+
+# dependencies
+-include Makefile.deps
+

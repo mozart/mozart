@@ -497,7 +497,7 @@ public:
     return value;
   }
 
-  Abstraction *lookup(ObjectClass *c, TaggedRef meth,
+  Abstraction *lookup(OzClass *c, TaggedRef meth,
 		      SRecordArity arity)
   {
     if (ToInt32(c) != key) {
