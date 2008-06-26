@@ -551,7 +551,9 @@ static mv2ovTabType mv2ovTab[] = {
   { 2, 0, "1.1.0" },
   { 3, 0, "1.1.0" },
   { 3, 1, "1.1.1" },
-  { 3, 2, "1.2.0" }
+  { 3, 2, "1.2.0" },
+  { 3, 3, "1.3.0" },
+  { 4, 0, "1.4.0" }
 };
 
 // returns a string to be used as "oz version %s";
