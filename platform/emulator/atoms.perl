@@ -153,6 +153,17 @@
 	  ( AtomError,          "error"),
 
 	  # Failure
+	  ( AtomOk,             "ok"),
+	  ( AtomTempFail,	"tempFail"),
+	  ( AtomLocalFail,	"localFail"),
+	  ( AtomPermFail,	"permFail"),
+	  ( AtomNormal,	        "normal"),
+	  ( AtomInfo,	        "info"),
+	  ( AtomDp,	        "dp"),
+	  ( AtomSystem,	        "system"),
+	  ( AtomIO,	        "io"),
+
+	  # old stuff used in interFault.cc only
 	  ( AtomBlocked,	"blocked"),
 	  ( AtomPermBlocked,	"permBlocked"),
 	  ( AtomTempBlocked,	"tempBlocked"),
@@ -165,11 +176,8 @@
 	  ( AtomAll,	        "all"),
 	  ( AtomPermAll,	"permAll"),
 	  ( AtomTempAll,	"tempAll"),
-	  ( AtomPermFail,	"permFail"),
-	  ( AtomTempFail,	"tempFail"),
 	  ( AtomRemoteProblem,	"remoteProblem"),
 	  ( AtomAny,	        "any"),
-	  ( AtomNormal,	        "normal"),
 	  ( AtomThis,           "this"),
 	  ( AtomSingle,	        "single"),
 	  ( AtomRetry,		"retry"),
@@ -179,19 +187,15 @@
 	  ( AtomWatcher,	"watcher"),
 	  ( AtomInjector,	"injector"),
 	  ( AtomSafeInjector,	"safeInjector"),
-	  ( AtomInfo,	        "info"),
 	  ( AtomWait,	        "wait"),
 	  ( AtomObjectFetch,	"objectFetch"),
-	  ( AtomDp,	        "dp"),
 	  ( AtomEntity,	        "entity"),
 	  ( AtomConditions,	"conditions"),
 	  ( AtomOp,	        "op"),
 	  ( AtomOwner,	        "owner"),
-	  ( AtomSystem,	        "system"),
 	  ( AtomState,	        "state"),
-	  ( AtomIO,	        "io"),
-	  
-	# Types
+
+	  # Types
 	  ( AtomBool,        "bool"),
 	  ( AtomInt,         "int"),
 	  ( AtomThread,      "thread"),
@@ -297,6 +301,10 @@
           ( NameOoMethSrc,     "ooMethSrc"),
           ( NameOoAttrSrc,     "ooAttrSrc"),
           ( NameOoFeatSrc,     "ooFeatSrc"),
+	  # connectivity status
+	  ( AtomCommunicating, "communicating"),
+	  ( AtomChannel, "channel"),
+	  ( AtomCircuit, "circuit"),
 	  );
 
 

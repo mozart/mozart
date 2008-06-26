@@ -484,7 +484,7 @@ public:
   OZ_Return put_record(SRecord * sr, TaggedRef as);
   OZ_Return put_record_or_tuple(TaggedRef tcl, int start); 
 
-  OZ_Return close_hierarchy(Object * o);
+  OZ_Return close_hierarchy(OzObject * o);
 
 };
 
@@ -1357,7 +1357,7 @@ OZ_BI_define(BItk_writeFilter,5,0) {
 
 
 
-OZ_Return TK::close_hierarchy(Object * o) {
+OZ_Return TK::close_hierarchy(OzObject * o) {
   TaggedRef v = o->replaceFeature(TkNameTclName, TkNameTclClosed);
     
   if (v == makeTaggedNULL()) {
@@ -1439,7 +1439,7 @@ OZ_BI_define(BItk_close,2,0) {
       
     Assert(oz_isObject(to));
 
-    Object  * o = tagged2Object(to);
+    OzObject  * o = tagged2Object(to);
     TaggedRef v = o->getFeature(TkNameTclName);
     TaggedRef slave_entry;    
 	

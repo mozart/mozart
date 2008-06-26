@@ -5,6 +5,8 @@
  * 
  *  Contributors:
  *    Andreas Sundstroem <andreas@sics.se>
+ *    Boriss Mejias <bmc@info.ucl.ac.be>
+ *    Raphael Collet <raph@info.ucl.ac.be>
  * 
  *  Copyright:
  *    Per Brand, 1998
@@ -30,11 +32,7 @@
 #define __DPMARSHALER_HH
 
 #include "base.hh"
-#include "dpBase.hh"
-#include "msgType.hh"
 #include "byteBuffer.hh"
-#include "perdio.hh"
-#include "table.hh"
 #include "marshalerBase.hh"
 #include "gname.hh"
 
@@ -297,15 +295,14 @@ protected:
   OzValuePatch *expVars;
   OZ_Term gcExpVars;		// "OZ_Term" version of 'expVars';
 
-  //
-  // Support for lazy protocols: when 'doToplevel' is set to TRUE, a
-  // complete representation of the first object (etc.?) is generated,
-  // as opposed to its stub.
-  Bool doToplevel;
-
+  // Support for immutable protocols: when 'immediate' is true, the
+  // next value is marshaled completely; otherwise marshaling is
+  // delegated to the Glue layer.  This is used to send the contents
+  // of an immutable, instead of its identity only.
+  bool immediate;
   //
 public:
-  DPMarshaler() : doToplevel(FALSE) {
+  DPMarshaler() : immediate(false) {
     lIT = new AddressHashTableO1Reset(LocationsITInitSize);
     vIT = new MarshalerDict(ValuesITInitSize);
     expVars = (OzValuePatch *) 0;
@@ -362,12 +359,10 @@ public:
   OzValuePatch* getExpVars() { return (expVars); }
   void setExpVars(OzValuePatch *p) { expVars = p; }
 
-  //
-  // Support for lazy protocols: next marshaling will generate a full
-  // representation of a top-level object (as opposed to its stub);
-  void genFullToplevel() { doToplevel = TRUE; }
-  Bool isFullToplevel() { return (doToplevel); }
-
+  // Support for immutable protocols: the next value will be marshaled
+  // completely
+  bool isImmediate() const { return immediate; }
+  void setImmediate(bool b = true) { immediate = b; }
   //
   MarshalerDict *getVIT() { return (vIT); }
 };
@@ -385,12 +380,13 @@ public:
   void processBigInt(OZ_Term biTerm);
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
   Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
-  void processLock(OZ_Term lockTerm, Tertiary *lockTert);
-  Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
-  void processPort(OZ_Term portTerm, Tertiary *portTert);
-  void processResource(OZ_Term resTerm, Tertiary *tert);
+  Bool processObjectState(OZ_Term stateTerm, ConstTerm *stateConst);
+  void processLock(OZ_Term lockTerm, ConstTerm *lockConst);
+  Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
+  void processPort(OZ_Term portTerm, ConstTerm *portConst);
+  void processResource(OZ_Term resTerm, ConstTerm *unusConst);
   void processNoGood(OZ_Term resTerm);
-  void processVar(OZ_Term cv, OZ_Term *varTerm);
+  Bool processVar(OZ_Term cv, OZ_Term *varTerm);
   Bool processLTuple(OZ_Term ltupleTerm);
   Bool processSRecord(OZ_Term srecordTerm);
   Bool processFSETValue(OZ_Term fsetvalueTerm);
@@ -401,17 +397,15 @@ public:
   Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
   void processSync();
 
+  // a generic one for all entities managed by the Glue
+  Bool processGlue(OZ_Term entity);
+
   //
   void doit();
   //
   void traverse(OZ_Term t);
   void resume(Opaque *o);
   void resume();
-
-  //
-private:
-  Bool marshalObjectStub(OZ_Term objTerm, ConstTerm *objConst);
-  Bool marshalFullObject(OZ_Term objTerm, ConstTerm *objConst);
 };
 
 //
@@ -432,12 +426,13 @@ public:
   void processBigInt(OZ_Term biTerm);
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
   Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
-  void processLock(OZ_Term lockTerm, Tertiary *lockTert);
-  Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
-  void processPort(OZ_Term portTerm, Tertiary *portTert);
-  void processResource(OZ_Term resTerm, Tertiary *tert);
+  Bool processObjectState(OZ_Term stateTerm, ConstTerm *stateConst);
+  void processLock(OZ_Term lockTerm, ConstTerm *lockConst);
+  Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
+  void processPort(OZ_Term portTerm, ConstTerm *portConst);
+  void processResource(OZ_Term resTerm, ConstTerm *unusConst);
   void processNoGood(OZ_Term resTerm);
-  void processVar(OZ_Term cv, OZ_Term *varTerm);
+  Bool processVar(OZ_Term cv, OZ_Term *varTerm);
   Bool processLTuple(OZ_Term ltupleTerm);
   Bool processSRecord(OZ_Term srecordTerm);
   Bool processFSETValue(OZ_Term fsetvalueTerm);
@@ -448,6 +443,9 @@ public:
   Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
   void processSync();
 
+  // a generic one for entities managed by the Glue
+  Bool processGlue(OZ_Term entity);
+
   //
   void doit();
   //
@@ -457,11 +455,6 @@ public:
 
   //
   DebugCode(void vHook();)
-
-  //
-private:
-  Bool marshalObjectStub(OZ_Term objTerm, ConstTerm *objConst);
-  Bool marshalFullObject(OZ_Term objTerm, ConstTerm *objConst);
 };
 
 //
@@ -474,131 +467,69 @@ private:
 // . keep locations of variables
 // . hold internal (memory) representation of "exported" variables until
 //   their external (network) representations are sent out;
-class MgrVarPatch : public OzValuePatch {
-private:
-  Bool isMarshaled;		// for the case of transmission failure;
-  OB_TIndex oti;
-  RRinstance *remoteRef;
-  MarshalTag tag;		// readonly? auto?
-
-  //
-public:
-  MgrVarPatch(OZ_Term locIn, OzValuePatch *nIn,
-		 ManagerVar *mv, DSite *dest);
-  virtual ~MgrVarPatch() { Assert(0); }
-
-  //
-  virtual void          disposeV();
-  //
-  virtual ExtVarType    getIdV(void) { return (OZ_EVAR_MGRVARPATCH); }
-  //
-  virtual OzValuePatch* gCollectV() {
-    return (new MgrVarPatch(*this));
-  }
-  virtual void gCollectRecurseV() {
-    gcRecurseOVP();
-  }
-
-  //
-  void marshal(ByteBuffer *bs, Bool hasIndex);
-};
-
-inline
-Bool oz_isMgrVarPatch(OZ_Term v)
-{
-  return (oz_isExtVar(v) && (oz_getExtVar(v)->getIdV() == OZ_EVAR_MGRVARPATCH));
-}
-
-inline
-MgrVarPatch *oz_getMgrVarPatch(OZ_Term v)
-{
-  Assert(oz_isMgrVarPatch(v));
-  return ((MgrVarPatch *) oz_getExtVar(v));
-}
 
 //
-// MVarPatch holds a location of a *marshaled* variable, of whichever
-// type (but should not be marshaled itself: 'processVar()' methods
-// should recognize coreferences, and marshal them accordingly);
-class MVarPatch : public OzValuePatch {
+// DistributedVarPatch holds a location of a variable.  If the patched
+// variable has not been marshaled yet, its mediator is assigned to
+// the patch itself.  The mediator contains the necessary information
+// for marshaling the variable, even after its binding.
+//
+// In case the variable has been marshaled already, the mediator is
+// ignored.  This is an optimization: processVar() methods should
+// recognize coreferences, and marshal them accordingly.
+
+class DistributedVarPatch : public OzValuePatch {
 public:
-  MVarPatch(OZ_Term locIn, OzValuePatch *nIn)
-    : OzValuePatch(locIn, nIn) {}
-  ~MVarPatch() { Assert(0); }
+  DistributedVarPatch(OZ_Term loc, OzValuePatch *next, Bool marshaled = false)
+    : OzValuePatch(loc, next)
+  {
+    if (!marshaled) {
+      OzVariable *ov = tagged2Var(oz_deref(loc));
+      Assert(ov->hasMediator());
+      extVar2Var(this)->setMediator(ov->getMediator());
+    }
+  }
+  virtual ~DistributedVarPatch() { Assert(0); }
 
   //
-  virtual void          disposeV() { 
+  virtual void disposeV() {
     disposeOVP();
-    oz_freeListDispose(extVar2Var(this), extVarSizeof(MVarPatch));
+    oz_freeListDispose(extVar2Var(this), extVarSizeof(DistributedVarPatch));
   }
   //
-  virtual ExtVarType    getIdV(void) { return (OZ_EVAR_MVARPATCH); }
+  virtual ExtVarType getIdV(void) { return (OZ_EVAR_DISTRIBUTEDVARPATCH); }
   //
   virtual OzValuePatch* gCollectV() {
-    return (new MVarPatch(*this));
+    return (new DistributedVarPatch(*this));
   }
-  virtual void gCollectRecurseV() {
-    gcRecurseOVP();
-  }
-};
+  virtual void gCollectRecurseV() { gcRecurseOVP(); }
 
-//
-class PxyVarPatch : public OzValuePatch {
-private:
-  DebugCode(OB_TIndex bti;);
-  Bool isMarshaled;
-  Ext_OB_TIndex oti;
-  RRinstance *remoteRef;
-  DSite *ms;			// manager site, always;
-  short isReadOnly;		//
-  short isToOwner;		//
-  BYTE  ec;                     // Entity Condition
-
-  //
-public:
-  PxyVarPatch(OZ_Term locIn, OzValuePatch *nIn,
-		 ProxyVar *pv, DSite *dest);
-  virtual ~PxyVarPatch() { Assert(0); }
-
-  //
-  virtual void          disposeV();
-  //
-  virtual ExtVarType    getIdV(void) { return (OZ_EVAR_PXYVARPATCH); }
-  //
-  virtual OzValuePatch* gCollectV() {
-    return (new PxyVarPatch(*this));
-  }
-  virtual void gCollectRecurseV() {
-    gcRecurseOVP();
-    ms->makeGCMarkSite();
-  }
-
-  //
-  void marshal(ByteBuffer *bs, Bool hasIndex);
+  // status is checked by marshaler (check for failed values)
+  virtual VarStatus checkStatusV() { return EVAR_STATUS_UNKNOWN; }
 };
 
 inline
-Bool oz_isPxyVarPatch(OZ_Term v)
+Bool oz_isDistributedVarPatch(OZ_Term v)
 {
-  return (oz_isExtVar(v) && (oz_getExtVar(v)->getIdV() == OZ_EVAR_PXYVARPATCH));
+  return (oz_isExtVar(v) &&
+	  (oz_getExtVar(v)->getIdV() == OZ_EVAR_DISTRIBUTEDVARPATCH));
 }
 
 inline
-PxyVarPatch *oz_getPxyVarPatch(OZ_Term v)
+DistributedVarPatch *oz_getDistributedVarPatch(OZ_Term v)
 {
-  Assert(oz_isPxyVarPatch(v));
-  return ((PxyVarPatch *) oz_getExtVar(v));
+  Assert(oz_isDistributedVarPatch(v));
+  return ((DistributedVarPatch *) oz_getExtVar(v));
 }
 
 //
 // Construct virtual snapshot;
 class VSnapshotBuilder : public GenTraverser {
 private:
-  DSite *dest;			// for this message;
   MarshalerDict *vIT;		// shared with the dpMarshaler;
   OzValuePatch *expVars;
   //
-  Bool doToplevel;
+  Bool immediate;
 
   //
 private:
@@ -609,25 +540,23 @@ private:
   //
 public:
   VSnapshotBuilder() {
-    DebugCode(dest = (DSite *) -1;);
     DebugCode(vIT = (MarshalerDict *) -1;);
     DebugCode(expVars = (OzValuePatch *) -1;);
-    DebugCode(doToplevel = (Bool) -1;);
+    DebugCode(immediate = (Bool) -1;);
   }
 
   //
-  void init(DSite *destIn, DPMarshaler *dpm) {
-    dest = destIn;
+  void init(DPMarshaler *dpm) {
     vIT = dpm->getVIT();
-    doToplevel = dpm->isFullToplevel();
+    immediate = dpm->isImmediate();
     expVars = dpm->getExpVars();
     copyStack(dpm);
   }
 #if defined(EVAL_EAGER_SNAPSHOT)
-  void initEager(DSite *destIn, DPMarshaler *dpm, OZ_Term t) {
+  void initEager(DPMarshaler *dpm, OZ_Term t) {
     dest = destIn;
     vIT = dpm->getVIT();
-    doToplevel = dpm->isFullToplevel();
+    immediate = dpm->isImmediate();
     expVars = (OzValuePatch *) 0;
     put(t);
   }
@@ -635,15 +564,14 @@ public:
 
   void reset() {
     GenTraverser::reset();
-    DebugCode(dest = (DSite *) -1;);
     DebugCode(vIT = (MarshalerDict *) -1;);
-    DebugCode(doToplevel = (Bool) -1;);
-    DebugCode(doToplevel = (Bool) -1;);
+    DebugCode(immediate = (Bool) -1;);
   }
   ~VSnapshotBuilder() { reset(); }
 
   //
   OzValuePatch *takeExpVars () { return (expVars); }
+  bool isImmediate() const { return immediate; }
 
   //
   void processSmallInt(OZ_Term siTerm);
@@ -652,11 +580,11 @@ public:
   void processExtension(OZ_Term extensionTerm);
   void processBigInt(OZ_Term biTerm);
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
-  void processLock(OZ_Term lockTerm, Tertiary *lockTert);
-  void processPort(OZ_Term portTerm, Tertiary *portTert);
-  void processResource(OZ_Term resTerm, Tertiary *tert);
+  void processLock(OZ_Term lockTerm, ConstTerm *lockConst);
+  void processPort(OZ_Term portTerm, ConstTerm *portConst);
+  void processResource(OZ_Term resTerm, ConstTerm *unusConst);
   void processNoGood(OZ_Term resTerm);
-  void processVar(OZ_Term cv, OZ_Term *varTerm);
+  Bool processVar(OZ_Term cv, OZ_Term *varTerm);
   Bool processLTuple(OZ_Term ltupleTerm);
   Bool processSRecord(OZ_Term srecordTerm);
   Bool processFSETValue(OZ_Term fsetvalueTerm);
@@ -664,7 +592,8 @@ public:
   Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
   Bool processClass(OZ_Term classTerm, ConstTerm *classConst);
   Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
-  Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
+  Bool processObjectState(OZ_Term stateTerm, ConstTerm *stateConst);
+  Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
   Bool processAbstraction(OZ_Term absTerm, ConstTerm *absConst);
   Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
   void processSync();
@@ -708,8 +637,7 @@ Bool traverseCode(GenTraverser *m, GTAbstractEntity *arg);
 // 'dpMarshalTerm' with four arguments is called when a first frame
 // is marshaled, and with two arguments - for subsequent frames;
 inline
-DPMarshaler* dpMarshalTerm(OZ_Term term,
-			   ByteBuffer *bs, DPMarshaler *dpmIn, DSite *dest)
+DPMarshaler* dpMarshalTerm(OZ_Term term, ByteBuffer *bs, DPMarshaler *dpmIn)
 {
   Assert(dpmIn->isFinished());
 #if defined(EVAL_EAGER_SNAPSHOT)
@@ -721,7 +649,7 @@ DPMarshaler* dpMarshalTerm(OZ_Term term,
 
   //
 #if defined(EVAL_EAGER_SNAPSHOT)
-  vsb.initEager(dest, dpm, term);
+  vsb.initEager(dpm, term);
   DebugCode(vsb.prepareTraversing((Opaque *) bs));
   vsb.resume();
   vsb.finishTraversing();
@@ -749,7 +677,7 @@ DPMarshaler* dpMarshalTerm(OZ_Term term,
   } else {
 #if !defined(EVAL_EAGER_SNAPSHOT)
     // Now, take the snapshot:
-    vsb.init(dest, dpm);	// copy the marshaler's stack, among all;
+    vsb.init(dpm);	// copy the marshaler's stack, among all;
     DebugCode(vsb.prepareTraversing((Opaque *) bs));
     vsb.resume();		// .. off the just copied stack;
     vsb.finishTraversing();
@@ -927,13 +855,7 @@ extern SendRecvCounter mess_counter[];
 // '-1' means the action is suspended;
 
 //
-void marshalTertiary(ByteBuffer *bs,
-		     Tertiary *t, Bool hasIndex, MarshalTag tag);
-OZ_Term unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag);
-OZ_Term unmarshalOwner(MarshalerBuffer *bs, MarshalTag mt);
 // var.cc
-OZ_Term unmarshalBorrow(MarshalerBuffer *bs,
-			OB_Entry *&ob, OB_TIndex &bi, BYTE &ec);
 void marshalObject(MarshalerBuffer *bs, ConstTerm* t);
 
 //
@@ -954,9 +876,7 @@ void marshalObject(MarshalerBuffer *bs, ConstTerm* t);
 #define MOwnHeadMaxSize							\
   (2*DIFMaxSize + MNumberMaxSize + MCreditMaxSize)
 #define MToOwnerMaxSize MCreditToOwnerMaxSize
-#define MTertiaryMaxSize						\
-  (DIFMaxSize +								\
-   max(max(MOwnHeadMaxSize, MBorrowHeadMaxSize), MToOwnerMaxSize))
+#define MRefConsInfoMaxSize (MDSiteMaxSize + MCreditMaxSize) 
 
 //
 // Top-level management of marshalers (to be used by transport
@@ -980,7 +900,7 @@ private:
   int musNum;
 
   //
-protected:
+public:
   DPMarshalers() : mus((MU *) 0), musNum(0) {}
   ~DPMarshalers() { dpAllocateMarshalers(0); }
 
@@ -999,5 +919,6 @@ protected:
 //
 extern DPMarshaler **dpms;
 extern Builder **dpbs;
+extern DPMarshalers *DPM_Repository;
 
 #endif

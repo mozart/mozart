@@ -168,7 +168,7 @@ void TRAVERSERCLASS::doit()
 	case Co_Class:
 	  if (!processClass(t, ct)) {
 	    Assert(tosNotRunning == (StackEntry *) 0);
-	    ObjectClass *cl = (ObjectClass *) ct;
+	    OzClass *cl = (OzClass *) ct;
 	    SRecord *fs = cl->getFeatures();
 	    t = fs ? makeTaggedSRecord(fs) : oz_nil();
 	    continue;
@@ -178,6 +178,7 @@ void TRAVERSERCLASS::doit()
 	case Co_Abstraction:
 	  if (!processAbstraction(t, ct)) {
 	    Abstraction *pp = (Abstraction *) ct;
+	    Assert(pp->isComplete());
 	    int gs = pp->getPred()->getGSize();
 	    //
 	    // in the stream: file, name, registers, code area:
@@ -197,9 +198,12 @@ void TRAVERSERCLASS::doit()
 
 	case Co_Object:
 	  if (!processObject(t, ct)) {
-	    //
-	    Object *o = (Object *) tagged2Const(t);
+	    // raph: objects are no longer marshaled this way
 
+	    //
+	    OzObject *o = tagged2Object(t);
+
+	    put(makeTaggedConst(o->getClass()));
 	    //
 	    SRecord *sr = o->getFreeRecord();
 	    OZ_Term tsr;
@@ -215,7 +219,8 @@ void TRAVERSERCLASS::doit()
 	    put(tsr);
 
 	    //
-	    put(makeTaggedConst(getCell(o->getState())));
+	    //bmc: I should not put the state yet.
+	    put(o->getStateTerm());
 
 	    //
 	    if (o->getLock())
@@ -226,23 +231,31 @@ void TRAVERSERCLASS::doit()
 	  }
 	  break;
 
+	case Co_ObjectState: {
+	  if (!processObjectState(t, ct)) {
+	    ObjectState *s = (ObjectState *) ct;
+	    t = s->getValueTerm();
+	    continue;
+	  }
+	  break;
+	}
+
 	case Co_Lock:
-	  processLock(t, (Tertiary *) ct);
+	  processLock(t, ct);
 	  break;
 
 	case Co_Cell:
-	  if (!processCell(t, (Tertiary *) ct) && 
-	      ((Tertiary *) ct)->isLocal()) {
-	    t = ((CellLocal *) ct)->getValue();
+	  if (!processCell(t, ct) && !(static_cast<OzCell*>(ct)->isDistributed())) {
+	    t = static_cast<OzCell*>(ct)->getValue();
 	    continue;
 	  }
 	  break;
 
 	case Co_Port:
-	  processPort(t, (Tertiary *) ct);
+	  processPort(t, ct);
 	  break;
 	case Co_Resource:
-	  processResource(t, (Tertiary *) ct);
+	  processResource(t, ct);
 	  break;
 
 	default:
@@ -254,7 +267,12 @@ void TRAVERSERCLASS::doit()
 
     case LTAG_VAR0:
     case LTAG_VAR1:
-      processVar(t, tPtr);
+      if (!processVar(t, tPtr)) {
+	Assert(oz_isFailed(t));
+	// now traverse the exception
+	t = static_cast<Failed*>(tagged2Var(t))->getException();
+	continue;
+      }
       break;
 
     case LTAG_MARK0:

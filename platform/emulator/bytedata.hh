@@ -38,7 +38,7 @@ protected:
   BYTE *data;
 public:
   BYTE *allocate(int bytes) {
-    return ((BYTE *) _OZ_new_OZ_Extension(bytes));
+    return ((BYTE *) oz_heapMalloc(bytes));
   }
   virtual int getSize() = 0;	// number of bytes in data array
   BYTE *cloneData() {
@@ -159,7 +159,7 @@ public:
   int getWidth() { return width; }
   virtual int getSize() { return width; }
   ByteData operator=(const ByteData&);
-  ByteData(){};
+  ByteData() {}
   ByteData(int w) : width(w) {
     data = allocate(w);
     memset((void*)data,0,w);
@@ -207,7 +207,7 @@ public:
   virtual void sCloneRecurseV(void) {}
   virtual void gCollectRecurseV(void) {}
   ByteString operator=(const ByteString&);
-  ByteString() : OZ_Extension(oz_rootBoard()) {}
+  ByteString() : OZ_Extension(oz_rootBoard()), ByteData() {}
   ByteString(int w) : OZ_Extension(oz_rootBoard()), ByteData(w) {}
   ByteString *clone();
 };

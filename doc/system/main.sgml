@@ -77,6 +77,7 @@
 
 <!ENTITY chapter.connection   SYSTEM "connection.sgml">
 <!ENTITY chapter.fault        SYSTEM "fault.sgml">
+<!ENTITY chapter.dp           SYSTEM "dp.sgml">
 <!ENTITY chapter.remote       SYSTEM "remote.sgml">
 <!ENTITY chapter.resolve      SYSTEM "resolve.sgml">
 <!ENTITY chapter.urlurl       SYSTEM "url.sgml">
@@ -219,6 +220,7 @@
     <Meta name="html.split"       value="chapter.connection">
     <Meta name="html.split"       value="chapter.remote">
     <Meta name="html.split"       value="chapter.fault">
+    <Meta name="html.split"       value="chapter.dp">
     <Meta name="html.split"       value="chapter.urlurl">
     <Meta name="html.split"       value="chapter.resolve">
     <Meta name="html.split"       value="chapter.discovery">
@@ -333,12 +335,13 @@
 
   <Part id="Part.Distributed">
     <Title/Distributed Programming/
+    &chapter.dp;
     &chapter.connection;
     &chapter.remote;
     &chapter.urlurl;
     &chapter.resolve;
-    &chapter.fault;
     &chapter.discovery;
+    &chapter.fault;
     &chapter.dpinit;
     &chapter.dpstatistics;
   </Part>
