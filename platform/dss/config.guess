@@ -1,0 +1,296 @@
+#! /bin/sh
+
+#
+# Print the host system CPU-VENDOR-OS.  configfsf.guess is run and its
+# guess then sharpened up to take advantage of the finer grained CPU
+#
+
+# Expect to find configfsf.guess in the same directory as this config.guess
+configfsf_guess="`echo \"$0\" | sed 's/config.guess$/configfsf.guess/'`"
+if test "$configfsf_guess" = "$0"; then
+  echo "Cannot derive configfsf.guess from $0" 1>&2
+  exit 1
+fi
+if test -f "$configfsf_guess"; then
+  :
+else
+  echo "$configfsf_guess not found" 1>&2
+  exit 1
+fi
+
+# Always run configfsf.guess with $SHELL, like autoconf does for config.guess
+SHELL=${CONFIG_SHELL-/bin/sh}
+
+# Identify ourselves on --version, --help or errors
+if test $# != 0; then
+  $SHELL $configfsf_guess "$@"
+  exit 1
+fi
+
+
+guess_full=`$SHELL $configfsf_guess`
+if test $? != 0; then
+  exit 1
+fi
+
+guess_cpu=`echo "$guess_full" | sed 's/-.*$//'`
+guess_rest=`echo "$guess_full" | sed 's/^[^-]*//'`
+exact_cpu=
+
+
+# -------------------------------------------------------------------------
+# The following should look at the current guess and probe the system to
+# establish a better guess in exact_cpu.  Leave exact_cpu empty if probes
+# can't be done, or don't work.
+#
+# When a number of probes are done, test -z "$exact_cpu" can be used instead
+# of putting each probe under an "else" of the preceeding.  That can stop
+# the code getting horribly nested and marching off the right side of the
+# screen.
+
+
+dummy=dummy-$$
+trap 'rm -f $dummy.c $dummy.o $dummy ${dummy}1.s ${dummy}2.c ; exit 1' 1 2 15
+
+# Use $HOST_CC if defined. $CC may point to a cross-compiler
+if test x"$CC_FOR_BUILD" = x; then
+  if test x"$HOST_CC" != x; then
+    CC_FOR_BUILD="$HOST_CC"
+  else
+    if test x"$CC" != x; then
+      CC_FOR_BUILD="$CC"
+    else
+      echo 'dummy(){}' >$dummy.c
+      for c in cc c89 gcc; do 
+	  ($c $dummy.c -c) >/dev/null 2>&1
+	  if test $? = 0; then
+	      CC_FOR_BUILD="$c"; break
+	  fi
+      done
+      rm -f $dummy.c $dummy.o
+      if test x"$CC_FOR_BUILD" = x; then
+	CC_FOR_BUILD=no_compiler_found
+      fi
+    fi
+  fi
+fi
+
+
+case "$guess_full" in
+
+sparc-*-* | sparc64-*-*)
+  # If we can recognise an actual v7 then $exact_cpu is set to "sparc" so as
+  # to short-circuit subsequent tests.
+
+  # Grep the linux kernel /proc/cpuinfo pseudo-file.
+  # A typical line is "cpu\t\t: TI UltraSparc II  (BlackBird)"
+  # See arch/sparc/kernel/cpu.c and arch/sparc64/kernel/cpu.c.
+  #
+  if test -f /proc/cpuinfo; then
+    if grep 'cpu.*Cypress' /proc/cpuinfo >/dev/null; then
+      exact_cpu="sparc"   # ie. v7
+    elif grep 'cpu.*Power-UP' /proc/cpuinfo >/dev/null; then
+      exact_cpu="sparc"   # ie. v7
+    elif grep 'cpu.*HyperSparc' /proc/cpuinfo >/dev/null; then
+      exact_cpu="sparcv8"
+    elif grep 'cpu.*SuperSparc' /proc/cpuinfo >/dev/null; then
+      exact_cpu="supersparc"
+    elif grep 'cpu.*MicroSparc' /proc/cpuinfo >/dev/null; then
+      exact_cpu="microsparc"
+    elif grep 'cpu.*MB86904' /proc/cpuinfo >/dev/null; then
+      # actually MicroSPARC-II
+      exact_cpu=microsparc
+    elif grep 'cpu.*UltraSparc III' /proc/cpuinfo >/dev/null; then
+      exact_cpu="ultrasparc3"
+    elif grep 'cpu.*UltraSparc IIi' /proc/cpuinfo >/dev/null; then
+      exact_cpu="ultrasparc2i"
+    elif grep 'cpu.*UltraSparc II' /proc/cpuinfo >/dev/null; then
+      exact_cpu="ultrasparc2"
+    elif grep 'cpu.*UltraSparc' /proc/cpuinfo >/dev/null; then
+      exact_cpu="ultrasparc"
+    fi
+  fi
+
+  # Grep the output from sysinfo on SunOS.
+  # sysinfo has been seen living in /bin or in /usr/kvm
+  #	cpu0 is a "SuperSPARC Model 41 SPARCmodule" CPU
+  #	cpu0 is a "75 MHz TI,TMS390Z55" CPU
+  #
+  if test -z "$exact_cpu"; then
+    for i in sysinfo /usr/kvm/sysinfo; do
+      if $SHELL -c $i 2>/dev/null >conftest.dat; then
+        if grep 'cpu0 is a "SuperSPARC' conftest.dat >/dev/null; then
+          exact_cpu=supersparc
+          break
+        elif grep 'cpu0 is a .*TMS390Z55' conftest.dat >/dev/null; then
+          # TMS390Z55 is a supersparc
+          exact_cpu=supersparc
+          break
+        fi
+      fi
+    done
+    rm -f conftest.dat
+  fi  
+
+  # Grep the output from prtconf on Solaris.
+  # Use an explicit /usr/sbin, since that directory might not be in a normal
+  # user's path.
+  #
+  #     SUNW,UltraSPARC (driver not attached)
+  #     SUNW,UltraSPARC-II (driver not attached)
+  #     SUNW,UltraSPARC-IIi (driver not attached)
+  #     SUNW,UltraSPARC-III+ (driver not attached)
+  #     Ross,RT625 (driver not attached)
+  #     TI,TMS390Z50 (driver not attached)
+  #
+  # /usr/sbin/sysdef prints similar information, but includes all loadable
+  # cpu modules, not just the real cpu.
+  #
+  if test -z "$exact_cpu"; then
+    if $SHELL -c /usr/sbin/prtconf 2>/dev/null >conftest.dat; then
+      if grep 'SUNW,UltraSPARC-III' conftest.dat >/dev/null; then
+        exact_cpu=ultrasparc3
+      elif grep 'SUNW,UltraSPARC-IIi' conftest.dat >/dev/null; then
+        exact_cpu=ultrasparc2i
+      elif grep 'SUNW,UltraSPARC-II' conftest.dat >/dev/null; then
+        exact_cpu=ultrasparc2
+      elif grep 'SUNW,UltraSPARC' conftest.dat >/dev/null; then
+        exact_cpu=ultrasparc
+      elif grep 'Ross,RT62.' conftest.dat >/dev/null; then
+        # RT620, RT625, RT626 hypersparcs (v8).
+        exact_cpu=sparcv8
+      elif grep 'TI,TMS390Z5.' conftest.dat >/dev/null; then
+        # TMS390Z50 and TMS390Z55
+        exact_cpu=supersparc
+      elif grep 'TI,TMS390S10' conftest.dat >/dev/null; then
+        exact_cpu=microsparc
+      elif grep 'FMI,MB86904' conftest.dat >/dev/null; then
+        # actually MicroSPARC-II
+        exact_cpu=microsparc
+      fi
+    fi
+    rm -f conftest.dat
+  fi  
+
+  # sun4m and sun4d are v8s of some sort, sun4u is a v9 of some sort
+  #
+  if test -z "$exact_cpu"; then
+    case `uname -m` in
+      sun4[md]) exact_cpu=sparcv8 ;;
+      sun4u)    exact_cpu=sparcv9 ;;
+    esac
+  fi
+  ;;
+
+i?86-*-*)
+  cat <<EOF >${dummy}1.s
+	.globl cpuid
+	.globl _cpuid
+cpuid:
+_cpuid:
+	pushl %esi
+	pushl %ebx
+	movl 16(%esp),%eax
+	.byte 0x0f
+	.byte 0xa2
+	movl 12(%esp),%esi
+	movl %ebx,(%esi)
+	movl %edx,4(%esi)
+	movl %ecx,8(%esi)
+	popl %ebx
+	popl %esi
+	ret
+EOF
+  cat <<EOF >${dummy}2.c
+main ()
+{
+  char vendor_string[13];
+  char dummy_string[12];
+  long fms;
+  int family, model;
+  char *modelstr;
+
+  cpuid (vendor_string, 0);
+  vendor_string[12] = 0;
+
+  fms = cpuid (dummy_string, 1);
+
+  family = (fms >> 8) & 15;
+  model = (fms >> 4) & 15;
+
+  modelstr = "i486";
+  if (strcmp (vendor_string, "GenuineIntel") == 0)
+    {
+      switch (family)
+	{
+	case 5:
+	  if (model <= 2)	modelstr = "pentium";
+	  else if (model >= 4)	modelstr = "pentiummmx";
+	  break;
+	case 6:
+	  if (model == 1)	modelstr = "pentiumpro";
+	  else if (model <= 6)	modelstr = "pentium2";
+	  else			modelstr = "pentium3";
+	  break;
+	case 15:
+	  modelstr = "pentium4";
+	  break;
+	}
+    }
+  else if (strcmp (vendor_string, "AuthenticAMD") == 0)
+    {
+      switch (family)
+	{
+	case 5:
+	  if (model <= 3)	modelstr = "k5";
+	  else if (model <= 7)	modelstr = "k6";
+	  else if (model <= 8)	modelstr = "k62";
+	  else if (model <= 9)	modelstr = "k63";
+	  break;
+	case 6:
+	  modelstr = "athlon";
+	  break;
+	}
+    }
+  else if (strcmp (vendor_string, "CyrixInstead") == 0)
+    {
+      /* Should recognize Cyrix' processors too.  */
+    }
+
+  printf ("%s\n", modelstr);
+  return 0;
+}
+EOF
+
+  if ($CC_FOR_BUILD ${dummy}1.s ${dummy}2.c -o $dummy) >/dev/null 2>&1; then
+    # suppress SIGILL message on 80386
+    x=`$SHELL -c ./$dummy 2>/dev/null`
+    if test -n "$x"; then
+      exact_cpu=$x
+    fi
+  fi
+
+  # We need to remove some .o files here since lame C compilers
+  # generate these even when not asked.
+  rm -f ${dummy}1.s ${dummy}1.o ${dummy}2.c ${dummy}2.o $dummy
+  ;;
+
+esac
+
+
+
+# -------------------------------------------------------------------------
+# Use an exact cpu, if possible
+
+if test -n "$exact_cpu"; then
+  echo "$exact_cpu$guess_rest"
+else
+  echo "$guess_full"
+fi
+exit 0
+
+
+
+# Local variables:
+# fill-column: 76
+# End:

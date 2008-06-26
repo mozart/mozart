@@ -483,13 +483,12 @@ public:
 void pickle(TaggedPair *aux, PickleMarshalerBuffer *out)
 {
   /* write new version number */
-  // kost@ : i don't get: why new version number??! Say when a lexical
-  // analyzer of a language A can also parse language B, it does not
-  // mean it can compile B...
   Assert(aux->tag==TAG_STRING);
 
-  // marshalString(MARSHALERVERSION,out);
-  marshalString(out, aux->val.string);
+  // raph: The pickle is written in the *current* format with the
+  // *current* version number.  unpickle() is responsible for checking
+  // version compatibility.
+  marshalString(out, MARSHALERVERSION);
   aux = aux->next;
 
   while(aux) {
@@ -600,6 +599,13 @@ TaggedPair *unpickle(FILE *in)
   int aux = sscanf(val.string,"%d#%d",&major,&minor);
   if (aux !=2) {
     OZ_error("Version too new. Got: '%s', expected: '%s'.\n",
+	     val.string, MARSHALERVERSION);
+  }
+
+  // check compatibility with current version: we currently are fully
+  // backwards compatible
+  if ((major << 16 | minor) > (MARSHALERMAJOR << 16 | MARSHALERMINOR)) {
+    OZ_error("Compatibility check: unable convert from %s to %s.\n",
 	     val.string, MARSHALERVERSION);
   }
 
