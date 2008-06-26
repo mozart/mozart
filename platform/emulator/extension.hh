@@ -84,22 +84,17 @@ class MarshalerBuffer;
 //        Descending data (arrays, etc.) are supposed to be allocated
 //        the same way (no explicit/implicit malloc"s!!);
 
-class ozdeclspec OZ_Extension
-{
-private:
-  void *space;
+// raph: The memory scheme of an extension consists in a pair of
+// objects of types ConstTermWithHome and OZ_Extension, respectively.
+// A tagged ref to an extension is actually a tagged ref to the
+// ConstTermWithHome object.  const2Extension() and extension2Const()
+// convert pointers between members of the pair.
+
+class ozdeclspec OZ_Extension {
+
 public:
-  OZ_Extension(void) {
-    reinterpret_cast<OZ_Container*>(((void**)((void*)this))-1)->initAsExtension();
-    space = _OZ_currentBoard();
-
-  }
-  OZ_Extension(void *sp) : space(sp) {
-    reinterpret_cast<OZ_Container*>(((void**)((void*)this))-1)->initAsExtension();
-  }
-
-  void *  __getSpaceInternal(void)      { return space; }
-  void    __setSpaceInternal(void * sp) { space = sp;   }
+  OZ_Extension();
+  OZ_Extension(void *sp);
 
 public:
   virtual ozdeclspec ~OZ_Extension();
@@ -130,9 +125,7 @@ public:
                                      ByteBuffer *bs, GenTraverser *gt) {}
   virtual int           minNeededSpace() { return (0); }
 
-  OZ_Boolean isLocal(void) {
-    return _OZ_isLocal_OZ_Extension(__getSpaceInternal());
-  }
+  OZ_Boolean isLocal();
 
 };
 

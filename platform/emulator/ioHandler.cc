@@ -29,6 +29,20 @@
 #include "os.hh"
 #include "am.hh"
 
+// LATENCY DELAY should, if used, be set to number of microseconds to delay
+
+#ifdef LATENCY_DELAY
+#include <sys/time.h>
+
+static timezone tz = {0,0};
+
+// x - y = diff (in microseconds)
+long difftime(struct timeval*  x, struct timeval* y){
+  return (x->tv_usec - y->tv_usec + (x->tv_sec - y->tv_sec) * 1000000);
+}
+
+#endif
+
 class IONode {
 private:
   Bool isprotected[2];
@@ -36,6 +50,10 @@ public:
   int fd;
   OZ_IOHandler handler[2];
   OZ_IOHandler hSusp[2];
+#ifdef LATENCY_DELAY
+  // ZACHARIAS: for introducing the delay directly on the IONode, we only need it on the write socket though
+  timeval offset[2];
+#endif
   void *readwritepair[2];
   IONode *next;
   IONode(int f, IONode *nxt): fd(f), next(nxt) {
@@ -82,6 +100,10 @@ void oz_io_select(int fd, int mode, OZ_IOHandler fun, void *val)
   IONode *ion = findIONode(fd);
   ion->readwritepair[mode]=val;
   ion->handler[mode]=fun;
+#ifdef LATENCY_DELAY
+  gettimeofday(&(ion->offset[mode]),&tz);
+#endif
+
   osWatchFD(fd,mode);
 }
 
@@ -125,6 +147,9 @@ int oz_io_select(int fd, int mode, TaggedRef l, TaggedRef r)
   IONode *ion = findIONode(fd);
   ion->readwritepair[mode]=(void *) oz_cons(l,r);
   ion->protect(mode);
+#ifdef LATENCY_DELAY
+  gettimeofday(&(ion->offset[mode]),&tz);
+#endif
 
   ion->handler[mode]=oz_io_awake;
   osWatchFD(fd,mode);
@@ -204,24 +229,48 @@ OZ_BI_define(io_handler,1,0)
 #endif
   int numbOfFDs = osFirstSelect();
 
+#ifdef LATENCY_DELAY
+  timeval now;
+  gettimeofday(&now,&tz);
+#endif
+
   // find the nodes to awake
   for (int index = 0; numbOfFDs > 0; index++) {
-    for(int mode=SEL_READ; mode <= SEL_WRITE; mode++) {
 
-      if (osNextSelect(index, mode) ) {
+    //for(int mode=SEL_READ; mode <= SEL_WRITE; mode++) {
+    // }
 
-        numbOfFDs--;
+    if (osNextSelect(index, SEL_READ) ) {
 
-        IONode *ion = findIONode(index);
-        if ((ion->handler[mode]) &&  /* Perdio: handlers may do a deselect for other fds*/
-            (ion->handler[mode])(index, ion->readwritepair[mode])) {
-          ion->readwritepair[mode] = 0;
-          ion->unprotect(mode);
-          ion->handler[mode] = 0;
-          osClrWatchedFD(index,mode);
-        }
+      numbOfFDs--;
+
+      IONode *ion = findIONode(index);
+      if ((ion->handler[SEL_READ]) &&  /* Perdio: handlers may do a deselect for other fds*/
+          (ion->handler[SEL_READ])(index, ion->readwritepair[SEL_READ])) {
+        ion->readwritepair[SEL_READ] = 0;
+        ion->unprotect(SEL_READ);
+        ion->handler[SEL_READ] = 0;
+        osClrWatchedFD(index,SEL_READ);
       }
     }
+
+    if (osNextSelect(index, SEL_WRITE) ) {
+
+      numbOfFDs--;
+
+      IONode *ion = findIONode(index);
+      if ((ion->handler[SEL_WRITE]) &&  /* Perdio: handlers may do a deselect for other fds*/
+#ifdef LATENCY_DELAY
+          (difftime(&now, &(ion->offset[SEL_WRITE])) > LATENCY_DELAY) &&
+#endif
+          (ion->handler[SEL_WRITE])(index, ion->readwritepair[SEL_WRITE])) {
+        ion->readwritepair[SEL_WRITE] = 0;
+        ion->unprotect(SEL_WRITE);
+        ion->handler[SEL_WRITE] = 0;
+        osClrWatchedFD(index,SEL_WRITE);
+      }
+    }
+
   }
 #ifdef DENYS_EVENTS
   return PROCEED;

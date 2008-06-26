@@ -3,6 +3,8 @@
  *    Per Brand, Konstantin Popov
  *
  *  Contributors:
+ *    Raphael Collet (raph@info.ucl.ac.be)
+ *    Boriss Mejias (bmc@info.ucl.ac.be)
  *
  *  Copyright:
  *    Per Brand, Konstantin Popov 1998
@@ -33,137 +35,100 @@
 #include "os.hh"
 
 //
-Bool isPerdioInitializedStub()
-{
+Bool dpReadyStub() {
   return (NO);
 }
 
-//
-OZ_Return portSendStub(Tertiary *p, TaggedRef msg)
-{
-  OZD_error("'portSend' called without DP library?");
-  return (PROCEED);
-}
-OZ_Return cellDoExchangeStub(Tertiary*,TaggedRef,TaggedRef)
-{
-  OZD_error("'cellDoExchange' called without DP library?");
-  return (PROCEED);
-}
-OZ_Return objectExchangeStub(Tertiary*,TaggedRef,TaggedRef,TaggedRef)
-{
-  OZD_error("'objectExchange' called without DP library?");
-  return (PROCEED);
-}
-OZ_Return cellDoAccessStub(Tertiary*,TaggedRef)
-{
-  OZD_error("'cellDoAccess' called without DP library?");
-  return (PROCEED);
-}
-OZ_Return cellAtAccessStub(Tertiary*,TaggedRef,TaggedRef)
-{
-  OZD_error("'cellAtAccess' called without DP library?");
-  return (PROCEED);
-}
-OZ_Return cellAtExchangeStub(Tertiary*,TaggedRef,TaggedRef)
-{
-  OZD_error("'cellAtExchange' called without DP library?");
-  return (PROCEED);
-}
-OZ_Return cellAssignExchangeStub(Tertiary*,TaggedRef,TaggedRef)
-{
-  OZD_error("'cellAssignExchange' called without DP library?");
-  return (PROCEED);
+// ports
+OZ_Return distPortSendStub(OzPort *p, TaggedRef msg, TaggedRef) {
+  OZD_error("'distPortSend' called without DP library?");
+  return PROCEED;
 }
 
-// lock/unlock (interface) methods/their usage may be optimized
-// further, e.g. inline cases when distributed locks are currently
-// local;
-// interface;
-void lockLockProxyStub(Tertiary *t, Thread *thr)
-{
-  OZD_error("'lockLockProxy' called without DP library?");
+// cells
+OZ_Return distCellOpStub(OperationTag, OzCell*, TaggedRef*, TaggedRef*) {
+  OZD_error("'distCellOp' called without DP library?");
+  return PROCEED;
 }
-LockRet lockLockManagerOutlineStub(LockManagerEmul *lfu, Thread *thr)
-{
-  OZD_error("'lockLockManagerOutline' called without DP library?");
-  return LOCK_WAIT;
+
+// locks
+OZ_Return distLockTakeStub(OzLock*, TaggedRef) {
+  OZD_error("'distLockTake' called without DP library?");
+  return PROCEED;
 }
-void unlockLockManagerOutlineStub(LockManagerEmul *lfu, Thread *thr)
-{
-  OZD_error("'unlockLockManagerOutline' called without DP library?");
+OZ_Return distLockReleaseStub(OzLock*, TaggedRef) {
+  OZD_error("'distLockRelease' called without DP library?");
+  return PROCEED;
 }
-LockRet lockLockFrameOutlineStub(LockFrameEmul *lfu, Thread *thr)
-{
-  OZD_error("'lockLockFrameOutline' called without DP library?");
-  return LOCK_WAIT;
+
+// objects
+OZ_Return distObjectInvokeStub(OzObject*, TaggedRef) {
+  OZD_error("'distObjectInvoke' called without DP library?");
+  return PROCEED;
 }
-void unlockLockFrameOutlineStub(LockFrameEmul *lfu, Thread *thr)
-{
-  OZD_error("'unlockLockFrameOutline' called without DP library?");
+OZ_Return
+distObjectOpStub(OperationTag, OzObject*, TaggedRef*, TaggedRef*) {
+  OZD_error("'distObjectOp' called without DP library?");
+  return PROCEED;
+}
+OZ_Return
+distObjectStateOpStub(OperationTag, ObjectState*, TaggedRef*, TaggedRef*) {
+  OZD_error("'distObjectStateOp' called without DP library?");
+  return PROCEED;
+}
+
+// arrays
+OZ_Return distArrayOpStub(OperationTag, OzArray*, TaggedRef*, TaggedRef*) {
+  OZD_error("'distArrayOp' called without DP library?");
+  return PROCEED;
+}
+
+// dictionaries
+OZ_Return
+distDictionaryOpStub(OperationTag, OzDictionary*, TaggedRef*, TaggedRef*) {
+  OZD_error("'distDictionaryOp' called without DP library?");
+  return PROCEED;
+}
+
+// distributed variables
+OZ_Return distVarBindStub(OzVariable*, TaggedRef*, TaggedRef) {
+  OZD_error("'distVarBind' called without DP library");
+  return PROCEED;
+}
+OZ_Return distVarUnifyStub(OzVariable*, TaggedRef*, OzVariable*, TaggedRef*) {
+  OZD_error("'distVarUnify' called without DP library");
+  return PROCEED;
+}
+OZ_Return distVarMakeNeededStub(TaggedRef*) {
+  OZD_error("'distVarMakeNeeded' called without DP library");
+  return PROCEED;
+}
+
+// chunks
+OZ_Return distChunkOpStub(OperationTag, SChunk*, TaggedRef*, TaggedRef*) {
+  OZD_error("'distChunkOp' called without DP library?");
+  return PROCEED;
+}
+
+// classes
+OZ_Return distClassGetStub(OzClass*) {
+  OZD_error("'distClassGet' called without DP library?");
+  return PROCEED;
+}
+
+// procedures
+OZ_Return distProcedureCallStub(Abstraction*, TaggedRef) {
+  OZD_error("'distProcedureCall' called without DP library?");
+  return PROCEED;
 }
 
 // interface for GC;
-void gCollectProxyRecurseStub(Tertiary *t)
-{
-  OZD_error("'gCollectProxyRecurse' called without DP library?");
-}
-void gCollectManagerRecurseStub(Tertiary *t)
-{
-  OZD_error("'gCollectManagerRecurse' called without DP library?");
-}
-ConstTerm* gCollectDistResourceStub(ConstTerm*)
-{
-  OZD_error("'gCollectDistResource' called without DP library?");
-  return ((ConstTerm *) 0);
+void gCollectMediatorStub(Mediator*) {
+  OZD_error("'gCollectMediator' called without DP library?");
 }
 
-//
-void gCollectDistCellRecurseStub(Tertiary *t)
-{
-  OZD_error("'gCollectDistCellRecurse' called without DP library?");
-}
-void gCollectDistLockRecurseStub(Tertiary *t)
-{
-  OZD_error("'gCollectDistLockRecurse' called without DP library?");
-}
-//
-void gCollectDistPortRecurseStub(Tertiary *t)
-{
-  OZD_error("'gCollectDistPortRecurse' called without DP library?");
-}
-
-//
-// (Only) gCollect method - for cells & locks (because we have to know
-// whether they are accessible locally or not);
-ConstTerm* auxGCollectDistCellStub(Tertiary *t)
-{
-  OZD_error("'auxGCollectDistCell' called without DP library?");
-  return ((ConstTerm *) 0);
-}
-ConstTerm* auxGCollectDistLockStub(Tertiary *t)
-{
-  OZD_error("'auxGCollectDistLock' called without DP library?");
-  return ((ConstTerm *) 0);
-}
-
-//
-ConstTerm *gCollectStatefulSpecStub(Tertiary *t)
-{
-  OZD_error("'gCollectStatefulSpec' called without DP library?");
-  return ((ConstTerm *) 0);
-}
-
-//
-void gCollectEntityInfoStub(Tertiary *t)
-{
-  Assert(t->getInfo() == (EntityInfo *) 0);
-}
-
-//
-void gCollectPerdioStartStub() {}
-void gCollectPerdioFinalStub() {}
-void gCollectBorrowTableUnusedFramesStub() {}
-void gCollectPerdioRootsStub() {}
+// stub for gCollectGlueXXX() functions: simply do nothing
+void doNothingStub() {}
 
 // exit hook;
 void dpExitStub() {;}
@@ -185,64 +150,73 @@ Bool distHandlerDeInstallStub(unsigned short x,unsigned short y,
 // Link interface function pointers against stubs;
 
 //
-Bool (*isPerdioInitialized)() = isPerdioInitializedStub;
+Bool (*dpReady)() = dpReadyStub;
 
-//
-OZ_Return (*portSend)(Tertiary *p, TaggedRef msg)
-  = portSendStub;
-OZ_Return (*cellDoExchange)(Tertiary*,TaggedRef,TaggedRef)
-  = cellDoExchangeStub;
-OZ_Return (*objectExchange)(Tertiary*,TaggedRef,TaggedRef,TaggedRef)
-  = objectExchangeStub;
-OZ_Return (*cellDoAccess)(Tertiary*,TaggedRef)
-  = cellDoAccessStub;
-OZ_Return (*cellAtAccess)(Tertiary*,TaggedRef,TaggedRef)
-  = cellAtAccessStub;
-OZ_Return (*cellAtExchange)(Tertiary*,TaggedRef,TaggedRef)
-  = cellAtExchangeStub;
-OZ_Return (*cellAssignExchange)(Tertiary*,TaggedRef,TaggedRef)
-  = cellAssignExchangeStub;
+// ports
+OZ_Return (*distPortSend)(OzPort*, TaggedRef, TaggedRef)
+  = distPortSendStub;
 
-// lock/unlock (interface) methods/their usage may be optimized
-// further, e.g. inline cases when distributed locks are currently
-// local;
-void (*lockLockProxy)(Tertiary *t, Thread *thr)
-  = lockLockProxyStub;
-LockRet (*lockLockManagerOutline)(LockManagerEmul *lfu, Thread *thr)
-  = lockLockManagerOutlineStub;
-void (*unlockLockManagerOutline)(LockManagerEmul *lfu, Thread *thr)
-  = unlockLockManagerOutlineStub;
-LockRet (*lockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr)
-  = lockLockFrameOutlineStub;
-void (*unlockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr)
-  = unlockLockFrameOutlineStub;
+// cells
+OZ_Return (*distCellOp)(OperationTag, OzCell*, TaggedRef*, TaggedRef*)
+  = distCellOpStub;
 
-//
-void (*gCollectProxyRecurse)(Tertiary *t)
-  = gCollectProxyRecurseStub;
-void (*gCollectManagerRecurse)(Tertiary *t)
-  = gCollectManagerRecurseStub;
-ConstTerm* (*gCollectDistResource)(ConstTerm*)
-  = gCollectDistResourceStub;
-void (*gCollectDistCellRecurse)(Tertiary *t)
-  = gCollectDistCellRecurseStub;
-void (*gCollectDistLockRecurse)(Tertiary *t)
-  = gCollectDistLockRecurseStub;
-void (*gCollectDistPortRecurse)(Tertiary *t)
-  = gCollectDistPortRecurseStub;
-//
-void (*gCollectEntityInfo)(Tertiary*)
-  = gCollectEntityInfoStub;
+// locks
+OZ_Return (*distLockTake)(OzLock*, TaggedRef)
+  = distLockTakeStub;
+OZ_Return (*distLockRelease)(OzLock*, TaggedRef)
+  = distLockReleaseStub;
 
-//
-void (*gCollectPerdioStart)()
-  = gCollectPerdioStartStub;
-void (*gCollectPerdioRoots)()
-  = gCollectPerdioRootsStub;
-void (*gCollectBorrowTableUnusedFrames)()
-  = gCollectBorrowTableUnusedFramesStub;
-void (*gCollectPerdioFinal)()
-  = gCollectPerdioFinalStub;
+// objects
+OZ_Return (*distObjectInvoke)(OzObject*, TaggedRef)
+  = distObjectInvokeStub;
+OZ_Return (*distObjectOp)(OperationTag, OzObject*, TaggedRef*, TaggedRef*)
+  = distObjectOpStub;
+OZ_Return (*distObjectStateOp)(OperationTag, ObjectState*,
+                               TaggedRef*, TaggedRef*)
+  = distObjectStateOpStub;
+
+// arrays
+OZ_Return (*distArrayOp)(OperationTag, OzArray*, TaggedRef*, TaggedRef*)
+  = distArrayOpStub;
+
+// dictionaries
+OZ_Return (*distDictionaryOp)(OperationTag, OzDictionary*,
+                              TaggedRef*, TaggedRef*)
+  = distDictionaryOpStub;
+
+// distributed variables
+OZ_Return (*distVarBind)(OzVariable*, TaggedRef*, TaggedRef)
+  = distVarBindStub;
+OZ_Return (*distVarUnify)(OzVariable*, TaggedRef*, OzVariable*, TaggedRef*)
+  = distVarUnifyStub;
+OZ_Return (*distVarMakeNeeded)(TaggedRef*)
+  = distVarMakeNeededStub;
+
+// chunks
+OZ_Return (*distChunkOp)(OperationTag, SChunk*, TaggedRef*, TaggedRef*)
+  = distChunkOpStub;
+
+// classes
+OZ_Return (*distClassGet)(OzClass*)
+  = distClassGetStub;
+
+// procedures
+OZ_Return (*distProcedureCall)(Abstraction*, TaggedRef)
+  = distProcedureCallStub;
+
+// garbage collection of a mediator
+void (*gCollectMediator)(Mediator*)
+  = gCollectMediatorStub;
+
+// dss garbage collection steps
+void (*gCollectGlueStart)()
+  = doNothingStub;
+void (*gCollectGlueRoots)()
+  = doNothingStub;
+void (*gCollectGlueWeak)()
+  = doNothingStub;
+void (*gCollectGlueFinal)()
+  = doNothingStub;
 
 // exit hook;
 void (*dpExit)()

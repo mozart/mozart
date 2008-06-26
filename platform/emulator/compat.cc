@@ -121,8 +121,8 @@ OZ_BI_define(compat_importClass, 3, 1)
     TaggedRef t_feat = oz_deref(OZ_in(2));
     SRecord *feat = tagged2SRecord(t_feat);
 
-    ObjectClass *cl =
-      new ObjectClass(makeTaggedNULL(),
+    OzClass *cl =
+      new OzClass(makeTaggedNULL(),
                       makeTaggedNULL(),
                       makeTaggedNULL(),
                       makeTaggedNULL(),

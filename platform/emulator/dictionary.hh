@@ -704,9 +704,11 @@ public:
   }
 
   //
+//  Bool isSafeDict() { return true; }
   Bool isSafeDict() { return (dictFlags & DictSafeFlag); }
   void markSafe()   { dictFlags |= DictSafeFlag; }
-  //
+
+      //
   DictNode* pairsInArray() { return (table->getPairsInArray()); }
 
   OZPRINT;
@@ -725,5 +727,9 @@ OzDictionary *tagged2Dictionary(OZ_Term term)
   Assert(oz_isDictionary(term));
   return (OzDictionary *) tagged2Const(term);
 }
+
+// dictionary operations
+OZ_Return
+dictionaryOperation(OperationTag, OzDictionary*, TaggedRef*, TaggedRef*);
 
 #endif

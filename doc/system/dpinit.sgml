@@ -1,55 +1,7 @@
 <Chapter id="Chapter.DPInit">
   <Title/Initializing and instrumenting the distribution layer: <<DPInit>>/
 
-<P>
-The distribution layer of Mozart is dynamicly loaded when used. Some parameters can be defined at loading time. This section gives a brief description of the interface and what is possible to do with it.
-</P>
+<p>This module is deprecated.  The initialization of the distribution
+layer is now part of module <<DP>> (<ptr to="section.dp.init">).
 
-<section><title/Interface of <code/DPInit/ Module/
-
-<p><list>
-<entry/<code/DPInit.init//
-<synopsis/<code/{DPInit.init ?+{Spec} ??{B}}//
-<item> Initializes the distribution layer of Mozart parameterized according to  ?_{Spec}.  The distribution layer can only be initialized once, <code/DPInit.init/ returns a boolean flag <<B>> that is true if the settings was accepted and false otherwise.  The distribution layer can only be initialized once.  ?_{Spec} is an record of the following type:
-
-<list>
-
-<entry/<code/
-init(ip:IpString <= SystemIp
-     port:IpPort <= 9000
-     acceptproc:AccProc <= DefaultAccProc
-     connectProc:ConProc <= DefaultConProc
-     firewall:FW <= false)
-//
-<item> All entries in the ?_{Spec} record are optional, if <code/DPInit.init/ is called with just the atom <code/init/ as parameter the system will start with all values as default values. The fields and their implication on the system is defined here:
-
-<p><list>
-<entry/<code/IpString //
-<item> Defines the ip number that the Mozart
-site should expose as its home address to the outside world. Must be
-on the form <code/"193.10.66.192"/. The system will map the host name
-of the computer to an ip number if this field is not given. The Ip
-number should only be set if the operating system by some reason
-returns a faulty ip number.
-
-<entry/<code/IpPort //
-<item> Sets the port number that should be used for listening on incomming connection atempts. If the choosen port number is unavailable a higher port number will be tired. The default value is 9000.
-<entry/<code/AccProc //
-<item> Connection atempts comming in to the Site are handled by a piece of Mozart code called the AcceptProcedure. The AcceptProcedure defines a handshaking prototcol that the connecter must follow to be accepted. It can be replaced if other needs are present than what the default AcceptProcedure can give.
-<entry/<code/ConProc //
-<item> Connection atempts done to other Sites are performed by a Mozart procedure called the ConnectionProcedure. The ConnectionProcedure used must be compatible with the othtre machine's AcceptProcedure for the connection to be established. The ConnectionProcedure can be replaced with a custimzed ConnectionProcedure.
-
-<entry/<code/FW //
-<item>The default schema for connection handeling is not realy suited for one-way firewalls. Sites sitiuated behind one-way firewalls should set the firewall flagg to true. If the firewall flag is true the Site will be reluctant to close down its connection due to resource shortage.
-
-</list>
-</list>
-
-<entry/<code/DPInit.getSettings//
-<synopsis/<code/{DPInit.getSettings ??{AnsSpec}}//
-<item> Returns the settings of the distribution layer. If the distribution layer was initialized a record of the same format as ?_{Spec} is returned otherwise the atom <<not_initilaized>> is returned.
-
-</list>
-
-</Section>
 </Chapter>

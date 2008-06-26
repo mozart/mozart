@@ -41,10 +41,13 @@ class VirtualProperty {
 public:
   virtual OZ_Term   get();
   virtual OZ_Return set(OZ_Term);
-  void              add(char*);
+  void              add(const char*);
 private:
   static void       add(const char*,const int);
   friend void initVirtualProperties();
 };
+
+extern OZ_Term registry_get(OZ_Term);
+extern void registry_put(OZ_Term,OZ_Term);
 
 #endif

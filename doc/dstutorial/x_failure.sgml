@@ -1,6 +1,14 @@
 <CHAPTER ID="chapter.failure">
   <TITLE>Failure Model</TITLE>
 
+<p class=warning>This chapter is obsolete.  The failure model of
+Mozart has evolved since Mozart version 1.4.0, and some language
+primitives (such as fault exceptions and handlers) are no longer
+available.  The module <<Fault>> itself is defunct.  Please consult
+the documentation of the new module <ref.extern to="ozdoc:system"
+key="section.dp.fault"/<<DP>>/, which provides new primitives for
+handling failures.
+
 <index/partial failure property/
 <index/failure<and>partial failure property/
 <P>Distributed systems have the partial failure

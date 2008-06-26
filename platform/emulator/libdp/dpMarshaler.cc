@@ -8,6 +8,8 @@
  *
  *  Contributors:
  *    Andreas Sundstroem <andreas@sics.se>
+ *    Boriss Mejias <bmc@info.ucl.ac.be>
+ *    Raphael Collet <raph@info.ucl.ac.be>
  *
  *  Copyright:
  *    Per Brand, 1998
@@ -34,21 +36,18 @@
 #endif
 
 #include "base.hh"
-#include "dpBase.hh"
-#include "perdio.hh"
-#include "msgType.hh"
-#include "table.hh"
 #include "dpMarshaler.hh"
 #include "dpInterface.hh"
-#include "var.hh"
-#include "var_obj.hh"
 #include "var_readonly.hh"
-#include "var_class.hh"
 #include "gname.hh"
-#include "state.hh"
-#include "port.hh"
-#include "dpResource.hh"
 #include "boot-manager.hh"
+
+#include "dss_object.hh"
+
+#include "glue_buffer.hh"
+#include "glue_marshal.hh"
+
+
 
 //
 // #define DBG_TRACE
@@ -70,329 +69,26 @@ static FILE *dbgout = (FILE *) 0;
 #endif
 
 // The count of marshaled diffs should be done for the distributed
-// messages and not for other marshaled structures.
-// Erik
+// messages and not for other marshaled structures.  Erik
 inline
-void marshalDIFcounted(MarshalerBuffer *bs, MarshalTag tag)
- {
+void marshalDIFcounted(MarshalerBuffer *bs, MarshalTag tag) {
   dif_counter[tag].send();
   marshalDIF(bs,tag);
 }
 
-
-/**********************************************************************/
-/*  basic borrow, owner */
-/**********************************************************************/
-
-//
-static inline
-void marshalOwnHead(MarshalerBuffer *bs, OB_TIndex i)
-{
-  PD((MARSHAL_CT,"OwnHead"));
-  bs->put(DIF_SITE_SENDER);
-  OwnerEntry *oe = ownerIndex2ownerEntry(i);
-  marshalNumber(bs, oe->getExtOTI());
-  bs->put((BYTE) ENTITY_NORMAL);
-  marshalCredit(bs, oe->getCreditBig());
-}
-
-//
-static inline
-void saveMarshalOwnHead(OB_TIndex oti, RRinstance *&c)
-{
-  c = ownerIndex2ownerEntry(oti)->getCreditBig();
-}
-
-//
-static inline
-void marshalOwnHeadSaved(MarshalerBuffer *bs, OB_TIndex oti, RRinstance *c)
-{
-  PD((MARSHAL_CT,"OwnHead"));
-  bs->put(DIF_SITE_SENDER);
-  OwnerEntry *oe = ownerIndex2ownerEntry(oti);
-  marshalNumber(bs, oe->getExtOTI());
-  bs->put((BYTE) ENTITY_NORMAL);
-  marshalCredit(bs, c);
-}
-
-//
-static inline
-void discardOwnHeadSaved(OB_TIndex oti, RRinstance *c)
-{
-  ownerIndex2ownerEntry(oti)->mergeReference(c);
-}
-
-//
-static inline
-void marshalToOwner(MarshalerBuffer *bs, OB_TIndex bi)
-{
-  PD((MARSHAL,"toOwner"));
-  BorrowEntry *b = borrowIndex2borrowEntry(bi);
-  Ext_OB_TIndex OTI = b->getExtOTI();
-  marshalCreditToOwner(bs, b->getSmallReference(), OTI);
-}
-
-//
-// 'saveMarshalToOwner'/'marshalToOwnerSaved' are complimentary. These
-// are used for immediate exportation of variable proxies and
-// marshaling corresponding "exported variable proxies" later.
-static inline
-void saveMarshalToOwner(OB_TIndex bi, Ext_OB_TIndex &oti, RRinstance *&c)
-{
-  PD((MARSHAL,"toOwner"));
-  BorrowEntry *b = borrowIndex2borrowEntry(bi);
-
-  //
-  oti = b->getExtOTI();
-  c = b->getSmallReference();
-}
-
-//
-static inline
-void marshalToOwnerSaved(MarshalerBuffer *bs, RRinstance  *c, Ext_OB_TIndex oti)
-{
-  marshalCreditToOwner(bs, c, oti);
-}
-
-//
-static inline
-void marshalBorrowHead(MarshalerBuffer *bs, OB_TIndex bi, BYTE ec)
-{
-  PD((MARSHAL,"BorrowHead"));
-  BorrowEntry *b = borrowIndex2borrowEntry(bi);
-  NetAddress *na = b->getNetAddress();
-  na->site->marshalDSite(bs);
-  marshalNumber(bs, Ext_OB_TIndex2Int(na->index));
-  bs->put(ec);
-  marshalCredit(bs, b->getBigReference());
-}
-
-//
-static inline
-void saveMarshalBorrowHead(OB_TIndex bi, DSite* &ms, Ext_OB_TIndex &oti,
-                           RRinstance *&c)
-{
-  PD((MARSHAL,"BorrowHead"));
-
-  BorrowEntry *b = borrowIndex2borrowEntry(bi);
-  NetAddress *na = b->getNetAddress();
-
-  //
-  ms = na->site;
-  oti = na->index;
-  //
-  c = b->getBigReference();
-}
-
-//
-static inline
-void marshalBorrowHeadSaved(MarshalerBuffer *bs, DSite *ms,
-                            Ext_OB_TIndex oti, RRinstance *c, BYTE ec)
-{
-  ms->marshalDSite(bs);
-  marshalNumber(bs, Ext_OB_TIndex2Int(oti));
-  bs->put((BYTE) ec);
-  //
-  marshalCredit(bs, c);
-}
-
-//
-// The problem with borrow entries is that they can go away.
-static inline
-void discardBorrowHeadSaved(DSite *ms, Ext_OB_TIndex oti, RRinstance *credit)
-{
-  BorrowEntry *b = borrowTable->find(oti, ms);
-
-  //
-  if (b) {
-    // still there - then just nail credits back;
-    b->mergeReference(credit);
+// combined with an index: marshal either 'tag', or 'tagdef' and 'index'
+inline
+void marshalDIFindex(MarshalerBuffer *bs,
+                     MarshalTag tag, MarshalTag tagdef, int index) {
+  if (index) {
+    marshalDIFcounted(bs, tagdef);
+    marshalTermDef(bs, index);
   } else {
-    sendRRinstanceBack(ms,oti,credit);
-  }
-}
-
-
-//
-// Variables - immediate ones and patches;
-//
-extern Bool globalRedirectFlag;
-
-//
-MgrVarPatch::MgrVarPatch(OZ_Term locIn, OzValuePatch *nIn,
-                         ManagerVar *mv, DSite *dest)
-  : OzValuePatch(locIn, nIn), isMarshaled(NO)
-{
-  Assert(mv->getIdV() == OZ_EVAR_MANAGER);
-
-  //
-  oti = mv->getIndex();
-  saveMarshalOwnHead(oti, remoteRef);
-  if ((USE_ALT_VAR_PROTOCOL) && (globalRedirectFlag == AUT_REG)) {
-    tag = mv->isReadOnly() ? DIF_READONLY_AUTO : DIF_VAR_AUTO;
-    mv->registerSite(dest);
-  } else {
-    tag = mv->isReadOnly() ? DIF_READONLY : DIF_VAR;
-  }
-}
-
-//
-void MgrVarPatch::disposeV()
-{
-  if (!isMarshaled)
-    discardOwnHeadSaved(oti, remoteRef);
-  disposeOVP();
-  DebugCode(isMarshaled = OK;);
-  DebugCode(oti = (OB_TIndex) -1;);
-  DebugCode(remoteRef = (RRinstance *) -1;);
-  DebugCode(tag = (MarshalTag) -1;);
-  oz_freeListDispose(extVar2Var(this), extVarSizeof(MgrVarPatch));
-}
-
-//
-// An index, if any, is marshaled *afterwards*;
-void MgrVarPatch::marshal(ByteBuffer *bs, Bool hasIndex)
-{
-  DebugCode(PD((MARSHAL,"var manager oti:%d", oti)););
-  // Should not be seen again: 'processVar()' must recognize
-  // co-references, and marshal a corresponding REF;
-  Assert(isMarshaled == NO);
-  //
-  marshalDIFcounted(bs, (hasIndex ? defmap[tag] : tag));
-  marshalOwnHeadSaved(bs, oti, remoteRef);
-  isMarshaled = OK;
-}
-
-//
-PxyVarPatch::PxyVarPatch(OZ_Term locIn, OzValuePatch *nIn,
-                         ProxyVar *pv, DSite *dest)
-  : OzValuePatch(locIn, nIn), isMarshaled(NO)
-{
-  Assert(pv->getIdV() == OZ_EVAR_PROXY);
-  OB_TIndex bi = pv->getIndex();
-  DebugCode(bti = bi;);
-
-  //
-  PD((MARSHAL,"var proxy bi: %d", bi));
-  isReadOnly = pv->isReadOnly();
-  ms = borrowTable->getOriginSite(bi);
-  if (dest && ms == dest) {
-    isToOwner = OK;
-    saveMarshalToOwner(bi, oti, remoteRef);
-  } else {
-    isToOwner = NO;
-    saveMarshalBorrowHead(bi, ms, oti, remoteRef);
-    ec = pv->getInfo() ?
-      (pv->getInfo()->getEntityCond()&PERM_FAIL) : ENTITY_NORMAL;
-  }
-}
-
-//
-void PxyVarPatch::disposeV()
-{
-  if (!isMarshaled)
-    discardBorrowHeadSaved(ms, oti, remoteRef);
-  disposeOVP();
-  DebugCode(isMarshaled = OK;);
-  DebugCode(oti = (Ext_OB_TIndex) -1;);
-  DebugCode(remoteRef = (RRinstance *) -1;);
-  DebugCode(ms = (DSite *) -1;);
-  DebugCode(isReadOnly = isToOwner = -1;);
-  DebugCode(ec = (BYTE) -1;);
-  oz_freeListDispose(extVar2Var(this), extVarSizeof(PxyVarPatch));
-}
-
-//
-// An index, if any, is marshaled *afterwards*;
-void PxyVarPatch::marshal(ByteBuffer *bs, int hasIndex)
-{
-  Assert(isMarshaled == NO);
-  isMarshaled = OK;
-  //
-  if (isToOwner) {
-    marshalDIFcounted(bs, (hasIndex ? DIF_OWNER_DEF : DIF_OWNER));
-    marshalToOwnerSaved(bs, remoteRef, oti);
-  } else {
-    marshalDIFcounted(bs, (isReadOnly ?
-                           (hasIndex ? DIF_READONLY_DEF : DIF_READONLY) :
-                           (hasIndex ? DIF_VAR_DEF : DIF_VAR)));
-    marshalBorrowHeadSaved(bs, ms, oti, remoteRef, ec);
-  }
-}
-
-//
-// An index, if any, is marshaled *afterwards*;
-void ManagerVar::marshal(ByteBuffer *bs, Bool hasIndex)
-{
-  Assert(getIdV() == OZ_EVAR_MANAGER);
-  OB_TIndex oti = getIndex();
-  PD((MARSHAL,"var manager o:%d", oti));
-  if ((USE_ALT_VAR_PROTOCOL) && (globalRedirectFlag == AUT_REG)) {
-    MarshalTag tag = (isReadOnly() ?
-                      (hasIndex ? DIF_READONLY_AUTO_DEF : DIF_READONLY_AUTO) :
-                      (hasIndex ? DIF_VAR_AUTO_DEF : DIF_VAR_AUTO));
     marshalDIFcounted(bs, tag);
-    marshalOwnHead(bs, oti);
-    registerSite(bs->getSite());
-  } else {
-    MarshalTag tag = (isReadOnly() ?
-                      (hasIndex ? DIF_READONLY_DEF : DIF_READONLY) :
-                      (hasIndex ? DIF_VAR_DEF : DIF_VAR));
-    marshalDIFcounted(bs, tag);
-    marshalOwnHead(bs, oti);
   }
 }
 
-//
-// An index, if any, is marshaled *afterwards*;
-void ProxyVar::marshal(ByteBuffer *bs, Bool hasIndex)
-{
-  Assert(getIdV() == OZ_EVAR_PROXY);
-  DSite *dest = bs->getSite();
-  OB_TIndex bti = getIndex();
-  PD((MARSHAL,"var proxy o:%d", bti));
 
-  if (dest && dest == borrowTable->getOriginSite(bti)) {
-    marshalDIFcounted(bs, (hasIndex ? DIF_OWNER_DEF : DIF_OWNER));
-    marshalToOwner(bs, bti);
-  } else {
-    MarshalTag tag = (isReadOnly() ?
-                      (hasIndex ? DIF_READONLY_DEF : DIF_READONLY) :
-                      (hasIndex ? DIF_VAR_DEF : DIF_VAR));
-    BYTE ec = (getInfo() ?
-               (getInfo()->getEntityCond() & PERM_FAIL) : ENTITY_NORMAL);
-    marshalDIFcounted(bs, tag);
-    marshalBorrowHead(bs, bti, ec);
-  }
-}
-
-//
-// kost@ : both 'DIF_VAR_OBJECT' and 'DIF_STUB_OBJECT' (currently)
-// have the "tertiary" representation (and, thus, are unmarshaled
-// using 'unmarshalTertiary'). An index, if any, is marshaled
-// *afterwards*;
-void ObjectVar::marshal(ByteBuffer *bs, Bool hasCoRefsIndex)
-{
-  PD((MARSHAL,"var objectproxy"));
-  GName *classgn = getGNameClass();
-
-  //
-  DSite* sd = bs->getSite();
-  if (sd && borrowTable->getOriginSite(index) == sd) {
-    marshalDIFcounted(bs, (hasCoRefsIndex ? DIF_OWNER_DEF : DIF_OWNER));
-    marshalToOwner(bs, index);
-  } else {
-    Assert(gname);
-    Assert(classgn);
-
-    // ERIK, entity condition not yet taken care of
-    marshalDIFcounted(bs, (hasCoRefsIndex ?
-                           DIF_VAR_OBJECT_DEF : DIF_VAR_OBJECT));
-    marshalBorrowHead(bs, index, ENTITY_NORMAL);
-    marshalGName(bs, gname);
-    marshalGName(bs, classgn);
-  }
-}
 
 //
 // 'dpMarshalLitCont' marshals a string (which is passed in as 'arg')
@@ -408,11 +104,10 @@ void dpMarshalString(ByteBuffer *bs, GenTraverser *gt,
 {
   const char *name = desc->getRemainingString();
   int nameSize = desc->getCurrentSize();
-  int availSpace = bs->availableSpace() - MNumberMaxSize;
-  Assert(availSpace >= 0);
+  Assert(bs->availableSpace() >= MNumberMaxSize);
 
   //
-  int ms = min(nameSize, availSpace);
+  int ms = min(nameSize, bs->availableSpace() - MNumberMaxSize);
   marshalStringNum(bs, name, ms);
   // If it didn't fit completely, put the continuation back:
   if (ms < nameSize) {
@@ -449,23 +144,6 @@ void dpMarshalLitCont(GenTraverser *gt, GTAbstractEntity *arg)
   }
 #endif
   dpMarshalString(bs, gt, (DPMarshalerLitSusp *) arg);
-}
-
-//
-#define MarshalRHTentry(entity, index)                                  \
-{                                                                       \
-  Ext_OB_TIndex rhtIndex = RHT->find(entity);                           \
-  if (rhtIndex == (Ext_OB_TIndex) RESOURCE_NOT_IN_TABLE) {              \
-    OwnerEntry *oe_manager;                                             \
-    (void) ownerTable->newOwner(oe_manager);                            \
-    rhtIndex = oe_manager->getExtOTI();                                 \
-    PD((GLOBALIZING,"GLOBALIZING Resource index:%d", rhtIndex));        \
-    oe_manager->mkRef(entity);                                          \
-    RHT->add(entity, rhtIndex);                                         \
-  }                                                                     \
-  marshalDIFcounted(bs, index ? DIF_RESOURCE_DEF : DIF_RESOURCE);       \
-  marshalOwnHead(bs, OT->extOTI2ownerEntry(rhtIndex));                  \
-  if (index) marshalTermDef(bs, index);                                 \
 }
 
 //
@@ -591,40 +269,6 @@ void DPMarshaler2ndP::vHook()
 #include "dpMarshalerCode.cc"
 #undef VISITNODE
 #undef DPMARSHALERCLASS
-
-//
-//
-OZ_Term
-unmarshalBorrow(MarshalerBuffer *bs,
-                OB_Entry *&ob, OB_TIndex &bi, BYTE &ec)
-{
-  PD((UNMARSHAL,"Borrow"));
-  DSite *sd = unmarshalDSite(bs);
-  Ext_OB_TIndex si = MakeExt_OB_TIndex(ToPointer(unmarshalNumber(bs)));
-  PD((UNMARSHAL,"borrow o:%d",si));
-
-  if(sd==myDSite){ Assert(0);}
-
-  BorrowEntry *b = borrowTable->find(si, sd);
-
-  ec = bs->get();
-  RRinstance* cred = unmarshalCredit(bs);
-
-  if (b!=NULL) {
-    b->mergeReference(cred);
-    ob = b;
-    // Assert(b->getValue() != (OZ_Term) 0);
-    return b->getValue();
-  } else {
-    bi = borrowTable->newBorrow(cred,sd,si);
-    b=borrowIndex2borrowEntry(bi);
-    ob=b;
-    return 0;
-  }
-
-  ob=b;
-  return 0;
-}
 
 //
 // 'suspend' turns 'OK' if unmarshaling is not complete;
@@ -787,12 +431,13 @@ inline
 Bool VSnapshotBuilder::processObject(OZ_Term objTerm, ConstTerm *objConst)
 {
   VisitNodeTrav(objTerm, vIT, return(TRUE));
-  if (doToplevel) {
-    doToplevel = FALSE;
-    return (FALSE);
-  } else {
-    return (TRUE);
-  }
+  return (TRUE);
+}
+inline
+Bool VSnapshotBuilder::processObjectState(OZ_Term objTerm, ConstTerm *objConst)
+{
+  VisitNodeTrav(objTerm, vIT, return(TRUE));
+  return (TRUE);
 }
 inline
 void VSnapshotBuilder::processNoGood(OZ_Term resTerm)
@@ -801,85 +446,46 @@ void VSnapshotBuilder::processNoGood(OZ_Term resTerm)
   VisitNodeTrav(resTerm, vIT, return);
 }
 inline
-void VSnapshotBuilder::processLock(OZ_Term lockTerm, Tertiary *tert)
+void VSnapshotBuilder::processLock(OZ_Term lockTerm, ConstTerm *lockConst)
 {
   VisitNodeTrav(lockTerm, vIT, return);
 }
 inline
-Bool VSnapshotBuilder::processCell(OZ_Term cellTerm, Tertiary *tert)
+Bool VSnapshotBuilder::processCell(OZ_Term cellTerm, ConstTerm *cellConst)
 {
   VisitNodeTrav(cellTerm, vIT, return(TRUE));
   return (TRUE);
 }
 inline
-void VSnapshotBuilder::processPort(OZ_Term portTerm, Tertiary *tert)
+void VSnapshotBuilder::processPort(OZ_Term portTerm, ConstTerm *portConst)
 {
   VisitNodeTrav(portTerm, vIT, return);
 }
 inline
-void VSnapshotBuilder::processResource(OZ_Term rTerm, Tertiary *tert)
+void VSnapshotBuilder::processResource(OZ_Term rTerm, ConstTerm *unusConst)
 {
   VisitNodeTrav(rTerm, vIT, return);
 }
 
 //
 inline
-void VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
+Bool VSnapshotBuilder::processVar(OZ_Term v, OZ_Term *vRef)
 {
   Assert(oz_isVar(v));
   OZ_Term vrt = makeTaggedRef(vRef);
 
-  // Note: a variable is identified by its *location*;
-  VisitNodeTrav(vrt, vIT, return);
+  // Note: a variable is identified by its *location*.  Note that
+  // patched variables, by construction, have already been visited, so
+  // they return immediately here.
+  VisitNodeTrav(vrt, vIT, return(OK));
 
-  //
-  // Now, construct a VAR patch for this variable (export it if needed);
-  if (oz_isExtVar(v)) {
-    ExtVarType evt = oz_getExtVar(v)->getIdV();
-    switch (evt) {
-    case OZ_EVAR_MANAGER:
-      {
-        // make&save an "exported" manager;
-        ManagerVar *mvp = oz_getManagerVar(v);
-        expVars = new MgrVarPatch(vrt, expVars, mvp, dest);
-      }
-      break;
+  // failed values are not handled as variables here, just go through it
+  if (oz_isFailed(v)) return NO;
 
-    case OZ_EVAR_PROXY:
-      {
-        // make&save an "exported" proxy:
-        ProxyVar *pvp = oz_getProxyVar(v);
-        expVars = new PxyVarPatch(vrt, expVars, pvp, dest);
-      }
-      break;
-
-    case OZ_EVAR_LAZY:
-      // First, lazy variables are transparent for the programmer.
-      // Secondly, the earlier an object gets over the network the
-      // better for failure handling (aka "no failure - simple
-      // failure handling!"). Altogether, delayed exportation is a
-      // good thing here, so we ignore these vars;
-      break;
-
-    default:
-      Assert(0);
-      break;
-    }
-  } else if (oz_isFree(v) || oz_isReadOnly(v)) {
-    Assert(perdioInitialized);
-
-    //
-    ManagerVar *mvp = globalizeFreeVariable(vRef);
-    expVars = new MgrVarPatch(vrt, expVars, mvp, dest);
-  } else {
-    //
-
-    // Actualy, we should copy all these types of variables
-    // (constraint stuff), and then marshal them as "nogood"s.  So,
-    // just ignoring them is a limitation: the system behaves
-    // differently when such variables are bound between logical
-    // sending of a message and their marshaling.
-  }
+  // globalize the variable if needed, and patch it
+  glue_globalizeEntity(vrt);
+  expVars = new DistributedVarPatch(vrt, expVars, false);
+  return OK;
 }
 
 //
@@ -899,7 +505,8 @@ inline
 Bool VSnapshotBuilder::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
 {
   VisitNodeTrav(chunkTerm, vIT, return(TRUE));
-  return (NO);
+  // return false if the chunk is marshaled immediately
+  return !(isImmediate() || glue_isImmediate(chunkTerm));
 }
 
 //
@@ -932,8 +539,9 @@ VSnapshotBuilder::processClass(OZ_Term classTerm, ConstTerm *classConst)
 {
   VisitNodeTrav(classTerm, vIT, return(TRUE));
   //
-  ObjectClass *cl = (ObjectClass *) classConst;
-  return (cl->isSited());
+  if (((OzClass *) classConst)->isSited()) return (OK);
+  // return false if the class is marshaled immediately
+  return !(isImmediate() || glue_isImmediate(classTerm));
 }
 
 //
@@ -942,8 +550,13 @@ VSnapshotBuilder::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
 {
   VisitNodeTrav(absTerm, vIT, return(TRUE));
 
+  // return OK if handled by the Glue
+  if (!(isImmediate() || glue_isImmediate(absTerm))) return (OK);
+
   //
   Abstraction *pp = (Abstraction *) absConst;
+  if (!pp->isComplete()) return OK;     // not nice...
+
   PrTabEntry *pred = pp->getPred();
   //
   if (pred->isSited()) {
@@ -1053,56 +666,6 @@ VSnapshotBuilder vsb;
 /*   interface to Oz-core                                  */
 /* *********************************************************************/
 
-//
-// An index, if any, is marshaled *after* 'marshalTertiary()';
-void marshalTertiary(ByteBuffer *bs,
-                     Tertiary *t, Bool hasIndex, MarshalTag tag)
-{
-#if defined(DBG_TRACE)
-  DBGINIT();
-  fprintf(dbgout, "> tag: %s(%d) = %s\n",
-          dif_names[tag].name, tag, toC(makeTaggedConst(t)));
-  fflush(dbgout);
-#endif
-  PD((MARSHAL,"Tert"));
-  switch(t->getTertType()){
-  case Te_Local:
-    globalizeTert(t);
-    // no break here!
-  case Te_Manager:
-    {
-      PD((MARSHAL_CT,"manager"));
-      OB_TIndex OTI = MakeOB_TIndex(t->getTertPointer());
-      marshalDIFcounted(bs, (hasIndex ? defmap[tag] : tag));
-      marshalOwnHead(bs, OTI);
-    }
-    break;
-
-  case Te_Frame:
-  case Te_Proxy:
-    {
-      PD((MARSHAL,"proxy"));
-      OB_TIndex BTI = MakeOB_TIndex(t->getTertPointer());
-      DSite* sd=bs->getSite();
-      if (sd && (sd == borrowTable->getOriginSite(BTI))) {
-        marshalDIFcounted(bs, (hasIndex ? DIF_OWNER_DEF : DIF_OWNER));
-        marshalToOwner(bs, BTI);
-
-        //
-      } else {
-        EntityInfo *ei = t->getInfo();
-        BYTE ec = (ei?(ei->getEntityCond() & (PERM_FAIL)):ENTITY_NORMAL);
-        marshalDIFcounted(bs, (hasIndex ? defmap[tag] : tag));
-        marshalBorrowHead(bs, BTI, ec);
-      }
-      break;
-    }
-  default:
-    Assert(0);
-  }
-}
-
-
 static
 char *tagToComment(MarshalTag tag)
 {
@@ -1131,170 +694,6 @@ char *tagToComment(MarshalTag tag)
     return "";
 }}
 
-OZ_Term
-unmarshalTertiary(MarshalerBuffer *bs, MarshalTag tag)
-{
-  OB_Entry* ob;
-  OB_TIndex bi;
-  BYTE ec;
-
-  OZ_Term val = unmarshalBorrow(bs, ob, bi, ec);
-
-  if (val) {
-    PD((UNMARSHAL,"%s hit b:%d",tagToComment(tag),bi));
-    switch (tag) {
-    case DIF_RESOURCE:
-    case DIF_RESOURCE_DEF:
-    case DIF_PORT:
-    case DIF_PORT_DEF:
-    case DIF_CELL:
-    case DIF_CELL_DEF:
-    case DIF_LOCK:
-    case DIF_LOCK_DEF:
-      break;
-
-    case DIF_STUB_OBJECT:
-    case DIF_STUB_OBJECT_DEF:
-    case DIF_VAR_OBJECT:
-    case DIF_VAR_OBJECT_DEF:
-      TaggedRef obj;
-      TaggedRef clas;
-      (void) unmarshalGName(&obj, bs);
-      (void) unmarshalGName(&clas, bs);
-      break;
-    default:
-      Assert(0);
-    }
-
-    // If the entity had a failed condition, propagate it.
-    if (ec & PERM_FAIL){
-      // As failed entities are propageted as Resources, the
-      // type of the marshaled entity can differ from the
-      // type of the borrowtable entity
-      // i.e. A failed variable, the table contains a variable
-      // but the unmarshaled entity is a tertiary(resource).
-      if(ob->isTertiary())
-        deferProxyTertProbeFault(ob->getTertiary(),PROBE_PERM);
-      else
-        deferProxyVarProbeFault(val,PROBE_PERM);
-    }
-    return (val);
-  }
-
-  PD((UNMARSHAL,"%s miss b:%d",tagToComment(tag),bi));
-  Tertiary *tert;
-
-  switch (tag) {
-  case DIF_RESOURCE:
-  case DIF_RESOURCE_DEF:
-    tert = new DistResource(bi);
-    break;
-  case DIF_PORT:
-  case DIF_PORT_DEF:
-    tert = new PortProxy(bi);
-    break;
-  case DIF_CELL:
-  case DIF_CELL_DEF:
-    tert = new CellProxy(bi);
-    break;
-  case DIF_LOCK:
-  case DIF_LOCK_DEF:
-    tert = new LockProxy(bi);
-    break;
-
-  case DIF_VAR_OBJECT:
-  case DIF_VAR_OBJECT_DEF:
-  case DIF_STUB_OBJECT:
-  case DIF_STUB_OBJECT_DEF:
-    {
-      OZ_Term obj;
-      OZ_Term clas;
-      OZ_Term val;
-      GName *gnobj = unmarshalGName(&obj, bs);
-      GName *gnclass = unmarshalGName(&clas, bs);
-      if(!gnobj) {
-//      printf("Had Object %d:%d flags:%d\n",
-//             ((BorrowEntry *)ob)->getNetAddress()->index,
-//             ((BorrowEntry *)ob)->getNetAddress()->site->getTimeStamp()->pid,
-//             ((BorrowEntry *)ob)->getFlags());
-        if(!(borrowTable->maybeFreeBorrowEntry(bi))){
-          ob->mkRef(obj,ob->getFlags());
-//        printf("indx:%d %xd\n",((BorrowEntry *)ob)->getNetAddress()->index,
-//               ((BorrowEntry *)ob)->getNetAddress()->site);
-        }
-        return (obj);
-      }
-
-      //
-      if (gnclass) {
-        // A new proxy for the class (borrow index is not there since
-        // we do not run the lazy class protocol here);
-        clas = newClassProxy(MakeOB_TIndex(-1), gnclass);
-        addGName(gnclass, clas);
-      } else {
-        // There are two cases: we've got either the class or its
-        // proxy. In either case, it's used for the new object proxy:
-      }
-
-      //
-      val = newObjectProxy(bi, gnobj, clas);
-      addGName(gnobj, val);
-      ob->changeToVar(val);
-
-      //
-      return (val);
-    }
-  default:
-    Assert(0);
-  }
-  val=makeTaggedConst(tert);
-  ob->changeToTertiary(tert);
-
-  // If the entity carries failure info react to it
-  // othervise check the local environment. The present
-  // representation of the entities site might have information
-  // about the failure state.
-
-  if (ec & PERM_FAIL)
-    {
-      deferProxyTertProbeFault(tert,PROBE_PERM);
-    }
-  else
-    {
-      switch(((BorrowEntry*)ob)->getSite()->siteStatus()){
-      case SITE_OK:{
-        break;}
-      case SITE_PERM:{
-        deferProxyTertProbeFault(tert,PROBE_PERM);
-        break;}
-      case SITE_TEMP:{
-        deferProxyTertProbeFault(tert,PROBE_TEMP);
-        break;}
-      default:
-        Assert(0);
-      }
-    }
-  return val;
-}
-
-
-OZ_Term
-unmarshalOwner(MarshalerBuffer *bs, MarshalTag mt)
-{
-  Ext_OB_TIndex OTI;
-  OZ_Term oz;
-  RRinstance  *c = unmarshalCreditToOwner(bs, mt, OTI);
-  PD((UNMARSHAL,"OWNER o:%d",OTI));
-  OwnerEntry* oe = ownerTable->extOTI2ownerEntry(OTI);
-  if (oe){
-    oe->mergeReference(c);
-    oz=oe->getValue();}
-  else
-    oz = createFailedEntity(OTI,TRUE);
-  return oz;
-}
-
-//
 void DPBuilderCodeAreaDescriptor::gc()
 {
   Assert(current >= start && current <= end);
@@ -1310,7 +709,6 @@ void DPBuilderCodeAreaDescriptor::gc()
 #endif
 }
 
-//
 //
 OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 {
@@ -1330,7 +728,6 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
     fprintf(dbgout, "< tag: %s(%d)", dif_names[tag].name, tag);
     fflush(dbgout);
 #endif
-
     switch (tag) {
 
     case DIF_SMALLINT:
@@ -1402,7 +799,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 
           //
           b->setTerm(value, refTag);
-          delete printname;
+          delete [] printname;
 #if defined(DBG_TRACE)
           fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
           fflush(dbgout);
@@ -1452,7 +849,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
           }
 
           //
-          delete printname;
+          delete [] printname;
 #if defined(DBG_TRACE)
           fprintf(dbgout, " = %s\n", toC(value));
           fflush(dbgout);
@@ -1493,7 +890,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
           value = makeTaggedLiteral(aux);
           b->buildValue(value);
           b->setTerm(value, refTag);
-          delete printname;
+          delete [] printname;
 #if defined(DBG_TRACE)
           fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
           fflush(dbgout);
@@ -1528,7 +925,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
           NamedName *aux = NamedName::newCopyableName(strdup(printname));
           value = makeTaggedLiteral(aux);
           b->buildValue(value);
-          delete printname;
+          delete [] printname;
 #if defined(DBG_TRACE)
           fprintf(dbgout, " = %s\n", toC(value));
           fflush(dbgout);
@@ -1567,7 +964,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
           value = oz_uniqueName(printname);
           b->buildValue(value);
           b->setTerm(value, refTag);
-          delete printname;
+          delete [] printname;
 #if defined(DBG_TRACE)
           fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
           fflush(dbgout);
@@ -1600,7 +997,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 
           value = oz_uniqueName(printname);
           b->buildValue(value);
-          delete printname;
+          delete [] printname;
 #if defined(DBG_TRACE)
           fprintf(dbgout, " = %s\n", toC(value));
           fflush(dbgout);
@@ -1852,7 +1249,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
         fflush(dbgout);
 #endif
         b->buildValue(OZ_CStringToNumber(aux));
-        delete aux;
+        delete [] aux;
         break;
       }
 
@@ -1867,7 +1264,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
         OZ_Term value = OZ_CStringToNumber(aux);
         b->buildValue(value);
         b->setTerm(value, refTag);
-        delete aux;
+        delete [] aux;
         break;
       }
 
@@ -1931,63 +1328,50 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
         break;
       }
 
-      //
-    case DIF_OWNER_DEF:
-      {
-        OZ_Term tert = unmarshalOwner(bs, tag);
-        int refTag = unmarshalRefTag(bs);
-
-#if defined(DBG_TRACE)
-        fprintf(dbgout, " = %s (at %d)\n", toC(tert), refTag);
-        fflush(dbgout);
-#endif
-        b->buildValueRemember(tert, refTag);
-        break;
-      }
-
-      //
     case DIF_OWNER:
-      {
-        OZ_Term tert = unmarshalOwner(bs, tag);
-
-#if defined(DBG_TRACE)
-        fprintf(dbgout, " = %s (at %d)\n", toC(tert), refTag);
-        fflush(dbgout);
-#endif
-        b->buildValue(tert);
-        break;
-      }
-
-    case DIF_RESOURCE_DEF:
-    case DIF_PORT_DEF:
-    case DIF_CELL_DEF:
-    case DIF_LOCK_DEF:
-    case DIF_STUB_OBJECT_DEF:
-    case DIF_VAR_OBJECT_DEF:
-      {
-        OZ_Term tert = unmarshalTertiary(bs, tag);
-        int refTag = unmarshalRefTag(bs);
-#if defined(DBG_TRACE)
-        fprintf(dbgout, " = %s (at %d)\n", toC(tert), refTag);
-        fflush(dbgout);
-#endif
-        b->buildValueRemember(tert, refTag);
-        break;
-      }
-
-    case DIF_RESOURCE:
+    case DIF_OWNER_DEF:
     case DIF_PORT:
+    case DIF_PORT_DEF:
     case DIF_CELL:
+    case DIF_CELL_DEF:
     case DIF_LOCK:
-    case DIF_STUB_OBJECT:
+    case DIF_LOCK_DEF:
+    case DIF_ARRAY:
+    case DIF_ARRAY_DEF:
     case DIF_VAR_OBJECT:
+    case DIF_VAR_OBJECT_DEF:
+    case DIF_STUB_OBJECT:
+    case DIF_STUB_OBJECT_DEF:
+    case DIF_RESOURCE_DEF:
+    case DIF_RESOURCE:
       {
-        OZ_Term tert = unmarshalTertiary(bs, tag);
+        OZ_error("Unmarshaling tags from the old system");
+        break;
+      }
+
+    // Unmmarshaling stateless dictionaries.
+    case DIF_DICT_DEF:
+      {
+        int refTag = unmarshalRefTag(bs);
+        int size   = unmarshalNumber(bs);
+        Assert(oz_onToplevel());
+        b->buildDictionaryRemember(size,refTag);
 #if defined(DBG_TRACE)
-        fprintf(dbgout, " = %s\n", toC(tert));
+        fprintf(dbgout, " size=%d (at %d)\n", size, refTag);
         fflush(dbgout);
 #endif
-        b->buildValue(tert);
+        break;
+      }
+
+    case DIF_DICT:
+      {
+        int size   = unmarshalNumber(bs);
+        Assert(oz_onToplevel());
+        b->buildDictionary(size);
+#if defined(DBG_TRACE)
+        fprintf(dbgout, " size=%d\n", size);
+        fflush(dbgout);
+#endif
         break;
       }
 
@@ -2002,6 +1386,8 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
           fflush(dbgout);
 #endif
           b->buildChunkRemember(gname, refTag);
+        } else if (!tagged2SChunk(value)->getValue()) {   // lazy protocol
+          b->buildChunkRemember(tagged2SChunk(value)->getGName(), refTag);
         } else {
           b->knownChunk(value);
           b->setTerm(value, refTag);
@@ -2019,6 +1405,8 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
         GName *gname = unmarshalGName(&value, bs);
         if (gname) {
           b->buildChunk(gname);
+        } else if (!tagged2SChunk(value)->getValue()) {   // lazy protocol
+          b->buildChunk(tagged2SChunk(value)->getGName());
         } else {
           b->knownChunk(value);
 #if defined(DBG_TRACE)
@@ -2042,40 +1430,17 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
           fflush(dbgout);
 #endif
           b->buildClassRemember(gname, flags, refTag);
+        } else if (!tagged2OzClass(value)->isComplete()) {
+          b->buildClassRemember(tagged2OzClass(value)->getGName(),
+                                flags, refTag);
         } else {
-          // Either we have the class itself, or that's the lazy
-          // object protocol, in which case it must be a variable
-          // that denotes an object (of this class);
-          OZ_Term vd = oz_deref(value);
-          Assert(!oz_isRef(vd));
-          if (oz_isConst(vd)) {
-            Assert(tagged2Const(vd)->getType() == Co_Class);
-            b->knownClass(value);
-            b->setTerm(value, refTag);
+          // optimization: we already have the class
+          b->knownClass(value);
+          b->setTerm(value, refTag);
 #if defined(DBG_TRACE)
-            fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
-            fflush(dbgout);
+          fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
+          fflush(dbgout);
 #endif
-          } else if (oz_isVar(vd)) {
-            OzVariable *var = tagged2Var(vd);
-            Assert(var->getType() == OZ_VAR_EXT);
-            ExtVar *evar = var2ExtVar(var);
-            Assert(evar->getIdV() == OZ_EVAR_LAZY);
-            LazyVar *lvar = (LazyVar *) evar;
-            Assert(lvar->getLazyType() == LT_CLASS);
-            ClassVar *cv = (ClassVar *) lvar;
-            // The binding of a class'es gname is kept until the
-            // construction of a class is finished.
-            gname = cv->getGName();
-            b->buildClassRemember(gname, flags, refTag);
-#if defined(DBG_TRACE)
-            fprintf(dbgout, " (at %d)\n", refTag);
-            fflush(dbgout);
-#endif
-          } else {
-            OZ_error("Unexpected value is bound to an object's gname");
-            b->buildValue(oz_nil());
-          }
         }
         break;
       }
@@ -2088,222 +1453,27 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
         //
         if (gname) {
           b->buildClass(gname, flags);
+        } else if (!tagged2OzClass(value)->isComplete()) {
+          b->buildClass(tagged2OzClass(value)->getGName(), flags);
         } else {
-          // Either we have the class itself, or that's the lazy
-          // object protocol, in which case it must be a variable
-          // that denotes an object (of this class);
-          OZ_Term vd = oz_deref(value);
-          Assert(!oz_isRef(vd));
-          if (oz_isConst(vd)) {
-            Assert(tagged2Const(vd)->getType() == Co_Class);
-            b->knownClass(value);
+          // optimization: we already have the class
+          b->knownClass(value);
 #if defined(DBG_TRACE)
-            fprintf(dbgout, " = %s\n", toC(value));
-            fflush(dbgout);
+          fprintf(dbgout, " = %s\n", toC(value));
+          fflush(dbgout);
 #endif
-          } else if (oz_isVar(vd)) {
-            OzVariable *var = tagged2Var(vd);
-            Assert(var->getType() == OZ_VAR_EXT);
-            ExtVar *evar = var2ExtVar(var);
-            Assert(evar->getIdV() == OZ_EVAR_LAZY);
-            LazyVar *lvar = (LazyVar *) evar;
-            Assert(lvar->getLazyType() == LT_CLASS);
-            ClassVar *cv = (ClassVar *) lvar;
-            // The binding of a class'es gname is kept until the
-            // construction of a class is finished.
-            gname = cv->getGName();
-            b->buildClass(gname, flags);
-          } else {
-            OZ_error("Unexpected value is bound to an object's gname");
-            b->buildValue(oz_nil());
-          }
         }
         break;
       }
 
     case DIF_VAR_DEF:
-      {
-        OZ_Term v = unmarshalVar(bs, FALSE, FALSE);
-        int refTag = unmarshalRefTag(bs);
-#if defined(DBG_TRACE)
-        fprintf(dbgout, " = %s (at %d)\n", toC(v), refTag);
-        fflush(dbgout);
-#endif
-        b->buildValueRemember(v, refTag);
-        break;
-      }
-
     case DIF_VAR:
-      {
-        OZ_Term v = unmarshalVar(bs, FALSE, FALSE);
-#if defined(DBG_TRACE)
-        fprintf(dbgout, " = %s (at %d)\n", toC(v), refTag);
-        fflush(dbgout);
-#endif
-        b->buildValue(v);
-        break;
-      }
-
     case DIF_READONLY_DEF:
-      {
-        OZ_Term f = unmarshalVar(bs, TRUE, FALSE);
-        int refTag = unmarshalRefTag(bs);
-#if defined(DBG_TRACE)
-        fprintf(dbgout, " = %s (at %d)\n", toC(f), refTag);
-        fflush(dbgout);
-#endif
-        b->buildValueRemember(f, refTag);
-        break;
-      }
-
     case DIF_READONLY:
-      {
-        OZ_Term f = unmarshalVar(bs, TRUE, FALSE);
-#if defined(DBG_TRACE)
-        fprintf(dbgout, " = %s (at %d)\n", toC(f), refTag);
-        fflush(dbgout);
-#endif
-        b->buildValue(f);
-        break;
-      }
-
-    case DIF_VAR_AUTO_DEF:
-      {
-        OZ_Term va = unmarshalVar(bs, FALSE, TRUE);
-        int refTag = unmarshalRefTag(bs);
-#if defined(DBG_TRACE)
-        fprintf(dbgout, " = %s (at %d)\n", toC(va), refTag);
-        fflush(dbgout);
-#endif
-        b->buildValueRemember(va, refTag);
-        break;
-      }
-
-    case DIF_VAR_AUTO:
-      {
-        OZ_Term va = unmarshalVar(bs, FALSE, TRUE);
-#if defined(DBG_TRACE)
-        fprintf(dbgout, " = %s (at %d)\n", toC(va), refTag);
-        fflush(dbgout);
-#endif
-        b->buildValue(va);
-        break;
-      }
-
-    case DIF_READONLY_AUTO_DEF:
-      {
-        OZ_Term fa = unmarshalVar(bs, TRUE, TRUE);
-        int refTag = unmarshalRefTag(bs);
-#if defined(DBG_TRACE)
-        fprintf(dbgout, " = %s (at %d)\n", toC(fa), refTag);
-        fflush(dbgout);
-#endif
-        b->buildValueRemember(fa, refTag);
-        break;
-      }
-
-    case DIF_READONLY_AUTO:
-      {
-        OZ_Term fa = unmarshalVar(bs, TRUE, TRUE);
-#if defined(DBG_TRACE)
-        fprintf(dbgout, " = %s (at %d)\n", toC(fa), refTag);
-        fflush(dbgout);
-#endif
-        b->buildValue(fa);
-        break;
-      }
-
     case DIF_OBJECT_DEF:
-      {
-        OZ_Term value;
-        int refTag = unmarshalRefTag(bs);
-        GName *gname = unmarshalGName(&value, bs);
-        if (gname) {
-          // If objects are distributed only using the lazy
-          // protocol, this shouldn't happen: There must be a proxy
-          // already;
-#if defined(DBG_TRACE)
-          fprintf(dbgout, " (at %d)\n", refTag);
-          fflush(dbgout);
-#endif
-          b->buildObjectRemember(gname, refTag);
-        } else {
-          // The same as for classes: either we have already the
-          // object (how comes? requested twice??), or that's the
-          // lazy object protocol;
-          OZ_Term vd = oz_deref(value);
-          Assert(!oz_isRef(vd));
-          if (oz_isConst(vd)) {
-            Assert(tagged2Const(vd)->getType() == Co_Object);
-            OZ_warning("Full object is received again.");
-            b->knownObject(value);
-            b->setTerm(value, refTag);
-#if defined(DBG_TRACE)
-            fprintf(dbgout, " = %s (at %d)\n", toC(value), refTag);
-            fflush(dbgout);
-#endif
-          } else if (oz_isVar(vd)) {
-            OzVariable *var = tagged2Var(vd);
-            Assert(var->getType() == OZ_VAR_EXT);
-            ExtVar *evar = var2ExtVar(var);
-            Assert(evar->getIdV() == OZ_EVAR_LAZY);
-            LazyVar *lvar = (LazyVar *) evar;
-            Assert(lvar->getLazyType() == LT_OBJECT);
-            ObjectVar *ov = (ObjectVar *) lvar;
-            gname = ov->getGName();
-            // Observe: the gname points to the proxy;
-            b->buildObjectRemember(gname, refTag);
-#if defined(DBG_TRACE)
-            fprintf(dbgout, " (at %d)\n", refTag);
-            fflush(dbgout);
-#endif
-          } else {
-            OZ_error("Unexpected value is bound to an object's gname.");
-            b->buildValue(oz_nil());
-          }
-        }
-        break;
-      }
-
     case DIF_OBJECT:
       {
-        OZ_Term value;
-        GName *gname = unmarshalGName(&value, bs);
-        if (gname) {
-          // If objects are distributed only using the lazy
-          // protocol, this shouldn't happen: There must be a proxy
-          // already;
-          b->buildObject(gname);
-        } else {
-          // The same as for classes: either we have already the
-          // object (how comes? requested twice??), or that's the
-          // lazy object protocol;
-          OZ_Term vd = oz_deref(value);
-          Assert(!oz_isRef(vd));
-          if (oz_isConst(vd)) {
-            Assert(tagged2Const(vd)->getType() == Co_Object);
-            OZ_warning("Full object is received again.");
-            b->knownObject(value);
-#if defined(DBG_TRACE)
-            fprintf(dbgout, " = %s\n", toC(value));
-            fflush(dbgout);
-#endif
-          } else if (oz_isVar(vd)) {
-            OzVariable *var = tagged2Var(vd);
-            Assert(var->getType() == OZ_VAR_EXT);
-            ExtVar *evar = var2ExtVar(var);
-            Assert(evar->getIdV() == OZ_EVAR_LAZY);
-            LazyVar *lvar = (LazyVar *) evar;
-            Assert(lvar->getLazyType() == LT_OBJECT);
-            ObjectVar *ov = (ObjectVar *) lvar;
-            gname = ov->getGName();
-            // Observe: the gname points to the proxy;
-            b->buildObject(gname);
-          } else {
-            OZ_error("Unexpected value is bound to an object's gname.");
-            b->buildValue(oz_nil());
-          }
-        }
+        OZ_error("Unmarshaling tags from the old system");
         break;
       }
 
@@ -2318,6 +1488,10 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
         int line      = unmarshalNumber(bs);
         int column    = unmarshalNumber(bs);
         int codesize  = unmarshalNumber(bs); // in ByteCode"s;
+
+        // in case of an incomplete abstraction, pretend it is unknonw
+        if (!gname && !tagged2Abstraction(value)->isComplete())
+          gname = tagged2Abstraction(value)->getGName();
 
         //
         if (gname) {
@@ -2443,7 +1617,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
         break;
       }
 
-    case DIF_DICT_DEF:
+/*    case DIF_DICT_DEF:
       {
         int refTag = unmarshalRefTag(bs);
         int size   = unmarshalNumber(bs);
@@ -2467,7 +1641,7 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
 #endif
         break;
       }
-
+*/
     case DIF_BUILTIN_DEF:
       {
         int refTag = unmarshalRefTag(bs);
@@ -2478,12 +1652,12 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
         if (!found) {
           OZ_warning("Builtin '%s' not in table.", name);
           value = oz_nil();
-          delete name;
+          delete [] name;
         } else {
           if (found->isSited()) {
             OZ_warning("Unpickling sited builtin: '%s'", name);
           }
-          delete name;
+          delete [] name;
           value = makeTaggedConst(found);
         }
         b->buildValue(value);
@@ -2504,12 +1678,12 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
         if (!found) {
           OZ_warning("Builtin '%s' not in table.", name);
           value = oz_nil();
-          delete name;
+          delete [] name;
         } else {
           if (found->isSited()) {
             OZ_warning("Unpickling sited builtin: '%s'", name);
           }
-          delete name;
+          delete [] name;
           value = makeTaggedConst(found);
         }
         b->buildValue(value);
@@ -2633,11 +1807,6 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       b->buildFSETValue();
       break;
 
-    case DIF_ARRAY:
-      OZ_error("not implemented!");
-      b->buildValue(oz_nil());
-      break;
-
       //
       // 'DIF_SYNC' and its handling is a part of the interface
       // between the builder object and the unmarshaler itself:
@@ -2667,6 +1836,40 @@ OZ_Term dpUnmarshalTerm(ByteBuffer *bs, Builder *b)
       // caller should know whether that's a complete message;
       return ((OZ_Term) -1);
 
+    case DIF_FAILEDVALUE:
+      b->buildFailedValue();
+      break;
+
+    case DIF_FAILEDVALUE_DEF: {
+      int refTag = unmarshalRefTag(bs);
+      b->buildFailedValueRemember(refTag);
+      break;
+    }
+
+    case DIF_GLUE: {
+      OZ_Term t;
+      bool immediate = glue_unmarshalEntity(bs, t);
+      Assert(!immediate);     // not handled here
+#if defined(DBG_TRACE)
+        fprintf(dbgout, " = %s\n", toC(t));
+        fflush(dbgout);
+#endif
+      b->buildValue(t);
+      break;
+    }
+
+    case DIF_GLUE_DEF: {
+      int refTag = unmarshalRefTag(bs);
+      OZ_Term t;
+      bool immediate = glue_unmarshalEntity(bs, t);
+      Assert(!immediate);     // not handled here
+#if defined(DBG_TRACE)
+      fprintf(dbgout, " = %s (at %d)\n", toC(t), refTag);
+      fflush(dbgout);
+#endif
+      b->buildValueRemember(t, refTag);
+      break;
+    }
 
     case DIF_UNUSED0:
     case DIF_UNUSED1:

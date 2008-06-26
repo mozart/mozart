@@ -38,7 +38,7 @@ CD=/Users/ggutierrez/Desktop/CocoaDialog.app
 ##
 # Mozart Install
 ##
-MOZ_HOME=/Users/ggutierrez/Work/moz132
+MOZ_HOME=/Users/ggutierrez/Work/moz140
 ## Directories of mozart installation to be bundled.
 MOZ_DIRS= platform bin cache share include
 
@@ -59,11 +59,15 @@ VERSION=1.3.2
 
 APP=$(NAME).app
 EXT_LIBS=$(APP)/Contents/Resources/ext_libs
-EXEC=$(APP)/Contents/Resources/platform/i486-darwin/emulator.exe
+EXEC=$(APP)/Contents/Resources/platform/darwin-i386/emulator.exe
 
 ## Platypus call
-PLATCALL=$(PLAT) -a '$(NAME)' -t 'Shell' -o 'None' -u 'Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>' -i 'appIcon.icns'  -V '$(VERSION)' -s '????' -I 'org.Mozart' 'script' '$(APP)'
+#PLATCALL=$(PLAT) -a '$(NAME)' -t 'Shell' -o 'None' -u 'Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>' -i 'appIcon.icns'  -V '$(VERSION)' -s '????' -I 'org.Mozart' 'script' '$(APP)'
 
+#PLATCALL=$(PLAT) -a '$(NAME)' -t 'AppleScript' -o 'None' -u 'Gustavo Gutierrez' -i '/usr/bin/oascript' -V '1.0' -s '????' -I 'org.ggutierrez.mozart' -X '*' -T '****|fold' 'launcher.applescript' '$(APP)'
+
+
+PLATCALL=$(PLAT) -D -a '$(NAME)' -t 'Shell' -o 'None' -u 'Gustavo Gutierrez' -i '/bin/sh' -V '1.0' -s '????' -I 'org.ggutierrez.mozart' -X '*.oz' -T '****' 'script' '$(APP)'
 
 # External libraries thet mozart uses (i.e. gmp)
 MOZ_LIBS_DIR=/Users/ggutierrez/Work/ext_libs
@@ -99,7 +103,9 @@ WC_DMG=wc.dmg
 WC_DIR=wc
 
 .PHONY: all
-all: bundskel fixpaths $(MASTER_DMG)
+all: bundskel fixpaths
+
+## $(MASTER_DMG)
 
 $(TEMPLATE_DMG): $(TEMPLATE_DMG).bz2
         bunzip2 -k $<
@@ -131,14 +137,14 @@ $(MASTER_DMG): $(WC_DMG) $(SOURCE_FILES)
         done
 
         rm -rf "$(WC_DIR)/Examples"; \
-        ditto -rsrc "$(MOZ_HOME)/examples" "$(WC_DIR)/Examples"; \
+#       ditto -rsrc "$(MOZ_HOME)/examples" "$(WC_DIR)/Examples"; \
 
         rm -rf "$(WC_DIR)/Doc"
-        ditto -rsrc "$(MOZ_DOC_HTML)" "$(WC_DIR)/Doc/mozart";
+#       ditto -rsrc "$(MOZ_DOC_HTML)" "$(WC_DIR)/Doc/mozart";
 
         rm -rf "$(WC_DIR)/Doc/stdlib-doc"
-        ditto -rsrc "$(MOZ_STDLIB_HTML)/mozart-ozmake" "$(WC_DIR)/Doc/stdlib-doc/mozart-ozmake";
-        ditto -rsrc "$(MOZ_STDLIB_HTML)/mozart-stdlib" "$(WC_DIR)/Doc/stdlib-doc/mozart-stdlib";
+#       ditto -rsrc "$(MOZ_STDLIB_HTML)/mozart-ozmake" "$(WC_DIR)/Doc/stdlib-doc/mozart-ozmake";
+#       ditto -rsrc "$(MOZ_STDLIB_HTML)/mozart-stdlib" "$(WC_DIR)/Doc/stdlib-doc/mozart-stdlib";
 
         WC_DEV=`hdiutil info | grep "$(WC_DIR)" | grep "Apple_HFS" | awk '{print $$1}'` && \
         hdiutil detach $$WC_DEV -quiet -force

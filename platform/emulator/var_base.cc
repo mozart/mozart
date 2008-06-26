@@ -87,7 +87,8 @@ Bool oz_var_valid(OzVariable *ov,TaggedRef val) {
   return NO;
 }
 
-OZ_Return oz_var_unify(OzVariable *ov, TaggedRef *ptr, TaggedRef *val) {
+// bind a variable to another variable (non-distributed)
+OZ_Return oz_var_unifyLocal(OzVariable *ov, TaggedRef *ptr, TaggedRef *val) {
   Assert(oz_isVar(*val));
   Assert(ov == tagged2Var(*ptr));
   DebugCode(OzVariable *rv = tagged2Var(*val));
@@ -113,7 +114,8 @@ OZ_Return oz_var_unify(OzVariable *ov, TaggedRef *ptr, TaggedRef *val) {
   return FAILED;
 }
 
-OZ_Return oz_var_bind(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
+// bind a variable to a value (non-distributed)
+OZ_Return oz_var_bindLocal(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
   switch (ov->getType()){
   case OZ_VAR_OPT:      return ((OptVar *) ov)->bind(ptr,val);
   case OZ_VAR_SIMPLE_QUIET:
@@ -132,7 +134,8 @@ OZ_Return oz_var_bind(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
   return FAILED;
 }
 
-OZ_Return oz_var_forceBind(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
+// bind a variable to a value (non-distributed)
+OZ_Return oz_var_forceBindLocal(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
   switch (ov->getType()){
   case OZ_VAR_OPT:      return ((OptVar *) ov)->bind(ptr,val);
   case OZ_VAR_SIMPLE_QUIET:
@@ -151,6 +154,51 @@ OZ_Return oz_var_forceBind(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
   return FAILED;
 }
 
+
+// possibly distributed operations
+
+// bind a variable to another variable (possibly distributed)
+OZ_Return oz_var_unify(OzVariable *lvar, TaggedRef *lptr, TaggedRef *rptr) {
+  // !oz_isFree(*lptr) implies !oz_isFree(*rptr)
+  Assert(oz_isFree(*lptr) || !oz_isFree(*rptr));
+
+  // attempt a distributed operation if (1) the binding is done at the
+  // toplevel and is not an '==', and (2) the variable is distributed,
+  // and (3) the variable is free
+  if (oz_isLocalVar(lvar) && lvar->hasMediator() && oz_isFree(*lptr)) {
+    OzVariable *rvar = tagged2Var(*rptr);
+    if (rvar->hasMediator()) // both sides are distributed
+      return (*distVarUnify)(lvar, lptr, rvar, rptr);
+    if (!oz_isFree(*rptr)) // right-hand side is local and not free
+      return (*distVarBind)(lvar, lptr, makeTaggedRef(rptr));
+    // both sides are free, preferably bind local to distributed
+    Swap(lptr, rptr, TaggedRef*);
+    lvar = rvar;
+  }
+  return oz_var_unifyLocal(lvar, lptr, rptr);
+}
+
+// bind a variable to a value (possibly distributed)
+OZ_Return oz_var_bind(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
+  // attempt a distributed operation if (1) the binding is done at the
+  // toplevel and is not an '==', and (2) the variable is distributed,
+  // and (3) the variable is free
+  if (oz_isLocalVar(ov) && ov->hasMediator() && oz_isFree(*ptr))
+    return (*distVarBind)(ov, ptr, val);
+  else
+    return oz_var_bindLocal(ov, ptr, val);
+}
+
+// bind a variable to a value (possibly distributed)
+OZ_Return oz_var_forceBind(OzVariable *ov,TaggedRef *ptr,TaggedRef val) {
+  // attempt a distributed operation if (1) the binding is done at the
+  // toplevel and is not an '==', and (2) the variable is distributed
+  if (oz_isLocalVar(ov) && ov->hasMediator())
+    return (*distVarBind)(ov, ptr, val);
+  else
+    return oz_var_forceBindLocal(ov, ptr, val);
+}
+
 //
 // Convert an OptVar to a simple var;
 OzVariable* oz_getNonOptVar(TaggedRef *v)
@@ -163,27 +211,23 @@ OzVariable* oz_getNonOptVar(TaggedRef *v)
   return (ov);
 }
 
+// add a suspension on a variable.  The variable becomes needed.
 OZ_Return oz_var_addSusp(TaggedRef *v, Suspendable * susp) {
   Assert(oz_isVar(*v));
+  // first ensure that the variable is needed, then add the suspension
+  oz_var_makeNeeded(v);
+
   OzVariable *ov = tagged2Var(*v);
   switch (ov->getType()) {
+  case OZ_VAR_OPT:
+  case OZ_VAR_SIMPLE_QUIET:
+  case OZ_VAR_READONLY_QUIET:
+    OZ_error("Unexpected quiet variable");
+    return FAILED;
   case OZ_VAR_FAILED:
     return ((Failed *) ov)->addSusp(v, susp);
-  case OZ_VAR_READONLY_QUIET:
-    ((ReadOnly*) ov)->becomeNeeded();
-    // fall through
-  case OZ_VAR_READONLY:
-    ov->addSuspSVar(susp);
-    return (SUSPEND);
   case OZ_VAR_EXT:
     return var2ExtVar(ov)->addSuspV(v, susp);
-  case OZ_VAR_OPT:
-    ov = new SimpleVar(ov->getBoardInternal());
-    *v = makeTaggedVar(ov);
-    // fall through
-  case OZ_VAR_SIMPLE_QUIET:
-    ((SimpleVar*) ov)->becomeNeeded();
-    // fall through
   case OZ_VAR_SIMPLE:
     if (ozconf.useFutures || susp->isNoBlock()) {
       return oz_raise(E_ERROR, E_KERNEL, "block", 1, makeTaggedRef(v));
@@ -195,10 +239,10 @@ OZ_Return oz_var_addSusp(TaggedRef *v, Suspendable * susp) {
   }
 }
 
-// fred+raph: Add a "quiet" suspension to v
+// add a "quiet" suspension to v (don't trigger by-need suspensions)
 OZ_Return oz_var_addQuietSusp(TaggedRef *v, Suspendable * susp) {
   Assert(oz_isVar(*v));
-  OzVariable *ov = tagged2Var(*v);
+  OzVariable *ov = oz_getNonOptVar(v);
   switch (ov->getType()) {
   case OZ_VAR_FAILED:
     // Don't suspend on a failed value!  addSusp() raises the exception.
@@ -206,9 +250,8 @@ OZ_Return oz_var_addQuietSusp(TaggedRef *v, Suspendable * susp) {
   case OZ_VAR_EXT:
     return var2ExtVar(ov)->addSuspV(v, susp);
   case OZ_VAR_OPT:
-    ov = new SimpleVar(ov->getBoardInternal());
-    *v = makeTaggedVar(ov);
-    // fall through;
+    OZ_error("Unexpected optimized variable");
+    return FAILED;
   case OZ_VAR_READONLY_QUIET:
   case OZ_VAR_READONLY:
   case OZ_VAR_SIMPLE_QUIET:
@@ -223,25 +266,24 @@ OZ_Return oz_var_addQuietSusp(TaggedRef *v, Suspendable * susp) {
   }
 }
 
-// raph: makes a variable needed
-OZ_Return oz_var_makeNeeded(TaggedRef *v) {
+// make a variable needed (non-distributed)
+OZ_Return oz_var_makeNeededLocal(TaggedRef *v) {
   Assert(oz_isVar(*v));
-  OzVariable *ov = tagged2Var(*v);
-
+  OzVariable *ov = oz_getNonOptVar(v);
   switch (ov->getType()) {
-  case OZ_VAR_OPT:
-    ov = new SimpleVar(ov->getBoardInternal());
-    *v = makeTaggedVar(ov);
-    // fall through
-  case OZ_VAR_SIMPLE_QUIET:
-    ((SimpleVar*) ov)->becomeNeeded(); break;
-  case OZ_VAR_READONLY_QUIET:
-    ((ReadOnly*) ov)->becomeNeeded(); break;
+  case OZ_VAR_SIMPLE_QUIET:   ((SimpleVar*) ov)->becomeNeeded(); break;
+  case OZ_VAR_READONLY_QUIET: ((ReadOnly*) ov)->becomeNeeded(); break;
   default:
     break;
   }
-
   return (PROCEED);
+}
+
+// make a variable needed (possibly distributed)
+OZ_Return oz_var_makeNeeded(TaggedRef *v) {
+  if (oz_isNeeded(*v)) return PROCEED;
+  if (tagged2Var(*v)->hasMediator()) return (*distVarMakeNeeded)(v);
+  return oz_var_makeNeededLocal(v);
 }
 
 void oz_var_dispose(OzVariable *ov) {

@@ -6,6 +6,7 @@
  *  Contributors:
  *    Kostja Popow (popow@ps.uni-sb.de)
  *    Christian Schulte <schulte@ps.uni-sb.de>
+ *    Raphael Collet (raph@info.ucl.ac.be)
  *
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -150,6 +151,29 @@ void rebind(TaggedRef *refPtr, TaggedRef term2)
     TaggedRef *refPtr = (TaggedRef*) rebindTrail.pop();
 
 
+// raph: Variable bindings that suspend do not need to stop the whole
+// unification.  Instead we put them aside on a trail, and let the
+// process carry on.  In case of success, we simplify the unification,
+// and suspend on those variables.  This keeps less references alive,
+// and enables parallel distributed bindings.
+
+// hold suspended bindings
+static Stack suspendTrail(100,Stack_WithMalloc);
+
+inline
+void suspendUnify(TaggedRef term1, TaggedRef term2) {
+  suspendTrail.ensureFree(2);
+  suspendTrail.push(ToPointer(term2), NO);
+  suspendTrail.push(ToPointer(term1), NO);
+}
+
+inline
+TaggedRef popSuspended() { // beware: they come one by one!
+  return ToInt32(suspendTrail.pop());
+}
+
+
+
 OZ_Return oz_unify(TaggedRef t1, TaggedRef t2)
 {
   unifyStack.pushMark();
@@ -203,6 +227,9 @@ loop:
   } else {
     int res = oz_var_bind(tagged2Var(term1), termPtr1, term2);
     if (res == PROCEED) {
+      goto next;
+    } else if (res == SUSPEND) {
+      suspendUnify(makeTaggedRef(termPtr1), term2);
       goto next;
     } else {
       result = res;
@@ -284,6 +311,10 @@ loop:
 
     if (res == PROCEED)
       goto next;
+    if (res == SUSPEND) {
+      suspendUnify(makeTaggedRef(termPtr1), makeTaggedRef(termPtr2));
+      goto next;
+    }
     result = res;
     goto fail;
   }
@@ -391,6 +422,8 @@ fail:
   while (!unifyStack.isMark()) {
     unifyStack.pop();
   }
+  suspendTrail.mkEmpty();
+  am.emptySuspendVarList();     // emulator invariant
   // fall through
 
 exit:
@@ -402,7 +435,9 @@ exit:
   // In a space, the bindings must either be undone or transferred
   // to the global trail to end up in the script.  For simplicity
   // we choose to undo them -- Denys&Christian
-  if (result!=PROCEED || !oz_onToplevel() || am.inEqEq())
+  // raph: Undo temporary bindings if suspensions are pending.
+  if (result!=PROCEED || !oz_onToplevel() || am.inEqEq() ||
+      !suspendTrail.isEmpty())
     while (!rebindTrail.isEmpty ()) {
       PopRebindTrail(value,refPtr);
     // kost@ : no need to restore temporary bindings if terms were
@@ -417,6 +452,37 @@ exit:
     // necessary to pop each item: we can simply make the trail
     // empty directly -- Denys
     rebindTrail.mkEmpty();
+
+  // handle pending suspensions
+  if (!suspendTrail.isEmpty()) {
+    // make two terms with the suspended bindings
+    int n = suspendTrail.getUsed() / 2;
+    if (n == 1) {
+      term1 = popSuspended();
+      term2 = popSuspended();
+    } else {
+      SRecord* rec1 = SRecord::newSRecord(AtomPair, n);
+      SRecord* rec2 = SRecord::newSRecord(AtomPair, n);
+      while (n > 0) {
+        n--;
+        rec1->setArg(n, popSuspended());
+        rec2->setArg(n, popSuspended());
+      }
+      term1 = makeTaggedSRecord(rec1);
+      term2 = makeTaggedSRecord(rec2);
+    }
+
+    // unification is reduced to "term1 = term2"
+    am.prepareCall(BI_Unify, RefsArray::make(term1, term2));
+
+    // the following ensures that suspension occurs after replacement
+    if (am.isEmptySuspendVarList())
+      am.addSuspendVarListInline(oz_newSimpleVar(oz_currentBoard()));
+
+    return BI_REPLACEBICALL;
+  }
+
+  Assert(suspendTrail.isEmpty());
 
   return (result);
 }

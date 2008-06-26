@@ -1,0 +1,406 @@
+<!--
+  - Authors:
+  -   Raphael Collet    <raphael.collet@uclouvain.be>
+  -
+  - Copyright:
+  -   Raphael Collet, 2008
+  -
+  - Last change:
+  -   $Date: 2005-06-11T18:04:05.000000Z $ by $Author:  $
+  -   $Revision: 65 $
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+<Chapter id="Chapter.DP">
+  <Title/General Distributed Programming Support: <<DP>>/
+
+<p>This module presents the primitive support for distribution
+provided by the Mozart system.  It gives the programmer some control
+on <em>how</em> a language entity is distributed, with a system
+of <em>annotations</em>.  It also provides primitives to handle
+distribution failures.
+
+<section id="section.dp.init">
+  <title/Initializing the Distribution Layer/
+
+<p>The distribution layer of Mozart is dynamically loaded when used.
+Its load and initialization can be forced with the procedures
+<<DP.init>> and <<DP.initWith>>.
+
+<list>
+  <entry><<init>>
+      <index><<DP>><and><<init>></index></entry>
+  <synopsis><<{DP.init}>></synopsis>
+  <item>Initializes the distribution layer with parameters determined
+automatically by the system.  The call has no effect if the layer has
+already been initialized.</item>
+  <entry><<initWith>>
+      <index><<DP>><and><<initWith>></index></entry>
+  <synopsis><<{DP.initWith ?+{Spec}}>></synopsis>
+  <item>Initializes the distribution layer according to ?_{Spec}.  It
+has no effect if the layer had already been initialized.  The value
+?_{Spec} is a record of the type
+<code display>
+init(ip:       ?_{IP} <= best
+     port:     ?_{PN} <= 'from'(9000)
+     firewall: ?_{FW} <= false)
+</code>
+All entries in record ?_{Spec} are optional.  The default values shown
+above are used if not given.  The fields have the following meaning.
+<list>
+  <item>?_{IP} defines the IP address that the Mozart site should
+expose as its home address.  It is either a string like
+<<"193.10.66.192">> or the atom <<best>>.  With the latter, the system
+will map the host name of the computer to an IP address.  The IP
+address should only be set if the operating system returns a faulty
+address for some reason.</item>
+  <item>?_{PN} sets the port number that should be used for listening
+to incoming connection attempts.  If ?_{PN} has the form
+<<exact(?_{N})>>, the distribution layer will try to obtain the port
+number ?_{N}.  If ?_{PN} has the form <<'from'(?_{N})>>, the system
+will try to obtain the port number ?_{N}.  If that port is
+unavailable, port ?_{N}+1 will be tried, then ?_{N}+2, and so on,
+until a port number is granted by the operating system.  If ?_{PN} is
+<<free>>, then the distribution layer will pick the first port number
+granted by the operating system.</item>
+  <item>?_{FW} is a boolean value that indicates if this site's host
+is behind a firewall.  If it has value <<true>>, connection attempts
+will be tried from inside to outside the firewall.</item>
+</list>
+  </item>
+</list>
+
+<p>The record ?_{Spec} given to <<DP.initWith>> can also be set as
+property <<'dp.listenerParams'>> in module <<Property>>.  Setting the
+property does not force the distribution layer to be initialized.  The
+call <<{DP.initWith ?_{Spec}}>> is equivalent to
+<code display>
+{Property.put 'dp.listenerParams'
+ {Adjoin {Property.get 'dp.listenerParams'} ?_{Spec}}
+{DP.init}
+</code>
+
+<section id="section.dp.annotations"><title/Distribution Annotations/
+
+<p>Since Mozart 1.4.0, the distribution support provides more choices
+on how an entity is distributed.  The programmer can choose between
+several protocols for the management of an entity's state, and its
+distributed memory management.  The choice is specified by attaching
+an <em>annotation</em> to the entity.  Once an entity is distributed,
+the system determines its distribution parameters (state protocol and
+memory management) by looking up the entity's annotation.  If some
+parameters are missing in the annotation, the system uses default
+values for the corresponding parameters.  Default values are discussed
+below (<ptr to="section.dp.annotations.defaults">).
+
+<p>An annotation value is either an atom or a list of atoms.  Valid
+values are given below.  It may specify a protocol (like
+<<stationary>>), a memory management scheme (like <<[persistent]>>),
+or both (like <<[stationary persistent]>>).  The annotation
+is <em>complete</em> if both a protocol and a memory management scheme
+are given, otherwise it is <em>partial</em>.
+
+<subsection><title/Annotating Entities/
+
+<p>The following two operations handle entity operations.  The
+annotation mechanism is incremental: one can annotate an entity
+several times, the resulting annotation for the entity being the
+conjunction of the given annotations.
+<list>
+  <entry><<annotate>>
+  <index><<DP>><and><<annotate>></index></entry>
+  <synopsis><<{DP.annotate ?_{X} ?+{Annot}}>></synopsis>
+  <item>Annotate entity ?_{X} with the given annotation.  The
+annotation must be consistent and valid for the given entity.  An
+exception is raised otherwise.</item>
+  <entry><<getAnnotation>>
+  <index><<DP>><and><<getAnnotation>></index></entry>
+  <synopsis><<{DP.getAnnotation ?_{X} ??{Annot}}>></synopsis>
+  <item>Return the annotation ?_{Annot} of entity ?_{X} as a list of
+atomic annotations.  The list is empty if the entity has not been
+annotated yet.</item>
+</list>
+
+<subsection><title/Annotation Values/
+
+<p>The following table lists the valid protocol annotations, and to
+which kind of entity they can be applied.
+<table id="table.annotations.protocols">
+  <tr>
+    <th>Value</th>
+    <th>Entity type</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><<sited>></td>
+    <td>mutable, immutable</td>
+    <td>Makes an entity sited (no distribution support).  The entity
+will appear outside its home site as an <em>unusable</em>.</td>
+  </tr>
+  <tr>
+    <td><<stationary>></td>
+    <td>mutable, immutable</td>
+    <td>The entity's state remains on its home site.</td>
+  </tr>
+  <tr>
+    <td><<migratory>>, <<pilgrim>></td>
+    <td>mutable</td>
+    <td>The state of the entity is freely mobile; it migrates on sites
+where entity operations must be performed.  With the <<pilgrim>>
+protocol, the state continuously moves between the sites that
+regularly perform operations on the entity.</td>
+  </tr>
+  <tr>
+    <td><<replicated>></td>
+    <td>mutable</td>
+    <td>The entity's state is replicated on all sites referring to the
+entity.  Read operations are performed locally, while write operations
+atomically update all replicas with a two-phase commit-like
+protocol.</td>
+  </tr>
+  <tr>
+    <td><<immediate>></td>
+    <td>immutable</td>
+    <td>The complete representation of the entity is sent together
+with its reference.</td>
+  </tr>
+  <tr>
+    <td><<eager>>, <<lazy>></td>
+    <td>immutable</td>
+    <td>With those protocols, the representation of the entity is sent
+at most once to a site.  The <<eager>> protocol copies the entity as
+soon as possible, while the <<lazy>> protocol delays the copy until it
+is required on the site.</td>
+  </tr>
+  <tr>
+    <td><<variable>>, <<reply>></td>
+    <td>transient</td>
+    <td>For variables and read-only futures.  The <<reply>> protocol
+is an optimization of the <<variable>> protocol for the case where two
+sites share the variable, and the variable is bound by the remote
+site.  That protocol should not be used with read-only futures.</td>
+  </tr>
+</table>
+
+<p>The table below lists annotations for distributed memory
+management.
+<table id="table.annotations.memory">
+  <tr>
+    <th>Annotation</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td><<persistent>></td>
+    <td>The entity remains alive forever.</td>
+  </tr>
+  <tr>
+    <td><<credit>></td>
+    <td>All references to the entity (on sites or in network messages)
+embed a certain amount of <em>credits</em>.  The total amount of
+credits remains constant, and remote sites can exchange references
+without notifying the home site (they put a part of their own credits
+with the reference they exchange).  When all credits are sent back to
+the home site (by the remote sites' respective garbage collectors),
+that site is able to remove the entity from its own memory.</td>
+  </tr>
+  <tr>
+    <td><<lease>></td>
+    <td>All sites referring to an entity periodically notify its home
+site of their presence.  When the home site has not had any
+notification for a long time, it considers that the entity has no more
+remote references, and makes the entity local to its site.  This
+scheme allows to collect memory in the case where remote references
+are lost with site failures.  It is not guaranteed correct,
+though.</td>
+  </tr>
+</table>
+
+<p><em>Note.</em> The annotations <<credit>> and <<lease>> can be
+combined in a single annotation as <<[credit lease]>>.  In that case,
+the home site will localize the entity as soon as one of both schemes
+declares it as local.  The <<credit>> scheme will react quicker in
+case of no failure, while the <<lease>> scheme will still allow
+garbage collection in case some credits are lost in a site failure.
+
+<subsection id="section.dp.annotations.defaults">
+  <title/Default Annotations/
+
+<p>The system defines default annotations for all types of entities.
+Those default annotations are set as system properties in the module
+<<Property>> (<ptr to="section.property.dp">).  The default annotation
+set for a given type must be complete and adequate for that type of
+entity.  For instance, the statement below configures objects to be
+stationary by default, and classes to be copied lazily.  Note that
+default annotations are used for entities created on the current site
+only.
+<code display>
+{Property.put 'dp.annotation.object' [stationary credit]}
+{Property.put 'dp.annotation.class' [lazy credit]}
+</code>
+
+<section id="section.dp.fault"><title/Fault Handling/
+
+<p>At global scale, there is only one kind of entity failure in
+Mozart: the entity permanently cease to function.  For instance, if
+the home site of an entity crashes, and that site was necessary for
+the entity to function properly, the entity itself fails permanently.
+The failure of an entity can also be provoked on purpose by the
+programmer.  This may simplify some fault handling algorithms, because
+it makes sure the entity is failed permanently.
+
+<p>At local scale, every site can observe entity failures.  It may
+observe the global failure of an entity, but it may also observe
+unknown failures.  Bad network communication can prevent an operation
+to perform on an entity.  The failure may be temporary, and go away
+once the network communication is reestablished.  But it may also hide
+a real permanent failure.  The possible failures observed at a site
+are
+<list>
+  <item><<ok>>: the entity seems to be working properly.</item>
+  <item><<tempFail>>: the entity is unusable on this site because of
+an unknown failure.</item>
+  <item><<localFail>>: the entity is permanently unusable on this
+site, but the failure may not be global.  This failure is provoked by
+the operation <<break>> below.</item>
+  <item><<permFail>>: the entity is failed globally.</item>
+</list>
+
+<p>Valid fault state transitions are shown in
+<ptr to="fig.faultstates">.  One can see that from fault states
+<<localFail>> and <<permFail>>, one can never go back to state <<ok>>
+again (see <ptr to="section.dp.limitations">, though).
+
+<p>
+<figure id="fig.faultstates">
+<caption>State diagram with valid fault state transitions</caption>
+<picture.extern to="pictures/faultstates.eps" type=ps>
+</figure>
+
+<p>A synchronous operation on a failed entity simply <em>blocks</em>.
+If the failure is transient, then the operation naturally resumes once
+the failure goes away.  If the failure is permanent, then the
+operation blocks forever.  Contrary to versions of Mozart prior to
+1.4.0, an operation on failed entity never raises an exception because
+of the failure.
+
+<p>An asynchronous operation on a failed entity returns immediately as
+usual.  If the failure is temporary, then the operation will
+eventually perform its effect.  In the case of a permanent failure,
+the effect will never occur.
+
+<subsection><title/Entity Fault Stream/
+
+<p>Every site maintains a <em>local fault state</em> for every entity,
+and that fault state is available to the programmer.  In order to
+allow the programmer to react to fault state <em>transitions</em>, the
+site provides a <em>fault stream</em> for every entity.  The fault
+stream of an entity is extended automatically with that entity's local
+fault state every time it changes.
+
+<list>
+  <entry><<getFaultStream>>
+      <index><<DP>><and><<getFaultStream>></index></entry>
+  <synopsis><<{DP.getFaultStream ?_{X} ??{FS}}>></synopsis>
+  <item>Return the current tail of the fault stream of entity ?_{X},
+prefixed with the current fault state of ?_{X}.  Therefore, the
+current fault state of ?_{X} is given by
+<<{DP.getFaultStream ?_{X}}.1>>.</item>
+</list>
+
+Once an entity is removed from memory by the local garbage collector,
+its fault stream is automatically <em>closed</em>, i.e., its tail is
+bound to <<nil>>.  This gives a simple way for a fault handler to
+detect that the entity it watches is no longer in use.  This
+finalization mechanism is triggered at the same time as
+the <em>post-mortem finalization</em> of the entity
+(<ptr to="chapter.finalize">).
+
+<subsection><title/Kill and Break/
+
+<p>Entity failure can be provoked explicitly by the programmer.  It
+can apply either globally, or locally.  These operations can be useful
+in order to guarantee that an entity will no longer be used.
+<list>
+  <entry><<kill>>
+      <index><<DP>><and><<kill>></index></entry>
+  <synopsis><<{DP.kill ?_{X}}>></synopsis>
+  <item>Eventually make entity ?_{X} fail permanently, if possible.
+This operation is asynchronous, and is not guaranteed to proceed.  Its
+success is confirmed once the fault state <<permFail>> appears on the
+entity's fault stream.</item>
+  <entry><<break>>
+      <index><<DP>><and><<break>></index></entry>
+  <synopsis><<{DP.break ?_{X}}>></synopsis>
+  <item>This operation makes the entity ?_{X} fail on the current
+site, if possible.  The operation proceeds immediately, since only the
+current site is involved.  It has no effect on other sites.</item>
+</list>
+
+<section id="section.dp.variables"><title/Special Case: Variables/
+
+<p>Variables are a bit trickier to manipulate because of their
+transient nature.  One may experience a race condition if a variable
+is bound and concurrently annotated: the annotation may fail.  In
+order to avoid such a race condition, one should perform the
+annotation on a fresh variable, then bind the latter to the target
+variable.  If the target variable is not annotated yet, the annotation
+is automatically transferred to it.
+<code display>
+local Y in
+   {DP.annotate Y reply}        % annotate Y
+   X=Y                          % transfer annotation to X if possible
+end
+</code>
+A similar rule applies for the fault stream of a variable.  If a
+variable is bound to another variable, their fault streams
+are <em>merged</em>: their tails are bound to each other, possibly
+with an intermediate fault state if they have different fault states.
+<code display>
+local Y in
+   FS={DP.getFaultStream Y}     % take fault stream of Y
+   X=Y                          % FS is now the fault stream of X, too
+end
+</code>
+Note that if the variable is bound to a value, its fault stream is
+closed.
+
+<section id="section.dp.limitations"><title/Limitations/
+
+<p>
+<list>
+  <item>If an entity ?_{X} has fault state <<localFail>> on a site
+?_{S}, then no operation on ?_{X} will ever succeed on ?_{S}.  This
+property is guaranteed, but only as long as ?_{X} remains in memory of
+?_{S}.  Indeed, this state has no effect on other sites, and by
+default only ?_{S} knows that fault state for ?_{X}.  If ?_{X} is
+removed by the garbage collector of ?_{S}, then its fault state on
+?_{S} vanishes.  In that case, if ?_{X} is reintroduced later to
+?_{S}, it might be considered in state <<ok>> again.</item>
+
+  <item>Since version 1.4.0, the fault state <<tempFail>> is triggered
+based on an adaptive timeout.  The system monitors its site
+connections, and determines an average round-trip time and deviation
+for each connection.  Because the mechanism is adaptive, it requires
+some time to find appropriate values.  Therefore the failure detection
+can sometimes appear too sensitive, and sometimes a bit sloppy.</item>
+
+</list>
+
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

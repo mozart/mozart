@@ -141,6 +141,9 @@ OZ_BI_define(BIprocedureCoord, 1,1)
     oz_typeError(0,"Procedure (no builtin)");
   }
   Abstraction *a=tagged2Abstraction(proc);
+  if (!a->getPred()) {     // incomplete abstraction
+    OZ_RETURN(NameUnit);
+  }
   ProgramCounter PC = a->getPred()->getPC();
   ProgramCounter definitionPC = CodeArea::definitionStart(PC);
   if (definitionPC != NOCODE) {

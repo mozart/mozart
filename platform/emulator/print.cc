@@ -577,25 +577,17 @@ void Abstraction::printStream(ostream &stream, int depth)
          << getPrintName() << "/" << getArity();
 }
 
-void Object::printStream(ostream &stream, int depth)
+void OzObject::printStream(ostream &stream, int depth)
 {
-  stream << "<O:" << getPrintName()
-         << ", ";
-  if (getFreeRecord())
-    getFreeRecord()->printStream(stream,depth);
-  else
-    stream << "nofreefeatures";
-  stream << ", State: ";
-  RecOrCell state = getState();
-  if (stateIsCell(state)) {
-    getCell(state)->printStream(stream,depth);
-  } else if(getRecord(state)) {
-    getRecord(state)->printStream(stream,depth);
-  }
-  stream << ">";
+  stream << "O:" << getPrintName();
 }
 
-void ObjectClass::printStream(ostream &stream, int depth)
+void ObjectState::printStream(ostream &stream, int depth)
+{
+  stream << "Object state";
+}
+
+void OzClass::printStream(ostream &stream, int depth)
 {
   stream << "C:" << getPrintName();
 }
@@ -689,43 +681,25 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
     ((Abstraction *) this)->printLongStream(stream,depth,offset);
     break;
   case Co_Object:
-    ((Object *) this)->printLongStream(stream,depth,offset);
+    ((OzObject *) this)->printLongStream(stream,depth,offset);
+    break;
+  case Co_ObjectState:
+    ((ObjectState *) this)->printLongStream(stream,depth,offset);
     break;
   case Co_Class:
-    ((ObjectClass *) this)->printLongStream(stream,depth,offset);
+    ((OzClass *) this)->printLongStream(stream,depth,offset);
     break;
   case Co_Cell:
-    switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:
-      stream << "CellLocal@" << this;
-      break;
-    case Te_Frame:
-      stream << "CellFrame@" << this;
-      break;
-    case Te_Manager:
-      stream << "CellManager@" << this;
-      break;
-    case Te_Proxy:
-      stream << "CellProxy@" << this;
-      break;
-    default:
-      Assert(NO);
-    }
+    if (((OzCell *)this)->isDistributed())
+      stream << "Proxy Cell@" << this;
+    else
+      stream << "Local Cell@" << this;
     break;
   case Co_Port:
-    switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:
-      stream << "PortLocal@" << this;
-      break;
-    case Te_Manager:
-      stream << "PortManager@" << this;
-      break;
-    case Te_Proxy:
-      stream << "PortProxy@" << this;
-      break;
-    default:
-      Assert(NO);
-    }
+    if (((OzPort *)this)->isDistributed())
+      stream << "Proxy Port@" << this;
+    else
+      stream << "Local Port@" << this;
     break;
   case Co_Space:
     ((Space *) this)->printLongStream(stream,depth,offset);
@@ -740,21 +714,10 @@ void ConstTerm::printLongStream(ostream &stream, int depth, int offset)
     ((OzDictionary *) this)->printLongStream(stream,depth,offset);
     break;
   case Co_Lock:
-    switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:
-      stream << "<LockLocal@" << this << ">";
-      break;
-    case Te_Frame:
-      stream << "<LockFrame@" << this << ">";
-      break;
-    case Te_Manager:
-      stream << "<LockManager@" << this << ">";
-      break;
-    case Te_Proxy:
-      stream << "<LockProxy@" << this << ">";
-      break;
-    default:         Assert(NO);
-    }
+    if (((OzLock *) this)->isDistributed())
+      stream << "<Proxy Lock@" << this << ">";
+    else
+      stream << "<Local Lock@" << this << ">";
     break;
   case Co_Builtin:
     ((Builtin *) this)->printLongStream(stream,depth,offset);
@@ -786,42 +749,23 @@ void ConstTerm::printStream(ostream &stream, int depth)
     break;
   case Co_Abstraction: ((Abstraction *) this)->printStream(stream,depth);
     break;
-  case Co_Object:      ((Object *) this)->printStream(stream,depth);
+  case Co_Object:      ((OzObject *) this)->printStream(stream,depth);
     break;
-  case Co_Class:       ((ObjectClass *) this)->printStream(stream,depth);
+  case Co_ObjectState: ((ObjectState *) this)->printStream(stream,depth);
+    break;
+  case Co_Class:       ((OzClass *) this)->printStream(stream,depth);
     break;
   case Co_Cell:
-    switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:
-      stream << "CellLocal@" << this;
-      break;
-    case Te_Frame:
-      stream << "CellFrame@" << this;
-      break;
-    case Te_Manager:
-      stream << "CellManager@" << this;
-      break;
-    case Te_Proxy:
-      stream << "CellProxy@" << this;
-      break;
-    default:
-      Assert(NO);
-    }
+    if (((OzCell *)this)->isDistributed())
+      stream << "Proxy Cell@" << this;
+    else
+      stream << "Local Cell@" << this;
     break;
   case Co_Port:
-    switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:
-      stream << "PortLocal@" << this;
-      break;
-    case Te_Manager:
-      stream << "PortManager@" << this;
-      break;
-    case Te_Proxy:
-      stream << "PortProxy@" << this;
-      break;
-    default:
-      Assert(NO);
-    }
+    if (((OzPort *)this)->isDistributed())
+      stream << "Proxy Port@" << this;
+    else
+      stream << "Local Port@" << this;
     break;
   case Co_Space:       ((Space *) this)->printStream(stream,depth);
     break;
@@ -832,21 +776,10 @@ void ConstTerm::printStream(ostream &stream, int depth)
   case Co_Dictionary:  ((OzDictionary *) this)->printStream(stream,depth);
     break;
   case Co_Lock:
-    switch(((Tertiary *)this)->getTertType()){
-    case Te_Local:
-      stream << "<LockLocal@" << this << ">";
-      break;
-    case Te_Frame:
-      stream << "<LockFrame@" << this << ">";
-      break;
-    case Te_Manager:
-      stream << "<LockManager@" << this << ">";
-      break;
-    case Te_Proxy:
-      stream << "<LockProxy@" << this << ">";
-      break;
-    default:         Assert(NO);
-    }
+    if (((OzLock *)this)->isDistributed())
+      stream << "Proxy Lock@" << this;
+    else
+      stream << "Local Lock@" << this;
     break;
   case Co_Builtin:     ((Builtin *) this)->printStream(stream,depth);
     break;
@@ -861,7 +794,7 @@ void ForeignPointer::printStream(ostream &stream, int depth)
   stream << "foreign pointer: " << getPointer() << " at " << this << '.';
 }
 
-void ObjectClass::printLongStream(ostream &stream, int depth, int offset)
+void OzClass::printLongStream(ostream &stream, int depth, int offset)
 {
   stream << indent(offset)
          << "Class: "
@@ -1052,7 +985,7 @@ void LTuple::printLongStream(ostream &stream, int depth, int offset)
   ozd_printLongStream(args[1],stream,PRINT_DEPTH_DEC(depth),offset+2);
 }
 
-void Object::printLongStream(ostream &stream, int depth, int offset)
+void OzObject::printLongStream(ostream &stream, int depth, int offset)
 {
   stream << indent(offset)
          << "Object: "
@@ -1063,10 +996,21 @@ void Object::printLongStream(ostream &stream, int depth, int offset)
   }
   stream << endl;
   stream << "State: ";
-  if (stateIsCell(state)) {
-    getCell(state)->printLongStream(stream,depth,offset);
-  } else if(getRecord(state)) {
-    getRecord(state)->printLongStream(stream,depth,offset);
+  ObjectState* state = getState();
+  if (state) {
+    state->printLongStream(stream,depth,offset);
+  } else {
+    stream << "(distributed)";
+  }
+}
+
+void ObjectState::printLongStream(ostream &stream, int depth, int offset)
+{
+  SRecord* state = getValue();
+  if (state) {
+    state->printLongStream(stream,depth,offset);
+  } else {
+    stream << "(distributed)";
   }
 }
 
@@ -1075,20 +1019,24 @@ void Abstraction::printLongStream(ostream &stream, int depth, int offset)
   stream << indent(offset)
          << "Abstraction @id"
          << this << endl;
-  getPred()->printLongStream(stream,depth,offset);
-  int n = getPred()->getGSize();
-  if (offset == 0) {
-    if (n > 0) {
-      stream <<  "G Regs:";
-      for (int i = 0; i < n; i++) {
-        stream << " G[" << i << "]:\n";
-        ozd_printLongStream(getG(i),stream,depth,offset+2);
+  if (getPred()) {
+    getPred()->printLongStream(stream,depth,offset);
+    int n = getPred()->getGSize();
+    if (isComplete() && offset == 0) {
+      if (n > 0) {
+        stream <<  "G Regs:";
+        for (int i = 0; i < n; i++) {
+          stream << " G[" << i << "]:\n";
+          ozd_printLongStream(getG(i),stream,depth,offset+2);
+        }
+      } else {
+        stream << "No G-Regs" << endl;
       }
     } else {
-      stream << "No G-Regs" << endl;
+      stream << indent(offset) << "G Regs: #" << n << endl;
     }
   } else {
-    stream << indent(offset) << "G Regs: #" << n << endl;
+    stream << indent(offset) << "Only a stub (distribution)" << endl;
   }
 }
 
@@ -1138,12 +1086,13 @@ void Space::printLongStream(ostream &stream, int depth, int offset)
 void SChunk::printLongStream(ostream &stream, int depth, int offset)
 {
   stream << indent(offset)
-         << "Chunk@id" << this << endl
-         << indent(offset)
-         << " value:"<<endl;
-  ozd_printLongStream(value,stream,depth,offset+2);
+         << "Chunk@id" << this << endl;
+  if (value) {
+    stream << indent(offset) << " value:" << endl;
+    ozd_printLongStream(value,stream,depth,offset+2);
+  }
   stream << indent(offset)
-    << " home:"<<endl;
+         << " home:"<<endl;
   GETBOARD(this)->printLongStream(stream,depth,offset);
 }
 

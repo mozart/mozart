@@ -1,0 +1,69 @@
+2002/11/14 : Erik
+
+Arbetet på pappret borde ha tagit fart. Slides texten har blivit
+skriven, paralellt med detta jobbade jag på unusables. Alltså de gamla
+resurserna.  Drabbades av en fin bugg när jag kastade ut de gamla emul
+klasserna. Var tvungen att gå tillbaks i CVS'n och plocka fram gamla
+filer och göra allt från början.
+
+2002/11/15 : Zacharias
+
+Började med slidestexten, efter att ha undersökt enklare prestanda
+tester gjordes buffrarna om något. De blev mer lättförståeliga samt
+att en del optimeringar gjorts både i buffrarna samt i moduler som
+använt dem. Började med omarbetet av timers: Från att ha varit O(2n) så
+skall de bli O(1).
+
+2002/11/22 : Zacharias
+
+Början av veckan har gått åt till att debugga timersarna, com-objektet
+visade sig vara en riktig sk*t-djungel :).
+Hittade de flesta buggar och avlutade veckan med en forhoppningsvis
+hyfsad timer-impl. Fredag slides i Uppsala
+
+2002/11/22 : Erik
+
+Dokument vecka. Inte rolig bara tråkig. Ett 7 sidors dokument i
+slides format är gjort. Förhoppningsvis finns mer eller mindre
+all info med i det.
+shweitzarna har hört av sig, det ser ut som om vi sticker ner i
+mitten på December.
+På modelerings fronten lutar det mot att Named-entiteter nu skall
+vara GDM'er, igen...
+
+
+2002/11/29: Erik
+
+Hell week - 2. Fortsatte med dokumeneted. Nu först med Hjälp från
+Seif(Han godkände slidesen som ett arbets materiel), för att senare
+arbeta med Per. Per visade sig ha betydligt mer insikt och kanske
+intresse. Hela skiten omgjord till en bra outline, nu gäller det bara
+att få ihop skiten.
+På utvecklingsfronten visade det sig att remote transienterna fungerade,
+logiska variabler med remote skrivrättighet. Dock ser det ut som om
+interna messengeingen är slö. När tid finns skall vi ta en titt på
+det hela.
+
+2002/11/29: Zacharias
+
+Dokument hela veckan. Från slides texten kom raw-text som sedan blev
+paper outline. Sjuk tisdag och onsdag samt antagligen lite smått på
+torsdag och fredag med gjorde att arbetsinsatsen blev lite haltande
+
+2002/12/17: Erik
+
+Vi misslyckades. Helt enkelt misslyckades. Den arbetsinsatts som jag
+och Zacharias la ner var helt otrolig, och ändå misslyckades
+vi. Veckan efter den 8'de var jag sjuk som ett barn. Per och Zacharias
+fortsatte att jobba på och dukumentet materialiserade sig lite
+mer. Vid närmare eftertanke visade det sig att vi var långt ifrån
+klara kring den 8'de. Nu, idag den 17'de har vi en draft. Den har dock
+vuxit till ca 50 sidor och vi skulle alltsp behöva skära bort 20 sidor
+för att kunna submitta den, om vi nu inte hade kört över datumet med
+snart en vecka. Hur som haver, nu tror jag att allt är skrivet och det
+är dax att på riktigt gå igenom allt för att se vad som finns och inte
+finns. Till EU kommer den i alla fall. Roligt är det inte längre....
+
+2002/12/19: Zacharias
+
+Få se om vi kan kalla oss klara. Nu är det jul och dokumentet är...

@@ -77,7 +77,6 @@ OZ_Return SimpleVar::becomeNeeded()
   return PROCEED;
 }
 
-OzVariable *oz_newSimpleVar(Board *bb)
-{
-  return new SimpleVar(bb);
+OZ_Term oz_newSimpleVar(Board *bb) {
+  return makeTaggedRef(newTaggedVar(new SimpleVar(bb)));
 }

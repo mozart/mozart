@@ -44,7 +44,7 @@ private:
   }
   int *allocate(int size) {
     size_t n = size * sizeof(int);
-    return ((int *) _OZ_new_OZ_Extension(n));
+    return ((int *) oz_heapMalloc(n));
   }
 public:
   virtual

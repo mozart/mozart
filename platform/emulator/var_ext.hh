@@ -35,11 +35,9 @@ typedef enum {
   OZ_EVAR_PROXY,
   OZ_EVAR_MANAGER,
   OZ_EVAR_LAZY,
-  // Patches are not really a variable, but serve for marshaling
+  // Patches are not really variables, but serve for marshaling
   // (see marshalerPatch.hh and libdp/dpMarshaler.hh);
-  OZ_EVAR_MGRVARPATCH,
-  OZ_EVAR_PXYVARPATCH,
-  OZ_EVAR_MVARPATCH,
+  OZ_EVAR_DISTRIBUTEDVARPATCH,
   OZ_EVAR_LAST
 } ExtVarType;
 

@@ -1326,7 +1326,7 @@ OZ_ENABLE(modules-static,[ link modules statically],$oz_enable_modules_static,
         oz_enable_modules_static=yes
         AC_MSG_RESULT(yes (-DMODULES_LINK_STATIC))
         AC_DEFINE(MODULES_LINK_STATIC)
-        STATIC_MODULES="\$(MODULE_NAMES)"
+        STATIC_MODULES="\$(MODULE_NAMES) DSS"
         DYNAMIC_MODULES=""
         ,
         oz_enable_modules_static=no

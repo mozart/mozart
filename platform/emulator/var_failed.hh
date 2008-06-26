@@ -49,11 +49,14 @@
 class Failed: public OzVariable {
 private:
   // encapsulated exception
-  OZ_Term exception;
+  TaggedRef exception;
 
 public:
-  Failed(Board *bb, OZ_Term exc)
+  Failed(Board *bb, TaggedRef exc)
     : OzVariable(OZ_VAR_FAILED,bb), exception(exc) {}
+
+  TaggedRef getException() { return exception; }
+  TaggedRef* getRefException() { return &exception; }
 
   OZ_Return bind(TaggedRef* vPtr,TaggedRef t);
   OZ_Return unify(TaggedRef* vPtr,TaggedRef* tPtr);

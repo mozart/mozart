@@ -85,12 +85,12 @@ the module <ref.extern to="ozdoc:system"
 key="chapter.connection"/<<Connection>>/,
 which has the following three operations:
 <LIST>
-<ITEM> <<{Connection.offer X T}>> creates
+<ITEM> <<{Connection.offerOnce X T}>> creates
 a ticket <<T>> for <<X>>, which can be any language entity.
 The ticket can be taken just once.
 Attempting to
 take a ticket more than once will raise an exception.
-<ITEM> <<{Connection.offerUnlimited X T}>> creates
+<ITEM> <<{Connection.offerMany X T}>> creates
 a ticket <<T>> for <<X>>, which can be any language entity.
 The ticket can be taken any number of times.
 <ITEM> <<{Connection.take T X}>> creates a reference <<X>>
@@ -107,7 +107,7 @@ as follows:
 
 <<<
 declare Stream Tkt in
-{Connection.offerUnlimited Stream Tkt}
+{Connection.offerMany Stream Tkt}
 {Show Tkt}
 >>>
 
@@ -120,7 +120,7 @@ the ticket in the emulator window.
 We will use copy and paste to communicate the ticket
 to another application.
 The ticket looks something like
-<<'x-ozticket://193.10.66.30:9002:SpGK0:U4v/y:s:f:xl'>>.
+<<'oz-ticket://130.104.228.81:9000/h9323679#42'>>.
 Don't worry about exactly what's inside this strange atom.
 Users don't normally see tickets:
 they are stored in files or passed across the network,
@@ -131,7 +131,7 @@ to the stream:
 <<<
 declare Stream in
 {Connection.take
-   'x-ozticket://193.10.66.30:9002:SpGK0:U4v/y:s:f:xl'
+   'oz-ticket://130.104.228.81:9000/h9323679#42'
    Stream}
 {Browse Stream}
 >>>
@@ -297,7 +297,7 @@ end
 
 % Make server available through a URL:
 % (by using a filename that is also accessible by URL)
-{Pickle.save {Connection.offerUnlimited Srv}
+{Pickle.save {Connection.offerMany Srv}
              "/usr/staff/pvr/public_html/hw"}
 >>>
 <P>All the above must be executed on the server site.
@@ -420,6 +420,62 @@ This ensures that
 there is no conflict with any exceptions
 raised by <<ProcOrObj>>.
 
+<SUBSECTION id="making.objects.stationary">
+  <TITLE>Making stationary objects, the new way</TITLE>
+
+<p>Since version 1.4.0, Mozart has built-in support to make
+objects stationary.  The platform provides a way for the
+programmer to <em>choose a different protocol</em> for objects,
+or any entity in general.
+By default, object-records are copied lazily, and object states
+are mobile.
+But we can enforce the platform to use the so-called
+<em>stationary protocol</em> for a given object.
+<index/object<and>stationary/
+This is done by <em>annotating</em> the object: the annotation
+specifies a desired distributed behavior for the object.
+
+<p>An entity is annotated with the procedure
+<index/annotation/
+<index/<<DP>><and><<annotate>>/
+<<DP.annotate>>.
+The procedure takes the entity and an <em>annotation</em>,
+and attaches the annotation to the entity.
+The annotation is an atom or a list of atoms.
+It will be used by the distribution subsystem
+once the entity becomes distributed.
+Note that it is important to annotate the entity
+<em>before</em> it gets distributed.
+The protocol used by an entity cannot be changed once it is distributed.
+
+<p>
+In the following example, the object is created with
+the procedure <<New>>.
+It it then annotated with the atom <<stationary>>, which
+is tells Mozart to use the stationary protocol
+instead of the default one.
+The distributed behavior of the object is exactly as expected.
+<<<
+declare
+class HelloWorld
+   meth hw(X) X="Hello world" end
+end
+
+Srv={New HelloWorld hw(_)}
+{DP.annotate Srv stationary}     % make Srv stationary
+>>>
+
+<p>We now have an alternative definition for <<NewStat>>,
+using annotations:
+<<<
+declare
+fun {NewStat Class Init}
+   Obj={New Class Init}
+in
+   {DP.annotate Obj stationary}
+   Obj
+end
+>>>
 
 <SUBSECTION id="compute.server"><TITLE>A compute server</TITLE>
 

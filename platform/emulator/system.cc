@@ -46,6 +46,13 @@ OZ_BI_define(BIgarbageCollection,0,0)
   return BI_PREEMPT;
 } OZ_BI_end
 
+OZ_BI_define(BIpostmortem,3,0) {
+  oz_declareNonvarIN(1, port);
+  if (!oz_isPort(port)) { oz_typeError(1, "port"); }
+  registerPostMortem(OZ_in(0), port, OZ_in(2));
+  return PROCEED;
+} OZ_BI_end
+
 OZ_BI_define(BIsystemEq,2,1) {
   oz_declareSafeDerefIN(0,a);
   oz_declareSafeDerefIN(1,b);

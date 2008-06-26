@@ -342,7 +342,7 @@ dnl Christian's request, CXXFLAGS is set to -O by default if it is not
 dnl already set in the environment
 dnl ==================================================================
 
-AC_DEFUN(OZ_VERSION_GXX,[2.95.3])
+AC_DEFUN(OZ_VERSION_GXX,[3.3.2])
 AC_DEFUN(OZ_CXX_CHOOSE,[
   if test -z "$oz_cv_cxx__chosen"; then
     : ${CXXFLAGS="-O"}
@@ -363,10 +363,10 @@ system.  It can be retrieved from:
 
         ftp://ftp.gnu.org/pub/gnu/gcc/
 
-The latest version at this time is 3.3.2 and is available
+The latest version at this time is 4.1.0 and is available
 packaged as the following archive:
 
-        gcc-3.3.2.tar.gz
+        gcc-4.1.0.tar.bz2
 
 You may find a mirror archive closer to you by consulting:
 
@@ -468,7 +468,7 @@ dnl At Christian's request CFLAGS is set to -O by default if it is not
 dnl already set in the environment.
 dnl ==================================================================
 
-AC_DEFUN(OZ_VERSION_GCC,[2.95.3])
+AC_DEFUN(OZ_VERSION_GCC,[3.3.2])
 AC_DEFUN(OZ_CC_CHOOSE,[
   if test -z "$oz_cv_cc__chosen"; then
     : ${CFLAGS="-O"}
@@ -488,10 +488,10 @@ system.  It can be retrieved from:
 
         ftp://ftp.gnu.org/pub/gnu/gcc/
 
-The latest version at this time is 3.3.2 and is available
+The latest version at this time is 4.1.0 and is available
 packaged as the following archive:
 
-        gcc-3.3.2.tar.gz
+        gcc-4.1.0.tar.bz2
 
 You may find a mirror archive closer to you by consulting:
 

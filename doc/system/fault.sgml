@@ -27,236 +27,36 @@
 <Chapter id="Chapter.Fault">
   <Title/Detecting and Handling Distribution Problems: <<Fault>>/
 
-<P>This section summarizes the operations of the <<Fault>> module
-and their argument types.
-Please refer to the Distribution Tutorial for a full specification
-of the operations and examples of how to use them.
-This section carefully indicates where the current release
-is incomplete with respect to the specification
-(called a <EM>limitation</EM>)
-or has a different behavior (called a <EM>modification</EM>).
+<p>This module is defunct.  It has been replaced since Mozart 1.4.0 by
+new primitives in module <<DP>> (<ptr to="section.dp.fault">).  The
+former functionality could be reproduced, but no effort has been made
+in that direction, because the new fault model is believed to be
+superior, although much simpler.
 
-<section><title/Argument Types/
-
-<P>We summarize the argument types for the operations
-in the <<Fault>> module.
-<list>
-<entry/<code/Entity//
-<item>A reference to any Oz language entity that
-has distributed fault modes, namely any
-object, cell, lock, port, or logic variable.
-
-<entry/<code/Level//
-<item>Either <<site>> or <<'thread'(T)>>,
-where <<T>> is a thread reference or the atom <<this>>.<NOTE
-FOOT>Since <<thread>> is already used as a keyword in the language,
-it has to be quoted to make it an atom.</NOTE>
-
-<entry/<code/FStates//
-<item>A set of fault states, i.e., a list that can contain
-at most one of each of
-the elements <<tempFail>>, <<permFail>>,
-<<remoteProblem(tempSome)>>,
-<<remoteProblem(permSome)>>,
-<<remoteProblem(tempAll)>>, and
-<<remoteProblem(permAll)>>.
-
-<entry/<code/OP//
-<item>A record that indicates which attempted operation caused
-the exception or handler invocation.
-The value of <<OP>> is one of:
-<list>
-<item><<bind(T)>>, <<wait>>, <<isDet>> (for logic variables).
-<item><<cellExchange(Old New)>>, <<cellAssign(New)>>,
-<<cellAccess(Old)>> (for cells).
-<item><<'lock'>> (for locks).
-<item><<send(Msg)>> (for ports).
-<item><<objectExchange(Attr Old New)>>,
-<<objectAssign(Attr New)>>,
-<<objectAccess(Attr Old)>>,
-<<objectFetch>> (for objects).
-A limitation of the current release is that an attempted
-operation on an object cannot be retried.
-</list>
-
-<entry/<code/HandlerProc//
-<item>A handler, i.e., a three-argument procedure
-that is called as <<{HandlerProc Entity FStates OP}>>,
-where <<FStates>> is a set of currently active fault states.
-A handler replaces an attempted operation on an entity.
-
-<entry/<code/WatcherProc//
-<item>A watcher, i.e., a two-argument procedure
-that is called in its own thread
-as <<{WatcherProc Entity FStates}>>,
-where <<FStates>> is a set of currently active fault states.
-A watcher is invoked as soon as the site detects a fault.
-
-</list>
-
-<section><title/Fault Information/
-
-<P>When there is a distribution problem,
-then three items of information are made available:
-<list>
-<item><<Entity>>: the faulty entity.
-<item><<ActualFStates>>: the fault states that are currently active.
-This is always a subset of the states that the entity is set up to detect.
-For objects, cells, and locks,
-the fault states <<tempFail(info:I)>> and <<permFail(info:I)>>
-are possible, where <<I>> is in {<<state>>, <<owner>>}.
-This tells whether the fault is due
-to a lost state pointer (<<state>>)
-or a crashed owner (<<owner>>).
-<item><<OP>>: the operation that is attempted but does not succeed.
-</list>
-<P>The system can be configured (see below) so that these three items
-appear in one or more of the following three ways:
-<list>
-<item>In an exception with format
-<<system(dp(entity:Entity conditions:FStates op:OP) ...)>>.
-<item>As arguments to a handler call, <<{HandlerProc Entity FStates OP}>>.
-<item>As arguments to a watcher call, <<{WatcherProc Entity FStates}>>.
-</list>
-<P>A limitation of the current release is that the <<Entity>>
-argument is undefined for an object operation.
-For handlers and watchers, this limitation can
-be bypassed by giving the handler and watcher procedures
-a reference to the object.
-
-<section><title/Operations/
-
-<P>The <<Fault>> module contains the following operations.
-All operations return a boolean flag <<B>> that is <<true>>
-if the operation succeeds and <<false>> otherwise.
-All <<enable>> and <<install>> operations
-succeed if nothing was enabled or installed
-at that level.
-An entity with a successful <<enable>> or <<install>>
-at a given level
-is said to <EM>have fault detection</EM>
-at that level.
-All <<disable>> and <<deInstall>> operations
-succeed if nothing was disabled or deinstalled
-at that level.
-The system starts up as if
-<<{Fault.defaultEnable [tempFail permFail] _}>>
-was executed.
-
-<P>All the following operations that have
-an <<Entity>> argument will do nothing
-if entity does not have distributed fault modes.
-If a logic variable with fault detection
-is bound to a nonvariable entity, then
-the fault detection is transferred to
-the entity, provided the latter has
-no fault detection at that level.
-
-<list>
-<entry/<code/{Fault.defaultEnable FStates ??{B}}//
-<item>Sets the default fault detection to <<FStates>> on the current site.
-When an operation is attempted on an entity and
-there is no fault detection on the site or thread level for
-the entity, then the default fault detection is used.
-This always succeeds.
-
-<entry/<code/{Fault.defaultDisable ??{B}}//
-<item>Sets the default fault detection to <<nil>> on the current site.
-This always succeeds.
-
-<entry/<code/{Fault.enable Entity Level FStates ??{B}}//
-<item>Enables fault detection on a given entity
-at a given level for a given set of fault states.
-An exception is raised if a fault is detected
-when an operation is attempted on the entity.
-
-<entry/<code/{Fault.disable Entity Level ??{B}}//
-<item>Disables fault detection on a given entity
-at a given level.
-
-<entry/<code/{Fault.install Entity Level FStates HandlerProc ??{B}}//
-<item>Installs a handler for fault detection on a given entity
-at a given level for a given set of fault states.
-The handler <<{HandlerProc Entity AFStates OP}>> is called
-if a fault is detected when an operation is attempted on the entity.
-A modification of the current release
-with respect to the specification is that
-handlers installed on variables always retry
-the operation after they return.
-
-<entry/<code/{Fault.deInstall Entity Level ??{B}}//
-<item>Deinstalls a handler for fault detection on a given
-entity at a given level.
-
-<entry/<code/{Fault.installWatcher Entity FStates WatcherProc ??{B}}//
-<item>Installs a watcher for fault detection on a given entity
-for a given set of fault states.
-Any number of watchers can be installed on an entity.
-It is always possible to install a watcher,
-so therefore this always succeeds.
-The watcher <<{WatcherProc Entity AFStates}>> is called
-in its own thread as soon as the site detects a fault.
-
-<entry/<code/{Fault.deInstallWatcher Entity WatcherProc ??{B}}//
-<item>Deinstalls the given watcher on a given entity.
-This call succeeds if <<WatcherProc>> was installed
-on the entity.
-If there is more than one instance of <<WatcherProc>>
-installed on the entity, then exactly one is deinstalled.
-
-</list>
-On a given entity at the <<global>> level,
-at most one enable can be done or one handler installed.
-For a given entity, the <<site>> level
-can have at most one fault detection per site.
-The <<'thread'(T)>> can have at most one fault detection
-per thread.
-To have another fault detection,
-it is necessary to do a disable or deinstall first.
-
-<section><title/Limitations and Modifications/
-
-<P>The current release has the following limitations
-and modifications with respect to the failure model specification.
-A <EM>limitation</EM> is an operation that is specified
-but not possible in the current release.
-A <EM>modification</EM> is an operation that is specified
-but behaves differently in the current release.
-
-<P>Most of the limitations and modifications
-listed here will be removed in future releases.
-
-<SECTION><TITLE>Limitations</TITLE>
-
-<P>The limitations are:
-<list>
-<item>The fault state <<tempFail>> is indicated only after
-a long delay.
-In future releases, the delay will be very short and
-based on adaptive observation of actual network behavior.
-
-<item>If an exception is raised or a handler or watcher
-is invoked for an <EM>object</EM>,
-then the <<Entity>> argument is undefined.
-For handlers and watchers, this limitation can
-be bypassed by giving the handler and watcher procedures
-a reference to the object.
-
-<item>If an exception is raised or a handler is invoked
-for an <EM>object</EM>,
-then the attempted object operation cannot be retried.
-</list>
-
-<SECTION><TITLE>Modifications</TITLE>
-
-<P>The modifications are:
-<list>
-<item>A handler installed on a <EM>variable</EM> will retry
-the operation (i.e., bind or wait) after it returns.
-That is, the handler is inserted before the operation
-instead of replacing the operation.
-</list>
-
+<p>Only the installation of <em>watchers</em> on fault states
+<<tempFail>> and <<permFail>> is still functional.  It is redefined as
+<code display>
+fun {InstallWatcher Entity FStates WatcherProc}
+   if {List.all FStates
+       fun {$ S} {Member S [tempFail permFail]} end}
+   then
+      proc {Loop FS}
+         case FS of F|Fr then
+            if {Member F FStates} then
+               thread {WatcherProc Entity F(info:state)} end
+            else
+               {Loop Fr}
+            end
+         else skip end
+      end
+   in
+      {DP.getFaultStream Entity thread {Loop} end}
+      true
+   else
+      false
+   end
+end
+</code>
 
 <!--
 Local Variables:

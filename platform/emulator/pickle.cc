@@ -212,13 +212,21 @@ Bool Pickler::processObject(OZ_Term term, ConstTerm *objConst)
 
 //
 inline
-void Pickler::processLock(OZ_Term term, Tertiary *tert)
+Bool Pickler::processObjectState(OZ_Term term, ConstTerm *objConst)
+{
+  OZ_error("Pickler::processObjectState is called!");
+  return (TRUE);
+}
+
+//
+inline
+void Pickler::processLock(OZ_Term term, ConstTerm *lockConst)
 {
   OZ_error("Pickler::processLock is called!");
 }
 
 inline
-Bool Pickler::processCell(OZ_Term term, Tertiary *tert)
+Bool Pickler::processCell(OZ_Term term, ConstTerm *cellConst)
 {
   int index;
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
@@ -227,7 +235,7 @@ Bool Pickler::processCell(OZ_Term term, Tertiary *tert)
   VisitNodeM2ndP(term, vIT, bs, index, return(OK));
 
   //
-  Assert(cloneCells() && tert->isLocal());
+  Assert(cloneCells() && !(static_cast<OzCell*>(cellConst)->isDistributed()));
   if (index) {
     marshalDIF(bs, DIF_CLONEDCELL_DEF);
     marshalTermDef(bs, index);
@@ -238,22 +246,40 @@ Bool Pickler::processCell(OZ_Term term, Tertiary *tert)
 }
 
 inline
-void Pickler::processPort(OZ_Term termcellTerm, Tertiary *tert)
+void Pickler::processPort(OZ_Term termcellTerm, ConstTerm *portConst)
 {
   OZ_error("Pickler::processPort is called!");
 }
 
 inline
-void Pickler::processResource(OZ_Term term, Tertiary *tert)
+void Pickler::processResource(OZ_Term term, ConstTerm *resConst)
 {
   OZ_error("Pickler::processResource is called!");
 }
 
 //
 inline
-void Pickler::processVar(OZ_Term cv, OZ_Term *varTerm)
+Bool Pickler::processVar(OZ_Term cv, OZ_Term *varTerm)
 {
+  if (oz_isFailed(cv)) {
+    int index;
+    PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
+
+    //
+    VisitNodeM2ndP(makeTaggedRef(varTerm), vIT, bs, index, return(OK));
+
+    //
+    if (index) {
+      marshalDIF(bs, DIF_FAILEDVALUE_DEF);
+      marshalTermDef(bs, index);
+    } else {
+      marshalDIF(bs, DIF_FAILEDVALUE);
+    }
+    return (NO);
+  }
+
   OZ_error("Pickler::processVar is called!");
+  return (TRUE);
 }
 
 //
@@ -316,7 +342,7 @@ Bool Pickler::processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst)
   int index;
   PickleMarshalerBuffer *bs = (PickleMarshalerBuffer *) getOpaque();
   SChunk *ch    = (SChunk *) chunkConst;
-  GName *gname  = globalizeConst(ch);
+  GName *gname  = ch->globalize();
   Assert(gname);
 
   //
@@ -411,9 +437,9 @@ Bool Pickler::processClass(OZ_Term classTerm, ConstTerm *classConst)
   }
 
   //
-  ObjectClass *cl = (ObjectClass *) classConst;
+  OzClass *cl = (OzClass *) classConst;
   Assert(!cl->isSited());
-  GName *gn = globalizeConst(cl);
+  GName *gn = cl->globalize();
   Assert(gn);
   marshalGName(bs, gn);
   marshalNumber(bs, cl->getFlags());
@@ -439,7 +465,7 @@ Bool Pickler::processAbstraction(OZ_Term absTerm, ConstTerm *absConst)
   }
 
   Abstraction *pp = (Abstraction *) absConst;
-  GName* gname = globalizeConst(pp);
+  GName* gname = pp->globalize();
   Assert(gname);
   PrTabEntry *pred = pp->getPred();
   Assert(!pred->isSited());
@@ -538,15 +564,22 @@ Bool ResourceExcavator::processObject(OZ_Term objTerm, ConstTerm *objConst)
   return (TRUE);
 }
 inline
-void ResourceExcavator::processLock(OZ_Term lockTerm, Tertiary *tert)
+Bool ResourceExcavator::processObjectState(OZ_Term objTerm, ConstTerm *objConst)
+{
+  VisitNodeTrav(objTerm, vIT, return(TRUE));
+  addResource(objTerm);
+  return (TRUE);
+}
+inline
+void ResourceExcavator::processLock(OZ_Term lockTerm, ConstTerm *lockConst)
 {
   addResource(lockTerm);
 }
 inline
-Bool ResourceExcavator::processCell(OZ_Term cellTerm, Tertiary *tert)
+Bool ResourceExcavator::processCell(OZ_Term cellTerm, ConstTerm *cellConst)
 {
   VisitNodeTrav(cellTerm, vIT, return(TRUE));
-  if (cloneCells() && tert->isLocal()) {
+  if (cloneCells() && !(static_cast<OzCell*>(cellConst)->isDistributed())) {
     return (NO);
   } else {
     addResource(cellTerm);
@@ -554,21 +587,26 @@ Bool ResourceExcavator::processCell(OZ_Term cellTerm, Tertiary *tert)
   }
 }
 inline
-void ResourceExcavator::processPort(OZ_Term portTerm, Tertiary *tert)
+void ResourceExcavator::processPort(OZ_Term portTerm, ConstTerm *portConst)
 {
   addResource(portTerm);
 }
 inline
-void ResourceExcavator::processResource(OZ_Term rTerm, Tertiary *tert)
+void ResourceExcavator::processResource(OZ_Term rTerm, ConstTerm *resConst)
 {
   addResource(rTerm);
 }
 
 //
 inline
-void ResourceExcavator::processVar(OZ_Term v, OZ_Term *vRef)
+Bool ResourceExcavator::processVar(OZ_Term v, OZ_Term *vRef)
 {
-  addResource(makeTaggedRef(vRef));
+  if (oz_isFailed(v)) {
+    return (NO);     // not a resource
+  } else {
+    addResource(makeTaggedRef(vRef));
+    return (OK);
+  }
 }
 
 //
@@ -589,6 +627,10 @@ Bool ResourceExcavator::processChunk(OZ_Term chunkTerm,
                                      ConstTerm *chunkConst)
 {
   VisitNodeTrav(chunkTerm, vIT, return(TRUE));
+  if (!tagged2SChunk(chunkTerm)->getValue()) {
+    addResource(chunkTerm);
+    return (OK);
+  }
   return (NO);
 }
 
@@ -631,10 +673,13 @@ inline Bool
 ResourceExcavator::processClass(OZ_Term classTerm, ConstTerm *classConst)
 {
   VisitNodeTrav(classTerm, vIT, return(TRUE));
-  ObjectClass *cl = (ObjectClass *) classConst;
+  OzClass *cl = (OzClass *) classConst;
   if (cl->isSited()) {
     addNogood(classTerm);
     return (OK);                // done - a leaf;
+  } else if (!cl->isComplete()) {
+    addResource(classTerm);
+    return (OK);
   } else {
     return (NO);
   }
@@ -924,9 +969,9 @@ OZ_Term unpickleTermInternal(PickleMarshalerBuffer *bs)
     case DIF_OBJECT_DEF:
     case DIF_OBJECT:
 #ifdef DEBUG_CHECK
-      OZ_error("unmarshal: unexpected tertiary (%d)\n",tag);
+      OZ_error("unmarshal: unexpected term (%d)\n",tag);
 #else
-      OZ_warning("unmarshal: unexpected tertiary (%d)\n",tag);
+      OZ_warning("unmarshal: unexpected term (%d)\n",tag);
 #endif
       b->buildValue(oz_nil());
       break;
@@ -1231,6 +1276,16 @@ OZ_Term unpickleTermInternal(PickleMarshalerBuffer *bs)
     case DIF_CLONEDCELL:
       b->buildClonedCell();
       break;
+
+    case DIF_FAILEDVALUE:
+      b->buildFailedValue();
+      break;
+
+    case DIF_FAILEDVALUE_DEF: {
+      int refTag = unmarshalRefTag(bs);
+      b->buildFailedValueRemember(refTag);
+      break;
+    }
 
     case DIF_EOF:
       return (b->finish());

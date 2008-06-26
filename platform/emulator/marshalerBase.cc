@@ -126,6 +126,10 @@ MarshalTag defmap[DIF_LAST] = {
   DIF_VAR_AUTO_DEF,
   DIF_READONLY_AUTO_DEF,
   DIF_VAR_OBJECT_DEF,
+  DIF_FAILEDVALUE_DEF,
+  (MarshalTag) -1,              // DIF_FAILEDVALUE_DEF
+  DIF_GLUE_DEF,
+  (MarshalTag) -1               // DIF_GLUE_DEF
 };
 
 #if !defined(TEXT2PICKLE)
@@ -148,18 +152,6 @@ void initRobustMarshaler()
 //
 SendRecvCounter dif_counter[DIF_LAST];
 SendRecvCounter misc_counter[MISC_LAST];
-
-//
-GName *globalizeConst(ConstTerm *t)
-{
-  switch(t->getType()) {
-  case Co_Object:      return ((Object*)t)->globalize();
-  case Co_Class:       return ((ObjectClass*)t)->globalize();
-  case Co_Chunk:       return ((SChunk*)t)->globalize();
-  case Co_Abstraction: return ((Abstraction*)t)->globalize();
-  default: Assert(0); return NULL;
-  }
-}
 
 //
 void skipNumber(MarshalerBuffer *bs)
