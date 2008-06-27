@@ -85,7 +85,7 @@ key="chapter.pickle"/<<Pickle>>/ allows an application
 to store and retrieve
 arbitrary stateless data from files and URLs.
 <ITEM> The module
-<index/<<DP>> module/
+<index/<<DP>><and>module/
 <index id=idx.moduledp/module<and>system<and><<DP>>/
 <ref.extern to="ozdoc:system"
 key="chapter.dp"/<<DP>>/ gives the basic primitives for configuring
