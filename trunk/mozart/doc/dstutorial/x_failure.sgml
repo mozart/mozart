@@ -1,14 +1,6 @@
 <CHAPTER ID="chapter.failure">
   <TITLE>Failure Model</TITLE>
 
-<p class=warning>This chapter is obsolete.  The failure model of
-Mozart has evolved since Mozart version 1.4.0, and some language
-primitives (such as fault exceptions and handlers) are no longer
-available.  The module <<Fault>> itself is defunct.  Please consult
-the documentation of the new module <ref.extern to="ozdoc:system"
-key="section.dp.fault"/<<DP>>/, which provides new primitives for
-handling failures.
-
 <index/partial failure property/
 <index/failure<and>partial failure property/
 <P>Distributed systems have the partial failure
@@ -44,18 +36,19 @@ The system provides mechanisms
 to program with language entities that are subject
 to failures.
 
+<index/<<DP>><and>failure model/
 <P>The Mozart failure model is accessed
-through the module <ref.extern to="ozdoc:system"
-key="chapter.fault"/<<Fault>>/.
+through the module
+<ref.extern to="ozdoc:system" key="chapter.dp"/<<DP>>/.
 This chapter explains and justifies this
 functionality, and gives examples
 showing how to use it.
-We present the failure model in two steps:
-the basic model and the advanced model.
-To start writing fault-tolerant applications
-it is enough to understand the basic model.
-To build fault-tolerant abstractions it
-is often necessary to use the advanced model.
+The failure model has been both simplified and improved
+since version 1.4.0.
+The primitives offered by the former module
+<ref.extern to="ozdoc:system" key="chapter.fault"/<<Fault>>/
+are no longer available, they have been replaced by a simpler
+mechanism that subsumes former <em>fault watchers</em>.
 
 <P>In its current state,
 the Mozart system provides only the
@@ -75,22 +68,32 @@ All comments and suggestions for improvements are welcome.
 <index/fault state/
 <P>All failure modes are defined with respect to
 both a language entity and a particular site.
-For example, one would like to send a message
-to a port from a given site.
-The site may or may not be able to send the message.
-A language entity can be in three fault states
+For example, one would like to read the contents
+of a cell from a given site.
+The site may or may not be able to access the cell.
+A language entity can be in one of four fault states
 on a given site:
 <LIST>
-<ITEM> The entity works normally (local fault state <<ok>>).
-<ITEM> The entity is temporarily not working
+<ITEM><index/fault state<and><<ok>>/
+<index/<<ok>><and>fault state/
+The entity works normally (local fault state <<ok>>).
+<ITEM><index/fault state<and><<tempFail>>/
+<index/<<tempFail>><and>fault state/
+The entity is temporarily not working
 (local fault state <<tempFail>>).
 This is because a remote site crucial to the entity
 is currently unreachable due to a network problem.
-This fault state can go away.
-A limitation of the current release is that
-temporary problems are indicated only after
-a long delay time.
-<ITEM> The entity is permanently not working
+This fault state can go away, and the entity work normally again.
+<ITEM><index/fault state<and><<localFail>>/
+<index/<<localFail>><and>fault state/
+The entity is permanently not working on the given site
+(local fault state <<localFail>>).
+This state is enforced by the application itself
+and is irreversible.
+It does not affect other sites.
+<ITEM><index/fault state<and><<permFail>>/
+<index/<<permFail>><and>fault state/
+The entity is permanently not working on all sites
 (local fault state <<permFail>>).
 This is because a site crucial to the entity
 has crashed.
@@ -107,6 +110,15 @@ be considered temporary since the
 system actively tries
 to reestablish another connection.
 
+<P>The fault state <<localFail>> provides no guarantee
+on the actual status of the entity.
+It may hide a temporary or permanent fault, or no fault at all.
+It is permanent in the sense that the site will
+never be able to use the entity again.
+This fault state is not final, though.
+If the system detects that the entity is permanently
+not working on all sites, its fault state will become <<permFail>>.
+
 
 <SUBSECTION><TITLE>Temporary faults</TITLE>
 
@@ -115,7 +127,7 @@ application to react quickly to temporary network problems.
 It is raised by the system as soon as a network problem
 is recognized.
 <index/time-out<and>difference with temporary fault/
-It is therefore fundamentally different from a time-out.
+It is therefore fundamentally different from a connection time-out.
 For example, TCP gives a time-out after some minutes.
 This duration has been chosen to be very long,
 approximating infinity from the viewpoint of the
@@ -123,7 +135,7 @@ network connection.
 After the time-out,
 one can be sure that the connection is no longer working.
 
-<P>The purpose of <<tempFail>> is quite different from a time-out.
+<P>The purpose of <<tempFail>> is quite different.
 It is to <EM>inform</EM> the application
 of network problems, not to mark the <EM>end</EM> of a connection.
 For example, an application might be connected to a given server.
@@ -147,721 +159,338 @@ The important thing is that the network layer does not make this decision;
 the application is completely free to decide or to let the user decide.
 
 
+<subsection><title>Permanent faults</title>
+
+<p>In the new model, the application has the possibility
+to enforce a permanent failure locally or globally.
+Permanent failures are simpler to deal with, since they
+come with guarantees.
+If a thread attempts to invoke a distributed object
+that is known to be permanently failed,
+the system may infer that the thread will block forever,
+because the operation will never succeed.
+That information can be used by the garbage collector
+in order to safely remove that thread from memory.
+
+<p>Enforcing permanent failures can also simplify
+failure handlers themselves.
+A recovery mechanism based on temporary failures only, has
+to take into account the possibility that the failure may
+go away, and the normal behavior of an entity can interfere
+with the recovery.
+
+<p>Making an entity permanently unusable on a given site does
+not require any communication with other sites a priori.
+Therefore the fault state <<localFail>> is useful in cases where
+network faults are occurring.
+Note that the state has no impact on the network layer itself.
+On the other hand, making an entity permanently unusable for
+all sites may require to communicate with other sites.
+The system cannot notify the fault state <<permFail>> without
+having the guarantee that all sites are unable to use the entity.
+
+
 <SUBSECTION><TITLE>Remote problems</TITLE>
 
-<P>The local fault states <<ok>>, <<tempFail>>,
-and <<permFail>> say
-whether an entity operation can be performed locally.
-An entity can also contain information
-about the fault states on other sites.
-For example, say the current site is waiting for a variable binding,
-but the remote site that will do the binding has crashed.
-The current site can find this out.
-The following remote problems are identified:
-<LIST>
-<ITEM> At least one of the other sites
-referencing the entity can no longer
-perform operations on the entity
-(fault state <<remoteProblem(permSome)>>).
-The sites may or may not have crashed.
-<ITEM> All of the other sites referencing
-the entity can no longer perform operations
-on the entity
-(fault state <<remoteProblem(permAll)>>).
-The sites may or may not have crashed.
-<ITEM> At least one of the other sites
-referencing the entity is currently unreachable
-(fault state <<remoteProblem(tempSome)>>).
-<ITEM> All of the other sites
-referencing the entity are currently unreachable
-(fault state <<remoteProblem(tempAll)>>).
-</LIST>
-All of these cases are identified
-by the fault state <<remoteProblem(I)>>,
-where the argument <<I>> identifies the problem.
-A permanent remote problem never goes away.
-A temporary remote problem can go away,
-just like a <<tempFail>>.
-
-<P>Even if there exists a remote problem,
-it is not always possible to
-return a <<remoteProblem>> fault state.
-This happens if there are problems
-with a proxy
-that the owner site does not know about.
-This also happens 
-if the owner site is inaccessible.
-In that case it might not be possible to learn
-anything about the remote sites.
-
-<index/fault state<and>exhaustive list/
-<P>The complete fault state of an
-entity consists of at most one
-element from the set
-{<<tempFail>>, <<permFail>>}
-together with at most two elements from the set
-{<<remoteProblem(permSome)>>,
-<<remoteProblem(permAll)>>,
-<<remoteProblem(tempSome)>>,
-<<remoteProblem(tempAll)>>}.
-Permanent remote problems mask temporary ones,
-i.e., if <<remoteProblem(permSome)>> is detected
-then <<remoteProblem(tempSome)>> cannot be detected.
-If a (temporary or permanent)
-problem exists on <EM>all</EM> remote sites
-(e.g., <<remoteProblem(permAll)>>)
-then the problem also exists on <EM>some</EM>
-sites (e.g., <<remoteProblem(permSome)>>).
+<p>The former failure model was defining
+extra fault states that were informing the application
+about other sites using a given entity.
+Those fault states have been discarded in the new fault model.
+They were more difficult to understand, and their semantics
+was depending on the type of entity
+and the design of the distribution of entities.
+In order to allow for different distribution strategies,
+we considered these extra fault states to be inadequate.
+We believe that the four states defined above are expressive
+enough for building powerful fault-tolerant abstractions.
 
 
 <SECTION><TITLE>Basic model</TITLE>
 
 <index/failure<and>basic model/
 <index/basic failure model/
-<P>We present the failure model in two steps:
-the basic model and the advanced model.
-The simplest way to start writing fault-tolerant
-applications is to use the basic model.
-The basic model allows to enable or disable
-synchronous <EM>exceptions</EM> on language entities.
-That is, attempting to perform operations
-on entities with faults will
-either block or raise an exception without doing the operation.
-The fault detection can be enabled separately on each of two levels:
-a per-site level or a per-thread level
-(see <ptr to="levels">).
+<p>The model is extremely simple:
+<em>operations that cannot proceed because of a failure
+block until the failure possibly goes away</em>.
+Resumption after a temporary failure is automatic.
+Permanent failures cause the operation to block forever.
+Note how this behavior preserves the semantics of the language:
+an operation will never do something <em>different</em> because
+of a distribution fault.
+If the operation cannot complete, then it does not complete,
+and simply blocks.
 
-<index/exception<and>in failure model/
-<P>Exceptions can be enabled on logic variables,
-ports, objects, cells, and locks.
-All other entities, e.g., records, procedures, classes,
-and functors, will never raise an exception
-since they have no fault states
-(see <ptr to="eager.stateless.data">).
-Attempting to enable an exception on such an
-entity is allowed but has no observable effect.
+<p>Note that <em>asynchronous</em> operations do not block,
+even in the case of entity failure.
+Sending a message on a port is asynchronous: it terminates
+immediately, and eventually the message appears on the port's stream.
+Upon failure, this behavior is unchanged, except that the message
+may never arrive if the failure is permanent.
+So, sending a message on a permanently failed port is equivalent
+to doing nothing.
 
-<P>The advanced model allows to install or
-deinstall <EM>handlers</EM> and <EM>watchers</EM>
-on entities.
-These are procedures that are invoked
-when there is a failure.
-Handlers are invoked synchronously (when attempting
-to perform an operation) and watchers are
-invoked asynchronously (in their own thread as
-soon as the fault state is known).
-The advanced model is explained in
-<ptr to="advanced.model">.
+<subsection><title>The fault stream</title>
 
-<SUBSECTION><TITLE>Enabling exceptions on faults</TITLE>
+<index/fault stream<and>definition/
+<p>This basic model guarantees that nothing <em>wrong</em>
+happens to a distributed program that does not handle failures.
+Failure may simply <em>prevent</em> things to happen.
+In order to handle failures, one needs to detect them.
+So the second aspect of the model is a primitive that
+allows to watch the fault state of an entity.
+For that purpose, every site defines a <em>fault stream</em>
+for every entity.
+The fault stream of an entity reflects the history
+of the fault states of that entity on the site.
+Every time the fault state of the entity changes, the new state
+appears on the stream.
 
-<index/default failure detection/
-<index/failure<and>detection<and>default/
-<P>By default, new entities are
-set up so that an exception will be raised
-on fault states <<tempFail>> or <<permFail>>.
-The following operations are provided to do other
-kinds of fault detection:
-<LIST>
-<ENTRY> <<fun {Fault.defaultEnable FStates}>>
-<ITEM> sets the site's default for detected fault states
-to <<FStates>>.
-Each site has a default that is set independently
-of that of other sites.
-Enabling site or thread-level detection for an entity
-overrides this default.
-Attempting to perform an operation on an entity with
-a fault state in the default <<FStates>> raises an exception.
-The <<FStates>> can be changed as often as desired.
-When the system starts up, the defaults are set up as if
-the call <<{Fault.defaultEnable [tempFail permFail]}>> had been done.
+<index/<<DP>><and><<getFaultStream>>/
+<index/fault stream<and><<DP.getFaultStream>>/
+<p>The fault stream of an entity <<X>> is given by the function
+<<DP.getFaultStream>>:
+<<<
+FS={DP.getFaultStream X}
+>>>
+The stream <<FS>> always contains the current fault state of <<X>>
+as its first element.
+So, if <<X>> is working normally, the fault stream will look like
+<<<
+FS=ok|_
+>>>
+Note that the tail of the stream is a read-only future.
+It will be bound as soon as the fault state of <<X>> changes.
+Assume that a temporary failure is detected.  The stream becomes
+<<<
+FS=ok|tempFail|_
+>>>
+Now assume that the failure goes away.  The stream is extended as
+<<<
+FS=ok|tempFail|ok|_
+>>>
+Any thread reading <<FS>> will be able to follow the history
+of <<X>>'s local fault state.
+Now consider that the home site of <<X>> crashes, and
+that it makes <<X>> permanently unavailable.
+The stream becomes
+<<<
+FS=ok|tempFail|ok|permFail|_
+>>>
+At that point, another thread that executes
+<<{DP.getFaultStream X}>> will get the tail of the stream,
+prefixed by <<X>>'s current fault state, i.e.,
+<<<
+permFail|_
+>>>
 
-<ENTRY> <<fun {Fault.defaultDisable}>>
-<ITEM> disables the default fault detection.
-This function is included for symmetry.
-It is exactly the same as doing <<{Fault.defaultEnable nil}>>.
+<index/failure handling<and>fault stream/
+<index/fault stream<and>failure handler/
+<p>On implements a failure handler with a thread reading
+an entity's fault stream, and performing an action
+depending on the fault state it just read.
+With the fault stream, one can implement failure handlers
+in many different ways.
+One entity can be monitored by several handlers: they will
+simply happen to read the same fault stream.
+One can also monitor several entities with a single handler:
+one thread can read several streams, using <<Record.waitOr>> to
+synchronize on fault state updates.
 
-<ENTRY> <<fun {Fault.enable Entity Level FStates}>>
-<ITEM> is a more targeted
-way to do fault detection.
-It enables fault detection on a given entity at a given level.
-If a fault in <<FStates>> occurs while attempting
-an operation at the given level,
-then an exception is raised instead of doing the operation.
-The <<Entity>> is a reference to
-any language entity.
-Exceptions are enabled only if the entity is an
-object, cell, port, lock, or logic variable.
-The <<Level>> is <<site>>, <<'thread'(this)>>
-(for the current thread), or <<'thread'(T)>>
-(for an arbitrary thread identifier <<T>>).<NOTE
-FOOT>Since <<thread>> is already used as a keyword in the language,
-it has to be quoted to make it an atom.</NOTE>
-More information on levels is given in
-<ptr to="levels">.
+<subsubsection><title>Stream finalization</title>
 
-<ENTRY> <<fun {Fault.disable Entity Level}>>
-<ITEM> disables
-fault detection on the given entity at the given level.
-If a fault occurs, then the system does nothing at the
-given level, but checks whether any exceptions
-are enabled at the next higher level.
-This is <EM>not</EM> the same as <<{Fault.enable Entity Level nil}>>,
-which always causes the entity to block at the given level.
-</LIST>
-<P>The function <<Fault.enable>> returns
-<<true>> if and only if the
-enable was successful, i.e., the entity was not already
-enabled for that level.
-The function <<Fault.disable>> returns
-<<true>> if and only if the
-disable was successful, i.e., the entity was already
-enabled for that level.
-The functions <<Fault.defaultEnable>> and 
-<<Fault.defaultDisable>> always return <<true>>.
-At its creation, an entity is not enabled at any level.
-All four functions raise a type error exception if their arguments
-do not have the correct type.
+<index/fault stream<and>finalization/
+<p>It can be useful to drop a failure handler once the entity
+it is monitoring is out of memory scope on the handler's site.
+When an entity is garbage collected, the tail of
+its fault stream is automatically bound to <<nil>>.
+So, in the example above, if <<X>> disappears from the site
+where <<DP.getFaultStream>> was applied, the fault stream becomes
+<<<
+FS=ok|tempFail|ok|permFail|nil
+>>>
 
-<SUBSECTION id="binding.logic.variables"><TITLE>Binding logic variables</TITLE>
+<subsubsection><title>Variables</title>
 
-<index/logic variable<and>binding in failure model/
-<index/failure<and>binding logic variables/
-<P>A logic variable can be declared before it is bound.
-What happens to its enabled exceptions when it is bound?
-For example, let's say variable <<V>> is enabled with <<FS_v>>
-and port <<P>> is enabled with <<FS_p>>.
-What happens after the binding <<V=P>>?
-In this case, the binding gives <<P>>,
-which keeps the enabled exceptions <<FS_p>>.
-The enabled exceptions <<FS_v>> are discarded.
+<p>Beware of variables: the fault stream of a variable is not the same
+as the fault stream of its value!
+In order to monitor a variable <<X>>, one has to make sure that
+<<{DP.getFaultStream X}>> is called <em>before</em> <<X>> is
+determined.
+Once <<X>> is determined, its fault stream is closed with <<nil>>, like
+upon finalization above.
+This gives a hint to the handler watching <<X>> that the variable no
+longer exists as a variable on its site.
+This is important because the way a variable failure may be completely
+unrelated to how a failure of its value is handled.
+The model enforces the separation between the variable and its value.
 
-<P>The following cases are possible.
-We assume that variable <<V>> is enabled with
-fault detection on fault states <<FS_v>>.
-<LIST>
-<ITEM><<V>> is bound to a nonvariable entity <<X>> that
-has no enabled exceptions.
-In this case, the enabled exceptions <<FS_v>>
-are transferred to <<X>>.
+<p>In order to get the fault stream of a variable <<X>>, the safest
+way is to get the fault stream of a fresh variable, then bind that
+variable to <<X>>.
+Once two variables are bound, their fault streams are merged (see
+module <ref.extern to="ozdoc:system" key="chapter.dp"/<<DP>>/).
+In the example below, the fault stream of <<Y>> becomes the fault
+stream of <<X>>.
+<<<
+proc {GetVariableFaultStream X ?FS}
+   Y
+in
+   FS={DP.getFaultStream Y}
+   X=Y
+end
+>>>
 
-<ITEM><<V>> is bound to a nonvariable entity <<X>> that
-already has enabled exceptions <<FS_x>>.
-In this case, <<X>> keeps its enabled
-exceptions and <<FS_v>> is discarded.
+<SECTION id="advanced.model"><TITLE>Advanced features</TITLE>
 
-<ITEM><<V>> is bound to another logic variable <<W>> that
-might have enabled exceptions.
-In this case, the resulting variable keeps <em>one</em> set
-of enabled exceptions, either <<FS_v>> or <<FS_w>>
-(if the latter exists).
-Which one is not specified.
-</LIST>
+<p>The basic model lets you predict the behavior of an application in
+case of faults, and write failure watchers that may react upon entity
+failure.
+The advanced model provides two extra operations <<DP.break>> and
+<<DP.kill>>, for enforcing the fault states <<localFail>> and
+<<permFail>>, respectively.
 
-<P>These cases follow from three basic principles:
-<LIST>
-<ITEM>A logic variable that is
-"observed", e.g., it has fault detection
-with enabled exceptions,
-will be "observed" at all instants of time.
-That is, it will keep some kind of fault detection
-even after it is bound.
+<p>The statement <<{DP.break X}>> puts the entity <<X>> in fault state
+<<localFail>>, unless it was already in state <<permFail>>.
+In the latter case, it does nothing.
+It ensures that <<X>> is permanently not working on the current site
+at least, and has no effect on other sites.
+It can be used to prevent an entity that is in fault state
+<<tempFail>> for a long time, from working again.
 
-<ITEM>A nonvariable entity is never bothered by
-being bound to a variable.
-That is, the nonvariable's fault detection 
-(if there is any) can only be modified
-by explicit commands from <<Fault>>,
-never from being bound to a variable.
+<p>The statement <<{DP.kill X}>> is asynchronous: it terminates
+immediately, and attempts to put the entity <<X>> in fault state
+<<permFail>>.
+It is not guaranteed to succeed.
+It can be applied even if <<X>> is in fault state <<localFail>>.
 
-<ITEM>Any language entity that is set up
-with a set of enabled exceptions will have exactly
-<em>one</em> set of enabled exceptions,
-even if it is bound.
-There is no attempt to "combine" the two sets.
-</LIST>
+<subsection><title>Failure propagation</title>
 
-<SUBSECTION><TITLE>Exception formats</TITLE>
+<p>Here is a small example on how to use <<DP.getFaultStream>> and
+<<DP.kill>> in order to make a set of entities fail as soon as one of
+them fail.
+Assume <<Es>> is a list of entities.
+We create as many failure watchers as entities, and every watcher that
+observes <<permFail>> on its fault stream binds a trigger variable.
+Concurrently, a thread waits on that trigger variable, and kill all
+entities once it is bound.
 
-<index/failure<and>exception format/
-<index/exception<and>format for failure exception/
-<P>The exceptions raised have the format
-<<<system(dp(entity:E conditions:FS op:OP) ...)>>>
-where the four arguments are defined as follows:
-<LIST>
-<ITEM> <<E>> is the entity on which the operation was attempted.
-A temporary limitation of the current release is that
-if the entity is an object, then <<E>> is undefined.
-<ITEM> <<FS>> is the list of actual fault states occurring
-at the site on which the operation was attempted.
-This list is a subset of the list for which fault detection
-was enabled.
-Each fault state in <<FS>> may have an extra
-field <<info>> that gives additional information about
-the fault.
-The possible elements of <<FS>> are
-currently the following:
-<LIST>
-<ITEM> <<tempFail(info:I)>> and <<permFail(info:I)>>,
-where <<I>> is in {<<state>>, <<owner>>}.
-The <<info>> field only exists for
-objects, cells, and locks.
-<ITEM> <<remoteProblem(tempSome)>>, <<remoteProblem(permSome)>>,
-<<remoteProblem(tempAll)>>, and
-<<remoteProblem(permAll)>>.
-</LIST>
+<<<
+local Trigger in
+   for E in Es do
+      thread
+         %% bind Trigger once E has permanently failed
+         if {Member permFail {DP.getFaultStream E}} then
+            Trigger=unit
+         end
+      end
+   end
+   thread
+      {Wait Trigger}
+      %% attempt to make all elements of Es fail
+      for E in Es do {DP.kill E} end
+   end
+end
+>>>
 
-<ITEM> <<OP>> indicates which attempted operation caused the exception.
-The possible values of <<OP>> are currently:
-<LIST>
-<ITEM> For logic variables: <<bind(T)>>, <<wait>>, and <<isDet>>,
-where <<T>> is what the variable was attempted to be bound with.
-<ITEM> For cells: 
-<<cellExchange(Old New)>>, 
-<<cellAssign(New)>>, and
-<<cellAccess(Old)>>,
-where <<Old>> is the cell content before the attempted operation
-and <<New>> is the cell content after the attempted operation.
-<ITEM> For locks: <<'lock'>>.<NOTE
-FOOT>Since <<lock>> is already used as a keyword in the language,
-it has to be quoted to make it an atom.</NOTE>
-<ITEM> For ports: <<send(Msg)>>,
-where <<Msg>> is the message attempted to be sent to the port.
-<ITEM> For objects: 
-<<objectExchange(Attr Old New)>>,
-<<objectAssign(Attr New)>>, 
-<<objectAccess(Attr Old)>>, and
-<<objectFetch>>,
-where <<Attr>> is the name of the object attribute,
-<<Old>> is the attribute value before the attempted operation,
-and <<New>> is the attribute value after the attempted operation.
-A limitation of the current release is that the attempted
-operation cannot be retried.
-The <<objectFetch>> operation exists because object-records
-are copied lazily: the first time the object is used, the
-object-record is fetched over the network, which might fail.
-</LIST>
-
-</LIST>
-
-<SUBSECTION id="levels"><TITLE>Levels of fault detection</TITLE>
-
-<index/fault level/
-<index/fault detection<and>level/
-<index/level of fault detection/
-<P>There are three levels of fault detection, namely
-default site-based, site-based, and thread-based.
-A more specific level, if it exists,
-overrides a more general level.
-The most general is <EM>default site-based</EM>,
-which determines what exceptions are raised
-if the entity is not enabled at the site or thread level.
-Next is <EM>site-based</EM>, which detects a fault for a
-specific entity when an operation is tried on one
-particular site.
-Finally, the most fine-grained is 
-<EM>thread-based</EM>, which detects a fault for a
-specific entity when an operation
-is tried in a particular thread.
-
-<P>The site-based and thread-based levels have to
-be enabled specifically for a given entity.
-The function <<{Fault.enable Entity Level FStates}>> is
-used, where <<Level>> is either <<site>> or
-<<'thread'(T)>>.
-The thread <<T>> is either the atom <<this>>
-(which means the current thread),
-or a thread identifier.
-Any thread's identifier
-can be obtained by executing <<{Thread.this T}>>
-in the thread.
-
-<P>The thread-based level is the most specific; if it is enabled 
-it overrides the two others in its thread.
-The site-based level, if it is enabled, overrides the default.
-If neither a thread-based nor a site-based level are
-enabled, then the default is used.
-Even if the actual fault state does not give an exception,
-the mere fact that a level is enabled always overrides the
-next higher level.
-
-<P>For example, assume that the cell <<C>>
-is on a site with
-default detection for <<[tempFail permFail]>>
-and thread-based detection for <<[permFail]>>
-in thread <<T1>>.
-What happens if many threads try to do
-an exchange if C's actual fault state
-is <<tempFail>>?
-Then thread <<T1>> will block, since it is set up
-to detect only <<permFail>>.
-All other threads will raise the exception <<tempFail>>,
-since the default covers it
-and there is no enable at the site or thread levels.
-Thread <<T1>> will continue the operation when and
-if the <<tempFail>> state goes away.
-
-<SUBSECTION><TITLE>Levels and sitedness</TITLE>
-
-<index/fault level<and>relation with sitedness/
-<index/level<and>relation with sitedness/
-<index/sitedness<and>relation with fault detection/
-<P>The <<Fault>> module has both sited and unsited operations.
-Both setting the default and enabling at the site level
-are <EM>sited</EM>.
-This protects the site from remote attempts
-to change its settings.
-Enabling at the thread level is <EM>unsited</EM>.
-This allows fault-tolerant abstractions to be network-transparent,
-i.e., when passed to another site they continue to work.
-
-<P>To be precise, the calls
-<<{Fault.enable E site ...}>> and <<{Fault.install E site ...}>>,
-will only work on the home site of the <<Fault>> module.
-A procedure containing these calls may be passed around
-the network at will, and executed anywhere.
-However, any attempt to execute either call
-on a site different from the <<Fault>> module's
-home site will raise an exception.<NOTE
-FOOT>Note that each site has its own <<Fault>> module.</NOTE>
-The calls <<{Fault.enable E 'thread'(T) ...}>> 
-and <<{Fault.install E 'thread'(T) ...}>> will work anywhere.
-A procedure containing these calls may be passed around
-the network at will, and will work correctly anywhere.
-Of course, since threads are sited, <<T>> has to identify
-a thread on the site where the procedure is executed.
-
-<SECTION id="advanced.model"><TITLE>Advanced model</TITLE>
-
-<index/failure<and>advanced model/
-<index/advanced failure model/
-<P>The basic model lets you set up the system to
-raise an exception when an operation is attempted
-on a faulty entity.
-The advanced model extends this to <EM>call a
-user-defined procedure</EM>.
-Furthermore, the advanced model can call
-the procedure <EM>synchronously</EM>,
-i.e., when an operation is attempted,
-or <EM>asynchronously</EM>, i.e.,
-as soon as the fault is known, even
-if no operation is attempted.
-In the synchronous case,
-the procedure is called a <EM>fault handler</EM>,
-or just <EM>handler</EM>.
-In the asynchronous case,
-the procedure is called <EM>watcher</EM>.
-
-<SUBSECTION><TITLE>Lazy detection with handlers</TITLE>
-
-<index/failure<and>handler (synchronous detection)/
-<index/synchronous failure detection/
-<index/fault handler/
-<index/handler/
-<index/lazy<and>failure detection/
-<P>When an operation is attempted
-on an entity with a problem,
-then a handler call replaces the operation.
-This call is done in the context of the thread
-that attempted the operation.
-If the entity works again later
-(which is possible with <<tempFail>>
-and <<remoteProblem>>) then the
-handler can just try the operation again.
-
-<P>In an exact analogy to the basic model,
-a fault handler can be installed
-on a given entity at a given level
-for a given set of fault states.
-The possible entities, levels, and fault states
-are exactly the same.
-What happens to handlers on logic variables
-when the variables are bound is exactly
-the same as what happens to
-enabled exceptions in <ptr to="binding.logic.variables">.
-For example, when a variable with handler <<H_v1>>
-is bound to another variable with handler <<H_v2>>,
-then the result has exactly one handler, say <<H_v2>>.
-The other handler <<H_v1>> is discarded.
-When a variable with handler is bound to a port
-with handler, then the port's handler survives
-and the variable's handler is discarded.
-
-<P>Handlers are installed and deinstalled with the
-following two built-in operations:
-<LIST>
-<ENTRY> <<fun {Fault.install Entity Level FStates HandlerProc}>>
-<ITEM>installs handler <<HandlerProc>> on <<Entity>> at <<Level>>
-for fault states <<FStates>>.
-If an operation is attempted and there is a fault
-in <<FStates>>, then the operation is replaced by
-a call to <<HandlerProc>>.
-At most one handler can be installed on a given entity
-at a given level.
-<ENTRY> <<fun {Fault.deInstall Entity Level}>>
-<ITEM>deinstalls a previously installed handler from
-<<Entity>> at <<Level>>.
-</LIST>
-<P>The function <<Fault.install>> returns <<true>> if and only if the
-installation was successful, i.e., the entity did not already
-have an installation or an enable for that level.
-The function <<Fault.deInstall>> returns <<true>> if and only if the
-deinstall was successful, i.e., the entity had a handler installed
-for that level.
-Both functions raise a type error exception if their arguments
-do not have the correct type.
-
-<P>A handler <<HandlerProc>> is a three-argument
-procedure that is called as <<{HandlerProc E FS OP}>>.
-The arguments <<E>>, <<FS>>, and <<OP>>,
-are exactly the same as in a distribution exception.
-
-<P>A modification of the current release with respect
-to handler semantics is that
-handlers installed on <EM>variables</EM> always retry
-the operation after they return.
-
-<SUBSECTION><TITLE>Eager detection with watchers</TITLE>
-
-<index/failure<and>watcher (asynchronous detection)/
-<index/asynchronous failure detection/
-<index/fault watcher/
-<index/watcher/
-<index/eager<and>failure detection/
-<P>Fault handlers detect failure synchronously,
-i.e., when an operation is attempted.
-One often wants to be informed earlier.
-The advanced model allows the application to be informed
-asynchronously and eagerly, that is,
-as soon as the site finds out about the failure.
-Two operations are provided:
-<LIST>
-<ENTRY> <<fun {Fault.installWatcher Entity FStates WatcherProc}>>
-<ITEM>installs watcher <<WatcherProc>> on <<Entity>>
-for fault states <<FStates>>.
-If a fault in <<FStates>> is detected on the current site,
-then <<WatcherProc>> is invoked in its own new thread.
-A watcher is automatically deinstalled when it is invoked.
-Any number of watchers can be installed on an entity.
-The function always returns <<true>>, since it is always
-possible to install a watcher.
-<ENTRY> <<fun {Fault.deInstallWatcher Entity WatcherProc}>>
-<ITEM>deinstalls (i.e., removes) one instance of
-the given watcher from the entity on the current site.
-If no instance of <<WatcherProc>> is there to deinstall, then
-the function returns <<false>>.  Otherwise, it returns <<true>>.
-</LIST>
-<P>A watcher <<WatcherProc>> is a two-argument
-procedure that is called as <<{WatcherProc E FS}>>.
-The arguments <<E>> and <<FS>>
-are exactly the same as in a distribution exception
-or in a handler call.
+This implements something similar to the <em>process linking</em> in
+Erlang: all those entities serve a common task, which ensures that no
+entity survives if some of them fail.
 
 <SECTION><TITLE>Fault states for language entities</TITLE>
 
 <P>This section explains the possible fault states
 of each language entity in terms of its distributed semantics.
-The fault state is
-a consequence of two things:
+The fault state is a consequence of two things:
 the entity's distributed implementation and
 the system's failure mode.
-For example, let's consider a variable.
-There is one owner site and a set of proxy sites.
-If a variable proxy is
-on a crashed site and the owner site
-is still working,
-then to another variable proxy this
-will be a <<remoteProblem>>.
-If the owner site crashes, then
-all proxies will see a <<permFail>>.
+Note that a given entity may have several possible distributed
+implementations, depending on which state protocol is used.
+So the fault states will be explained in function of the protocols,
+and not of the entities themselves.
+Please refer to protocol annotations in module
+<ref.extern to="ozdoc:system" key="chapter.dp"/<<DP>>/
+for a detailed list of all protocols.
 
-<SUBSECTION id="eager.stateless.data"><TITLE>Eager stateless data</TITLE>
+<p>As you already know, the fault state <<localFail>> only depends on
+the site where it occurs.
+So we are only interested in the situations that may cause fault
+states <<tempFail>> and <<permFail>>, and which are not related to the
+usage of <<DP.kill>>.
 
-<index/fault state<and>eager stateless data (records, procedures,
-functions, classes, functors)/
-<index/eager<and>stateless data/
-<P>Eager stateless data, namely records, procedures,
-functions, classes, and functors, are
-copied immediately in messages.
-There are no remote references to eager
-stateless data, which are always local to a site.
-So their only possible fault state is <<ok>>.
+<subsection><title>Stationary state protocols: <<stationary>>,
+<<sited>></title>
 
-<P>In future releases, procedures, functions, and functors
-will not send their code immediately in the message,
-but will send only their global name.
-Upon arrival, if the code is not present,
-then it will be immediately requested.
-This will guarantee that code is sent at most
-once to a given site.
-This will introduce fault states <<tempFail>> and <<permFail>>
-if the site containing the code
-becomes unreachable or crashes.
+<p>This applies to ports, which are always stationary, and to
+dictionaries and arrays, which are stationary by default.  It also
+applies to sited entities, or entities explicitly annotated as
+<<sited>>.
+The fault state of those entities depends on their home site only.
+The state <<tempFail>> reflects an unknown problem for communicating
+with the entity's home site, while <<permFail>> is a sign of a site
+crash.
 
+<subsection><title>Migratory state protocols: <<migratory>>,
+<<pilgrim>></title>
 
-<SUBSECTION><TITLE>Sited entities</TITLE>
+<p>This applies to cells and object states, which use protocol
+<<migratory>> by default.
+The fault state depends on both their home site and the sites that may
+contain the state.
+In particular, the state <<permFail>> occurs when the home site
+crashes, or the site holding the state crashes.
+The state is guaranteed to be lost in that state.
 
-<index/fault state<and>sited entities/
-<P>Sited entities can be referenced remotely
-but can only be used on their home site.
-Attempting to use one outside of its home
-site immediately raises an exception.
-Detecting this does not need any network operations.
-So their only possible fault state is <<ok>>.
+<subsection><title>Replicated state protocol: <<replicated>></title>
 
-<SUBSECTION><TITLE>Ports</TITLE>
+<p>This applies to stateful entities annotated as such.
+Like in the stationary state protocols, the fault state depends on the
+home site only.
+The proxy sites only hold a copy of the state.
+Once they crash and the home site detects them, they are simply
+discarded when it comes to updating the state.
+The protocol is designed in such a way that proxy failures do not
+affect the entity.
 
-<index/fault state<and>port/
-<index/port<and>fault states/
-<P>A port has one owner site
-and a set of proxy sites.
-The following failure modes are possible:
-<LIST>
-<ITEM> Normal operation (<<ok>>).
-<ITEM> Owner site down (<<permFail>>
-and <<remoteProblem(I)>> where <<I>> is both <<permSome>>
-and <<permAll>>).
-<ITEM> Owner site unreachable (<<tempFail>>).
-</LIST>
-<P>A port has a single operation, <<Send>>,
-which can complete if the fault state is <<ok>>.
-The <<Send>> operation is asynchronous,
-that is, it completes immediately on the
-sender site and at some later point in time
-it will complete on the port's owner site.
-The fact that it completes on the sender site
-does not imply that it will complete on the owner site.
-This is because the owner site may fail.
+<subsection><title>Immediate copy protocol: <<immediate>></title>
 
-<!--  <P><ptr to="safesend"> shows how to build a <<SafeSend>> abstraction -->
-<!--  that only completes on the sender site if it completes -->
-<!--  on the owner site. -->
+<p>This applies to stateless entities that are copied upon
+transmission, like procedures, classes and chunks by default.
+Those entities are only values, and they cannot fail, since they are
+present on all the sites referring to them.
+The only possible fault state for those entities is <<ok>>.
 
-<SUBSECTION><TITLE>Logic variables</TITLE>
+<subsection><title>Non-immediate copy protocol: <<eager>>,
+<<lazy>></title>
 
-<index/fault state<and>logic variable/
-<index/logic variable<and>fault states/
-<P>A logic variable has one owner site
-and a set of proxy sites.
-The following failure modes are possible:
-<LIST>
-<ITEM> Normal operation (<<ok>>).
-<ITEM> Owner site down (<<permFail>> and
-<<remoteProblem(I)>> where <<I>> is both <<permSome>>
-and <<permAll>>).
-<ITEM> Owner site unreachable (<<tempFail>>).
-<ITEM> Some or all proxy sites down
-(<<remoteProblem(I)>> where <<I>> is both <<permSome>> and <<permAll>>).
-<ITEM> Some or all proxy sites unreachable
-(<<remoteProblem(tempSome))>>).
-It is impossible
-to have <<remoteProblem(tempAll)>>
-in the current implementation.
-</LIST>
-<P> A logic variable has two operations,
-binding and waiting until bound.
-Bind operations are explicit in the program text.
-Most wait operations are implicit since
-threads block until their data is available.
-The bind operation will only complete if the
-fault state is <<ok>> or <<remoteProblem>>.
+<p>This applies to stateless entities that are copied between sites,
+but not immediately, like object-records by default.
+Such entities can be <<tempFail>> if a network failure prevents the
+site from obtaining their full representation.
+However, they cannot be <<permFail>>, because their representation
+could be obtained by other means.
 
-<P>If the application binds a variable,
-then its wait operation is only guaranteed to complete if the
-fault state is <<ok>>.
-When it completes, this means
-that another proxy has bound the variable.
-If the fault state is <<remoteProblem>>,
-then the wait operation may not be able
-to complete if the problem exists 
-at the proxy that was supposed to bind the variable.
-This is <EM>not</EM> a <<tempFail>> or <<permFail>>,
-since a third proxy can successfully bind the variable.
-But from the application's viewpoint, it may still
-be important to know about this problem.
-Therefore, the fault state <<remoteProblem>>
-is important for variables.
+<p>For example, consider a class that is copied lazily.  The class
+representation may be obtained by another site than the one that sent
+the class reference.  The class may also have been save on a file, and
+that file can be available to the site requesting it.  Loading the
+class will simply fulfill the representation in memory.
 
-<P>A common case for variables is the client-server.
-The client sends a request containing a variable to the server.
-The server binds the variable to the answer.
-The variable exists only on the client and server sites.
-In this case, if the client detects a <<remoteProblem>>
-then it knows that the variable binding will be
-delayed or never done.
+<subsection><title>Variable protocols: <<variable>>, <<reply>></title>
 
-<SUBSECTION><TITLE>Cells and locks</TITLE>
+<p>This applies to all kinds of variables.
+With the protocol <<variable>>, the fault state of the entity only
+depends on its home site.
+If the home site fails before the variable is bound, the variable's
+fault state will be <<permFail>>.
 
-<index/fault state<and>cell/
-<index/cell<and>fault states/
-<index/fault state<and>lock/
-<index/lock<and>fault states/
-<P>Cells and locks have almost the same failure behavior.
-A cell or lock has one owner site and a set of proxy sites.
-At any given time instant,
-the cell's state pointer or the lock's token
-is at one proxy or in the network.
-The following failure modes are possible:
-<LIST>
-<ITEM> Normal operation (<<ok>>).
-<ITEM> State pointer not present and owner site down
-(<<permFail(info:owner)>> and <<remoteProblem(permSome)>>).
-<ITEM> State pointer not present and owner site unreachable
-(<<tempFail(info:owner)>>).
-<ITEM> State pointer lost and owner site up
-(<<permFail(info:state)>>, <<remoteProblem(permAll)>>,
-and <<remoteProblem(permSome)>>).
-This failure mode is only possible for cells.
-If a lock token is lost then the owner recreates it.
-<ITEM> State pointer unreachable and owner site up
-(<<tempFail(info:state)>>).
-<ITEM> State pointer present and owner site down
-(<<remoteProblem(permAll)>> and <<remoteProblem(permSome)>>).
-<ITEM> State pointer present and owner site unreachable
-(<<remoteProblem(tempAll)>> and <<remoteProblem(tempSome)>>).
-</LIST>
-<P>A cell has one primitive operation,
-a state update, which is called <<Exchange>>.
-A lock has two implicit operations,
-acquiring the lock token and releasing it.
-Both are implemented by the same distributed protocol.
-
-<SUBSECTION><TITLE>Objects</TITLE>
-
-<index/fault state<and>object/
-<index/object<and>fault states/
-<P>An object consists of
-an object-record that is a lazy chunk
-and that references
-the object's features, a cell, and a class.
-The object-record is lazy: it is copied to the site
-when the object is used for the first time.
-This means that
-the following failure modes are possible:
-<LIST>
-<ITEM> Normal operation (<<ok>>).
-<ITEM> Object-record or state pointer not present
-and owner site down
-(<<permFail(info:owner)>> and <<remoteProblem(permSome)>>).
-<ITEM> Object-record or state pointer not present
-and owner site unreachable
-(<<tempFail(info:owner)>>).
-<ITEM> State pointer lost and owner site up
-(<<permFail(info:state)>>, <<remoteProblem(permAll)>>,
-and <<remoteProblem(permSome)>>).
-<ITEM> State pointer unreachable and owner site up
-(<<tempFail(info:state)>>).
-<ITEM> Object-record and state pointer present and owner site down
-(<<remoteProblem(permAll)>> and <<remoteProblem(permSome)>>).
-<ITEM> Object-record and state pointer present and owner site unreachable
-(<<remoteProblem(tempAll)>> and <<remoteProblem(tempSome)>>).
-</LIST>
-Compared to cells,
-objects have two new failure modes:
-the object-record can be temporarily or permanently absent.
-In both cases the object
-cannot be used, so we simply consider the new failure modes
-to be instances of <<tempFail>> and <<permFail>>.
+<p>The weakness of the protocol <<variable>> is that it does not
+consider a proxy crash as a possible cause of entity failure, even if
+that proxy site was the one supposed to bind the variable.
+For that purpose, the protocol <<reply>> considers also the first
+proxy site (the first site that was sent the variable) as critical for
+the entity.
+So, with the protocol <<reply>>, the fault state <<permFail>> may be
+caused by a crash of the home site or the first proxy site.
 
 </CHAPTER>
 
