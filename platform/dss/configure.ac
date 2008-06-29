@@ -230,6 +230,10 @@ case "$host_cpu" in
         AC_MSG_RESULT(sparc CPU)
         CPU_FLAGS="-mcpu=v8 -DBIG_ENDIAN_HOST"
     ;;
+    powerpc)
+        AC_MSG_RESULT($host_cpu architecture)
+        CPU_FLAGS="-mtune=$host_cpu -DBIG_ENDIAN_HOST"
+    ;;
     *)
         AC_MSG_RESULT($host_cpu architecture)
         if test "$VERSION" = ABOVE3; then
