@@ -5,6 +5,7 @@
   - Contributors:
   -   Denys Duchier <duchier@ps.uni-sb.de>
   -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Raphael Collet <raphael.collet@uclouvain.be>
   -
   - Copyright:
   -   Christian Schulte, 1998
@@ -57,6 +58,11 @@
 <Book proglang=oz>
   <Front>
     <meta name="proglang.mode" arg1="oz" arg2="oz-mode">
+
+    <meta name="html.split"       value="chapter.m140">
+    <meta name="html.split"	  value="section.m140.lang">
+    <meta name="html.split"	  value="section.m140.impl">
+    <meta name="html.split"	  value="section.m140.fixes">
 
     <meta name="html.split"       value="chapter.m132">
     <meta name="html.split"	  value="section.m132.changes">
@@ -111,6 +117,158 @@
       This documents gives a brief overview of the changes between different Mozart versions.
     </Abstract>
   <Body>
+
+  <chapter id="chapter.m140">
+    <title/Mozart 1.4.0/
+
+    <p>Mozart 1.4.0 is both a development and maintenance release.  It
+    contains some substantial changes compared to former releases.  It
+    provides some new features, but also discards some former
+    features, making it backwards-incompatible in some cases.
+
+    <section id="section.m140.lang" proglang=sh>
+      <title/Changes to the language/
+
+      <p>This new release provides a certain number of changes in the
+      support for distribution.  The philosophy has not changed,
+      though: distribution is achieved by transparently sharing
+      language entities between sites.  And most of the usual features
+      are kept intact, like the modules <<Connection>> and <<Remote>>.
+      However, the distribution strategy is now changeable for any
+      single entity.  The most dramatic change is in the failure
+      handling primitives: the former fault model has been simplified
+      to the extreme (only one primitive).  Most of the new features
+      are available in the new module <ref.extern to="ozdoc:system"
+      key="chapter.dp"/<<DP>>/.
+
+      <subsection><title/New distribution features/
+
+      <p>Mozart now provides more than one protocol for some entities.
+      An entity is no longer stuck to one default protocol.  A cell,
+      for instance, may be distributed in five different ways for its
+      state, and four different ways for its distributed garbage
+      collection.  The protocol choice is specified as
+      an <em>annotation</em> before the entity is distributed.  The
+      list of available protocols is given in the documentation of
+      module <ref.extern to="ozdoc:system" key="chapter.dp"/<<DP>>/.
+
+      <p>More entities benefit from distribution support, like arrays
+      and dictionaries.  Distributed variables also have built-in
+      support for <em>by-need evaluation</em>: making a variable
+      needed is now propagated from site to site.  <em>Failed
+      values</em> are also distributed.
+
+      <p>Distributed locks have a better support than before thanks to
+      stationary objects and procedures.  The built-in support for
+      stationary callable entities guarantees a globally unique thread
+      identifier for the caller and the callee.  So reentrant locks
+      are supported correctly, even in the case of mutually recursive
+      stationary procedures and objects.
+
+      </subsection>
+
+      <subsection><title/New fault model/
+
+      <p>The set of possible fault states has been reduced to four:
+      <<ok>>, <<tempFail>>, <<localFail>>, and <<permFail>>.  Contrary
+      to the former model, the transition from <<tempFail>> to <<ok>>
+      is directly observable.
+
+      <p>Upon failure, synchronous operations simply block.
+      Exceptions and handlers have been discarded.  So by default,
+      nothing <em>wrong</em> happens in an application that does not
+      handle distribution failures.  Watchers have been kept, but no
+      longer as a primitive.
+
+      <p>Every site maintains a <em>fault stream</em> for each entity
+      it refers to.  The fault stream reflects the history of the
+      local fault state of the entity on the given site.  Fault state
+      transitions are thus notified by dataflow only.  Watchers are
+      trivial to build on top of fault streams.
+
+      <p>It is also possible to make an entity fail on purpose.  The
+      failure may be visible on the current site (procedure
+      <<DP.break>>) or on all sites (procedure <<DP.kill>>).
+
+      <p>The former module <<Fault>> has become obsolete.  The new
+      module <<DP>> has taken over all its functionalities.
+
+      </subsection>
+
+      <subsection><title/Post-mortem finalization/
+
+      <p>A new finalization mechanism is available.  It is triggered
+      after an entity has left memory, which makes it more reliable
+      than the weak finalization, in particular in the presence of
+      distribution.
+
+      </subsection>
+
+    </section>
+
+    <section id="section.m140.impl" proglang=sh>
+      <title/Changes to the implementation/
+
+      <p>The distribution layer has been completely reimplemented on
+      top of the DSS (Distribution SubSystem) library.  The latter was
+      written by Erik Klintskog as part of his PhD thesis:
+      <ref.extern to="http://www.sics.se/~erik/PAPERS/phd_final.pdf"/
+      Generic Distribution Support for Programming Systems/,
+      KTH, June 2005.
+      The DSS can be used independently of Mozart: it's a C++ library
+      that is called by the Mozart emulator, but it can also be used
+      in any C++ program to provide similar distribution abilities.
+      The design and implementation of the new distribution layer is
+      described in Raphael Collet's PhD thesis:
+      <ref.extern to="http://www.info.ucl.ac.be/~pvr/raphthesis.pdf"/
+      The Limits of Network Transparency in a Distributed Programming
+      Language/, UCL, December 2007.
+      The DSS library is under the directory <<platform/dss>> in the
+      sources of Mozart.
+
+      <p>The distribution layer extends the capabilities of the former
+      distribution layer, and implements the new fault model for Oz.
+      The new library subsumes the former network protocols used in
+      Mozart, but their implementation differ and are incompatible.
+      The Mozart marshaler and pickler have been modified to fit the
+      new architecture.
+
+      <p>The internal VM support for distributing language entities
+      has been redesigned as well, in order to make the distribution
+      support more generic.
+
+    </section>
+
+    <section id="section.m140.fixes" proglang=sh>
+      <title/Bug fixes/
+
+      <p>A various number of small bug fixes have been incorporated to
+      the new release.  Notable ones are:
+      <list>
+
+	<item>Weak dictionaries can now be finalized via other weak
+	dictionaries.  A fixpoint has to be computed in the garbage
+	collector in order to determine which ones had to be
+	finalized.  This fixpoint computation has been added.</item>
+
+	<item>Unification is now fully <em>incremental</em>.  Unifying
+	streams no longer causes memory leaks, for instance.  The
+	unification algorithm has been fixed to handle all cases where
+	a part of the unification cannot proceed immediately.  So
+	unifying <<X|Xs=Y|Ys>> where <<Xs>> and <<Ys>> are read-only
+	binds <<X=Y>>, and resumes the unification statement to
+	<<Xs=Ys>>, which removes the reference to <<X>> and <<Y>>.
+	The new implementation also handles gracefully record
+	containing distributed variables: unifying <<X#Y=foo#bar>>
+	with <<X>> and <<Y>> distributed performs the distributed
+	bindings <<X=foo>> and <<Y=bar>> <em>in parallel</em>, and no
+	longer sequentially.</item>
+
+      </list>
+
+    </section>
+
+  </chapter>
 
   <chapter id="chapter.m132">
    <title/Mozart 1.3.2/
