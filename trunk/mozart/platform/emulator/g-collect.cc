@@ -180,6 +180,11 @@ static PostMortemTriple* pm_list = NULL;
 
 // register a triple for post-mortem finalization
 void registerPostMortem(TaggedRef entity, TaggedRef port, TaggedRef item) {
+  // OptVar's are not marked by the garbage collector, so we have to
+  // de-optimize them in order to make gcPostMortemCheck() work.
+  DEREF(entity, entityPtr);
+  if (oz_isOptVar(entity)) { (void) oz_getNonOptVar(entityPtr); }
+  // now insert entity in pm_list
   pm_list = new PostMortemTriple(entity, port, item, pm_list);
 }
 
