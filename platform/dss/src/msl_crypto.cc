@@ -933,7 +933,10 @@ namespace _msl_internal{ //Start namespace
     u32 a = state[0], b = state[1], c = state[2], d = state[3], x[MD5_SIZE];
     // Move contents of block to x, putting bytes in little-endian order.
 #ifdef BIG_ENDIAN_HOST
-    for (int i = 0, int j = 0; i < MD5_SIZE; i++, j+= 4){ x[i] = gf_char2integer(block[j]); }
+    int i, j;
+    for (i = 0, j = 0; i < MD5_SIZE; i++, j+= 4) {
+      x[i] = gf_char2integer(block[j]);
+    }
 #else
     memcpy( x, block, 64 );
 #endif
