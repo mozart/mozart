@@ -1,0 +1,1816 @@
+dnl -*- sh -*-
+dnl
+dnl  Authors:
+dnl    Michael Mehl (mehl@dfki.de)
+dnl    Denys Duchier (duchier@ps.uni-sb.de)
+dnl 
+dnl  Contributors:
+dnl    optional, Contributor's name (Contributor's email address)
+dnl 
+dnl  Copyright:
+dnl    Michael Mehl (1997)
+dnl    Denys Duchier (1998)
+dnl 
+dnl  Last change:
+dnl    $Date$ by $Author$
+dnl    $Revision$
+dnl 
+dnl  This file is part of Mozart, an implementation 
+dnl  of Oz 3:
+dnl     http://www.mozart-oz.org
+dnl 
+dnl  See the file "LICENSE" or
+dnl     http://www.mozart-oz.org/LICENSE.html
+dnl  for information on usage and redistribution 
+dnl  of this file, and for a DISCLAIMER OF ALL 
+dnl  WARRANTIES.
+dnl
+
+dnl Process this file with autoconf to produce a configure script.
+
+dnl mm2: Known Problems and Bugs
+dnl  Windows support
+dnl  pmake support
+dnl  ensure that all needed programs are really found
+dnl  cache M4 -E
+
+dnl *****************************************************************
+dnl INITIALIZE
+dnl *****************************************************************
+
+dnl This will check that we are in the Oz directory and initiate
+AC_INIT(base.hh)
+
+OZ_INIT
+OZ_DENYS_EVENTS
+OZ_SITE_PROPERTY
+
+dnl *****************************************************************
+dnl additional tests
+dnl *****************************************************************
+
+dnl *****************************************************************
+dnl cross compilation
+dnl *****************************************************************
+
+AC_CHECK_TOOL(AS, as)
+AC_CHECK_TOOL(DLLTOOL, dlltool)
+AC_CHECK_TOOL(DLLWRAP, dllwrap)
+
+case "$target" in
+    NONE)
+	;;
+    i386-mingw32|i386-mingw32msvc)
+	AC_MSG_RESULT(cross compiling for windows)
+	oz_malloc_obj=
+
+	# va-start makes problems under mingw32
+	enable_warnings=no
+
+	# -DINTERFACE does not work
+	oz_copt_debug="-g"
+	;;
+    *)
+	AC_MSG_ERROR("can only cross-compile for target i386-mingw32 not for $target")
+	;;
+esac
+AC_SUBST(target)
+
+dnl *****************************************************************
+dnl Checks for programs.
+dnl *****************************************************************
+
+AC_MSG_CHECKING(for --with-sunpro)
+AC_ARG_WITH(sunpro,
+    [--with-sunpro      use sunpro compiler (default: no)],
+	if test "${with_sunpro}" = yes; then
+            AC_MSG_RESULT(yes)
+	    AC_CHECK_PROGS(SUNPRO, CC)
+	    if test -n "${SUNPRO}"
+	    then
+		CXX=$SUNPRO
+		AC_DEFINE(SUNPRO)
+		oz_enable_threaded=no
+	    else
+		AC_MSG_WARN(Ignoring --with-sunpro!)
+	    fi
+	else
+	    AC_MSG_RESULT(no)
+	fi,
+	AC_MSG_RESULT(no))
+
+OZ_CXX_CHOOSE
+OZ_CC_CHOOSE
+AC_LANG_CPLUSPLUS
+OZ_PROG_FLEX
+OZ_PROG_BISON
+AC_PROG_LN_S
+OZ_PROG_MAKE
+AC_PROG_MAKE_SET
+AC_PROG_RANLIB
+
+AC_CHECK_PROGS(M4, gm4 m4, m4)
+OZ_PROG_PERL
+
+AC_CHECK_PROGS(SED, gnused sed, sed)
+if test -z "$AR"; then
+    AC_CHECK_PROGS(AR, gar ar, ar)
+fi
+
+AC_PATH_PROG(DEPEND, makedepend, makedepend)
+
+OZTOOL_SH="sh `pwd`/oztool.sh"
+AC_SUBST(OZTOOL_SH)
+
+
+dnl *****************************************************************
+dnl platform
+dnl *****************************************************************
+
+# PLATFORM is defined by OZ_INIT
+: ${platform=$PLATFORM}
+AC_SUBST(platform)
+
+# GNU tr and System V tr use incompatible syntax
+# System V expects character sets to be enclosed in square brackets
+# It is OK to always use square brackets because it will work as expected
+# on System V and will harmlessly convert square brackets into themselves
+# on GNU systems.
+changequote(<,>)
+PLATFORM="`echo $platform|sed -e s/-/_/|tr '[a-z]' '[A-Z]'`"
+changequote([,])
+AC_DEFINE_UNQUOTED($PLATFORM)
+AC_SUBST(PLATFORM)
+
+ARCH=ARCH_`echo $PLATFORM|sed -e 's/.*_//'`
+OS=`echo $PLATFORM|sed -e 's/_.*//'`
+AC_DEFINE_UNQUOTED($ARCH)
+AC_DEFINE_UNQUOTED($OS)
+
+dnl *****************************************************************
+dnl Build mode: executable or DLL
+dnl *****************************************************************
+
+case "$platform" in
+    win32*)
+	EMULATOR_EXE=emulator.dll
+	;;
+    *)
+	EMULATOR_EXE=emulator.exe
+	;;
+esac
+AC_SUBST(EMULATOR_EXE)
+
+dnl *****************************************************************
+dnl Compiler, Linker, and m4 options
+dnl *****************************************************************
+
+: ${oz_copt_default=$CXXFLAGS}
+CXXFLAGS=
+EMULATE_CXXFLAGS=""
+export EMULATE_CXXFLAGS
+AC_SUBST(EMULATE_CXXFLAGS)
+
+if test "${GXX}" = yes; then
+    M4_S="-s"
+    DEPEND="$CXX -MM"
+
+    OZ_CXX_OPTIONS(-fno-exceptions,oz_a)
+    CXXAVOID=$oz_a
+    CXXFLAGS="$CXXFLAGS $oz_a"
+
+    OZ_CXX_OPTIONS(-fno-implicit-templates,oz_a)
+    CXXFLAGS="$CXXFLAGS $oz_a"
+
+    : ${oz_enable_warnings=no}
+    AC_MSG_CHECKING(for --enable-warnings)
+    AC_ARG_ENABLE(warnings,
+	[--enable-warnings  print c warnings (default=no)],,
+	[enable_warnings=$oz_enable_warnings])
+    AC_MSG_RESULT($enable_warnings)
+    : ${oz_enable_errors=no}
+    AC_MSG_CHECKING(for --enable-errors)
+    AC_ARG_ENABLE(errors,
+	[--enable-errors  c warnings abort make (default=no)],,
+	[enable_errors=$oz_enable_errors])
+    AC_MSG_RESULT($enable_errors)
+
+    if test "${enable_warnings}" != no
+    then
+	case `$CXX -dumpversion` in
+	2.*)
+	oz_warn="-Wall -W -Wpointer-arith -Wbad-function-cast -Wcast-qual \
+	    -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations \
+	    -Wnested-externs -Wsynth \
+	    -Winline \
+	    -Wno-unused -Wno-reorder -Wno-uninitialized -Wno-sign-compare"
+	;;
+        3.*)
+	oz_warn="-Wall -W -Wno-trigraphs -Wno-undef -Wimport -Wbad-function-cast \
+	    -Wcast-qual -Wconversion -Wimplicit-function-dec -Wimplicit-int -Wmissing-braces \
+	    -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wparentheses \
+	    -Wsequence-point -Wpointer-arith -Wno-sign-compare -Wunknown-pragmas \
+	    -Wstrict-prototypes -Wno-write-strings -Wreturn-type -Wsynth -Wno-reorder \
+	    -Wno-uninitialized -Wunreachable-code -Wno-unused -Winline -Wdeprecated"
+	;;
+	esac
+        test "$enable_errors" != no && \
+	oz_warn_error="-Werror"
+    fi
+
+    oz_opt=""
+    oz_om=""
+    case ${platform} in
+    powermac-*)
+    # for the MacOS X port
+      case `$CXX -dumpversion` in
+      2.95.*)
+          oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
+	  oz_om=""
+          ;;
+      *)
+      # Darwin/GCC 3.x
+      # the settings below were provided by Marc-Antoine Parent and
+      # gave the best (well least bad results :-) on his 450MHz G4
+          oz_opt="-O3 -pipe -fno-strict-aliasing -fschedule-insns2 "
+	  oz_om=" -fomit-frame-pointer -mtune=7450 "
+	  EMULATE_CXXFLAGS=" -finline-limit=500 "
+          ;;
+      esac
+      ;;
+    *-i486|i486-darwin) 
+	case `$CXX -dumpversion` in
+	2.95.3)
+	    oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
+	    oz_om="-march=pentium -mcpu=pentiumpro -fomit-frame-pointer"
+	    ;;
+	2.95.*)
+	    oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
+	    oz_om="-march=pentium -mcpu=pentiumpro -fomit-frame-pointer"
+	    ;;
+	3.3.*)
+	    oz_opt="-O3 -pipe -fno-strict-aliasing"
+	    oz_om="-march=pentium -mcpu=pentiumpro -fomit-frame-pointer"
+	    EMULATE_CXXFLAGS="-finline-limit=500 -fno-tracer -fno-guess-branch-probability"
+	    ;;
+	*)
+	    oz_opt="-O3 -pipe -fno-strict-aliasing"
+	    oz_om="-march=pentium -mcpu=pentiumpro -fomit-frame-pointer"
+	    EMULATE_CXXFLAGS=-finline-limit=500
+	    ;;
+	esac
+	;;
+
+    *-sparc)
+	case `$CXX -dumpversion` in
+	2.95.*)
+	    oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
+            oz_om="-mcpu=v8 -fdelayed-branch"
+	    ;;
+	*)
+	    oz_opt="-O3 -pipe -fno-strict-aliasing"
+            oz_om="-mv8 -fdelayed-branch"
+	    ;;
+	esac
+	;;
+
+    *-s390)
+        case `$CXX -dumpversion` in
+        2.95.*)
+            oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
+            oz_om=""
+            ;;
+        *)
+            oz_opt="-O3 -pipe -fno-strict-aliasing"
+            oz_om=""
+            ;;
+        esac
+        ;;
+
+    linux-parisc)
+	case `$CXX -dumpversion` in
+	3.*)
+	    oz_opt="-O3 -pipe -fno-strict-aliasing"
+	    oz_om="-fomit-frame-pointer"
+	    ;;
+	esac
+	;;
+    *)  ;;
+    esac
+
+    : ${oz_copt_optimize="$oz_opt $oz_om"}
+    : ${oz_copt_profile="$oz_opt -pg"}
+    : ${oz_copt_debug="-g3 -DINTERFACE -fno-inline -fno-default-inline -fno-inline-functions"}
+fi
+
+if test -n "${SUNPRO}"
+then
+    : ${oz_copt_optimize=-fast}
+    DEPEND="$CXX -xM"
+fi
+
+: ${LD=$CXX}
+AC_SUBST(LD)
+
+
+case $platform in
+    sunos*)
+        TOOLLDCMD="ld"
+	oz_enable_modules_static=yes
+	;;
+    linux*)
+        TOOLLDCMD="gcc -shared"
+	# kost@ : redundant now; ;; EMULDFLAGS="-Wl,--export-dynamic"
+	: ${oz_enable_modules_static=no}
+	;;
+    solaris*)
+        TOOLLDCMD="gcc -shared"
+	: ${oz_enable_modules_static=no}
+	;;
+    irix*)
+        TOOLLDCMD="ld -shared"
+	oz_enable_modules_static=yes
+	CPPFLAGS="-DINTERFACE $CPPFLAGS"
+	;;
+    osf1*)
+        TOOLLDCMD="gcc -shared -Wl,-expect_unresolved -Wl,*"
+	dnl dont change LDFLAGS, see machine.hh !!!
+	EMULDFLAGS="-Wl,-D -Wl,0x30000000 -Wl,-T -Wl,0x20000000"
+	: ${oz_enable_modules_static=no}
+	;;
+    hpux*)
+        TOOLLDCMD="ld -b"
+	EMULDFLAGS="-Wl,-E"
+	oz_enable_modules_static=yes
+	;;
+    freebsdelf*)
+	TOOLLDCMD="gcc -shared"
+	# kost@ : redundant now; ;; EMULDFLAGS="-Wl,--export-dynamic"
+	: ${oz_enable_modules_static=no}
+        ;;
+    freebsd*)
+        TOOLLDCMD="ld -Bshareable"
+	oz_enable_modules_static=yes
+        ;;
+    netbsd*)
+	# mail by Yu Wang indicated that "ld -Bshareable" did
+	# not work (anymore?) but "gcc -shared" worked
+	TOOLLDCMD="gcc -shared"
+	: ${oz_enable_modules_static=no}
+        ;;
+    openbsd*)
+	TOOLLDCMD="ld -Bshareable"
+	: ${oz_enable_modules_static=no}
+	;;
+    win32*)
+	AC_DEFINE(WINDOWS)
+	oz_enable_modules_static=yes
+	if test "$target" = NONE
+	then # compiling for mingw32 under cygwin
+	    LD="$CXX"
+	    TOOLLDCMD="`cd .. && pwd`/mswindows/oztool -inc `pwd` ld"
+	else # cross-compiling
+	    AC_DEFINE(ARCH_I486)
+	    TOOLLDCMD="sh `pwd`/$target-oztool ld"
+	fi
+	CPPFLAGS="-DWINDOWS_EMULATOR $oz_a $CPPFLAGS"
+    ;;
+    rhapsody* | darwin*)
+	AC_DEFINE(RHAPSODY)
+	EMULDFLAGS="-Wl,-keep_private_externs"
+	TOOLLDCMD="$CC -dynamic -bundle -flat_namespace -undefined suppress"
+	: ${oz_enable_modules_static=no}
+    ;;
+    *)
+	AC_MSG_WARN(Unknown platform "$platform")
+	sleep 3
+	TOOLLDCMD="ld"
+	oz_enable_modules_static=yes
+	;;
+esac
+
+# gcc's '--export-dynamic': if the linker recognizes it, then let's use it:
+AC_MSG_CHECKING(whether linker understands --export-dynamic)
+AC_CACHE_VAL(ac_cv_understand_export_dynamic,
+[savedKPCXXFLAGS=$CXXFLAGS
+CXXFLAGS="$CXXFLAGS -Wl,--export-dynamic"
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+AC_TRY_LINK(,,
+ac_cv_understand_export_dynamic=yes,
+ac_cv_understand_export_dynamic=no)
+CXXFLAGS=$savedKPCXXFLAGS
+AC_LANG_RESTORE])
+
+if test $ac_cv_understand_export_dynamic = yes; then
+    AC_MSG_RESULT([yes, will use it!])
+    EMULDFLAGS="$EMULDFLAGS -Wl,--export-dynamic"
+else
+    AC_MSG_RESULT([no])
+fi
+unset savedKPCXXFLAGS
+
+
+AC_SUBST(TOOLLDCMD)
+
+# compiler options
+: ${oz_copt_optimize="-O"}
+: ${oz_copt_profile=-pg}
+: ${oz_copt_debug="-g"}
+
+# compiler options for warnings
+AC_SUBST(oz_warn)
+
+# compiler option which turns warnings into errors
+AC_SUBST(oz_warn_error)
+
+# linker options
+: ${oz_lopt_profile=-pg}
+
+# m4 options
+if test -n "$M4"
+then
+    for oz_opt in -E -B10000; do
+	AC_MSG_CHECKING(whether $M4 understands $oz_opt option)
+	oz_tmp=`$M4 $oz_opt < /dev/null 2>&1`
+	if test -n "$oz_tmp"
+	then
+	    AC_MSG_RESULT(no)
+	else
+	    AC_MSG_RESULT(yes)
+	    M4="$M4 $oz_opt"
+	fi
+    done
+fi
+AC_SUBST(M4_S)
+
+OZ_CXX_OPTIONS($oz_warn,oz_a)
+oz_warn=$oz_a
+
+OZ_CXX_OPTIONS($oz_warn_error,oz_a)
+oz_warn_error=$oz_a
+
+dnl *****************************************************************
+dnl Try to link system libraries statically
+dnl *****************************************************************
+
+OZ_ENABLE(link-static,[ link system libraries statically],no,
+        AC_MSG_RESULT(yes)
+	,
+        AC_MSG_RESULT(no)
+	)
+
+
+dnl *****************************************************************
+dnl Checks for types.
+dnl *****************************************************************
+
+AC_CHECK_TYPE(key_t, unsigned int)
+
+dnl *****************************************************************
+dnl Checks for header files.
+dnl *****************************************************************
+
+dnl AC_HEADER_DIRENT
+dnl AC_HEADER_STDC
+dnl AC_HEADER_SYS_WAIT
+dnl AC_CHECK_HEADERS(fcntl.h limits.h malloc.h strings.h sys/time.h unistd.h)
+
+AC_CHECK_HEADERS(dlfcn.h)
+AC_CHECK_HEADERS(stdint.h)
+
+dnl *****************************************************************
+dnl Checks for typedefs, structures, and compiler characteristics.
+dnl *****************************************************************
+
+dnl const test not needed for C++!
+dnl AC_C_CONST
+
+dnl AC_C_INLINE
+dnl AC_TYPE_MODE_T
+dnl AC_TYPE_PID_T
+dnl AC_TYPE_SIZE_T
+dnl AC_HEADER_TIME
+dnl AC_STRUCT_TM
+
+dnl *****************************************************************
+dnl Checks for libraries.
+dnl *****************************************************************
+
+
+case "$platform" in
+*rhapsody)
+;;
+win32-i486)
+    AC_CHECK_LIB(kernel32,main)
+    AC_CHECK_LIB(wsock32,main)
+    AC_CHECK_LIB(dirent,opendir)
+    AC_CHECK_LIB(mingwex,opendir)
+;;
+irix6*)
+    AC_CHECK_LIB(m, fabs)
+    AC_CHECK_LIB(dl, dlopen)
+;;
+*)
+    AC_CHECK_LIB(nsl, gethostbyaddr,,[
+      AC_CHECK_LIB(c, gethostbyaddr)])
+    OZ_NEEDS_FUNC(gethostbyaddr)
+    AC_CHECK_LIB(socket, socket)
+    OZ_NEEDS_FUNC(socket)
+    AC_CHECK_LIB(m, fabs)
+    OZ_NEEDS_FUNC(fabs)
+    AC_CHECK_LIB(dl, dlopen)
+
+esac
+
+dnl *****************************************************************
+dnl Checks for library functions.
+dnl *****************************************************************
+
+dnl AC_FUNC_ALLOCA
+dnl AC_FUNC_MEMCMP
+dnl AC_TYPE_SIGNAL
+dnl AC_FUNC_VPRINTF
+dnl AC_CHECK_FUNCS(getcwd gethostname gettimeofday putenv select socket strdup strerror strstr strtod strtol strtoul uname)
+
+AC_CHECK_FUNC(setpgid,AC_DEFINE(HAVE_SETPGID))
+
+case $platform in
+win32*)
+    AC_DEFINE(USE_MALLOC)
+    ;;
+*)
+    AC_CHECK_FUNCS(dlopen)
+
+    AC_CHECKING(whether we could allocate Oz heap with malloc ...)
+    AC_CACHE_VAL(ac_cv_can_malloc,
+    [can_malloc=yes
+     case $platform in
+	 powermac-darwin)
+	 #AC_CHECK_FUNC includes <assert.h> and this seems to
+	 #introduce a conflicting prototype for malloc on MacOS X
+	 #so we need to check differently
+	     AC_TRY_LINK([#include <stdlib.h>],[malloc(100);],
+		 AC_DEFINE_UNQUOTED(HAVE_MALLOC),
+		 can_malloc=no)
+	     ;;
+	 *)
+	     AC_CHECK_FUNCS(malloc,, can_malloc=no)
+	     ;;
+     esac
+     if test $can_malloc = yes; then
+        AC_MSG_CHECKING(... with a test program)
+	AC_LANG_SAVE
+	AC_LANG_C
+        AC_TRY_RUN([
+#include <stdlib.h>
+#include <signal.h>
+#include <setjmp.h>
+
+// Check whether setting an malloc threshold can be called at all,
+// and that it does really work:
+// - large pages become allocated outside bss
+//   - criterium: none of the large pages gets trapped between 
+//     small ones
+// We DID check whether large pages are reasonably adjacent (modulo
+// MALLOC_OVERHEAD). The rationale: there should be no strange gaps
+// between pages that could lead to fragmentation. We did exactly as
+// described until Marc-Antoine Parent pointed out that on Mac OS X
+// 10.3 (Panther) pages are not that arranged like that, but rather,
+// when allocating .5mb large pages, there is 1.5mb gap. Peculiar but
+// probably not illegal (as long as the system can eventually use the
+// gaps too), got to admit. Now, the test is modified so that:
+// - the size of a gap between large pages must be such that the gap
+//   can accommodate a number of large pages (usually none), and the
+//   remainder must be smaller than MALLOC_OVERHEAD.
+// - freed chunks are really returned to OS
+// Note also that we allow (i.e. do not disallow) large pages to be
+// allocated on different sides of bss: it's peculiar but why not?
+// Also we do not check whether the pages overlap.. it's not about
+// whether malloc is broken or not.
+
+#define L_BLOCKSIZE	(512 * 1024)
+#define S_BLOCKSIZE	(512)
+
+#define L_MARGIN	(L_BLOCKSIZE - 1)
+#define MALLOC_OVERHEAD (L_BLOCKSIZE / 100)
+
+jmp_buf env;
+
+static
+void sh(int sig)
+{
+  longjmp(env, SIGSEGV);
+}
+
+main()
+{
+  void *s1, *s2, *l1, *l2;
+  // struct mallinfo mi = mallinfo();
+
+#if defined(M_MMAP_THRESHOLD)
+  int ret = mallopt(M_MMAP_THRESHOLD, L_MARGIN);
+#else
+  // still try it even if there is no M_MMAP_THRESHOLD;
+#endif
+
+  s1 = malloc(S_BLOCKSIZE);
+  l1 = malloc(L_BLOCKSIZE);
+  s2 = malloc(S_BLOCKSIZE);
+  l2 = malloc(L_BLOCKSIZE);
+
+  if (s1 == 0 || l1 == 0 || s2 == 0 || l2 == 0)
+    return (1);
+
+  // conceivably possible..
+  if (s1 > s2) { 
+    void *tmp = s1;
+    s1 = s2; 
+    s2 = tmp;
+  }
+  if (l1 > l2) {
+    void *tmp = l1;
+    l1 = l2;
+    l2 = tmp;
+  }
+
+  // Now there are 6 cases, of which in 3 the small pages "trap" one
+  // or both large pages between them.
+  if (s1 < l1 && l1 < s2)
+    return (2);
+  if (s1 < l2 && l2 < s2)
+    return (3);		// the third case is cover by both;
+
+  // Now, adjacency of large pages:
+  // Also covers the case as in Mac OS X:
+  //   (int&) l2 = ((int) l2) + 3*L_BLOCKSIZE;
+  // But barks if e.g.:
+  //   (int&) l2 = ((int) l2) + 3*L_BLOCKSIZE + MALLOC_OVERHEAD;
+  if ((((int) l2 - (int) l1) % L_BLOCKSIZE) > MALLOC_OVERHEAD) {
+    return (4);
+  }
+
+  // freeing up memory..
+  if (setjmp(env) != 0)
+    return (0);
+  (void) signal(SIGSEGV, sh);
+
+  free(l1);
+  *((int *) l1) = 0;
+  return (5);
+}
+],
+        AC_MSG_RESULT(succeeded),
+        AC_MSG_RESULT(failed)
+        can_malloc=no,
+        AC_MSG_RESULT(dunno (no))
+        can_malloc=no)
+	AC_LANG_RESTORE
+     fi
+     ac_cv_can_malloc=$can_malloc])
+    if test $ac_cv_can_malloc = yes; then
+       AC_MSG_RESULT([... yes, we can allocate Oz heap with malloc!])
+    else
+       AC_MSG_RESULT([... sorry, we shouldn't allocate Oz heap with malloc.])
+    fi
+
+    AC_CHECKING(whether we can allocate Oz heap via mmap...)
+    AC_CACHE_VAL(ac_cv_can_mmap,
+    [can_mmap=yes
+     AC_CHECK_FUNCS(mmap,, can_mmap=no)
+     if test $can_mmap = yes; then
+        AC_MSG_CHECKING(... with a test program)
+	AC_LANG_SAVE
+	AC_LANG_C
+        AC_TRY_RUN([
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <signal.h>
+#include <setjmp.h>
+
+// Test whether:
+// - mmap is working
+// - subsequent mmap"s allocate contiguous memory (no fragmentation)
+// - munmap really returns memory
+
+#if defined(MAP_ANON) && !defined(MAP_ANONYMOUS)
+#define	MAP_ANONYMOUS	MAP_ANON
+#elif defined(MAP_ANONYMOUS) && !defined(MAP_ANON)
+#define	MAP_ANON	MAP_ANONYMOUS
+#endif
+
+#if !defined(MAP_ANONYMOUS)
+#include <sys/stat.h>
+#include <fcntl.h>
+#endif
+
+#define BLOCKSIZE	(512 * 1024)
+
+jmp_buf env;
+
+static
+void sh(int sig)
+{
+  longjmp(env, SIGSEGV);
+}
+
+main()
+{
+#if defined(_POSIX_MAPPED_FILES) || defined(_MMAP_DECLARED)
+  void *loc1, *loc2;
+
+#ifdef MAP_ANONYMOUS
+  loc1 = mmap((void *) 0x0, (size_t) BLOCKSIZE, (PROT_READ|PROT_WRITE),
+	      (MAP_PRIVATE|MAP_ANONYMOUS), -1, (off_t) 0x0);
+  loc2 = mmap((void *) 0x0, (size_t) BLOCKSIZE, (PROT_READ|PROT_WRITE),
+	      (MAP_PRIVATE|MAP_ANONYMOUS), -1, (off_t) 0x0);
+#else
+  int zeroFD = open("/dev/zero", O_RDWR);
+  if (zeroFD < 0)
+    return (2);
+  loc1 = mmap((caddr_t) 0x0, (size_t) BLOCKSIZE, (PROT_READ|PROT_WRITE),
+	      (MAP_PRIVATE), zeroFD, 0x0);
+  loc2 = mmap((caddr_t) 0x0, (size_t) BLOCKSIZE, (PROT_READ|PROT_WRITE),
+	      (MAP_PRIVATE), zeroFD, (off_t) 0x0);
+#endif
+
+  if (loc1 == MAP_FAILED || loc2 == MAP_FAILED)
+    return (3);
+  // On Solaris, regions are NOT adjacent - but so what?
+  //    if (loc2 > loc1) {
+  //      if ((char *) loc2 != ((char *) loc1) + BLOCKSIZE)
+  //        return (4);
+  //    } else {
+  //      // conceivable possible..
+  //      if ((char *) loc1 != ((char *) loc2) + BLOCKSIZE)
+  //        return (4);
+  //    }      
+
+  if (setjmp(env) != 0)
+    return (0);
+  (void) signal(SIGSEGV, sh);
+
+  if (munmap((caddr_t) loc1, BLOCKSIZE))
+    return (5);
+  *((int *) loc1) = 0;
+  return (6);
+
+#else // _POSIX_MAPPED_FILES
+  exit(-1);
+#endif
+}
+],
+        AC_MSG_RESULT(succeeded),
+        AC_MSG_RESULT(failed)
+        can_mmap=no,
+        AC_MSG_RESULT(dunno (no))
+        can_mmap=no)
+	AC_LANG_RESTORE
+     fi
+     ac_cv_can_mmap=$can_mmap])
+    if test $ac_cv_can_mmap = yes; then
+       AC_MSG_RESULT([... yes, we can allocate Oz heap via mmap!])
+    else
+       AC_MSG_RESULT([... sorry, we cannot allocate Oz heap via mmap.])
+    fi
+
+    AC_CHECKING(whether we could allocate Oz heap via sbrk ...)
+    AC_CACHE_VAL(ac_cv_can_sbrk,
+    [can_sbrk=yes
+     AC_CHECK_FUNCS(sbrk,, can_sbrk=no)
+     if test $can_sbrk = yes; then
+        AC_MSG_CHECKING(... with a test program)
+	AC_LANG_SAVE
+	AC_LANG_C
+        AC_TRY_RUN([
+#include <unistd.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <setjmp.h>
+
+// Test whether:
+// - both brk() and sbrk() are working, i.e. yielding some memory
+// - malloc does not interfere with brk"ed memory fragments
+//   - malloc works before and after brk()
+//   - malloc"ed memory allocated before brk() retains its content
+//   - malloc"ed memory can be deallocated
+// - sbrk can return memory back to the OS
+
+
+#define BLOCKSIZE	(512 * 1024)
+#define STRUCTSIZE	(256)
+
+jmp_buf env;
+
+static
+void sh(int sig)
+{
+  longjmp(env, SIGSEGV);
+}
+
+main()
+{
+  void *start;
+  void *s1, *s2;
+  void *end;
+  char *mar1, *mar2;
+  int i;
+
+  start = sbrk(0);
+  if (start == (void *) -1)
+    return (1);
+
+  mar1 = (char *) malloc(STRUCTSIZE);
+  if (mar1 == (char *) NULL)
+    return (2);
+  for (i = 0; i < STRUCTSIZE; i++)
+    mar1[i] = (char) i;
+
+  s1 = sbrk(BLOCKSIZE);
+  if (s1 == (void *) -1)
+    return (3);
+  if ((char *) sbrk(0) != ((char *) s1) + BLOCKSIZE)
+    return (4);
+
+  for (i = 0; i < STRUCTSIZE; i++) {
+    if (mar1[i] != (char) i)
+      return (5);
+  }
+
+  mar2 = (char *) malloc(STRUCTSIZE);
+  if (mar2 == (char *) NULL)
+    return (6);
+  for (i = 0; i < STRUCTSIZE; i++)
+    mar2[i] = (char) i;
+
+  s2 = sbrk(0);
+  if (sbrk == (void *) -1)
+    return (7);
+  if (brk((void *) (((char *) s2) + BLOCKSIZE)) != 0)
+    return (8);
+  if ((char *) sbrk(0) != ((char *) s2) + BLOCKSIZE)
+    return (9);
+
+  for (i = 0; i < STRUCTSIZE; i++) {
+    if (mar1[i] != (char) i)
+      return (10);
+    if (mar2[i] != (char) i)
+      return (11);
+  }
+
+  if (brk(s2) != 0 || sbrk(0) != s2)
+    return (12);
+  if (setjmp(env) == 0) {
+    (void) signal(SIGSEGV, sh);
+    *((int *) s2) = 0;
+    return (13);
+  }
+
+  mar1 = (char *) malloc(STRUCTSIZE);
+  mar2 = (char *) malloc(STRUCTSIZE);
+  if (mar1 == (char *) NULL || mar2 == (char *) NULL)
+    return (2);
+  for (i = 0; i < STRUCTSIZE; i++) {
+    mar1[i] = (char) i;
+    mar2[i] = (char) i;
+  }
+
+  free(mar1);
+  free(mar2);
+
+  return (0);
+}
+],
+        AC_MSG_RESULT(succeeded),
+        AC_MSG_RESULT(failed)
+        can_sbrk=no,
+        AC_MSG_RESULT(dunno (no))
+        can_sbrk=no)
+	AC_LANG_RESTORE
+     fi
+     ac_cv_can_sbrk=$can_sbrk])
+    if test $ac_cv_can_sbrk = yes; then
+       AC_MSG_RESULT([... yes, we can allocate Oz heap via sbrk!])
+    else
+       AC_MSG_RESULT([... sorry, we cannot allocate Oz heap with sbrk.])
+    fi
+
+    alloc_scheme=default
+    AC_MSG_CHECKING(for --enable-malloc-heap)
+    AC_ARG_ENABLE(malloc-heap, [--enable-malloc-heap	use malloc for Oz heap memory allocation],
+                  AC_MSG_RESULT(yes)
+                  alloc_scheme=malloc,
+                  if test $ac_cv_can_malloc = no; then
+                     AC_MSG_WARN(using malloc may cause C heap fragmentation!)
+                  fi
+                  AC_MSG_RESULT(no))
+    AC_MSG_CHECKING(for --enable-mmap-heap)
+    AC_ARG_ENABLE(mmap-heap, [--enable-mmap-heap	use mmap for Oz heap memory allocation],
+                  if test $alloc_scheme = default; then
+                     AC_MSG_RESULT(yes)
+                     alloc_scheme=mmap
+		     if test $ac_cv_can_mmap = no; then
+			AC_MSG_WARN(mmap may fail to work on this platform!) 
+		     fi
+		  else
+		     AC_MSG_RESULT(ignored: scheme "$alloc_scheme" is already specified)
+		  fi,
+		AC_MSG_RESULT(no))
+    AC_MSG_CHECKING(for --enable-sbrk-heap)
+    AC_ARG_ENABLE(sbrk-heap, [--enable-sbrk-heap	use sbrk for Oz heap memory allocation],
+                  if test $alloc_scheme = default; then
+                     AC_MSG_RESULT(yes)
+                     alloc_scheme=sbrk
+                     if test $ac_cv_can_sbrk = no; then
+                        AC_MSG_WARN(sbrk may fail to work on this platform!) 
+                     fi
+                  else
+                     AC_MSG_RESULT(ignored: scheme "$alloc_scheme" is already specified)
+                  fi,
+                  AC_MSG_RESULT(no))
+
+    if test $alloc_scheme = default; then
+       if test $ac_cv_can_malloc = yes; then
+          alloc_scheme=malloc
+       elif test $ac_cv_can_mmap = yes; then
+          alloc_scheme=mmap
+       elif test $ac_cv_can_sbrk = yes; then
+          alloc_scheme=sbrk
+       fi
+    fi
+
+    case $alloc_scheme in
+    malloc)
+        AC_MSG_RESULT(... will use the (efficient) 'malloc'ing for Oz heap)
+        AC_DEFINE(USE_MALLOC)
+        ;;
+    mmap)
+        AC_MSG_RESULT(... will allocate Oz heap using 'mmap')
+        AC_DEFINE(USE_MMAP)
+        ;;
+    sbrk)
+        AC_MSG_RESULT(... will allocate Oz heap using 'sbrk')
+        AC_DEFINE(USE_SBRK)
+        ;;
+    *)
+        AC_MSG_RESULT(... will use the (inefficient) 'malloc'ing for Oz heap )
+        AC_DEFINE(USE_MALLOC)
+        ;;
+    esac
+    ;;
+esac
+
+AC_CHECK_FUNC(strdup,AC_DEFINE(HAVE_STRDUP))
+
+dnl *****************************************************************
+dnl MISC
+dnl *****************************************************************
+
+AC_DEFUN(OZ_CHECK_DLOPEN_UNDERSCORE,[
+if test "$ac_cv_lib_dl_dlopen" = yes || \
+   test "$ac_cv_func_dlopen" = yes; then
+  AC_CACHE_CHECK([whether dlopen needs leading underscore],
+    oz_cv_dlopen_underscore,[
+    if test -n "$oz_dlopen_underscore"; then
+      oz_cv_dlopen_underscore=$oz_dlopen_underscore
+    else
+      case $platform in
+         hpux* | win32*) oz_tmp=no;;
+         *) oz_tmp="$ac_cv_func_dlopen";;
+      esac
+      oz_uscore=error
+      if test "$oz_tmp" = yes; then
+          cat > conftestLIB.c <<EOF
+int foo() { return 0; }
+EOF
+          cat > conftestUSE.c <<EOF
+#ifdef HAVE_DLFCN_H
+#include <dlfcn.h>
+#else
+extern void * dlopen(char *, int);
+extern void * dlsym(void *, char *);
+#endif
+
+#if !defined(RTLD_NOW)
+#define RTLD_NOW 1
+#endif
+
+#if !defined(RTLD_GLOBAL)
+#define RTLD_GLOBAL 0
+#endif
+
+int main()
+{
+  void * pointer;
+  void *handle = dlopen("./conftestLIB.so",RTLD_NOW|RTLD_GLOBAL);
+  if (!handle) {
+    printf("error\n");
+    return 1;
+  }
+  pointer = dlsym(handle,"foo");
+  if (pointer) {
+    printf("no\n");
+    return 0;
+  }
+  pointer = dlsym(handle,"_foo");
+  if (pointer) {
+    printf("yes\n");
+    return 0;
+  }
+  printf("error\n");
+  return 1;
+}
+EOF
+        if test "$ac_cv_header_dlfcn_h" = yes; then
+            oz_HAVE_DLFCN_H=-DHAVE_DLFCN_H
+        fi
+        ${CC-cc} -c $CFLAGS $CPPFLAGS $oz_HAVE_DLFCN_H $OZTOOLDYNOPTCC conftestLIB.c -o conftestLIB.o 2>/dev/null && \
+        ${TOOLLDCMD} $LDFLAGS conftestLIB.o -o conftestLIB.so 2>/dev/null && \
+        ${CC-cc} $CFLAGS $CPPFLAGS -ldl conftestUSE.c -o conftestUSE.exe 2>/dev/null && \
+        oz_uscore=`./conftestUSE.exe 2>/dev/null`
+        rm -f conftestLIB.c conftestLIB.o conftestLIB.so conftestUSE.c conftestUSE.exe 2>/dev/null
+      fi
+      case "$oz_uscore" in
+        yes) oz_cv_dlopen_underscore=yes
+echo "DETERMINED BY TRYING"
+;;
+         no) oz_cv_dlopen_underscore=no
+echo "DETERMINED BY TRYING"
+;;
+          *) cat > conftest.$ac_ext <<EOF
+extern "C"
+int foo() { return 1; }
+EOF
+             if AC_TRY_EVAL(ac_compile); then
+               oz_tmp=`(strings -a conftest.o | grep foo) 2>/dev/null`
+               ## on some platforms strings -a does not do the job
+               ## but nm works fine (e.g. Darwin). So, in case we did
+               ## not get a result with strings -a, we try it again
+               ## here with nm and remove the stuff preceding the
+               ## identifier that we are interested in
+               if test -z "$oz_tmp"; then
+                 oz_tmp=`(nm conftest.o | grep foo) 2>/dev/null`
+                 oz_tmp=`expr "$oz_tmp" : '.* . \(.*\)' 2>/dev/null`
+               fi
+               if expr "$oz_tmp" : '_' 1>/dev/null 2>&1; then
+                 oz_cv_dlopen_underscore=yes;
+               else
+                 oz_cv_dlopen_underscore=no;
+               fi
+echo "DETERMINED BY INSPECTION"
+             else
+               AC_MSG_ERROR([test bombed])
+             fi
+             rm -rf conftest.$ac_ext conftest.o
+             ;;
+      esac
+    fi])
+  if test "$oz_cv_dlopen_underscore" = yes; then
+    AC_DEFINE(DLOPEN_UNDERSCORE)
+  fi
+fi])
+
+OZ_CHECK_DLOPEN_UNDERSCORE
+
+# AC_CHECK_SIZEOF(int)
+# AC_C_BIGENDIAN
+
+AC_CACHE_CHECK([for little-endianness],
+  oz_cv_little_endian,
+  [AC_TRY_RUN([
+class DoubleConv {
+public:
+  union {
+    unsigned char c[sizeof(double)];
+    int i[sizeof(double)/sizeof(int)];
+    double d;
+  } u;
+};
+int main() {
+  DoubleConv dc;
+  dc.u.i[0]=1;
+  return (dc.u.c[0]==1)?0:-1;
+}
+],
+oz_cv_little_endian=yes,
+oz_cv_little_endian=no,
+AC_MSG_ERROR([cannot determine endianness when cross-compiling]))])
+
+if test "$oz_cv_little_endian" = yes; then
+  AC_DEFINE(ARCH_LITTLE_ENDIAN)
+fi
+
+if test "$oz_cv_little_endian" = yes; then
+AC_CACHE_CHECK([for big-wordianness],
+  oz_cv_big_wordian,
+  [AC_TRY_RUN([
+class DoubleConv {
+public:
+  union {
+    unsigned char c[sizeof(double)];
+    int i[sizeof(double)/sizeof(int)];
+    double d;
+  } u;
+};
+int main() {
+  DoubleConv dc;
+  dc.u.d = 123e-57;
+  return (dc.u.i[0]==152689723);
+}
+],oz_cv_big_wordian=yes,
+  oz_cv_big_wordian=no,
+  AC_MSG_ERROR([cannot determine wordianness when cross-compiling]))])
+
+if test "$oz_cv_big_wordian" = yes; then
+  AC_DEFINE(ARCH_BIG_WORDIAN)
+  ## sanity check
+  case "$platform" in
+  linux-arm);;
+  *)
+    AC_MSG_ERROR([the combination little-endian/big-wordian is only expected on the ARM architecture.])
+    ;;
+  esac
+fi
+fi
+
+
+# check malloc base
+
+dnl ****************************************************************
+dnl check for the times/sysconf(_SC_CLK_TCK) bug
+dnl ****************************************************************
+
+case $platform in
+win32*);;
+*)
+AC_CACHE_CHECK([whether the times/sysconf(_SC_CLK_TCK) bug is present],
+  oz_cv_times_sysconf_bug,
+  [AC_LANG_SAVE
+   AC_LANG_C
+   cat > conftest.$ac_ext <<EOF
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/times.h>
+#include <sys/time.h>
+#include <math.h> 
+ 
+int myTrunc(double r) 
+{ 
+  int n = floor(r); 
+  return ((r-((double)n)) > 0.5)?n+1:n; 
+} 
+
+int main()
+{
+  int clktck;
+  struct tms buf;
+  struct timeval tmv_begin;
+  struct timeval tmv_end;
+  clock_t tck_begin;
+  clock_t tck_end;
+  long int elapsed1;
+  long int elapsed2;
+  long int diff;
+  double ratio;
+  int fix;
+
+  clktck = sysconf(_SC_CLK_TCK);
+  (void) gettimeofday(&tmv_begin,NULL);
+  tck_begin = times(&buf);
+  usleep(1000000);
+  (void) gettimeofday(&tmv_end,NULL);
+  tck_end = times(&buf);
+
+  elapsed1 = (tmv_end.tv_sec-tmv_begin.tv_sec)*1000 + (tmv_end.tv_usec-tmv_end.tv_usec)/1000;
+  elapsed2 = ((tck_end-tck_begin)*1000)/clktck;
+
+  ratio = ((double)elapsed2) / ((double)elapsed1);
+  if (ratio < 1.0) fix=0;
+  else fix = (int) myTrunc(ratio);
+  printf("%d\n",fix);
+  return 0;
+}
+EOF
+   if `${CC-gcc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS -lm`; then
+     oz_cv_CLKFIX=`./conftest${ac_exeext}` || oz_cv_CLKFIX='0'
+   else
+     oz_cv_CLKFIX='0'
+   fi
+   AC_LANG_RESTORE
+   if test "$oz_cv_CLKFIX" -eq 0 ; then
+     oz_cv_times_sysconf_bug=error
+     AC_MSG_ERROR([unable to test for times/sysconf(_SC_CLK_TCK) bug])
+   elif test "$oz_cv_CLKFIX" -eq 1; then
+     oz_cv_times_sysconf_bug=no
+   else
+     oz_cv_times_sysconf_bug=yes
+   fi
+])
+
+if test "$oz_cv_times_sysconf_bug" = yes; then
+   AC_MSG_CHECKING([for times/sysconf(_SC_CLK_TCK) fix ratio])
+   AC_MSG_RESULT($oz_cv_CLKFIX)
+   AC_DEFINE_UNQUOTED(CLK_TCK_BUG_RATIO,$oz_cv_CLKFIX)
+fi
+;;
+esac
+
+dnl *****************************************************************
+dnl *** GMP
+dnl *****************************************************************
+
+: ${oz_inc_path="/usr/local/include"}
+: ${oz_lib_path="/usr/local/lib"}
+
+OZ_LIB_GMP
+if test "$OZ_GMP_MAJOR" -gt 3 || \
+   (test "$OZ_GMP_MAJOR" -eq 3 && test "$OZ_GMP_MINOR" -gt 1); then
+  AC_DEFINE_UNQUOTED(GMP_NEEDS_CPLUSPLUS)
+fi
+
+dnl *****************************************************************
+dnl *** zlib
+dnl *****************************************************************
+
+OZ_LIB_ZLIB
+
+dnl *****************************************************************
+dnl ccmalloc
+dnl *****************************************************************
+
+AC_MSG_CHECKING(for --with-ccmalloc)
+AC_ARG_WITH(ccmalloc,
+    [--with-ccmalloc    use debugging malloc library ccmalloc ])
+
+if test "$with_ccmalloc" = "yes"
+then
+    AC_MSG_RESULT(yes)
+    AC_CHECK_LIB(ccmalloc,main,true,AC_MSG_ERROR(cannot find lib ccmalloc))
+    AC_DEFINE(CCMALLOC)
+    LIBS="$LIBS -lccmalloc"
+    oz_enable_modules_static=yes
+elif test -n "$with_ccmalloc"
+then
+    AC_MSG_ERROR(only yes allowed)
+else
+    AC_MSG_RESULT(no)
+fi
+
+
+dnl *****************************************************************
+dnl *** Features
+dnl *****************************************************************
+
+
+AC_MSG_CHECKING(for --enable-opt)
+AC_ARG_ENABLE(opt,
+    [--enable-opt=<k>   add specialied compile options (default=yes)
+                   (o|yes=optimize, d=debug, no|none, p=profile, rsp=ralfs profile)])
+case $enable_opt in
+    d*)
+        AC_MSG_RESULT(debug (-DDEBUG_EMULATOR))
+	AC_DEFINE(DEBUG_EMULATOR)
+	OZ_CXX_OPTIONS($oz_copt_debug, COPT)
+	oz_enable_threaded=no
+	oz_enable_fastreg=no
+	oz_enable_fasterreg=no
+	;;
+    p*)
+	AC_MSG_RESULT(profile (-DPROFILE_EMULATOR))
+	AC_DEFINE(PROFILE_EMULATOR)
+        OZ_CXX_OPTIONS($oz_copt_profile, COPT)
+	EMULDFLAGS="$EMULDFLAGS $oz_lopt_profile"
+	;;
+    rsp*)
+        AC_MSG_RESULT(rsprofile (-DRS_PROFILE))
+	AC_DEFINE(RS_PROFILE)
+        OZ_CXX_OPTIONS("-O", COPT)
+	oz_enable_miscbuiltins="yes"
+	oz_enable_threaded="no"
+	;;
+    no*)
+        AC_MSG_RESULT(default)
+	COPT=$oz_copt_default
+	;;
+    *)
+	AC_MSG_RESULT(optimize)
+	OZ_CXX_OPTIONS($oz_copt_optimize, COPT)
+	;;
+esac
+AC_SUBST(COPT)
+AC_SUBST(EMULDFLAGS)
+
+
+OZ_ENABLE(threaded,[ threaded code emulator],yes,
+	AC_MSG_RESULT(yes (-DTHREADED))
+	AC_DEFINE(THREADED)
+	)
+
+OZ_ENABLE(fastreg,[  fast register access],yes,
+	AC_MSG_RESULT(yes (-DFASTREGACCESS))
+	AC_DEFINE(FASTREGACCESS)
+	)
+
+OZ_ENABLE(fasterreg,[  even faster temporary register access],yes,
+	AC_MSG_RESULT(yes (-DFASTERREGACCESS))
+	AC_DEFINE(FASTERREGACCESS)
+	)
+
+OZ_ENABLE(fastarith,[  use fast arithemtic (assembly), if available],no,
+	AC_MSG_RESULT(yes (-DFASTARITH))
+	AC_DEFINE(FASTARITH)
+	)
+
+OZ_ENABLE(modules-static,[ link modules statically],$oz_enable_modules_static,
+        oz_enable_modules_static=yes
+        AC_MSG_RESULT(yes (-DMODULES_LINK_STATIC))
+	AC_DEFINE(MODULES_LINK_STATIC)
+	STATIC_MODULES="\$(MODULE_NAMES) DSS"
+	DYNAMIC_MODULES=""
+	,
+        oz_enable_modules_static=no
+        AC_MSG_RESULT(no (-UMODULES_LINK_STATIC))
+	STATIC_MODULES=""
+	DYNAMIC_MODULES="\$(MODULE_NAMES)"
+	)
+AC_SUBST(STATIC_MODULES)
+AC_SUBST(DYNAMIC_MODULES)
+
+case ${platform} in
+*-darwin)
+    ## seems needed on Darwin (MacOS X)
+    ## emits pic code suitable for fynamic linking and avoiding
+    ## any limit on the size of the global offset table
+    ## (according to info from Marc-Antoine Parent maparent@acm.org)
+    PICOPTIONS="-fPIC -fpic -Kpic"
+    PICOPTIONSCC="-fPIC -fpic -Kpic"
+    PICOPTIONSEXTRA="-fno-common"
+    ;;
+*)  PICOPTIONS="-fpic -Kpic"
+    PICOPTIONSCC="-fpic -Kpic"
+    ;;
+esac
+OZ_CXX_FIRST_OPTION($PICOPTIONS,OZTOOLDYNOPT)
+OZ_CXX_OPTIONS($PICOPTIONSEXTRA,ozm_tmp)
+if test -n "$ozm_tmp"; then
+  OZTOOLDYNOPT="$OZTOOLDYNOPT $ozm_tmp"
+fi
+if test "$oz_enable_modules_static" != "yes" ; then 
+    CDYNOPT=$OZTOOLDYNOPT
+fi
+AC_SUBST(CDYNOPT)
+AC_SUBST(OZTOOLDYNOPT)
+
+dnl ------------------------------------------------------------------
+dnl Configure oztool.sh
+dnl ------------------------------------------------------------------
+
+OZTOOL_CXX="$CXX${CXXAVOID:+ }$CXXAVOID"
+AC_SUBST(OZTOOL_CXX)
+dnl OZ_CC_CHOOSE
+AC_LANG_SAVE
+AC_LANG_C
+OZ_CC_FIRST_OPTION($PICOPTIONSCC,OZTOOLDYNOPTCC)
+OZ_CC_OPTIONS($PICOPTIONSEXTRA,ozm_tmp)
+if test -n "$ozm_tmp"; then
+  OZTOOLDYNOPTCC="$OZTOOLDYNOPTCC $ozm_tmp"
+fi
+AC_LANG_RESTORE
+AC_SUBST(OZTOOLDYNOPTCC)
+
+dnl *****************************************************************
+dnl malloc
+dnl *****************************************************************
+
+if test -z "$with_ccmalloc" 
+then
+    AC_MSG_CHECKING(for --with-malloc)
+    AC_ARG_WITH(malloc,
+	[--with-malloc=<obj>      use malloc from object file <obj> (default: NONE)])
+
+    if test -n "$with_malloc"
+    then
+	oz_malloc_obj=$with_malloc
+    fi
+    
+    if test -n "$oz_malloc_obj" && test -r $oz_malloc_obj
+    then
+	LIBS="$LIBS $oz_malloc_obj"
+	AC_MSG_RESULT(yes (\"$oz_malloc_obj\"))
+    else
+	AC_MSG_RESULT(no)
+    fi
+fi
+
+dnl *****************************************************************
+dnl virtual sites
+dnl *****************************************************************
+
+AC_MSG_CHECKING(whether socklen_t is declared...)
+dnl AC_TRY_COMPILE([
+dnl #include <sys/socket.h>],
+dnl     [socklen_t gaga;],
+dnl     [AC_MSG_RESULT(yes (-DHAVE_SOCKLEN_T))
+dnl      AC_DEFINE(HAVE_SOCKLEN_T)])
+
+AC_CACHE_VAL(oz_cv_have_socklen_t,[
+AC_EGREP_HEADER(typedef.*socklen_t.*;,sys/socket.h,
+[oz_cv_have_socklen_t=yes],
+[AC_EGREP_HEADER(typedef.*socklen_t.*;,sys/types.h,
+ [oz_cv_have_socklen_t=yes],
+ [oz_cv_have_socklen_t=no])])])
+if test $oz_cv_have_socklen_t = yes; then
+    AC_MSG_RESULT(yes (-DHAVE_SOCKLEN_T))
+    AC_DEFINE(HAVE_SOCKLEN_T)
+else
+    AC_MSG_RESULT(no)
+fi
+
+AC_CHECKING(whether we can do virtual sites...)
+AC_CACHE_VAL(ac_cv_can_vs,
+[can_vs=yes
+ AC_CHECK_HEADER(sys/types.h,, can_vs=no)
+ AC_CHECK_HEADER(unistd.h,, can_vs=no)
+ AC_CHECK_HEADER(sys/ipc.h,, can_vs=no)
+ AC_CHECK_HEADER(sys/shm.h,, can_vs=no)
+ AC_CHECK_FUNCS(shmget,, can_vs=no)
+ AC_CHECK_FUNCS(shmat,, can_vs=no)
+ AC_CHECK_FUNCS(shmdt,, can_vs=no)
+ AC_CHECK_FUNCS(shmctl,, can_vs=no)
+ if test $can_vs = yes; then
+    AC_MSG_CHECKING(shared memory with a test program)
+    AC_TRY_RUN([
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <errno.h>
+
+#define VS_KEYTYPE_SIZE		4
+#define VS_SEQ_SIZE		12
+#define VS_PID_MASK		0xffff
+#define SEQ_NUM			0x5
+#define VS_MSGBUFFER_KEY	0x1
+#define SHMSIZE			(1024*1024)
+#define	PERMS			0666
+#define SHM_OPT			0
+
+typedef unsigned int Value;
+
+#if defined(sparc)
+
+#define ASM_SWAP(cell, value)					\
+({ 								\
+  Value out;							\
+  __asm__ __volatile__ ("swap %3,%0"				\
+		 : "=r" (out),   "=m" (cell) 	/* output */	\
+		 : "0"  (value), "m"  (cell));	/* input  */	\
+  out;								\
+})
+;
+
+#elif defined(i386)
+
+#define ASM_SWAP(cell, value)					\
+({ 								\
+  Value out;							\
+  __asm__ __volatile__ ("xchgl %3,%0"				\
+			 :"=r" (out), "=m" (cell)		\
+			 :"0" (value), "m" (cell));		\
+  out;								\
+})
+;
+
+#else
+
+DO NOT COMPILE THE CRAP!
+  
+#endif
+ 
+key_t vsTypeToKey(int type)
+{
+  int idOffset = sizeof(key_t)*8 - VS_KEYTYPE_SIZE;
+  int seqOffset = idOffset - VS_SEQ_SIZE;
+  return ((key_t) ((type << idOffset) |
+		    (SEQ_NUM << seqOffset) |
+		    (getpid() & VS_PID_MASK)));
+}
+
+int volatile global;
+
+main()
+{
+  int shmkey;
+  int shmid;
+  void *shm;
+  struct shmid_ds ds;
+
+  shmkey = vsTypeToKey(VS_MSGBUFFER_KEY);
+  if ((shmid = shmget(shmkey, SHMSIZE, (PERMS|IPC_CREAT))) < 0)
+    exit(-1);
+  if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+    exit(-2);
+  for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+    *addr = (char) 0;
+  if (shmdt((char *) shm) < 0)
+    exit(-3);
+
+  if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+    exit(-4);
+  for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+    if (*addr != (char) 0) 
+      exit(-5);
+  if (shmdt((char *) shm) < 0)
+    exit(-6);
+
+  if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+    exit(-7);
+  for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+    *addr = (char) 0x4f;
+  if (shmdt((char *) shm) < 0)
+    exit(-8);
+
+  if ((shm = (void *) shmat(shmid, 0, SHM_OPT)) == (void *) -1)
+    exit(-9);
+  for (char *addr = (char *) shm; addr < ((char *) shm) + SHMSIZE; addr++)
+    if (*addr != (char) 0x4f) 
+      exit(-10);
+  if (shmdt((char *) shm) < 0)
+    exit(-11);
+
+  if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) < 0)
+    exit(-12);
+  if (shmctl(shmid, IPC_RMID, (struct shmid_ds *) 0) == 0)
+    exit(-13);
+  if (errno != EIDRM && errno != EINVAL)
+    exit(-14);
+
+  int local = 0;
+  global = 1;
+  local = ASM_SWAP(global, local);
+
+  if (global != 0 || local != 1) exit(-15);
+
+  exit(0);
+}
+],
+    AC_MSG_RESULT(succeeded),
+    AC_MSG_RESULT(failed)
+    can_vs=no,
+    AC_MSG_RESULT(dunno (no))
+    can_vs=no)
+ fi
+ ac_cv_can_vs=$can_vs])
+
+if test $ac_cv_can_vs = yes; then
+    AC_MSG_RESULT([... yes, we can do virtual sites!])
+else
+    AC_MSG_RESULT([... sorry, we cannot do virtual sites.])
+fi
+
+dnl OZ_ENABLE(virtualsites,[   provide support for virtual sites],
+dnl 	    $ac_cv_can_vs,
+dnl 	    AC_DEFINE(VIRTUALSITES)
+dnl 	    AC_MSG_RESULT(yes)
+dnl 	    ,
+dnl 	    )
+OZ_ENABLE(virtualsites,[   provide support for virtual sites],
+        no,
+	AC_DEFINE(VIRTUALSITES)
+        AC_MSG_RESULT(yes)
+	,
+	)
+
+dnl *****************************************************************
+dnl Include misc builtins
+dnl *****************************************************************
+
+OZ_ENABLE(miscbuiltins,[   include misc builtins],no,
+	AC_DEFINE(MISC_BUILTINS)
+        AC_MSG_RESULT(yes)
+	,
+	)
+
+dnl *****************************************************************
+dnl Find out which alignment assembler uses
+dnl *****************************************************************
+
+AC_MSG_CHECKING(whether .align is multiple)
+AC_TRY_RUN([
+#ifdef __GNUC__
+
+#include <stdio.h>
+
+static int nonsense(int);
+int main(void) {
+  int j;
+
+  goto leave;
+  
+ start:
+  asm volatile(".align 16");
+ la1:
+  asm volatile(".long 1");
+  asm volatile(".align 16");
+ la2:
+  j=nonsense(42);
+  goto leave;
+  
+  asm volatile(".align 16");
+ lb1:
+  asm volatile(".long 2");
+  asm volatile(".align 16");
+ lb2:
+  j=nonsense(4711);
+  goto leave;
+
+ leave:
+  static void * fake[] = {
+    && start, && la1, && la2,
+    && lb1, && lb2, && leave};
+
+  if (((((char *) && lb2) - ((char *) && lb1)) == 16) &&
+      ((((char *) && la2) - ((char *) && la1)) == 16) &&
+      (*((int *) && la1)==1) &&
+      (*((int *) && lb1)==2)) {
+    return 0;
+  } 
+  return -1;
+    
+}
+static int nonsense(int i) {
+  return i*i;
+}
+
+#else
+
+BOOOOOOOM
+
+#endif
+],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(AS_HAS_MULTIPLE_ALIGN),
+  AC_MSG_RESULT(no),
+  AC_MSG_RESULT(no))
+
+
+AC_MSG_CHECKING(whether .align is power of 2)
+AC_TRY_RUN([
+#ifdef __GNUC__
+
+#include <stdio.h>
+
+static int nonsense(int);
+int main(void) {
+  int j;
+
+  goto leave;
+  
+ start:
+  asm volatile(".align 4");
+ la1:
+  asm volatile(".long 1");
+  asm volatile(".align 4");
+ la2:
+  j=nonsense(42);
+  goto leave;
+  
+  asm volatile(".align 4");
+ lb1:
+  asm volatile(".long 2");
+  asm volatile(".align 4");
+ lb2:
+  j=nonsense(4711);
+  goto leave;
+
+ leave:
+  static void * fake[] = {
+    && start, && la1, && la2,
+    && lb1, && lb2, && leave};
+
+  if (((((char *) && lb2) - ((char *) && lb1)) == 16) &&
+      ((((char *) && la2) - ((char *) && la1)) == 16) &&
+      (*((int *) && la1)==1) &&
+      (*((int *) && lb1)==2)) {
+    return 0;
+  } 
+  return -1;
+    
+}
+static int nonsense(int i) {
+  return i*i;
+}
+
+#else
+
+BOOOOOOOM
+
+#endif
+],
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(AS_HAS_POWER_ALIGN),
+  AC_MSG_RESULT(no),
+  AC_MSG_RESULT(no))
+
+dnl ------------------------------------------------------------------
+dnl check alignment of secondary tag
+dnl ------------------------------------------------------------------
+
+AC_MSG_CHECKING([alignment of secondary tag for const terms])
+AC_TRY_RUN([
+class Tag {
+public:
+  unsigned int tag;
+};
+class Const : public Tag {
+private:
+  void*ptr;
+};
+int main()
+{
+  Const c;
+  return (((void*)&c)==((void*)(Tag*)&c))?0:-1;
+}],
+  AC_MSG_RESULT([ok]),
+  AC_MSG_ERROR([Aargh... alignment conditions for secondary tags
+are not satisfied on your platform/compiler combination]),
+  AC_MSG_RESULT([assume optimistic ok for cross compilation]))
+
+AC_MSG_CHECKING([if alignment of secondary tags for extensions needs padding])
+AC_TRY_RUN([
+class Tag {
+public:
+  unsigned int tag;
+};
+class Ext : public Tag {
+public:
+  void* ptr;
+  virtual void foo() {}
+};
+class User : public Ext {
+public:
+  void* uptr;
+public:
+  virtual void baz(){}
+};
+int main()
+{
+  User u;
+  return (((((char*)(void*)(Tag*)&u) - ((char*)(void*)&u)) % 8) == 0)?0:-1;
+}],
+  AC_MSG_RESULT(no)
+  needs_padding=no,
+  AC_MSG_RESULT(yes)
+  needs_padding=yes,
+  AC_MSG_RESULT([assume optimistic no for cross compilation])
+  needs_padding=no)
+
+NEEDS_PADDING=0
+AC_SUBST(NEEDS_PADDING)
+if test "$needs_padding" = "yes"; then
+AC_MSG_CHECKING([if padding works])
+AC_TRY_RUN([
+class Tag {
+public:
+  unsigned int tag;
+};
+class Pad {
+private:
+  unsigned int _pad;
+};
+class Ext : public Pad, public Tag {
+public:
+  void* ptr;
+  virtual void foo() {}
+};
+class User : public Ext {
+public:
+  void* uptr;
+public:
+  virtual void baz(){}
+};
+int main()
+{
+  User u;
+  return (((((char*)(void*)(Tag*)&u) - ((char*)(void*)&u)) % 8) == 0)?0:-1;
+}],
+  AC_MSG_RESULT(yes)
+  NEEDS_PADDING=1,
+  AC_MSG_RESULT(no),
+  AC_MSG_ERROR([we should not get here when cross compiling]))
+fi
+
+dnl *****************************************************************
+dnl FINALIZE
+dnl *****************************************************************
+
+AC_CONFIG_HEADER(conf-others.h)
+
+AC_OUTPUT(Makefile.vars Makefile Makefile.rules libdp/Makefile libfd/Makefile libfset/Makefile OZCONF.h:OZCONF.in oztool.sh:oztool.in $target-oztool:i386-mingw32-oztool.in .gdbinit)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded
+],
+ [autoconf failed: use 'autoconf -l ../..' to include ../../aclocal.m4.
+]))

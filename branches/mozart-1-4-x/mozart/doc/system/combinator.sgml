@@ -1,0 +1,119 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<chapter id="chapter.combinator">
+  <title/Deep-guard Concurrent Constraint Combinators: <<Combinator>>/
+
+  <p>
+    This chapter describes deep-guard concurrent
+    constraint combinators such as conditional and 
+    disjunction. Most combinators implemented by
+    the module <<Combinator>> are available by
+    convenient syntax and are described in
+    <ptr.extern to="ozdoc:tutorial"
+    key="chapter.lp">.  
+
+  <list>
+
+    <entry><<'not'>>
+      <index class=tails/<<Combinator>><And><<'not'>>/
+    <synopsis>
+      <<{Combinator.'not' ?+{P}}>>
+    <item>
+      implements deep-negation where the nullary
+      procedure ?_{P} gives the statement to
+      negate.  
+    <p>
+      Is supported by special syntax. The
+      statement
+      <<<not ?_{S} end>>>
+      expands to
+      <<<{Combinator.'not' proc {$} ?_{S} end}>>>
+
+    <entry><<'reify'>>
+      <index class=tails/<<Combinator>><And><<'reify'>>/
+    <synopsis>
+      <<{Combinator.'reify' ?+{P} ?@{D}}>>
+    <item>
+      implements deep-reification where the nullary
+      procedure ?_{P} gives the statement to
+      reify.  
+
+    <entry><<'cond'>>
+      <index class=tails/<<Combinator>><And><<'cond'>>/
+    <synopsis>
+      <<{Combinator.'cond' ?+{T} ?+{P}}>>
+    <item>
+      implements parallel concurrent conditional. 
+
+    <entry><<'or'>>
+      <index class=tails/<<Combinator>><And><<'or'>>/
+    <synopsis>
+      <<{Combinator.'or' ?+{T}}>>
+    <item>
+      implements disjunction. ?_{T} is a tuple of either nullary or unary
+      procedures. The special syntax statement
+
+      <<<
+      or ?_{S1}
+      [] ?_{S2}
+      [] ?_{S3} then ?_{S4}
+      end
+      >>>
+
+	corresponds to the following
+
+    <<<
+    local
+       proc {C1} ?_{S1} end
+       proc {C2} ?_{S2} end
+       fun {C3} ?_{S3} proc {$} ?_{S4} end end
+    in
+       {Combinator.'or' C1#C2#C3}
+    end
+   >>>
+	
+
+    <entry><<'choice'>>
+      <index class=tails/<<Combinator>><And><<'choice'>>/
+    <synopsis>
+      <<{Combinator.'choice' ?+{T}}>>
+    <item>
+      implements choice point construction.
+
+    <entry><<'dis'>>
+      <index class=tails/<<Combinator>><And><<'dis'>>/
+    <synopsis>
+      <<{Combinator.'dis' ?+{T}}>>
+    <item>
+      implements andorra-style disjunction.
+
+  </list>
+
+</chapter>
+
+
+
+
+
+

@@ -1,0 +1,496 @@
+<CHAPTER ID="chapter.failure">
+  <TITLE>Failure Model</TITLE>
+
+<index/partial failure property/
+<index/failure<and>partial failure property/
+<P>Distributed systems have the partial failure
+property, that is, part of the system can fail
+while the rest continues to work.
+Partial failures are not at all rare.
+Properly-designed applications must take
+them into account.
+This is both good and bad for application design.
+The bad part is that it makes applications more complex.
+The good part is that applications can take
+advantage of the redundancy offered by
+distributed systems to become more robust.
+
+<P>The Mozart failure model defines what failures
+are recognized by the system
+and how they are reflected in the language.
+The system recognizes
+<index/failure<and>fail-silent/
+<index/fail-silent assumption/
+permanent site failures that are instantaneous
+<index/failure<and>temporary network problem/
+<index/failure<and>permanent network problem/
+<index/communication failure/
+<index/network failure/
+and both temporary and permanent communication failures.
+The permanent site failure mode is more 
+generally known as fail-silent with failure detection,
+that is, a site stops working instantaneously, does
+not communicate with other sites from that point onwards,
+and the stop can be detected from the outside.
+The system provides mechanisms
+to program with language entities that are subject
+to failures.
+
+<index/<<DP>><and>failure model/
+<P>The Mozart failure model is accessed
+through the module
+<ref.extern to="ozdoc:system" key="chapter.dp"/<<DP>>/.
+This chapter explains and justifies this
+functionality, and gives examples
+showing how to use it.
+The failure model has been both simplified and improved
+since version 1.4.0.
+The primitives offered by the former module
+<ref.extern to="ozdoc:system" key="chapter.fault"/<<Fault>>/
+are no longer available, they have been replaced by a simpler
+mechanism that subsumes former <em>fault watchers</em>.
+
+<P>In its current state,
+the Mozart system provides only the
+primitive operations needed to detect failure
+and reflect it in the language.
+The design and implementation of
+fault-tolerant abstractions 
+within the language
+by using these primitives
+is the subject of ongoing research.
+This chapter and the next one give the first results
+of this research.
+All comments and suggestions for improvements are welcome.
+
+<SECTION><TITLE>Fault states</TITLE>
+
+<index/fault state/
+<P>All failure modes are defined with respect to
+both a language entity and a particular site.
+For example, one would like to read the contents
+of a cell from a given site.
+The site may or may not be able to access the cell.
+A language entity can be in one of four fault states
+on a given site:
+<LIST>
+<ITEM><index/fault state<and><<ok>>/
+<index/<<ok>><and>fault state/
+The entity works normally (local fault state <<ok>>).
+<ITEM><index/fault state<and><<tempFail>>/
+<index/<<tempFail>><and>fault state/
+The entity is temporarily not working
+(local fault state <<tempFail>>).
+This is because a remote site crucial to the entity
+is currently unreachable due to a network problem.
+This fault state can go away, and the entity work normally again.
+<ITEM><index/fault state<and><<localFail>>/
+<index/<<localFail>><and>fault state/
+The entity is permanently not working on the given site
+(local fault state <<localFail>>).
+This state is enforced by the application itself
+and is irreversible.
+It does not affect other sites.
+<ITEM><index/fault state<and><<permFail>>/
+<index/<<permFail>><and>fault state/
+The entity is permanently not working on all sites
+(local fault state <<permFail>>).
+This is because a site crucial to the entity
+has crashed.
+This fault state is permanent.
+</LIST>
+<P>If the entity is currently
+not working, then it is guaranteed that
+the fault state will be either <<tempFail>> or <<permFail>>.
+The system cannot always determine
+whether a fault is temporary or permanent.
+In particular, a <<tempFail>> may hide a site crash.
+However, network failures can always
+be considered temporary since the
+system actively tries
+to reestablish another connection.
+
+<P>The fault state <<localFail>> provides no guarantee
+on the actual status of the entity.
+It may hide a temporary or permanent fault, or no fault at all.
+It is permanent in the sense that the site will
+never be able to use the entity again.
+This fault state is not final, though.
+If the system detects that the entity is permanently
+not working on all sites, its fault state will become <<permFail>>.
+
+
+<SUBSECTION><TITLE>Temporary faults</TITLE>
+
+<P>The fault state <<tempFail>> exists to allow the
+application to react quickly to temporary network problems.
+It is raised by the system as soon as a network problem
+is recognized.
+<index/time-out<and>difference with temporary fault/
+It is therefore fundamentally different from a connection time-out.
+For example, TCP gives a time-out after some minutes.
+This duration has been chosen to be very long,
+approximating infinity from the viewpoint of the
+network connection.
+After the time-out,
+one can be sure that the connection is no longer working.
+
+<P>The purpose of <<tempFail>> is quite different.
+It is to <EM>inform</EM> the application
+of network problems, not to mark the <EM>end</EM> of a connection.
+For example, an application might be connected to a given server.
+If there are problems with this server, the application
+would like to be informed quickly so that it can try connecting
+to another server.
+A <<tempFail>> fault state will therefore be relatively frequent,
+much more frequent than a time-out.
+In most cases, a <<tempFail>> fault state will eventually go away.
+
+<P>It is possible for a <<tempFail>> state to last forever.
+For example, if a user disconnects the network connection of a laptop
+machine, then only he or she knows whether the problem is permanent.
+The application cannot in general know this.
+The decision whether to continue waiting or to stop the wait
+can cut through all levels of
+abstraction to appear at the top level (i.e., the user).
+The application might then pop up a window to ask the user whether
+to continue waiting or not.
+The important thing is that the network layer does not make this decision;
+the application is completely free to decide or to let the user decide.
+
+
+<subsection><title>Permanent faults</title>
+
+<p>In the new model, the application has the possibility
+to enforce a permanent failure locally or globally.
+Permanent failures are simpler to deal with, since they
+come with guarantees.
+If a thread attempts to invoke a distributed object
+that is known to be permanently failed,
+the system may infer that the thread will block forever,
+because the operation will never succeed.
+That information can be used by the garbage collector
+in order to safely remove that thread from memory.
+
+<p>Enforcing permanent failures can also simplify
+failure handlers themselves.
+A recovery mechanism based on temporary failures only, has
+to take into account the possibility that the failure may
+go away, and the normal behavior of an entity can interfere
+with the recovery.
+
+<p>Making an entity permanently unusable on a given site does
+not require any communication with other sites a priori.
+Therefore the fault state <<localFail>> is useful in cases where
+network faults are occurring.
+Note that the state has no impact on the network layer itself.
+On the other hand, making an entity permanently unusable for
+all sites may require to communicate with other sites.
+The system cannot notify the fault state <<permFail>> without
+having the guarantee that all sites are unable to use the entity.
+
+
+<SUBSECTION><TITLE>Remote problems</TITLE>
+
+<p>The former failure model was defining
+extra fault states that were informing the application
+about other sites using a given entity.
+Those fault states have been discarded in the new fault model.
+They were more difficult to understand, and their semantics
+was depending on the type of entity
+and the design of the distribution of entities.
+In order to allow for different distribution strategies,
+we considered these extra fault states to be inadequate.
+We believe that the four states defined above are expressive
+enough for building powerful fault-tolerant abstractions.
+
+
+<SECTION><TITLE>Basic model</TITLE>
+
+<index/failure<and>basic model/
+<index/basic failure model/
+<p>The model is extremely simple:
+<em>operations that cannot proceed because of a failure
+block until the failure possibly goes away</em>.
+Resumption after a temporary failure is automatic.
+Permanent failures cause the operation to block forever.
+Note how this behavior preserves the semantics of the language:
+an operation will never do something <em>different</em> because
+of a distribution fault.
+If the operation cannot complete, then it does not complete,
+and simply blocks.
+
+<p>Note that <em>asynchronous</em> operations do not block,
+even in the case of entity failure.
+Sending a message on a port is asynchronous: it terminates
+immediately, and eventually the message appears on the port's stream.
+Upon failure, this behavior is unchanged, except that the message
+may never arrive if the failure is permanent.
+So, sending a message on a permanently failed port is equivalent
+to doing nothing.
+
+<subsection><title>The fault stream</title>
+
+<index/fault stream<and>definition/
+<p>This basic model guarantees that nothing <em>wrong</em>
+happens to a distributed program that does not handle failures.
+Failure may simply <em>prevent</em> things to happen.
+In order to handle failures, one needs to detect them.
+So the second aspect of the model is a primitive that
+allows to watch the fault state of an entity.
+For that purpose, every site defines a <em>fault stream</em>
+for every entity.
+The fault stream of an entity reflects the history
+of the fault states of that entity on the site.
+Every time the fault state of the entity changes, the new state
+appears on the stream.
+
+<index/<<DP>><and><<getFaultStream>>/
+<index/fault stream<and><<DP.getFaultStream>>/
+<p>The fault stream of an entity <<X>> is given by the function
+<<DP.getFaultStream>>:
+<<<
+FS={DP.getFaultStream X}
+>>>
+The stream <<FS>> always contains the current fault state of <<X>>
+as its first element.
+So, if <<X>> is working normally, the fault stream will look like
+<<<
+FS=ok|_
+>>>
+Note that the tail of the stream is a read-only future.
+It will be bound as soon as the fault state of <<X>> changes.
+Assume that a temporary failure is detected.  The stream becomes
+<<<
+FS=ok|tempFail|_
+>>>
+Now assume that the failure goes away.  The stream is extended as
+<<<
+FS=ok|tempFail|ok|_
+>>>
+Any thread reading <<FS>> will be able to follow the history
+of <<X>>'s local fault state.
+Now consider that the home site of <<X>> crashes, and
+that it makes <<X>> permanently unavailable.
+The stream becomes
+<<<
+FS=ok|tempFail|ok|permFail|_
+>>>
+At that point, another thread that executes
+<<{DP.getFaultStream X}>> will get the tail of the stream,
+prefixed by <<X>>'s current fault state, i.e.,
+<<<
+permFail|_
+>>>
+
+<index/failure handling<and>fault stream/
+<index/fault stream<and>failure handler/
+<p>On implements a failure handler with a thread reading
+an entity's fault stream, and performing an action
+depending on the fault state it just read.
+With the fault stream, one can implement failure handlers
+in many different ways.
+One entity can be monitored by several handlers: they will
+simply happen to read the same fault stream.
+One can also monitor several entities with a single handler:
+one thread can read several streams, using <<Record.waitOr>> to
+synchronize on fault state updates.
+
+<subsubsection><title>Stream finalization</title>
+
+<index/fault stream<and>finalization/
+<p>It can be useful to drop a failure handler once the entity
+it is monitoring is out of memory scope on the handler's site.
+When an entity is garbage collected, the tail of
+its fault stream is automatically bound to <<nil>>.
+So, in the example above, if <<X>> disappears from the site
+where <<DP.getFaultStream>> was applied, the fault stream becomes
+<<<
+FS=ok|tempFail|ok|permFail|nil
+>>>
+
+<subsubsection><title>Variables</title>
+
+<p>Beware of variables: the fault stream of a variable is not the same
+as the fault stream of its value!
+In order to monitor a variable <<X>>, one has to make sure that
+<<{DP.getFaultStream X}>> is called <em>before</em> <<X>> is
+determined.
+Once <<X>> is determined, its fault stream is closed with <<nil>>, like
+upon finalization above.
+This gives a hint to the handler watching <<X>> that the variable no
+longer exists as a variable on its site.
+This is important because the way a variable failure may be completely
+unrelated to how a failure of its value is handled.
+The model enforces the separation between the variable and its value.
+
+<p>In order to get the fault stream of a variable <<X>>, the safest
+way is to get the fault stream of a fresh variable, then bind that
+variable to <<X>>.
+Once two variables are bound, their fault streams are merged (see
+module <ref.extern to="ozdoc:system" key="chapter.dp"/<<DP>>/).
+In the example below, the fault stream of <<Y>> becomes the fault
+stream of <<X>>.
+<<<
+proc {GetVariableFaultStream X ?FS}
+   Y
+in
+   FS={DP.getFaultStream Y}
+   X=Y
+end
+>>>
+
+<SECTION id="advanced.model"><TITLE>Advanced features</TITLE>
+
+<p>The basic model lets you predict the behavior of an application in
+case of faults, and write failure watchers that may react upon entity
+failure.
+The advanced model provides two extra operations <<DP.break>> and
+<<DP.kill>>, for enforcing the fault states <<localFail>> and
+<<permFail>>, respectively.
+
+<p>The statement <<{DP.break X}>> puts the entity <<X>> in fault state
+<<localFail>>, unless it was already in state <<permFail>>.
+In the latter case, it does nothing.
+It ensures that <<X>> is permanently not working on the current site
+at least, and has no effect on other sites.
+It can be used to prevent an entity that is in fault state
+<<tempFail>> for a long time, from working again.
+
+<p>The statement <<{DP.kill X}>> is asynchronous: it terminates
+immediately, and attempts to put the entity <<X>> in fault state
+<<permFail>>.
+It is not guaranteed to succeed.
+It can be applied even if <<X>> is in fault state <<localFail>>.
+
+<subsection><title>Failure propagation</title>
+
+<p>Here is a small example on how to use <<DP.getFaultStream>> and
+<<DP.kill>> in order to make a set of entities fail as soon as one of
+them fail.
+Assume <<Es>> is a list of entities.
+We create as many failure watchers as entities, and every watcher that
+observes <<permFail>> on its fault stream binds a trigger variable.
+Concurrently, a thread waits on that trigger variable, and kill all
+entities once it is bound.
+
+<<<
+local Trigger in
+   for E in Es do
+      thread
+         %% bind Trigger once E has permanently failed
+         if {Member permFail {DP.getFaultStream E}} then
+            Trigger=unit
+         end
+      end
+   end
+   thread
+      {Wait Trigger}
+      %% attempt to make all elements of Es fail
+      for E in Es do {DP.kill E} end
+   end
+end
+>>>
+
+This implements something similar to the <em>process linking</em> in
+Erlang: all those entities serve a common task, which ensures that no
+entity survives if some of them fail.
+
+<SECTION><TITLE>Fault states for language entities</TITLE>
+
+<P>This section explains the possible fault states
+of each language entity in terms of its distributed semantics.
+The fault state is a consequence of two things:
+the entity's distributed implementation and
+the system's failure mode.
+Note that a given entity may have several possible distributed
+implementations, depending on which state protocol is used.
+So the fault states will be explained in function of the protocols,
+and not of the entities themselves.
+Please refer to protocol annotations in module
+<ref.extern to="ozdoc:system" key="chapter.dp"/<<DP>>/
+for a detailed list of all protocols.
+
+<p>As you already know, the fault state <<localFail>> only depends on
+the site where it occurs.
+So we are only interested in the situations that may cause fault
+states <<tempFail>> and <<permFail>>, and which are not related to the
+usage of <<DP.kill>>.
+
+<subsection><title>Stationary state protocols: <<stationary>>,
+<<sited>></title>
+
+<p>This applies to ports, which are always stationary, and to
+dictionaries and arrays, which are stationary by default.  It also
+applies to sited entities, or entities explicitly annotated as
+<<sited>>.
+The fault state of those entities depends on their home site only.
+The state <<tempFail>> reflects an unknown problem for communicating
+with the entity's home site, while <<permFail>> is a sign of a site
+crash.
+
+<subsection><title>Migratory state protocols: <<migratory>>,
+<<pilgrim>></title>
+
+<p>This applies to cells and object states, which use protocol
+<<migratory>> by default.
+The fault state depends on both their home site and the sites that may
+contain the state.
+In particular, the state <<permFail>> occurs when the home site
+crashes, or the site holding the state crashes.
+The state is guaranteed to be lost in that state.
+
+<subsection><title>Replicated state protocol: <<replicated>></title>
+
+<p>This applies to stateful entities annotated as such.
+Like in the stationary state protocols, the fault state depends on the
+home site only.
+The proxy sites only hold a copy of the state.
+Once they crash and the home site detects them, they are simply
+discarded when it comes to updating the state.
+The protocol is designed in such a way that proxy failures do not
+affect the entity.
+
+<subsection><title>Immediate copy protocol: <<immediate>></title>
+
+<p>This applies to stateless entities that are copied upon
+transmission, like procedures, classes and chunks by default.
+Those entities are only values, and they cannot fail, since they are
+present on all the sites referring to them.
+The only possible fault state for those entities is <<ok>>.
+
+<subsection><title>Non-immediate copy protocol: <<eager>>,
+<<lazy>></title>
+
+<p>This applies to stateless entities that are copied between sites,
+but not immediately, like object-records by default.
+Such entities can be <<tempFail>> if a network failure prevents the
+site from obtaining their full representation.
+However, they cannot be <<permFail>>, because their representation
+could be obtained by other means.
+
+<p>For example, consider a class that is copied lazily.  The class
+representation may be obtained by another site than the one that sent
+the class reference.  The class may also have been save on a file, and
+that file can be available to the site requesting it.  Loading the
+class will simply fulfill the representation in memory.
+
+<subsection><title>Variable protocols: <<variable>>, <<reply>></title>
+
+<p>This applies to all kinds of variables.
+With the protocol <<variable>>, the fault state of the entity only
+depends on its home site.
+If the home site fails before the variable is bound, the variable's
+fault state will be <<permFail>>.
+
+<p>The weakness of the protocol <<variable>> is that it does not
+consider a proxy crash as a possible cause of entity failure, even if
+that proxy site was the one supposed to bind the variable.
+For that purpose, the protocol <<reply>> considers also the first
+proxy site (the first site that was sent the variable) as critical for
+the entity.
+So, with the protocol <<reply>>, the fault state <<permFail>> may be
+caused by a crash of the home site or the first proxy site.
+
+</CHAPTER>
+

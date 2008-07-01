@@ -1,0 +1,196 @@
+<!--
+  - Authors:
+  -   Andreas Sundstrom <andreas@sics.se>
+  -
+  - Copyright:
+  -   Andreas Sundstrom, 1999
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+  <Chapter id="chapter.directory">
+    <Title/An Example of a Server Directory/
+    <author.extern to="author.db" key="Andreas.Sundstroem">
+
+    <P>
+      This contribution is meant primarily to work as an example of
+      how one can use the module <<Discovery>> and build a yellow
+      pages service.  The directory service consists out of three
+      parts: a directory server, an interface to announce services,
+      and a way to find announced services.
+    </P>
+    <P>
+      All services have descriptions. When a lookup is performed, a
+      pattern is given to specify what to look for. The result of the
+      lookup are services that have descriptions matching the pattern.
+      Both descriptions and patterns are Oz records.
+    </P>
+    <P> 
+      So what does it mean that a description <def/match/ a pattern?
+      All features in a pattern must be present in the description. If a
+      field in the pattern has a value, then it must be either equal
+      or match to a corresponding field in the description. For
+      example, f(a:1 b:g(x:5 y:7) c:28 d:foo) does match f(c:28 b:g
+      d:_), but not the other way around.
+    </P>
+    <P>
+      One could say that a pattern puts constraints on a matching
+      description. Our form of pattern puts constraints on the label
+      and features of the description.
+    </P>
+
+    <Section id="section.directory.module">
+      <Title/The ExampleDirectory Module/
+
+      <P>
+        The module has three classes under features (<<server>>,
+	<<serviceProvider>> and <<client>>), which corresponds to the
+	three parts mentioned earlier.
+      </P>
+
+      <P>
+        The class <<ExampleDirectory.server>> has following methods:
+
+      <P>
+        <List>
+          <Entry><<init>>
+          <Synopsis>
+           <code display>
+init(port:?_{PortNr} <= useDefault
+     expectedClientId:?_{ClientId} <= unit 
+     id:?_{ServerId} <= directory(kind:recordMatching))
+           </code>
+          <Item>
+            This method starts a directory server. The initial contact
+            between a client (or service provider) and the server is
+            made through the ip port ?_{PortNr}. The default ip port
+            number is <<Discovery.defaultPortNumber>>. After the first
+            contact has been performed, all subsequent interactions
+            are done using Oz ports.
+	  <P>
+	    ?_{ServerId} is a record explaining which type of
+            directory server it is.
+	  <P>
+            ?_{ClientId} is a record used to specify which clients
+            should be served. If a client id sent from a client (or
+            service provider) matches ?_{ClientId}, the client will be
+            served. If the feature <<expectedClientId>> is not
+            specified the server will serve every client requesting
+            service.
+
+          <Entry><<close>>
+          <Synopsis>
+           <code display>
+close()
+           </code>
+          <Item>
+	    Closes the operation of the server.
+
+        </List>
+      </P>
+
+      <P>
+        The class <<ExampleDirectory.serviceProvider>> has following methods:
+
+      <P>
+        <List>
+          <Entry><<init>>
+          <Synopsis>
+           <code display>
+init(serverPort:?_{PortNr} <= useDefault
+     id:?_{ClientId} <= unit 
+     expectedServerId:?_{ServerId} <= directory(kind:recordMatching) 
+     timeOut:?_{TimeOut} <= 1000)
+           </code>
+          <Item>
+            This method broadcasts to the ip port ?_{PortNr} and waits
+            for answers from servers that listen to it. The servers
+            that answer and which id matches ?_{ServerId} will be used
+            by the other methods of this class.
+	  <P>
+	    When interacting with the servers, ?_{ClientId} will be used
+	    as identification. The method will not consider answers
+	    received after ?_{TimeOut} milliseconds has gone by.
+
+          <Entry><<add>>
+          <Synopsis>
+           <code display>
+add(description:?_{Desc} 
+    ticket:?_{Ticket} 
+    key:??_{Key <= _})
+           </code>
+          <Item>
+            This method announces a service with a description
+            ?_{Desc}. ?_{Ticket} is a ticket to an Oz-entity that is
+            used as an interface to the service. An Oz name that can
+            be used to remove the service from the directories is
+            returned.
+	    
+          <Entry><<remove>>
+          <Synopsis>
+<code display>
+remove(key:Key)
+</code>
+          <Item>
+            Tells the servers to remove a service with the key
+            ?_{Key}.
+
+        </List>
+      </P>
+
+      <P>
+        The class <<ExampleDirectory.client>> has following methods:
+
+      <P>
+        <List>
+          <Entry><<init>>
+          <Synopsis>
+           <code display>
+init(serverPort:?_{PortNr} <= useDefault
+     id:?_{ClientId} <= unit
+     expectedServerId:?_{ServerId} <= directory(kind:recordMatching)
+     timeOut:?_{TimeOut} <= 1000)
+           </code>
+          <Item>
+	    Similar to <<ExampleDirectory.serviceProvider>>.
+
+          <Entry><<lookup>>
+          <Synopsis>
+           <code display>
+lookup(pattern:?_{Pattern} services:??_{Services})
+           </code>
+          <Item>
+            Asks servers for services that match the ?_{Pattern}.
+	    A list of pairs is returned. Those pairs consist of a service
+	    description and its ticket.
+        </List>
+      </P>
+    </Section>
+
+  </Chapter>
+
+
+
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "part.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->
+

@@ -1,0 +1,69 @@
+<!--
+  - Authors:
+  -   Peter Van Roy	<pvr@info.ucl.ac.be>
+  -   Per Brand		<perbrand@sics.se>
+  -   Denys Duchier     <duchier@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Peter Van Roy, 1998
+  -   Per Brand, 1998
+  -   Denys Duchier, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+<Chapter id="Chapter.Fault">
+  <Title/Detecting and Handling Distribution Problems: <<Fault>>/
+
+<p>This module is defunct.  It has been replaced since Mozart 1.4.0 by
+new primitives in module <<DP>> (<ptr to="section.dp.fault">).  The
+former functionality could be reproduced, but no effort has been made
+in that direction, because the new fault model is believed to be
+superior, although much simpler.
+
+<p>Only the installation of <em>watchers</em> on fault states
+<<tempFail>> and <<permFail>> is still functional.  It is redefined as
+<code display>
+fun {InstallWatcher Entity FStates WatcherProc}
+   if {List.all FStates
+       fun {$ S} {Member S [tempFail permFail]} end}
+   then
+      proc {Loop FS}
+         case FS of F|Fr then
+            if {Member F FStates} then
+               thread {WatcherProc Entity F(info:state)} end
+            else
+               {Loop Fr}
+            end
+         else skip end
+      end
+   in
+      {DP.getFaultStream Entity thread {Loop} end}
+      true
+   else
+      false
+   end
+end
+</code>
+
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "chapter.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

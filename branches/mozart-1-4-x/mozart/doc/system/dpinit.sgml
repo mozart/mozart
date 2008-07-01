@@ -1,0 +1,7 @@
+<Chapter id="Chapter.DPInit">
+  <Title/Initializing and instrumenting the distribution layer: <<DPInit>>/
+
+<p>This module is deprecated.  The initialization of the distribution
+layer is now part of module <<DP>> (<ptr to="section.dp.init">).
+
+</Chapter>

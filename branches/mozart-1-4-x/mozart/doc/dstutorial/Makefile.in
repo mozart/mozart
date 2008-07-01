@@ -1,0 +1,17 @@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+
+HTMLEXTRAFILES = tutorial.gif
+
+WHAT	= dstutorial
+MAIN	= dstutorial.sgml
+WHATCLASS=tutorial
+PRINTNAME=DistributedProgramming
+SGMLSRCS = 1_abstract.sgml 2_introduction.sgml x_dist_model.sgml	\
+           x_examples.sgml x_failure.sgml x_ft_examples.sgml		\
+           x_limits.sgml
+# x_agentexamples.sgml
+
+include ../Makefile.common
+ 
