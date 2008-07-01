@@ -36,162 +36,67 @@ CD=/Users/ggutierrez/Desktop/CocoaDialog.app
 
 
 ##
-# Mozart Install
+# Mozart Installation
 ##
-MOZ_HOME=/Users/ggutierrez/Work/moz140
+MOZ_INST=/Users/ggutierrez/Work/moz140
 ## Directories of mozart installation to be bundled.
 MOZ_DIRS= platform bin cache share include
 
 
 ##Mozart documentation folder (html)
-MOZ_DOC_HTML=/Users/ggutierrez/doc
+#MOZ_DOC_HTML=/Users/ggutierrez/doc
 
 ##Mozart standard library documentation dir (html)
-MOZ_STDLIB_HTML=$(MOZ_HOME)/doc
+#MOZ_STDLIB_HTML=$(MOZ_HOME)/doc
 
-################################################################################
-# Customizable variables
-################################################################################
-INTOOL=/usr/bin/install_name_tool
-OTOOL=/usr/bin/otool -L
+
+#INTOOL=/usr/bin/install_name_tool
+#OTOOL=/usr/bin/otool -L
 NAME=Mozart
-VERSION=1.3.2
+#VERSION=1.4.0
+
+
+### do not change anything!!
 
 APP=$(NAME).app
-EXT_LIBS=$(APP)/Contents/Resources/ext_libs
-EXEC=$(APP)/Contents/Resources/platform/darwin-i386/emulator.exe
+
+## Directories inside the bundle
+BND_CONTENTS=$(APP)/Contents
+
+## The Resources directory is where mozart installation files will be.
+BND_RESOURCES=$(BND_CONTENTS)/Resources
+
+## The Frameworks directory is where shared libraries used by the emulator will be.
+## For instance, libgmp.dylib
+BND_FRAMEWORKS=$(BND_CONTENTS)/Frameworks
+
+
+#EXT_LIBS=ext_libs
+
+## The path to the emulator inside the bundle
+EMULATOR=$(APP)/Contents/Resources/platform/darwin-i386/emulator.exe
 
 ## Platypus call
-#PLATCALL=$(PLAT) -a '$(NAME)' -t 'Shell' -o 'None' -u 'Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>' -i 'appIcon.icns'  -V '$(VERSION)' -s '????' -I 'org.Mozart' 'script' '$(APP)'
-
-#PLATCALL=$(PLAT) -a '$(NAME)' -t 'AppleScript' -o 'None' -u 'Gustavo Gutierrez' -i '/usr/bin/oascript' -V '1.0' -s '????' -I 'org.ggutierrez.mozart' -X '*' -T '****|fold' 'launcher.applescript' '$(APP)'
-
-
-PLATCALL=$(PLAT) -D -a '$(NAME)' -t 'Shell' -o 'None' -u 'Gustavo Gutierrez' -i '/bin/sh' -V '1.0' -s '????' -I 'org.ggutierrez.mozart' -X '*.oz' -T '****' 'script' '$(APP)'
-
-# External libraries thet mozart uses (i.e. gmp)
-MOZ_LIBS_DIR=/Users/ggutierrez/Work/ext_libs
-
-
-##
-# Some dirs in the bundle
-##
-BCONT=$(APP)/Contents
-BRSRCS=$(BCONT)/Resources
-BFRWRKS=$(BCONT)/Frameworks
-
-##
-# Bundle related files
-##
-InfPL=Info.plist
-ICN=appIcon.icns
-BBIN=Mozart.sh
-
-SOURCE_FILES=$(APP) 
-OZHOME_FILES=
-OZHOME_DIRS= examples
-
-TEMPLATE_DMG=template.dmg
-
-
-################################################################################
-# DMG building. No editing should be needed beyond this point.
-################################################################################
-
-MASTER_DMG=$(NAME)-$(VERSION).dmg
-WC_DMG=wc.dmg
-WC_DIR=wc
-
-.PHONY: all
-all: bundskel fixpaths 
-
-## $(MASTER_DMG)
-
-$(TEMPLATE_DMG): $(TEMPLATE_DMG).bz2
-	bunzip2 -k $<
-
-$(TEMPLATE_DMG).bz2: 
-	@echo
-	@echo --------------------- Generating empty template --------------------
-	mkdir template
-	hdiutil create -size  100m "$(TEMPLATE_DMG)" -srcfolder template -format UDRW -volname "$(NAME)" -quiet
-	rmdir template
-	bzip2 "$(TEMPLATE_DMG)"
-	@echo
-
-$(WC_DMG): $(TEMPLATE_DMG)
-	cp $< $@
-
-$(MASTER_DMG): $(WC_DMG) $(SOURCE_FILES)
-	@echo
-	@echo --------------------- Creating Disk Image --------------------
-	mkdir -p $(WC_DIR)
-	hdiutil attach "$(WC_DMG)" -noautoopen -quiet -mountpoint "$(WC_DIR)"
-	for i in $(SOURCE_FILES); do  \
-		rm -rf "$(WC_DIR)/$$i"; \
-		ditto -rsrc "$$i" "$(WC_DIR)/$$i"; \
-	done
-	for i in $(OZHOME_FILES); do  \
-		rm -rf "$(WC_DIR)/$$i"; \
-		ditto -rsrc "$(MOZ_HOME)/$$i" "$(WC_DIR)"; \
-	done
-	
-	rm -rf "$(WC_DIR)/Examples"; \
-#	ditto -rsrc "$(MOZ_HOME)/examples" "$(WC_DIR)/Examples"; \
-	
-	rm -rf "$(WC_DIR)/Doc"
-#	ditto -rsrc "$(MOZ_DOC_HTML)" "$(WC_DIR)/Doc/mozart"; 
-	
-	rm -rf "$(WC_DIR)/Doc/stdlib-doc"
-#	ditto -rsrc "$(MOZ_STDLIB_HTML)/mozart-ozmake" "$(WC_DIR)/Doc/stdlib-doc/mozart-ozmake";
-#	ditto -rsrc "$(MOZ_STDLIB_HTML)/mozart-stdlib" "$(WC_DIR)/Doc/stdlib-doc/mozart-stdlib";
-	
-	WC_DEV=`hdiutil info | grep "$(WC_DIR)" | grep "Apple_HFS" | awk '{print $$1}'` && \
-	hdiutil detach $$WC_DEV -quiet -force
-	rm -f "$(MASTER_DMG)"
-	hdiutil convert "$(WC_DMG)" -quiet  -format UDZO -imagekey zlib-level=9 -o "$@"
-	rm -rf $(WC_DIR)
-	hdiutil unflatten "$@"
-	/Developer/Tools/Rez Carbon.r license.r -a -o "$@"
-	hdiutil flatten "$@"
-	@echo
-
-##
-# App creation
-##
-fixpaths: 
-	@echo
-	@echo --------------------- Fixing libgmp --------------------
-
-	$(INTOOL) -change /opt/local/lib/libgmp.3.dylib \
-	@executable_path/../../../Frameworks/libgmp.3.dylib  $(EXEC)
-	$(INTOOL) -change /opt/local/lib/libz.1.dylib \
-	@executable_path/../../../Frameworks/libz.1.dylib  $(EXEC)
-	@echo
-	@echo --------------------- Path results --------------------
-	$(OTOOL) $(EXEC)
-
+PLATCALL = $(PLAT) -i 'appIcon.icns' script.sh ./$(APP)
 
 ##
 #Create a bundle from skel
 ##
-bundskel:
-	$(shell $(PLATCALL))
-	@echo --------------------- Populating the bundle with mozart dirs ------------
+all: bundle fixpaths 
+
+bundle:
+	$(PLATCALL)
 	for i in $(MOZ_DIRS); do  \
-		cp -R $(MOZ_HOME)/$$i $(BRSRCS); \
+		cp -R $(MOZ_INST)/$$i $(BND_RESOURCES); \
 	done
-	@echo --------------------- Populating the bundle with CocoaDialog ------------
-	cp -R $(CD) $(BRSRCS)
-	@echo --------------------- Done. ---------------
-	@echo --------------------- Populating the bundle with External Libs ------------
-	mkdir -p $(BFRWRKS)/
-	cp $(MOZ_LIBS_DIR)/* $(BFRWRKS)/
-	@echo --------------------- Done. ---------------
+	cp -R $(CD) $(BND_RESOURCES)
+	mkdir -p $(BND_FRAMEWORKS)/
+#	cp $(EXT_LIBS)/* $(BND_FRAMEWORKS)/
 
-.PHONY: clean veryclean
+fixpaths:
+	./bundlelibs.sh $(EMULATOR) $(APP)
+
+.PHONY: bundskel
+
 clean:
-	-rm -rf $(TEMPLATE_DMG) $(MASTER_DMG) $(WC_DMG) 
-
-veryclean: clean
-	-rm -rf Mozart.app
+	-rm -rf $(APP)
