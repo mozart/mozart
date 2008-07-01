@@ -18,7 +18,7 @@
 <!ENTITY x_examples		SYSTEM	"x_examples.sgml">
 <!-- ENTITY x_agentexamples	SYSTEM	"x_agentexamples.sgml"       -->
 <!ENTITY x_failure		SYSTEM	"x_failure.sgml">
-<!-- ENTITY x_ft_examples		SYSTEM	"x_ft_examples.sgml" -->
+<!ENTITY x_ft_examples		SYSTEM	"x_ft_examples.sgml">
 <!ENTITY x_limits		SYSTEM	"x_limits.sgml">
 
 <!-- Abbreviations -->
@@ -40,7 +40,7 @@
     <Meta name="html.split" value="chapter.examples">
 <!--    <Meta name="html.split" value="chapter.agentexamples"> -->
     <Meta name="html.split" value="chapter.failure">
-<!--    <Meta name="html.split" value="chapter.ft_examples">   -->
+    <Meta name="html.split" value="chapter.ft_examples">
     <Meta name="html.split" value="chapter.limits">
 
     <Meta name="html.split.bib" value="">
@@ -66,7 +66,7 @@
    &x_examples;
 <!--   &x_agentexamples; -->
    &x_failure;
-<!--   &x_ft_examples;   -->
+   &x_ft_examples;
    &x_limits;
   </BODY> 
   <!-- Hallo -->
