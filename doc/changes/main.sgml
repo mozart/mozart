@@ -125,6 +125,8 @@
     contains some substantial changes compared to former releases.  It
     provides some new features, but also discards some former
     features, making it backwards-incompatible in some cases.
+    This chapter lists the differences between Mozart 1.4.0 and Mozart
+    1.3.2.
 
     <section id="section.m140.lang" proglang=sh>
       <title/Changes to the language/
@@ -246,6 +248,10 @@
       the new release.  Notable ones are:
       <list>
 
+	<item><<IsOdd>> was incorrectly returning <<false>> when given
+	an odd negative number.  It now returns <<true>> as
+	expected.</item>
+
 	<item>Weak dictionaries can now be finalized via other weak
 	dictionaries.  A fixpoint has to be computed in the garbage
 	collector in order to determine which ones had to be
@@ -263,6 +269,15 @@
 	with <<X>> and <<Y>> distributed performs the distributed
 	bindings <<X=foo>> and <<Y=bar>> <em>in parallel</em>, and no
 	longer sequentially.</item>
+
+	<item>There were also some important bug fixes in the
+	marshaler, which are orthogonal to the new distribution
+	layer.</item>
+
+	<item>The executable <<ozengine>> can now belong to a
+	directory whose path contains spaces.  Similarly, functors
+	compiled as executables can be run from a path different than
+	<<'.'>> using paths containing spaces.</item>
 
       </list>
 
