@@ -935,7 +935,7 @@ namespace _msl_internal{ //Start namespace
 #ifdef BIG_ENDIAN_HOST
     int i, j;
     for (i = 0, j = 0; i < MD5_SIZE; i++, j+= 4) {
-      x[i] = gf_char2integer(block[j]);
+      x[i] = gf_char2integer(&(block[j]));
     }
 #else
     memcpy( x, block, 64 );
