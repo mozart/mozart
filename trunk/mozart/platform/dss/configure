@@ -6302,6 +6302,11 @@ case "$host_cpu" in
 echo "${ECHO_T}sparc CPU" >&6; }
 	CPU_FLAGS="-mcpu=v8 -DBIG_ENDIAN_HOST"
     ;;
+    ultrasparc)
+        { echo "$as_me:$LINENO: result: ultrasparc CPU" >&5
+echo "${ECHO_T}ultrasparc CPU" >&6; }
+        CPU_FLAGS="-mcpu=ultrasparc -DBIG_ENDIAN_HOST"
+    ;;
     powerpc)
 	{ echo "$as_me:$LINENO: result: $host_cpu architecture" >&5
 echo "${ECHO_T}$host_cpu architecture" >&6; }
