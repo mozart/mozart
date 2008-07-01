@@ -82,6 +82,8 @@ PLATCALL = $(PLAT) -i 'appIcon.icns' script.sh ./$(APP)
 ##
 #Create a bundle from skel
 ##
+all: bundle fixpaths 
+
 bundle:
 	$(PLATCALL)
 	for i in $(MOZ_DIRS); do  \
