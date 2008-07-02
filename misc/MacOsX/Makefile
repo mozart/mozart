@@ -35,6 +35,10 @@ CD=/Users/ggutierrez/Desktop/CocoaDialog.app
 ##
 MOZ_INST=/Users/ggutierrez/Work/moz140
 
+## Mozart documentation
+MOZ_DOC=/Users/ggutierrez/Desktop/Documentation
+
+##----------------------------------------------------------------
 ## Do not modify anything bellow this line
 
 ## Directories of mozart installation to be bundled.
@@ -92,7 +96,18 @@ bundle:
 fixpaths:
         ./bundlelibs.sh $(EMULATOR) $(APP)
 
-.PHONY: bundskel
+
+diskimage:
+        -rm -rf tmpdir
+        mkdir -p tmpdir/
+        mv Mozart.app tmpdir/
+        cp -r $(MOZ_DOC) tmpdir/
+        ./make-dmg.sh $(NAME).dmg tmpdir/ $(NAME)
+        -rm -rf tmpdir
+        @echo finished
+
+
+.PHONY: bundskel fixpaths
 
 clean:
         -rm -rf $(APP)
