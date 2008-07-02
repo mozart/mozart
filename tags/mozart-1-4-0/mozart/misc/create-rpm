@@ -1,0 +1,371 @@
+#!/bin/sh 
+#
+#  Authors:
+#    Christian Schulte <schulte@ps.uni-sb.de>
+#
+#  Contributors:
+#    Konstantin Popov <kost@sics.se>
+#
+#  Copyright:
+#    Christian Schulte, 1998
+#    Konstantin Popov, 2001
+#
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://www.mozart-oz.org
+# 
+#  See the file "LICENSE" or
+#     http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+#
+
+RPMROOT=/usr/src/redhat
+RPMSRC=$RPMROOT/SOURCES
+RPMSPEC=$RPMROOT/SPECS
+TMPDIR=/tmp
+: ${PACKAGER:="Konstantin Popov (mozart-oz.org)"}
+
+#
+COPYLIBS=no
+
+#
+# check whether copying of the 'libgcc_s' and 'libstdc++' libraries
+# is dislabled;
+while [ 1 ]; do
+    case $1 in 
+	--no-lib-copies)
+	COPYLIBS=no
+	shift 1
+	continue
+	;;
+	--lib-copies)
+	COPYLIBS=yes
+	shift 1
+	continue
+	;;
+    esac
+    break
+done
+
+#
+# Read dir
+#
+if test $# -lt 3
+then
+   echo "usage: create-rpm [--no-lib-copies] <build-dir> <build-stdlib-dir> <dst-dir>" 1>&2;
+   echo "          <build-dir> is the place where Mozart has been built" 1>&2;
+   echo "          <build-stdlib-dir> is the place where Mozart Standard Library has been built" 1>&2;
+   exit 1;
+fi
+BUILDDIR=$1
+BUILDSTDDIR=$2
+BUSRCTAR=`ls ${BUILDDIR}/mozart-*.*-src.tar.gz`
+BUDOCTAR=`ls ${BUILDDIR}/mozart-*.*-doc.tar.gz`
+BUSTDTAR=`ls ${BUILDSTDDIR}/mozart-*.*-std.tar.gz`
+DSTDIR=$3
+OZHOME=/usr/lib/mozart
+
+#
+# Find version
+#
+
+VERSION=`(echo ${BUSRCTAR} | sed 's/.*mozart-\(.*\..*\)-src.tar.gz/\1/')`
+BUILD=`(echo $Revision$ | sed 's|.*\.\([1-9][0-9]*\).*|\1|')`
+
+#
+# Build sh files
+#
+
+cd $TMPDIR
+
+cat > oz.sh <<EOF
+export PATH=${OZHOME}/bin:\${PATH}
+EOF
+
+cat > oz.csh <<EOF
+setenv PATH ${OZHOME}/bin:\${PATH}
+EOF
+
+chmod a+x oz.sh oz.csh
+tar cf - oz.csh oz.sh | gzip -9 > ${RPMSRC}/mozart-profiles.tar.gz
+rm -f oz.sh oz.csh
+
+
+#
+# Build xpm
+#
+
+cat > ${RPMSRC}/mozart.xpm <<EOF
+/* XPM */
+static char * mozart_xpm[] = {
+"69 30 32 1",
+" 	c None",
+".	c #FFFFFF",
+"+	c #FFE69E",
+"@	c #FBF6E9",
+"#	c #F7E7B8",
+"\$	c #FAD466",
+"%	c #FBCE4A",
+"&	c #FFDE7C",
+"*	c #FFF3D2",
+"=	c #F0D688",
+"-	c #E3BA42",
+";	c #61501F",
+">	c #100F0A",
+",	c #000000",
+"'	c #392E0F",
+")	c #B29030",
+"!	c #777777",
+"~	c #484848",
+"{	c #A7A7A7",
+"]	c #282828",
+"^	c #D7D7D7",
+"/	c #201B08",
+"(	c #A18F59",
+"_	c #8F8F8F",
+":	c #896F25",
+"<	c #725C1E",
+"[	c #D3AC3E",
+"}	c #C0B185",
+"|	c #514215",
+"1	c #606060",
+"2	c #BFBFBF",
+"3	c #C2A34C",
+"                                #@                                   ",
+"                              *\$%&                                   ",
+"                            *&&*%%*                                  ",
+"                           +\$*  #%\$                                  ",
+"                         #\$#    #%%#                                 ",
+"                       *\$&      #%%%                                 ",
+"                     @=%%\$  #=  +%%%+                                ",
+"                    #%%%%%=\$%#  &%%%%*                               ",
+"                  #-;>,')%%%%#  \$%%+%&                         !~~   ",
+"                *&)>,,,,,;%%%*  %=@ &%*                        ~,,   ",
+"              @+%%>,')',,,)%%*  *   #%\$                        ~,,   ",
+"~~~{],]_^~,,~@+%%),,)%%/,,/%%     @(>[%#      _],,>~^  !~~!>~_~>,,~~ ",
+",,,,,,,,>,,,,~@%%:,,<%%[,,,[%    }',,|%%@    1,,,,,,>^ ~,,,,~!,,,,,, ",
+",,,]!>,,,!~,,, #%:,,>%%%',,[%# #;,,,,'%%+   ^,,>{^],,_ ~,,,,~_~,,,~~ ",
+",,,2 !,,1 @,,,  \$[,,,;%%:,,[%%3>,,>,,<%%%*  @2!2 ^],,! ~,,>{   ,,,   ",
+",,,2 !,,!  ,,,  #%|,,,:[',/%%%%/>)[,,:%%%&   @!],,,,,! ~,,!    ,,,   ",
+",,,  !,,!  ,,,   &%/,,,,,,)\$%%%[%%),,)%%%%# @>,,]1],,! ~,,_    ,,,   ",
+",,,  !,,!  ,,,   *%%',,,~2   #%%%%:,,[%%:%\$ _,,]@ ~,,! ~,,2    ,,,   ",
+",,,  !,,!  ,,,    +%%[[=      *%%%;,,[:>,:%#!,,~ ^>,,! ~,,2    ,,,_2@",
+",,,  !,,!  ,,,     %%%%  *&#   #%%',,/,,,:\$*_,,,],,,,! ~,,2    ],,,,2",
+",,,  !,,!  ,,,     #%%=  #%%*   %%/,,,,'3#   ~,,,~!,,! ~,,2    {>,,,2",
+"                    \$%#  #%%\$   =%/,,/)=@     ^2^                22^ ",
+"                    *%&   \$%%#  #%)>:\$*                              ",
+"                     &%   *%%+  &%%-#                                ",
+"                     *%#   *=*  %%+                                  ",
+"                      +%*      =&@                                   ",
+"                       %%#   *+*                                     ",
+"                       #%%%%%#                                       ",
+"                        \$%%+                                         ",
+"                        *&*                                          "};
+EOF
+
+cp ${BUSRCTAR} ${BUDOCTAR} ${BUSTDTAR} ${RPMSRC}
+
+SRCTAR=mozart-${VERSION}-src.tar.gz
+DOCTAR=mozart-${VERSION}-doc.tar.gz
+STDTAR=mozart-${VERSION}-std.tar.gz
+SPEC=mozart-$VERSION-$BUILD.spec
+
+# Generate redhat spec file
+cd $TMPDIR
+cat > $RPMSPEC/$SPEC <<EOF
+# Spec file for Mozart, an efficient and distributed implementation of Oz
+# Author: Christian Schulte, 1998
+# Contributor: Konstantin Popov, 2001, 2004
+# Contributor: Denys Duchier, 2001
+# Copyright: Christian Schulte, 1998, 1999
+# Copyright: Konstantin Popov, 2001, 2004
+# Copyright: Denys Duchier, 2001
+Name: mozart
+Version: $VERSION
+Release: $BUILD
+Summary: Mozart, an efficient and distributed implementation of Oz
+License: Free
+Vendor: Mozart Consortium
+Url: http://www.mozart-oz.org/
+Group: Development/Languages
+Packager: $PACKAGER
+Icon: mozart.xpm
+
+Source0: ftp://ftp.mozart-oz.org/pub/${VERSION}/tar/${SRCTAR}
+Source1: ftp://ftp.mozart-oz.org/pub/${VERSION}/tar/${DOCTAR}
+Source2: mozart-profiles.tar.gz
+Source3: ftp://ftp.mozart-oz.org/pub/${VERSION}/tar/${STDTAR}
+
+BuildRoot: /var/tmp/mozart-${VERSION}
+
+%description
+The Mozart system provides state-of-the-art support in two areas: open
+distributed computing and constraint-based inference. Mozart
+implements Oz, a concurrent object-oriented language with dataflow
+synchronization. Oz combines concurrent and distributed programming
+with logical constraint-based inference, making it a unique choice for
+developing multi-agent systems. Mozart is an ideal platform for both
+general-purpose distributed applications as well as for hard problems
+requiring sophisticated optimization and inferencing abilities. We
+have developed applications in scheduling and time-tabling, in
+placement and configuration, in natural language and knowledge
+representation, multi-agent systems and sophisticated collaborative
+tools.
+
+Mozart has been jointly developed by the Programming Systems Lab at
+DFKI and Universität des Saarlandes, the Swedish Institute of Computer
+Science, and Université de Louvain.
+
+This package contains all you need to run and develop Oz programs with
+Mozart.
+%package doc
+Summary: Mozart documentation
+Group: Development/Languages
+requires: mozart
+%description doc
+This package contains the extensive Mozart online documentation as a
+set of HTML pages, postscript and pdf documents. It also contains demo
+applications that can directly be started from the pages.
+%prep
+%setup -q
+%setup -q -D -T -b 3
+
+%build
+# configure and build mozart core distro
+: \${CFLAGS="\$RPM_OPT_FLAGS"}
+: \${CXXFLAGS="\$RPM_OPT_FLAGS"}
+export CFLAGS CXXFLAGS
+./configure --prefix=\$RPM_BUILD_ROOT$OZHOME --with-ozhome=$OZHOME --enable-opt=yes
+make
+# perform an install to a temporary fake root
+# so that the rest of the distro can use it for
+# purposes of compilation
+rm -rf \$RPM_BUILD_ROOT
+make install
+# configure and build the standard library
+( cd \$RPM_BUILD_DIR/\$RPM_PACKAGE_NAME-\$RPM_PACKAGE_VERSION-std; \
+  ./configure --prefix=\$RPM_BUILD_ROOT$OZHOME; \
+  make )
+
+%install
+### rm -rf \$RPM_BUILD_ROOT
+PREFIX=\$RPM_BUILD_ROOT$OZHOME
+# config files
+mkdir -p \$RPM_BUILD_ROOT/etc/profile.d
+(cd \$RPM_BUILD_ROOT/etc/profile.d; \
+ gzip -dc \$RPM_SOURCE_DIR/mozart-profiles.tar.gz | tar xf -)
+mkdir -p \$PREFIX
+# Generic install
+make install
+PLTFRM=\`\$PREFIX/bin/ozplatform\`
+if [ "$COPYLIBS" = "yes" ]; then
+    # inspect the emulator.exe for being dynamically linked against
+    # libstdc++.so.5 and libgcc_s.so, and if so - copy the library(s) into
+    # $PREFIX/platform/$PLTFRM/lib:
+    found=""
+    dynlib=\`ldd \$PREFIX/platform/\${PLTFRM}/emulator.exe | grep libgcc_s.so && eval '' || eval ''\`
+    for e in \$dynlib ; do
+        match=\`echo \$e | grep "/.*libgcc_s.so" && eval '' || eval ''\`
+        if [ "\$match" != "" ]; then
+    	found=\$match
+    	break
+        fi
+    done
+    if [ "\$found" != "" ]; then
+        lib=""
+        for e in \`echo \$found | tr '/' ' '\` ; do
+    	lib=\$e
+        done
+        mkdir -p \$PREFIX/platform/\${PLTFRM}/lib
+        /bin/cp \$found \$PREFIX/platform/\${PLTFRM}/lib/\$lib
+        /bin/chmod a+x \$PREFIX/platform/\${PLTFRM}/lib/\$lib
+        unset lib
+    fi
+    unset found
+    unset dynlib
+    found=""
+    dynlib=\`ldd \$PREFIX/platform/\${PLTFRM}/emulator.exe | grep "libstdc++.so" && eval '' || eval ''\`
+    for e in \$dynlib ; do
+        match=\`echo \$e | grep "/.*libstdc++.so" && eval '' || eval ''\`
+        if [ "\$match" != "" ]; then
+    	found=\$match
+    	break
+        fi
+    done
+    if [ "\$found" != "" ]; then
+        lib=""
+        for e in \`echo \$found | tr '/' ' '\` ; do
+    	lib=\$e
+        done
+        mkdir -p \$PREFIX/platform/\${PLTFRM}/lib
+        /bin/cp \$found \$PREFIX/platform/\${PLTFRM}/lib/\$lib
+        /bin/chmod a+x \$PREFIX/platform/\${PLTFRM}/lib/\$lib
+        unset lib
+    fi
+    unset found
+    unset dynlib
+fi
+
+# Strip binaries and shared objects
+find \$PREFIX -type f -name '*.so*' -exec strip '{}' ';'
+find \$PREFIX -type f -name '*.exe' -exec strip '{}' ';'
+# standard library
+(cd \$RPM_BUILD_DIR/\$RPM_PACKAGE_NAME-\$RPM_PACKAGE_VERSION-std; \
+ make install )
+
+# documentation files (overwrite whatever is installed up until now;)
+(cd \$PREFIX; \
+ gzip -dc \$RPM_SOURCE_DIR/$DOCTAR | tar xf -; \
+ rm -rf doc print; \
+ mv mozart/doc .; \
+ mv mozart/print .; \
+ rm -rf mozart; \
+ rm -rf doc/demo/applets; \
+ chown -R root .; \
+ chgrp -R root .; \
+ chmod -R a+rX,g-w,o-w .)
+
+# Create file lists
+make files.base files.base-\${PLTFRM}
+make files.contrib files.contrib-\${PLTFRM}
+make files.doc
+cat files.base files.base-\${PLTFRM} files.contrib files.contrib-\${PLTFRM} | \
+    sed 's|^./|$OZHOME/|g' > mfiles.base 
+cat files.doc | \
+    sed 's|^./|$OZHOME/|g' > mfiles.doc 
+
+%clean
+rm -rf \$RPM_BUILD_ROOT
+rm -rf \$RPM_BUILD_DIR/\$RPM_PACKAGE_NAME-\$RPM_PACKAGE_VERSION-std
+%files -f mfiles.base
+%doc README LICENSE LICENSE.html LICENSE.rtf
+%config /etc/profile.d/oz.sh
+%config /etc/profile.d/oz.csh
+%files doc -f mfiles.doc
+EOF
+
+#
+# No we have all what we need, go and build rpms
+#
+
+rpmpgm=`rpmbuild --usage >/dev/null 2>&1 && echo rpmbuild || echo rpm`
+$rpmpgm --clean -ba ${RPMSPEC}/mozart-$VERSION-$BUILD.spec
+rm -f ${RPMSPEC}/${SPEC}
+rm -f ${RPMSRC}/${SRCTAR}
+rm -f ${RPMSRC}/${DOCTAR}
+rm -f ${RPMSRC}/${STDTAR}
+rm -f ${RPMSRC}/mozart-profiles.tar.*
+rm -f ${RPMSRC}/mozart.xpm
+
+#
+# Move the created rpms to destination
+#
+
+mv ${RPMROOT}/RPMS/i386/mozart-{,doc-}$VERSION-$BUILD.i386.rpm ${DSTDIR}
+mv ${RPMROOT}/SRPMS/mozart-$VERSION-$BUILD.src.rpm ${DSTDIR}

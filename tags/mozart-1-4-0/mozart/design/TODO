@@ -1,0 +1,15 @@
+-*-outline-*-
+
+This document is for keeping track of what still needs to be done, and
+what we would like to do.
+
+* Libraries
+** HTML
+take HTML out of Open and make it or something like it separately
+available (request: Picker)
+
+* Emulator
+** 64bits
+is this finished or not?
+** signals
+clean this up and document?

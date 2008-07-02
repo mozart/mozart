@@ -1,0 +1,41 @@
+diff -ur regex-0.12/Makefile.in regex-0.12-mingw32/Makefile.in
+--- regex-0.12/Makefile.in	Sat Apr  3 01:12:15 1993
++++ regex-0.12-mingw32/Makefile.in	Wed Aug  8 20:16:46 2001
+@@ -43,14 +43,19 @@
+ 
+ SHELL = /bin/sh
+ 
+-subdirs = doc test
++#subdirs = doc test
+ 
+-default all:: regex.o
++default all:: libregex.a
+ .PHONY: default all
+ 
+ regex.o: regex.c regex.h
+ 	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEFS) -I. -I$(srcdir) -c $<
+ 
++libregex.a: regex.o
++	rm -f libregex.a
++	ar q libregex.a $^
++	ranlib libregex.a
++
+ clean mostlyclean::
+ 	rm -f *.o
+ 
+@@ -71,6 +76,15 @@
+ 
+ makeargs = $(MFLAGS) CPPFLAGS='$(CPPFLAGS)' CFLAGS='$(CFLAGS)' CC='$(CC)' \
+ DEFS='$(DEFS)' LDFLAGS='$(LDFLAGS)' LOADLIBES='$(LOADLIBES)'
++
++prefix = /usr/local
++INSTALL = @INSTALL@
++
++install:: install-lib
++
++install-lib:
++	$(INSTALL) regex.h $(prefix)/include
++	$(INSTALL) libregex.a $(prefix)/lib
+ 
+ default all install \
+ mostlyclean clean distclean extraclean realclean \

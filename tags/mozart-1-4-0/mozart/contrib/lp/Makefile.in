@@ -1,0 +1,145 @@
+@SET_MAKE@
+BUILDTOP	= @BUILDTOP@
+SRCTOP		= @SRCTOP@
+SRCDIR		= @srcdir@
+VPATH		= @srcdir@
+PREFIX		= @prefix@
+PLATFORM	= @PLATFORM@
+LIB_DIR		= $(PREFIX)/cache/x-oz/contrib
+HOMEURL         = @HOMEURL@
+
+OZC		= @OZC@
+OZL		= @OZL@
+COMPILE		= $(OZC) -c -z 9 
+OZTOOL		= @OZTOOL@
+CPPFLAGS	= -I$(SRCTOP)/platform/emulator \
+		  -I$(SRCTOP)/contrib/ri \
+		  -I$(BUILDTOP)/platform/emulator \
+		  -I$(PREFIX)/include @CPPFLAGS@
+CXXFLAGS	= @CXXFLAGS@
+LDFLAGS		= @LDFLAGS@
+LIBS		= @LIBS@
+
+INSTALL		= @INSTALL@
+INSTALL_DIR	= @INSTALL_DIR@
+INSTALL_LIB	= $(INSTALL) -m 444
+INSTALL_DLL	= $(INSTALL) -m 555
+
+
+OZDEPEND 	= ozc -c -M
+
+USECPLEX = 
+#USECPLEX = 1
+
+
+CFLAGS 		=  -O3 $(COPT) $(CPPFLAGS) $(CXXFLAGS)
+CFLAGS  	+= -I/usr/local/oz/include
+CFLAGS  	+= -I$(VPATH)/../ri
+CFLAGS   	+= -Wall -Wno-unused -Wno-reorder -Wno-uninitialized
+
+#LDFLAGS 	= -L$(VPATH)
+
+
+
+ifdef USECPLEX
+CFLAGS   	+= -DINCLUDE_CPLEX -DALLWAYS_CLOSE_CPLEX
+CFLAGS   	+= -I/opt/CPLEX
+LDFLAGS  	+= -L/opt/CPLEX
+LIBS     	+=  -lcplex 
+endif
+
+CXX     	= $(OZTOOL) c++
+LD 		= $(OZTOOL) ld
+DEPEND   	= $(CXX) $(CFLAGS) -MM
+
+
+
+
+CPPSRCS		= \
+		misc.cc \
+		propagators.cc \
+		builtins.cc \
+		lp.cc 
+
+OZSRCS  	= LP.oz
+
+OZGSRCS  	= 
+
+OZFCTS  	= $(OZSRCS:.oz=.ozf) $(OZGSRCS:.ozg=.ozf) 
+
+TARGETS		= LP.ozf lp.so-$(PLATFORM)
+LIB_TARGETS	= $(TARGETS:%=$(LIB_DIR)/%)
+
+.PHONY: all install clean veryclean distclean bootstrap depend
+
+all:		$(TARGETS)
+install:	$(LIB_DIR) $(LIB_TARGETS)
+
+$(LIB_DIR):
+	$(INSTALL_DIR) $@
+
+$(LIB_DIR)/%.ozf: %.ozf
+	$(INSTALL_LIB) $< $@
+
+$(LIB_DIR)/%.so-$(PLATFORM): %.so-$(PLATFORM)
+	$(INSTALL_DLL) $< $@
+
+#----------------------------------------------------------------------
+# Oz part
+#----------------------------------------------------------------------
+
+%.ozf: %.oz 
+	$(OZC) -z 9 -c $< -o $@ 
+
+%.ozf: %.ozg 
+	$(OZC) -z 9 -c --gump $< -o $@ 
+
+#----------------------------------------------------------------------
+# C part
+#----------------------------------------------------------------------
+
+%.so-$(PLATFORM): $(CPPSRCS:.cc=.o) 
+	$(LD) -o $@ $^ $(LDFLAGS) $(LIBS)
+
+%.o: %.cc 
+	$(CXX) $(OPTIMIZE) $(CFLAGS) -c $< -o $@ 
+
+#----------------------------------------------------------------------
+# Maintenance
+#----------------------------------------------------------------------
+
+depend: Makefile $(CPPSRCS) $(OZSRCS) $(OZGSRCS)
+	$(DEPEND) $(CPPSRCS:%=$(SRCDIR)/%) > Makefile.deps
+	$(OZDEPEND) $(OZSRCS:%=$(SRCDIR)/%) $(OZGSRCS:%=$(SRCDIR)/%) \
+	>> Makefile.deps
+
+clean: 
+	-$(RM) *.ozf
+	-$(RM) *.o
+	-$(RM) *.so-$(PLATFORM)
+	-$(RM) *.so
+	-$(RM) *.l
+	-$(RM) *.C
+	-$(RM) *~
+
+distclean: clean
+	-$(RM) config.* Makefile*
+
+include $(BUILDTOP)/share/Makefile.boot
+
+bootstrap: boot-all
+
+#----------------------------------------------------------------------
+# Automatic Makefile update
+#----------------------------------------------------------------------
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck
+
+#----------------------------------------------------------------------
+# Dependencies
+#----------------------------------------------------------------------
+-include Makefile.deps

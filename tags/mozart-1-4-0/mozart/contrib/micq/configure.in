@@ -1,0 +1,10 @@
+AC_INIT(manager.oz)
+OZ_CONTRIB_INIT
+cp $SRCDIR/manager.oz $BUILDTOP/contrib/micq/manager.oz
+AC_OUTPUT(Makefile)
+
+errprint(ifdef([OZ_INIT],
+ [autoconf succeeded.
+],
+ [autoconf failed: use 'autoconf -l ../..' to include ../aclocal.m4.
+]))

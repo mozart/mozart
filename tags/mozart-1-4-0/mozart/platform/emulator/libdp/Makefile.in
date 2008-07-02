@@ -1,0 +1,111 @@
+#  Authors:
+#    Konstantin Popov <kost@sics.se>
+# 
+#  Contributors:
+#    optional, Contributor's name (Contributor's email address)
+# 
+#  Copyright:
+#    Michael Mehl (mehl@dfki.de)
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://www.mozart-oz.org
+# 
+#  See the file "LICENSE" or
+#     http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+
+include ../Makefile.vars
+
+BUILDTOP	= @BUILDTOP@
+VPATH		= @srcdir@
+SRCDIR		= @srcdir@
+INCS		= -I$(SRCDIR) -I. -I$(SRCDIR)/.. -I.. -I$(SRCDIR)/../../dss/include
+M4_D		= -DEMUDIR=$(SRCDIR)
+LIBS		= @LIBS@
+LDFLAGS		= @LDFLAGS@
+
+REALCORESRCS = 	glue_interface.cc engine_interface.cc \
+		glue_tables.cc glue_faults.cc \
+		glue_builtins.cc \
+		glue_utils.cc pstContainer.cc dpMarshaler.cc \
+		glue_buffer.cc glue_site.cc \
+		glue_mediators.cc glue_marshal.cc \
+		glue_suspendedThreads.cc \
+		glue_entityOpImpl.cc \
+		glue_ioFactory.cc
+
+CREATEDCOREFILES= dpMarshalcode.cc
+CREATEDCORESRCS =
+CORESRCS	= $(REALCORESRCS) $(CREATEDCORESRCS)
+COREOBJS	= $(CORESRCS:.cc=.lo)
+
+MODULESRCS	=
+MODULEOBJS	= $(MODULESRCS:.cc=.lo)
+
+REALSRCS	= $(REALCORESRCS) $(MODULESRCS)
+
+CREATEDFILES	= $(CREATEDCOREFILES)
+
+
+# nothing to do for all ;)
+all:
+
+# Remember the order, CREATEDFILES MUST be created before COREOBJS
+# The DSS should be included when dynamically linked..
+../Glue.so-$(PLATFORM): $(CREATEDFILES) $(COREOBJS)
+	$(DYNLD) -L$(BUILDTOP)/platform/emulator -lDSS -o $@ $(COREOBJS)
+
+#.. otherwise we do it using the -lDSS and copy the libDSS.a to the emulator dir
+../libGlue.a: $(CREATEDFILES) $(COREOBJS)
+	$(AR) -rc $@ $(COREOBJS) && $(RANLIB) $@
+
+# Modules
+
+
+
+#
+first:	$(CREATEDFILES)
+
+depend:: Makefile $(REALSRCS)
+	$(MAKE) first
+	$(DEPEND) $(REALSRCS:%=$(SRCDIR)/%) | sed -e '1,$$s/\.o:/\.lo:/' > Makefile.deps
+
+Makefile: Makefile.in
+	(cd ..;./config.status)
+
+-include Makefile.deps
+include ../Makefile.rules
+
+distclean::
+	-rm -f Makefile makefile
+
+cleaner::
+	-rm -f *.a *.so-$(PLATFORM) $(CREATEDFILES)
+
+veryclean::
+	-rm -f *.a *.so-$(PLATFORM) Makefile.deps TAGS $(CREATEDFILES)
+
+#
+# special dependencies...
+ALLOBJS=$(COREOBJS) $(MODULEOBJS)
+
+# m4-files dependencies;
+dpMarshalcode.cc : dpMarshalcode.m4cc
+
+BUILDDIR=$(shell pwd)
+tags:	$(CREATEDFILES)
+	etags \
+	--regex='/OZ_BI_\(io\)?define([ 	]*\([^ 	,)]+\)/\2/' \
+	--regex='/OZ_C_\(io\)?proc_begin([ 	]*\([^ 	,)]+\)/\2/' \
+	--regex='/OZ_DECLARE[A-Z0-9_]*([ 	]*\([^ 	,)]+\)/\1/' -l c++ \
+	-o $(SRCDIR)/TAGS \
+	$(addprefix $(BUILDDIR)/,$(CREATEDFILES)) \
+	$(SRCDIR)/*c $(SRCDIR)/*h $(SRCDIR)/../*c $(SRCDIR)/../*h 
+

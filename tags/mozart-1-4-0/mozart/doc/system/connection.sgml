@@ -1,0 +1,220 @@
+<!--
+  - Authors:
+  -   Denys Duchier     <duchier@ps.uni-sb.de>
+  -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -   Raphael Collet    <raphael.collet@uclouvain.be>
+  -
+  - Copyright:
+  -   Denys Duchier, 1998
+  -   Leif Kornstaedt, 1998
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+  <Chapter id="Chapter.Connection">
+    <Title/Connecting Computations: <<Connection>>/
+
+    <P>
+      Oz uses a ticket-based mechanism to establish
+      connections between independent Oz processes.
+      One process (called <Def/server/) creates a ticket
+      with which other sites (called <Def/clients/)
+      can establish a connection.
+    </P>
+
+    <P>
+      A <Def/ticket/ is a character string 
+      which can be stored and transported through all media that can
+      handle text, e.g., phone lines, electronic mail, paper,
+      and so forth. Tickets are insecure, in that they can be forged.
+      The following is an example ticket encoded as an Oz atom:
+      <<<'oz-ticket://130.104.228.81:9000/h9323679#42'>>>
+    </P>
+
+    <P>
+      The ticket identifies both the server and the value to
+      which a remote reference will be made. Independent connections
+      can be made to different values on the same server. Once an
+      initial connection is established by the value exchanged, then
+      further connections as desired by applications can be built from
+      programming abstractions, like object, classes, ports or
+      procedures.
+    </P>
+    
+    <P>
+      Two different types of connections and tickets are supported:
+      <List>
+        <Entry>
+          <Def/One-to-one connections/ and <Def/one-shot tickets/.
+        <Item>
+          Allow to establish a single connection only.
+
+        <Entry>
+          <Def/Many-to-one connections/ and <Def/many-shot tickets/.
+        <Item>
+          Allow multiple connections with the same ticket to the same
+          value.
+       </List>
+    </P>
+
+    <P>
+      The module <Span class=index/<<Connection>>/ provides procedures
+      and classes that support both one-to-one and many-to-one
+      connections.
+    </P>
+
+    <Section id="Section.Connection.One">
+      <Title/One-to-one Connections/
+
+      <P>
+        <List>
+          <Entry><Span class=index/<<offerOnce>>/,
+		 <Span class=index/<<offer>>/
+	    <Index/<<Connection>><And><<offerOnce>>/
+	    <Index/<<Connection>><And><<offer>>/
+          <Synopsis>
+	    <<{Connection.offerOnce ?_{X} ??{TicketA}}>>
+          <Item>
+            Returns the single-shot ticket ?_{TicketA} (an atom)
+            under which the value ?_{X} is offered.
+          <P>
+            The value ?_{X} is exported immediately. An exception is
+            raised, if exportation of ?_{X} fails, because ?_{X}
+            refers to sited entities.
+
+          <Entry><Span class=index/<<take>>/
+	    <Index/<<Connection>><And><<take>>/
+          <Synopsis>
+	    <<{Connection.take ?+{TicketV} ??{X}}>>
+          <Item>
+            Returns the value ?_{X} offered under the ticket
+            ?_{TicketV} (a virtual string).
+          <P>
+            Waits until the connection to the offering process is
+            established and the ticket has been acknowledged by that
+            process.
+          <P>
+            Raises an exception if the ticket is illegal, or if the
+            offering process does not longer exist.
+          <P>
+            Also works for many-shot tickets, where an exception might
+            be raised if the same ticket is used more than once.
+        </List>
+      </P>
+    </Section>
+
+    <Section id="Section.Connection.Many">
+      <Title/Many-to-one Connections/
+
+      <P>
+        <List>
+          <Entry><Span class=index/<<offerMany>>/,
+		 <Span class=index/<<offerUnlimited>>/
+	    <Index/<<Connection>><And><<offerMany>>/
+	    <Index/<<Connection>><And><<offerUnlimited>>/
+          <Synopsis>
+	    <<{Connection.offerMany ?_{X} ??{TicketA}}>>
+          <Item>
+            offers the value ?_{X} under the returned many-shot ticket
+            ?_{TicketA} (an atom).
+          <P>
+            The value ?_{X} is exported immediately. An exception is
+            raised, if exportation of ?_{X} fails, because ?_{X} might
+            refer to sited entities.
+          <p>
+            The ticket remains valid until it is retracted, or the
+	    current Oz process terminates.
+
+          <Entry><Span class=index/<<retract>>/
+	    <Index/<<Connection>><And><<retract>>/
+          <Synopsis>
+	    <<{Connection.retract ?+{TicketA}}>>
+          <Item>
+            retracts the ticket ?_{TicketA} (an atom).  The ticket is
+	    discarded, and any future attempt to take it will fail.
+          <P>
+	    A one-shot ticket is nothing more than a many-shot ticket
+	    that is automatically retracted once it is taken.
+        </List>
+      </P>
+
+      <Subsection><Title/Gates/
+
+      <P>
+        Values for many-to-one connections can also be offered through
+	<Def/gates/.  Gates provide many-shot tickets with an object
+	interface.  Values offered through gates can be taken with
+	<Span class=index/<<Connection.take>>/ as described above.
+      </P>
+
+      <P>
+        Gates are provided as instances of the class
+        <Span class=index/<<Connection.gate>>/. The methods of
+        <<Connection.gate>> are as follows.
+      </P>
+
+      <P>
+        <List>
+          <Entry><Span class=index/<<init>>/
+	    <Index/<<Connection>><And><<gate>><And><<init>>/
+          <Synopsis>
+	    <code/init(?_{X} ?_{TicketA} <= _)/
+          <Item>
+            Optionally returns the many-shot ticket ?_{TicketA} (an atom)
+            under which the value ?_{X} is offered.
+          <P>
+            The value ?_{X} is exported immediately. An exception is
+            raised, if exportation of ?_{X} fails, because ?_{X} might
+            refer to sited entities.
+
+          <Entry><Span class=index/<<getTicket>>/
+	    <Index/<<Connection>><And><<gate>><And><<getTicket>>/
+          <Synopsis>
+	    <code/getTicket(?_{TicketA})/
+          <Item>
+            Returns the many-shot ticket ?_{TicketA} (an atom) of the
+            gate. 
+
+          <Entry><Span class=index/<<close>>/
+	    <Index/<<Connection>><And><<gate>><And><<close>>/
+          <Synopsis>
+	    <code/close()/
+          <Item>
+            Closes the gate, which makes further use of the associated
+            ticket illegal.
+
+        </List>
+      </P>
+
+      </Subsection>
+      
+    </Section>
+
+  </Chapter>
+
+
+
+<!--
+Local Variables:
+mode: sgml
+mode: auto-fill
+sgml-default-dtd-file: "part.ced"
+sgml-auto-activate-dtd: t
+adaptive-fill-mode: nil
+End:
+-->

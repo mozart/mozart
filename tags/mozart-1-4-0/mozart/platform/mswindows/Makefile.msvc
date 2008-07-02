@@ -1,0 +1,117 @@
+# Generated automatically from Makefile.in by configure.
+#  Authors:
+#    Ralf Scheidhauer <scheidhr@dfki.de>
+#    Leif Kornstaedt <kornstae@ps.uni-sb.de>
+# 
+#  Copyright:
+#    Ralf Scheidhauer, 1999
+#    Leif Kornstaedt, 1999
+# 
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation of Oz 3:
+#    http://www.mozart-oz.org
+# 
+#  See the file "LICENSE" or
+#    http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL
+#  WARRANTIES.
+
+SRCTOP=		/home/bruni/devel/mozart
+BUILDTOP=	/home/bruni/devel/msbuild/mozart
+PREFIX=		/cygdrive/c/Programme/Mozart
+SRCDIR= 	/home/bruni/devel/mozart/platform/mswindows
+VPATH=	 	/home/bruni/devel/mozart/platform/mswindows
+BINDIR=		$(PREFIX)/bin
+
+CXX=		cl -nologo -TP -Zi
+LD=             cl -nologo -Zi
+AR=		ar
+WINDRES=	rc
+
+INCS=		-Ic:\programme\micros~2\vc98\include -I. -I$(SRCDIR)
+LIBS=		startup.lib user32.lib advapi32.lib
+
+INSTALL=	/usr/bin/install -c
+INSTALL_DIR=	/home/bruni/devel/mozart/mkinstalldirs
+INSTALL_FILE=	$(INSTALL) -m 444
+INSTALL_BIN=	$(INSTALL) -m 555
+
+CONSOLE_EXES = oztool.exe ozengine.exe
+WINDOWS_EXES = oz.exe ozenginew.exe
+EXES = $(CONSOLE_EXES) ozwrapper.bin $(WINDOWS_EXES) ozwrapperw.bin
+
+LIBOBJS = \
+	panic.obj getenv.obj path.obj initenv.obj makecmd.obj \
+	ppid.obj process.obj registry.obj
+
+.PHONY: all bootstrap install clean veryclean distclean depend check
+
+.SUFFIXES: .cc .obj .exe .bin
+
+%.obj: %.cc
+	$(CXX) $(INCS) -c -Fo$@ $<
+
+all: $(EXES)
+
+bootstrap: all
+
+startup.lib: $(LIBOBJS)
+	$(AR) rcs $@ $(LIBOBJS)
+
+$(CONSOLE_EXES): %.exe: %.obj res.res startup.lib
+	$(LD) $(INCS) $< res.res -Fe$@ $(LIBS) -link -SUBSYSTEM:CONSOLE  
+
+new-ozwrapper.bin: ozwrapper.obj startup.lib
+	$(LD) $(INCS) -Fe$(SRCDIR)/ozwrapper.bin $< $(LIBS) -link -SUBSYSTEM:CONSOLE
+
+$(WINDOWS_EXES): %.exe: %.obj res.res startup.lib
+	$(LD) $(INCS) -Fe$@ $< res.res $(LIBS) -link -SUBSYSTEM:WINDOWS
+
+new-ozwrapperw.bin: ozwrapperw.obj startup.lib
+	$(LD) $(INCS) -Fe$(SRCDIR)/ozwrapperw.bin $< $(LIBS) -link -SUBSYSTEM:WINDOWS
+
+res.res: res.rc
+	$(WINDRES) /fo$@  $<
+
+version.h: $(SRCTOP)/OZVERSION
+	echo "#define OZVERSION \"`$<`\"" > $@
+
+oz.obj ozengine.obj ozenginew.obj ozwrapper.obj ozwrapperw.obj oztool.obj: startup.hh
+
+$(LIBOBJS): startup.hh
+
+registry.obj: version.h
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck
+
+install: $(BINDIR) $(EXES:%=$(BINDIR)/%)
+
+$(BINDIR):
+	$(INSTALL_DIR) $@
+
+$(BINDIR)/%.exe: %.exe
+	$(INSTALL_BIN) $< $@
+
+$(BINDIR)/%.bin: %.bin
+	$(INSTALL_FILE) $< $@
+
+clean:
+	rm -f *.obj *.lib version.h
+
+veryclean: clean
+	rm -f $(EXES)
+
+distclean: veryclean
+	rm -f Makefile version.h config.cache config.log config.status
+
+depend:
+
+check:

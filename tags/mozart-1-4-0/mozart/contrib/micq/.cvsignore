@@ -1,0 +1,7 @@
+ss sc sc1 sc2 sc10 sc10p sc20p micq client copy nukeall
+*.ozf
+*.oza
+*.txt
+config.log
+config.status
+Makefile

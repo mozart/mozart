@@ -1,0 +1,963 @@
+<!--
+  - Authors:
+  -  Tobias Müller <tmueller@ps.uni-sb.de>
+  -
+  - Copyright:
+  -  Tobias Müller, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Chapter id="chapter.fs">
+  <Title/Finite Set Constraints: <<FS>>/
+
+<p>
+We use the following notation for operations and relations on sets.  We
+write&nbsp;<math/\cup, \cap/, and <math/\backslash/ for set union, intersection, and
+difference, <math/\subseteq/ and <math/\|/ for inclusion and disjointness, <math/\#/
+for the set cardinality, and <math/\in/ for the element relation.
+Furthermore, we write <math/\emptyset/ and <math/\uniset/ for the empty set and the
+universal set.
+<p>
+
+For every set specification ?{Spec} we write the set ?{M}
+specified by ?{Spec} as ?{M} = <math/
+~$
+\newcommand{\sic}[2]{\mbox{$[#1,#2]$}}
+\newcommand{\conv}{{\it set}}
+\newcommand{\convinv}{{\it set}^{-1}}
+ 
+~$~
+\conv({Spec})/.  For example,
+<math/\conv(\mbox{\codeinline{oz}{[1\#3 5 7]}})/ denotes <math/\{1,2,3,5,7\}/. Further, for
+every set <<S>> we denote with <math/{D} = \convinv({S})/ a set
+description ?{D} such that <math/\conv({\tt D}) = {\tt S}/.
+<p>
+For more information on the finite set constraint system
+see&nbsp;<ptr to=MuellerMueller.WLP.97>.
+
+<!-- ********************************************************************** -->
+<section id="section.fs.genral"><title/Finite Set Intervals/
+<p>
+<list>
+
+<entry>
+<index class=module/FS<and>inf<and>id/
+<<inf>>
+<synopsis>
+<<<FS.inf
+>>>
+<item>
+An integer constant that denotes the smallest possible element of a
+set.  Its value is implementation-dependent.  In Mozart <<FS.inf>> is
+0.
+
+<entry>
+<index class=module/FS<and>sup<and>id/
+<<sup>>
+<synopsis>
+<<<FS.sup
+>>>
+<item>
+An integer constant that denotes the greatest possible element of a
+set.  Its value is implementation-dependent.  In Mozart <<FS.sup>> is
+134 217 726.
+
+<entry>
+<index class=module/FS<and>compl<and>id/
+<<compl>>
+<synopsis>
+<<<{FS.compl $M1 $M2}
+>>>
+<item>
+<math/\codeinline{oz}{M2} = \{\codeinline{oz}{FS.inf},\ldots,\codeinline{oz}{FS.sup}\}\setminus \codeinline{oz}{M1}/
+
+<entry>
+<index class=module/FS<and>complIn<and>id/
+<<complIn>>
+<synopsis>
+<<<{FS.complIn $M1 $M2 $M3}
+>>>
+<item>
+<math/\codeinline{oz}{M3} = \codeinline{oz}{M2} \setminus \codeinline{oz}{M1}/
+
+
+<entry>
+<index class=module/FS<and>include<and>id/
+<<include>>
+<synopsis>
+<<<{FS.include +D *M}
+>>>
+<item>
+<math/\codeinline{oz}{D} \in \codeinline{oz}{M} \wedge \codeinline{oz}{FS.inf} \le \codeinline{oz}{D} \le \codeinline{oz}{FS.sup}/
+
+<entry>
+<index class=module/FS<and>exclude<and>id/
+<<exclude>>
+<synopsis>
+<<<{FS.exclude +D *M}
+>>>
+<item>
+<math/\codeinline{oz}{D} \notin \codeinline{oz}{M}/
+
+<entry>
+<index class=module/FS<and>card<and>id/
+<<card>>
+<synopsis>
+<<<{FS.card *M ?D}
+>>>
+<item>
+<math/\codeinline{oz}{D} = \# {M}/
+
+<entry>
+<index class=module/FS<and>cardRange<and>id/
+<<cardRange>>
+<synopsis>
+<<<{FS.cardRange +I1 +I2 *M}
+>>>
+<item>
+<math/\codeinline{oz}{I1} \le \# {M} \le {I2}/
+
+<entry>
+<index class=module/FS<and>isIn<and>id/
+<<isIn>>
+<synopsis>
+<<<{FS.isIn +I *M ?B}
+>>>
+<item>
+<math/(\codeinline{oz}{E} \in \codeinline{oz}{M}) \rightarrow \codeinline{oz}{B}/
+
+<entry>
+<index class=module/FS<and>makeWeights<and>id/
+<<makeWeights>>
+<synopsis>
+<<<{FS.makeWeights +SpecW ?P}
+>>>
+<item>
+Returns a procedure with signature <<{P +I1 ?I2>>}. This procedure
+maps an element to a weight according to the weight description passed
+to <<FS.makeWeights>>.
+</list>
+</section>
+
+<!-- ********************************************************************** -->
+<section id="section.fs.integers"><title/Sets over Integers/
+<p>
+<list>
+
+<entry>
+<index class=module/FS<and>int<and>min/
+<<int.min>>
+<synopsis>
+<<<{FS.int.min *M $D}
+>>>
+<item>
+<<D>> is the minimal element within <<M>>. 
+   
+
+<entry>
+<index class=module/FS<and>int<and>max/
+<<int.max>>
+<synopsis>
+<<<{FS.int.max *M $D}
+>>>
+<item>
+<<D>> is the maximal element within <<M>>. 
+   
+
+<entry>
+<index class=module/FS<and>int<and>convex/
+<<int.convex>>
+<synopsis>
+<<<{FS.int.convex *M}
+>>>
+<item>
+Whenever <<I1>> and <<I2>> are elements of <<M>>, then 
+every <<I>> between <<I1>> and <<I2>>, <<I1 < I < I2>>, 
+is also in <<M>>.
+
+<entry>
+<index class=module/FS<and>int<and>match/
+<<int.match>>
+<synopsis>
+<<<{FS.int.match *M *Dv}
+>>>
+<item>
+<<Dv>> is a vector of integer variables that denotes the elements of
+<<M>> in ascending order.
+
+<entry>
+<index class=module/FS<and>int<and>minN/
+<<int.minN>>
+<synopsis>
+<<<{FS.int.minN *M *Dv}
+>>>
+<item>
+<<Dv>> is a vector of ?{n} integer variables that denotes the ?{n}
+minimal elements of <<M>> in ascending order.
+
+<entry>
+<index class=module/FS<and>int<and>maxN/
+<<int.maxN>>
+<synopsis>
+<<<{FS.int.maxN *M *Dv}
+>>>
+<item>
+<<Dv>> is a vector of ?{n} integer variables that denotes the ?{n}
+maximal 
+elements of <<M>> in ascending order.
+
+<entry>
+<index class=module/FS<and>int<and>seq/
+<<int.seq>>
+<synopsis>
+<<<{FS.int.seq *Mv}
+>>>
+<item>
+<<Mv>> is a vector of disjoint sets such that for distinct sets
+<<M1>> and <<M2>>, where <<M1>> precedes <<M2>> in <<Mv>>, all
+elements of <<M1>> are smaller than any element of <<M2>>.
+</list>
+</section>
+
+<!-- ********************************************************************** -->
+<section id="section.fs.standard"><title/Standard Propagators/
+<p>
+<list>
+
+<entry>
+<index class=module/FS<and>diff<and>id/
+<<diff>>
+<synopsis>
+<<<{FS.diff $M1 $M2 $M3}
+>>>
+<item>
+<math/\codeinline{oz}{M3} = \codeinline{oz}{M1} \setminus \codeinline{oz}{M2}/
+
+<entry>
+<index class=module/FS<and>intersect<and>id/
+<<intersect>>
+<synopsis>
+<<<{FS.intersect $M1 $M2 $M3}
+>>>
+<item>
+<math/\codeinline{oz}{M3} = \codeinline{oz}{M1} \cap \codeinline{oz}{M2}/
+
+<entry>
+<index class=module/FS<and>intersectN<and>id/
+<<intersectN>>
+<synopsis>
+<<<{FS.intersectN *Mv *M}
+>>>
+<item>
+<math/\codeinline{oz}{M} = \bigcap \{ \codeinline{oz}{M'} \mid \codeinline{oz}{M'} \in \codeinline{oz}{Mv}\}/
+
+<entry>
+<index class=module/FS<and>union<and>id/
+<<union>>
+<synopsis>
+<<<{FS.union $M1 $M2 $M3}
+>>>
+<item>
+<math/\codeinline{oz}{M3} = \codeinline{oz}{M1} \cup \codeinline{oz}{M2}/
+
+<entry>
+<index class=module/FS<and>unionN<and>id/
+<<unionN>>
+<synopsis>
+<<<{FS.unionN $Mv $M}
+>>>
+<item>
+<math/\codeinline{oz}{M} = \bigcup \{ \codeinline{oz}{S} \mid \codeinline{oz}{S} \in \codeinline{oz}{Mv}\}/
+
+<entry>
+<index class=module/FS<and>subset<and>id/
+<<subset>>
+<synopsis>
+<<<{FS.subset $M1 $M2}
+>>>
+<item>
+<math/\codeinline{oz}{M1} \subseteq \codeinline{oz}{M2}/
+
+<entry>
+<index class=module/FS<and>disjoint<and>id/
+<<disjoint>>
+<synopsis>
+<<<{FS.disjoint $M1 $M2}
+>>>
+<item>
+<math/\codeinline{oz}{M1} \| \codeinline{oz}{M2}/
+
+<entry>
+<index class=module/FS<and>disjointN<and>id/
+<<disjointN>>
+<synopsis>
+<<<{FS.disjointN *Mv}
+>>>
+<item>
+All elements of the vector ?{Mv} are pairwise disjoint. 
+
+<entry>
+<index class=module/FS<and>distinct<and>id/
+<<distinct>>
+<synopsis>
+<<<{FS.distinct $M1 $M2}
+>>>
+<item>
+<math/\codeinline{oz}{M1} \neq \codeinline{oz}{M2}/
+
+<entry>
+<index class=module/FS<and>distinctN<and>id/
+<<distinctN>>
+<synopsis>
+<<<{FS.distinctN *MV}
+>>>
+<item>
+All elements of the vector ?{Mv} are pairwise distinct. 
+
+<entry>
+<index class=module/FS<and>partition<and>id/
+<<partition>>
+<synopsis>
+<<<{FS.partition $MV $M}
+>>>
+<item>
+?{Mv} is a partition of ?{M}; that is, 
+?{Mv} contains pairwise disjoint sets such that their 
+union yields ?{M}. 
+</list>
+</section>
+
+<!-- ********************************************************************** -->
+<section id="section.fs.vars"><title/Finite Set Interval Variables/
+<p>
+<list>
+
+<entry>
+<index class=module/FS<and>var<and>is/
+<<var.is>>
+<synopsis>
+<<<{FS.var.is +M ?B}
+>>>
+<item>
+Tests whether <<M>> is a finite set variable.
+</list>
+<subsection><title/Declaring a Single Variable/
+<p>
+<list>
+
+<entry>
+<index class=module/FS<and>var<and>decl/
+<<var.decl>>
+<synopsis>
+<<<{FS.var.decl ?M}
+>>>
+<item>
+<math/\emptyset \subseteq {\tt M} \subseteq \uniset/
+
+<entry>
+<index class=module/FS<and>var<and>upperBound/
+<<var.upperBound>>
+<synopsis>
+<<<{FS.var.upperBound +Spec ?M}
+>>>
+<item>
+<math/\emptyset \subseteq \codeinline{oz}{M} \subseteq \conv(\codeinline{oz}{Spec})/
+
+<entry>
+<index class=module/FS<and>var<and>lowerBound/
+<<var.lowerBound>>
+<synopsis>
+<<<{FS.var.lowerBound +Spec ?M}
+>>>
+<item>
+<math/\conv({\tt Spec}) \subseteq \codeinline{oz}{M} \subseteq \uniset/
+
+<entry>
+<index class=module/FS<and>var<and>bounds/
+<<var.bounds>>
+<synopsis>
+<<<{FS.var.bounds +Spec1 +Spec2 ?M}
+>>>
+<item>
+<math/\conv({\tt Spec1}) \subseteq {\tt M} \subseteq \conv({\tt Spec2})/
+</list>
+</subsection>
+<subsection><title/Declaring a List of Variables/
+<p>
+The following functions return a list <<Ms>> of length <<I>>
+and all its elements are constrained to finite set interval variables
+according to the following specifications.
+<list>
+
+<entry>
+<index class=module/FS<and>var<and>list<and>decl/
+<<var.list.decl>>
+<synopsis>
+<<<{FS.var.list.decl +I ?Ms}
+>>>
+<item>
+For all elements <<M>> of <<Ms>>: 
+<math/\emptyset \subseteq \codeinline{oz}{M} \subseteq \uniset/
+
+<entry>
+<index class=module/FS<and>var<and>list<and>upperBound/
+<<var.list.upperBound>>
+<synopsis>
+<<<{FS.var.list.upperBound +I +Spec ?Ms}
+>>>
+<item>
+For all elements <<M>> of <<Ms>>: 
+<math/\emptyset \subseteq \codeinline{oz}{M} \subseteq
+\conv({\tt Spec})/
+
+<entry>
+<index class=module/FS<and>var<and>list<and>lowerBound/
+<<var.list.lowerBound>>
+<synopsis>
+<<<{FS.var.list.lowerBound +I +Spec ?Ms}
+>>>
+<item>
+For all elements <<M>> of <<Ms>>: 
+<math/\conv(\codeinline{oz}{Spec}) \subseteq \codeinline{oz}{M}\subseteq \uniset/
+
+<entry>
+<index class=module/FS<and>var<and>list<and>bounds/
+<<var.list.bounds>>
+<synopsis>
+<<<{FS.var.list.bounds +I +Spec1 +Spec2 ?Ms}
+>>>
+<item>
+For all elements <<M>> of <<Ms>>: 
+<math/\conv({\tt Spec1})\subseteq
+{\tt M}\subseteq \conv({\tt Spec2})/
+</list>
+</subsection>
+<subsection><title/Declaring a Tuple of Variables/
+<p>
+The following functions return a tuple <<Mt>> with label <<L>>
+and width <<I>> and all its elements are constrained to finite set
+interval variables according to the following specifications.
+<list>
+
+<entry>
+<index class=module/FS<and>var<and>tuple<and>decl/
+<<var.tuple.decl>>
+<synopsis>
+<<<{FS.var.tuple.decl +L +I ?Mt}
+>>>
+<item>
+For all elements <<M>> of <<Mt>>: 
+<math/\emptyset \subseteq {\tt M} \subseteq
+\uniset/
+
+<entry>
+<index class=module/FS<and>var<and>tuple<and>upperBound/
+<<var.tuple.upperBound>>
+<synopsis>
+<<<{FS.var.tuple.upperBound +L +I +Spec ?Mt}
+>>>
+<item>
+For all elements <<M>> of <<Mt>>: 
+<math/\emptyset \subseteq \codeinline{oz}{M} \subseteq
+\conv({\tt Spec})/
+
+<entry>
+<index class=module/FS<and>var<and>tuple<and>lowerBound/
+<<var.tuple.lowerBound>>
+<synopsis>
+<<<{FS.var.tuple.lowerBound +L +I +Spec ?Mt}
+>>>
+<item>
+For all elements <<M>> of <<Mt>>: 
+<math/\conv(\codeinline{oz}{Spec}) \subseteq
+\codeinline{oz}{M}\subseteq \uniset/
+
+<entry>
+<index class=module/FS<and>var<and>tuple<and>bounds/
+<<var.tuple.bounds>>
+<synopsis>
+<<<{FS.var.tuple.bounds +L +M +Spec1 +Spec2 ?Mt}
+>>>
+<item>
+For all elements <<M>> of <<Mt>>: <math/\conv({\tt Spec1})\subseteq
+{\tt M}\subseteq \conv({\tt Spec2})/
+</list>
+</subsection>
+<subsection><title/Declaring a Record of Variables/
+<p>
+The following functions return a record <<Mr>> with label <<L>>
+and the fields <<Ls>> and all its fields are constrained to finite set
+interval variables according to the following specifications.
+<list>
+
+<entry>
+<index class=module/FS<and>var<and>record<and>decl/
+<<var.record.decl>>
+<synopsis>
+<<<{FS.var.record.decl +L +Ls ?Mr}
+>>>
+<item>
+For all elements <<M>> of <<Mr>>: 
+<math/\emptyset \subseteq {\tt M} \subseteq
+\uniset/
+
+<entry>
+<index class=module/FS<and>var<and>record<and>upperBound/
+<<var.record.upperBound>>
+<synopsis>
+<<<{FS.var.record.upperBound +L +Ls +Spec ?Mr}
+>>>
+<item>
+For all elements <<M>> of <<Mr>>: 
+<math/\emptyset \subseteq \codeinline{oz}{M} \subseteq
+\conv({\tt Spec})/
+
+<entry>
+<index class=module/FS<and>var<and>record<and>lowerBound/
+<<var.record.lowerBound>>
+<synopsis>
+<<<{FS.var.record.lowerBound +L +Ls +Spec ?Mr}
+>>>
+<item>
+For all elements <<M>> of <<Mr>>: 
+<math/\conv(\codeinline{oz}{Spec}) \subseteq
+\codeinline{oz}{M}\subseteq \uniset/
+
+<entry>
+<index class=module/FS<and>var<and>record<and>bounds/
+<<var.record.bounds>>
+<synopsis>
+<<<{FS.var.record.bounds +L +Ls +Spec1 +Spec2 ?Mr}
+>>>
+<item>
+For all elements <<M>> of <<Mr>>: <math/{\tt M} \in
+\sic{\conv({\tt Spec1})}{\conv({\tt Spec2})}/
+</list>
+</subsection>
+</section>
+
+<!-- ********************************************************************** -->
+<section id="section.fs.consts"><title/Finite Set Constants/
+<p>
+<list>
+
+<entry>
+<index class=module/FS<and>value<and>empty/
+<<value.empty>>
+<synopsis>
+<<<FS.value.empty
+>>>
+<item>
+Denotes <math/\emptyset/.
+
+<entry>
+<index class=module/FS<and>value<and>universal/
+<<value.universal>>
+<synopsis>
+<<<FS.value.universal
+>>>
+<item>
+Denotes <math/\uniset/. 
+
+<entry>
+<index class=module/FS<and>value<and>singl/
+<<value.singl>>
+<synopsis>
+<<<{FS.value.singl +I ?M}
+>>>
+<item>
+<math/{\tt M} = \{{\tt I}\}/
+
+<entry>
+<index class=module/FS<and>value<and>make/
+<<value.make>>
+<synopsis>
+<<<{FS.value.make +Spec ?M}
+>>>
+<item>
+<math/{\tt M} = \conv({\tt Spec})/
+
+<entry>
+<index class=module/FS<and>value<and>is/
+<<value.is>>
+<synopsis>
+<<<{FS.value.is +M ?B}
+>>>
+<item>
+Tests whether <<M>> is a finite set value or not.
+
+<entry>
+<index class=module/FS<and>value<and>toString/
+<<value.toString>>
+<synopsis>
+<<<{FS.value.toString +M ?S}
+>>>
+<item>
+Converts <<M>> to a string and returns it in <<M>>.
+</list>
+</section>
+
+<!-- ********************************************************************** -->
+<section id="section.fs.reified"><title/Reified Propagators/
+<p>
+<list>
+
+<entry>
+<index class=module/FS<and>reified<and>isIn/
+<<reified.isIn>>
+<synopsis>
+<<<{FS.reified.isIn +I *M $D}
+>>>
+<item>
+<math/\codeinline{oz}{D} \in \{0,1\} \wedge ((\codeinline{oz}{I} \in \codeinline{oz}{M}) \leftrightarrow
+\codeinline{oz}{D} = 1)/
+
+<entry>
+<index class=module/FS<and>reified<and>areIn/
+<<reified.areIn>>
+<synopsis>
+<<<{FS.reified.areIn +Spec *M $Ds}
+>>>
+<item>
+?{Spec} describes a list of individual elements ?{Is}. ?{Is} and
+?{Ds} are lists of the same length such that every element <math/{\tt
+D}_i/ of ?{Ds} reifies the presence of the corresponding element
+<math/{\tt I}_i/ of ?{Is} in the set ?{M}.
+
+<entry>
+<index class=module/FS<and>reified<and>include/
+<<reified.include>>
+<synopsis>
+<<<{FS.reified.include +D1 *M $D2}
+>>>
+<item>
+?{D2} reifies the presence of ?{D1} in the set ?{M}. This propagator
+detects in contrast to <<FS.reified.isIn>> earlier if ?{D1} is or is not
+constained  in ?{M}.
+
+<entry>
+<index class=module/FS<and>reified<and>equal/
+<<reified.equal>>
+<synopsis>
+<<<{FS.reified.equal *M1 *M2 $D}
+>>>
+<item>
+?{D} reifies the equality of ?{M1} and ?{M2}. 
+
+<entry>
+<index class=module/FS<and>reified<and>partition/
+<<reified.partition>>
+<synopsis>
+<<<{FS.reified.partition +MVs +Is +MV $Ds}
+>>>
+<item>
+The propagator partitions the set value <<MV>> by selecting elements
+from the list of set values <<MVs>>.  The positive integers in <<Is>>
+denote the cost resp. benefit of the corresponding set value in
+<<MVs>> if it is selected for the partition. Each element of <<Ds>>
+is either <<0>> or the corresponding integer value in <<Is>>
+depending on whether the corresponding set value in <<MVs>> is part of
+the partition or not. Excluding a set value from the partition is done
+by constraining the corresponding element of <<Ds>> to <<0>>. An
+element in <<Ds>> not equal to <<0>> includes the corresponding set
+value in <<MVs>> in the partition. The propagator ensures a valid
+partition according to the values of <<Ds>>.
+
+</list>
+</section>
+
+<!-- ********************************************************************** -->
+<section id="section.fs.iterating"><title/Iterating and Monitoring/
+<p>
+<list>
+
+<entry>
+<index class=module/FS<and>monitorIn<and>id/
+<<monitorIn>>
+<synopsis>
+<<<{FS.monitorIn *M ?Is}
+>>>
+<item>
+This procedure writes all elements of <<M>> to <<Is>> as soon as
+<math/{\tt I} \in {\tt M}/ becomes <Em/known/.  When <<M>> becomes
+determined the stream <<Is>> will be closed.
+
+<entry>
+<index class=module/FS<and>monitorOut<and>id/
+<<monitorOut>>
+<synopsis>
+<<<{FS.monitorOut *M ?Is}
+>>>
+<item>
+This procedure writes all elements of <<M>> to <<Is>> as soon as
+<math/{\tt I} \notin {\tt M}/ becomes <Em/known/.  When <<M>> becomes
+determined the stream <<Is>> will be closed.
+
+<entry>
+<index class=module/FS<and>forAllIn<and>id/
+<<forAllIn>>
+<synopsis>
+<<<{FS.forAllIn *M +P/1}
+>>>
+<item>
+This procedure applies <<P/1>> to all elements of <<M>>. 
+</list>
+</section>
+
+<!-- ********************************************************************** -->
+<section id="section.fs.reflection"><title/Reflection/
+<p>
+The result of a reflective procedure depends on the current state of the
+constraint store and is non-deterministic.
+<list>
+
+<entry>
+<index class=module/FS<and>reflect<and>card/
+<<reflect.card>>
+<synopsis>
+<<<{FS.reflect.card *M ?Spec}
+>>>
+<item>
+returns a description ?{Spec} of the current information on the
+cardinality of&nbsp;?{M}. 
+
+<entry>
+<index class=module/FS<and>reflect<and>lowerBound/
+<<reflect.lowerBound>>
+<synopsis>
+<<<{FS.reflect.lowerBound *M ?Spec}
+>>>
+<item>
+Returns a specification of the greatest lower bound that is 
+currently known about the set ?{M}. 
+
+<entry>
+<index class=module/FS<and>reflect<and>upperBound/
+<<reflect.upperBound>>
+<synopsis>
+<<<{FS.reflect.upperBound *M ?Spec}
+>>>
+<item>
+Returns a specification of the least upper bound that is currently
+known about the set ?{M}.  
+
+<entry>
+<index class=module/FS<and>reflect<and>unknown/
+<<reflect.unknown>>
+<synopsis>
+<<<{FS.reflect.unknown *M ?Spec}
+>>>
+<item>
+Returns a specification of the set of elements that are neither known
+to be included in ?{M} nor excluded from ?{M}.
+
+<entry>
+<index class=module/FS<and>reflect<and>lowerBoundList/
+<<reflect.lowerBoundList>>
+<synopsis>
+<<<{FS.reflect.lowerBoundList *M ?Spec}
+>>>
+<item>
+Returns an expanded specification (&ie;, every individual element is
+represented) of the greatest lower bound that is currently known about
+the set ?{M}.
+
+<entry>
+<index class=module/FS<and>reflect<and>upperBoundList/
+<<reflect.upperBoundList>>
+<synopsis>
+<<<{FS.reflect.upperBoundList *M ?Spec}
+>>>
+<item>
+Returns an expanded specification (&ie;, every individual element is
+represented) of the least upper bound that is currently
+known about the set ?{M}.  
+
+<entry>
+<index class=module/FS<and>reflect<and>unknownList/
+<<reflect.unknownList>>
+<synopsis>
+<<<{FS.reflect.unknownList *M ?Spec}
+>>>
+<item>
+Returns an expanded specification (&ie;, every individual element is
+represented) of the set of elements that are neither known to be
+included in ?{M} nor excluded from ?{M}.
+
+<entry>
+<index class=module/FS<and>reflect<and>cardOf<and>lowerBound/
+<<reflect.cardOf.lowerBound>>
+<synopsis>
+<<<{FS.reflect.cardOf.lowerBound *M ?I}
+>>>
+<item>
+Returns the cardinality of the current greatest lower bound for ?{M}. 
+
+<entry>
+<index class=module/FS<and>reflect<and>cardOf<and>upperBound/
+<<reflect.cardOf.upperBound>>
+<synopsis>
+<<<{FS.reflect.cardOf.upperBound *M ?I}
+>>>
+<item>
+Returns the cardinality of the current greatest lower bound for ?{M}. 
+
+<entry>
+<index class=module/FS<and>reflect<and>cardOf<and>unknown/
+<<reflect.cardOf.unknown>>
+<synopsis>
+<<<{FS.reflect.cardOf.unknown *M ?I}
+>>>
+<item>
+Returns the number of elements that are currently not known to be
+included or excluded from ?{M}.
+
+</list>
+</section>
+
+<!-- ********************************************************************** -->
+<section id="section.fs.distribution"><title/Distribution/
+<p>
+Given a set ?{M}, let <math/{\it lowerBound}({\tt M})/ and <math/{\it
+upperBound}({\tt M})/ denote the greatest lower bound and the least upper
+bound currently known for ?{M}.  Also define <math/{\it unknown}({\tt M}) =
+{\it upperBound}({\tt M}) \backslash {\it lowerBound}({\tt M})/.
+<list>  
+
+<entry>
+<index class=module/FS<and>distribute<and>id/
+<<distribute>>
+<synopsis>
+<<<{FS.distribute +Dist *Ms}
+>>>
+<item>
+The vector <<Ms>> is distributed according to the specification
+<<Dist>>. The following values for <<Dist>> are supported:
+<list>
+<item> <<naive>> is equivalent to <<generic>>, &ie; the default
+      settings apply.
+<item>
+<<<
+generic(order:    +Order   &lt;= order
+        filter:   +Filter  &lt;= true
+        select:   +Select  &lt;= id
+        element:  +Element &lt;= element
+        rrobin:   +RRobin  &lt;= false
+        weights:  +Weights &lt;= {FS.makeWeights nil}
+        procedure:+Proc    &lt;= proc {$} skip end)
+>>>
+<list>
+<item> <<Order>>
+<list>
+<item> <<naive>> selects the left-most variable.
+<item>
+<<<
+order(sel:  +Sel  &lt;= min
+      cost: +Cost &lt;= card 
+      comp: +Comp &lt;= unknown)
+>>>
+<list>
+<item> <<Sel = min>> selects the left-most variable <<S>> from <<Ss>> with
+the <em/minimal/ cost according to <<Cost>>.
+<item> <<Sel = max>> selects the left-most variable <<S>> from <<Ss>>
+  with the <em/maximal/ cost according to <<Cost>>.
+<item> <<Cost = card>>: The cost is the cardinality of the 
+set determined by <<Comp>>.
+<item> <<Cost = weightSum>>: The cost is the <em/sum/
+of the weights associated with the elements 
+of the set determined by <<Comp>>.
+<item> <<Cost = weightMin>>: The cost is the <em/minimal/ weight
+ determined by <<Comp>>.
+<item> <<Cost = weightMax>>: The cost is the <em/maximal/ weight
+  associated with an element of the set determined by
+  <<Comp>>.
+<item> <<Comp = unknown>> selects <math/{\it unknown}({\tt S})/. 
+<item> <<Comp = lowerBound>> selects <math/{\it lowerBound}({\tt S})/. 
+<item> <<Comp = upperBound>> selects <math/{\it upperBound}({\tt S})/. 
+</list>
+<item>  
+<<<
+fun {Order +Ss} ... end
+>>>
+</list>
+<item> <<Filter>> determines if an element <<S>> of <<Ss>> is
+choosen for distribution. That is the case if <<{IsDet S>>} <em/and/
+the filter yields <<true>>.
+<list>
+<item> <<true>> skips values in <<Ss>>.
+<item> 
+<<<
+fun {Filter +E} ... end
+>>>
+</list>
+<item> <<Select>> is used to access the actual finite set
+      variable. Self-defined functions resp. procedures have to apply
+      an appropriate selection function by themselves.
+<list>
+<item> <<id>> is the identity function. 
+<item> 
+<<<
+fun {Select +E} ... end
+>>>
+</list>
+<item> <<Element>>
+<list>
+<item> 
+<<<
+element(sel: +Sel &lt;= min
+        wrt: +Wrt &lt;= unknown) 
+>>>
+<list>
+<item> <<Sel = min>> selects the <em/minimal/ element with
+respect to <<Wrt>>.  
+<item> <<Sel = max>> selects the <em/maximal/ element
+  with respect to <<Wrt>>.
+  
+<item> <<Wrt = unknown>> chooses an element from <math/{\it unknown}(S)/.
+  and interprets it as an integer.
+<item> <<Wrt = weight>> chooses an element from <math/{\it unknown}(S)/
+  and takes its weight as selection criterion.
+</list>
+<item> 
+<<<
+fun {Element +E} ... end
+>>>
+</list>
+<item> <<RRobin>>
+<list>
+<item> <<true>> causes the distribution to step through the variable
+      list in a round-robin fashion.
+<item> <<false>> causes the distribution to completely enumerate the
+      head of the variable list and then proceeds with the head of the
+      tail of the variable list.
+</list>
+<item> <<Weights>> must be a list of the form <<[E#W ...]>>. The
+      variable <<E>> denotes an element and <<W>> the element's
+      weight. An list element of the form <<default#W>> assigns to all
+      not explicitely mentioned elements the weight <<W>>. If there is
+      no element <<default#W>> then 
+        <<default#0>> is implicitely
+      added.
+<item> <<Proc>> is applied when stability is reached. Since this
+      application may cause instability, distribution is continued when
+      stability is reached again.
+</list>
+</list>
+</list>
+</section>
+
+</Chapter>

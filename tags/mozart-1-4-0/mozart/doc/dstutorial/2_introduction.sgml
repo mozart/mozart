@@ -1,0 +1,150 @@
+<CHAPTER ID="chapter.introduction">
+  <TITLE>Introduction</TITLE>
+
+<P>Fueled by the explosive development
+of the Internet,
+distributed programming is becoming more and more popular.
+<index id=idx.internet/Internet/
+The Internet provides the first steps towards
+a global infrastructure for distributed applications:
+a global namespace (URLs) and
+a global communications protocol (TCP/IP).
+Both platforms based on
+<index id=idx.java/Java language/
+the Java language and on
+<index id=idx.corba/CORBA/
+the CORBA standard take advantage
+of this infrastructure and have become widely-used.
+On first glance, one might think that distributed
+programming has become a solved problem.
+But this is far from the case.
+Writing efficient, open, and robust distributed
+applications remains much harder than writing
+centralized applications.
+Making them secure increases the difficulty
+by another quantum leap.
+The abstractions offered by Java and CORBA,
+for example the notion of distributed object,
+provide only rudimentary help.
+The programmer must still
+keep distribution and fault-tolerance strongly in mind.
+
+<P>The Mozart platform is the result of three years
+of research into distributed programming and
+ten years of research into concurrent constraint programming.
+The driving goal is to separate the fundamental aspects
+of programming a distributed system:
+application functionality, distribution structure,
+fault tolerance, security, and open computing.
+
+<P>The current Mozart release completely separates
+application functionality from distribution structure,
+and provides primitives for fault-tolerance,
+open computing, and partial support for security.
+Current research is focused on completing
+the separation for fault tolerance and open computing,
+which will be offered in upcoming releases.
+Future research will focus on security
+and other issues.
+
+<P>This tutorial presents many examples
+of practical programs and techniques of distributed
+programming and fault-tolerant programming.
+The tutorial also gives many examples of
+useful abstractions, such as cached objects,
+stationary objects,
+fault-tolerant stationary objects,
+mobile agents, and
+fault-tolerant mobile agents,
+and shows how easy it is to develop new abstractions
+in the Mozart platform.
+
+<P>Essentially all the distribution abilities of Mozart are
+given by four modules:
+<LIST>
+<ITEM> The module
+<index/<<Connection>> module/
+<index id=idx.moduleconnection/module<and>system<and><<Connection>>/
+<ref.extern to="ozdoc:system"
+key="chapter.connection"/<<Connection>>/
+provides the basic mechanism (known as <EM>tickets</EM>)
+for active applications to connect with each other.
+<ITEM> The module
+<index/<<Remote>> module/
+<index id=idx.moduleremote/module<and>system<and><<Remote>>/
+<ref.extern to="ozdoc:system"
+key="chapter.remote"/<<Remote>>/
+allows an active application to create
+a new site (local or remote operating system process) and connect with it.
+The site may be on the same machine or a remote machine.
+<ITEM> The module
+<index/<<Pickle>> module/
+<index id=idx.modulepickle/module<and>system<and><<Pickle>>/
+<ref.extern to="ozdoc:system"
+key="chapter.pickle"/<<Pickle>>/ allows an application
+to store and retrieve
+arbitrary stateless data from files and URLs.
+<ITEM> The module
+<index/<<DP>><and>module/
+<index id=idx.moduledp/module<and>system<and><<DP>>/
+<ref.extern to="ozdoc:system"
+key="chapter.dp"/<<DP>>/ gives the basic primitives for configuring
+the distribution of entities, and fault detection and handling.
+</LIST>
+The first three modules, <ref.extern to="ozdoc:system"
+key="chapter.connection"/<<Connection>>/, <ref.extern to="ozdoc:system"
+key="chapter.remote"/<<Remote>>/,
+and <ref.extern to="ozdoc:system"
+key="chapter.pickle"/<<Pickle>>/, are extremely simple to use.
+In each case, there are just a few basic operations.
+For example, <ref.extern to="ozdoc:system"
+key="chapter.connection"/<<Connection>>/ has just two basic operations:
+offering a ticket and taking a ticket.
+
+<P>The fourth module, <ref.extern to="ozdoc:system"
+key="chapter.dp"/<<DP>>/, is the base on which
+fault-tolerant abstractions are built.
+The current module provides complete fault-detection ability
+for both site and network failures
+and has hooks that allow to build efficient fault-tolerant
+abstractions within the Oz language.
+The underlying model of that module is a both simplified and
+improved version of the former module
+<ref.extern to="ozdoc:system" key="chapter.fault"/<<Fault>>/.
+
+<P>This tutorial gives an informal but precise specification
+of both the distribution model and the failure model.
+The tutorial carefully indicates where the current release
+is incomplete with respect to the specification
+(this is called a <EM>limitation</EM>)
+or has a different behavior (this is called a <EM>modification</EM>).
+All limitations and modifications are explained where they occur
+and they are also listed together at the end of the tutorial
+(see <ptr to="chapter.limits">).
+
+<index id=idx.connected/application<and>connected/
+<index id=idx.connectedapplications/connected applications/
+<P>We say two or more applications are
+<EM>connected</EM>
+if they share a reference to a language entity that allows
+them to exchange information.
+For example, let Application 1 and Application 2
+reference the same object.
+Then either application can call the object.
+All low-level data transfer between the two applications
+is automatic; from the viewpoint of the system, it's just one
+big concurrent program where one object is being called from
+more than one thread.
+There is never any explicit message passing or encoding of data.
+
+<P>The Mozart platform provides much functionality
+in addition to distribution.
+It provides an interactive development environment
+with incremental compiler,
+many tools including a browser, debugger, and parser-generator,
+a C++ interface for developing dynamically-linked libraries,
+and state-of-the-art constraint and logic programming support.
+We refer the reader to the other tutorials and the extensive
+system documentation.
+
+</CHAPTER>

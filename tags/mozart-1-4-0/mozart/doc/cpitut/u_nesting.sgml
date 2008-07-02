@@ -1,0 +1,315 @@
+<Section id="u_nesting">
+<Title/Imposing Propagators/
+
+<p>
+The &cpi provides a generic way to implement different schemes for
+imposing propagators. This section discusses the following issues:
+<p>
+<List>
+
+<Item> How to implement a nestable propagator. <p> It is explained how
+      to make the addition propagator of <ptr to="u_getting_started">
+      nestable.
+
+<Item> How to extend the class <<OZ_Expect>> to cope with structured
+      parameters.
+
+</List>
+<p>
+The answers to these questions will be used in later sections, for
+example, when we come to implement propagators imposed on more than just
+single variables.
+
+<SubSection id="u_nesting.basic">
+<Title/Basic Concepts/
+
+<p>
+A propagator is imposed by a &ccpp; function, a so-called <Em/header
+function/, that is connected to an Oz abstraction. The application of
+such an abstraction results in calling the corresponding header
+function and finally in imposing the propagator.
+
+<!--
+<para class=apropos><title/Tasks of a header function/
+The task of a header function  is
+twofold. First, it checks the store for certain constraints to be
+available. For example, in most of the cases it is reasonable to suspend
+imposing a finite domain propagator until at least all of its parameters
+are constrained to finite domain variables. Then it creates the &cpp;
+object which represents the propagator and introduces it to the runtime
+system. Thereby, the member function <<propagate()>> is called.
+
+-->
+
+<para class=apropos><title/&cpi class <<OZ_Expect>>/
+The class <<OZ_Expect>>
+provides the functionality to fulfill the tasks
+mentioned above. It
+provides member functions to control the imposition of a propagator and
+to determine the constraints which have to be present in the store before
+a propagator is imposed.
+
+<p>
+The class <<OZ_Expect>> provides a group of member functions to
+examine the constraints of a propagator's parameters. The names of these
+member functions begin with <<expect>>.  The basic idea is to define
+for each parameter a constraint <Math/\phi/ (expected to be present in the
+store) in terms of <<expect>> member functions and to decide whether
+<Math/\phi/ is entailed &resp disentailed by the store (by evaluating the
+return value of the <<expect>> function expressing the constraint
+<Math/\phi/). If entailment of <Math/\phi/ for a parameter cannot be decided
+yet then the constraint in the store for this parameter is 
+<Em/insufficient/.
+
+<p>
+The type of the return value allows to handle structured
+parameters. The definition of the return type is as follows.
+
+<p>
+<<  struct OZ_expect_t { int size, accepted; } >>
+
+<p>
+The meaning of the fields <<size>> and <<accepted>> is explained by
+the following examples. 
+
+<p>
+<List>
+
+<Entry> Example 1.
+<Item> Assume a parameter is expected to be an integer, then
+      the field <<size>> of the returned value is <Math/1/. In case this
+      parameter is currently a variable then the field <<accepted>>
+      is <Math/0/. An inconsistent constraint, like for instance a literal,
+      would be indicated by <Math/-1/. The value <Math/1/ in the field
+      <<accepted>> for our example means that the examined parameter
+      is an integer.
+
+<Entry> Example 2.
+<Item> Let us suppose we expect a parameter to be a vector
+      with <Math/n/ integer fields, where a vector is either a closed
+      record, a tuple, or a list. First the parameter is expected to be a
+      vector (which is one constraint expected to be found in the store)
+      and then all its <Math/n/ elements are to be integers, which determines
+      the field <<size>> of the return value to be <Math/n+1/. If the field
+      <<accepted>> is also <Math/n+1/, then all expected constraints are
+      present. Otherwise appropriate action has to be taken, for
+      example, suspending the execution of the header function.  The
+      implementation to check for a vector of finite domain variable is
+      discussed in <ptr to="u_nesting.basic">.
+
+</List>
+
+<p>
+An instance of the class <<OZ_Expect>> maintains two sets, namely <Math/A/
+and <Math/B/. In the course of checking parameters <<expect>> member
+functions collect variables in either of these two sets. Variables which
+are constrained according to the corresponding <<expect>> function
+are added to set <Math/A/. All the other variables are added to set 
+<Math/B/. The
+<<expect>> function for finite domain variables has an extra argument
+to determine the event which resumes the propagator, for example only
+narrowing of the bounds of the domain. This information is maintained in
+the sets too.
+
+<p>
+Leaving a header function by calling the member function <<suspend>>
+(see <Ptr.Extern to="ozdoc:cpiref" key="expect.control">) causes the
+header function to be resumed if variables collected in set <Math/B/
+are further constrained.
+
+<p>
+Calling <<OZ_Expect::impose()>> introduces the propagator which is
+passed as argument to the runtime system and makes the propagator resume
+if at least one variable of both sets is constrained in a way defined by
+the corresponding <<expect>> function. Additionally, variables in set <Math/B/
+are constrained to be finite domain variables. This will be used for the
+implementation of nestable propagators.
+
+<p>
+<SubSection id="u_nesting.impose">
+<Title/Imposing Nestable Propagators/
+<p>
+In <ptr to="u_getting_started.creating"> not too much attention was paid to
+propagator imposition. Now more details will be given by the example of a
+nestable propagator.  Let us consider the following Oz code. 
+<p>
+<<  {FD.times {FD.plus U V} {FD.plus X Y} Z} >>
+
+<p>
+The propagator <<FD.plus>> is required to be <Em/nestable/,
+since one of its parameters is
+syntactically not accessible and cannot be constrained to a finite
+domain variable by explicit Oz code. The expansion of the above code
+makes it clear.
+
+<p>
+<Code.Extern display to="programs/nestable.oz" class=linenumbers>
+
+<p>
+Due to lexical scoping the implicit variables <<A1>> and
+<<A2>> are 
+inaccessible to outside code. Therefore the two <<FD.plus>>
+propagators must constrain <<A1>> and <<A2>> to finite domain
+variables before they are imposed. To simplify the implementation of
+header functions for propagators, the &cpi provides three macros. 
+
+<p>
+<List>
+<Entry> <<OZ_EXPECTED_TYPE(S)>> <Item> defines a &ccpp; string
+<<S>> typically consisting of a number of substrings separated by
+commas which describe the constraint expected at the corresponding
+argument position. The first substring corresponds to the first argument
+with index <Math/0/, the second one to the second argument with index
+<Math/1/ and so on. The substrings are used to generate meaningful
+messages in case an inconsistent constraint is detected. There are
+predefined macros (starting with <<OZ_EM_>> defining strings for the
+possible constraints to be expected. For details see <Ptr.Extern
+to="ozdoc:cpiref" key="expect.macros">. The macro <<OZ_EXPECTED_TYPE>>
+is required by <<OZ_EXPECT>> and <<OZ_EXPECT_SUSPEND>>.
+
+<Entry> <<OZ_EXPECT(O, P, F)>>
+<Item> checks if the argument at position
+      <<P>> (<<P>> is a C integer with a value starting from <Math/0/)
+      is constrained according to the semantics of <<F>> (which is an
+      <<expect>> member function of class <<O>>). The type of
+      <<F>> has to be <<OZ_Expect_t O::F(OZ_Term)>>. The value of
+      <<O>> has to be an instance of the class <<OZ_Expect>> or a
+      class inheriting from it. In case an inconsistent or insufficient
+      constraint is detected, the appropriate action is
+      taken 
+      <note foot>
+      For example, in case of a detected inconsistency an
+      error message is emitted and the header function returns
+      <<OZ_FAILED>> to the runtime system.
+      </note> 
+      and the &ccpp; function is
+      left by a <<return>> statement. Otherwise, the execution
+      proceeds to the next statement in the header function.
+
+<Entry> <<OZ_EXPECT_SUSPEND(O, P, F, SC)>>
+<Item> is similar to
+      <<OZ_EXPECT>> except for the case that the constraint defined by
+      <<F>> is currently not yet entailed. Then it increments the
+      value of <<SC>> which is expect to be of type <<int>> and
+      proceeds to the next statement in the header function.
+
+</List>
+
+<p>
+In <ptr to="u_getting_started.creating"> 
+the macro <<OZ_EXPECT>> was already
+used for the non-nestable addition propagator. The macro
+<<OZ_EXPECT_SUSPEND>> is provided to implement nestable
+propagators. Insufficient constraints for a parameter cause it to
+increment its argument <<SC>>. Allowing exactly one argument to be
+insufficiently constrained implements a nestable propagator.
+
+<p>
+Therefore the header function has to suspend in case more than one
+parameter is insufficiently constrained. The class <<OZ_Expect>>
+therefore provides the member function <<suspend()>> which expects a
+value of type <<OZ_Thread>>. Details on how to create a thread for a
+&ccpp; function can be found in <Ptr.Extern to="ozdoc:foreign"
+key="section.threads">.
+
+<p>
+<Code.Extern display proglang=cc to="programs/ex_b.5.cc" class=linenumbers>
+
+<p>
+The variable <<susp_count>> is passed to the <<OZ_EXPECT_SUSPEND>>
+macros and if it is greater than <Math/1/ the function <<fd_add_nestable()>>
+is suspended. Otherwise the propagator is imposed.
+
+<SubSection id="u_nesting.customize">
+<Title/Customizing <<OZ_Expect>>/
+
+<p>
+The propagators implemented so far are imposed on single finite domain
+variables. The propagators will be resumed whenever an arbitrary element
+of a domain of its parameters is removed. But more elaborate propagators
+may have more demanding requirements concerning their resumption &resp
+parameter structure. Therefore the following frequently occurring
+requirements will be discussed in this section.
+
+<p>
+<List>
+<Item> Often it is <Em/not/ desirable to resume a propagator as soon
+      as any arbitrary element is removed from the domain of one of its
+      parameters. For instance, one might want to suspend resumption
+      until a domain becomes a singleton domain.
+
+<Item> One wants to pass structured parameters to a propagator. In
+      <ptr to="u_vectors"> a propagator will be implemented that
+      expects a vector of finite domain variables.
+
+</List>
+
+<p>
+The <<expect>> member functions are used to define new <<expect>>
+functions which specify the constraints for each parameter of a
+propagator which have to be entailed by the store to enable the
+imposition of the propagator. To conform with the macros
+<<OZ_EXPECT>> and <<OZ_EXPECT_SUSPEND>> the type of the 
+resulting <<expect>> function has to be
+<<OZ_expect_t (O::*)(OZ_Term)>>, where <<O>> is either
+<<OZ_Expect>> or a class inheriting from it.
+
+<p>
+The new member function <<expectIntVarSingl()>> is implemented as
+member function of class <<ExtendedExpect>> inheriting from
+<<OZ_Expect>>. The definition of the member function
+<<expectIntVarSingl()>> which causes a propagator to be resumed when a
+variable is constrained to an integer, uses
+
+<p>
+<<<  
+OZ_Expect::expectIntVar(OZ_Term t, 
+                        OZ_FDPropState ps);
+>>>
+
+<p>
+provided by the &cpi . The second argument <<ps>> determines the event
+for resuming the propagator. For details on the values determining the
+resumption event see <Ptr.Extern to="ozdoc:cpiref" key="expect.types">.
+<p>
+The following code defines the class <<ExtendedExpect>> with the
+member function <<expectIntVarSingl()>>.
+
+<p>
+<Code.Extern display proglang=cc to="programs/ex_c.1a.cc" class=linenumbers>
+
+<p>
+The definition of an <<expect>> function for vectors is similar. The
+&cpi provides for the function
+
+<p>
+<Code.Extern display proglang=cc to="programs/custom2.cc" class=linenumbers>
+
+<p>
+which can be used to define a new instance of <<expectVector>> with
+the required signature
+<<OZ_expect_t (O::*)(OZ_Term)>>.
+The
+semantics of <<expectVector>> defines that <<v>> is a vector and
+all elements of the vector are constrained according to <<f>>, which
+is an <<expect>> function too. 
+
+<p>
+Note that for a member function passed to <<expectVector>>, defined in
+a class inheriting from <<OZ_Expect>>, the cast 
+<<OZ_ExpectMeth>> is
+necessary, since the type system of &ccpp; cannot figure out by itself
+that the type of the function passed is admissible.
+
+<p>
+The following code is part of the definition of class
+<<ExtendedExpect>>.
+
+<p>
+<Code.Extern display proglang=cc to="programs/ex_c.1b.cc" class=linenumbers>
+
+<p>
+The implementation of the propagators discussed in the next sections
+assumes the existence of the class <<ExtendedExpect>>.
+
+

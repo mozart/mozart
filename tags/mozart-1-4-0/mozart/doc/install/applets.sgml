@@ -1,0 +1,100 @@
+<!--
+  - Authors:
+  -   Christian Schulte <schulte@ps.uni-sb.de>
+  -
+  - Copyright:
+  -   Christian Schulte, 1998
+  -
+  - Last change:
+  -   $Date$ by $Author$
+  -   $Revision$
+  -
+  - This file is part of Mozart, an implementation
+  - of Oz 3
+  -    http://www.mozart-oz.org
+  -
+  - See the file "LICENSE" or
+  -    http://www.mozart-oz.org/LICENSE.html
+  - for information on usage and redistribution
+  - of this file, and for a DISCLAIMER OF ALL
+  - WARRANTIES.
+  -
+  -->
+
+<Appendix id="appendix.applets">
+  <Title/Enabling Oz Applets/
+
+  <p>
+    Most Mozart demos are available as <em/Oz applets/: Oz
+    applications that can be started by clicking a link on a web
+    page. In order to start them by clicking, the web browser must
+    know about Oz applets (or Oz applications as we also call them).
+
+  <Section id="section.windows.notes">
+    <Title/Enabling Oz Applets under Windows/
+    <p>
+    The modifications described below only have to be done by Unix
+    users. Under Windows the installation process will automatically
+    do the necessary modifications for you. If that fails for some
+    reason, please follow the instructions below, but use
+<code display>
+"C:\Program Files\Mozart\bin\ozenginew.exe" "%1"
+</code>
+   as application (assuming that you installed Mozart under <Kbd>C:\Program Files\Mozart)</Kbd>.
+
+
+  <Section id="section.applets.oz">
+    <Title/Oz Applications/
+
+    <p>
+      Application execution in a web browser (and also by mail tools,
+      etc.) is controlled by MIME types. An Oz
+      application has the MIME type
+      <Kbd>application/x-oz-application</Kbd> and the 
+      filename extension <Kbd/oza/.
+
+    <p>
+      To make your Web Browser or E-Mail tool Oz application enabled,
+      it needs to 
+      know the following bits of information:
+      <List>
+        <Entry>Mime type
+        <Item> This is <Kbd>application/x-oz-application</Kbd>.
+        <Entry>File extension
+        <Item> This is <Kbd>oza</Kbd>.
+        <Entry>Program location
+        <Item> Where the Oz engine to execute Applications resides. For
+        example, if Mozart has been installed in
+        <Kbd>/usr/local/oz</Kbd>, this is
+        <Kbd>/usr/local/oz/bin/ozengine</Kbd>.
+      </List>
+    </P>
+
+   <Section id="section.applets.netscape">
+     <Title/Example: Making Netscape Mozart Enabled/
+
+   <P>
+     <Figure Class=Picture Id="figure.applets.install">
+      <Title/The Netscape application dialog./
+      <Picture.Choice>
+        <Picture.Extern to="netscape.gif" type=gif>
+      </PICTURE.CHOICE>
+    </Figure>
+
+     <P>
+       You have to do the following steps:
+     </P>
+
+     <P>
+       <List>
+         <Item> Open the preferences window.
+         <Item> Choose the Navigator, Applications dialog.
+         <Item> Press the <Em/New/ button.
+         <Item> Enter the information as sketched above, as you see it
+         done in <Ptr to="figure.applets.install">
+       </List>
+     </P>
+   </Section>
+
+
+</Appendix>

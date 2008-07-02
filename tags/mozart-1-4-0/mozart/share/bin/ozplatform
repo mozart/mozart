@@ -1,0 +1,85 @@
+#!/bin/sh
+# determine machine architecture and OS version
+
+if [ -x /bin/uname ]; then UNAME=/bin/uname
+elif [ -x /usr/bin/uname ]; then UNAME=/usr/bin/uname
+else UNAME=uname
+     #echo "Cannot find uname" 1>&2 ; exit 1
+fi
+
+system="`$UNAME -m` `$UNAME -s` `$UNAME -r`"
+
+case $system in
+    #-----------------------------------------------------------------
+    # tentative new platforms pending confirmation
+    #-----------------------------------------------------------------
+    mips\ Linux\ *)	OZARCH=linux-mips
+    ;;
+    s390\ Linux\ *)	OZARCH=linux-s390
+    ;;
+    #-----------------------------------------------------------------
+    armv4l\ Linux\ *)	OZARCH=linux-arm
+    ;;
+    #parisc32\ Linux\ *)	OZARCH=linux-hppa32
+    #;;
+    # so far: userspace is 32 bits on linux-parisc / hppa
+   parisc*\ Linux\ *)	OZARCH=linux-parisc
+    ;;
+    #-----------------------------------------------------------------
+   ppc\ Linux\ 2.*)	OZARCH=linux-ppc
+   ;;
+   sun4*\ SunOS\ 4.1*)	OZARCH=sunos-sparc
+   ;;
+   sun4*\ SunOS\ 5*)	OZARCH=solaris-sparc
+   ;;
+   i86pc*\ SunOS\ 5*)	OZARCH=solaris-i486
+   ;;
+   RISC\ ULTRIX\ 4.*)	OZARCH=ultrix-mips
+   ;;
+   i[4567]86\ Linux\ *) OZARCH=linux-i486
+   ;;
+   m68k\ Linux\ *)      OZARCH=linux-m68k
+   ;;
+   sparc\ Linux\ *)     OZARCH=linux-sparc
+   ;;
+   9000/7*HP-UX*)	OZARCH=hpux-700
+   ;;
+   *IRIX\ 5*)	        OZARCH=irix5-`/bin/uname -p`
+   ;;
+   *IRIX*\ 6*)	        OZARCH=irix6-`/bin/uname -p`
+   ;;
+   *AIX*)	        OZARCH=aix3-rs6000
+   ;;
+   *alpha*OSF1*)        OZARCH=osf1-alpha
+   ;;
+   *i386*FreeBSD*)
+       if [ -f /etc/objformat ]; then . /etc/objformat
+       elif [ -f /usr/bin/objformat ]; then OBJFORMAT=`/usr/bin/objformat`
+       fi
+       OZARCH=freebsd${OBJFORMAT}-i486
+   ;;
+   *atari*NetBSD*)      OZARCH=netbsd-m68k
+   ;;
+   *sparc*NetBSD*)      OZARCH=netbsd-sparc
+   ;;
+   *sparc*OpenBSD*)      OZARCH=netbsd-sparc
+   ;;
+   *i386*OpenBSD*)	OZARCH=openbsd-i486
+   ;;
+   *i386*NetBSD*)       OZARCH=netbsd-i486
+   ;;
+   *i386*NETBSD*)	OZARCH=netbsd-i486
+   ;;
+   *i[4567]86*CYGWIN*)       OZARCH=win32-i486
+   ;;
+   *Power*Mac*Rhapsody*) OZARCH=rhapsody-powermac
+   ;;
+   *Power*Mac*Darwin*)	OZARCH=darwin-powermac
+   ;;
+   *i*86*Darwin*)       OZARCH=darwin-i386
+   ;;
+   *)  	                OZARCH=unknown-unknown
+   ;;
+esac
+
+echo $OZARCH

@@ -1,0 +1,258 @@
+			Stack Space Leak Fixes
+                        ======================
+
+Kevin Glynn (glynn@info.ucl.ac.be) 
+
+This note describes fixes made to the Mozart virtual machine to remove
+a source of space leaks caused by references from thread stacks.
+
+Thread stacks consist of stack frames.  Frames can contain references
+to X registers, Y registers and G registers.  During garbage
+collection data structures referenced by these registers are
+considered live.  By analysing the program code that will be run when
+control returns to a stack frame it may be possible to show that some
+of the registers stored in the frame will never be read.  In this case
+the register contents are garbage, and the data structures they are
+pointing to are space leaks.
+
+* X Registers
+
+The Mozart virtual machine has, for a long time, fixed the problem of
+space leaks from the X registers. 
+
+The garbage collector collects each frame on each live thread's stack
+(TaskStack::_cac in cac.cc). When it finds an X_CONT frame (a frame
+storing a copy of the X registers at the time the thread was
+suspended) it performs a liveness analysis on the code to be run when
+that frame is resumed (CodeArea::livenessX in liveness.cc).  This
+liveness analysis tracks all possible paths through the byte code
+keeping track of all the X registers that may be read.  Once the
+analysis is complete the collector overwrites the dead (non-live) X
+registers with taggedVoidValue and collects the X registers. We now
+overwrite with make makeTaggedNULL(), which is slightly more efficient
+
+The results of the liveness analysis are cached (livenesscache in
+liveness.cc).
+
+We have fixed a bug in the existing X liveness code.  Alternative
+roots (e.g. from conditional statements) are held in a work list and
+we try each alternative root until the work list is empty. Previously
+we didn't retry a root if we had already investigated it.  However, we
+must retry it if this time we have registers marked unwritten that
+were marked as overwritten on previous passes from that root.
+
+* G and Y registers
+
+We have extended this solution to the G and Y registers
+(CodeArea::livenessGY in liveness.cc). G and Y registers are
+referenced from normal call frames. The analysis tracks usage of both
+sets of registers at the same time.
+
+The following example demonstrates an insidious space leak caused by a
+G register.
+
+    local S P Loop in
+       P = {NewPort S}
+       thread
+          try
+             {ForAll S proc {$ X} skip end}
+          catch _ then skip end 
+       end
+       proc {Loop} {Send P foo} {Loop} end
+       {Loop}
+    end
+    
+Mozart compiles the code between thread ... end into a procedure. This
+procedure has an external reference to the stream S, which is stored
+on the new thread's stack in a G register.  Because of the try
+... catch statement this reference to S (the start of the port's
+stream) stays on the stack and becomes a space leak which soon crashes
+the emulator.  Our analysis detects that this reference is never used
+after being passed to the Forall loop and removes it.
+
+As well as the code entry point in the call frame the livenessGY
+routine also considers CATCH and LOCK frames beneath. These contain
+additional code entry points that can execute with the same G and Y
+registers. TaskStack::_cac in cac.cc then skips over these frames by
+detecting that their Y register slot has already been gc'd.
+
+As with the existing X registers, we cache G and Y register liveness
+info for each entry point in static caches (livenessGcache and
+livenessYcache in liveness.cc).
+
+Since Y registers are not shared once the liveness analysis is
+complete we can immediately overwrite dead Y registers with
+makeTaggedNULL() before collecting them.
+
+G registers, unfortunately, are rather more difficult.  The G
+registers are referenced from closures (class Abstraction in
+value.hh).  Closures are first class objects and as well as being
+referenced from stack frames they can also be be directly referenced
+from data structures and byte code. (Indeed many stack frames may
+reference the same closure, each with a different PC and thus
+different liveness requirements).  Therefore, the liveness info we
+calculate from a particular stack frame is only one path by which the
+G registers may be accessed and we cannot simply overwrite the dead
+registers.
+
+To remove space leaks in G registers we must verify that G registers
+are dead via every possible path to the closure.  Before our changes
+closures where collected as a particular form of a ConstTerm.  As part
+of our changes we introduce a special collector for closures
+(Abstraction::gCollect in cac.cc). This collector takes an optional
+argument, a liveness mask, which is only set in gCollect calls from
+stack frames.  If the argument is not passed then
+Abstraction::gCollect assumes that all the G registers are live.
+
+Normally, once a structure has been garbage collected its first word
+is overwritten with a tagged pointer to the new copy.  When further
+attempts are made to collect the structure the pointer to the copy is
+returned immediately.
+
+For Abstractions we don't write the forwarding pointer in the first
+word (we overwrite the pred slot instead), so *each* attempt to
+collect a closure will call Abstraction::gCollect.  The first time a
+closure is encountered we make a copy as normal but store the tagged
+pointer to the copy in the Abstraction's pred field.  We then set any
+dead G registers (i.e. dead via this access path) to makeTaggedNULL()
+before collecting the fields of the Abstraction copy.  (Note that
+since we have overwritten the original pred field then during garbage
+collection code must access the pred from the copy or via a new
+Abstraction method cacGetPred() which follows the link if necessary).
+
+In future attempts to collect the Abstraction the gCollect routine
+will notice the tagged reference to the new copy and just copy across
+G registers that were previously thought dead but are live through
+this new path. We then collect the newly live G registers.
+
+The code to collect a closure immediately gc's any newly live G
+registers. Since these may point back to this closure we have to be
+careful that each following attempt only gc's registers that that
+attempt has made newly live.
+
+In this way, once we have discovered every path to the closure we will
+have collected the union of all live G registers through all paths.
+
+As an optimisation once we notice that all of an abstraction's G
+registers are, in fact, live we overwrite the first word with a tagged
+pointer to the new copy in the standard way. Future attempts to gc
+this abstraction are thus short circuited as usual.
+
+CACHES
+======
+
+By default we reset all cached information (for X, G, and Y registers)
+at the start of each garbage collection.  This makes the caching safe
+if we ever reclaim and re-use byte code store areas.
+
+If you set #define GY_CACHE_RESET_OFF then the X, G, and Y static
+caches will not be reset before each garbage collection. This is
+probably safe at the moment because code areas are not yet reclaimed.
+
+
+PERFORMANCE
+===========
+
+We take care to optimise the case where the Y register liveness
+information is available from the cache and there are no further entry
+points (by CATCH and LOCK frames).  In this case we invalidate Y
+register entries directly from the cache.  This proved to be an
+important optimisation for constraint programs, such as FD_train from
+the test suite.
+
+If there are less than a fixed number of registers (currently set to
+100) then we use a static array for the usage vectors, otherwise they
+are malloced/freed.
+
+The liveness checking for G and Y registers is potentially a large
+cost, since it may have to scan an arbitrary amount of code. Caching
+liveness information helps in the common case where multiple stack
+frames have the same entry points.  
+
+On the other hand, where the analysis does find dead register slots we
+improve performance by not having to copy dead data structures on each
+garbage collection.
+
+I have run various benchmarks to get a feeling for the expected cost.
+Where these have shown significant performance problems I have, so
+far, been able to fix them.
+
+I now can't find any examples where the space leak fixes makes a
+significant hit on performance, (famous last words).
+
+DEBUGGING
+=========
+
+If we erroneously void a register that is not actually dead then an
+application is likely to crash with an error like this one:
+
+%********************** error in application ********************
+%**
+%** Application of non-procedure and non-object
+%**
+%** In statement: {0 <P/1 AllSolsRepairScript>}
+%**
+%** Call Stack:
+%** toplevel abstraction in line 1, column 0, PC = 138968588
+%**--------------------------------------------------------------
+
+Note the 0 where you would reasonably expect to see some other type of
+data. This is because dead registers are overwritten with a void
+value. 
+
+We need to find out why the liveness code decided this register was
+dead. To help track down these errors the patch includes a #define
+(DEBUG_LIVECALC) which when turned on will overwrite each dead
+register with a unique integer. As dead registers are overwritten we
+also print debug messages containing the register name and its new
+value. 
+
+Since you can't tell from the error message which type of register has
+caused the error we try to make this clear from the overwritten value:
+
+X registers are overwritten with decreasing -ve numbers: -1, -2, -3,
+...
+
+Y registers are overwritten with increasing +ve numbers: 1, 2, 3, ...
+
+G registers are overwritten with increasing +ve numbers starting from
+300000: 300000, 300001, 300002, ....
+
+This will help you track down the code in which the liveness
+calculation went wrong.  It will also be helpful to print out the code
+being checked, the patch includes commented out calls to
+CodeArea::display(...); in codearea.cc.  To make these work you will
+need to compile the emulator with DEBUG_CHECK and hack up some of the
+print routines to stop them hanging.
+
+
+FUTURE WORK
+====== ====
+
+* Since most stack frames are pushed at predictable places (e.g. at a
+  procedure call) it would be possible for the compiler to statically
+  determine which registers are still live and pass this to the
+  garbage collector.  For such frames we could then avoid the dynamic
+  liveness checks.
+
+  Drawbacks of this approach is that it requires support from the
+  compiler and we would need a scheme of passing the liveness
+  info. (We could compile the liveness info into the byte code, e.g. by
+  extending the CALL instructions to include it).
+
+* We only do the liveness checks during garbage collections,  they
+  could be done during clone operations too.
+
+* We reset the liveness caches at the start of each garbage collection
+  phase.  It would be better to do this only when memory containing
+  byte code is freed.
+
+* In fact, (I believe) currently, we don't ever free memory containing
+  byte code so we can disable the cache resets (compile g-collect.cc
+  with -DGY_CACHE_RESET_OFF).
+
+* The liveness caches only cache liveness information for places with
+  32 or less registers (liveness info is stored as a one word bit
+  mask).  This limit could be removed.
+
+   
