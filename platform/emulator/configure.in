@@ -373,7 +373,7 @@ case $platform in
 	    AC_DEFINE(ARCH_I486)
 	    TOOLLDCMD="sh `pwd`/$target-oztool ld"
 	fi
-	CPPFLAGS="-DWINDOWS_EMULATOR $oz_a $CPPFLAGS"
+	CPPFLAGS="-DWINDOWS_EMULATOR -DDSS_STATIC_LINK $oz_a $CPPFLAGS"
     ;;
     rhapsody* | darwin*)
 	AC_DEFINE(RHAPSODY)
