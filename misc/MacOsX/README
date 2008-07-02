@@ -1,0 +1,12 @@
+To bouild a Mac OS X application bundle is necessary to install several external tools:
+
+1- Platypus, you coan download it from http://www.sveinbjorn.org/platypus. At this time due to some bugs the recommended version is 3.4. Be sure to install the command line tools as they are called by the makefile. After inatalling it please set the PLAT variable in the Makefile to the location of command line tools.
+
+2- Cocoa dialog, you can download it from download it from http://cocoadialog.sourceforge.net/. Just drag the application to some place and set the Makefile variable CD to its location.
+
+
+After having all the external applications required for the bundle, build mozart in the standard way (i.e. ./configure --prefix=/some/place/ && make && make install). After doing that you should have a mozart installation at /some/place/. Please set the variable MOZ_INST in the makefile to pint to /some/place. No other modification to the Makefile should be needed.
+
+Now, to actually build the bundle execute 'sudo make' in the directory. sudo is needed since there is a script which modifies some paths inside the emulator.exe file and needs super user privileges. If everythings went fine you will have a Mozart.app as a result. That is the bundle, enjoy it.
+
+
