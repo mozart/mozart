@@ -3686,7 +3686,7 @@ EOF
 
 	    TOOLLDCMD="sh `pwd`/$target-oztool ld"
 	fi
-	CPPFLAGS="-DWINDOWS_EMULATOR $oz_a $CPPFLAGS"
+	CPPFLAGS="-DWINDOWS_EMULATOR -DDSS_STATIC_LINK $oz_a $CPPFLAGS"
     ;;
     rhapsody* | darwin*)
 	cat >> confdefs.h <<\EOF
