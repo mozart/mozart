@@ -1,9 +1,10 @@
-# Script to package the mozart system into an application bundle for
-# Mac Os X.
+# Makefile to package the a Mozart distribution for Mac OS X as a bundle
+# inside a disk image.
+#
 #
 # Author: Gustavo Gutierrez
-# Date: May 9 2007
-
+# Last modified: $Date$
+#
 # Credits:
 # Build file for creating DMG files.
 #
@@ -29,7 +30,6 @@ PLAT=/usr/local/bin/platypus
 ## Cocoa dialog
 CD=/Users/ggutierrez/Desktop/CocoaDialog.app
 
-
 ##
 # Mozart Installation
 ##
@@ -44,20 +44,7 @@ MOZ_DOC=/Users/ggutierrez/Desktop/Documentation
 ## Directories of mozart installation to be bundled.
 MOZ_DIRS= platform bin cache share include
 
-
-##Mozart documentation folder (html)
-#MOZ_DOC_HTML=/Users/ggutierrez/doc
-
-##Mozart standard library documentation dir (html)
-#MOZ_STDLIB_HTML=$(MOZ_HOME)/doc
-
-
-#INTOOL=/usr/bin/install_name_tool
-#OTOOL=/usr/bin/otool -L
 NAME=Mozart
-#VERSION=1.4.0
-
-
 APP=$(NAME).app
 
 ## Directories inside the bundle
@@ -66,15 +53,15 @@ BND_CONTENTS=$(APP)/Contents
 ## The Resources directory is where mozart installation files will be.
 BND_RESOURCES=$(BND_CONTENTS)/Resources
 
-## The Frameworks directory is where shared libraries used by the emulator will be.
-## For instance, libgmp.dylib
+## The Frameworks directory is where shared libraries used by the emulator
+## will be placed. For instance, libgmp.dylib
+
 BND_FRAMEWORKS=$(BND_CONTENTS)/Frameworks
 
 
-#EXT_LIBS=ext_libs
-
 ## The path to the emulator inside the bundle
-EMULATOR=$(APP)/Contents/Resources/platform/darwin-i386/emulator.exe
+PLATFORM=`$(MOZ_INST)/bin/oztool platform`
+EMULATOR=$(APP)/Contents/Resources/platform/$(PLATFORM)/emulator.exe
 
 ## Platypus call
 PLATCALL = $(PLAT) -i 'appIcon.icns' script.sh ./$(APP)
@@ -91,7 +78,7 @@ bundle:
         done
         cp -R $(CD) $(BND_RESOURCES)
         mkdir -p $(BND_FRAMEWORKS)/
-#       cp $(EXT_LIBS)/* $(BND_FRAMEWORKS)/
+
 
 fixpaths:
         ./bundlelibs.sh $(EMULATOR) $(APP)
