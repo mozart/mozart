@@ -23,15 +23,10 @@
 # Variables for external tools and directories.
 ###
 
-###
-# Platypus is required to build the application bundle. Please download it from:
-# http://www.sveinbjorn.org/platypus and install the command lines tools. Then, set the
-# following variable accordingly.
-
 # Platpus commanline tool
 PLAT=/usr/local/bin/platypus 
 
-## Cocoa dialog : download it from http://cocoadialog.sourceforge.net/
+## Cocoa dialog
 CD=/Users/ggutierrez/Desktop/CocoaDialog.app
 
 
@@ -39,6 +34,9 @@ CD=/Users/ggutierrez/Desktop/CocoaDialog.app
 # Mozart Installation
 ##
 MOZ_INST=/Users/ggutierrez/Work/moz140
+
+## Do not modify anything bellow this line
+
 ## Directories of mozart installation to be bundled.
 MOZ_DIRS= platform bin cache share include
 
@@ -55,8 +53,6 @@ MOZ_DIRS= platform bin cache share include
 NAME=Mozart
 #VERSION=1.4.0
 
-
-### do not change anything!!
 
 APP=$(NAME).app
 
