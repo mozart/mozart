@@ -42,7 +42,9 @@
 #ifndef WIN32
 #include <unistd.h>
 #else
+#include <cstdlib>
 #include <process.h>
+#define _exit exit
 #endif
 
 // ************************ GLOBALS ******************************

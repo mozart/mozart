@@ -126,11 +126,11 @@ extern DSS_LOG_LEVEL  g_dssLogLevel;
 void dssLog(DSS_LOG_LEVEL level, const char* const format, ...);
 #else
 // We want to optimize away this statement
-#ifdef WIN32
+#ifdef _MSC_VER
 #define dssLog(level, __VA_ARGS__)
 #else
 #define dssLog(level, args...)
-#endif // DSS_LOG / WIN32
+#endif // DSS_LOG / _MSC_VER
 
 #endif // DSS_LOG
   
