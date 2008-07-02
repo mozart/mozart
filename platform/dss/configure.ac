@@ -171,6 +171,7 @@ AC_ARG_ENABLE(modules-static,
 if test "$enable_modules_static" = yes; then
     AC_MSG_RESULT(static linking)
     ENVTYPE="lib$ENV.a"
+    CXXFLAGS="$CXXFLAGS -DDSS_STATIC_LINK"
 else
     AC_MSG_RESULT(dynamic linking)
     ENVTYPE="lib$ENV.so"
