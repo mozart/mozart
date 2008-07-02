@@ -46,10 +46,14 @@ class CoordinatorAssistant;
 #ifndef WIN32
 #define DSSDLLSPEC
 #else
+#ifdef DSS_STATIC_LINK
+#define DSSDLLSPEC
+#else
 #ifdef DSS_EXPORTING
 #define DSSDLLSPEC __declspec(dllexport)
 #else
 #define DSSDLLSPEC __declspec(dllimport)
+#endif
 #endif
 #endif
 

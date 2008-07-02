@@ -32,6 +32,11 @@
 #include <string.h>
 #include "dss_templates.hh"
 
+#ifdef WIN32
+#define random rand
+#define srandom srand
+#endif
+
 namespace _msl_internal{ //Start namespace
 
 #ifdef STAND_ALONE_TEST

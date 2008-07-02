@@ -3,6 +3,7 @@
 SRCDIR  =@srcdir@/src
 VPATH   = $(SRCDIR)
 INCS    = -I. -I@srcdir@/include
+LIBS    = -lgmp
 
 include ./Makefile.vars
 

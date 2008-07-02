@@ -55,7 +55,6 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <net/if.h>
-#endif
 // handles IRIX6 (6.5 at least), IRIX64, HPUX_700 (9.05 at least),
 // Solaris does not try to be BSD4.3-compatible by default (but one
 // can say '-DBSD_COMP' and then that stuff is included as well)
@@ -63,6 +62,7 @@
 #include    <sys/sockio.h>
 #else
 #include    <sys/ioctl.h>
+#endif
 #endif
 
 /****************************** Utils ******************************/
@@ -446,7 +446,12 @@ OZ_BI_define(BIsockoptBroadcast,1,0)
   if (
 #ifdef HAVE_SOCKLEN_T
       setsockopt(desc, SOL_SOCKET, SO_BROADCAST,
-                 (void *) &on, (socklen_t) sizeof(on))
+#ifdef WIN32
+                 (const char *) &on,
+#else
+                 (void *) &on,
+#endif
+                 (socklen_t) sizeof(on))
 #else
       setsockopt(desc, SOL_SOCKET, SO_BROADCAST,
                  (const char *) &on, (int) sizeof(on))

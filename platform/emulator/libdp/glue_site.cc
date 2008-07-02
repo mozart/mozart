@@ -34,7 +34,9 @@
 #include "glue_buffer.hh"
 #include "glue_interface.hh"
 #include "pstContainer.hh"
+#ifndef WIN32
 #include <netinet/in.h>
+#endif
 
 GlueSite* thisGSite = NULL;
 GlueSite* gSiteList = NULL;
