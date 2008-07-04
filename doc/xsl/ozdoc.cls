@@ -17,6 +17,7 @@
 \righthyphenmin=3
 
 \renewcommand{\encodingdefault}{T1}
+\RequirePackage[latin1]{inputenc}
 \RequirePackage{times}
 \RequirePackage{mathptm}
 
@@ -38,7 +39,6 @@
 \RequirePackage[dvips]{graphicx}
 \RequirePackage[dvips]{epsfig}
 \RequirePackage{alltt}
-\RequirePackage{isolatin1}
 \RequirePackage{color}
 \RequirePackage{theorem}
 \RequirePackage{pstricks}
@@ -835,7 +835,7 @@
 
 \definecolor{chunkborder}{rgb}{1.0,0.647,0}
 \definecolor{chunktitle}{rgb}{0.4196,0.556862745,0.1372549}
-\definecolor{chunkref}{rgb}{0.4156862745,0.352941,0.803921}
+\definecolor{chunkref}{rgb}{0.415686274,0.352941,0.803921}
 
 \definecolor{inlinecode}{rgb}{0.4,0.2,0.4}
 \DeclareRobustCommand{\mozartINLINEFACETEXT}{\textcolor{inlinecode}}

@@ -142,6 +142,8 @@ $(WHAT).xml: $(MAIN) $(SGMLSRCS) $(TEXEXTRAFILES)
 $(WHAT).tex: $(WHAT)-ready.xml
         $(JAVA) $(JAVACP) $(CLASSPATH) com.jclark.xsl.sax.Driver $< $(SRCTOP)/doc/xsl/ozdoc-new.xsl $@ \
         || { rm -f $@; exit -1; }
+        cp $@ $*.utf8
+        iconv -f UTF8 -t ISO8859-1 -o $@ $*.utf8
 
 export TEXINPUTS = $(SRCDIR):$(SRCTOP)/doc/xsl:../xsl:$(shell echo $$TEXINPUTS)
 export BSTINPUTS = .:$(SRCDIR):$(shell echo $$BSTINPUTS)
