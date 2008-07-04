@@ -110,7 +110,7 @@ cd $PREFIX
 mkdir -p $build
 cd $build
 #
-$use_src/configure $moreargs --with-stdlib=$use_src-stdlib --prefix=$PREFIX/install
+$use_src/configure $moreargs --disable-contrib-micq --with-stdlib=$use_src-stdlib --prefix=$PREFIX/install
 #
 make depend bootstrap install
 

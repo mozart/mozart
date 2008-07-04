@@ -76,8 +76,9 @@ OZHOME=/usr/lib/mozart
 #
 
 VERSION=`(echo ${BUSRCTAR} | sed 's/.*mozart-\(.*\..*\)-src.tar.gz/\1/')`
-BUILD=`(echo $Revision$ | sed 's|.*\.\([1-9][0-9]*\).*|\1|')`
-
+BUILD=`(echo $Revision$ | sed 's|.*\ \([1-9][0-9]*\).*|\1|')`
+echo "Version:"$VERSION
+echo "Build:"$BUILD
 #
 # Build sh files
 #
@@ -241,7 +242,7 @@ applications that can directly be started from the pages.
 : \${CFLAGS="\$RPM_OPT_FLAGS"}
 : \${CXXFLAGS="\$RPM_OPT_FLAGS"}
 export CFLAGS CXXFLAGS
-./configure --prefix=\$RPM_BUILD_ROOT$OZHOME --with-ozhome=$OZHOME --enable-opt=yes
+./configure --prefix=\$RPM_BUILD_ROOT$OZHOME --with-ozhome=$OZHOME --enable-opt=yes --disable-contrib-micq
 make
 # perform an install to a temporary fake root
 # so that the rest of the distro can use it for
