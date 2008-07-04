@@ -1,23 +1,32 @@
-# Script to package the mozart system into an application bundle for
-# Mac Os X.
 #
-# Author: Gustavo Gutierrez
-# Date: May 9 2007
+#  Authors:
+#    Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
+#
+#  Contributors:
+#    Raphael Collet <raphael.collet@uclouvain.be>
+#
+#  Copyright:
+#    Gustavo Gutierrez, 2008
+#
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://www.mozart-oz.org
+# 
+#  See the file "LICENSE" or
+#     http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+#
 
-# Credits: 
-# Build file for creating DMG files.
-#
-# The DMG packager looks for a template.dmg.bz2 for using as its 
-# DMG template. If it doesn't find one, it generates a clean one.
-#
-# If you create a DMG template, you should make one containing all
-# the files listed in $(SOURCE_FILES) below, and arrange everything to suit
-# your style. The contents of the files themselves does not matter, so
-# they can be empty (they will be overwritten later). 
-#
-# Remko Troncon 
-# http://el-tramo.be/about
-#
+
+# Makefile to package the a Mozart distribution for Mac OS X as a bundle 
+# inside a disk image.
+
 
 ###
 # Variables for external tools and directories.
@@ -29,11 +38,10 @@ PLAT=/usr/local/bin/platypus
 ## Cocoa dialog
 CD=/Users/ggutierrez/Desktop/CocoaDialog.app
 
-
 ##
 # Mozart Installation
 ##
-MOZ_INST=/Users/ggutierrez/Work/moz140
+MOZ_INST=/Users/ggutierrez/Work/tmp/installnew
 
 ## Mozart documentation
 MOZ_DOC=/Users/ggutierrez/Desktop/Documentation
@@ -44,20 +52,7 @@ MOZ_DOC=/Users/ggutierrez/Desktop/Documentation
 ## Directories of mozart installation to be bundled.
 MOZ_DIRS= platform bin cache share include
 
-
-##Mozart documentation folder (html)
-#MOZ_DOC_HTML=/Users/ggutierrez/doc
-
-##Mozart standard library documentation dir (html)
-#MOZ_STDLIB_HTML=$(MOZ_HOME)/doc
-
-
-#INTOOL=/usr/bin/install_name_tool
-#OTOOL=/usr/bin/otool -L
 NAME=Mozart
-#VERSION=1.4.0
-
-
 APP=$(NAME).app
 
 ## Directories inside the bundle
@@ -66,18 +61,18 @@ BND_CONTENTS=$(APP)/Contents
 ## The Resources directory is where mozart installation files will be.
 BND_RESOURCES=$(BND_CONTENTS)/Resources
 
-## The Frameworks directory is where shared libraries used by the emulator will be.
-## For instance, libgmp.dylib
+## The Frameworks directory is where shared libraries used by the emulator 
+## will be placed. For instance, libgmp.dylib
+
 BND_FRAMEWORKS=$(BND_CONTENTS)/Frameworks
 
 
-#EXT_LIBS=ext_libs
-
 ## The path to the emulator inside the bundle
-EMULATOR=$(APP)/Contents/Resources/platform/darwin-i386/emulator.exe
+PLATFORM=`$(MOZ_INST)/bin/oztool platform`
+EMULATOR=$(APP)/Contents/Resources/platform/$(PLATFORM)/emulator.exe
 
 ## Platypus call
-PLATCALL = $(PLAT) -i 'appIcon.icns' script.sh ./$(APP)
+PLATCALL = $(PLAT) -D -X "oz|OZ" -V "1.4.0" -u 'Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>' -i 'appIcon.icns' script.sh ./$(APP)
 
 ##
 #Create a bundle from skel
@@ -91,7 +86,7 @@ bundle:
 	done
 	cp -R $(CD) $(BND_RESOURCES)
 	mkdir -p $(BND_FRAMEWORKS)/
-#	cp $(EXT_LIBS)/* $(BND_FRAMEWORKS)/
+
 
 fixpaths:
 	./bundlelibs.sh $(EMULATOR) $(APP)
