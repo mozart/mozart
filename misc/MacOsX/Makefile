@@ -1,24 +1,32 @@
+#
+#  Authors:
+#    Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
+#
+#  Contributors:
+#    Raphael Collet <raphael.collet@uclouvain.be>
+#
+#  Copyright:
+#    Gustavo Gutierrez, 2008
+#
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+#
+#  This file is part of Mozart, an implementation
+#  of Oz 3:
+#     http://www.mozart-oz.org
+#
+#  See the file "LICENSE" or
+#     http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution
+#  of this file, and for a DISCLAIMER OF ALL
+#  WARRANTIES.
+#
+
+
 # Makefile to package the a Mozart distribution for Mac OS X as a bundle
 # inside a disk image.
-#
-#
-# Author: Gustavo Gutierrez
-# Last modified: $Date$
-#
-# Credits:
-# Build file for creating DMG files.
-#
-# The DMG packager looks for a template.dmg.bz2 for using as its
-# DMG template. If it doesn't find one, it generates a clean one.
-#
-# If you create a DMG template, you should make one containing all
-# the files listed in $(SOURCE_FILES) below, and arrange everything to suit
-# your style. The contents of the files themselves does not matter, so
-# they can be empty (they will be overwritten later).
-#
-# Remko Troncon
-# http://el-tramo.be/about
-#
+
 
 ###
 # Variables for external tools and directories.
@@ -33,7 +41,7 @@ CD=/Users/ggutierrez/Desktop/CocoaDialog.app
 ##
 # Mozart Installation
 ##
-MOZ_INST=/Users/ggutierrez/Work/moz140
+MOZ_INST=/Users/ggutierrez/Work/tmp/installnew
 
 ## Mozart documentation
 MOZ_DOC=/Users/ggutierrez/Desktop/Documentation
@@ -64,7 +72,7 @@ PLATFORM=`$(MOZ_INST)/bin/oztool platform`
 EMULATOR=$(APP)/Contents/Resources/platform/$(PLATFORM)/emulator.exe
 
 ## Platypus call
-PLATCALL = $(PLAT) -i 'appIcon.icns' script.sh ./$(APP)
+PLATCALL = $(PLAT) -D -X "oz|OZ" -V "1.4.0" -u 'Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>' -i 'appIcon.icns' script.sh ./$(APP)
 
 ##
 #Create a bundle from skel
