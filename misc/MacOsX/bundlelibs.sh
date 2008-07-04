@@ -19,6 +19,7 @@ BUNDLELIBS=`otool -LX $EMULATOR | sed 's/(.*$//' |
     grep -v /usr/lib/libgcc |
     grep -v /usr/lib/libstdc\+\+ |
     grep -v /usr/lib/libz |
+    grep -v /System/Library/Frameworks/Tk.framework/Versions/8.4/Tk |
     grep -v /usr/lib/libSystem`
 
 # copy libraries in the bundle, and patch the emulator
