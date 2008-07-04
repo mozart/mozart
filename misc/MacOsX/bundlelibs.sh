@@ -1,4 +1,29 @@
 #!/bin/sh
+#
+#  Authors:
+#    Raphael Collet <raphael.collet@uclouvain.be>
+#
+#  Contributors:
+#    Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
+#
+#  Copyright:
+#    Raphael Collet, 2008
+#
+#  Last change:
+#    $Date$ by $Author$
+#    $Revision$
+# 
+#  This file is part of Mozart, an implementation 
+#  of Oz 3:
+#     http://www.mozart-oz.org
+# 
+#  See the file "LICENSE" or
+#     http://www.mozart-oz.org/LICENSE.html
+#  for information on usage and redistribution 
+#  of this file, and for a DISCLAIMER OF ALL 
+#  WARRANTIES.
+#
+
 
 # This script copies the libraries used by emulator.exe into its
 # application bundle, and modifies the references to these libraries
