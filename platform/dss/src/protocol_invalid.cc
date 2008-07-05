@@ -25,10 +25,10 @@
  */
 
 #if defined(INTERFACE)
-#pragma implementation "protocol_eagerinvalid.hh"
+#pragma implementation "protocol_invalid.hh"
 #endif
 
-#include "protocol_eagerinvalid.hh"
+#include "protocol_invalid.hh"
 
 namespace _dss_internal{ //Start namespace
 
@@ -69,7 +69,7 @@ namespace _dss_internal{ //Start namespace
   // failures.
 
   namespace {
-    enum EagerInvalid_Message {
+    enum Invalid_Message {
       INV_READ,         // p2m: proxy asks for reading
       INV_WRITE,        // p2m: proxy requests write operation
       INV_RETURN,       // m2p: manager returns operation result
@@ -312,7 +312,7 @@ namespace _dss_internal{ //Start namespace
   OpRetVal
   ProtocolInvalidProxy::operationRead(GlobalThread* th_id,
 				      PstOutContainerInterface**& msg){
-    dssLog(DLL_BEHAVIOR,"EagerInvalidProxy::Read");
+    dssLog(DLL_BEHAVIOR,"InvalidProxy::Read");
     msg = NULL;
     if (isPermFail()) return DSS_RAISE;
     if (m_isValid()) return DSS_PROCEED;   // state is valid
@@ -325,7 +325,7 @@ namespace _dss_internal{ //Start namespace
   OpRetVal
   ProtocolInvalidProxy::operationWrite(GlobalThread* th_id,
 				       PstOutContainerInterface**& msg){
-    dssLog(DLL_BEHAVIOR,"EagerInvalidProxy::Write");
+    dssLog(DLL_BEHAVIOR,"InvalidProxy::Write");
     msg = NULL;
     if (isPermFail()) return DSS_RAISE;
     if (th_id) {
