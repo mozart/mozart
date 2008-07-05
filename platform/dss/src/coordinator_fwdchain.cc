@@ -42,8 +42,7 @@
 #include "protocol_once_only.hh"
 #include "protocol_simple_channel.hh"
 #include "protocol_migratory.hh"
-#include "protocol_eagerinvalid.hh"
-#include "protocol_lazyinvalid.hh"
+#include "protocol_invalid.hh"
 #include "dss_msgLayerInterface.hh"
 
 namespace _dss_internal{ //Start namespace
