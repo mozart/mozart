@@ -1288,7 +1288,7 @@ Builtin::Builtin(const char * mn, const char * bn,
   : bi_name(bn),
     inArity(inArity), outArity(outArity),
     fun(fn), sited(nat),
-    ConstTerm(Co_Builtin) {
+    ConstTermWithHome(NULL, Co_Builtin) {
   Assert(bn);
   mod_name = mn ? mn : "`missing module name`";
 #ifdef PROFILE_BI

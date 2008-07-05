@@ -67,7 +67,6 @@ bool glue_validProtocol(const ProtocolName pn, const GlueTag tag) {
   case GLUE_VARIABLE:
   case GLUE_READONLY:
     return (1 << pn) & (1 << PN_TRANSIENT | 1 << PN_TRANSIENT_REMOTE);
-  case GLUE_UNUSABLE:
   case GLUE_CHUNK:
   case GLUE_CLASS:
   case GLUE_OBJECT:
@@ -75,6 +74,8 @@ bool glue_validProtocol(const ProtocolName pn, const GlueTag tag) {
     return (1 << pn) & (1 << PN_SIMPLE_CHANNEL | 1 << PN_IMMUTABLE_LAZY |
                         1 << PN_IMMUTABLE_EAGER | 1 << PN_IMMEDIATE |
                         1 << PN_SITED);
+  case GLUE_UNUSABLE:
+    return pn == PN_SITED;
   default:
     return false;
   }
