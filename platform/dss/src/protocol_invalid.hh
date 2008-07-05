@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef __PROTOCOL_EAGERINVALID_HH
-#define __PROTOCOL_EAGERINVALID_HH
+#ifndef __PROTOCOL_INVALID_HH
+#define __PROTOCOL_INVALID_HH
 
 #ifdef INTERFACE
 #pragma interface
@@ -148,6 +148,23 @@ namespace _dss_internal{ //Start namespace
   class ProtocolEagerInvalidProxy : public ProtocolInvalidProxy {
   public:
     ProtocolEagerInvalidProxy() : ProtocolInvalidProxy(false) {}
+  };
+
+
+
+  // manager and proxy for the lazy protocol
+
+  class ProtocolLazyInvalidManager : public ProtocolInvalidManager {
+  public:
+    ProtocolLazyInvalidManager(DSite* s) :
+      ProtocolInvalidManager(s, true) {}
+    ProtocolLazyInvalidManager(MsgContainer* msg) :
+      ProtocolInvalidManager(msg) {}
+  };
+
+  class ProtocolLazyInvalidProxy : public ProtocolInvalidProxy {
+  public:
+    ProtocolLazyInvalidProxy() : ProtocolInvalidProxy(true) {}
   };
 
 } //End namespace

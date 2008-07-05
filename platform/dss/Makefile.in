@@ -22,7 +22,7 @@ SRCDSS = dssBase.cc dss_interface.cc dss_msgLayerInterface.cc           \
         coordinator.cc referenceConsistency.cc                          \
         abstractEntityImplementations.cc dss_threads.cc                 \
         protocol_once_only.cc protocol_migratory.cc                     \
-        protocol_simple_channel.cc protocol_eagerinvalid.cc             \
+        protocol_simple_channel.cc protocol_invalid.cc                  \
         protocol_pilgrim.cc protocol_transient_remote.cc                \
         protocol_immediate.cc dss_netId.cc protocol_immutable_lazy.cc   \
         protocol_immutable_eager.cc protocol_sited.cc                   \
