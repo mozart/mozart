@@ -2538,7 +2538,7 @@ Abstraction *tagged2Abstraction(TaggedRef term)
  * Builtin (incl. Builtin)
  *=================================================================== */
 
-class Builtin: public ConstTerm {
+class Builtin: public ConstTermWithHome {
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
