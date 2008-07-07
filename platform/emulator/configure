@@ -3546,7 +3546,7 @@ fi
           ;;
       esac
       ;;
-    *-i486|i486-darwin) 
+    *-i*86|i*86-darwin) 
 	case `$CXX -dumpversion` in
 	2.95.3)
 	    oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
