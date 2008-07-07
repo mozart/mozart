@@ -78,6 +78,9 @@ GENERATED_FILES = $(MODULE_SPEC:.spec=-table.cc)
 all:            first $(TARGETS)
 install:        $(LIB_DIR) $(LIB_TARGETS)
 
+$(TARGETS): first
+$(LIB_TARGETS): $(LIB_DIR)
+
 $(LIB_DIR):
         $(INSTALL_DIR) $@
 

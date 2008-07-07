@@ -49,6 +49,8 @@ NEW_NATIVES     = $(addprefix $(NEWCACHEDIR)/,$(NATIVES))
 all:            $(FUNCTORS) $(NATIVES)
 install:        $(NEWCACHEDIR) $(NEW_FUNCTORS) $(NEW_NATIVES)
 
+$(NEW_FUNCTORS) $(NEW_NATIVES): $(NEWCACHEDIR)
+
 $(LIB_DIR) $(NEWCACHEDIR):
         $(INSTALL_DIR) $@
 

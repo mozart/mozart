@@ -90,6 +90,8 @@ GENERATED_FILES = $(GENERATED_CSRCS) $(GENERATED_HSRCS) $(GENERATED_OUTPUT)
 all:            first $(TARGETS)
 install:        $(LIB_DIR) $(LIB_TARGETS)
 
+$(LIB_TARGETS): $(LIB_DIR)
+
 $(LIB_DIR):
         $(INSTALL_DIR) $@
 

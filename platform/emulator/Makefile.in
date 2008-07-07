@@ -229,9 +229,14 @@ ALLOBJS= $(OBJS) \
 .PHONY: all first install install-bin install-inc \
         install-dir depend tags clean cleaner distclean veryclean
 
-all: $(TARGETS) $(DYNAMIC_MODULETARGETS)
+all: $(TARGETS) dynamic_modules
 
 bootstrap:: all
+
+dynamic_modules: $(TARGETS)
+        for dynamic_module in $(DYNAMIC_MODULETARGETS); do \
+          $(MAKE) $$dynamic_module; \
+        done
 
 $(MODINTERS): bidecl.perl
 .PHONY: libDSS.a
@@ -389,6 +394,8 @@ install-cache: $(NEWCACHEDIR) $(NEWTARGETS)
         echo "----- Checking libDSS ----"
         if test -s libDSS.so; then mkdir -p $(BINDIR)/lib; fi;
         if test -s libDSS.so; then cp libDSS.so $(BINDIR)/lib/libDSS.so; fi;
+
+$(NEWTARGETS): $(NEWCACHEDIR)
 
 $(NEWCACHEDIR):
         $(INSTALL_DIR) $@

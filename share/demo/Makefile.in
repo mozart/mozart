@@ -83,6 +83,10 @@ all: dirs $(APPLETS) MT10.ozf
 install:: $(OZDEMO) $(DEMOAPPLETS) \
         $(SYSTEMDOC) $(SYSTEMOZF) $(SYSTEMOZF)/MT10.ozf $(SYSTEMDOC)/MT10.oz
 
+$(DEMOAPPLETS): $(OZDEMO)
+$(SYSTEMOZF)/MT10.ozf: $(SYSTEMOZF)
+$(SYSTEMDOC)/MT10.oz: $(SYSTEMDOC)
+
 $(OZDEMO) $(SYSTEMDOC) $(SYSTEMOZF):
         $(INSTALL_DIR) $@
 
@@ -279,7 +283,10 @@ OZIMAGES = \
 
 install:: $(OZIMGDIRS) $(OZIMAGES)
 
-$(OZIMGDIRS):
+$(OZIMGDIRS): $(OZIMG)
+$(OZIMAGES): $(OZIMGDIRS)
+
+$(OZIMG) $(OZIMGDIRS):
         $(INSTALL_DIR) $@
 $(OZIMG)/animated-queens/%.xbm: images/animated-queens/%.xbm
         $(INSTALL_FILE) $< $@

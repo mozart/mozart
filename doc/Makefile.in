@@ -99,6 +99,7 @@ bootstrap::
         dirs="$(SUBDIRS)"; \
         for i in $$dirs; do (cd $$i && $(MAKE) boot1st) || exit 1; done; \
         for i in $$dirs; do (cd $$i && $(MAKE) boot2nd) || exit 1; done
+        $(MAKE) boot-THEINDEX
 
 boot-1st boot1st:
         -rm -f xref.db index.db
@@ -114,7 +115,6 @@ boot-2nd boot2nd:
 # index/x-ref files got changed, the 2nd stage needs to run again
 # COMPLETELY.
 
-bootstrap:: boot-THEINDEX
 all:: THEINDEX
 THEINDEX: idx/index.html
 

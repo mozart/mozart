@@ -54,6 +54,9 @@ all:            $(TARGETS) $(ETARGETS)
 install:        $(ELIB_DIR) $(ELIB_TARGETS) \
         $(NEWCACHEDIR) $(NEW_TARGETS)
 
+$(ELIB_TARGETS): $(ELIB_DIR)
+$(NEW_TARGETS): $(NEWCACHEDIR)
+
 $(LIB_DIR) $(ELIB_DIR) $(NEWCACHEDIR):
         $(INSTALL_DIR) $@
 

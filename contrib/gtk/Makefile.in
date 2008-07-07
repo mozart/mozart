@@ -212,7 +212,7 @@ $(NATCMPS):%.so-$(PLATFORM): %.o
 all: $(TARGETS) binding
 install: $(LIB_DIR) $(LIB_TARGETS) $(EXAMPLES_DIR) $(EXAMPLES_TARGETS) \
         install_names
-install_names:
+install_names: $(LIB_DIR)
         cp ClassNames.ozp $(LIB_DIR)/ClassNames.ozp
 
 #---------------------------------------------------------------------
@@ -258,6 +258,9 @@ wrapper_files: $(GEN_TARGETS) $(CCMPS)
 #---------------------------------------------------------------------
 # Installing
 #---------------------------------------------------------------------
+
+$(LIB_TARGETS): $(LIB_DIR)
+$(EXAMPLES_TARGETS): $(EXAMPLES_DIR)
 
 $(LIB_DIR) $(EXAMPLES_DIR):
         $(INSTALL_DIR) $@

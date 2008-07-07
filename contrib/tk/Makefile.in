@@ -11,6 +11,7 @@ INSTALL         = @INSTALL@
 INSTALL_DIR     = @INSTALL_DIR@
 INSTALL_LIB     = $(INSTALL) -m 444
 FUNCTORS        = CheckBox.ozf ScrollFrame.ozf
+NEW_FUNCTORS    = $(addprefix $(NEWCACHEDIR)/,$(FUNCTORS))
 NEWCACHEDIR     = $(PREFIX)/cache/x-oz/contrib/tk
 PLATFORM        = @PLATFORM@
 CYGPATH         = $(SRCTOP)/share/lib/cygpath.sh
@@ -18,7 +19,10 @@ CYGPATH         = $(SRCTOP)/share/lib/cygpath.sh
 all:            $(FUNCTORS)
 %.ozf: %.oz
         $(OZC) -c $(shell $(CYGPATH) "$<") -o $@
-install:        $(NEWCACHEDIR) $(addprefix $(NEWCACHEDIR)/,$(FUNCTORS))
+install:        $(NEWCACHEDIR) $(NEW_FUNCTORS)
+
+$(NEW_FUNCTORS): $(NEWCACHEDIR)
+
 $(LIB_DIR) $(NEWCACHEDIR):
         $(INSTALL_DIR) $@
 $(LIB_DIR)/%.ozf: %.ozf

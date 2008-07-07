@@ -85,6 +85,9 @@ install: $(BINDIR) $(BINFILES)
 install: $(DOCDIR) $(DOCBINFILES) $(DOCFILES)
 installps:
 
+$(BINFILES): $(BINDIR)
+$(DOCFILES): $(DOCBINFILES)
+
 $(BINDIR) $(DOCDIR):
         $(INSTALL_DIR) $@
 

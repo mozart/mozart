@@ -291,7 +291,8 @@ GroundZip.ozf: compiler/GroundZip.oz
 Builtins.ozf: compiler/Builtins.oz GroundZip.ozf compiler-Builtins.oz
 
 Unnester.ozf: compiler/Unnester.oz compiler/TupleSyntax.oz \
-        compiler/BindingAnalysis.oz compiler/UnnestFD.oz FD.ozf
+        compiler/BindingAnalysis.oz compiler/UnnestFD.oz FD.ozf \
+        Builtins.ozf
 
 Annotate.ozf: compiler/Annotate.oz
 
@@ -374,6 +375,11 @@ install-cache: $(NEWCACHEDIR) $(NEWFUNCTORS) \
         $(OZLIB) $(NEWINIT) \
         $(NEWIMAGESDIR) $(NEWIMAGES)
 
+$(NEWIMAGESDIR): $(NEWCACHEDIR)
+$(NEWFUNCTORS): $(NEWCACHEDIR)
+$(NEWINIT): $(OZLIB)
+$(NEWIMAGES): $(NEWIMAGESDIR)
+
 $(NEWCACHEDIR) $(NEWIMAGESDIR):
         $(INSTALL_DIR) $@
 
@@ -427,10 +433,10 @@ distclean: veryclean
 .PHONY: bootstrap check
 
 # use the boot compiler to create the functors
-bootstrap:
-        $(MAKE) boot-unzip boot-init boot-ozc boot-all
+bootstrap: boot-unzip
+        $(MAKE) boot-all
 
-boot-all:
+boot-all: boot-init boot-ozc
         $(MAKE) all \
                 OZC=$(SRCDIR)/boot-ozc.sh \
                 OZENGINE=$(SRCDIR)/oze.sh \

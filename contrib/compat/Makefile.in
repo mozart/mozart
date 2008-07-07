@@ -38,6 +38,9 @@ all: $(TARGETS)
 
 install: $(BIN_DIR) $(BIN_TARGETS) $(CACHEDIR) $(CACHE_TARGETS)
 
+$(BIN_TARGETS): $(BIN_DIR)
+$(CACHE_TARGETS): $(CACHEDIR)
+
 $(BIN_DIR) $(CACHEDIR):
         $(INSTALL_DIR) $@
 
