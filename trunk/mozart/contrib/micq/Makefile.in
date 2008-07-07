@@ -17,6 +17,7 @@ INSTALL		= @INSTALL@
 INSTALL_DIR	= @INSTALL_DIR@
 INSTALL_LIB	= $(INSTALL) -m 444
 APPLETS		= server.oza client.oza
+NEW_APPLETS	= $(addprefix $(NEWCACHEDIR)/,$(APPLETS))
 GIFCONV		= Gif2Functor.oza
 ICONDIR		= $(SRCDIR)/Icons2
 MAKEGIF		= $(OZENGINE) $(GIFCONV)
@@ -26,7 +27,10 @@ NEWCACHEDIR	= $(PREFIX)/cache/x-oz/contrib/micq
 all:		$(GIFCONV) $(GIFS) $(APPLETS)
 
 install:: $(DEMO_DIR) $(DEMO_DIR)/MIM.oza \
-	$(NEWCACHEDIR) $(addprefix $(NEWCACHEDIR)/,$(APPLETS))
+	$(NEWCACHEDIR) $(NEW_APPLETS)
+
+$(DEMO_DIR)/MIM.oza: $(DEMO_DIR)
+$(NEW_APPLETS): $(NEWCACHEDIR)
 
 $(NEWCACHEDIR)/% : %
 	$(INSTALL_LIB) $< $@
