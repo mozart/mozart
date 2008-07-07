@@ -11,17 +11,6 @@
 ac_help=
 ac_default_prefix=/usr/local
 # Any additions from configure.in:
-ac_default_prefix=/usr/local/oz
-ac_help="$ac_help
---with-global-oz allows to use an existing oz installation to build the system (default: no)"
-ac_help="$ac_help
---with-global-oz allows to use an existing oz installation to build the system (default: no)"
-ac_help="$ac_help
---with-global-oz allows to use an existing oz installation to build the system (default: no)"
-ac_help="$ac_help
---with-inc-dir=d1,...,dn	add these dirs to CPPFLAGS"
-ac_help="$ac_help
---with-lib-dir=d1,...,dn	add these dirs to LDFLAGS"
 
 # Initialize some variables set by options.
 # The variables have the same names as the options, with
@@ -532,1465 +521,18 @@ else
 fi
 
 
+OZ_INIT
 
-  
-  
-  srcdir=`cd $srcdir && pwd`
-  SRCDIR="$srcdir"
-  
 
-  
-  echo $ac_n "checking for SRCTOP""... $ac_c" 1>&6
-echo "configure:545: checking for SRCTOP" >&5
-if eval "test \"`echo '$''{'oz_cv_path_SRCTOP'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  
-    
-  oz_tmp_dir=$srcdir
-  oz_tmp_ok=
-  oz_for="OZVERSION"
-  for oz_tmp1 in $oz_for; do
-    for oz_tmp2 in $oz_tmp_dir \
-		   $oz_tmp_dir/.. \
-		   $oz_tmp_dir/../.. \
-		   $oz_tmp_dir/../../.. \
-		   $oz_tmp_dir/../../../.. \
-		   $oz_tmp_dir/../../../../..; do
-      if test -r "$oz_tmp2/$oz_tmp1"; then
-        oz_cv_path_SRCTOP=`cd $oz_tmp2 && pwd`
-        oz_tmp_ok=yes
-        break
-      fi
-    done
-    test -n "$oz_tmp_ok" && break
-  done
-    if test -z "$oz_cv_path_SRCTOP"; then
-      { echo "configure: error: cannot find SRCTOP" 1>&2; exit 1; }
-    fi
-fi
-
-echo "$ac_t""$oz_cv_path_SRCTOP" 1>&6
-  SRCTOP=$oz_cv_path_SRCTOP
-  
-  
-  echo $ac_n "checking for BUILDTOP""... $ac_c" 1>&6
-echo "configure:579: checking for BUILDTOP" >&5
-if eval "test \"`echo '$''{'oz_cv_path_BUILDTOP'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  
-    
-  oz_tmp_dir=.
-  oz_tmp_ok=
-  oz_for="contrib config.cache"
-  for oz_tmp1 in $oz_for; do
-    for oz_tmp2 in $oz_tmp_dir \
-		   $oz_tmp_dir/.. \
-		   $oz_tmp_dir/../.. \
-		   $oz_tmp_dir/../../.. \
-		   $oz_tmp_dir/../../../.. \
-		   $oz_tmp_dir/../../../../..; do
-      if test -r "$oz_tmp2/$oz_tmp1"; then
-        oz_cv_path_BUILDTOP=`cd $oz_tmp2 && pwd`
-        oz_tmp_ok=yes
-        break
-      fi
-    done
-    test -n "$oz_tmp_ok" && break
-  done
-    if test -z "$oz_cv_path_BUILDTOP"; then
-      { echo "configure: error: cannot find BUILDTOP" 1>&2; exit 1; }
-    fi
-fi
-
-echo "$ac_t""$oz_cv_path_BUILDTOP" 1>&6
-  BUILDTOP=$oz_cv_path_BUILDTOP
-  
-  ac_aux_dir=
-for ac_dir in $SRCTOP $srcdir/$SRCTOP; do
-  if test -f $ac_dir/install-sh; then
-    ac_aux_dir=$ac_dir
-    ac_install_sh="$ac_aux_dir/install-sh -c"
-    break
-  elif test -f $ac_dir/install.sh; then
-    ac_aux_dir=$ac_dir
-    ac_install_sh="$ac_aux_dir/install.sh -c"
-    break
-  fi
-done
-if test -z "$ac_aux_dir"; then
-  { echo "configure: error: can not find install-sh or install.sh in $SRCTOP $srcdir/$SRCTOP" 1>&2; exit 1; }
-fi
-ac_config_guess=$ac_aux_dir/config.guess
-ac_config_sub=$ac_aux_dir/config.sub
-ac_configure=$ac_aux_dir/configure # This should be Cygnus configure.
-
-  if test "$host_os" = ""; then  
-    
-# Make sure we can run config.sub.
-if ${CONFIG_SHELL-/bin/sh} $ac_config_sub sun4 >/dev/null 2>&1; then :
-else { echo "configure: error: can not run $ac_config_sub" 1>&2; exit 1; }
-fi
-
-echo $ac_n "checking host system type""... $ac_c" 1>&6
-echo "configure:638: checking host system type" >&5
-
-host_alias=$host
-case "$host_alias" in
-NONE)
-  case $nonopt in
-  NONE)
-    if host_alias=`${CONFIG_SHELL-/bin/sh} $ac_config_guess`; then :
-    else { echo "configure: error: can not guess host type; you must specify one" 1>&2; exit 1; }
-    fi ;;
-  *) host_alias=$nonopt ;;
-  esac ;;
-esac
-
-host=`${CONFIG_SHELL-/bin/sh} $ac_config_sub $host_alias`
-host_cpu=`echo $host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\1/'`
-host_vendor=`echo $host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\2/'`
-host_os=`echo $host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
-echo "$ac_t""$host" 1>&6
-
-  fi
-  
-  if test -z "$oz_cv_MAKE"; then
-    for ac_prog in gmake make
-do
-# Extract the first word of "$ac_prog", so it can be a program name with args.
-set dummy $ac_prog; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:666: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_prog_MAKE'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  if test -n "$MAKE"; then
-  ac_cv_prog_MAKE="$MAKE" # Let the user override the test.
-else
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
-  ac_dummy="$PATH"
-  for ac_dir in $ac_dummy; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_prog_MAKE="$ac_prog"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-fi
-fi
-MAKE="$ac_cv_prog_MAKE"
-if test -n "$MAKE"; then
-  echo "$ac_t""$MAKE" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-test -n "$MAKE" && break
-done
-test -n "$MAKE" || MAKE="NONE"
-
-    if test "$MAKE" = NONE; then
-      oz_tmp_ok=no
-    else
-      
-  if oz_tmp=`$MAKE -n --version 2>/dev/null` && \
-     oz_tmp=`expr "$oz_tmp" : GNU`; then
-    GNU_MAKE=yes
-  else
-    GNU_MAKE=no
-  fi
-      if test "$GNU_MAKE" = no; then
-        oz_tmp_ok=no
-        echo "configure: warning: $MAKE is not GNU make" 1>&2
-      else
-        oz_tmp_ok=yes
-      fi
-    fi
-    if test "$oz_tmp_ok" = yes; then
-      oz_cv_MAKE=$MAKE
-    else
-      { echo "configure: error: 
-GNU make is needed to build the system.
-It can be retrieved from:
-
-	ftp://ftp.gnu.org/pub/gnu/make/
-
-The latest version at this time is 3.80 and is available
-packaged as the following archive:
-
-	make-3.80.tar.gz
-
-You may find a mirror archive closer to you by consulting:
-
-	http://www.gnu.org/order/ftp.html
-" 1>&2; exit 1; }
-    fi
-  else
-    
-  echo $ac_n "checking for GNU make""... $ac_c" 1>&6
-echo "configure:735: checking for GNU make" >&5
-  MAKE=$oz_cv_MAKE
-  echo "$ac_t""(cached) $MAKE" 1>&6
-  fi
-  
-  echo $ac_n "checking whether ${MAKE-make} sets \${MAKE}""... $ac_c" 1>&6
-echo "configure:741: checking whether ${MAKE-make} sets \${MAKE}" >&5
-set dummy ${MAKE-make}; ac_make=`echo "$2" | sed 'y%./+-%__p_%'`
-if eval "test \"`echo '$''{'ac_cv_prog_make_${ac_make}_set'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  cat > conftestmake <<\EOF
-all:
-	@echo 'ac_maketemp="${MAKE}"'
-EOF
-# GNU make sometimes prints "make[1]: Entering...", which would confuse us.
-eval `${MAKE-make} -f conftestmake 2>/dev/null | grep temp=`
-if test -n "$ac_maketemp"; then
-  eval ac_cv_prog_make_${ac_make}_set=yes
-else
-  eval ac_cv_prog_make_${ac_make}_set=no
-fi
-rm -f conftestmake
-fi
-if eval "test \"`echo '$ac_cv_prog_make_'${ac_make}_set`\" = yes"; then
-  echo "$ac_t""yes" 1>&6
-  SET_MAKE=
-else
-  echo "$ac_t""no" 1>&6
-  SET_MAKE="MAKE=${MAKE-make}"
-fi
-
-  
-  if test "${INSTALL+set}" = set; then
-    echo $ac_n "checking whether to unset broken INSTALL""... $ac_c" 1>&6
-echo "configure:770: checking whether to unset broken INSTALL" >&5
-if eval "test \"`echo '$''{'oz_cv_unset_INSTALL'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  
-        echo >conftest.$$
-        if $INSTALL -c -m 644 conftest.$$ /tmp >/dev/null 2>&1; then
-          rm -f /tmp/conftest.$$ 2>/dev/null
-          oz_cv_unset_INSTALL=no
-          oz_cv_given_INSTALL="$INSTALL"
-        else
-          oz_cv_unset_INSTALL=yes
-        fi
-        rm -f conftest.$$ 2>/dev/null
-fi
-
-echo "$ac_t""$oz_cv_unset_INSTALL" 1>&6
-    test "$oz_cv_unset_INSTALL" = yes && unset INSTALL
-  fi
-  # Find a good install program.  We prefer a C program (faster),
-# so one script is as good as another.  But avoid the broken or
-# incompatible versions:
-# SysV /etc/install, /usr/sbin/install
-# SunOS /usr/etc/install
-# IRIX /sbin/install
-# AIX /bin/install
-# AIX 4 /usr/bin/installbsd, which doesn't work without a -g flag
-# AFS /usr/afsws/bin/install, which mishandles nonexistent args
-# SVR4 /usr/ucb/install, which tries to use the nonexistent group "staff"
-# ./install, which can be erroneously created by make from ./install.sh.
-echo $ac_n "checking for a BSD compatible install""... $ac_c" 1>&6
-echo "configure:801: checking for a BSD compatible install" >&5
-if test -z "$INSTALL"; then
-if eval "test \"`echo '$''{'ac_cv_path_install'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-    IFS="${IFS= 	}"; ac_save_IFS="$IFS"; IFS=":"
-  for ac_dir in $PATH; do
-    # Account for people who put trailing slashes in PATH elements.
-    case "$ac_dir/" in
-    /|./|.//|/etc/*|/usr/sbin/*|/usr/etc/*|/sbin/*|/usr/afsws/bin/*|/usr/ucb/*) ;;
-    *)
-      # OSF1 and SCO ODT 3.0 have their own names for install.
-      # Don't use installbsd from OSF since it installs stuff as root
-      # by default.
-      for ac_prog in ginstall scoinst install; do
-        if test -f $ac_dir/$ac_prog; then
-	  if test $ac_prog = install &&
-            grep dspmsg $ac_dir/$ac_prog >/dev/null 2>&1; then
-	    # AIX install.  It has an incompatible calling convention.
-	    :
-	  else
-	    ac_cv_path_install="$ac_dir/$ac_prog -c"
-	    break 2
-	  fi
-	fi
-      done
-      ;;
-    esac
-  done
-  IFS="$ac_save_IFS"
-
-fi
-  if test "${ac_cv_path_install+set}" = set; then
-    INSTALL="$ac_cv_path_install"
-  else
-    # As a last resort, use the slow shell script.  We don't cache a
-    # path for INSTALL within a source directory, because that will
-    # break other packages using the cache if that directory is
-    # removed, or if the path is relative.
-    INSTALL="$ac_install_sh"
-  fi
-fi
-echo "$ac_t""$INSTALL" 1>&6
-
-# Use test -z because SunOS4 sh mishandles braces in ${var-val}.
-# It thinks the first close brace ends the variable substitution.
-test -z "$INSTALL_PROGRAM" && INSTALL_PROGRAM='${INSTALL}'
-
-test -z "$INSTALL_SCRIPT" && INSTALL_SCRIPT='${INSTALL_PROGRAM}'
-
-test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
-
-  if test "$INSTALL" = "$oz_cv_given_INSTALL"; then
-    ac_given_INSTALL="$oz_cv_given_INSTALL"
-  fi
-  
-    if test -z "$WITH_GLOBAL_OZ"; then
-      
-  echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-echo "configure:860: checking for --with-global-oz" >&5
-  # Check whether --with-global-oz or --without-global-oz was given.
-if test "${with_global_oz+set}" = set; then
-  withval="$with_global_oz"
-  oz_cv_global_oz="$with_global_oz"
-else
-  oz_cv_global_oz=no
-fi
-
-  WITH_GLOBAL_OZ="$oz_cv_global_oz"
-  echo "$ac_t""$WITH_GLOBAL_OZ" 1>&6
-
-    fi
-    dummy_PATH="$PATH"
-    if test "$WITH_GLOBAL_OZ" = no; then
-      for oz_prog_tmp in mkinstalldirs; do
-        case $oz_prog_tmp in
-          oz|ozc|ozl|oztool|ozengine|ozplatform|ozdoc)
-            dummy_PATH="$SRCTOP/share/bin:$SRCTOP"
-          ;;
-        esac
-      done
-    fi
-    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
-    dummy_PATH=`echo $dummy_PATH | sed -e 's/::/:/g' | sed -e 's/:$//g'`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
-    oz_for="$dummy_PATH:$SRCTOP/share/bin:$SRCTOP"
-    # Extract the first word of "mkinstalldirs", so it can be a program name with args.
-set dummy mkinstalldirs; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:894: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_INSTALL_DIR'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  case "$INSTALL_DIR" in
-  /*)
-  ac_cv_path_INSTALL_DIR="$INSTALL_DIR" # Let the user override the test with a path.
-  ;;
-  ?:/*)			 
-  ac_cv_path_INSTALL_DIR="$INSTALL_DIR" # Let the user override the test with a dos path.
-  ;;
-  *)
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
-  ac_dummy="$oz_for"
-  for ac_dir in $ac_dummy; do 
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_path_INSTALL_DIR="$ac_dir/$ac_word"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-  ;;
-esac
-fi
-INSTALL_DIR="$ac_cv_path_INSTALL_DIR"
-if test -n "$INSTALL_DIR"; then
-  echo "$ac_t""$INSTALL_DIR" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-    case "$host_os" in
-      cygwin*) ;;
-      *) INSTALL_DIR=`echo $INSTALL_DIR | sed -e "s|//|/|g"`;;
-    esac
-    if test ! -n "$INSTALL_DIR"
-    then
-	INSTALL_DIR=undefined
-	
-    fi
-    
-  
-  echo $ac_n "checking for oz version""... $ac_c" 1>&6
-echo "configure:938: checking for oz version" >&5
-if eval "test \"`echo '$''{'oz_cv_ozversion'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  
-    oz_cv_ozversion=`sh $SRCTOP/OZVERSION`
-fi
-
-echo "$ac_t""$oz_cv_ozversion" 1>&6
-  OZVERSION=$oz_cv_ozversion;
-  
-  HOMEURL="http://www.mozart-oz.org/home-$OZVERSION"
-  HOMECACHE="http/www.mozart-oz.org/home-$OZVERSION"
-  
-  
-  case "$target" in
-    i386-mingw32|i386-mingw32msvc)
-	PLATFORM=win32-i486
-	platform="win32-i486"
-	ozplatform=$platform
-
-	cross_compiling=yes
-
-	CXX=${target}-gcc
-	CC=${CXX}
-	RANLIB=${target}-ranlib
-	AR=${target}-ar
-	STRIP=${target}-strip
-	WINDRES=${target}-windres
-	AS=${target}-as
-	DLLTOOL=${target}-dlltool
-	DLLWRAP=${target}-dllwrap
-	OZTOOL="sh $BUILDTOP/platform/emulator/${target}-oztool"
-	enable_contrib_psql=no
-	enable_contrib_gdbm=yes
-	enable_contrib_regex=yes
-	enable_contrib_os=no
-    ;;
-
-    *)
-	
-    if test -z "$WITH_GLOBAL_OZ"; then
-      
-  echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-echo "configure:982: checking for --with-global-oz" >&5
-  # Check whether --with-global-oz or --without-global-oz was given.
-if test "${with_global_oz+set}" = set; then
-  withval="$with_global_oz"
-  oz_cv_global_oz="$with_global_oz"
-else
-  oz_cv_global_oz=no
-fi
-
-  WITH_GLOBAL_OZ="$oz_cv_global_oz"
-  echo "$ac_t""$WITH_GLOBAL_OZ" 1>&6
-
-    fi
-    dummy_PATH="$PATH"
-    if test "$WITH_GLOBAL_OZ" = no; then
-      for oz_prog_tmp in ozplatform; do
-        case $oz_prog_tmp in
-          oz|ozc|ozl|oztool|ozengine|ozplatform|ozdoc)
-            dummy_PATH="$SRCTOP/share/bin:$SRCTOP"
-          ;;
-        esac
-      done
-    fi
-    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
-    dummy_PATH=`echo $dummy_PATH | sed -e 's/::/:/g' | sed -e 's/:$//g'`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
-    oz_for="$dummy_PATH:$SRCTOP/share/bin:$SRCTOP"
-    # Extract the first word of "ozplatform", so it can be a program name with args.
-set dummy ozplatform; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1016: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_OZPLATFORM'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  case "$OZPLATFORM" in
-  /*)
-  ac_cv_path_OZPLATFORM="$OZPLATFORM" # Let the user override the test with a path.
-  ;;
-  ?:/*)			 
-  ac_cv_path_OZPLATFORM="$OZPLATFORM" # Let the user override the test with a dos path.
-  ;;
-  *)
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
-  ac_dummy="$oz_for"
-  for ac_dir in $ac_dummy; do 
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_path_OZPLATFORM="$ac_dir/$ac_word"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-  ;;
-esac
-fi
-OZPLATFORM="$ac_cv_path_OZPLATFORM"
-if test -n "$OZPLATFORM"; then
-  echo "$ac_t""$OZPLATFORM" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-    case "$host_os" in
-      cygwin*) ;;
-      *) OZPLATFORM=`echo $OZPLATFORM | sed -e "s|//|/|g"`;;
-    esac
-    if test ! -n "$OZPLATFORM"
-    then
-	OZPLATFORM=undefined
-	
-    fi
-    
-	PLATFORM=`$OZPLATFORM || exit 1`
-	
-    if test -z "$WITH_GLOBAL_OZ"; then
-      
-  echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-echo "configure:1063: checking for --with-global-oz" >&5
-  # Check whether --with-global-oz or --without-global-oz was given.
-if test "${with_global_oz+set}" = set; then
-  withval="$with_global_oz"
-  oz_cv_global_oz="$with_global_oz"
-else
-  oz_cv_global_oz=no
-fi
-
-  WITH_GLOBAL_OZ="$oz_cv_global_oz"
-  echo "$ac_t""$WITH_GLOBAL_OZ" 1>&6
-
-    fi
-    dummy_PATH="$PATH"
-    if test "$WITH_GLOBAL_OZ" = no; then
-      for oz_prog_tmp in oztool; do
-        case $oz_prog_tmp in
-          oz|ozc|ozl|oztool|ozengine|ozplatform|ozdoc)
-            dummy_PATH="$SRCTOP/share/bin:$SRCTOP"
-          ;;
-        esac
-      done
-    fi
-    dummy_PWD=`pwd | sed 's/\//\\\\\//g'`
-    dummy_PATH=`echo $dummy_PATH | sed -e 's/::/:/g' | sed -e 's/:$//g'`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.:/$dummy_PWD:/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/^\.\//$dummy_PWD\//g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.\$/:$dummy_PWD/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:\.:/:$dummy_PWD:/g"`
-    dummy_PATH=`echo $dummy_PATH | sed -e "s/:.\//:$dummy_PWD\//g"`
-    oz_for="$dummy_PATH:$SRCTOP/share/bin:$SRCTOP"
-    # Extract the first word of "oztool", so it can be a program name with args.
-set dummy oztool; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1097: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_path_OZTOOL'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  case "$OZTOOL" in
-  /*)
-  ac_cv_path_OZTOOL="$OZTOOL" # Let the user override the test with a path.
-  ;;
-  ?:/*)			 
-  ac_cv_path_OZTOOL="$OZTOOL" # Let the user override the test with a dos path.
-  ;;
-  *)
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
-  ac_dummy="$oz_for"
-  for ac_dir in $ac_dummy; do 
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_path_OZTOOL="$ac_dir/$ac_word"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-  ;;
-esac
-fi
-OZTOOL="$ac_cv_path_OZTOOL"
-if test -n "$OZTOOL"; then
-  echo "$ac_t""$OZTOOL" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-    case "$host_os" in
-      cygwin*) ;;
-      *) OZTOOL=`echo $OZTOOL | sed -e "s|//|/|g"`;;
-    esac
-    if test ! -n "$OZTOOL"
-    then
-	OZTOOL=undefined
-	OZTOOL="sh $BUILDTOP/platform/emulator/oztool.sh"
-    fi
-    
-    ;;
-  esac
-  
-  echo $ac_n "checking for --with-inc-dir""... $ac_c" 1>&6
-echo "configure:1143: checking for --with-inc-dir" >&5
-  # Check whether --with-inc-dir or --without-inc-dir was given.
-if test "${with_inc_dir+set}" = set; then
-  withval="$with_inc_dir"
-  oz_cv_with_inc_dirs=$with_inc_dir
-else
-  : ${oz_cv_with_inc_dirs=$oz_with_inc_dir}
-fi
-
-  echo "$ac_t""$with_inc_dir" 1>&6
-  oz_tmp_IFS="$IFS"
-  IFS=","
-  # reverse the list of dirs
-  oz_tmp_dirs=""
-  for oz_tmp in $oz_cv_with_inc_dirs DONE; do
-    if test "$oz_tmp" != DONE; then
-      oz_tmp_dirs="$oz_tmp${oz_tmp_dirs:+ }$oz_tmp_dirs"
-    fi
-  done
-  # add them to CPPFLAGS and oz_inc_path
-  IFS=$oz_tmp_IFS
-  : ${oz_inc_path=""}
-  for oz_tmp1 in $oz_tmp_dirs DONE; do
-    if test "$oz_tmp1" != DONE; then
-      
-  if test "-I$oz_tmp1" != yes && test "-I$oz_tmp1" != no; then
-    oz_tmp_ok=yes
-    for oz_tmp in $CPPFLAGS NONE; do
-      if test "$oz_tmp" = "-I$oz_tmp1"; then
-        oz_tmp_ok=no
-        break
-      fi
-    done
-    test "$oz_tmp_ok" = yes && CPPFLAGS="$CPPFLAGS${CPPFLAGS:+ }-I$oz_tmp1"
-  fi
-
-      oz_inc_path="$oz_tmp1${oz_inc_path:+ }$oz_inc_path"
-    fi
-  done
-
-  
-  echo $ac_n "checking for --with-lib-dir""... $ac_c" 1>&6
-echo "configure:1185: checking for --with-lib-dir" >&5
-  # Check whether --with-lib-dir or --without-lib-dir was given.
-if test "${with_lib_dir+set}" = set; then
-  withval="$with_lib_dir"
-  oz_cv_with_lib_dirs=$with_lib_dir
-else
-  : ${oz_cv_with_lib_dirs=$oz_with_lib_dir}
-fi
-
-  echo "$ac_t""$with_lib_dir" 1>&6
-  oz_tmp_IFS="$IFS"
-  IFS=","
-  # reverse the list of dirs
-  oz_tmp_dirs=""
-  for oz_tmp in $oz_cv_with_lib_dirs DONE; do
-    if test "$oz_tmp" != DONE; then
-      oz_tmp_dirs="$oz_tmp${oz_tmp_dirs:+ }$oz_tmp_dirs"
-    fi
-  done
-  # add them to LDFLAGS and oz_lib_path
-  IFS=$oz_tmp_IFS
-  : ${oz_lib_path=""}
-  for oz_tmp1 in $oz_tmp_dirs DONE; do
-    if test "$oz_tmp1" != DONE; then
-      
-  if test "-L$oz_tmp1" != yes && test "-L$oz_tmp1" != no; then
-    oz_tmp_ok=yes
-    for oz_tmp in $LDFLAGS NONE; do
-      if test "$oz_tmp" = "-L$oz_tmp1"; then
-        oz_tmp_ok=no
-        break
-      fi
-    done
-    test "$oz_tmp_ok" = yes && LDFLAGS="-L$oz_tmp1${LDFLAGS:+ }$LDFLAGS"
-  fi
-
-      oz_lib_path="$oz_tmp1${oz_lib_path:+ }$oz_lib_path"
-    fi
-  done
-
-  
-  
-  
-  echo $ac_n "checking for build date""... $ac_c" 1>&6
-echo "configure:1229: checking for build date" >&5
-if eval "test \"`echo '$''{'oz_cv_build_date'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  
-    oz_cv_build_date=`date +"%Y%m%d"`
-fi
-
-echo "$ac_t""$oz_cv_build_date" 1>&6
-  OZBUILDDATE=$oz_cv_build_date;
-  
-  
-  
-  echo $ac_n "checking for OZLOADSEP""... $ac_c" 1>&6
-echo "configure:1243: checking for OZLOADSEP" >&5
-if eval "test \"`echo '$''{'oz_cv_OZLOADSEP'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  
-    case $PLATFORM in
-    win32*) oz_cv_OZLOADSEP=';'
-    ;;
-    *) oz_cv_OZLOADSEP=':'
-    ;;
-    esac
-  
-fi
-
-echo "$ac_t""$oz_cv_OZLOADSEP" 1>&6
-  OZLOADSEP="$oz_cv_OZLOADSEP";
-  
-
-  
-  echo $ac_n "checking for OZLOADWIN""... $ac_c" 1>&6
-echo "configure:1263: checking for OZLOADWIN" >&5
-if eval "test \"`echo '$''{'oz_cv_OZLOADWIN'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  
-
-  case $PLATFORM in
-    win32*)
-	oztmp=`pwd`
-	oztmp=`cygpath -a -w "$oztmp"`
-	oztmp=`expr "$oztmp" : "\(.\):"`
-	if test -n "$oztmp"; then
-	  oztmplo=`echo $oztmp | tr '[:upper:]' '[:lower:]'`
-	  oztmphi=`echo $oztmp | tr '[:lower:]' '[:upper:]'`
-	  oz_cv_OZLOADWIN="%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
-	fi
-	oztmp=`cygpath -a -w "$srcdir"`
-	oztmp=`expr "$oztmp" : "\(.\):"`
-	if test -n "$oztmp"; then
-	  oztmplo=`echo $oztmp | tr '[:upper:]' '[:lower:]'`
-	  oztmphi=`echo $oztmp | tr '[:lower:]' '[:upper:]'`
-	  oz_cv_OZLOADWIN="${oz_cv_OZLOADWIN}%prefix=${oztmplo}:/=${oztmplo}:/%prefix=${oztmphi}:/=${oztmphi}:/"
-	fi
-	;;
-    *) oz_cv_OZLOADWIN=
-	;;
-  esac
-
-  
-fi
-
-echo "$ac_t""$oz_cv_OZLOADWIN" 1>&6
-  OZLOADWIN="$oz_cv_OZLOADWIN"
-  
-
-
-
-
-
-  if test -z "$oz_cv_cc__chosen"; then
-    : ${CFLAGS="-O"}
-    # Extract the first word of "gcc", so it can be a program name with args.
-set dummy gcc; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1307: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_prog_CC'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  if test -n "$CC"; then
-  ac_cv_prog_CC="$CC" # Let the user override the test.
-else
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
-  ac_dummy="$PATH"
-  for ac_dir in $ac_dummy; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_prog_CC="gcc"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-fi
-fi
-CC="$ac_cv_prog_CC"
-if test -n "$CC"; then
-  echo "$ac_t""$CC" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-if test -z "$CC"; then
-  # Extract the first word of "cc", so it can be a program name with args.
-set dummy cc; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1337: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_prog_CC'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  if test -n "$CC"; then
-  ac_cv_prog_CC="$CC" # Let the user override the test.
-else
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
-  ac_prog_rejected=no
-  ac_dummy="$PATH"
-  for ac_dir in $ac_dummy; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      if test "$ac_dir/$ac_word" = "/usr/ucb/cc"; then
-        ac_prog_rejected=yes
-	continue
-      fi
-      ac_cv_prog_CC="cc"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-if test $ac_prog_rejected = yes; then
-  # We found a bogon in the path, so make sure we never use it.
-  set dummy $ac_cv_prog_CC
-  shift
-  if test $# -gt 0; then
-    # We chose a different compiler from the bogus one.
-    # However, it has the same basename, so the bogon will be chosen
-    # first if we set CC to just the basename; use the full file name.
-    shift
-    set dummy "$ac_dir/$ac_word" "$@"
-    shift
-    ac_cv_prog_CC="$@"
-  fi
-fi
-fi
-fi
-CC="$ac_cv_prog_CC"
-if test -n "$CC"; then
-  echo "$ac_t""$CC" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-  if test -z "$CC"; then
-    case "`uname -s`" in
-    *win32* | *WIN32*)
-      # Extract the first word of "cl", so it can be a program name with args.
-set dummy cl; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1388: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_prog_CC'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  if test -n "$CC"; then
-  ac_cv_prog_CC="$CC" # Let the user override the test.
-else
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
-  ac_dummy="$PATH"
-  for ac_dir in $ac_dummy; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_prog_CC="cl"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-fi
-fi
-CC="$ac_cv_prog_CC"
-if test -n "$CC"; then
-  echo "$ac_t""$CC" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
- ;;
-    esac
-  fi
-  test -z "$CC" && { echo "configure: error: no acceptable cc found in \$PATH" 1>&2; exit 1; }
-fi
-
-echo $ac_n "checking whether the C compiler ($CC $CFLAGS $LDFLAGS) works""... $ac_c" 1>&6
-echo "configure:1420: checking whether the C compiler ($CC $CFLAGS $LDFLAGS) works" >&5
-
-ac_ext=c
-# CFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='${CC-cc} -c $CFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
-ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
-cross_compiling=$ac_cv_prog_cc_cross
-
-cat > conftest.$ac_ext << EOF
-
-#line 1431 "configure"
-#include "confdefs.h"
-
-main(){return(0);}
-EOF
-if { (eval echo configure:1436: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
-  ac_cv_prog_cc_works=yes
-  # If we can't run a trivial program, we are probably using a cross compiler.
-  if (./conftest; exit) 2>/dev/null; then
-    ac_cv_prog_cc_cross=no
-  else
-    ac_cv_prog_cc_cross=yes
-  fi
-else
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  ac_cv_prog_cc_works=no
-fi
-rm -fr conftest*
-ac_ext=c
-# CFLAGS is not in ac_cpp because -g, -O, etc. are not valid cpp options.
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='${CC-cc} -c $CFLAGS $CPPFLAGS conftest.$ac_ext 1>&5'
-ac_link='${CC-cc} -o conftest${ac_exeext} $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS 1>&5'
-cross_compiling=$ac_cv_prog_cc_cross
-
-echo "$ac_t""$ac_cv_prog_cc_works" 1>&6
-if test $ac_cv_prog_cc_works = no; then
-  { echo "configure: error: installation or configuration problem: C compiler cannot create executables." 1>&2; exit 1; }
-fi
-echo $ac_n "checking whether the C compiler ($CC $CFLAGS $LDFLAGS) is a cross-compiler""... $ac_c" 1>&6
-echo "configure:1462: checking whether the C compiler ($CC $CFLAGS $LDFLAGS) is a cross-compiler" >&5
-echo "$ac_t""$ac_cv_prog_cc_cross" 1>&6
-cross_compiling=$ac_cv_prog_cc_cross
-
-echo $ac_n "checking whether we are using GNU C""... $ac_c" 1>&6
-echo "configure:1467: checking whether we are using GNU C" >&5
-if eval "test \"`echo '$''{'ac_cv_prog_gcc'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  cat > conftest.c <<EOF
-#ifdef __GNUC__
-  yes;
-#endif
-EOF
-if { ac_try='${CC-cc} -E conftest.c'; { (eval echo configure:1476: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }; } | egrep yes >/dev/null 2>&1; then
-  ac_cv_prog_gcc=yes
-else
-  ac_cv_prog_gcc=no
-fi
-fi
-
-echo "$ac_t""$ac_cv_prog_gcc" 1>&6
-
-if test $ac_cv_prog_gcc = yes; then
-  GCC=yes
-else
-  GCC=
-fi
-
-ac_test_CFLAGS="${CFLAGS+set}"
-ac_save_CFLAGS="$CFLAGS"
-CFLAGS=
-echo $ac_n "checking whether ${CC-cc} accepts -g""... $ac_c" 1>&6
-echo "configure:1495: checking whether ${CC-cc} accepts -g" >&5
-if eval "test \"`echo '$''{'ac_cv_prog_cc_g'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  echo 'void f(){}' > conftest.c
-if test -z "`${CC-cc} -g -c conftest.c 2>&1`"; then
-  ac_cv_prog_cc_g=yes
-else
-  ac_cv_prog_cc_g=no
-fi
-rm -f conftest*
-
-fi
-
-echo "$ac_t""$ac_cv_prog_cc_g" 1>&6
-if test "$ac_test_CFLAGS" = set; then
-  CFLAGS="$ac_save_CFLAGS"
-elif test $ac_cv_prog_cc_g = yes; then
-  if test "$GCC" = yes; then
-    CFLAGS="-g -O2"
-  else
-    CFLAGS="-g"
-  fi
-else
-  if test "$GCC" = yes; then
-    CFLAGS="-O2"
-  else
-    CFLAGS=
-  fi
-fi
-
-    if test "$GCC" = yes; then
-      if oz_tmp=`$CC -dumpversion 2>/dev/null` || oz_tmp=`$CC --version 2>/dev/null`; then
-        if expr "$oz_tmp" : egcs >/dev/null; then
-          echo "configure: warning: dont know how to check egcs version, assuming ok" 1>&2
-	else
-          
-  echo $ac_n "checking $CC version is at least 3.3.2""... $ac_c" 1>&6
-echo "configure:1533: checking $CC version is at least 3.3.2" >&5
-  oz_tmp_ok=no
-  if oz_tmp_version1=`$CC -dumpversion || $CC --version 2>/dev/null`; then
-    # first we try to locate the string "version"
-    oz_tmp_version2=`echo "${oz_tmp_version1}" | tr '\012' ' '`
-
-    oz_tmp_version=`expr "${oz_tmp_version2}" : '.*version \([0-9._-]*[a-z]\{0,1\}\)'`
-    # if that failed: we look at the end of the first line
-    if test -z "$oz_tmp_version"; then
-      oz_tmp_IFS="$IFS"
-      IFS='
-'
-      for oz_tmp_version3 in ${oz_tmp_version1}; do
-        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._-]*[a-z]\{0,1\}\)$'`
-	# else try to match the entire first line
-	if test -z "$oz_tmp_version"; then
-	  oz_tmp_version=`expr "${oz_tmp_version3}" : '\([0-9._-]*[a-z]\{0,1\}\)$'`
-	fi
-	break
-      done
-      IFS="$oz_tmp_IFS"
-    fi
-
-    if test -n "$oz_tmp_version"; then
-      
-  oz_tmp_got="$oz_tmp_version"
-  oz_tmp_want="3.3.2"
-  
-  oz_tmp="$oz_tmp_got"
-
-  oz_tmp=`echo $oz_tmp | sed -e 's/[a-z]/.\0/'`
-  oz_tmp=`echo $oz_tmp | sed -e 's/[._-]/ /g'`
-
-  oz_tmp_got=$oz_tmp
-  
-  oz_tmp="$oz_tmp_want"
-
-  oz_tmp=`echo $oz_tmp | sed -e 's/[a-z]/.\0/'`
-  oz_tmp=`echo $oz_tmp | sed -e 's/[._-]/ /g'`
-
-  oz_tmp_want=$oz_tmp
-  set $oz_tmp_got DONE
-  oz_tmp__ok=yes
-  for oz_tmp_cur in $oz_tmp_want; do
-    case $oz_tmp_cur in
-      DONE)
-         case $1 in
-           a-z) oz_tmp__ok=no;;
-           *);;
-         esac
-         break
-         ;;
-      a-z)
-         case $1 in
-           DONE) break;;
-           a-z)
-              if test `expr $oz_tmp_cur '<=' $1` -eq 0; then
-                oz_tmp__ok=no
-                break
-              fi
-           ;;
-           *) break
-           ;;
-         esac
-         ;;
-      *)
-         case $1 in
-           DONE) oz_tmp__ok=no
-             break
-             ;;
-           a-z) oz_tmp__ok=no
-             break
-             ;;
-           *) if test "$oz_tmp_cur" -lt "$1"; then
-                break
-              elif test "$oz_tmp_cur" -gt "$1"; then
-                oz_tmp__ok=no
-                break
-              fi
-           ;;
-         esac
-         ;;
-    esac
-    shift
-  done
-  oz_tmp_ok=$oz_tmp__ok
-    fi
-  fi
-  if test -z "$oz_tmp_version"; then
-    echo "$ac_t""no (cannot find version)" 1>&6
-  elif test $oz_tmp_ok = no; then
-    echo "$ac_t""no" 1>&6
-  else
-    echo "$ac_t""yes ($oz_tmp_version)" 1>&6
-  fi
-          if test "$oz_tmp_ok" = no; then
-            { echo "configure: error: 
-configure found the GNU C compiler $CC version $oz_tmp_version
-but version 3.3.2 or higher is required to build the
-system.  It can be retrieved from:
-
-	ftp://ftp.gnu.org/pub/gnu/gcc/
-
-The latest version at this time is 4.1.0 and is available
-packaged as the following archive:
-
-	gcc-4.1.0.tar.bz2
-
-You may find a mirror archive closer to you by consulting:
-
-	http://www.gnu.org/order/ftp.html
-" 1>&2; exit 1; }
-          fi
-        fi
-      else
-        echo "configure: warning: Could not check $CC version, assuming ok" 1>&2
-      fi
-    fi
-    case "$PLATFORM" in
-    *win32*)
-      case "$CC" in
-      *mno-cygwin*)
-      ;;
-      *)
-        
-	ozm_out=
-	if test -n "-mno-cygwin"
-	then
-	    echo 'void f(){}' > oz_conftest.c
-	    oz_for="-mno-cygwin"
-	    for ozm_opt in $oz_for
-	    do
-		echo $ac_n "checking cc compiler option $ozm_opt""... $ac_c" 1>&6
-echo "configure:1666: checking cc compiler option $ozm_opt" >&5
-		ozm_ropt=`echo $ozm_opt | sed -e 's/[^a-zA-Z0-9_]/_/g'`
-		if eval "test \"`echo '$''{'oz_cv_gccopt_$ozm_ropt'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  if test -z "`${CC} ${ozm_out} ${ozm_opt} -c oz_conftest.c 2>&1`"; then
-			eval "oz_cv_gccopt_$ozm_ropt=yes"
-		    else
-			eval "oz_cv_gccopt_$ozm_ropt=no"
-		    fi
-fi
-
-		if eval "test \"`echo '$''{'oz_cv_gccopt_$ozm_ropt'}'`\" = yes"; then
-		    ozm_out="$ozm_out $ozm_opt"
-		    echo "$ac_t""yes" 1>&6
-		else
-		    echo "$ac_t""no" 1>&6
-		fi
-	    done
-	    rm -f oz_conftest*
-	fi
-	oz_tmp="$ozm_out"
-	
-	CC="$CC${oztmp:+ }$oz_tmp"
-      ;;
-      esac
-    ;;
-    *)
-    ;;
-    esac
-    echo $ac_n "checking how to run the C preprocessor""... $ac_c" 1>&6
-echo "configure:1697: checking how to run the C preprocessor" >&5
-# On Suns, sometimes $CPP names a directory.
-if test -n "$CPP" && test -d "$CPP"; then
-  CPP=
-fi
-if test -z "$CPP"; then
-if eval "test \"`echo '$''{'ac_cv_prog_CPP'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-    # This must be in double quotes, not single quotes, because CPP may get
-  # substituted into the Makefile and "${CC-cc}" will confuse make.
-  CPP="${CC-cc} -E"
-  # On the NeXT, cc -E runs the code through the compiler's parser,
-  # not just through cpp.
-  cat > conftest.$ac_ext <<EOF
-#line 1712 "configure"
-#include "confdefs.h"
-#include <assert.h>
-Syntax Error
-EOF
-ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1718: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
-ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
-if test -z "$ac_err"; then
-  :
-else
-  echo "$ac_err" >&5
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  CPP="${CC-cc} -E -traditional-cpp"
-  cat > conftest.$ac_ext <<EOF
-#line 1729 "configure"
-#include "confdefs.h"
-#include <assert.h>
-Syntax Error
-EOF
-ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1735: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
-ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
-if test -z "$ac_err"; then
-  :
-else
-  echo "$ac_err" >&5
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  CPP="${CC-cc} -nologo -E"
-  cat > conftest.$ac_ext <<EOF
-#line 1746 "configure"
-#include "confdefs.h"
-#include <assert.h>
-Syntax Error
-EOF
-ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:1752: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
-ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
-if test -z "$ac_err"; then
-  :
-else
-  echo "$ac_err" >&5
-  echo "configure: failed program was:" >&5
-  cat conftest.$ac_ext >&5
-  rm -rf conftest*
-  CPP=/lib/cpp
-fi
-rm -f conftest*
-fi
-rm -f conftest*
-fi
-rm -f conftest*
-  ac_cv_prog_CPP="$CPP"
-fi
-  CPP="$ac_cv_prog_CPP"
-else
-  ac_cv_prog_CPP="$CPP"
-fi
-echo "$ac_t""$CPP" 1>&6
-
-    oz_cv_CC=$CC
-    oz_cv_CPP=$CPP
-    oz_cv_GCC=$GCC
-    oz_cv_CFLAGS=$CFLAGS
-    oz_cv_cc__chosen=yes
-  else
-    
-  echo $ac_n "checking for C compiler""... $ac_c" 1>&6
-echo "configure:1784: checking for C compiler" >&5
-  CC=$oz_cv_CC
-  echo "$ac_t""(cached) $CC" 1>&6
-    
-  echo $ac_n "checking whether we are using GNU C""... $ac_c" 1>&6
-echo "configure:1789: checking whether we are using GNU C" >&5
-  GCC=$oz_cv_GCC
-  echo "$ac_t""(cached) $GCC" 1>&6
-    
-  echo $ac_n "checking for C preprocessor""... $ac_c" 1>&6
-echo "configure:1794: checking for C preprocessor" >&5
-  CPP=$oz_cv_CPP
-  echo "$ac_t""(cached) $CPP" 1>&6
-    if test "${CFLAGS+set}" != set ; then
-      
-  echo $ac_n "checking for default CFLAGS""... $ac_c" 1>&6
-echo "configure:1800: checking for default CFLAGS" >&5
-  CFLAGS=$oz_cv_CFLAGS
-  echo "$ac_t""(cached) $CFLAGS" 1>&6
-    fi
-  fi
-  
-  
-
-  if test -z "$oz_cv_YACC"; then
-    for ac_prog in 'bison -y' byacc
-do
-# Extract the first word of "$ac_prog", so it can be a program name with args.
-set dummy $ac_prog; ac_word=$2
-echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1814: checking for $ac_word" >&5
-if eval "test \"`echo '$''{'ac_cv_prog_YACC'+set}'`\" = set"; then
-  echo $ac_n "(cached) $ac_c" 1>&6
-else
-  if test -n "$YACC"; then
-  ac_cv_prog_YACC="$YACC" # Let the user override the test.
-else
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS=":"
-  ac_dummy="$PATH"
-  for ac_dir in $ac_dummy; do
-    test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      ac_cv_prog_YACC="$ac_prog"
-      break
-    fi
-  done
-  IFS="$ac_save_ifs"
-fi
-fi
-YACC="$ac_cv_prog_YACC"
-if test -n "$YACC"; then
-  echo "$ac_t""$YACC" 1>&6
-else
-  echo "$ac_t""no" 1>&6
-fi
-
-test -n "$YACC" && break
-done
-test -n "$YACC" || YACC="yacc"
-
-    
-  if oz_tmp=`$YACC --version 2>/dev/null` && \
-     oz_tmp=`expr "$oz_tmp" : '.*GNU'`; then
-    GNU_YACC=yes;
-  else
-    GNU_YACC=no
-  fi
-    if test "$GNU_YACC" = no; then
-      oz_tmp_ok=no
-      echo "configure: warning: $YACC is not GNU bison" 1>&2
-    else
-      
-  echo $ac_n "checking $YACC version is at least 1.25""... $ac_c" 1>&6
-echo "configure:1857: checking $YACC version is at least 1.25" >&5
-  oz_tmp_ok=no
-  if oz_tmp_version1=`$YACC --version 2>/dev/null`; then
-    # first we try to locate the string "version"
-    oz_tmp_version2=`echo "${oz_tmp_version1}" | tr '\012' ' '`
-
-    oz_tmp_version=`expr "${oz_tmp_version2}" : '.*version \([0-9._-]*[a-z]\{0,1\}\)'`
-    # if that failed: we look at the end of the first line
-    if test -z "$oz_tmp_version"; then
-      oz_tmp_IFS="$IFS"
-      IFS='
-'
-      for oz_tmp_version3 in ${oz_tmp_version1}; do
-        oz_tmp_version=`expr "${oz_tmp_version3}" : '.* \([0-9._-]*[a-z]\{0,1\}\)$'`
-	# else try to match the entire first line
-	if test -z "$oz_tmp_version"; then
-	  oz_tmp_version=`expr "${oz_tmp_version3}" : '\([0-9._-]*[a-z]\{0,1\}\)$'`
-	fi
-	break
-      done
-      IFS="$oz_tmp_IFS"
-    fi
-
-    if test -n "$oz_tmp_version"; then
-      
-  oz_tmp_got="$oz_tmp_version"
-  oz_tmp_want="1.25"
-  
-  oz_tmp="$oz_tmp_got"
-
-  oz_tmp=`echo $oz_tmp | sed -e 's/[a-z]/.\0/'`
-  oz_tmp=`echo $oz_tmp | sed -e 's/[._-]/ /g'`
-
-  oz_tmp_got=$oz_tmp
-  
-  oz_tmp="$oz_tmp_want"
-
-  oz_tmp=`echo $oz_tmp | sed -e 's/[a-z]/.\0/'`
-  oz_tmp=`echo $oz_tmp | sed -e 's/[._-]/ /g'`
-
-  oz_tmp_want=$oz_tmp
-  set $oz_tmp_got DONE
-  oz_tmp__ok=yes
-  for oz_tmp_cur in $oz_tmp_want; do
-    case $oz_tmp_cur in
-      DONE)
-         case $1 in
-           a-z) oz_tmp__ok=no;;
-           *);;
-         esac
-         break
-         ;;
-      a-z)
-         case $1 in
-           DONE) break;;
-           a-z)
-              if test `expr $oz_tmp_cur '<=' $1` -eq 0; then
-                oz_tmp__ok=no
-                break
-              fi
-           ;;
-           *) break
-           ;;
-         esac
-         ;;
-      *)
-         case $1 in
-           DONE) oz_tmp__ok=no
-             break
-             ;;
-           a-z) oz_tmp__ok=no
-             break
-             ;;
-           *) if test "$oz_tmp_cur" -lt "$1"; then
-                break
-              elif test "$oz_tmp_cur" -gt "$1"; then
-                oz_tmp__ok=no
-                break
-              fi
-           ;;
-         esac
-         ;;
-    esac
-    shift
-  done
-  oz_tmp_ok=$oz_tmp__ok
-    fi
-  fi
-  if test -z "$oz_tmp_version"; then
-    echo "$ac_t""no (cannot find version)" 1>&6
-  elif test $oz_tmp_ok = no; then
-    echo "$ac_t""no" 1>&6
-  else
-    echo "$ac_t""yes ($oz_tmp_version)" 1>&6
-  fi
-    fi
-    if test "$oz_tmp_ok" = yes; then
-      oz_cv_YACC=$YACC
-    else
-      if test "$oz_coolness" = yes; then
-        YACC=bison_not_found
-        echo "configure: warning: bison not found" 1>&2
-      else
-        { echo "configure: error: 
-GNU bison version 1.25 or higher is needed to build the system.
-It can be retrieved from:
-
-	ftp://ftp.gnu.org/pub/gnu/bison/
-
-The latest version at this time is 1.875 and is available
-packaged as the following archive:
-
-	bison-1.875.tar.gz
-
-
-You may find a mirror archive closer to you by consulting:
-
-	http://www.gnu.org/order/ftp.html
-" 1>&2; exit 1; }
-      fi
-    fi
-  else
-    
-  echo $ac_n "checking for GNU bison""... $ac_c" 1>&6
-echo "configure:1981: checking for GNU bison" >&5
-  YACC=$oz_cv_YACC
-  echo "$ac_t""(cached) $YACC" 1>&6
-  fi
-  BISON=$YACC
-  
-  
+OZ_CC_CHOOSE
+OZ_PROG_BISON
 echo $ac_n "checking for working const""... $ac_c" 1>&6
-echo "configure:1989: checking for working const" >&5
+echo "configure:531: checking for working const" >&5
 if eval "test \"`echo '$''{'ac_cv_c_const'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 1994 "configure"
+#line 536 "configure"
 #include "confdefs.h"
 
 int main() {
@@ -2039,7 +581,7 @@ ccp = (char const *const *) p;
 
 ; return 0; }
 EOF
-if { (eval echo configure:2043: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
+if { (eval echo configure:585: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
   rm -rf conftest*
   ac_cv_c_const=yes
 else
@@ -2059,13 +601,93 @@ EOF
 
 fi
 
+echo $ac_n "checking how to run the C preprocessor""... $ac_c" 1>&6
+echo "configure:606: checking how to run the C preprocessor" >&5
+# On Suns, sometimes $CPP names a directory.
+if test -n "$CPP" && test -d "$CPP"; then
+  CPP=
+fi
+if test -z "$CPP"; then
+if eval "test \"`echo '$''{'ac_cv_prog_CPP'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+    # This must be in double quotes, not single quotes, because CPP may get
+  # substituted into the Makefile and "${CC-cc}" will confuse make.
+  CPP="${CC-cc} -E"
+  # On the NeXT, cc -E runs the code through the compiler's parser,
+  # not just through cpp.
+  cat > conftest.$ac_ext <<EOF
+#line 621 "configure"
+#include "confdefs.h"
+#include <assert.h>
+Syntax Error
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:627: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
+if test -z "$ac_err"; then
+  :
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  CPP="${CC-cc} -E -traditional-cpp"
+  cat > conftest.$ac_ext <<EOF
+#line 638 "configure"
+#include "confdefs.h"
+#include <assert.h>
+Syntax Error
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:644: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
+if test -z "$ac_err"; then
+  :
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  CPP="${CC-cc} -nologo -E"
+  cat > conftest.$ac_ext <<EOF
+#line 655 "configure"
+#include "confdefs.h"
+#include <assert.h>
+Syntax Error
+EOF
+ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
+{ (eval echo configure:661: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
+if test -z "$ac_err"; then
+  :
+else
+  echo "$ac_err" >&5
+  echo "configure: failed program was:" >&5
+  cat conftest.$ac_ext >&5
+  rm -rf conftest*
+  CPP=/lib/cpp
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+fi
+rm -f conftest*
+  ac_cv_prog_CPP="$CPP"
+fi
+  CPP="$ac_cv_prog_CPP"
+else
+  ac_cv_prog_CPP="$CPP"
+fi
+echo "$ac_t""$CPP" 1>&6
+
 echo $ac_n "checking for ANSI C header files""... $ac_c" 1>&6
-echo "configure:2064: checking for ANSI C header files" >&5
+echo "configure:686: checking for ANSI C header files" >&5
 if eval "test \"`echo '$''{'ac_cv_header_stdc'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 2069 "configure"
+#line 691 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 #include <stdarg.h>
@@ -2073,7 +695,7 @@ else
 #include <float.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2077: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:699: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2090,7 +712,7 @@ rm -f conftest*
 if test $ac_cv_header_stdc = yes; then
   # SunOS 4.x string.h does not declare mem*, contrary to ANSI.
 cat > conftest.$ac_ext <<EOF
-#line 2094 "configure"
+#line 716 "configure"
 #include "confdefs.h"
 #include <string.h>
 EOF
@@ -2108,7 +730,7 @@ fi
 if test $ac_cv_header_stdc = yes; then
   # ISC 2.0.2 stdlib.h does not declare free, contrary to ANSI.
 cat > conftest.$ac_ext <<EOF
-#line 2112 "configure"
+#line 734 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 EOF
@@ -2129,7 +751,7 @@ if test "$cross_compiling" = yes; then
   :
 else
   cat > conftest.$ac_ext <<EOF
-#line 2133 "configure"
+#line 755 "configure"
 #include "confdefs.h"
 #include <ctype.h>
 #define ISLOWER(c) ('a' <= (c) && (c) <= 'z')
@@ -2140,7 +762,7 @@ if (XOR (islower (i), ISLOWER (i)) || toupper (i) != TOUPPER (i)) exit(2);
 exit (0); }
 
 EOF
-if { (eval echo configure:2144: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:766: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   :
 else
@@ -2164,12 +786,12 @@ EOF
 fi
 
 echo $ac_n "checking for size_t""... $ac_c" 1>&6
-echo "configure:2168: checking for size_t" >&5
+echo "configure:790: checking for size_t" >&5
 if eval "test \"`echo '$''{'ac_cv_type_size_t'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 2173 "configure"
+#line 795 "configure"
 #include "confdefs.h"
 #include <sys/types.h>
 #if STDC_HEADERS
@@ -2197,12 +819,12 @@ EOF
 fi
 
 echo $ac_n "checking for ANSI C header files""... $ac_c" 1>&6
-echo "configure:2201: checking for ANSI C header files" >&5
+echo "configure:823: checking for ANSI C header files" >&5
 if eval "test \"`echo '$''{'ac_cv_header_stdc'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 2206 "configure"
+#line 828 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 #include <stdarg.h>
@@ -2210,7 +832,7 @@ else
 #include <float.h>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2214: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:836: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2227,7 +849,7 @@ rm -f conftest*
 if test $ac_cv_header_stdc = yes; then
   # SunOS 4.x string.h does not declare mem*, contrary to ANSI.
 cat > conftest.$ac_ext <<EOF
-#line 2231 "configure"
+#line 853 "configure"
 #include "confdefs.h"
 #include <string.h>
 EOF
@@ -2245,7 +867,7 @@ fi
 if test $ac_cv_header_stdc = yes; then
   # ISC 2.0.2 stdlib.h does not declare free, contrary to ANSI.
 cat > conftest.$ac_ext <<EOF
-#line 2249 "configure"
+#line 871 "configure"
 #include "confdefs.h"
 #include <stdlib.h>
 EOF
@@ -2266,7 +888,7 @@ if test "$cross_compiling" = yes; then
   :
 else
   cat > conftest.$ac_ext <<EOF
-#line 2270 "configure"
+#line 892 "configure"
 #include "confdefs.h"
 #include <ctype.h>
 #define ISLOWER(c) ('a' <= (c) && (c) <= 'z')
@@ -2277,7 +899,7 @@ if (XOR (islower (i), ISLOWER (i)) || toupper (i) != TOUPPER (i)) exit(2);
 exit (0); }
 
 EOF
-if { (eval echo configure:2281: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:903: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   :
 else
@@ -2304,17 +926,17 @@ for ac_hdr in string.h malloc.h sys/types.h
 do
 ac_safe=`echo "$ac_hdr" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for $ac_hdr""... $ac_c" 1>&6
-echo "configure:2308: checking for $ac_hdr" >&5
+echo "configure:930: checking for $ac_hdr" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 2313 "configure"
+#line 935 "configure"
 #include "confdefs.h"
 #include <$ac_hdr>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:2318: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:940: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -2346,7 +968,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:2350: checking for $ac_word" >&5
+echo "configure:972: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_STRIP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2382,19 +1004,19 @@ case "$YACC" in
   # The Ultrix 4.2 mips builtin alloca declared by alloca.h only works
 # for constant arguments.  Useless!
 echo $ac_n "checking for working alloca.h""... $ac_c" 1>&6
-echo "configure:2386: checking for working alloca.h" >&5
+echo "configure:1008: checking for working alloca.h" >&5
 if eval "test \"`echo '$''{'ac_cv_header_alloca_h'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 2391 "configure"
+#line 1013 "configure"
 #include "confdefs.h"
 #include <alloca.h>
 int main() {
 char *p = alloca(2 * sizeof(int));
 ; return 0; }
 EOF
-if { (eval echo configure:2398: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:1020: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   ac_cv_header_alloca_h=yes
 else
@@ -2415,12 +1037,12 @@ EOF
 fi
 
 echo $ac_n "checking for alloca""... $ac_c" 1>&6
-echo "configure:2419: checking for alloca" >&5
+echo "configure:1041: checking for alloca" >&5
 if eval "test \"`echo '$''{'ac_cv_func_alloca_works'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 2424 "configure"
+#line 1046 "configure"
 #include "confdefs.h"
 
 #ifdef __GNUC__
@@ -2448,7 +1070,7 @@ int main() {
 char *p = (char *) alloca(1);
 ; return 0; }
 EOF
-if { (eval echo configure:2452: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:1074: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   ac_cv_func_alloca_works=yes
 else
@@ -2480,12 +1102,12 @@ EOF
 
 
 echo $ac_n "checking whether alloca needs Cray hooks""... $ac_c" 1>&6
-echo "configure:2484: checking whether alloca needs Cray hooks" >&5
+echo "configure:1106: checking whether alloca needs Cray hooks" >&5
 if eval "test \"`echo '$''{'ac_cv_os_cray'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 2489 "configure"
+#line 1111 "configure"
 #include "confdefs.h"
 #if defined(CRAY) && ! defined(CRAY2)
 webecray
@@ -2510,12 +1132,12 @@ echo "$ac_t""$ac_cv_os_cray" 1>&6
 if test $ac_cv_os_cray = yes; then
 for ac_func in _getb67 GETB67 getb67; do
   echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
-echo "configure:2514: checking for $ac_func" >&5
+echo "configure:1136: checking for $ac_func" >&5
 if eval "test \"`echo '$''{'ac_cv_func_$ac_func'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 2519 "configure"
+#line 1141 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char $ac_func(); below.  */
@@ -2538,7 +1160,7 @@ $ac_func();
 
 ; return 0; }
 EOF
-if { (eval echo configure:2542: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:1164: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_$ac_func=yes"
 else
@@ -2565,7 +1187,7 @@ done
 fi
 
 echo $ac_n "checking stack direction for C alloca""... $ac_c" 1>&6
-echo "configure:2569: checking stack direction for C alloca" >&5
+echo "configure:1191: checking stack direction for C alloca" >&5
 if eval "test \"`echo '$''{'ac_cv_c_stack_direction'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2573,7 +1195,7 @@ else
   ac_cv_c_stack_direction=0
 else
   cat > conftest.$ac_ext <<EOF
-#line 2577 "configure"
+#line 1199 "configure"
 #include "confdefs.h"
 find_stack_direction ()
 {
@@ -2592,7 +1214,7 @@ main ()
   exit (find_stack_direction() < 0);
 }
 EOF
-if { (eval echo configure:2596: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
+if { (eval echo configure:1218: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext} && (./conftest; exit) 2>/dev/null
 then
   ac_cv_c_stack_direction=1
 else
@@ -2715,7 +1337,6 @@ do
 done
 
 ac_given_srcdir=$srcdir
-ac_given_INSTALL="$INSTALL"
 
 trap 'rm -fr `echo "Makefile config.h:conf.in" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
@@ -2749,33 +1370,7 @@ s%@includedir@%$includedir%g
 s%@oldincludedir@%$oldincludedir%g
 s%@infodir@%$infodir%g
 s%@mandir@%$mandir%g
-s%@SRCDIR@%$SRCDIR%g
-s%@SRCTOP@%$SRCTOP%g
-s%@BUILDTOP@%$BUILDTOP%g
-s%@host@%$host%g
-s%@host_alias@%$host_alias%g
-s%@host_cpu@%$host_cpu%g
-s%@host_vendor@%$host_vendor%g
-s%@host_os@%$host_os%g
-s%@MAKE@%$MAKE%g
-s%@SET_MAKE@%$SET_MAKE%g
-s%@INSTALL_PROGRAM@%$INSTALL_PROGRAM%g
-s%@INSTALL_SCRIPT@%$INSTALL_SCRIPT%g
-s%@INSTALL_DATA@%$INSTALL_DATA%g
-s%@INSTALL_DIR@%$INSTALL_DIR%g
-s%@OZVERSION@%$OZVERSION%g
-s%@HOMEURL@%$HOMEURL%g
-s%@HOMECACHE@%$HOMECACHE%g
-s%@OZPLATFORM@%$OZPLATFORM%g
-s%@OZTOOL@%$OZTOOL%g
-s%@OZBUILDDATE@%$OZBUILDDATE%g
-s%@PLATFORM@%$PLATFORM%g
-s%@OZLOADSEP@%$OZLOADSEP%g
-s%@OZLOADWIN@%$OZLOADWIN%g
-s%@CC@%$CC%g
 s%@CPP@%$CPP%g
-s%@YACC@%$YACC%g
-s%@BISON@%$BISON%g
 s%@STRIP@%$STRIP%g
 s%@ALLOCA@%$ALLOCA%g
 
@@ -2854,10 +1449,6 @@ for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
     top_srcdir="$ac_dots$ac_given_srcdir" ;;
   esac
 
-  case "$ac_given_INSTALL" in
-  [/$]*) INSTALL="$ac_given_INSTALL" ;;
-  *) INSTALL="$ac_dots$ac_given_INSTALL" ;;
-  esac
 
   echo creating "$ac_file"
   rm -f "$ac_file"
@@ -2873,7 +1464,6 @@ for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
 s%@configure_input@%$configure_input%g
 s%@srcdir@%$srcdir%g
 s%@top_srcdir@%$top_srcdir%g
-s%@INSTALL@%$INSTALL%g
 " $ac_file_inputs | (eval "$ac_sed_cmds") > $ac_file
 fi; done
 rm -f conftest.s*
