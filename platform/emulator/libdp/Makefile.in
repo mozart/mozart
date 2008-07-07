@@ -58,6 +58,8 @@ CREATEDFILES	= $(CREATEDCOREFILES)
 all:
 
 # Remember the order, CREATEDFILES MUST be created before COREOBJS
+$(COREOBJS): $(CREATEDFILES)
+
 # The DSS should be included when dynamically linked..
 ../Glue.so-$(PLATFORM): $(CREATEDFILES) $(COREOBJS)
 	$(DYNLD) -L$(BUILDTOP)/platform/emulator -lDSS -o $@ $(COREOBJS)

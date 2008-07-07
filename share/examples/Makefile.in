@@ -62,16 +62,20 @@ all: $(FUNCTORS)
 EXFUNCTORS = \
 	$(FUNCTORS:%=$(OZEX)/fd/graphics/%)
 
-EXDIRS = \
-	sampler sampler/constraints \
-	fd grammar grammar/shieber \
-	fd/graphics
-
+EXDIRS = fd grammar sampler
+EXFDDIRS = fd/graphics
+EXGRDIRS = grammar/shieber
+EXSAMPLERDIRS = sampler/constraints
 
 OZEXDIRS = $(EXDIRS:%=$(OZEX)/%)
+OZEXFDDIRS = $(EXFDDIRS:%=$(OZEX)/%)
+OZEXGRDIRS = $(EXGRDIRS:%=$(OZEX)/%)
+OZEXSAMPLERDIRS = $(EXSAMPLERDIRS:%=$(OZEX)/%)
 
 
-$(OZEX) $(OZEXDIRS):
+$(OZEXFDDIRS) $(OZEXGRDIRS) $(OZEXSAMPLERDIRS): $(OZEXDIRS)
+$(OZEXDIRS): $(OZEX)
+$(OZEX) $(OZEXDIRS) $(OZEXFDDIRS) $(OZEXGRDIRS) $(OZEXSAMPLERDIRS):
 	$(INSTALL_DIR) $@
 
 FD = \
@@ -115,6 +119,10 @@ $(OZEX)/sampler/constraints/%.oz: sampler/constraints/%.oz
 .PHONY: all install clean veryclean distclean bootstrap check depend
 
 install: all $(OZEX) $(OZEXDIRS) $(SAMPLER) $(EXAMPLES) $(EXFUNCTORS)
+
+$(SAMPLER): $(OZEXSAMPLERDIRS)
+$(EXAMPLES): $(OZEXFDDIRS) $(OZEXGRDIRS)
+$(EXFUNCTORS): $(OZEXFDDIRS)
 
 clean:
 	-rm -f *~ ./*/*~ ./*/*/*~

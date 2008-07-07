@@ -53,6 +53,8 @@ LIB_TARGETS	= $(TARGETS:%=$(LIB_DIR)/%)
 all:     $(TARGETS)
 install: $(LIB_DIR) $(LIB_TARGETS)
 
+$(LIB_TARGETS): $(LIB_DIR)
+
 $(LIB_DIR):
 	$(INSTALL_DIR) $@
 
