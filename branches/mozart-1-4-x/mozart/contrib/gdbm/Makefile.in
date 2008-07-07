@@ -36,6 +36,8 @@ CYGPATH		= $(SRCTOP)/share/lib/cygpath.sh
 all:		$(TARGETS)
 install:	$(NEWCACHEDIR) $(NEW_TARGETS)
 
+$(NEW_TARGETS): $(NEWCACHEDIR)
+
 $(LIB_DIR) $(NEWCACHEDIR):
 	$(INSTALL_DIR) $@
 

@@ -31,6 +31,8 @@ LIB_TARGETS	= $(LIB_DIR)/Psql.ozf $(LIB_DIR)/PsqlLib.so-$(PLATFORM)
 all:		$(TARGETS)
 install:	$(LIB_DIR) $(LIB_TARGETS)
 
+$(LIB_TARGETS): $(LIB_DIR)
+
 $(LIB_DIR):
 	$(INSTALL_DIR) $@
 

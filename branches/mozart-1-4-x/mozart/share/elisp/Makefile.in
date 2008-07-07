@@ -72,6 +72,8 @@ $(ELCFILES): %.elc : %.el
 
 install: all $(ELISPDIR) $(LIBFILES)
 
+$(LIBFILES): $(ELISPDIR)
+
 $(ELISPDIR):
 	$(INSTALL_DIR) $@
 

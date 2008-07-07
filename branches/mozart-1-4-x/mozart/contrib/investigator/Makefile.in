@@ -64,6 +64,8 @@ all:     $(TARGETS)
 install: $(LIB_DIR) $(LIB_TARGETS)
 new:	 clean all
 
+$(LIB_TARGETS): $(LIB_DIR)
+
 $(LIB_DIR):
 	$(INSTALL_DIR) $@
 

@@ -54,6 +54,9 @@ bootstrap:
 
 install: $(BINDIR) $(LIB_SCRIPTS) $(LIB_LINKS) $(WRAPPERS)
 
+$(LIB_SCRIPTS): $(BINDIR)
+$(LIB_LINKS): $(BINDIR)
+$(WRAPPERS): $(BINDIR)
 
 $(LIB_SCRIPTS): $(BINDIR)/% : %
 	$(INSTALL_BIN) $< $(BINDIR)
