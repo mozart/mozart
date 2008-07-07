@@ -210,7 +210,7 @@
 				RelativePath="prioQueues.cc">
 			</File>
 			<File
-				RelativePath="protocol_eagerinvalid.cc">
+				RelativePath="protocol_invalid.cc">
 			</File>
 			<File
 				RelativePath="protocol_migratory.cc">
@@ -301,7 +301,7 @@
 				RelativePath="prioQueues.hh">
 			</File>
 			<File
-				RelativePath="protocol_eagerinvalid.hh">
+				RelativePath="protocol_invalid.hh">
 			</File>
 			<File
 				RelativePath="protocol_migratory.hh">
