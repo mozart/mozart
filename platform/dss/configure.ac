@@ -175,6 +175,7 @@ if test "$enable_modules_static" = yes; then
 else
     AC_MSG_RESULT(dynamic linking)
     ENVTYPE="lib$ENV.so"
+    CXXFLAGS="$CXXFLAGS -fPIC"
 fi
 
 AC_MSG_CHECKING(inclusion of examples)
