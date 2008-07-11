@@ -189,7 +189,7 @@ public:
   void pushDebug(OzDebug *dbg, Atom *dothis) { 
     pushFrame(C_DEBUG_CONT_Ptr, dbg, dothis); 
   }
-  void pushSelf(Object *o) { 
+  void pushSelf(OzObject *o) { 
     pushFrame(C_SET_SELF_Ptr, 0, o);
   }
   void pushAbstr(PrTabEntry  *a) { 

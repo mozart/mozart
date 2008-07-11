@@ -551,7 +551,9 @@ static mv2ovTabType mv2ovTab[] = {
   { 2, 0, "1.1.0" },
   { 3, 0, "1.1.0" },
   { 3, 1, "1.1.1" },
-  { 3, 2, "1.2.0" }
+  { 3, 2, "1.2.0" },
+  { 3, 3, "1.3.0" },
+  { 4, 0, "1.4.0" }
 };
 
 // returns a string to be used as "oz version %s";
@@ -1379,7 +1381,7 @@ OZ_BI_define(BItestDPUnmarshaler, 3, 0)
     buf->put(0xFF);          // Ctrl
     buf->putInt(0xFFFFFFFF); // Ack
     buf->putInt(0xFFFFFFFF); // Placeholder for Framesize
-    dpmC = dpMarshalTerm(val, buf, dpm, (DSite *) 0);
+    dpmC = dpMarshalTerm(val, buf, dpm);
     buf->marshalEnd();
 
     buf->unmarshalBegin();

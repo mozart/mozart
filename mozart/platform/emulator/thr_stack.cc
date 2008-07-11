@@ -196,7 +196,7 @@ Bool TaskStack::findCatch(Thread *thr,
     }
   }
 
-  Object * foundSelf = (Object *) NULL;
+  OzObject * foundSelf = (OzObject *) NULL;
   
   while (!isEmpty()) {
     if (out) {
@@ -220,23 +220,9 @@ Bool TaskStack::findCatch(Thread *thr,
       dbg->dispose();
     } else if (PC==C_LOCK_Ptr) { 
       OzLock *lck = (OzLock *) G;
-      switch(lck->getTertType()){
-      case Te_Local: 
-	if (((LockLocal*)lck)->hasLock(thr)) {
-	  ((LockLocal*)lck)->unlock();
-	}
-	break;
-      case Te_Frame: 
-	if (((LockFrameEmul*)lck)->hasLock(thr))
-	  ((LockFrameEmul*)lck)->unlock(thr);
-	break;
-      case Te_Manager: 
-	if (((LockManagerEmul*)lck)->hasLock(thr))
-	  ((LockManagerEmul*)lck)->unlock(thr);
-	break;
-      case Te_Proxy: OZD_error("lock proxy unlocking\n");break;}
+      lockRelease(lck);
     } else if (PC==C_SET_SELF_Ptr) { 
-      foundSelf = (Object*) G;
+      foundSelf = (OzObject*) G;
     } else if (PC==C_SET_ABSTR_Ptr) { 
       ozstat.leaveCall((PrTabEntry*)Y);
     }

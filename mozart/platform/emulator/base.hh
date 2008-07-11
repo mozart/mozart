@@ -59,14 +59,14 @@
 //
 #define MAX_DP_STRING		4
 // MARSHALERMAJOR "#" MARSHALERMINOR:
-#define MARSHALERVERSION	"3#3"
-#define MARSHALERMAJOR		3
-#define MARSHALERMINOR		3
+#define MARSHALERVERSION	"4#0"
+#define MARSHALERMAJOR		4
+#define MARSHALERMINOR		0
 
 //
-#define PERDIOVERSION     "3#3" /* PERDIOMAJOR "#" PERDIOMINOR */
-#define PERDIOMAJOR          3
-#define PERDIOMINOR          3
+#define PERDIOVERSION     "4#0" /* PERDIOMAJOR "#" PERDIOMINOR */
+#define PERDIOMAJOR          4
+#define PERDIOMINOR          0
 
 
 const unsigned int KB = 1024;
@@ -263,21 +263,11 @@ class ConstTerm;
 class OZ_Extension;
 class Cell;
 class SChunk;
+class OzArray;
+class OzPort;
 
-class EntityInfo;
-class Tertiary;
-
-class Port;
-class PortWithStream;
-class PortLocal;
-
-class PendThread;
-class PendBinding;
-class CellLocal;
-class CellFrameEmul;
-class CellSecEmul;
-class CellManagerEmul;
-class Chain;
+class PendingThreadList;
+class OzCell;
 
 class RefTable;
 class RefTrail;
@@ -286,7 +276,7 @@ class GenTraverser;
 class Builder;
 
 class Site;
-class DSite;
+//class DSite now provided by the Dss.
 
 class Builtin;
 
@@ -345,16 +335,13 @@ class IHashTable;
 
 class CompStream;
 
-class ObjectClass;
-class Object;
+class OzClass;
+class OzObject;
+class ObjectState;
 
 class OzDictionary;
 
 class OzLock;
-class LockLocal;
-class LockFrameEmul;
-class LockManagerEmul;
-class LockSecEmul;
 
 class InlineCache;
 class OZ_Location;
@@ -363,6 +350,34 @@ class NetAddress;
 class GName;
 
 class IONode;
+
+// Operations on tabular entities, like chunks, arrays, dictionaries
+enum OperationTag {
+  OP_MEMBER,                // key -> bool
+  OP_GET,                   // key -> val
+  OP_CONDGET,               // key x defval -> val
+  OP_PUT,                   // key x newval -> ()
+  OP_EXCHANGE,              // key x newval -> oldval
+  OP_CONDEXCHANGE,          // key x defval x newval -> oldval
+  OP_ISEMPTY,               // () -> bool
+  OP_REMOVE,                // key -> ()
+  OP_REMOVEALL,             // () -> ()
+  OP_KEYS,                  // () -> list
+  OP_ITEMS,                 // () -> list
+  OP_ENTRIES,               // () -> list
+  OP_CLONE,                 // () -> val
+  OP_TORECORD               // label -> val
+};
+
+inline OperationTag toOperationTag(int op) {
+  Assert(op >= 0 && op <= OP_TORECORD);
+  return static_cast<OperationTag>(op);
+}
+
+// operation arity (how many inputs and outputs), and has it side effects?
+static int OperationIn[]    = { 1, 1, 2, 2, 2, 3, 0, 1, 0, 0, 0, 0, 0, 1 };
+static int OperationOut[]   = { 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1 };
+static int OperationWrite[] = { 0, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0 };
 
 void checkGC();
 
@@ -397,6 +412,7 @@ enum LockRet{
 // see ozthread.cc
 Bool oz_isThread(TaggedRef term);
 Thread *oz_ThreadToC(TaggedRef term);
+Thread *oz_ThreadToAliveC(TaggedRef term);
 OZ_Term oz_thread(Thread *tt);
 
 // see am.cc
@@ -408,7 +424,10 @@ void handlerCHLD(int);
 void handlerALRM(int);
 void handlerUSR2(int);
 
+// unify.cc
 OZ_Return oz_unify(OZ_Term t1, OZ_Term t2);
+// builtins.cc
+OZ_Return oz_eqeq(OZ_Term t1, OZ_Term t2);
 
 // printing (see foreign.cc)
 void oz_printStream(OZ_Term term, ostream &out,
@@ -493,11 +512,15 @@ void oz_gCollectTerm(TaggedRef & f, TaggedRef & t) {
   OZ_gCollectBlock(&f, &t, 1);
 }
 
-// builtins.cc
-OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val);
+// register a triple (entity, port, item) for post-mortem finalization
+void registerPostMortem(TaggedRef, TaggedRef, TaggedRef);
 
-// var_simple.cc
-OzVariable *oz_newSimpleVar(Board *bb);
+// builtins.cc
+OZ_Return oz_sendPort(OZ_Term prt, OZ_Term val, OZ_Term var = 0);
+
+// var_simple.cc, readonly.cc
+OZ_Term oz_newSimpleVar(Board *bb);
+OZ_Term oz_newReadOnly(Board *bb);
 
 #ifndef HAVE_STRDUP
 inline char * strdup(const char *s) {

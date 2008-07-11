@@ -183,10 +183,18 @@ int oz_fastlength(OZ_Term l) {
  * ConstTerm
  *=================================================================== */
 
-const char *ObjectClass::getPrintName() 
+const char *Abstraction::getPrintName() {
+  return getPred() ? getPred()->getPrintName() : "???";
+}
+
+const char *OzClass::getPrintName() 
 { 
-  TaggedRef aux = classGetFeature(NameOoPrintName);
+  TaggedRef aux = isComplete() ? classGetFeature(NameOoPrintName) : 0;
   return aux ? tagged2Literal(oz_deref(aux))->getPrintName() : "???";
+}
+
+const char *OzObject::getPrintName() {
+  return getClass() ? getClass()->getPrintName() : "???";
 }
 
 const char *ConstTerm::getPrintName()
@@ -195,9 +203,9 @@ const char *ConstTerm::getPrintName()
   case Co_Abstraction:
     return ((Abstraction *) this)->getPrintName();
   case Co_Object:
-    return ((Object *) this)->getPrintName();
+    return ((OzObject *) this)->getPrintName();
   case Co_Class:
-    return ((ObjectClass *) this)->getPrintName();
+    return ((OzClass *) this)->getPrintName();
   case Co_Builtin:
     return ((Builtin *)this)->getPrintName();
   default:
@@ -218,7 +226,7 @@ int ConstTerm::getArity()
 
 
 /*===================================================================
- * Object
+ * OzObject
  *=================================================================== */
 
 /*
@@ -295,7 +303,7 @@ TaggedRef duplist(TaggedRef list, int &len)
   return ret;
 }
 
-TaggedRef Object::getArityList(void) {
+TaggedRef OzObject::getArityList(void) {
   TaggedRef ret = oz_nil();
   
   SRecord *rec=getClass()->getUnfreeRecord();
@@ -303,7 +311,7 @@ TaggedRef Object::getArityList(void) {
   return ret;
 }
 
-int Object::getWidth(void) {
+int OzObject::getWidth(void) {
   int ret = 0;
   SRecord *feat=getFreeRecord();
   if (feat) ret = feat->getWidth();
@@ -313,16 +321,10 @@ int Object::getWidth(void) {
   return ret;
 }
 
-GName *Object::globalize(){
-  if (!getGName1()) {
-    setGName(newGName(makeTaggedConst(this),GNT_OBJECT));}
-  return getGName1();
-}
-
 
 /* X==NULL means: do not reorder X args */
 inline
-Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, Bool reorder)
+Bool OzClass::lookupDefault(TaggedRef label, SRecordArity arity, Bool reorder)
 {
   TaggedRef def;
 
@@ -404,7 +406,7 @@ Bool ObjectClass::lookupDefault(TaggedRef label, SRecordArity arity, Bool reorde
 }
 
 
-Abstraction *ObjectClass::getMethod(TaggedRef label, SRecordArity arity, 
+Abstraction *OzClass::getMethod(TaggedRef label, SRecordArity arity, 
 				    Bool reorder,
 				    Bool &defaultsUsed)
 {
@@ -429,7 +431,7 @@ Abstraction *ObjectClass::getMethod(TaggedRef label, SRecordArity arity,
 
 
 
-TaggedRef ObjectClass::getFallbackNew() {
+TaggedRef OzClass::getFallbackNew() {
   TaggedRef fbs = oz_deref(classGetFeature(NameOoFallback));
 
   if (!oz_isSRecord(fbs)) 
@@ -445,7 +447,7 @@ TaggedRef ObjectClass::getFallbackNew() {
   return fbn;
 }
 
-TaggedRef ObjectClass::getFallbackApply() {
+TaggedRef OzClass::getFallbackApply() {
   TaggedRef fbs = oz_deref(classGetFeature(NameOoFallback));
 
   if (!oz_isSRecord(fbs)) 
@@ -1288,7 +1290,7 @@ Builtin::Builtin(const char * mn, const char * bn,
   : bi_name(bn),
     inArity(inArity), outArity(outArity), 
     fun(fn), sited(nat),
-    ConstTerm(Co_Builtin) {
+    ConstTermWithHome(NULL, Co_Builtin) {
   Assert(bn);
   mod_name = mn ? mn : "`missing module name`";
 #ifdef PROFILE_BI
@@ -1325,77 +1327,117 @@ void Builtin::initname(void) {
 
 
 /*===================================================================
- * LockLocal
+ * PendingThreadList
  *=================================================================== */
 
-void LockLocal::unlockComplex(){
-  setLocker(pendThreadResumeFirst(&pending));
-  return;}
-
-void LockLocal::lockComplex(Thread *t){
-  // mm2: ignoring the return is badly wrong
-  (void) pendThreadAddToEndEmul(getPendBase(),t,getBoardInternal());}
-
-void LockSecEmul::unlockPending(Thread* th){
-  Assert(th!=NULL);
-  PendThread** pt=&pending;
-  while((*pt)->thread!=th){
-    pt= &((*pt)->next);
-    if((*pt)==NULL) return;}
-  *pt=(*pt)->next;}
-
-/*===================================================================
- * PendThread
- *=================================================================== */
-
-OZ_Return pendThreadAddToEndEmul(PendThread **pt,Thread *t, Board *home)
-{
-  while(*pt!=NULL){pt= &((*pt)->next);}
-
-  ControlVarNew(controlvar,home);
-  *pt=new PendThread(t,NULL,0,0,controlvar,NOEX);
-  SuspendOnControlVar;
+TaggedRef pendingThreadList2List(PendingThreadList* pt) {
+  TaggedRef list = 0;
+  TaggedRef* tailp = &list;
+  for (; pt != NULL; pt = pt->next) {
+    *tailp = oz_cons(oz_pair2(pt->thread, pt->controlvar), 0);
+    tailp = tagged2LTuple(*tailp)->getRefTail();
+  }
+  *tailp = oz_nil();
+  return list;
 }
 
-Thread * pendThreadResumeFirst(PendThread **pt){
-  Thread * t;
-  do {
-    PendThread * tmp = *pt;
-    Assert(tmp!=NULL);
-    ControlVarResume(tmp->controlvar);
-    t = tmp->thread;
-    Assert(t!=NULL);
-    Assert(t!=(Thread*) 0x1);
-    *pt = tmp->next;
-    tmp->dispose();
-    if (!t->isDead())
-      return t;
-  } while (*pt);
-  return t;
+PendingThreadList* list2PendingThreadList(TaggedRef l) {
+  PendingThreadList* pt = NULL;
+  PendingThreadList** ptp = &pt;
+  for (l = oz_deref(l); oz_isLTuple(l); l = oz_deref(oz_tail(l))) {
+    TaggedRef pair = oz_deref(oz_head(l));
+    TaggedRef thr = oz_deref(oz_left(pair));
+    TaggedRef cv = oz_right(pair);
+    *ptp = new PendingThreadList(thr, cv, NULL);
+    ptp = &((*ptp)->next);
+  }
+  return pt;
 }
 
+void pendingThreadAdd(PendingThreadList** pt, TaggedRef t, TaggedRef cv) {
+  while (*pt != NULL) { pt = &((*pt)->next); }
+  *pt = new PendingThreadList(t, cv, NULL);
+}
 
-void gCollectPendThreadEmul(PendThread **pt)
-{
-  PendThread *tmp;
-  while (*pt!=NULL) {
-    // As the bugfix in Thread::gCollectRecurseV
-    Thread *tmpThread = SuspToThread((*pt)->thread->gCollectSuspendable());
-    if (!tmpThread) {
-      tmpThread=new Thread((*pt)->thread->getFlags(),
-			   (*pt)->thread->getPriority(),
-			   oz_rootBoard(),(*pt)->thread->getID());
+void pendingThreadDrop(PendingThreadList** pt, TaggedRef t) {
+  while (*pt != NULL) {
+    if (oz_eq(t, (*pt)->thread)) {
+      PendingThreadList* p = *pt;
+      *pt = p->next;
+      OZ_unifyInThread(p->controlvar, oz_unit());   // maybe not useful...
+      p->dispose();
+      return;
     }
-    tmp=new PendThread(tmpThread,(*pt)->next);
-    Assert((tmp)->thread!=NULL);
-    tmp->exKind = (*pt)->exKind;
-    oz_gCollectTerm((*pt)->old,tmp->old);
-    oz_gCollectTerm((*pt)->nw,tmp->nw);
-    oz_gCollectTerm((*pt)->controlvar,tmp->controlvar);
-    *pt=tmp;
-    pt=&(tmp->next);
   }
 }
+
+TaggedRef pendingThreadResumeFirst(PendingThreadList** pt) {
+  PendingThreadList* p = *pt;
+  TaggedRef thr;
+  Assert(p != NULL);
+  *pt = p->next;
+  thr = p->thread;
+  OZ_unifyInThread(p->controlvar, oz_unit());
+  p->dispose();
+  return thr;
+}
+
+void disposePendingThreadList(PendingThreadList* pt) {
+  while (pt != NULL) {
+    PendingThreadList* p = pt;
+    pt = p->next;
+    p->dispose();
+  }
+}
+
+/*===================================================================
+ * OzLock
+ *=================================================================== */
+
+// defined in builtins.cc
+int  oz_raise(OZ_Term cat, OZ_Term key, const char * label, int arity, ...);
+
+OZ_Return lockTake(OzLock* lock) {
+  Thread* thr = oz_currentThread();
+  TaggedRef t = oz_thread(thr);
+
+  if (!lock->isDistributed()) { // centralized case
+    if (!oz_isCurrentBoard(GETBOARD(lock)))
+      return oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
+
+    if (lock->take(t)) return PROCEED;
+    ControlVarNew(controlvar, oz_currentBoard());
+    lock->subscribe(t, controlvar);
+    SuspendOnControlVar;
+
+  } else { // distributed case
+    if (!oz_isRootBoard(oz_currentBoard()))
+      return oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
+
+    return (*distLockTake)(lock, t);
+  }
+}
+
+// the release operation is asynchronuous, but take and release
+// operations must be executed in order
+void lockRelease(OzLock* lock) {
+  Thread* thr = oz_currentThread();
+  TaggedRef t = oz_thread(thr);
+
+  if (!lock->isDistributed()) { // centralized case
+    Assert(oz_isCurrentBoard(GETBOARD(lock)));
+    lock->release(t);
+
+  } else { // distributed case
+    Assert(oz_isRootBoard(oz_currentBoard()));
+    (void) (*distLockRelease)(lock, t);
+  }
+  Assert(am.isEmptySuspendVarList());
+}
+
+/*===================================================================
+ * 
+ *=================================================================== */
 
 #define STRING_BLOCK_SZ 64
 
@@ -1462,7 +1504,7 @@ TaggedRef oz_getPrintName(TaggedRef t) {
       case Co_Abstraction:
 	return ((Abstraction *) rec)->getName();
       case Co_Class:
-	return oz_atom((OZ_CONST char*)((ObjectClass *) rec)->getPrintName());
+	return oz_atom((OZ_CONST char*)((OzClass *) rec)->getPrintName());
       default:
 	break;
       }
@@ -1482,3 +1524,129 @@ TaggedRef oz_getPrintName(TaggedRef t) {
   return AtomEmpty;
 }
 
+/*===================================================================
+ * ObjectState operations
+ *=================================================================== */
+
+OZ_Return ostateOperation(OperationTag op, ObjectState* state,
+			  TaggedRef* arg, TaggedRef* res) {
+  switch (op) {
+  case OP_GET:
+    if (*res = state->getFeature(arg[0])) return PROCEED;
+    break;
+  case OP_PUT:
+    if (state->setFeature(arg[0], arg[1])) return PROCEED;
+    break;
+  case OP_EXCHANGE:
+    if (*res = state->setFeature(arg[0], arg[1])) return PROCEED;
+    break;
+  default:
+    // invalid operation
+    return oz_raise(E_ERROR,E_KERNEL,"object state",1,makeTaggedConst(state));
+  }
+  // the operation has failed
+  return oz_raise(E_ERROR, E_KERNEL, "object state", 2,
+		  makeTaggedConst(state), arg[0]);
+}
+
+/*===================================================================
+ * OzObject operations
+ *=================================================================== */
+
+OZ_Return objectOperation(OperationTag op, OzObject* obj,
+			  TaggedRef* arg, TaggedRef* res) {
+  switch (op) {
+  case OP_MEMBER: {
+    TaggedRef out = obj->getFeature(arg[0]);
+    *res = out ? oz_true() : oz_false();
+    return PROCEED;
+  }
+  case OP_GET: {
+    if (*res = obj->getFeature(arg[0])) return PROCEED;
+    return oz_raise(E_ERROR, E_KERNEL, "object", 2,
+		    makeTaggedConst(obj), arg[0]);
+  }
+  case OP_CONDGET: {
+    TaggedRef out = obj->getFeature(arg[0]);
+    *res = out ? out : arg[1];
+    return PROCEED;
+  }
+  default:
+    // invalid operation
+    return oz_raise(E_ERROR, E_KERNEL, "object", 1, makeTaggedConst(obj));
+  }
+}
+
+/*===================================================================
+ * SChunk operations
+ *=================================================================== */
+
+OZ_Return
+chunkOperation(OperationTag op, SChunk* chunk, TaggedRef* arg, TaggedRef* res) {
+  switch (op) {
+  case OP_MEMBER: {
+    TaggedRef out = chunk->getFeature(arg[0]);
+    *res = out ? oz_true() : oz_false();
+    return PROCEED;
+  }
+  case OP_GET: {
+    if (*res = chunk->getFeature(arg[0])) return PROCEED;
+    return oz_raise(E_ERROR, E_KERNEL, "chunk", 2,
+		    makeTaggedConst(chunk), arg[0]);
+  }
+  case OP_CONDGET: {
+    TaggedRef out = chunk->getFeature(arg[0]);
+    *res = out ? out : arg[1];
+    return PROCEED;
+  }
+  default:
+    // invalid operation
+    return oz_raise(E_ERROR, E_KERNEL, "chunk", 1, makeTaggedConst(chunk));
+  }
+}
+
+/*===================================================================
+ * OzArray operations
+ *=================================================================== */
+
+OZ_Return
+arrayOperation(OperationTag op, OzArray* arr, TaggedRef* arg, TaggedRef* res) {
+  switch (op) {
+  case OP_GET:
+    if (*res = arr->getArg(tagged2SmallInt(arg[0]))) return PROCEED;
+    break;
+  case OP_PUT:
+    arr->setArg(tagged2SmallInt(arg[0]), arg[1]);
+    return PROCEED;
+  case OP_EXCHANGE:
+    if (*res = arr->exchange(tagged2SmallInt(arg[0]), arg[1])) return PROCEED;
+    break;
+  default:
+    // invalid operation
+    return oz_raise(E_ERROR, E_KERNEL, "array", 1, makeTaggedConst(arr));
+  }
+  // the operation failed
+  return oz_raise(E_ERROR, E_KERNEL, "array", 2, makeTaggedConst(arr), arg[0]);
+}
+
+/*===================================================================
+ * OzCell operations
+ *=================================================================== */
+
+OZ_Return
+cellOperation(OperationTag op, OzCell* cell, TaggedRef* arg, TaggedRef* res) {
+  switch (op) {
+  case OP_GET:
+    *res = cell->getValue();
+    return PROCEED;
+  case OP_PUT:
+    cell->setValue(arg[0]);
+    return PROCEED;
+  case OP_EXCHANGE:
+    *res = cell->exchangeValue(arg[0]);
+    return PROCEED;
+  default:
+    // invalid operation
+    return oz_raise(E_ERROR, E_KERNEL, "cell", 1, makeTaggedConst(cell));
+  }
+}

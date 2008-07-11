@@ -322,9 +322,7 @@ public:
 
   void put_int(TaggedRef i) {
     if (oz_isSmallInt(i)) {
-      int len;
-      sprintf(buffer,"%d%n",tagged2SmallInt(i),&len);
-      buffer += len;
+      buffer += sprintf(buffer,"%d",tagged2SmallInt(i));
       ensure(0);
     } else {
       char * s = toC(i);
@@ -337,9 +335,7 @@ public:
   }
 
   void put_float(TaggedRef f) {
-    int len;
-    sprintf(buffer,"%g%n",floatValue(f),&len);
-    buffer += len;
+    buffer += sprintf(buffer,"%g",floatValue(f));
     ensure(0);
   }
 
@@ -488,7 +484,7 @@ public:
   OZ_Return put_record(SRecord * sr, TaggedRef as);
   OZ_Return put_record_or_tuple(TaggedRef tcl, int start); 
 
-  OZ_Return close_hierarchy(Object * o);
+  OZ_Return close_hierarchy(OzObject * o);
 
 };
 
@@ -1361,7 +1357,7 @@ OZ_BI_define(BItk_writeFilter,5,0) {
 
 
 
-OZ_Return TK::close_hierarchy(Object * o) {
+OZ_Return TK::close_hierarchy(OzObject * o) {
   TaggedRef v = o->replaceFeature(TkNameTclName, TkNameTclClosed);
     
   if (v == makeTaggedNULL()) {
@@ -1443,7 +1439,7 @@ OZ_BI_define(BItk_close,2,0) {
       
     Assert(oz_isObject(to));
 
-    Object  * o = tagged2Object(to);
+    OzObject  * o = tagged2Object(to);
     TaggedRef v = o->getFeature(TkNameTclName);
     TaggedRef slave_entry;    
 	

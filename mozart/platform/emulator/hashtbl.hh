@@ -272,6 +272,7 @@ public:
   int getSize() { return (counter); }
   void htAdd(void *k, void *v);
   void htAddLastNotFound(void *k, void *v);
+  void htAddOverWrite(void *k, void *val); //comments at the .cc-file
   void* htFind(void *k);
   void mkEmpty();
 
@@ -383,7 +384,7 @@ private:
 public:
   GenDistEntryTable(int sizeAsPowerOf2) { init(sizeAsPowerOf2); }
   ~GenDistEntryTable() {
-    delete table;
+    delete[] table;
     DebugCode(table = (NODE **) -1;);
     DebugCode(tableSize = counter = percent = bits = rsBits = -1;);
   }

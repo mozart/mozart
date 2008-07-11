@@ -52,6 +52,7 @@
  #define FD_SETSIZE 10240
  #include <windows.h>
  #include <winsock.h>
+ #define socklen_t int
 
 #ifdef OZNOINTERFACE
   #undef INTERFACE

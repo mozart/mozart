@@ -61,9 +61,13 @@ OZ_BI_define(BIchunkWidth, 1,1)
     int w;
     switch (tagged2Const(ch)->getType()) {
     case Co_Class: 
-      w = tagged2ObjectClass(ch)->getWidth();
+      if (!tagged2OzClass(ch)->isComplete())   // call distribution layer
+	return (*distClassGet)(tagged2OzClass(ch));
+      w = tagged2OzClass(ch)->getWidth();
       break;
     case Co_Object:
+      if (! tagged2Object(ch)->getClass()->isComplete())   // distribution
+	return (*distClassGet)(tagged2Object(ch)->getClass());
       w = tagged2Object(ch)->getWidth();
       break;
     case Co_Chunk: 
@@ -142,9 +146,13 @@ OZ_BI_define(BIchunkArityBrowser,1,1)
     TaggedRef as;
     switch (tagged2Const(ch)->getType()) {
     case Co_Class : 
-      as = tagged2ObjectClass(ch)->getArityList();
+      if (!tagged2OzClass(ch)->isComplete())   // call distribution layer
+	return (*distClassGet)(tagged2OzClass(ch));
+      as = tagged2OzClass(ch)->getArityList();
       break;
     case Co_Object: 
+      if (! tagged2Object(ch)->getClass()->isComplete())   // distribution
+	return (*distClassGet)(tagged2Object(ch)->getClass());
       as = tagged2Object(ch)->getArityList();
       break;
     case Co_Chunk : 
@@ -196,10 +204,15 @@ OZ_BI_define(BIprocLoc,1,3)
   if (oz_isAbstraction(v)) {
     Abstraction *a = tagged2Abstraction(v);
     PrTabEntry *p = a->getPred();
-
-    OZ_out(0) = p->getFile();
-    OZ_out(1) = OZ_int(p->getLine());
-    OZ_out(2) = OZ_int(p->getColumn());
+    if (p) {
+      OZ_out(0) = p->getFile();
+      OZ_out(1) = OZ_int(p->getLine());
+      OZ_out(2) = OZ_int(p->getColumn());
+    } else {
+      OZ_out(0) = AtomProcedure;
+      OZ_out(1) = AtomDash;
+      OZ_out(2) = AtomDash;
+    }
     return (PROCEED);
   } else if (oz_isBuiltin(v)) {
     OZ_out(0) = AtomBBuiltin;
