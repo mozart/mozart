@@ -10,41 +10,11 @@ functor
 import
    TestMisc
    Compiler
-   Fault
-  %   System(show:Show)
 export
    Return
 define
    Size=20000
    Sites=1
-
-   class TcpPropMonitor
-      prop locking
-      attr n:0
-      meth init skip end
-      meth enter
-	 lock
-	    if @n==0 then
-	       {Fault.defaultDisable _}
-	       {Fault.defaultEnable [permFail] _}
-	    end
-	    n <- @n+1
-	 end
-      end
-      meth leave
-	 lock
-	    if @n==1 then
-	       % Assumes that the system had these settings to begin with.
-	       % If there was a way to check, this could have been done
-	       % in enter...
-	       {Fault.defaultEnable [tempFail permFail] _}
-	    end
-	    n <- @n-1
-	 end
-      end
-   end
-
-   Monitor = {New TcpPropMonitor init}
 
    proc {Start}
       % Create large values:
@@ -93,87 +63,69 @@ define
       Obj={New Cl init}
       % ByteString
       ByteS = {ByteString.make V}
-
+      
       TestValues = [test#test 
-	            list#L
-	     	    virtualstring#V
-	            string#St
+		    list#L
+		    virtualstring#V
+		    string#St
 		    %% atom#HAtom
 		    tuple#Tup
-	            record#Rec
-	            %% array#A
-	            procedure#Proc 
+		    record#Rec
+		    %% array#A
+		    procedure#Proc 
 		    'class'#Cl
-	            object#Obj
-	            bytestring#ByteS]
-   in
-      try
-	 {Monitor enter}
-	 Managers
-	 InP InSCell={NewCell {NewPort $ InP}}
-	 OutS OutP={NewPort OutS}
-	 proc {CheckStream S Value Times}
-	    if Times > 0 then
-	       case S of !Value|Rest then
-		  {CheckStream Rest Value (Times-1)}
-	       else
-		  raise equality_test_failed(S.1 Value) end
-	       end
+		    object#Obj
+		    bytestring#ByteS]
+      
+      Managers
+      InP InSCell={NewCell {NewPort $ InP}}
+      OutS OutP={NewPort OutS}
+      proc {CheckStream S Value Times}
+	 if Times > 0 then
+	    case S of !Value|Rest then
+	       {CheckStream Rest Value (Times-1)}
 	    else
-	       {Assign InSCell S} % Store away where to start with next value...
+	       raise equality_test_failed(S.1 Value) end
 	    end
+	 else
+	    {Assign InSCell S} % Store away where to start with next value...
 	 end
-      in
-	 try Hosts in
-	    {TestMisc.getHostNames Hosts}
-	    {TestMisc.getRemoteManagers Sites Hosts Managers}
-	    {ForAll Managers proc {$ RemMan}
-				{StartRemSite RemMan OutS InP}
-			     end}
-
-	    {ForAll TestValues proc {$ Lable#X}
-				  try
-%			          {Show trying(Lable)}
-				     {Send OutP X}			       
-				     {CheckStream {Access InSCell}
-				      X {List.length Managers}}
-				  catch Ex then
-				     raise failed(Lable Ex) end
-				  end
-			       end}
-	 catch X then
-%	 {Show manager_caught(X)}
-	    {TestMisc.gcAll Managers}
-	    {TestMisc.listApply Managers close}
-	    raise X end
-	 end
+      end
+   in
+      try Hosts in
+	 {TestMisc.getHostNames Hosts}
+	 {TestMisc.getRemoteManagers Sites Hosts Managers}
+	 {ForAll Managers proc {$ RemMan}
+			     {StartRemSite RemMan OutS InP}
+			  end}
+	 {ForAll TestValues proc {$ Lable#X}
+			       try
+				  {Send OutP X}			       
+				  {CheckStream {Access InSCell}
+				   X {List.length Managers}}
+			       catch Ex then
+				  raise failed(Lable Ex) end
+			       end
+			    end}
+      catch X then
 	 {TestMisc.gcAll Managers}
 	 {TestMisc.listApply Managers close}
-%      {Show done}
-      finally
-	 {Monitor leave}
+	 raise X end
       end
+      {TestMisc.gcAll Managers}
+      {TestMisc.listApply Managers close}
    end
-   
+
    proc {StartRemSite Manager InS OutP}
       {Manager apply(url:'' functor
 			    import
 			       Property(put)
 			       System(gcDo)
-			       Fault
 			    define
-			       {Fault.defaultDisable _}
-			       {Fault.defaultEnable [permFail] _}
 			       {Property.put 'close.time' 1000}
-
-			       proc {Start InS OutP}
-				  {ForAll InS proc{$ X}
-						 {Wait X}
-						 {Send OutP X}
-					      end}
+			       thread
+				  for X in InS do {Wait X} {Send OutP X} end
 			       end
-			       
-			       thread {Start InS OutP} end
 			       %% kost@ : keep that idiot doing also GC;
 			       thread P in
 				  proc {P} {System.gcDo} {Delay 500} {P} end
@@ -184,6 +136,3 @@ define
 
    Return = dp([huge(Start keys:[remote])])
 end
-
-
-
