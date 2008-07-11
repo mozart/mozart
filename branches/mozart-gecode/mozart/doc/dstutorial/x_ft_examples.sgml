@@ -11,6 +11,7 @@ fault-tolerant versions of the server examples.
 We conclude with a bigger example:
 reliable objects with recovery.
 
+<!--
 <SECTION><TITLE>A fault-tolerant hello server</TITLE>
 
 <index/example<and>client crash/
@@ -262,7 +263,7 @@ a remote stationary object.
 
 <P>We show how to use <<Remote>> and <<NewSafeStat>> to create
 a remote stationary object.
-First, we need a class--let's define
+First, we need a class - let's define
 a simple class <<Counter>> that implements a counter.
 <<<
 declare
@@ -612,12 +613,13 @@ up after 10 tries.
       end
    end
 </chunk>
+-->
 
 <SECTION><TITLE>A fault-tolerant broadcast channel</TITLE>
 
-<P>We can use the fault-tolerant stationary object
-(see <ptr to="fault.tolerant.stationary.objects">)
+<P>We will show how
 to define a simple open fault-tolerant broadcast channel.
+The example uses almost every concept seen in the former chapter.
 This is a useful abstraction; for example it
 can be used as the heart of a chat tool such as IRC.
 The service has a client/server structure
@@ -627,25 +629,24 @@ In case of a server crash, the service will no longer
 be available.  Clients receive notification of this.
 
 <P>Users access the broadcast service through a local client.
-The user creates the client by using a procedure given by
-the server.
-The client is accessed as an object.
-It has a method <<sendMessage>> for broadcasting a message.
-When the client receives a message or is notified
+The user creates a client object that is initialized with
+a ticket provided by the server.
+The client object has a method <<sendMessage>> for broadcasting a message.
+When the client object receives a message or is notified
 of a client or server crash,
 it informs the user by calling a user-defined procedure
 with one argument.
 The following events are possible:
 <LIST>
-<ITEM><<permServer>>: the broadcast channel server has crashed.
-<ITEM><<permClient(UserID)>>: the client identified by <<UserID>> has
-crashed.
 <ITEM><<message(UserID Mess)>>: receive the message <<Mess>> from client
 <<UserID>>.
 <ITEM><<registered(UserID)>>: the client identified by <<UserID>> has
 registered to the channel.
 <ITEM><<unregistered(UserID)>>: the client identified by <<UserID>>
 has unregistered from the channel.
+<ITEM><<permClient(UserID)>>: the client identified by <<UserID>> has
+crashed.
+<ITEM><<permServer>>: the broadcast channel server has crashed.
 </LIST>
 <P>We give an example of how the broadcast channel is used,
 and we follow this by showing its implementation.
@@ -657,15 +658,15 @@ to detect client and server crashes.
 <SUBSECTION><TITLE>Sample use (no fault tolerance)</TITLE>
 
 <P>First we create the channel server.
-To connect with clients, the server offers a ticket
+The server is a port.
+To connect with clients, the server is made available via a ticket
 with unlimited connection ability.
 The ticket is available through a publicly-accessible URL.
 <<<
 local 
-   S={NewStat ChannelServer init(S)}
+   S={NewChannelServer}
 in
-   {Pickle.save {Connection.offerUnlimited S}
-                "/usr/staff/pvr/public_html/chat"}
+   {Pickle.save {Connection.offerMany S} "/usr/staff/pvr/public_html/chat"}
 end
 >>>
 
@@ -687,15 +688,13 @@ local
          end}}
    end
    S={Connection.take {Pickle.load "http://www.info.ucl.ac.be/~pvr/chat"}}
-   MakeNewClient={S getMakeNewClient($)}
-   C={MakeNewClient HandleIncomingMessage 'myNameAsID'}
+   C={New ChannelClient init(S 'Raphael' HandleIncomingMessage)}
 in
    {For 1 1000 1
       proc {$ I}
          {C sendMessage('hello'#I)}
          {Delay 800}
       end}
-
    {C close}
 end
 >>>
@@ -704,194 +703,151 @@ of the form <<'hello'#I>>, where <<I>> takes successive values from
 1 to 1000.
 Then we close the client.
 
-<P>A nice property of this channel abstraction is that
-the client site only needs to know
-the channel's URL and its interface.
-All this can be stored in Ascii form
-and transmitted to the client at any time.
-In particular, the syntax of the interfaces, i.e.,
-the messages understood by user, client, and server,
-is defined completely by a simple Ascii list of the
-message names and their number of arguments.
-The client site does not need to
-know any program code.
-When a client is created through a call
-to <<MakeNewClient>>, then at that time the client code
-is transferred from the channel server to the client site.
+<p>Note that the client needs the code of the class <<ChannelClient>>.
+It is not difficult to avoid that requirement by making
+the server provide a functor,
+that the client applies, and which instantiates a <<ChannelClient>>.
+Please consult the <ref.extern to="ozdoc:apptut"/Application Programming/
+tutorial to learn more about that.
 
-<SUBSECTION id="channel.definition"><TITLE>Definition (no fault tolerance)</TITLE>
+<SUBSECTION id="channel.definition">
+  <TITLE>Definition (no fault tolerance)</TITLE>
 
-<P>Since a fault-tolerant stationary object has well-defined
-behavior in the case of a permanent crash, we can show the
-service's implementation in two steps.
+<p>The whole client-server communication is implemented with ports.
+They have a well-defined behavior in the case of a permanent crash:
+the operation <<Send>> has no more effect.
+We will show the service's implementation in two steps.
 First, we show how it is written without taking fault tolerance
 into account.
 Second, we complete the example by adding fault handling code.
-This is easy; it amounts to catching the <<remoteObjectError>>
-exception for each remote method call (client to server
-and server to client).
+This is easy; it amounts to add a few threads monitoring the fault
+state of the clients and server ports.
 
-<P>The client and server are stationary objects
-with the following structure:
-<chunk><title/Client and server classes/
+<p>The client is an object with the following structure,
+while the server is a port created by the function
+<<NewChannelServer>>.
+<chunk><title/Client class and server function/
 class ChannelClient
-   feat
-      server selfStatic usrMsgHandler userID
-   <chunk.ref/Client interface to user/
-   <chunk.ref/Client interface to server/
+   feat client userID
+   attr server
+   <chunk.ref/Client methods/
 end
 
-local
-   <chunk.ref/Concurrent ForAll procedure/
+fun {NewChannelServer}
+   Stream
+   Server={NewPort Stream}
+   <chunk.ref/Server's serving procedures/
 in
-   class ChannelServer
-      prop locking
-      feat selfStatic
-      attr clientList
-      meth init(S)
-         lock
-            self.selfStatic=S
-            clientList:=nil
-         end
-      end
-      <chunk.ref/Server's getMakeClient method/
-      <chunk.ref/Server interface to client/
-   end
+   thread {Serve Stream} end
+   Server
 end
 </chunk>
 
 <SUBSUBSECTION id="client.definition"><TITLE>Client definition</TITLE>
 
-<P>The client provides two methods to the server.
-The first, <<put>>, for receiving broadcasted
-message from registered clients.
-The second, <<init>>, for the client
-initialization (remember that a client is created using a procedure
-defined by the server).
-<chunk><title/Client interface to server/
-meth put(Msg)
-   {self.usrMsgHandler Msg}
+<p>The client has three methods.
+The first one, <<init>>, initializes a client with a server port,
+a user identifier, and a message handler procedure.
+The second one, <<close>>, deregisters the client from the service.
+The last one, <<sendMessage>>, sends a message for broadcast.
+<chunk><title/Client methods/
+meth init(Server UserID MsgHandler)
+   Ms
+in
+   @server = Server
+   self.client={NewPort Ms}
+   self.userID=UserID
+   {Send Server register(self.client self.userID)}
+   thread {ForAll Ms MsgHandler} end
+   <chunk.ref/Client's server failure handler/
 end
 
-meth init(Server SelfReference UsrMsgHandler UserID)
-   self.server=Server
-   self.selfStatic=SelfReference
-   self.usrMsgHandler=UsrMsgHandler
-   self.userID=UserID
-   {self.server register(self.selfStatic self.userID)}
+meth close()
+   {Send @server unregister(self.client self.userID)}
+   server := unit
+end
+
+meth sendMessage(M)
+   {Send @server broadcast(self.userID M)}
 end
 </chunk>
 <P>The client keeps a reference to the server, to itself
-for unregistering, to the user-defined handler procedure,
-and to its user identification.
+for unregistering, and to its user identification.
+The user-defined handler procedure is directly applied to the stream
+of incoming messages from the server.
+In our case, the server only sends events as described above.
+As we can see, the server must be able to process
+three kinds of messages:
+<<register>> and <<unregister>> for managing a client's
+connection to the server,
+and <<broadcast>> for sending messages to all clients.
 
-<P>A user accesses the broadcast channel only through a client. 
-The client provides
-the user with a method for sending a message through the channel
-and a method for leaving the channel.
-<chunk><title/Client interface to user/
-meth sendMessage(Msg)
-   {self.server broadcast(self.userID Msg)}
-end
+<p>There is one statement in method <<init>> that is in charge of
+handling server failures.
+Currently we assume that statement is <<skip>>, which is the semantics
+of the handler in case of no failure.
 
-meth close
-   {self.server unregister(self.selfStatic self.userID)}
-end
-</chunk>
+<P>A user should access the broadcast channel only through a client.
 
 <SUBSUBSECTION id="server.definition"><TITLE>Server definition</TITLE>
 
-<P>The server's <<getMakeClient>> method
-returns a reference to a procedure
-that creates clients:
-<chunk><title/Server's getMakeClient method/
-meth getMakeNewClient(MakeNewClient)
-   proc {MakeNewClient UserMessageHandler UserID StaticClientObj}
-      StaticClientObj={NewStat  
-         ChannelClient 
-         init(self.selfStatic StaticClientObj
-              UserID UserMessageHandler)}
-   end
+<P>The server's procedure <<Serve>> must process client messages
+(at least).
+In order to avoid inter-client dependencies when forwarding messages,
+the server creates one thread per registered client,
+that processes incoming messages to the server,
+and sends events to that client only.
+That thread is created when the server observes a registration message
+from a client.
+This is possible because of the simplicity of the service.
+<chunk><title/Server's serving procedures/
+proc {Serve X|T}
+   case X of register(Client UserID) then
+      {ServeClient Client UserID X|T}
+   else skip end
+   {Serve T}
 end
+<chunk.ref/Server's simple ServeClient/
 </chunk>
 
-<P>The server uses a concurrent ForAll procedure that
-starts all sends concurrently and waits until
-they are all finished.  This is important for implementing
-broadcasts.  With the concurrent ForAll, the total
-time for the broadcast is the <em>maximum</em> of
-all client round-trip times, instead of the <em>sum</em>,
-if the broadcast would sequentially send to each client
-and wait for an acknowledgement before continuing.
-Concurrent broadcast is efficient in Mozart
-due to its extremely lightweight threads.
-<chunk><title/Concurrent ForAll procedure/
-proc {ConcurrentForAll Ls P}
-   Sync
-   proc {LoopConcurrentForAll Ls PrevSync FinalSync}
-      case Ls
-      of L|Ls2 then
-      NewSync in
-         thread {P L} PrevSync=NewSync end
-         {LoopConcurrentForAll Ls2 NewSync FinalSync}
-      [] nil then
-         PrevSync=FinalSync
+<p>The procedure <<ServeClient>> creates one thread that sends
+appropriate event messages to a given client.
+Currently the thread processes the three messages sent by clients,
+namely <<register>>, <<unregister>>, and <<broadcast>>.
+Note how the client thread terminates automatically when its client
+unregisters: an exception is raised in the processing loop, and caught
+at the outer level.
+This makes the registration management implicit in the server.
+<chunk><title/Server's simple ServeClient/
+proc {ServeClient Client UserID L}
+   proc {Loop X|T}
+      case X
+      of broadcast(U M)  then {Send Client message(U M)}
+      [] register(C U)   then {Send Client registered(C U)}
+      [] unregister(C U) andthen C==Client then raise done end
+      [] unregister(C U) then {Send Client unregistered(C U)}
       end
+      {Loop T}
    end
 in
-   {LoopConcurrentForAll Ls unit Sync}
-   {Wait Sync}
+   thread
+      try {Loop L} catch done then skip end
+   end
 end
 </chunk>
 
+<p>Note that clients can receive server messages at different rates.
+The server does not wait for client acknowledgement when sending
+messages.  However, the order of messages is preserved because the
+<<ServeClient>> threads all read from the same sequential stream.
 
-<P>The server provides three methods for the client,
-namely <<register>>, <<unregister>>, and <<broadcast>>.
-A client can register to the broadcast channel by calling the
-<<register>> method and unregister by calling
-the <<unregister>> method.
-Note that clients are identified uniquely by references
+<P>Note that clients are identified uniquely by references
 to the client object <<Client>>,
 and not by the client's user ID <<UserID>>.
+This is visible in the processing of the message <<unregister>>.
 This means that the channel will work correctly
 even if there are clients with the same user ID.
 The users may get confused, but the channel will not.
-
-<P>A client can broadcast a message on the channel
-by calling the <<broadcast>> method.
-The server will concurrently forward the message
-to all registered clients.
-The broadcast call will block until the message has
-reached all the clients.
-<chunk><title/Server interface to client/
-meth register(Client UserID)
-CL in
-   lock
-      CL=@clientList
-      clientList := c(ref:Client id:UserID)|@clientList
-   end
-   {ConcurrentForAll CL
-      proc {$ Element} {Element.ref put(registered(UserID))} end}
-end
-
-meth unregister(Client UserID)
-CL in
-   lock
-      clientList :=
-         {List.filter @clientList
-            fun {$ Element} Element.ref\=Client end}
-      CL=@clientList
-   end
-   {ConcurrentForAll CL
-      proc {$ Element} {Element.ref put(unregistered(UserID))} end}
-end
-
-meth broadcast(SenderID Msg)
-   {ConcurrentForAll @clientList
-      proc {$ Element} {Element.ref put(message(SenderID Msg))} end}
-end
-</chunk>
-
 
 
 <SUBSECTION><TITLE>Sample use (with fault tolerance)</TITLE>
@@ -920,90 +876,72 @@ end
 
 <P>The non-fault-tolerant version of <ptr to="channel.definition">
 is easily extended to detect client and server crashes.
-First, the server and all clients must be created
-by calling <<NewSafeStat>> instead of <<NewStat>>.
-This means creating the server as follows:
-<<<
-S={NewSafeStat ChannelServer init(S)}
->>>
-<P>This makes the channel server a fault-tolerant stationary object.
-In addition, several small extensions to the client
-and server definitions are needed.
-This section gives these extensions.
 
 <SUBSUBSECTION><TITLE>Client definition</TITLE>
 
 <P>This definition extends the definition
 given in <ptr to="channel.definition">.
-We assume that the server has been created
-with <<NewSafeStat>>.
-Two changes are needed to the client.
-First,
-the client can detect a server crash
-by catching the <<remoteObjectError>> exception.
-Second, the server can detect a client crash
-in the same way, when it calls
-the client's <<selfStatic>> reference.
-Both of these changes can be done
-by redefining the values of
-<<self.server>> and <<self.selfStatic>>
-at the client.
-<<<
-meth init(Server SelfReference UsrMsgHandler UserID)
-   self.server =
-      proc {$ Msg}
-         try
-            {Server broadcast(self.userID Msg)}
-         catch remoteObjectError then
-            {self.usrMsgHandler permServ}
-         end
-      end
-   self.selfStatic =
-      proc {$ Msg}
-         try
-            {SelfReference Msg}
-         catch remoteObjectError then
-            {Server unregister(self.selfStatic self.userId)}
-            {Server broadcastCrashEvent(UserID)}
-         end
-      end
-   self.usrMsgHandler=UsrMsgHandler
-   self.userID=UserID
-   {self.server register(self.selfStatic self.userID)}
+The client creates a concurrent failure handler that monitors the
+server's port with its <em>fault stream</em>.
+Whenever the server's port reaches state <<permFail>>, the client
+sends the message <<permServer>> to its own port.
+This message will be seen by the user message handler.
+<chunk><title/Client's server failure handler/
+thread
+   if {List.member permFail {DP.getFaultStream S}} then
+      {Send self.client permServer}
+      server := unit
+   end
 end
->>>
+</chunk>
+
+<p>Notice that the attribute <<server>> is set to <<unit>>, like in
+method <<close>>.  This makes every subsequent call to <<sendMessage>>
+on the client object fail with an exception.
+
 
 <SUBSUBSECTION><TITLE>Server definition</TITLE>
 
-<P>The server has the new method <<broadcastCrashEvent>>.
-<<<
-meth broadcastCrashEvent(CrashID)
-   {ConcurrentForAll @clientList
-      proc {$ Element}
-         {Element.ref put(permClient(CrashID))}
-      end}
-end
->>>
-
-<P>In the old method <<getMakeNewClient>>,
-the procedure <<MakeNewClient>> has to be changed
-to call <<NewSafeStat>> instead of <<NewStat>>:
-<<<
-meth getMakeNewClient(MakeNewClient)
-   proc {MakeNewClient UserMessageHandler UserID StaticClientObj}
-      StaticClientObj={NewSafeStat
-         ChannelClient
-         init(self.selfStatic StaticClientObj
-              UserID UserMessageHandler)}
+<P>We extend the server's definition to handle
+permanent failures from clients.
+For that purpose we modify a bit the <<Loop>> procedure
+in <<ServeClient>>, and add a failure handler that monitors
+the client's port.
+<chunk><title/Server's robust ServeClient/
+proc {ServeClient Client UserID L}
+   proc {Loop X|T}
+      case X
+      of broadcast(U M)  then {Send Client message(U M)}
+      [] register(C U)   then {Send Client registered(C U)}
+      [] unregister(C U) andthen C==Client then raise done end
+      [] unregister(C U) then {Send Client unregistered(C U)}
+      [] permClient(C U) andthen C==Client then raise done end
+      [] permClient(C U) then {Send Client permClient(U)}
+      end
+      {Loop T}
+   end
+in
+   thread
+      try {Loop L} catch done then skip end
+   end
+   thread
+      if {List.member permFail {DP.getFaultStream Client}} then
+         {Send Server permClient(Client UserID)}
+      end
    end
 end
->>>
+</chunk>
 
-
-
-
-
-
+<p>The client thread in the server
+now also processes the message <<permClient>>.
+The thread that recognizes its own client port in the message
+raises the exception <<done>> to stop sending messages to that client,
+just like if the client was unregistered.
+Otherwise it simply notifies its client with the appropriate event.
+The failure handler created by <<ServeClient>>
+is responsible for sending the message <<permClient>>
+to the server's port.
+The message will be seen by all client threads on the server.
 
 </CHAPTER>
 
