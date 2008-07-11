@@ -526,20 +526,16 @@ and
 <P>Due to limitations of the current release,
 <index/sited entity<and>thread/
 <index/thread<and>sited entity/
-<index/sited entity<and>dictionary/
-<index/dictionary<and>sited entity/
-<index/sited entity<and>array/
-<index/array<and>sited entity/
+<index/sited entity<and>weak dictionary/
+<index/weak dictionary<and>sited entity/
 <index/sited entity<and>space/
 <index/space<and>sited entity/
-<index/distributed semantics<and>dictionary/
+<index/distributed semantics<and>weak dictionary/
 <index/distributed semantics<and>thread/
-<index/distributed semantics<and>array/
 <index/distributed semantics<and>space/
-threads, dictionaries, arrays, and spaces are sited
+threads, weak dictionaries, and spaces are sited
 even though they are in base modules.
-These entities will become
-unsited in future releases.
+<!-- These entities will become unsited in future releases. -->
 
 <P>When a reference to a constrained variable
 <index/constrained variable/

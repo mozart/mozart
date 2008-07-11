@@ -109,7 +109,7 @@ OZ_BI_define(BIgetenv,1,1)                           // 3
 } OZ_BI_end                                          //13
                                                      //14
                                                      //15
-OZ_C_proc_interface oz_interface[] = {               //16
+static OZ_C_proc_interface oz_interface[] = {        //16
   {"getenv",1,1,BIgetenv},                           //17
   {0,0,0,0}                                          //18
 };                                                   //19
@@ -286,7 +286,7 @@ Now we can link our module into &Oz; by executing:
 
 <code display proglang=oz>
 declare
-[Goodies]={Module.link ['./goodies.so{native}']} 
+[Goodies]={Module.link ['./getenv.so{native}']} 
 </code>
 
 This will lazily load the module upon first access and bind
@@ -563,7 +563,7 @@ which is non-zero iff the <code /n/-th argument is equal to <<true>>.
 </list>
 
 The above macros always declare a new C variable and then do some
-checks. Therefor in C (not in C++) only one of them can be used only
+checks. Therefore, in C (not in C++) only one of them can be used only
 at the start of a new block statement. For this reason there is also a
 second set of macros named <code /OZ_set*/ that expect that their
 second argument has already been declared. Thus in C++ you can use
@@ -1375,7 +1375,7 @@ during cloning.
 <p>
 Reading from or writing to a file descriptor may block, since buffers
 my be empty or resp. full. Thus calling <code /read/ or <code /write/
-might block the whole Oz process. We therefor provide abstractions that
+might block the whole Oz process. We therefore provide abstractions that
 allow concurrent access to file descriptors from within the C level.
 
 <p>

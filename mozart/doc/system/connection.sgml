@@ -3,6 +3,7 @@
   -   Denys Duchier     <duchier@ps.uni-sb.de>
   -   Leif Kornstaedt <kornstae@ps.uni-sb.de>
   -   Christian Schulte <schulte@ps.uni-sb.de>
+  -   Raphael Collet    <raphael.collet@uclouvain.be>
   -
   - Copyright:
   -   Denys Duchier, 1998
@@ -40,10 +41,9 @@
       A <Def/ticket/ is a character string 
       which can be stored and transported through all media that can
       handle text, e.g., phone lines, electronic mail, paper,
-      and so forth. Tickets are insecure, in that they can be forged
-      (albeit some luck is required, since they offer some security
-      against typos). The following is an example ticket encoded as an
-      Oz atom: <<<'x-ozticket://134.96.186.115:9000:egbj0:DS/v:s:kn'>>>
+      and so forth. Tickets are insecure, in that they can be forged.
+      The following is an example ticket encoded as an Oz atom:
+      <<<'oz-ticket://130.104.228.81:9000/h9323679#42'>>>
     </P>
 
     <P>
@@ -68,8 +68,7 @@
           <Def/Many-to-one connections/ and <Def/many-shot tickets/.
         <Item>
           Allow multiple connections with the same ticket to the same
-          value. Values for many-to-one connections are offered
-          through gates.
+          value.
        </List>
     </P>
 
@@ -84,10 +83,12 @@
 
       <P>
         <List>
-          <Entry><Span class=index/<<offer>>/
+          <Entry><Span class=index/<<offerOnce>>/,
+		 <Span class=index/<<offer>>/
+	    <Index/<<Connection>><And><<offerOnce>>/
 	    <Index/<<Connection>><And><<offer>>/
           <Synopsis>
-	    <<{Connection.offer ?_{X} ?_{TicketA}}>>
+	    <<{Connection.offerOnce ?_{X} ??{TicketA}}>>
           <Item>
             Returns the single-shot ticket ?_{TicketA} (an atom)
             under which the value ?_{X} is offered.
@@ -99,7 +100,7 @@
           <Entry><Span class=index/<<take>>/
 	    <Index/<<Connection>><And><<take>>/
           <Synopsis>
-	    <<{Connection.take ?+{TicketV} ?_{X}}>>
+	    <<{Connection.take ?+{TicketV} ??{X}}>>
           <Item>
             Returns the value ?_{X} offered under the ticket
             ?_{TicketV} (a virtual string).
@@ -119,27 +120,15 @@
 
     <Section id="Section.Connection.Many">
       <Title/Many-to-one Connections/
-      
-      <P>
-        Values for many-to-one connections can be offered through
-        <Def/gates/. Values offered through gates can be taken with
-        <Span class=index/<<Connection.take>>/ as described for
-        one-to-one connections. Gates can be closed which implies that
-        the associated ticket becomes invalid. 
-      </P>
-
-      <p>
-        The special case and frequently occuring case that the gate
-        never gets closed is supported by the procedure
-        <<Connection.offerUnlimited>> which is as follows:
-      </p>
 
       <P>
         <List>
-          <Entry><Span class=index/<<offerUnlimited>>/
+          <Entry><Span class=index/<<offerMany>>/,
+		 <Span class=index/<<offerUnlimited>>/
+	    <Index/<<Connection>><And><<offerMany>>/
 	    <Index/<<Connection>><And><<offerUnlimited>>/
           <Synopsis>
-	    <<{Connection.offerUnlimited ?_{X} ??{TicketA}}>>
+	    <<{Connection.offerMany ?_{X} ??{TicketA}}>>
           <Item>
             offers the value ?_{X} under the returned many-shot ticket
             ?_{TicketA} (an atom).
@@ -148,9 +137,29 @@
             raised, if exportation of ?_{X} fails, because ?_{X} might
             refer to sited entities.
           <p>
-            The ticket remains valid until the current Oz process
-            terminates.
+            The ticket remains valid until it is retracted, or the
+	    current Oz process terminates.
+
+          <Entry><Span class=index/<<retract>>/
+	    <Index/<<Connection>><And><<retract>>/
+          <Synopsis>
+	    <<{Connection.retract ?+{TicketA}}>>
+          <Item>
+            retracts the ticket ?_{TicketA} (an atom).  The ticket is
+	    discarded, and any future attempt to take it will fail.
+          <P>
+	    A one-shot ticket is nothing more than a many-shot ticket
+	    that is automatically retracted once it is taken.
         </List>
+      </P>
+
+      <Subsection><Title/Gates/
+
+      <P>
+        Values for many-to-one connections can also be offered through
+	<Def/gates/.  Gates provide many-shot tickets with an object
+	interface.  Values offered through gates can be taken with
+	<Span class=index/<<Connection.take>>/ as described above.
       </P>
 
       <P>
@@ -191,6 +200,8 @@
 
         </List>
       </P>
+
+      </Subsection>
       
     </Section>
 

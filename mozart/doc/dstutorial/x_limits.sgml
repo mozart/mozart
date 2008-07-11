@@ -47,14 +47,12 @@ On Solaris and Linux there are two,
 namely <<ipcs>> and <<ipcrm>>.
 </list>
 
-<item>The code of functions, procedures, classes, and functors
-(but not objects) is always inserted in messages,
+<item>By default the code of functions, procedures, classes, and
+functors (but not objects) is always inserted in messages,
 even if the code is already present at the destination.
-In future releases, the code will be copied
-across the network only
+By annotating those entities as <<eager>> or <<lazy>>,
+the code is copied across the network only
 if it is not present on the destination site.
-In both current and future releases, at most a single copy
-of the code can exist per site.
 
 <item>The distributed garbage collection
 algorithm reclaims all unused entities
@@ -70,13 +68,9 @@ reference the other.
 
 <item>If a site crashes that has references to entities created on
 other sites, then these entities are not garbage-collected.
-Future releases will incorporate a lease-based or similar
-technique to recover such entities.
-
-<item>The fault state <<tempFail>> is indicated only after
-a long delay.
-In future releases, the delay will be very short and
-based on adaptive observation of actual network behavior.
+A new distributed garbage collection scheme can recover from that
+situation; it is based on a time lease.
+Use the annotation <<lease>> to use that new scheme.
 </list>
 
 <SECTION><TITLE>Functionality limitations</TITLE>
@@ -98,12 +92,14 @@ Future releases will add more options.
 for applications separated by a firewall.
 This limitation will be addressed in a future release.
 
-<item>Threads, dictionaries, arrays, and spaces are sited,
+<item>Threads, weak dictionaries, and spaces are sited,
 even though they are in base modules.
-In future releases, it is likely that
-dictionaries and arrays will be made unsited.
-Threads and spaces will be made stationary entities
-that can be called remotely (like ports).
+However, dictionaries and arrays are no longer sited
+since version 1.4.0.
+Weak dictionaries have been kept sited so that their finalization
+mechanism relies on the garbage collector of a specific site.
+It is not known how to define finalization in case the state of the
+weak dictionary is replicated on several site.
 
 <item>When a reference to a constrained variable
 (finite domain, finite set, or free record)
@@ -111,31 +107,14 @@ is passed to another site, then this reference
 is converted to a <em>future</em>.
 The future will be bound when the constrained
 variable becomes determined.
-
-<item>If an exception is raised or a handler or watcher
-is invoked for an <EM>object</EM>,
-then the <<Entity>> argument is undefined.
-For handlers and watchers, this limitation can
-be bypassed by giving the handler and watcher procedures
-a reference to the object.
-
-<item>If an exception is raised or a handler is invoked
-for an <EM>object</EM>,
-then the attempted object operation cannot be retried.
-This limitation can be bypassed by programming the
-object so that it is known where in which method
-the error was detected.
+Note that reference integrity is preserved: the future will
+be correctly identified as the original variable if it is sent
+back to its home site.
 </list>
 
 <SECTION><TITLE>Modifications</TITLE>
 
-<P>There is currently only one modification.
-<list>
-<item>A handler installed on a <EM>variable</EM> will retry
-the operation (i.e., bind or wait) after it returns.
-That is, the handler is inserted before the operation
-instead of replacing the operation.
-</list>
+<P>There is no modification to the formal semantics of the language.
 
 </CHAPTER>
 

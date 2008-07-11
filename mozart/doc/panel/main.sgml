@@ -102,6 +102,9 @@ takes place. However, this can be changed (see
 <Ptr to="chapter.menu.options">).
 
 <p>
+Please note that the panel application itself contributes to thread and memory usage. For example, whenever the panel display updates the heap usage (see <Ptr to="chapter.usage.memory">) the current heap size increases by a few KB. By default, this happens every second when the mouse pointer is over the panel application (see above). Moreover, in the default setting two new threads are created (see <Ptr to="chapter.usage.threads">) whenever the mouse is moved anew over the panel, or when tabs are switched (the number of runnable threads remains 1, though).
+
+<p>
 The information the panel displays is described in 
 <Ptr to="chapter.usage.threads">,
 <Ptr to="chapter.usage.memory">,
