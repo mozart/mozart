@@ -68,12 +68,29 @@ win32*)
     EXE_EXT=''
     ;;
 esac
+
+case $platform in
+win32*)
+    LD_VAR=PATH
+    ;;
+darwin*)
+    LD_VAR=DYLD_LIBRARY_PATH
+    ;;
+aix*)
+    LD_VAR=LIBPATH
+    ;;
+*)
+    LD_VAR=LD_LIBRARY_PATH
+    ;;
+esac
+
 AC_SUBST(OZEXECFILE)
 AC_SUBST(EMULATOR_EXE)
 AC_SUBST(BOOTOZTOOL)
 AC_SUBST(WINOZTOOLCXXFLAGS)
 AC_SUBST(WINOZTOOLLDFLAGS)
 AC_SUBST(EXE_EXT)
+AC_SUBST(LD_VAR)
 
 dnl *****************************************************************
 dnl Checks for programs.

@@ -38,6 +38,7 @@ CYG_SOURCETOOLS =$(shell $(CYG_PATH) "$(SOURCETOOLS)")
 
 EXE_EXT=@EXE_EXT@
 
+BOOTDSS=$(BUILDTOP)/platform/dss
 BOOTEMU=$(BUILDTOP)/platform/emulator/@EMULATOR_EXE@
 BOOTENG=$(BUILDTOP)/share/ozengine.sh
 BOOTCOM=$(BOOTENG) $(BUILDTOP)/share/lib/ozc$(EXE_EXT)
@@ -111,8 +112,15 @@ export OZFLEX
 endif
 endif
 
+ifdef @LD_VAR@
+LD_VAR=$(BOOTDSS):$(@LD_VAR@)
+else
+LD_VAR=$(BOOTDSS)
+endif
+
 boot-%:
         $(MAKE) $* \
+        @LD_VAR@=$(LD_VAR) \
         OZEMULATOR=$(BOOTEMU) \
         OZENGINE=$(BOOTENG) \
         OZC="$(BOOTCOM)" \
