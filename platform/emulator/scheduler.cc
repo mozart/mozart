@@ -44,7 +44,7 @@ int run_thread(Thread * ct) {
   ct->setAbstr(NULL);
   am.cachedStack = ct->getTaskStackRef();
   am.cachedSelf  = (OzObject *) 0;
-
+  
   int ret = engine(NO);
   ct->setAbstr(ozstat.currAbstr);
   ozstat.leaveCall(NULL);

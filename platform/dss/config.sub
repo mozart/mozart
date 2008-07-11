@@ -1,0 +1,79 @@
+#! /bin/sh
+#
+
+# Expect to find configfsf.sub in the same directory as this config.sub
+configfsf_sub="`echo \"$0\" | sed 's/config.sub$/configfsf.sub/'`"
+if test "$configfsf_sub" = "$0"; then
+  echo "Cannot derive configfsf.sub from $0" 1>&2
+  exit 1
+fi
+if test -f "$configfsf_sub"; then
+  :
+else
+  echo "$configfsf_sub not found" 1>&2
+  exit 1
+fi
+
+# Always run configfsf.sub with $SHELL, like autoconf does for config.sub
+SHELL=${CONFIG_SHELL-/bin/sh}
+
+# Identify ourselves on --version, --help, etc
+case "$1" in
+"" | -*)
+  $SHELL $configfsf_sub "$@"
+  exit
+  ;;
+esac
+
+given_full="$1"
+given_cpu=`echo "$given_full" | sed 's/-.*$//'`
+given_rest=`echo "$given_full" | sed 's/^[^-]*//'`
+
+
+# Aliases for GMP extras
+case "$given_cpu" in
+p5 | p54)   given_cpu=pentium ;;
+p55)        given_cpu=pentiummmx ;;
+p6)         given_cpu=pentiumpro ;;
+pentiumii)  given_cpu=pentium2 ;;
+pentiumiii) given_cpu=pentium3 ;;
+esac
+given_full="$given_cpu$given_rest"
+
+
+# GMP extras and what to use for the config.sub test
+case "$given_cpu" in
+pentium | pentiummmx | pentiumpro | pentium[234] | k[56] | k6[23] | athlon)
+  test_cpu=i386 ;;
+sparcv8 | supersparc | microsparc | \
+ultrasparc | ultrasparc2 | ultrasparc2i | ultrasparc3)
+  test_cpu=sparc ;;
+*)
+  # Don't need or want to change the given name, just run configfsf.sub
+  $SHELL $configfsf_sub "$given_full"
+  if test $? = 0; then
+    exit 0
+  else
+    echo "(Testing \"$given_full\")"
+    exit 1
+  fi
+esac
+
+
+test_full="$test_cpu$given_rest"
+canonical_full=`$SHELL $configfsf_sub "$test_full"`
+if test $? = 0; then
+  :
+else
+  echo "(Testing \"$given_full\" as \"$test_full\")"
+  exit 1
+fi
+
+canonical_rest=`echo "$canonical_full" | sed 's/^[^-]*//'`
+echo "$given_cpu$canonical_rest"
+exit 0
+
+
+# Local variables:
+# fill-column: 76
+# End:
