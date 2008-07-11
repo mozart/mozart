@@ -57,6 +57,10 @@
 			     out => [],
 			     BI  => BIgarbageCollection},
  
+ 'postmortem'	        => { in  => ['value','+port','value'],
+			     out => [],
+			     BI  => BIpostmortem},
+ 
  'eq'		        => { in  => ['value','value'],
 			     out => ['+bool'],
 			     BI  => BIsystemEq},

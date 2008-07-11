@@ -37,6 +37,16 @@
 #endif
 
 
+OZ_Extension::OZ_Extension() {
+  ConstTermWithHome* ctwh = extension2Const(this);
+  *ctwh = ConstTermWithHome(oz_currentBoard(), Co_Extension);
+}
+
+OZ_Extension::OZ_Extension(void *sp) {
+  ConstTermWithHome* ctwh = extension2Const(this);
+  *ctwh = ConstTermWithHome((Board*) sp, Co_Extension);
+}
+
 OZ_Extension::~OZ_Extension() { 
   OZ_error("invoking destructor ~OZ_Extension()"); 
 }
@@ -85,10 +95,16 @@ unsigned int OZ_getUniqueId(void)
 }
 
 
+// The allocation of an extension always put a ConstTermWithHome
+// object in front of the OZ_Extension object.
 void* _OZ_new_OZ_Extension(size_t n) {
- return (void*)(((void**)oz_heapMalloc(n+sizeof(void*)))+1);
+  void* p = oz_heapMalloc(sizeof(ConstTermWithHome) + n);
+  return const2Extension(static_cast<ConstTerm*>(p));
 }
 
+OZ_Boolean OZ_Extension::isLocal() { 
+  return oz_isCurrentBoard(extension2Const(this)->getBoardInternal());
+}
 
 OZ_Boolean _OZ_isLocal_OZ_Extension(void *inb)
 {

@@ -247,7 +247,7 @@ if test "${GXX}" = yes; then
           ;;
       esac
       ;;
-    *-i486) 
+    *-i*86|i*86-darwin) 
 	case `$CXX -dumpversion` in
 	2.95.3)
 	    oz_opt="-O3 -pipe -fschedule-insns2 -fregmove"
@@ -387,9 +387,9 @@ case $platform in
 	    AC_DEFINE(ARCH_I486)
 	    TOOLLDCMD="sh `pwd`/$target-oztool ld"
 	fi
-	CPPFLAGS="-DWINDOWS_EMULATOR $oz_a $CPPFLAGS"
+	CPPFLAGS="-DWINDOWS_EMULATOR -DDSS_STATIC_LINK $oz_a $CPPFLAGS"
     ;;
-    *rhapsody | *darwin)
+    rhapsody* | darwin*)
 	AC_DEFINE(RHAPSODY)
 	EMULDFLAGS="-Wl,-keep_private_externs"
 	TOOLLDCMD="$CC -dynamic -bundle -flat_namespace -undefined suppress"
@@ -1339,7 +1339,7 @@ OZ_ENABLE(modules-static,[ link modules statically],$oz_enable_modules_static,
         oz_enable_modules_static=yes
         AC_MSG_RESULT(yes (-DMODULES_LINK_STATIC))
 	AC_DEFINE(MODULES_LINK_STATIC)
-	STATIC_MODULES="\$(MODULE_NAMES)"
+	STATIC_MODULES="\$(MODULE_NAMES) DSS"
 	DYNAMIC_MODULES=""
 	,
         oz_enable_modules_static=no

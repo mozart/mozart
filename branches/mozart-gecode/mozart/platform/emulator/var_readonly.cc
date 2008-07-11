@@ -142,42 +142,50 @@ OZ_BI_define(BIvarToReadOnly,2,0)
   return PROCEED;
 } OZ_BI_end
 
-// returns a read-only view of a variable
+
+// create a read-only view of a variable
+OZ_Term oz_readOnlyView(OZ_Term v) {
+  Assert(oz_isRef(v) && oz_isVar(*tagged2Ref(v)));
+
+  OZ_Term *vPtr = tagged2Ref(v);
+
+  // special case: failed values immediately return
+  if (oz_isFailed(*vPtr)) return v;
+
+  // create the read-only variable in the same space as v
+  OzVariable *ov = tagged2Var(*vPtr);
+  Board *bb = GETBOARD(ov);
+  TaggedRef r = oz_newReadOnly(bb);
+
+  // create the propagator for data and need
+  if (bb != oz_currentBoard()) {
+    Thread *thr = oz_newThreadInject(bb);
+    thr->pushCall(BI_varToReadOnly, RefsArray::make(v,r));
+
+  } else { // optimization: immediately suspend thread
+    Thread *thr = oz_newThreadSuspended();
+    thr->pushCall(BI_varToReadOnly, RefsArray::make(v,r));
+
+    // suspend it on both v and r
+    OZ_Return ret = oz_var_addQuietSusp(vPtr, thr);
+    Assert(ret==SUSPEND);
+    ret = oz_var_addQuietSusp(tagged2Ref(r), thr);
+    Assert(ret==SUSPEND);
+  }
+
+  return r;
+}
+
+
+// the builtin: return a read-only view of a variable
 OZ_BI_define(BIreadOnly,1,1)
 {
   oz_declareSafeDerefIN(0,v);
 
   if (oz_isRef(v)) {
-    OZ_Term *vPtr = tagged2Ref(v);
-
-    // special case: failed values immediately return
-    if (oz_isFailed(*vPtr)) OZ_RETURN(v);
-
-    // create the read-only variable in the same space as v
-    OzVariable *ov = tagged2Var(*vPtr);
-    Board *bb = GETBOARD(ov);
-    TaggedRef r = oz_newReadOnly(bb);
-
-    // create the propagator for data and need
-    if (bb != oz_currentBoard()) {
-      Thread *thr = oz_newThreadInject(bb);
-      thr->pushCall(BI_varToReadOnly, RefsArray::make(v,r));
-
-    } else { // optimization: immediately suspend thread
-      Thread *thr = oz_newThreadSuspended();
-      thr->pushCall(BI_varToReadOnly, RefsArray::make(v,r));
-
-      // suspend on both v and r
-      OZ_Return ret = oz_var_addQuietSusp(vPtr, thr);
-      Assert(ret==SUSPEND);
-      ret = oz_var_addQuietSusp(tagged2Ref(r), thr);
-      Assert(ret==SUSPEND);
-    }
-
-    // return the read-only view
-    OZ_RETURN(r);
+    OZ_RETURN(oz_readOnlyView(v));
+  } else {
+    // first argument is already a value
+    OZ_RETURN(v);
   }
-
-  // first argument is already a value
-  OZ_RETURN(v);
 } OZ_BI_end

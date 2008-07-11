@@ -3,6 +3,8 @@
  *    Per Brand, Konstantin Popov
  * 
  *  Contributors:
+ *    Raphael Collet (raph@info.ucl.ac.be)
+ *    Boriss Mejias (bmc@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Per Brand, Konstantin Popov 1998
@@ -32,46 +34,87 @@
 
 #include "base.hh"
 
-#define SIZEOFPORTPROXY (4*sizeof(void*))
+// The following functions interface the distribution layer to the
+// engine.  They implement operations that may imply distribution.
+// The function pointers are assigned once the glue layer is loaded.
 
 //
-extern Bool (*isPerdioInitialized)();
- 
-// 
-extern OZ_Return (*portSend)(Tertiary *p, TaggedRef msg);
-extern OZ_Return (*cellDoExchange)(Tertiary*,TaggedRef,TaggedRef);
-extern OZ_Return (*cellDoAccess)(Tertiary*,TaggedRef);
-extern OZ_Return (*cellAtAccess)(Tertiary*,TaggedRef,TaggedRef);
-extern OZ_Return (*cellAtExchange)(Tertiary*,TaggedRef,TaggedRef);
-extern OZ_Return (*cellAssignExchange)(Tertiary*,TaggedRef,TaggedRef);
-extern OZ_Return (*objectExchange) (Tertiary*,TaggedRef,TaggedRef,TaggedRef);
+extern Bool (*dpReady)();
 
-// lock/unlock (interface) methods/their usage may be optimized
-// further, e.g. inline cases when distributed locks are currently
-// local;
-extern void (*lockLockProxy)(Tertiary *t, Thread *thr);
-extern LockRet (*lockLockManagerOutline)(LockManagerEmul *lfu, Thread *thr);
-extern void (*unlockLockManagerOutline)(LockManagerEmul *lfu, Thread *thr);
-extern LockRet (*lockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr);
-extern void (*unlockLockFrameOutline)(LockFrameEmul *lfu, Thread *thr);
 
-//
-extern void (*gCollectProxyRecurse)(Tertiary *t);
-extern void (*gCollectManagerRecurse)(Tertiary *t);
-extern ConstTerm* (*gCollectDistResource)(ConstTerm*);
-extern void (*gCollectDistCellRecurse)(Tertiary *t);
-extern void (*gCollectDistLockRecurse)(Tertiary *t);
-extern void (*gCollectDistPortRecurse)(Tertiary *t);
-//
-extern void (*gCollectEntityInfo)(Tertiary*);
-//
-//
 
+/************************* Entity operations **************************/
+
+// We use the following convention:
 //
-extern void (*gCollectPerdioStart)();
-extern void (*gCollectPerdioRoots)();
-extern void (*gCollectBorrowTableUnusedFrames)();
-extern void (*gCollectPerdioFinal)();
+//    OZ_Return (*distXXXYYY)(ZZZ, ...);
+//
+// XXX denotes the entity type, YYY denotes the operation, and ZZZ
+// denotes a pointer or reference to the entity.  The operation's
+// arguments are given next.  The returned value may indicate that:
+//  - the operation just succeeded (PROCEED)
+//  - the operation will be resumed later (BI_REPLACEBICALL)
+//  - the operation suspended, typically because of a fault (SUSPEND)
+
+// ports
+extern OZ_Return (*distPortSend)(OzPort*, TaggedRef, TaggedRef);
+
+// cells
+extern OZ_Return (*distCellOp)(OperationTag, OzCell*, TaggedRef*, TaggedRef*);
+
+// locks
+extern OZ_Return (*distLockTake)(OzLock*, TaggedRef);
+extern OZ_Return (*distLockRelease)(OzLock*, TaggedRef);
+
+// objects
+extern OZ_Return (*distObjectInvoke)(OzObject*, TaggedRef);
+extern OZ_Return (*distObjectOp)(OperationTag, OzObject*,
+				 TaggedRef*, TaggedRef*);
+extern OZ_Return (*distObjectStateOp)(OperationTag, ObjectState*,
+				      TaggedRef*, TaggedRef*);
+
+// arrays
+extern OZ_Return (*distArrayOp)(OperationTag, OzArray*,
+				TaggedRef*, TaggedRef*);
+
+// dictionaries
+extern OZ_Return (*distDictionaryOp)(OperationTag, OzDictionary*,
+				     TaggedRef*, TaggedRef*);
+
+// distributed variables
+extern OZ_Return (*distVarBind)(OzVariable*, TaggedRef*, TaggedRef);
+extern OZ_Return (*distVarUnify)(OzVariable*, TaggedRef*,
+				 OzVariable*, TaggedRef*);
+extern OZ_Return (*distVarMakeNeeded)(TaggedRef*);
+
+// chunks
+extern OZ_Return (*distChunkOp)(OperationTag, SChunk*,
+				TaggedRef*, TaggedRef*);
+
+// classes
+extern OZ_Return (*distClassGet)(OzClass*);
+
+// procedures (Abstraction)
+extern OZ_Return (*distProcedureCall)(Abstraction*, TaggedRef);
+
+
+
+/******************** Garbage collection routines *********************/
+
+// various phases of GC
+extern void (*gCollectGlueStart)();
+extern void (*gCollectGlueRoots)();
+extern void (*gCollectGlueWeak)();
+extern void (*gCollectGlueFinal)();
+
+// mark a given mediator
+class Mediator;
+extern void (*gCollectMediator)(Mediator*);
+
+// Note.  The class Mediator is defined in libdp; only the type
+// Mediator is declared here.
+
+
 
 // exit hook;
 extern void (*dpExit)();
@@ -84,6 +127,5 @@ extern Bool (*distHandlerInstall)(unsigned short,unsigned short,
 				       Thread*,TaggedRef, TaggedRef);
 extern Bool (*distHandlerDeInstall)(unsigned short,unsigned short,
 				       Thread*,TaggedRef, TaggedRef);
+
 #endif // __DPINTERFACE_HH
-
-

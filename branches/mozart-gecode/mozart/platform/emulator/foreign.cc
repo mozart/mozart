@@ -896,9 +896,9 @@ void const2buffer(ostream &out, ConstTerm *c,const char sign,int depth)
   case Co_Class:
   case Co_Object:
     if (*s == '_' && *(s+1) == 0) {
-      out << (isObjectClass(c) ? "<C>" : "<O>");
+      out << (isOzClass(c) ? "<C>" : "<O>");
     } else {
-      out << (isObjectClass(c) ? "<C: " : "<O: ") << s << '>';
+      out << (isOzClass(c) ? "<C: " : "<O: ") << s << '>';
     }
     break;
 
@@ -1695,7 +1695,7 @@ OZ_Term OZ_subtree(OZ_Term term, OZ_Term fea)
       case Co_Extension:
 	return tagged2Extension(term)->getFeatureV(fea);
       case Co_Object:
-	return ((Object *) ct)->getFeature(fea);
+	return ((OzObject *) ct)->getFeature(fea);
       case Co_Chunk:
 	return ((SChunk *) ct)->getFeature(fea);
       default:

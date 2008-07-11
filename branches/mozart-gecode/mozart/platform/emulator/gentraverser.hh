@@ -43,6 +43,7 @@
 #include "codearea.hh"
 #include "am.hh"
 #include "dictionary.hh"
+#include "var_failed.hh"
 
 //
 // 3#2 compatibility (alters assertions);
@@ -249,12 +250,14 @@ public:
 
   //
   // And yet we update stack entries:
-  StackEntry* putPtrSERef(void *ptr) {
+  long putPtrSERef(void *ptr) {
     checkConsistency();
     *tos = ptr;
-    return (tos++);
+    // do not return a pointer here, since resizing the stack makes
+    // the returned pointer invalid!  use a difference instead:
+    return (tos++) - array;
   }
-  void updateSEPtr(StackEntry* se, void *ptr) { *se = ptr; }
+  void updateSEPtr(long pos, void *ptr) { *(array + pos) = ptr; }
   //
   void dropEntry() { tos--; }
   void dropEntries(int n) { tos -= n; }
@@ -590,24 +593,23 @@ protected:
   // OzConst"s;
   void processBigInt(OZ_Term biTerm);
   void processBuiltin(OZ_Term biTerm, ConstTerm *biConst);
-  // 'Tertiary' OzConst"s;
-  void processLock(OZ_Term lockTerm, Tertiary *lockTert);
-  Bool processCell(OZ_Term cellTerm, Tertiary *cellTert);
-  void processPort(OZ_Term portTerm, Tertiary *portTert);
-  void processResource(OZ_Term resTerm, Tertiary *tert);
+  void processLock(OZ_Term lockTerm, ConstTerm *lockConst);
+  Bool processCell(OZ_Term cellTerm, ConstTerm *cellConst);
+  void processPort(OZ_Term portTerm, ConstTerm *portConst);
+  void processResource(OZ_Term resTerm, ConstTerm *resConst);
   // anything else:
   void processNoGood(OZ_Term resTerm);
-  //
-  void processVar(OZ_Term v, OZ_Term *vRef);
 
   //
   // These methods return TRUE if the node to be considered a leaf;
   // (Note that we might want to go through a repetition, don't we?)
+  Bool processVar(OZ_Term v, OZ_Term *vRef);
   Bool processLTuple(OZ_Term ltupleTerm);
   Bool processSRecord(OZ_Term srecordTerm);
   Bool processFSETValue(OZ_Term fsetvalueTerm);
   // composite OzConst"s;
   Bool processObject(OZ_Term objTerm, ConstTerm *objConst);
+  Bool processObjectState(OZ_Term stateTerm, ConstTerm *stateConst);
   Bool processDictionary(OZ_Term dictTerm, ConstTerm *dictConst);
   Bool processArray(OZ_Term arrayTerm, ConstTerm *arrayConst);
   Bool processChunk(OZ_Term chunkTerm, ConstTerm *chunkConst);
@@ -1058,7 +1060,7 @@ public:
   PTYPE arg = (PTYPE) *(frame - bsFrameSize - 1);
 
 #define EnsureBTSpace(frame,n)				\
-  frame = ensureFree(frame, n * bsFrameSize);
+  frame = ensureFree(frame, (n) * bsFrameSize);
 #define EnsureBTSpace1Frame(frame)			\
   frame = ensureFree(frame, bsFrameSize);
 #define SetBTFrame(frame)				\
@@ -1741,41 +1743,29 @@ public:
   //
   void buildClass(GName *gname, int flags) {
     Assert(gname);
-
-    //      
-    ObjectClass *cl = new ObjectClass(makeTaggedNULL(), 
-				      makeTaggedNULL(),
-				      makeTaggedNULL(), 
-				      makeTaggedNULL(), NO, NO,
-				      am.currentBoard());
-    cl->setGName(gname);
-    gname->gcMaybeOff();	// if not in the table right now;;
-    OZ_Term classTerm = makeTaggedConst(cl);
-    // Note: no gname"s are assigned globally until the construction
-    // of the class is *completely* finished;
-
+    //
+    OZ_Term classTerm = gname->getValue();
+    OzClass *cl;
+    if (classTerm) {
+      cl = tagged2OzClass(classTerm);
+    } else {
+      // create class stub, and associate with gname
+      cl = new OzClass(makeTaggedNULL(), makeTaggedNULL(), makeTaggedNULL(), 
+		       makeTaggedNULL(), NO, NO, am.currentBoard());
+      cl->setGName(gname);
+      classTerm = makeTaggedConst(cl);
+      addGName(gname, classTerm);
+    }
     //
     putTask(BT_classFeatures, cl, flags);
   }
 
   //
   void buildClassRemember(GName *gname, int flags, int n) {
-    Assert(gname);
-
-    //      
-    ObjectClass *cl = new ObjectClass(makeTaggedNULL(), 
-				      makeTaggedNULL(),
-				      makeTaggedNULL(), 
-				      makeTaggedNULL(), NO, NO,
-				      am.currentBoard());
-    cl->setGName(gname);
-    gname->gcMaybeOff();
-    OZ_Term classTerm = makeTaggedConst(cl);
+    buildClass(gname, flags);
     //
-    setTerm(classTerm, n);
-
-    //
-    putTask(BT_classFeatures, cl, flags);
+    Assert(oz_isClass(gname->getValue()));
+    setTerm(gname->getValue(), n);
   }
 
   //
@@ -2033,7 +2023,7 @@ public:
       buildValue(v);
     } else {
       OZ_Term vt = oz_newVariable(oz_rootBoard());
-      setTerm(vt, n);		// a reference to, of course;
+      fillTermSafe(vt, n);		// a reference to, of course;
       buildValue(vt);
     }
   }
@@ -2130,7 +2120,7 @@ public:
 
   //
   void buildClonedCell() {
-    CellLocal *c = new CellLocal(oz_currentBoard(), oz_int(0));
+    OzCell *c = new OzCell(oz_currentBoard(), oz_int(0));
     buildValue(makeTaggedConst(c));
     GetBTFrame(frame);
     EnsureBTSpace(frame, 1);
@@ -2138,13 +2128,34 @@ public:
     SetBTFrame(frame);
   }
   void buildClonedCellRemember(int n) {
-    CellLocal *c = new CellLocal(oz_currentBoard(), oz_int(0));
+    OzCell *c = new OzCell(oz_currentBoard(), oz_int(0));
     OZ_Term cell = makeTaggedConst(c);
     buildValue(cell);
     setTerm(cell, n);
     GetBTFrame(frame);
     EnsureBTSpace(frame, 1);
     PutBTTaskPtr(frame, BT_spointer, c->getRef());
+    SetBTFrame(frame);
+  }
+
+  // build a failed value
+  void buildFailedValue() {
+    OZ_Term t = oz_newFailed(am.currentBoard(), oz_int(0));
+    Failed* f = (Failed*) tagged2Var(*tagged2Ref(t));
+    buildValue(t);
+    GetBTFrame(frame);
+    EnsureBTSpace(frame, 1);
+    PutBTTaskPtr(frame, BT_spointer, f->getRefException());
+    SetBTFrame(frame);
+  }
+  void buildFailedValueRemember(int n) {
+    OZ_Term t = oz_newFailed(am.currentBoard(), oz_int(0));
+    Failed* f = (Failed*) tagged2Var(*tagged2Ref(t));
+    buildValue(t);
+    setTerm(t, n);
+    GetBTFrame(frame);
+    EnsureBTSpace(frame, 1);
+    PutBTTaskPtr(frame, BT_spointer, f->getRefException());
     SetBTFrame(frame);
   }
 
@@ -2176,7 +2187,7 @@ public:
     buildValue(procTerm);
     //
     Abstraction *pp = (Abstraction *) tagged2Const(procTerm);
-    Assert(isAbstraction(pp));
+    Assert(isAbstraction(pp) && pp->isComplete());
     int gsize = pp->getPred()->getGSize();
     //
     GetBTFrame(frame);

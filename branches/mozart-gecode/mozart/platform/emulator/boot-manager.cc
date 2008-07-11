@@ -125,11 +125,7 @@ static TaggedRef dictionary_of_modules;
 #include "modBrowser-if.cc"
 #include "modDebug-if.cc"
 #include "modOsTime-if.cc"
-#include "modPID-if.cc"
-#include "modFault-if.cc"
-#include "modDPMisc-if.cc"
-#include "modDPStatistics-if.cc"
-#include "modVirtualSite-if.cc"
+#include "modGlue-if.cc"
 #include "modProfile-if.cc"
 #include "modZlibIO-if.cc"
 #include "modGFDB-if.cc"
@@ -139,19 +135,7 @@ static TaggedRef dictionary_of_modules;
 #include "modGFSB-if.cc"
 #include "modGFSP-if.cc"
 
-
-// Here comes the faked DPB interface
-extern "C"
-{
-  OZ_C_proc_interface * mod_int_DPB(void)
-  {
-    static OZ_C_proc_interface i_table[] = {
-      {0,0,0,0}
-    };
-
-    return i_table;
-  } /* mod_int_DPB(void) */
-} /* extern "C" */
+// bmc: faked DPB interface deleted.
 
 #endif
 
@@ -221,12 +205,7 @@ static ModuleEntry ext_module_table[] = {
   {"Schedule",        mod_int_Schedule},
   {"OsTime",          mod_int_OsTime},
   {"Debug",           mod_int_Debug},
-  {"DPB",             mod_int_DPB},
-  {"PID",             mod_int_PID},
-  {"Fault",           mod_int_Fault},
-  {"DPMisc",          mod_int_DPMisc},
-  {"DPStatistics",    mod_int_DPStatistics},
-  {"VirtualSite",     mod_int_VirtualSite},
+  {"Glue",            mod_int_Glue},
   {"Compat",          mod_int_Compat},
   {"Win32",           mod_int_Win32},
   {"Profile",         mod_int_Profile},

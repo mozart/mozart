@@ -215,6 +215,7 @@ TaggedRef CodeArea::getFrameVariables(ProgramCounter PC,
     }
     locals = reverseC(locals);
 
+    Assert(CAP->isComplete());
     int gsize=CAP->getPred()->getGSize();
     if (gsize>0) {
       for (int i=0; getOpcode(aux) == GLOBALVARNAME; i++) {

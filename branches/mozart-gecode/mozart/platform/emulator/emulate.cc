@@ -71,9 +71,10 @@ TaggedRef XREGS_SAVE[NumberOfXRegisters];
 // -----------------------------------------------------------------------
 
 inline
-Abstraction *getSendMethod(Object *obj, TaggedRef label, SRecordArity arity, 
+Abstraction *getSendMethod(OzObject *obj, TaggedRef label, SRecordArity arity, 
 			   InlineCache *cache)
 {
+  Assert(obj->isComplete());
   Assert(oz_isFeature(label));
   return cache->lookup(obj->getClass(),label,arity);
 }
@@ -2213,6 +2214,11 @@ LBLdispatcher:
 	    MAGIC_RET;
 	  }
 
+	case BI_REPLACEBICALL: 
+	  PC += 6;
+	  Assert(!e->isEmptyPreparedCalls());
+	  goto LBLreplaceBICall;
+
 	case RAISE:
 	  RAISE_THREAD;
 
@@ -2229,22 +2235,34 @@ LBLdispatcher:
   Case(INLINEAT)
     {
       TaggedRef fea = getLiteralArg(PC+1);
-      Object *self = e->getSelf();
+      OzObject *self = e->getSelf();
+      Assert(self && self->isComplete());
+      ObjectState* state = self->getState();
 
-      Assert(e->getSelf()!=NULL);
-      RecOrCell state = self->getState();
-      SRecord *rec;
-      if (stateIsCell(state)) {
-	rec = getState(state,NO,fea,XPC(2));
-	if (rec==NULL) {
+      if (state->isDistributed()) {     // call distribution layer
+	OZ_Return res = distObjectStateOp(OP_GET, state, &fea, &XPC(2));
+	switch(res) {
+	case PROCEED: {
+	  DISPATCH(5);
+	}
+	case SUSPEND: {
+	  PC += 5;
+	  PushContX(PC);
+	  SUSPENDONVARLIST;
+	  MAGIC_RET;
+	}
+	case BI_REPLACEBICALL: {
 	  PC += 5;
 	  Assert(!e->isEmptyPreparedCalls());
 	  goto LBLreplaceBICall;
 	}
-      } else {
-	rec = getRecord(state);
+	default:
+	  Assert(0);
+	}
       }
-      Assert(rec!=NULL);
+      // handle local case
+      SRecord* rec = state->getValue();
+      Assert(rec);
       int index = ((InlineCache*)(PC+3))->lookup(rec,fea);
       if (index>=0) {
 	XPC(2) = rec->getArg(index);
@@ -2257,28 +2275,41 @@ LBLdispatcher:
   Case(INLINEASSIGN)
     {      
       TaggedRef fea = getLiteralArg(PC+1);
+      OzObject *self = e->getSelf();
+      Assert(self && self->isComplete());
+      ObjectState* state = self->getState();
 
-      Object *self = e->getSelf();
-
+      // situatedness check
       if (!e->isCurrentRoot() && !oz_isCurrentBoard(GETBOARD(self))) {
 	(void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomObject);
 	RAISE_THREAD;
-     }
+      }
 
-      RecOrCell state = self->getState();
-      SRecord *rec;
-      
-      if (stateIsCell(state)) {
-	rec = getState(state,OK,fea,XPC(2));
-	if (rec==NULL) {
+      if (state->isDistributed()) {     // call distribution layer
+	TaggedRef arg[] = { fea, XPC(2) };
+	OZ_Return res = distObjectStateOp(OP_PUT, state, arg, NULL);
+	switch(res) {
+	case PROCEED: {
+	  DISPATCH(5);
+	}
+	case SUSPEND: {
+	  PC += 5;
+	  PushContX(PC);
+	  SUSPENDONVARLIST;
+	  MAGIC_RET;
+	}
+	case BI_REPLACEBICALL: {
 	  PC += 5;
 	  Assert(!e->isEmptyPreparedCalls());
 	  goto LBLreplaceBICall;
 	}
-      } else {
-	rec = getRecord(state);
+	default:
+	  Assert(0);
+	}
       }
-      Assert(rec!=NULL);
+      // handle local case
+      SRecord* rec = state->getValue();
+      Assert(rec);
       int index = ((InlineCache*)(PC+3))->lookup(rec,fea);
       if (index>=0) {
 	Assert(oz_isRef(*rec->getRef(index)) || !oz_isVar(*rec->getRef(index)));
@@ -2461,81 +2492,32 @@ LBLdispatcher:
 			oz_nil());
 	RAISE_TYPE1("lock",oz_mklist(aux));
       }
-  
-      OzLock *t = (OzLock*) tagged2Const(aux);
-      Thread *th = e->currentThread();
-  
-      if (t->isLocal()) {
-	if (!e->isCurrentRoot()) {
-	  if (!oz_isCurrentBoard(GETBOARD((LockLocal*)t))) {
-	    (void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
-	    RAISE_THREAD;
-	  }
-	}
-	if (((LockLocal*)t)->hasLock(th))
-	  goto has_lock;
-	if (((LockLocal*)t)->lockB(th))
-	  goto got_lock;
-	goto no_lock;
-      }
 
-      if (!e->isCurrentRoot()) {
-	(void) oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
+      OzLock* lock = (OzLock*) tagged2Const(aux);
+
+      switch (lockTake(lock)) {
+      case RAISE: { // can be a situatedness error, for instance
 	RAISE_THREAD;
       }
-
-      LockRet ret;
-  
-      switch (t->getTertType()) {
-      case Te_Frame:
-	{
-	  if (((LockFrameEmul *)t)->hasLock(th))
-	    goto has_lock;
-	  ret = ((LockFrameEmul *)t)->lockB(th);
-	  break;
-	}
-      case Te_Proxy:
-	{
-	  (*lockLockProxy)(t, th);
-	  goto no_lock;
-	}
-      case Te_Manager:
-	{
-	  if (((LockManagerEmul *)t)->hasLock(th)) 
-	    goto has_lock;
-	  ret=((LockManagerEmul *)t)->lockB(th);
-	  break;
-	}
+      case PROCEED: { // we have the lock
+	PushCont(PC+lbl);
+	CTS->pushLock(lock);
+	DISPATCH(3);
+      }
+      case BI_REPLACEBICALL: { // lock will be granted later
+	PushCont(PC+lbl); // failure preepmtion 
+	CTS->pushLock(lock);
+	PC += 3;
+	Assert(!e->isEmptyPreparedCalls());
+	goto LBLreplaceBICall;
+      }
+      case SUSPEND: { // suspended because of an entity failure
+	PushContX(PC);
+	SUSPENDONVARLIST;
+      }
       default:
 	Assert(0);
       }
-
-      if (ret==LOCK_GOT) 
-	goto got_lock;
-      if (ret==LOCK_WAIT) 
-	goto no_lock;
-
-      PushCont(PC+lbl); // failure preepmtion 
-      PC += 3;
-      Assert(!e->isEmptyPreparedCalls());
-      goto LBLreplaceBICall;
-  
-    got_lock:
-      PushCont(PC+lbl);
-      CTS->pushLock(t);
-      DISPATCH(3);
-  
-    has_lock:
-      PushCont(PC+lbl);
-      DISPATCH(3);
-  
-    no_lock:
-      PushCont(PC+lbl);
-      CTS->pushLock(t);
-      PC += 3;
-      Assert(!e->isEmptyPreparedCalls());
-      goto LBLreplaceBICall;
-
     }
 
   Case(RETURN)
@@ -2636,7 +2618,10 @@ LBLdispatcher:
 
     DEREF(object,objectPtr);
     if (oz_isObject(object)) {
-      Object *obj      = tagged2Object(object);
+      OzObject *obj = tagged2Object(object);
+      if (!obj->isComplete()) {
+	goto bombSend;
+      }
       Abstraction *def = getSendMethod(obj,label,arity,(InlineCache*)(PC+4));
       if (def == NULL) {
 	goto bombSend;
@@ -2693,14 +2678,15 @@ LBLdispatcher:
 
        if (oz_isAbstraction(taggedPredicate)) {
          Abstraction *def = tagged2Abstraction(taggedPredicate);
-	 PrTabEntry *pte = def->getPred();
-         CheckArity(pte->getArity(), taggedPredicate);
-         if (!isTailCall) { PushCont(PC+3); }
-         CallDoChecks(def);
-         JUMPABSOLUTE(pte->getPC());
-       }
-
-       if (!oz_isProcedure(taggedPredicate) && !oz_isObject(taggedPredicate)) {
+	 if (def->isComplete()) {
+	   CheckArity(def->getArity(), taggedPredicate);
+	   if (!isTailCall) { PushCont(PC+3); }
+	   CallDoChecks(def);
+	   JUMPABSOLUTE(def->getPC());
+	 }
+	 // the distributed case is handled below...
+       } else if (!oz_isProcedure(taggedPredicate) &&
+		  !oz_isObject(taggedPredicate)) {
 	 Assert(!oz_isRef(taggedPredicate));
 	 if (oz_isVarOrRef(taggedPredicate)) {
 	   SUSP_PC(predPtr,PC);
@@ -2729,9 +2715,28 @@ LBLdispatcher:
        if (typ==Co_Abstraction) {
 	 Abstraction *def = (Abstraction *) predicate;
 	 CheckArity(def->getArity(), makeTaggedConst(def));
-	 if (!isTailCall) { PushCont(PC); }
-	 CallDoChecks(def);
-	 JUMPABSOLUTE(def->getPC());
+	 if (def->isComplete()) {
+	   if (!isTailCall) { PushCont(PC); }
+	   CallDoChecks(def);
+	   JUMPABSOLUTE(def->getPC());
+	 } else {
+	   // procedure is incomplete: call distribution
+	   TaggedRef args = oz_nil();
+	   for (int i = def->getArity(); i--; ) {
+	     args = oz_cons(XREGS[i], args);
+	   }
+	   OZ_Return ret = distProcedureCall(def, args);
+	   Assert(ret == BI_REPLACEBICALL || ret == SUSPEND);
+	   if (ret == SUSPEND) {
+	     // must be a failure, recall procedure once ready
+	     Assert(!e->isEmptySuspendVarList());
+	     am.prepareCall(makeTaggedConst(def),
+			    RefsArray::make(XREGS, predArity));
+	   }
+	   if (isTailCall) { PC=NOCODE; }
+	   Assert(!e->isEmptyPreparedCalls());
+	   goto LBLreplaceBICall;
+	 }
        }
 
 // -----------------------------------------------------------------------
@@ -2739,13 +2744,35 @@ LBLdispatcher:
 // -----------------------------------------------------------------------
        if (typ==Co_Object) {
 	 CheckArity(1, makeTaggedConst(predicate));
-	 Object *o = (Object*) predicate;
-	 Assert(o->getClass()->getFallbackApply());
+	 OzObject *o = (OzObject*) predicate;
+	 if (!o->isComplete()) {   // object incomplete: call distribution
+	   Assert(o->isDistributed());
+	   OZ_Return ret = (*distObjectInvoke)(o, XREGS[0]);
+	   Assert(ret == BI_REPLACEBICALL || ret == SUSPEND);
+	   if (ret == SUSPEND) {
+	     // must be a failure, recall procedure once ready
+	     Assert(!e->isEmptySuspendVarList());
+	     am.prepareCall(makeTaggedConst(o), RefsArray::make(XREGS[0]));
+	   }
+	   if (isTailCall) { PC=NOCODE; }
+	   Assert(!e->isEmptyPreparedCalls());
+	   goto LBLreplaceBICall;
+	 }
+	 OzClass* cls = o->getClass();
+	 if (!cls->isComplete()) {   // class not available yet
+	   OZ_Return ret = (*distClassGet)(cls);
+	   Assert(ret == SUSPEND && !e->isEmptySuspendVarList());
+	   // recall object once class is ready
+	   am.prepareCall(makeTaggedConst(o), RefsArray::make(XREGS[0]));
+	   if (isTailCall) { PC=NOCODE; }
+	   goto LBLreplaceBICall;
+	 }
+	 Assert(cls->getFallbackApply());
 	 Abstraction *def =
-	   tagged2Abstraction(o->getClass()->getFallbackApply());
+	   tagged2Abstraction(cls->getFallbackApply());
 	 /* {Obj Msg} --> {SetSelf Obj} {FallbackApply Class Msg} */
 	 XREGS[1] = XREGS[0];
-	 XREGS[0] = makeTaggedConst(o->getClass());
+	 XREGS[0] = makeTaggedConst(cls);
 	 predArity = 2;
 	 if (!isTailCall) { PushCont(PC); }
 	 ChangeSelf(o);
@@ -3111,21 +3138,9 @@ LBLdispatcher:
 
   Case(TASKLOCK)
     {
-      OzLock *lck = (OzLock *) CAP;
+      OzLock *lock = (OzLock *) CAP;
       CAP = (Abstraction *) NULL;
-      switch(lck->getTertType()){
-      case Te_Local:
-	((LockLocal*)lck)->unlock();
-	break;
-      case Te_Frame:
-	((LockFrameEmul *)lck)->unlock(e->currentThread());
-	break;
-      case Te_Proxy:
-	oz_raise(E_ERROR,E_KERNEL,"globalState",1,AtomLock);
-	RAISE_THREAD_NO_PC;
-      case Te_Manager:
-	((LockManagerEmul *)lck)->unlock(e->currentThread());
-	break;}
+      lockRelease(lock);
       goto LBLpopTaskNoPreempt;
     }
 
@@ -3141,7 +3156,7 @@ LBLdispatcher:
 
   Case(TASKSETSELF)
     {
-      e->setSelf((Object *) CAP);
+      e->setSelf((OzObject *) CAP);
       CAP = NULL;
       goto LBLpopTaskNoPreempt;
     }
@@ -3206,7 +3221,8 @@ LBLdispatcher:
 
       if (oz_isAbstraction(pred)) {
 	Abstraction *abstr = tagged2Abstraction(pred);
-	if (abstr->getArity() == (tailcallAndArity >> 1)) {
+	if (abstr->isComplete() &&
+	    abstr->getArity() == (tailcallAndArity >> 1)) {
 	  patchToFastCall(abstr,PC,tailcallAndArity&1);
 	  DISPATCH(0);
 	}
@@ -3237,7 +3253,7 @@ LBLdispatcher:
 
       if(oz_isAbstraction(pred)) {
 	Abstraction *abstr = tagged2Abstraction(pred);
-	if (abstr->getArity() == arity) { 
+	if (abstr->isComplete() && abstr->getArity() == arity) { 
 	  patchToFastCall(abstr,PC,tailCall);
 	  DISPATCH(0);
 	}
@@ -3259,23 +3275,32 @@ LBLdispatcher:
       }
 
       if (oz_isClass(cls)) {
+	// if the class is a stub, call distribution layer
+	if (!tagged2OzClass(cls)->isComplete()) {
+	  OZ_Return ret = (*distClassGet)(tagged2OzClass(cls));
+	  Assert(ret == SUSPEND);
+	  PushContX(PC);
+	  SUSPENDONVARLIST;
+	}
+
 	Bool defaultsUsed;
-	Abstraction *abstr = tagged2ObjectClass(cls)->getMethod(cmi->mn,cmi->arity,
-								NO,defaultsUsed);
+	Abstraction *abstr = tagged2OzClass(cls)->getMethod(cmi->mn,cmi->arity,
+							    NO,defaultsUsed);
 	/* fill cache and try again later */
 	if (abstr==NULL || defaultsUsed) {
 	  isTailCall = cmi->isTailCall;
 	  if (!isTailCall) PC = PC+3;
 	  
-	  Assert(tagged2ObjectClass(cls)->getFallbackApply());
+	  Assert(tagged2OzClass(cls)->getFallbackApply());
 	
 	  XREGS[1] = makeMessage(cmi->arity,cmi->mn);
 	  XREGS[0] = cls;
 	
 	  predArity = 2;
-	  predicate = tagged2Const(tagged2ObjectClass(cls)->getFallbackApply());
+	  predicate = tagged2Const(tagged2OzClass(cls)->getFallbackApply());
 	  goto LBLcall;
 	}
+	Assert(abstr->isComplete());
 	patchToFastCall(abstr,PC,cmi->isTailCall);
 	cmi->dispose();
 	DISPATCH(0);
@@ -3308,11 +3333,13 @@ LBLdispatcher:
 
   Case(PROFILEPROC)
     {
-      PrTabEntry *pred = CAP->getPred();
-      pred->getProfile()->numCalled++;
-      if (pred!=ozstat.currAbstr) {
-	CTS->pushAbstr(ozstat.currAbstr);
-	ozstat.leaveCall(pred);
+      if (CAP->isComplete()) {
+	PrTabEntry *pred = CAP->getPred();
+	pred->getProfile()->numCalled++;
+	if (pred!=ozstat.currAbstr) {
+	  CTS->pushAbstr(ozstat.currAbstr);
+	  ozstat.leaveCall(pred);
+	}
       }
       DISPATCH(1);
     }

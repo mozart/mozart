@@ -42,11 +42,12 @@ BUILDDIR = @builddir@
 
 include Makefile.vars
 
-MODULE_NAMES =							\
-	PID Fault DPMisc DPB VirtualSite DPStatistics Tk Schedule FDP FSP \
+MODULE_NAMES = \
+        Glue \
+	Tk Schedule FDP FSP \
 	Parser \
 	CompilerSupport Browser Debug Space FDB FSB CTB RecordC Compat \
-	Win32 Profile OsTime ZlibIO 
+	Win32 Profile OsTime ZlibIO
 
 ### added to build with gecode ###
 MODULE_NAMES += GFDB GBDB GFSB GFDP GBDP GFSP
@@ -61,6 +62,7 @@ CLEAN_LIBCP += cd libcp-set; $(MAKE) clean
 
 STATIC_MODULES=		@STATIC_MODULES@
 DYNAMIC_MODULES=	@DYNAMIC_MODULES@
+# The dss must be included here for static compilations
 STATIC_MODULELIBS=	-L. ${STATIC_MODULES:%=-l%}
 STATIC_MODULETARGETS=	$(STATIC_MODULES:%=lib%.a)
 DYNAMIC_MODULETARGETS=	$(DYNAMIC_MODULES:%=%.so-$(PLATFORM))
@@ -98,10 +100,10 @@ BIMODSPECS = \
 
 MODSPECS= \
 	FDP FSP Schedule Tk Parser OS Property Pickle \
-	PID URL FDB FSB CTB RecordC Space System CTB \
+	URL FDB FSB CTB RecordC Space System CTB \
 	CompilerSupport Compat Win32 Profile \
-	Debug Fault Browser Misc DPMisc \
-	VirtualSite Application DPStatistics OsTime \
+	Debug Browser Misc Glue \
+	Application OsTime \
 	ZlibIO \
 	$(BIMODSPECS) \
 	$(DENYS_SPECS) \
@@ -267,35 +269,27 @@ ALLOBJS= $(OBJS) \
 .PHONY:	all first install install-bin install-inc \
 	install-dir depend tags clean cleaner distclean veryclean
 
-all: $(TARGETS) $(DYNAMIC_MODULETARGETS)
+all: $(TARGETS) dynamic_modules
 
 bootstrap:: all
 
+dynamic_modules: $(TARGETS)
+	for dynamic_module in $(DYNAMIC_MODULETARGETS); do \
+	  $(MAKE) $$dynamic_module; \
+	done
+
 $(MODINTERS): bidecl.perl
+.PHONY: libDSS.a
+libDSS.a:
+	cp -p ../dss/libDSS.a .
 
-.PHONY: libDPB.a DPB.so-$(PLATFORM)
-libDPB.a DPB.so-$(PLATFORM):
+.PHONY: libGlue.a
+libGlue.a:
 	cd libdp; $(MAKE) ../$@
 
-.PHONY: libPID.a PID.so-$(PLATFORM)
-libPID.a PID.so-$(PLATFORM):
-	cd libdp; $(MAKE) ../$@
-
-.PHONY: libFault.a Fault.so-$(PLATFORM)
-libFault.a Fault.so-$(PLATFORM):
-	cd libdp; $(MAKE) ../$@
-
-
-.PHONY: libDPMisc.a DPMisc.so-$(PLATFORM)
-libDPMisc.a DPMisc.so-$(PLATFORM):
-	cd libdp; $(MAKE) ../$@
-
-.PHONY: libDPStatistics.a DPStatistics.so-$(PLATFORM)
-libDPStatistics.a DPStatistics.so-$(PLATFORM):
-	cd libdp; $(MAKE) ../$@
-
-.PHONY: libVirtualSite.a VirtualSite.so-$(PLATFORM)
-libVirtualSite.a VirtualSite.so-$(PLATFORM):
+.PHONY: Glue.so-$(PLATFORM)
+Glue.so-$(PLATFORM):
+	cp -p ../dss/libDSS.so .
 	cd libdp; $(MAKE) ../$@
 
 .PHONY: libFDP.a FDP.so-$(PLATFORM) libSchedule.a Schedule.so-$(PLATFORM)
@@ -465,6 +459,11 @@ NEWCACHEDIR = $(PREFIX)/cache/x-oz/boot
 NEWTARGETS = $(DYNAMIC_MODULETARGETS:%=$(NEWCACHEDIR)/%)
 
 install-cache: $(NEWCACHEDIR) $(NEWTARGETS)
+	echo "----- Checking libDSS ----"
+	if test -s libDSS.so; then mkdir -p $(BINDIR)/lib; fi;
+	if test -s libDSS.so; then cp libDSS.so $(BINDIR)/lib/libDSS.so; fi;
+
+$(NEWTARGETS): $(NEWCACHEDIR)
 
 $(NEWCACHEDIR):
 	$(INSTALL_DIR) $@
