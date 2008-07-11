@@ -1,6 +1,7 @@
 @SET_MAKE@
 PREFIX=@prefix@
 SUBDIRS = @PLATFORMDIRS@
+INSTALLDIRS=@INSTALLDIRS@
 
 .PHONY: all bootstrap install clean veryclean distclean depend check
 
@@ -8,6 +9,16 @@ all::
 
 all bootstrap install clean veryclean depend distclean check::
 	dirs="$(SUBDIRS)"; \
+	for i in $$dirs; do \
+	  if (cd $$i && $(MAKE) $@); \
+          then true; \
+          else exit 1; \
+          fi; \
+        done
+
+install::
+	if (cd dss && $(MAKE)); then true; else exit 1; fi;
+	dirs="$(INSTALLDIRS)"; \
 	for i in $$dirs; do \
 	  if (cd $$i && $(MAKE) $@); \
           then true; \
