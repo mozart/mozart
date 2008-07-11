@@ -40,7 +40,7 @@ case $system in
    ;;
    m68k\ Linux\ *)      OZARCH=linux-m68k
    ;;
-   sparc\ Linux\ *)     OZARCH=linux-sparc
+   sparc*\ Linux\ *)    OZARCH=linux-sparc
    ;;
    9000/7*HP-UX*)	OZARCH=hpux-700
    ;;
@@ -72,11 +72,11 @@ case $system in
    ;;
    *i[4567]86*CYGWIN*)       OZARCH=win32-i486
    ;;
-   *Power*Mac*Rhapsody*) OZARCH=powermac-rhapsody
+   *Power*Mac*Rhapsody*) OZARCH=rhapsody-powermac
    ;;
-   *Power*Mac*Darwin*)	OZARCH=powermac-darwin
+   *Power*Mac*Darwin*)	OZARCH=darwin-powermac
    ;;
-   *i*86*Darwin*)       OZARCH=i486-darwin
+   *i*86*Darwin*)       OZARCH=darwin-i386
    ;;
    *)  	                OZARCH=unknown-unknown
    ;;
