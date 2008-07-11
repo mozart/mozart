@@ -39,13 +39,9 @@
 #endif
 
 #if defined(DEBUG_CONSTRAINT_UNIFY)
-
 #define DEBUG_CONSTRAIN_VAR(ARGS) printf ARGS; fflush(stdout);
-
 #else
-
 #define DEBUG_CONSTRAIN_VAR(ARGS)
-
 #endif
 
 #include "tagged.hh"
@@ -54,33 +50,6 @@
 #include "value.hh"
 #include "pointer-marks.hh"
 #include "am.hh"
-
-//#define DEBUG_TELLCONSTRAINTS
-
-// NOTE:
-//   this order is used in the case of VAR=VAR unification
-//
-// kost@ : the following description (who compiled it??!), the
-// 'CMPVAR(...)'  with its usage, and the table used before (just
-// below) are contradictory!!
-// -----
-//   e.g. SimpleVariable are bound prefered
-// partial order required:
-//  Simple<<Future<<Distributed<<everything
-//  Bool<<FD
-// see int cmpVar(OzVariable *, OzVariable *)
-//
-//  enum TypeOfVariable {
-//    OZ_VAR_FD      = 0,
-//    OZ_VAR_BOOL    = 1,
-//    OZ_VAR_FS      = 2,
-//    OZ_VAR_CT      = 3,
-//    OZ_VAR_EXT     = 4,
-//    OZ_VAR_SIMPLE  = 5,
-//    OZ_VAR_FUTURE  = 6,
-//    OZ_VAR_OF      = 7
-//  };
-// -----
 
 //
 // kost@ : Now, we keep the 'cmpVar(...)'  definition, so: variables
@@ -124,9 +93,15 @@ enum TypeOfVariable {
 #define STORE_FLAG 1
 #define REIFIED_FLAG 2
 
-#define SVAR_UNUSED    0x1
-#define VAR_TRAILED   0x2
-#define SVAR_FLAGSMASK 0x3
+// raph: The flag VAR_MEDIATOR indicates that a mediator is attached
+// to the variable.  The mediator is used for distribution, and can be
+// present without the variable being distributed.  VAR_TRAILED is
+// used for trailing.  Both flags are orthogonal, since a distributed
+// variable can be speculatively bound inside a computation space.
+class Mediator;
+#define VAR_MEDIATOR 0x1
+#define VAR_TRAILED  0x2
+
 
 #define DISPOSE_SUSPLIST(SL)			\
 {						\
@@ -136,6 +111,7 @@ enum TypeOfVariable {
   }						\
   DebugCode(SL = 0);				\
 }
+
 
 class OzVariable {
   //
@@ -161,7 +137,10 @@ private:
 		 u_ct   = OZ_VAR_CT, 
 		 u_mask = 3};
 
-  unsigned int homeAndFlags;
+  // tagged pointer to either a home space (if the variable is local),
+  // or a glue mediator (if the variable is distributed)
+  Tagged2 homeOrMediator;
+
 protected:
   SuspList * suspList;
 
@@ -170,46 +149,66 @@ public:
   TypeOfVariable getTypeMasked(void) {
     return TypeOfVariable(u.var_type & u_mask);
   }
-
   TypeOfVariable getType(void) {
     return u.var_type;
   }
-
   void setType(TypeOfVariable t){
     u.var_type = t;
   }
 
   OzVariable() { Assert(0); }
   OzVariable(TypeOfVariable t, Board *bb) : suspList(NULL) {
-    homeAndFlags=(unsigned int)bb;
+    homeOrMediator.set(bb, 0);  // local and not trailed
     setType(t);
   }
 
   void initAsExtension(Board*bb) {
-    homeAndFlags=(unsigned int)bb;
+    homeOrMediator.set(bb, 0);  // not a distributed variable
     suspList = 0;
     setType(OZ_VAR_EXT);
   }
 
   USEFREELISTMEMORY;
 
+  // get/set the variable's home
   Board *getBoardInternal() {
-    return (Board *)(homeAndFlags&~SVAR_FLAGSMASK);
+    return (hasMediator() ? oz_rootBoard() : (Board*) homeOrMediator.getPtr());
   }
   void setHome(Board *h) {
-    homeAndFlags = (homeAndFlags&SVAR_FLAGSMASK)|((unsigned)h);
+    Assert(!hasMediator());
+    homeOrMediator.setPtr(h);
   }
 
+  // test/set whether the variable is trailed
   Bool isTrailed(void) {
-    return homeAndFlags&VAR_TRAILED;
+    return homeOrMediator.getTag() & VAR_TRAILED;
   }
   void setTrailed(void) {
-    homeAndFlags |= VAR_TRAILED;
+    homeOrMediator.borTag(VAR_TRAILED);  // bitwise or with tag
   }
   void unsetTrailed(void) {
-    homeAndFlags &= ~VAR_TRAILED;
+    homeOrMediator.bandTag(~VAR_TRAILED);  // bitwise and with tag
   }
 
+  // test whether the variable has a mediator
+  Bool hasMediator() {
+    return homeOrMediator.getTag() & VAR_MEDIATOR;
+  }
+  // get/set/remove the variable's mediator, and set VAR_MEDIATOR tag
+  Mediator *getMediator() {
+    Assert(hasMediator());
+    return (Mediator*) homeOrMediator.getPtr();
+  }
+  void setMediator(Mediator* med) {
+    int trailtag = homeOrMediator.getTag() & VAR_TRAILED;
+    homeOrMediator.set(med, VAR_MEDIATOR | trailtag);
+  }
+  void removeMediator() {
+    int trailtag = homeOrMediator.getTag() & VAR_TRAILED;
+    homeOrMediator.set(oz_rootBoard(), trailtag);
+  }
+
+  // suspension list stuff
   void disposeS(void) {
     for (SuspList * l = suspList; l; l = l->dispose());
     DebugCode(suspList=0);
@@ -383,6 +382,7 @@ OZ_Return oz_var_forceBind(OzVariable*,TaggedRef*,TaggedRef);
 OZ_Return oz_var_addSusp(TaggedRef*, Suspendable *);
 OZ_Return oz_var_addQuietSusp(TaggedRef*, Suspendable *);
 OZ_Return oz_var_makeNeeded(TaggedRef *);
+OZ_Return oz_var_makeNeededLocal(TaggedRef *);
 void oz_var_dispose(OzVariable*);
 void oz_var_printStream(ostream&, const char*, OzVariable*, int = 10);
 int oz_var_getSuspListLength(OzVariable*);

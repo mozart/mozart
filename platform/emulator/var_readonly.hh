@@ -61,11 +61,10 @@ public:
     oz_freeListDispose(this, sizeof(ReadOnly));
   }
   void printStream(ostream &out,int depth = 10) {
-    if (getType() == OZ_VAR_READONLY_QUIET) {
-      out << "<readonly quiet>";
-    } else {
-      out << "<readonly>";
-    }
+    out << "<readonly";
+    if (hasMediator()) out << " distributed";
+    if (getType() == OZ_VAR_READONLY) out << " needed";
+    out << ">";
   }
   void printLongStream(ostream &out,int depth = 10,
 				int offset = 0) {
@@ -85,5 +84,8 @@ void oz_bindReadOnly(OZ_Term *vPtr,OZ_Term val)
 {
   oz_var_forceBind(tagged2Var(*vPtr),vPtr,val);
 }
+
+// create a read-only view of a variable (v is a tagged ref to a tagged var)
+OZ_Term oz_readOnlyView(OZ_Term v);
 
 #endif /* __READONLY__HH__ */

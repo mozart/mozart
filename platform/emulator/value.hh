@@ -4,7 +4,7 @@
  *    Ralf Scheidhauer (Ralf.Scheidhauer@ps.uni-sb.de)
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Boriss Mejias (bmc@info.ucl.ac.be)
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -528,6 +528,7 @@ enum TypeOfConst {
   // NOTE: update the builtins: subtree and chunkArity, when adding
   //       new chunks
   Co_Object,
+  Co_ObjectState,
   Co_Port,
   Co_Chunk,
   Co_Array,
@@ -537,13 +538,6 @@ enum TypeOfConst {
 };
 
 #define Co_ChunkStart Co_Object
-
-enum TertType {
-  Te_Local   = 0, // 0000
-  Te_Manager = 1, // 0001
-  Te_Proxy   = 2, // 0010
-  Te_Frame   = 3  // 0011
-};
 
 #define DebugIndexCheck(IND) {Assert(IND< (1<<27));Assert(IND>=0);}
 
@@ -577,9 +571,10 @@ public:
 };
 
 
-#define CWH_Board 0
-#define CWH_GName 1
-
+#define CWH_BOARD    0
+#define CWH_GNAME    1
+#define CWH_MEDIATOR 2
+class Mediator;
 
 class ConstTermWithHome: public ConstTerm {
 private:
@@ -588,27 +583,35 @@ private:
 public:
   void setBoard(Board *b)
   {
-    boardOrGName.set(b,CWH_Board);
+    boardOrGName.set(b,CWH_BOARD);
+  }
+  void setMediator(Mediator *med)
+  {
+    boardOrGName.set(med, CWH_MEDIATOR);
+  }
+  Mediator *getMediator()
+  {
+    return (Mediator*) boardOrGName.getPtr();
   }
   ConstTermWithHome() { Assert(0); }
   ConstTermWithHome(Board *bb, TypeOfConst tt) : ConstTerm(tt) { setBoard(bb);}
 
-  Bool hasGName() { return (boardOrGName.getTag()&CWH_GName); }
-
+  Bool hasGName() { return (boardOrGName.getTag()&CWH_GNAME); }
+  Bool isDistributed(){ return (boardOrGName.getTag()&CWH_MEDIATOR); }
   void init(Board *bb, TypeOfConst tt) { ConstTerm::init(tt); setBoard(bb); }
 
   Board *getBoardInternal() {
-    return hasGName() ? oz_rootBoardOutline() : (Board*)boardOrGName.getPtr();
+    return isDistributed() ? oz_rootBoardOutline() : (Board*)boardOrGName.getPtr();
   }
 
   Board *getSubBoardInternal() {
-    Assert(!hasGName()); 
+    Assert(!isDistributed()); 
     return (Board*)boardOrGName.getPtr();
   }
 
   void setGName(GName *gn) { 
     Assert(gn);
-    boardOrGName.set(gn,CWH_GName);
+    boardOrGName.set(gn,CWH_GNAME);
   }
   GName *getGName1() {
     return hasGName()?(GName *)boardOrGName.getPtr():(GName *)NULL;
@@ -624,6 +627,11 @@ public:
  *
  */
 
+// raph: Extensions are "wrapped" in ConstTerm's.  In memory, an
+// OZ_Extension object always sits next to a ConstTermWithHome object.
+// The latter is of type Co_Extension, an provides a board, mediator,
+// or gname to the extension.
+
 inline 
 Bool oz_isExtension(TaggedRef t) {
   return oz_isConst(t) && tagged2Const(t)->getType() == Co_Extension;
@@ -631,23 +639,24 @@ Bool oz_isExtension(TaggedRef t) {
 
 inline
 OZ_Extension* const2Extension(ConstTerm* p) {
-  return reinterpret_cast<OZ_Extension*>(reinterpret_cast<void**>(p)+1);
+  ConstTermWithHome* c = static_cast<ConstTermWithHome*>(p);
+  return reinterpret_cast<OZ_Extension*>(c + 1);
 }
 
 inline
-ConstTerm* extension2Const(OZ_Extension* p) {
-  return reinterpret_cast<ConstTerm*>(reinterpret_cast<void**>(p)-1);
+ConstTermWithHome* extension2Const(OZ_Extension* p) {
+  return reinterpret_cast<ConstTermWithHome*>(p) - 1;
 }
 
 inline 
 OZ_Extension * tagged2Extension(TaggedRef t) {
   Assert(oz_isExtension(t));
-  return reinterpret_cast<OZ_Extension*>(reinterpret_cast<void**>(tagged2Const(t))+1);
+  return const2Extension(tagged2Const(t));
 }
 
 inline 
 TaggedRef makeTaggedExtension(OZ_Extension * s) {
-  return makeTaggedConst(reinterpret_cast<ConstTerm*>(reinterpret_cast<void**>(s)-1));
+  return makeTaggedConst(extension2Const(s));
 }
 
 /*===================================================================
@@ -978,74 +987,6 @@ TaggedRef makeTaggedFSetValue(OZ_FSetValue * fsv) {
   return makeTaggedConst(new ConstFSetValue(fsv));
 }
 
-
-/*===================================================================
- * Tertiary
- *=================================================================== */
-
-class Tertiary: public ConstTerm {
-private:
-  Tagged2 tagged; // TertType + Board || TertType + OTI
-  EntityInfo* info;
-public:
-
-  TertType getTertType()       { return (TertType) tagged.getTag(); }
-  void setTertType(TertType t) { tagged.set(tagged.getData(),(int) t); }
-
-  void setInfo(EntityInfo *infoIn) { info = infoIn; }
-
-  void setTertIndex(int i) { tagged.setVal(i); }
-  int getTertIndex() { return tagged.getData(); }
-  void setTertPointer (void *p) { tagged.setPtr(p); }
-  void *getTertPointer() { return tagged.getPtr(); }
-
-  Bool checkTertiary(TypeOfConst s,TertType t){
-    return (s==getType() && t==getTertType());}
-
-  void setBoard(Board *b) {
-    if (getTertType() == Te_Local) {
-      setTertPointer(b);
-    }
-  }
-  void setBoardLocal(Board *b) {
-    Assert(getTertType() == Te_Local);
-    setTertPointer(b);
-  }
-
-  NO_DEFAULT_CONSTRUCTORS(Tertiary)
-  Tertiary() { Assert(0); }	// keep gcc happy;
-  Tertiary(Board *b, TypeOfConst s,TertType t) : ConstTerm(s) {
-    setTertType(t);
-    info=NULL;
-    setBoard(b);}
-  Tertiary(void *p, TypeOfConst s, TertType t) : ConstTerm(s) {
-    setTertType(t);
-    info=NULL;
-    setTertPointer(p);
-  }
-  Tertiary(int i, TypeOfConst s, TertType t) : ConstTerm(s) {
-    setTertType(t);
-    info=NULL;
-    setTertIndex(i);
-  }
-
-  //
-  EntityInfo *getInfo() { return (info); }
-
-  Bool isLocal()   { return (getTertType() == Te_Local); }
-  Bool isManager() { return (getTertType() == Te_Manager); }
-  Bool isProxy()   { return (getTertType() == Te_Proxy); }
-  Bool isFrame()   { return (getTertType() == Te_Frame); }
-
-  Board *getBoardInternal() {
-    return isLocal() ? (Board*)getTertPointer() : oz_rootBoardOutline();}
-
-  Board *getBoardLocal() {
-    Assert(isLocal());
-    return (Board*) getTertPointer();
-  }
-
-};
 
 /*===================================================================
  * ForeignPointer
@@ -1703,7 +1644,7 @@ OZ_Term oz_checkList(OZ_Term l, OzCheckList check=OZ_CHECK_ANY) {
 }
 
 /*===================================================================
- * ObjectClass
+ * OzClass
  *=================================================================== */
 
 /* Internal representation of Oz classes */
@@ -1712,7 +1653,7 @@ OZ_Term oz_checkList(OZ_Term l, OzCheckList check=OZ_CHECK_ANY) {
 #define CLASS_SITED   0x2
 #define CLASS_FLAGS_MAX 0x3
 
-class ObjectClass: public ConstTermWithHome {
+class OzClass: public ConstTermWithHome {
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
@@ -1725,9 +1666,9 @@ private:
 public:
   USEHEAPMEMORY;
   OZPRINTLONG
-  NO_DEFAULT_CONSTRUCTORS(ObjectClass)
+  NO_DEFAULT_CONSTRUCTORS(OzClass)
 
-  ObjectClass(TaggedRef feat, TaggedRef fm, TaggedRef uf, TaggedRef dm,
+  OzClass(TaggedRef feat, TaggedRef fm, TaggedRef uf, TaggedRef dm,
 	      Bool lck, Bool sited, Board *b)
     : ConstTermWithHome(b,Co_Class)
   {
@@ -1797,108 +1738,176 @@ public:
     return getFeatures()->getWidth();
   }
 
+  // distribution support: the state is present iff feat!=0
+  Bool isComplete() { return features != makeTaggedNULL(); }
 
   GName *globalize(void);
 };
+
+inline
+Bool isOzClass(ConstTerm *t)
+{
+  return (t->getType()==Co_Class);
+}
+
+inline
+Bool oz_isClass(TaggedRef term)
+{
+  return oz_isConst(term) && isOzClass(tagged2Const(term));
+}
+
+inline
+OzClass *tagged2OzClass(TaggedRef term)
+{
+  Assert(oz_isClass(term));
+  return (OzClass *)tagged2Const(term);
+}
 
 
 /*
  * Object
  */
 
+// raph: Objects are distributed with two mediators: one for the
+// object itself, and one for its state.  The object is considered an
+// immutable, and its state only is mutable.  The state of an object
+// looks like a chunk with mutable fields.
 
-typedef TaggedRef RecOrCell;
-
-inline
-Bool stateIsCell(RecOrCell rc) { 
-  return oz_isConst(rc); 
-}
-
-inline
-Tertiary * getCell(RecOrCell rc)   {
-  Assert(stateIsCell(rc)); 
-  return (Tertiary *) tagged2Const(rc);
-}
-
-inline
-SRecord * getRecord(RecOrCell rc) {
-  Assert(!stateIsCell(rc)); 
-  return tagged2SRecord(rc);
-}
-
-class Object: public Tertiary {
+class ObjectState : public ConstTermWithHome {
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
-  GName  *objectID; 
-  TaggedRef cl1, lock, freeFeatures, state;
+  TaggedRef value;     // must be a record (possibly with no field)
 public:
   OZPRINTLONG
-  NO_DEFAULT_CONSTRUCTORS(Object)
+  NO_DEFAULT_CONSTRUCTORS(ObjectState)
+  ObjectState(Board *b, TaggedRef v)
+    : ConstTermWithHome(b, Co_ObjectState), value(v)
+  {
+    Assert(v==0||oz_isRecord(v));
+    Assert(b);
+  };
 
-  ObjectClass * getClass(void) { 
-    return (ObjectClass *) tagged2Const(cl1); 
-  }
-  OZ_Term getClassTerm(void) {
-    return (cl1);
-  }
-  void setClass(ObjectClass *c) {
-    Assert(!c || c->supportsLocking()>=0);
-    cl1=makeTaggedConst(c);
-  }
-  void setClassTerm(OZ_Term cl) {
-    Assert(oz_isConst(cl) && tagged2Const(cl)->getType()==Co_Class);
-    cl1 = cl;
+  TaggedRef getValueTerm() { return value; }
+  SRecord* getValue() { return value ? tagged2SRecord(value) : NULL; }
+  void setValue(TaggedRef v) {
+    Assert(v == makeTaggedNULL() || oz_isRecord(v));
+    value = v;
   }
 
-  GName *getGName1(void)       {
-    return objectID;
+  TaggedRef getFeature(TaggedRef fea) { return OZ_subtree(value,fea); }
+  Bool setFeature(TaggedRef fea, TaggedRef val) {
+    return tagged2SRecord(value)->setFeature(fea, val);
   }
-  void setGName(GName *gn) {
-    objectID = gn;
+  TaggedRef getArityList() { return value ? ::getArityList(value) : oz_nil(); }
+  int getWidth () { return ::getWidth(value); }
+};
+
+inline
+Bool oz_isObjectState(TaggedRef t) {
+  return oz_isConst(t) && tagged2Const(t)->getType() == Co_ObjectState;
+}
+
+inline
+ObjectState* tagged2ObjectState(TaggedRef t) {
+  Assert(oz_isObjectState(t));
+  return (ObjectState*) tagged2Const(t);
+}
+
+// object state operations, with two arrays for inputs and outputs
+OZ_Return ostateOperation(OperationTag, ObjectState*, TaggedRef*, TaggedRef*);
+
+// Objects no longer use a GName.  The object is serialized by its
+// mediator.
+
+class OzObject: public ConstTermWithHome {
+  friend void ConstTerm::gCollectConstRecurse(void);
+  friend void ConstTerm::sCloneConstRecurse(void);
+private:
+  // do not change order, the garbage collector relies on it!
+  TaggedRef cls, lock, freeFeatures, state;
+
+public:
+  OZPRINTLONG
+  NO_DEFAULT_CONSTRUCTORS(OzObject)
+
+  // handle class, lock, free features, and state
+  OzClass* getClass(void) {
+    return cls == makeTaggedNULL() ? NULL : tagged2OzClass(cls);
+  }
+  void setClass(OzClass *c) {
+    cls = c ? makeTaggedConst(c) : makeTaggedNULL();
+  }
+  void setClass(OZ_Term cl) {
+    Assert(oz_isClass(cl));
+    cls = cl;
   }
     
   OzLock *getLock(void) { 
-    return ((lock == makeTaggedNULL()) ? 
-	    (OzLock *) NULL : (OzLock *) tagged2Const(lock)); 
+    return lock == makeTaggedNULL() ? NULL : (OzLock *) tagged2Const(lock); 
   }
-  void setLock(OzLock *l) { 
-    lock = l ? makeTaggedConst((ConstTerm *) l) : makeTaggedNULL();
+  void setLock(OzLock *l) {
+    lock = l ? makeTaggedConst((ConstTerm*) l) : makeTaggedNULL();
   }
-
-  const char *getPrintName(void) { 
-    return getClass()->getPrintName(); 
-  }
-  RecOrCell getState(void) { 
-    return state; 
-  }
-  void setState(SRecord *s) { 
-    Assert(s!=0); 
-    state=makeTaggedSRecord(s); 
-  }
-  void setState(Tertiary *c) { 
-    state = c ? makeTaggedConst(c) : makeTaggedNULL(); 
-  }
-  void setState(OZ_Term s) {
-    state = s;
-  }
-
-  OzDictionary *getDefMethods() {
-    return getClass()->getDefMethods();
+  void setLock(OZ_Term l) {
+    Assert(oz_isConst(l) && tagged2Const(l)->getType() == Co_Lock);
+    lock = l;
   }
 
   SRecord *getFreeRecord(void) { 
     return freeFeatures ? tagged2SRecord(freeFeatures) : (SRecord *) NULL;
   }
-  SRecord *getUnfreeRecord() { 
-    return getClass()->getUnfreeRecord(); 
+  void setFreeRecord(SRecord *sr) { 
+    freeFeatures = sr ? makeTaggedSRecord(sr) : makeTaggedNULL(); 
   }
-  void setFreeRecord(SRecord *aRec) { 
-    freeFeatures = aRec ? makeTaggedSRecord(aRec) : makeTaggedNULL(); 
+  void setFreeRecord(OZ_Term r) {
+    freeFeatures = r; 
+  }
+
+  TaggedRef getStateTerm(void) { return state; }
+  ObjectState* getState(void) {
+    return state == makeTaggedNULL() ? NULL : tagged2ObjectState(state);
+  }
+  void setState(ObjectState *s) {
+    state = s ? makeTaggedConst(s) : makeTaggedNULL();
+  }
+  void setState(OZ_Term s) {
+    Assert(s == makeTaggedNULL() || oz_isObjectState(s));
+    state = s;
+  }
+
+  // support for the glue layer
+  Bool isComplete() {
+    return cls != makeTaggedNULL();
+  }
+  OZ_Term getRepresentation(void) {
+    Assert(isComplete());
+    OZ_Term fea = freeFeatures ? freeFeatures : oz_nil();
+    OZ_Term lck = lock ? lock : oz_nil();
+    return OZ_mkTupleC("#", 4, cls, fea, lck, state);
+  }
+  void setRepresentation(OZ_Term t) {
+    Assert(!isComplete());
+    SRecord* rec = tagged2SRecord(t);
+    Assert(rec->getTupleWidth() == 4);
+    setClass(rec->getArg(0));
+    if (!oz_isNil(rec->getArg(1))) setFreeRecord(rec->getArg(1));
+    if (!oz_isNil(rec->getArg(2))) setLock(rec->getArg(2));
+    setState(rec->getArg(3));
+  }
+
+  // properties coming directly from the class
+  const char *getPrintName(void);
+
+  OzDictionary *getDefMethods() {   // unsafe
+    return getClass()->getDefMethods();
+  }
+  SRecord *getUnfreeRecord() {   // unsafe
+    return getClass()->getUnfreeRecord(); 
   }
 
   /* same functionality is also in instruction inlineDot */
-  TaggedRef getFeature(TaggedRef lit) {
+  TaggedRef getFeature(TaggedRef lit) {   // unsafe
     SRecord *freefeat = getFreeRecord();
     if (freefeat) {
       TaggedRef ret = freefeat->getFeature(lit);
@@ -1909,7 +1918,7 @@ public:
     return fr ?  fr->getFeature(lit) : makeTaggedNULL();
   }
 
-  TaggedRef replaceFeature(TaggedRef lit, TaggedRef value) {
+  TaggedRef replaceFeature(TaggedRef lit, TaggedRef value) {   // unsafe
     SRecord *freefeat = getFreeRecord();
     if (freefeat) {
       int ind = freefeat->getIndex(lit);
@@ -1920,51 +1929,37 @@ public:
       }
     }
     SRecord *fr = getUnfreeRecord();
-    
-    if (!fr)
-      return makeTaggedNULL();
-
-    int ind = fr->getIndex(lit);
-
-    if (ind == -1)
-      return makeTaggedNULL();
-    
-    TaggedRef ret = fr->getArg(ind);
-    fr->setArg(ind, value);
-    
-    return ret;
+    if (fr) {
+      int ind = fr->getIndex(lit);
+      if (ind != -1) {
+	TaggedRef ret = fr->getArg(ind);
+	fr->setArg(ind, value);
+	return ret;
+      }
+    }
+    return makeTaggedNULL();
   }
 
   TaggedRef getArityList();
   int getWidth ();
 
-  GName *globalize();
-  void localize();
-
-  Object(Board *bb, SRecord *s, ObjectClass *ac, SRecord *feat, OzLock *lck)
-    : Tertiary(bb, Co_Object,Te_Local)
+  // constructor
+  OzObject(Board *bb, SRecord *s, OzClass *ac, SRecord *feat, OzLock *lck)
+    : ConstTermWithHome(bb, Co_Object)
   {
-    setFreeRecord(feat);
     setClass(ac);
-    setState(s);
-    setGName(NULL);
-    setLock(lck);
-  }
-
-  // kost@ : this is THE constructor to be used by the builder (for
-  // distribution and eventually persistence);
-  Object(Board *bb, GName *gn, OZ_Term s, SRecord *feat, OzLock *lck)
-    : Tertiary(bb, Co_Object, Te_Local)
-  {
     setFreeRecord(feat);
-    setState(s);
-    setGName(gn);
     setLock(lck);
-    DebugCode(cl1 = (OZ_Term) 0;);
+    setState(new ObjectState(bb, makeTaggedSRecord(s)));
   }
-};
 
-SRecord *getState(RecOrCell state, Bool isAssign, OZ_Term fea, OZ_Term &val);
+  // raph: this is the constructor to be used by the builder
+  OzObject(Board *bb)
+    : ConstTermWithHome(bb, Co_Object),
+      cls(makeTaggedNULL()), lock(makeTaggedNULL()),
+      freeFeatures(makeTaggedNULL()), state(makeTaggedNULL())
+  {}
+};
 
 inline
 Bool isObject(ConstTerm *t)
@@ -1979,30 +1974,14 @@ Bool oz_isObject(TaggedRef term)
 }
 
 inline
-Object *tagged2Object(TaggedRef term)
+OzObject *tagged2Object(TaggedRef term)
 {
   Assert(oz_isObject(term));
-  return (Object *)tagged2Const(term);
+  return (OzObject *)tagged2Const(term);
 }
 
-inline
-Bool isObjectClass(ConstTerm *t)
-{
-  return (t->getType()==Co_Class);
-}
-
-inline
-Bool oz_isClass(TaggedRef term)
-{
-  return oz_isConst(term) && isObjectClass(tagged2Const(term));
-}
-
-inline
-ObjectClass *tagged2ObjectClass(TaggedRef term)
-{
-  Assert(oz_isClass(term));
-  return (ObjectClass *)tagged2Const(term);
-}
+// object operations (not state), with two arrays for inputs and outputs
+OZ_Return objectOperation(OperationTag, OzObject*, TaggedRef*, TaggedRef*);
 
 /*===================================================================
  * SChunk
@@ -2025,7 +2004,7 @@ public:
 
   TaggedRef getValue() { return value; }
   TaggedRef getFeature(TaggedRef fea) { return OZ_subtree(value,fea); }
-  TaggedRef getArityList() { return ::getArityList(value); }
+  TaggedRef getArityList() { return value ? ::getArityList(value) : oz_nil(); }
   int getWidth () { return ::getWidth(value); }
 
   void import(TaggedRef val) {
@@ -2077,6 +2056,9 @@ OZ_Term oz_newChunk(Board *bb, OZ_Term val)
   return makeTaggedConst(new SChunk(bb, val));
 }
 
+// chunk operations, with two arrays for inputs and outputs
+OZ_Return chunkOperation(OperationTag, SChunk*, TaggedRef*, TaggedRef*);
+
 /*===================================================================
  * Arrays
  *=================================================================== */
@@ -2097,6 +2079,10 @@ public:
   int getLow()      { return offset; }
   int getWidth()    { return width; }
   int getHigh()     { return getWidth() + offset - 1; }
+  bool checkIndex(int n) {
+    n -= offset;
+    return !(n>=width || n<0);
+  }
 
   OzArray(Board *b, int low, int high, TaggedRef initvalue)
     : ConstTermWithHome(b,Co_Array) 
@@ -2172,6 +2158,9 @@ OzArray *tagged2Array(TaggedRef term)
   Assert(oz_isArray(term));
   return (OzArray *) tagged2Const(term);
 }
+
+// array operations, with two arrays for inputs and outputs
+OZ_Return arrayOperation(OperationTag, OzArray*, TaggedRef*, TaggedRef*);
 
 
 /*===================================================================
@@ -2407,33 +2396,50 @@ class Abstraction: public ConstTermWithHome {
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 protected:
-  PrTabEntry *pred;
-  TaggedRef globals[1];
+  PrTabEntry *pred;       // predicate
+  TaggedRef *globals;     // array of global registers
+  int arity : 16;         // arity of abstraction
+  bool complete : 1;      // whether predicate and globals are complete
+
 public:
   OZPRINTLONG
   NO_DEFAULT_CONSTRUCTORS(Abstraction)
 
-  static Abstraction *newAbstraction(PrTabEntry *prd,Board *bb)
+  // regular constructor, where predicate is known
+  Abstraction(Board *bb, PrTabEntry *p) :
+    ConstTermWithHome(bb, Co_Abstraction),
+    pred(p), globals(NULL), arity(p->getArity()), complete(TRUE)
   {
-    Assert(prd->getGSize()>=0);
-    int sz=sizeof(Abstraction)+sizeof(TaggedRef)*(prd->getGSize()-1);
-    Abstraction *ab = (Abstraction *) oz_heapMalloc(sz);
-    ab->ConstTermWithHome::init(bb,Co_Abstraction);
-    ab->pred=prd;
-    DebugCheckT(for (int i=prd->getGSize(); i--; ) ab->globals[i]=0);
-    return ab;
+    Assert(p && p->getGSize() >= 0);
+    if (p->getGSize() > 0) {
+      globals = (TaggedRef*) oz_heapMalloc(sizeof(TaggedRef) * p->getGSize());
+      DebugCheckT(for (int i = p->getGSize(); i--; ) globals[i] = 0);
+    }
   }
 
-  int getAllocSize(void) {
-    return sizeof(Abstraction)+sizeof(TaggedRef)*(pred->getGSize()-1);
+  static Abstraction *newAbstraction(PrTabEntry *prd,Board *bb) {
+    return new Abstraction(bb, prd);
+  }
+
+  // special constructor, where predicate is not known yet
+  Abstraction(Board *bb, int n) :
+    ConstTermWithHome(bb, Co_Abstraction),
+    pred(NULL), globals(NULL), arity(n), complete(FALSE)
+  {}
+
+  bool isComplete(void) { return complete; }
+  void setComplete() {
+    Assert(pred);
+    Assert(pred->getGSize() == 0 || globals);
+    complete = TRUE;
   }
 
   void initG(int i, TaggedRef val) {
-    Assert(i>=0 && i<getPred()->getGSize());
+    Assert(globals && i>=0 && i<getPred()->getGSize());
     globals[i]=val;
   }
   TaggedRef getG(int i) {
-    Assert(i>=0 && i<cacGetPred()->getGSize());
+    Assert(globals && i>=0 && i<cacGetPred()->getGSize());
     return globals[i];
   }
   TaggedRef *getGRef() { return globals; }
@@ -2448,11 +2454,27 @@ public:
     return pred; 
   }
 
+  // set predicate (use only with second constructor!)
+  void setPred(PrTabEntry *p) {
+    Assert(!pred && p && p->getArity() == arity);
+    pred = p;
+    if (p->getGSize() > 0) {
+      globals = (TaggedRef*) oz_heapMalloc(sizeof(TaggedRef) * p->getGSize());
+      // nullifying globals is necessary for garbage collection
+      for (int i = p->getGSize(); i--; ) globals[i] = 0;
+    } else {
+      setComplete();
+    }
+  }
+
+  // always safe (even when the predicate is unknown)
+  int getArity() { return arity; }
+
+  // those are not safe: check isComplete() before!
   ProgramCounter getPC() { return getPred()->getPC(); }
-  int getArity()         { return getPred()->getArity(); }
-  SRecordArity getMethodArity()   { return getPred()->getMethodArity(); }
-  const char *getPrintName()   { return getPred()->getPrintName(); }
-  TaggedRef getName()    { return getPred()->getName(); }
+  SRecordArity getMethodArity() { return getPred()->getMethodArity(); }
+  TaggedRef getName() { return getPred()->getName(); }
+  const char *getPrintName();
 
   TaggedRef DBGgetGlobals();
 
@@ -2518,7 +2540,7 @@ Abstraction *tagged2Abstraction(TaggedRef term)
  * Builtin (incl. Builtin)
  *=================================================================== */
 
-class Builtin: public ConstTerm {
+class Builtin: public ConstTermWithHome {
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
@@ -2631,26 +2653,19 @@ int oz_procedureArity(OZ_Term pterm)
 
 /*===================================================================
  * Cell
- * Unused third field from tertiary.
  *=================================================================== */
 
-
-class CellLocal:public Tertiary{
+class OzCell:public ConstTermWithHome{
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
-  // DENYS:
-  // if I understand things correctly, the dummy member is there to
-  // make it half-way likely that we can somehow cast between
-  // CellFrame and CellLocal.  Such a cast may be used for forwarding,
-  // although I was not really able to locate such a cast precisely.
-  // WARNING: TaggedRef needs to be the same size as void* else this
-  // won't work.
+  // When the cell is distributed, val == 0 means that the state is not present.
   TaggedRef val;
-  void *dummy; // mm2
+
 public:                
-  NO_DEFAULT_CONSTRUCTORS(CellLocal)
-  CellLocal(Board *b,TaggedRef v) : Tertiary(b, Co_Cell,Te_Local), val(v) {}  
+  NO_DEFAULT_CONSTRUCTORS(OzCell);
+
+  OzCell(Board *b, TaggedRef v) : ConstTermWithHome(b, Co_Cell), val(v) {}  
   TaggedRef getValue() { return val; }
 
   void setValue(TaggedRef v) { val=v; }
@@ -2661,146 +2676,59 @@ public:
     return ret;}
 
   TaggedRef *getRef() { return &val; }
-
-  void globalize(int);
 };
-
-#define Cell_Lock_Invalid     0
-#define Cell_Lock_Requested   1
-#define Cell_Lock_Next        2
-#define Cell_Lock_Valid       4
-#define Cell_Lock_Dump_Asked  8
-#define Cell_Lock_Access_Bit 16
-
-class CellSecEmul {
-friend class CellManagerEmul;
-friend class CellFrameEmul;
-friend class CellFrame;
-friend class CellManager;
-protected:
-  unsigned int state;
-  PendThread* pending;
-  DSite* next;
-  TaggedRef contents;
-  PendThread* pendBinding;
-
-public:
-  CellSecEmul(TaggedRef val) { Assert(0); }
-  CellSecEmul() {}
-
-  unsigned int getState(){return state;}
-
-  TaggedRef getContents(){
-    Assert(state & (Cell_Lock_Valid|Cell_Lock_Requested));
-    return contents;}
-
-  void setContents(TaggedRef t){
-    Assert(state & (Cell_Lock_Valid|Cell_Lock_Requested));
-    contents = t;}
-
-  void dumpPending() {
-    pending = (PendThread *) 0;
-  }
-};
-
-//
-// 'CellManagerEmul' (like other "*Emul" classes) provide only for
-// methods that emulator must be able to use; everithing else (like
-// obtaining the state from a remote site) is PERDIO business
-// ('CellManager')
-class CellManagerEmul : public Tertiary {
-  friend void ConstTerm::gCollectConstRecurse(void);
-  friend void ConstTerm::sCloneConstRecurse(void);
-protected:
-  CellSecEmul *sec;
-  Chain *chain;
-public:
-  NO_DEFAULT_CONSTRUCTORS(CellManagerEmul)
-  CellManagerEmul() { Assert(0); }
-
-  CellSecEmul* getSec(){return sec;}
-  unsigned int getState(){return sec->state;}
-};
-
-class CellFrameEmul : public Tertiary {
-  friend void ConstTerm::gCollectConstRecurse(void);
-  friend void ConstTerm::sCloneConstRecurse(void);
-protected:
-  CellSecEmul *sec;
-  void *forward;
-public:
-  NO_DEFAULT_CONSTRUCTORS2(CellFrameEmul)
-  CellFrameEmul() { Assert(0); }
-
-  unsigned int getState(){return sec->state;}
-
-  CellSecEmul* getSec(){return sec;}
-};
-
 
 inline
 Bool oz_isCell(TaggedRef term)
 {
   return oz_isConst(term) && tagged2Const(term)->getType() == Co_Cell;
 }
+
+inline
+OzCell *tagged2Cell(TaggedRef term)
+{
+  Assert(oz_isCell(term));
+  return (OzCell *) tagged2Const(term);
+}
+
+// cell operations, with two arrays for inputs and outputs
+// (note: input arity of 'op' is OperationIn[op]-1)
+OZ_Return cellOperation(OperationTag, OzCell*, TaggedRef*, TaggedRef*);
                   
 /*===================================================================
- * Ports          
+ * Port          
  *=================================================================== */
 
-class Port : public Tertiary {
-  friend void ConstTerm::gCollectConstRecurse(void);
-  friend void ConstTerm::sCloneConstRecurse(void);
-public:
-  NO_DEFAULT_CONSTRUCTORS(Port)
-  Port(Board *b, TertType tt) : Tertiary(b,Co_Port,tt){}
-};
-
-class PortWithStream : public Port {
+class OzPort : public ConstTermWithHome {
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 public:
   TaggedRef strm;
-  NO_DEFAULT_CONSTRUCTORS(PortWithStream)
-  TaggedRef exchangeStream(TaggedRef newStream)
-  { 
+  NO_DEFAULT_CONSTRUCTORS(OzPort)
+  TaggedRef exchangeStream(TaggedRef newStream) { 
     TaggedRef ret = strm;
     strm = newStream;
-    return ret;   }
-  PortWithStream(Board *b, TaggedRef s) : Port(b,Te_Local)  {
-    strm = s;}
-};
-
-/* ----------------------------------------------------
-   PORTS    local               manager           proxy
-lst word:   Co_Port:board       Co_Port:_         Co_Port:_
-2nd word:   Te_Local:NO_ENTRY   Te_Manager:owner  Te_Proxy:borrow
-3rd word    <<stream>>          <<stream>>        _
----------------------------------------------------- */
-
-class PortLocal: public PortWithStream {
-  friend void ConstTerm::gCollectConstRecurse(void);
-  friend void ConstTerm::sCloneConstRecurse(void);
-public:
-  NO_DEFAULT_CONSTRUCTORS(PortLocal)
-  PortLocal(Board *b, TaggedRef s) : PortWithStream(b,s) {};
+    return ret;
+  }
+  
+  OzPort(Board *b, TaggedRef s):ConstTermWithHome(b, Co_Port), strm(s) {}
 };
 
 inline
 Bool oz_isPort(TaggedRef term)
 { return oz_isConst(term) && tagged2Const(term)->getType() == Co_Port;}
   
-inline PortWithStream *tagged2PortWithStream(TaggedRef term)
-{ return (PortWithStream *) tagged2Const(term);}
+inline OzPort *tagged2Port(TaggedRef term)
+{ return (OzPort *) tagged2Const(term);}
 
-inline Port *tagged2Port(TaggedRef term)
-{ return (Port*) tagged2Const(term);}
+// implemented in builtins.cc
+void doPortSend(OzPort *port, TaggedRef val, Board*);
 
 /*===================================================================
  * Space
  *=================================================================== */
 
-class Space: public Tertiary {
+class Space: public ConstTermWithHome {
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
@@ -2814,8 +2742,9 @@ public:
   OZPRINTLONG
   NO_DEFAULT_CONSTRUCTORS(Space)
 
-  Space(Board *h, Board *s) : Tertiary(h,Co_Space,Te_Local), solve(s) {};
-  Space(int i, TertType t) : Tertiary(i,Co_Space,t) {}
+  Space(Board *h, Board *s) : ConstTermWithHome(h, Co_Space), solve(s) {};
+// bmc: I do not think that we need this constructor.
+// Space(int i, TertType t) : ConstTermWithHome(i,Co_Space,t) {}
 
   Bool isMarkedFailed(void) { 
     return !solve;
@@ -2834,245 +2763,138 @@ public:
   } 
 };
 
-
-
 inline 
 Bool oz_isSpace(TaggedRef term)
 {
   return oz_isConst(term) && tagged2Const(term)->getType() == Co_Space;
 }
 
-
 /*===================================================================
- * PendThread  (only used for locks in centralized mozart
+ * Unusables
  *=================================================================== */
 
-enum ExKind{
-  EXCHANGE    = 0,
-  ASSIGN      = 1,
-  AT          = 2,
-  NOEX        = 3, // lock
-  ACCESS      = 4,
-  DEEPAT      = 5,
-  REMOTEACCESS= 6,
-  O_EXCHANGE  = 7,
-  MOVEEX      = 8,
-  DUMMY       = 9
-};
-
-
-//
-// 
-class PendThread{
+class UnusableResource: public ConstTermWithHome {
 public:
-  Thread *thread;
-  PendThread *next;
-  TaggedRef controlvar;
-  TaggedRef nw;
-  TaggedRef old;
-  ExKind    exKind;
-  PendThread(Thread *th,PendThread *pt):
-    next(pt), thread(th),old(0),nw(0), controlvar(0), exKind(NOEX) {}
-  PendThread(Thread *th,PendThread *pt,ExKind e):
-    next(pt), thread(th),old(0),nw(0), controlvar(0), exKind(e) {}
-  PendThread(Thread *th,PendThread *pt,TaggedRef o, TaggedRef n, TaggedRef cv,
-	     ExKind e)
-    :next(pt), thread(th),old(o),nw(n), exKind(e), controlvar(cv) {}
-  PendThread(Thread *th,PendThread *pt,TaggedRef cv,ExKind e)
-    :next(pt), thread(th),old(0),nw(0), exKind(e), controlvar(cv) {}
-  USEFREELISTMEMORY;
-  void dispose(){oz_freeListDispose(this,sizeof(PendThread));}
+  NO_DEFAULT_CONSTRUCTORS(UnusableResource);
+  UnusableResource():ConstTermWithHome(NULL, Co_Resource) {}
 };
 
-Thread* pendThreadResumeFirst(PendThread **pt);
-OZ_Return pendThreadAddToEndEmul(PendThread **pt,Thread *t, Board *home);
-void gCollectPendThreadEmul(PendThread**);
-void sClonePendThreadEmul(PendThread**);
+/*===================================================================
+ * PendingThreadList  (only used for locks now)
+ *=================================================================== */
+
+// a linked list of pairs (thread, control var)
+class PendingThreadList {
+public:
+  TaggedRef thread;
+  TaggedRef controlvar;
+  PendingThreadList *next;
+
+  PendingThreadList(PendingThreadList *pt):
+    thread(0), controlvar(0), next(pt) {}
+  PendingThreadList(TaggedRef t, TaggedRef cv, PendingThreadList *pt):
+    thread(t), controlvar(cv), next(pt) {}
+  USEFREELISTMEMORY;
+  void dispose(){oz_freeListDispose(this,sizeof(PendingThreadList));}
+};
+
+// convert from/to an Oz list of pairs
+TaggedRef pendingThreadList2List(PendingThreadList*);
+PendingThreadList* list2PendingThreadList(TaggedRef);
+
+// add/remove elements
+void pendingThreadAdd(PendingThreadList** pt, TaggedRef t, TaggedRef cv);
+void pendingThreadDrop(PendingThreadList** pt, TaggedRef t);
+TaggedRef pendingThreadResumeFirst(PendingThreadList** pt);
+void disposePendingThreadList(PendingThreadList*);
 
 /*===================================================================
  * Locks
  *=================================================================== */
 
-class OzLock:public Tertiary{
-public:
-  NO_DEFAULT_CONSTRUCTORS(OzLock)
-  OzLock() { Assert(0); }
-  OzLock(Board *b,TertType tt):Tertiary(b,Co_Lock,tt){}
-  OzLock(void *i,TertType tt):Tertiary(i,Co_Lock,tt){}
-};
-
-class LockLocal:public OzLock{
+class OzLock:public ConstTermWithHome{
   friend void ConstTerm::gCollectConstRecurse(void);
   friend void ConstTerm::sCloneConstRecurse(void);
 private:
-  PendThread *pending;
-  Thread *locker;
-public:                
-  NO_DEFAULT_CONSTRUCTORS(LockLocal)
-  LockLocal(Board *b) : OzLock(b,Te_Local){
-    pending=NULL;
-    locker = NULL;
-    pending= NULL;}
-
-  PendThread* getPending(){return pending;}
-  void setPending(PendThread *pt){pending=pt;}
-  PendThread** getPendBase(){return &pending;}
-  
-  Thread * getLocker() { return locker; }
-  void setLocker(Thread *t) { locker=t; }
-  Bool hasLock(Thread *t){return (t==getLocker()) ? TRUE : FALSE;}
-
-  void unlockComplex();
-  void unlock(){
-    Assert(getLocker()!=NULL);
-    if(pending==NULL){
-      setLocker(NULL);
-      return;}
-    unlockComplex();}
-
-  Bool isLocked(Thread *t) { return (getLocker()==t); }
-
-  void lockComplex(Thread *);
-  void lock(Thread *t){
-    if(t==getLocker()) {return;}
-    if(getLocker()==NULL) {setLocker(t);return;}
-    lockComplex(t);}
-
-  Bool lockB(Thread *t){
-    if(t==getLocker()) {return TRUE;}
-    if(getLocker()==NULL) {setLocker(t);return TRUE;}
-    lockComplex(t);
-    return FALSE;}
-
-  void globalize(int);
-
-  void convertToLocal(Thread *t,PendThread *pt){
-    setLocker(t);
-    pending=pt;}
-};
-
-class LockSecEmul {
-friend class LockFrameEmul;
-friend class LockManagerEmul;
-friend class LockFrame;
-friend class LockManager;
-friend class Chain;
-protected:
-  unsigned int state;
-  PendThread* pending;
-  DSite* next;
-  Thread *locker;
-  
-public:
-  NO_DEFAULT_CONSTRUCTORS2(LockSecEmul)
-  LockSecEmul(Thread *t,PendThread *pt) { Assert(0); }
-  LockSecEmul() {}		// 'LockSec()'
-
-  Thread* getLocker(){return locker;}
-
-  unsigned int getState() { return state; }
-
-  Bool secLockB(Thread*t){
-    if(t==locker) return OK;
-    if((locker==NULL) && (state==Cell_Lock_Valid)){
-      Assert(pending==NULL);
-      locker=t;
-      return OK;}
-    return NO;}
-
-  PendThread** getPendBase() { return &pending; }
-  void unlockPending(Thread* th);
-
-  // closing the site;
-  void dumpPending() {
-    locker = (Thread *) 0;
-    pending = (PendThread *) 0;
-  }
-};
-
-class LockManagerEmul : public OzLock {
-protected:
-  LockSecEmul *sec;
-  Chain *chain;
-public:
-  NO_DEFAULT_CONSTRUCTORS2(LockManagerEmul)
-  LockManagerEmul() { Assert(0); }
-
-  Bool hasLock(Thread *t) { 
-    if(getInfo()!=NULL) return FALSE;
-    return (sec->locker==t) ? TRUE : FALSE;}
-
-  LockSecEmul *getSec(){return sec;}
-
-  LockRet lockB(Thread *t){
-    if(getInfo()==NULL){
-      if(sec->secLockB(t)) return LOCK_GOT;}
-    return (*lockLockManagerOutline)(this, t);}
-
-  Bool lockImm(Thread *t){
-    if(sec->secLockB(t)) return TRUE;
-    return FALSE;}
-
-  void unlock(Thread *t){
-    if (sec->getLocker()!=t){
-      sec->unlockPending(t); 
-      return;}
-    Assert(sec->state & Cell_Lock_Valid);
-    sec->locker=NULL;
-    if((sec->state==Cell_Lock_Valid) && sec->pending==NULL) return;
-    (*unlockLockManagerOutline)(this, t);
-  }
-
-  PendThread* getPending() { return sec->pending; }
-};
-
-class LockFrameEmul : public OzLock {
-protected:
-  LockSecEmul *sec;
-  void *forward;
+  TaggedRef locker;               // the thread that has the lock
+  int depth;                      // locking depth (reentrant locks)
+  PendingThreadList *pending;     // threads waiting for the lock
 
 public:
-  NO_DEFAULT_CONSTRUCTORS2(LockFrameEmul)
-  LockFrameEmul() { Assert(0); }
+  NO_DEFAULT_CONSTRUCTORS(OzLock)
+  OzLock() { Assert(0); }
+  OzLock(Board *b):
+    ConstTermWithHome(b, Co_Lock), locker(0), depth(0), pending(NULL) {}
 
-  Bool hasLock(Thread *t){ 
-    if(getInfo()!=NULL) return FALSE;
-    return (t==sec->getLocker()) ? TRUE : FALSE;}
+  // get/set the locker thread, locking depth, and queue of pending
+  // threads.  The latter is a list of pairs ThreadId#ControlVar.
+  TaggedRef getLocker() { return locker; }
+  void setLocker(TaggedRef t) { locker = t; }
 
-  unsigned int getState(){return sec->state;}
-  /*
-  void lock(Thread *t){
-    if(sec->secLockB(t)) return;
-    (*lockLockFrameOutline)(this, t);
-  }
-  */
-  LockRet lockB(Thread *t){
-    if(getInfo()==NULL){
-      if(sec->secLockB(t)) return LOCK_GOT;}
-    return (*lockLockFrameOutline)(this, t);}
+  int getLockingDepth() { return depth; }
+  void setLockingDepth(int d) { depth = d; }
 
-  Bool lockImm(Thread *t){
-    if(sec->secLockB(t)) return TRUE;
-    return FALSE;}
-
-  void unlock(Thread *t){
-    if (sec->getLocker() != t){
-      sec->unlockPending(t);
-      return;}
-    sec->locker=NULL;
-    if((sec->state==Cell_Lock_Valid) && (sec->pending==NULL)){
-      return;}
-    (*unlockLockFrameOutline)(this, t);
+  PendingThreadList* getPending() { return pending; }
+  void setPending(PendingThreadList* pt) {
+    disposePendingThreadList(pending);
+    pending = pt;
   }
 
-  LockSecEmul* getSec() { return sec; }
-};    
+  // simple test
+  Bool hasLock(TaggedRef t) { return oz_eq(t, locker); }
+
+  // try to take the lock, and return TRUE if done.  Note that the
+  // thread must explicitly subscribe if the lock was not granted!
+  Bool take(TaggedRef t) {
+    if (hasLock(t)) {
+      Assert(depth > 0);
+      depth++;
+      return TRUE;
+    }
+    if (locker == 0) {
+      setLocker(t);
+      Assert(depth == 0);
+      depth = 1;
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  // subscribe to the pending list of the lock
+  void subscribe(TaggedRef t, TaggedRef cv) {
+    Assert(!oz_eq(t, locker) && locker != 0);
+    pendingThreadAdd(&pending, t, cv);
+  }
+
+  // release the lock for thread t (possibly earlier than expected)
+  void release(TaggedRef t) {
+    Assert(locker != 0 && depth > 0);
+    if (oz_eq(t, locker)) {
+      depth--;
+      if (depth == 0) {
+	if (pending != NULL) {
+	  locker = pendingThreadResumeFirst(&pending);
+	  depth = 1;
+	} else {
+	  locker = 0;
+	}
+      }
+    } else { // this is an early release, drop t from the queue
+      pendingThreadDrop(&pending, t);
+    }
+  }
+};
 
 inline
 Bool oz_isLock(TaggedRef term)
 {
   return oz_isConst(term) && tagged2Const(term)->getType() == Co_Lock;
 }
+
+// those operations support both the centralized and distributed cases
+OZ_Return lockTake(OzLock*);
+void lockRelease(OzLock*);
+
 /*===================================================================
  * 
  *=================================================================== */
@@ -3102,16 +2924,12 @@ OZ_Term oz_string(const char *s, const int len, const OZ_Term tail);
  * Service Registry
  *=================================================================== */
 
-extern OZ_Term system_registry;
-
 extern OZ_Term registry_get(OZ_Term);
-inline OZ_Term registry_get(char*s)
-{
+inline OZ_Term registry_get(char*s) {
   return registry_get(oz_atom(s));
 }
 extern void registry_put(OZ_Term,OZ_Term);
-inline void registry_put(char*s,OZ_Term v)
-{
+inline void registry_put(char*s,OZ_Term v) {
   registry_put(oz_atom(s),v);
 }
 

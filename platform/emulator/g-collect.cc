@@ -2,6 +2,9 @@
  *  Authors:
  *    Christian Schulte <schulte@ps.uni-sb.de>
  * 
+ *  Contributors:
+ *    Raphael Collet (raphael.collet@uclouvain.be)
+ * 
  *  Copyright:
  *    Christian Schulte, 1999
  * 
@@ -85,82 +88,144 @@ public:
 
   TaggedRef *elem;
   ExtRefNode *next;
+  int count;
 
-  ExtRefNode(TaggedRef *el, ExtRefNode *n): elem(el), next(n){ 
+  ExtRefNode(TaggedRef *el, ExtRefNode *n): elem(el), next(n), count(1) { 
     Assert(elem); 
   }
 
-  void remove(void) { 
-    elem = NULL; 
-  }
-  ExtRefNode *add(TaggedRef *el) { 
-    return new ExtRefNode(el,this); 
-  }
-  
-  ExtRefNode *gCollect(void) {
-    ExtRefNode *aux = this;
-    ExtRefNode *ret = NULL;
-    while (aux) {
-      if (aux->elem) {
-	ret = new ExtRefNode(aux->elem,ret);
-	oz_gCollectTerm(*ret->elem,*ret->elem);
-      }
-      aux = aux->next;
+  ExtRefNode(ExtRefNode* ptr, ExtRefNode* lst)
+    : elem(ptr->elem), next(lst), count(ptr->count) {}
+
+  static void gCollect(void) {
+    ExtRefNode* ptr = extRefs;
+    ExtRefNode* lst = NULL;
+    while (ptr) {
+      lst = new ExtRefNode(ptr, lst);
+      oz_gCollectTerm(*lst->elem,*lst->elem);
+      ptr = ptr->next;
     }
-    return ret;
+    extRefs = lst;
   }
 
-  ExtRefNode *protect(TaggedRef *el) {
+  static void protect(TaggedRef *el) {
     Assert(oz_isRef(*el) || !oz_isVar(*el));
-    Assert(!find(el));
-    return add(el);
+    ExtRefNode* ptr = extRefs;
+    while (ptr) {
+      if (ptr->elem==el) {
+	++ptr->count;
+	return;
+      }
+      ptr = ptr->next;
+    }
+    extRefs = new ExtRefNode(el, extRefs);
   }
 
-  Bool unprotect(TaggedRef *el) {
+  static Bool unprotect(TaggedRef *el) {
     Assert(el);
-    ExtRefNode *aux = extRefs;
-    while (aux) {
-      if (aux->elem==el) {
-	aux->remove();
+    ExtRefNode* ptr = extRefs;
+    ExtRefNode** prev = &extRefs;
+    while (ptr) {
+      if (ptr->elem==el) {
+	if (--ptr->count == 0) {
+	  *prev = ptr->next;
+	}
 	return OK;
       }
-      aux = aux->next;
+      prev = &ptr->next;
+      ptr  =  ptr->next;
     }
     return NO;
-  }
-
-  ExtRefNode * find(TaggedRef *el) {
-    Assert(el);
-    ExtRefNode *aux = extRefs;
-    while (aux) {
-      if (aux->elem==el)
-	break;
-      aux = aux->next;
-    }
-    return aux;
   }
 
 };
 
 
 Bool oz_protect(TaggedRef *ref) {
-  extRefs = extRefs->protect(ref);
+  ExtRefNode::protect(ref);
   return OK;
 }
 
 Bool oz_unprotect(TaggedRef *ref) {
-  ExtRefNode *aux = extRefs->find(ref);
-
-  if (aux == NULL)
-    return NO;
-
-  aux->remove();
-  return OK;
+  return ExtRefNode::unprotect(ref);
 }
 
 void oz_unprotectAllOnExit() {
   extRefs = (ExtRefNode *) 0;
 }
+
+
+
+/*
+ * Post-mortem finalization
+ *
+ * The stuff below maintains a list of post-mortem triples.  Each
+ * triple consists in an entity E, a port P, and an item I.  Once E
+ * becomes unreachable, I is sent on port P, and the triple is removed
+ * from the list.
+ */
+
+class PostMortemTriple {
+public:
+  USEHEAPMEMORY;
+
+  TaggedRef entity, port, item;
+  PostMortemTriple* next;
+
+  PostMortemTriple(TaggedRef e, TaggedRef p, TaggedRef i, PostMortemTriple* n):
+    entity(e), port(p), item(i), next(n) {}
+};
+
+static PostMortemTriple* pm_list = NULL;
+
+// register a triple for post-mortem finalization
+void registerPostMortem(TaggedRef entity, TaggedRef port, TaggedRef item) {
+  // OptVar's are not marked by the garbage collector, so we have to
+  // de-optimize them in order to make gcPostMortemCheck() work.
+  DEREF(entity, entityPtr);
+  if (oz_isOptVar(entity)) { (void) oz_getNonOptVar(entityPtr); }
+  // now insert entity in pm_list
+  pm_list = new PostMortemTriple(entity, port, item, pm_list);
+}
+
+// mark ports and items (at the beginning of GC)
+void gcPostMortemRoots() {
+  PostMortemTriple* t = pm_list;
+  pm_list = NULL;
+  for (; t; t = t->next) {	// rebuild pm_list in the new heap
+    oz_gCollectTerm(t->port, t->port);
+    oz_gCollectTerm(t->item, t->item);
+    registerPostMortem(t->entity, t->port, t->item);
+  }
+}
+
+// check which entities must be finalized (at the very end of GC)
+void gcPostMortemCheck() {
+  for (PostMortemTriple* t = pm_list; t; t = t->next) {
+    if (isGCMarkedTerm(t->entity)) {
+      oz_gCollectTerm(t->entity, t->entity);
+    } else {
+      t->entity = makeTaggedNULL();     // nullify refs to dead entities
+    }
+  }
+}
+
+// perform finalization of dead entities (after GC)
+void gcPostMortemFinalize() {
+  PostMortemTriple** tptr = &pm_list;
+  PostMortemTriple* t;
+  while (t = *tptr) {
+    if (t->entity != makeTaggedNULL()) {
+      tptr = &(t->next);
+    } else {
+      OZ_Return ret = oz_sendPort(t->port, t->item);
+      Assert(ret == PROCEED);
+      *tptr = t->next;		// drop post-mortem triple t from list
+    }
+  }
+}
+
+
 
 /*
  * Garbage collection needs to be aware of certain objects, e.g.,
@@ -854,11 +919,11 @@ void Builder::gCollect()
       }
 
       //
-      // 'ObjectClass' is already there:
+      // 'OzClass' is already there:
     case BT_classFeatures:
       {
-	GetBTTaskPtr1(frame, ObjectClass*, oc);
-	ObjectClass *noc = (ObjectClass *) oc->gCollectConstTerm();
+	GetBTTaskPtr1(frame, OzClass*, oc);
+	OzClass *noc = (OzClass *) oc->gCollectConstTerm();
 	ReplaceBTTask1stPtrOnly(frame, noc);
 	// yet unset features are already initialized to zero;
 	//
@@ -1049,7 +1114,7 @@ void AM::gCollect(int msgLevel)
   cacStack.init();
   am.nextGCStep();
 
-  (*gCollectPerdioStart)();
+  (*gCollectGlueStart)();
 
 #ifdef DEBUG_CHECK
   isCollecting = OK;
@@ -1102,11 +1167,12 @@ void AM::gCollect(int msgLevel)
   oz_gCollectTerm(debugPort, debugPort);
 
   PrTabEntry::gCollectPrTabEntries();
-  extRefs = extRefs->gCollect();
-
+  ExtRefNode::gCollect();
+  gcPostMortemRoots();
   cacStack.gCollectRecurse();
+
   gCollectDeferWatchers();
-  (*gCollectPerdioRoots)();
+  (*gCollectGlueRoots)();
   cacStack.gCollectRecurse();
 
   // now make sure that we preserve all weak dictionaries
@@ -1120,18 +1186,22 @@ void AM::gCollect(int msgLevel)
   // the weak dictionaries that is not marked is
   // otherwise inaccessible and should be finalized
 
-  gCollectWeakDictionariesContent();
-  weakReviveStack.recurse();	// copy stuff scheduled for finalization
-  cacStack.gCollectRecurse();
+  // raph: The loop below is necessary for finalizing weak
+  // dictionaries that are revived by other weak dictionaries.
 
-  // Erik+kost: All local roots must be processed at this point!
-  (*gCollectBorrowTableUnusedFrames)();
-  cacStack.gCollectRecurse();
+  while (gCollectWeakDictionariesHasMore()) {
+    gCollectWeakDictionariesContent();
+    weakReviveStack.recurse();      // copy stuff scheduled for finalization
+    cacStack.gCollectRecurse();
+  }
 
 #ifdef NEW_NAMER
   GCMeManager::gCollect();
   cacStack.gCollectRecurse();
 #endif
+
+  (*gCollectGlueWeak)();
+  cacStack.gCollectRecurse();
 
   weakStack.recurse();		// must come after namer gc
 
@@ -1142,10 +1212,11 @@ void AM::gCollect(int msgLevel)
 
   Assert(cacStack.isEmpty());
 
+  gcPostMortemCheck();
   gnameTable.gCollectGNameTable();
   //   MERGECON gcPerdioFinal();
   gCollectSiteTable();
-  (*gCollectPerdioFinal)();
+  (*gCollectGlueFinal)();
   Assert(cacStack.isEmpty());
 
   GCDBG_EXITSPACE;
@@ -1172,6 +1243,8 @@ void AM::gCollect(int msgLevel)
 
   vf.exit();
   cacStack.exit();
+
+  gcPostMortemFinalize();
 
   //  malloc_stats();
   DebugCode(uFillNode = 0;);
