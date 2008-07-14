@@ -1651,3 +1651,12 @@ then
         $1)
 fi
 ])
+
+AC_DEFUN([AC_PROG_NSGMLS],[
+AC_CHECK_PROGS(nsgmls,[nsgmls],no)
+if test $nsgmls = "no" ;
+then
+        ifelse($#,0,[AC_MSG_ERROR([Unable to find the nsgmls application])],
+        $1)
+fi
+])
