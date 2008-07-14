@@ -52,20 +52,6 @@
      fcp => ignore
  },
 
- 'cardVal'=> {
-     in  => ['value', '+set'],
-     out => [],
-     bi  => card,
-     fcp => ignore
- },
- 
- 'cardInt'=> {
-     in  => ['value','value', '+set'],
-     out => [],
-     bi  => card_Int,
-     fcp => ignore
- },
-
  'isIn'=> {
      in  => ['+set','int','+bool'],
      out => ['bool'],

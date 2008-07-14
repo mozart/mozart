@@ -144,7 +144,7 @@ define
    GFSReified
    ReifiedInclude
    GFSValue
-   GFSValueMake = GFSB.'gfs_valueMake_2'
+%   GFSValueMake = GFSB.'gfs_valueMake_2'
 
    %% Gecode propagators
    Rel
@@ -312,8 +312,8 @@ in
 % 		       {FSSetValue FSUniversalRefl}
 % 		    singl:
 % 		       fun {$ N} {FSSetValue [N]} end
-		    make:
-		       GFSValueMake
+		    %make:
+		       %GFSValueMake
 		    % is:
 % 		       FSisValue
 % 		    toString:
