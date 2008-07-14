@@ -52,6 +52,8 @@ AC_PROG_LATEX([AC_MSG_ERROR("You need LaTeX to build the documentation. It is av
 
 AC_PROG_PNMTOPNG([AC_MSG_ERROR("You need the pnmtopng program included in the netpbm package. It is available at http://netpbm.sourceforge.net/")])
 
+AC_PROG_NSGMLS([AC_MSG_ERROR("You need the nsgmls program included in the jade package. It is available at http://www.jclark.com/jade/")])
+
 AC_MSG_CHECKING(for --with-java-bin)
 AC_ARG_WITH(java-bin,
   [--with-java-bin='DIR'
