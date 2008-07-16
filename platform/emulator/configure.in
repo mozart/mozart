@@ -259,6 +259,9 @@ if test "${GXX}" = yes; then
             EMULATE_CXXFLAGS=-finline-limit=500
             ;;
         esac
+        if test "$enable_opt" = native; then
+            oz_om="-march=native -fomit-frame-pointer"
+        fi
         ;;
 
     *-sparc)
