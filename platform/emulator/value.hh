@@ -284,6 +284,7 @@ extern TaggedRef oz_uniqueName(const char *s);
 // #include <math.h>
 #include <limits.h>
 
+#include <cstdio>
 #ifndef GMP_NEEDS_CPLUSPLUS
 extern "C" {
 #endif
