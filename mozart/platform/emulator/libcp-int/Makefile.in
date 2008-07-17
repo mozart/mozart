@@ -41,7 +41,7 @@ GECODE_INC	= `pkg-config --cflags "gecode = ${GECODEVERSION}"`
 CFLAGS 		= $(INCS) $(GECODE_INC) $(GESPACE_CXXFLAGS) $(CPPFLAGS) 
 
 
-GFDBLIBSRC	= GeIntVar.cc GeIntVar-builtins.cc 
+GFDBLIBSRC	= GeIntVar.cc GeIntVar-builtins.cc distribute.cc
 GFDBLIBOBJS	= $(GFDBLIBSRC:.cc=.o)
 
 GFDPLIBSRC	=  GeFDP-Builtins.cc GeMozProp-builtins.cc GeIntProp-builtins.cc
