@@ -6,6 +6,10 @@ $boot_module_name      		  = "GFD";
 
 %builtins_all = 
 (
+## Distributor
+ 'distribute'    => { in =>  ['+value'],
+                      out => ['value'],
+                      bi =>  gfd_distribute },
 ##Propagators
  'int_sortedness' => { 
      in  => ['+value','+value','+int'],

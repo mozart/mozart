@@ -31,7 +31,9 @@
 
 
 #include "GeIntVar.hh"
+#include "distribute.hh"
 #include "unify.hh"
+
 
 using namespace Gecode;
 using namespace Gecode::Int;
@@ -162,7 +164,7 @@ void GeIntVar::toStream(ostream &out) {
 // Init the the module containing the propagators
 //void module_init_geintVarProp(void);
 void geivp_init(void){
-
+  gfd_dist_init();
 }
   
 

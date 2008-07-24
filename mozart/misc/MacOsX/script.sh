@@ -56,7 +56,8 @@ then
   export OZ_PI
 fi
 
-
+## Uncomment the following line when using gdb to debug the emulator
+##export OZ_EHOOK=3
 
 exec /Applications/Aquamacs\ Emacs.app/Contents/MacOS/Aquamacs\ Emacs --eval '(setq load-path (cons "'$OZHOME'/share/elisp" load-path))' -l oz.elc -f run-oz $2 &
 
