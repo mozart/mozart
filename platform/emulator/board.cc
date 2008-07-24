@@ -772,20 +772,20 @@ void Board::unsetGlobalMarks(void) {
 }
 
 void Board::commitB(TaggedRef c) {
-	// 	this method is called from the BI_bindCSync builtin
-	// if there is a distributor in the space then call commit directly
-	Distributor *d = getDistributor();
-	if (d) {
-		//printf("CommitB when distributor is present %s\n",OZ_toC(c,100,100));fflush(stdout);
-		if(d->commitBranch(this, c) == 0) {
-			//printf("CommitB distributor can be removed\n");fflush(stdout);
-			setDistributor(NULL);
-		}
-	} else {
-		// Committed branch is stored in the branches queue
-		//printf("CommitB whit **NO** distributor present (BR) %s\n",OZ_toC(c,100,100));fflush(stdout);
-		bq->enqueue(c);
-	}
+  // 	this method is called from the BI_bindCSync builtin
+  // if there is a distributor in the space then call commit directly
+  Distributor *d = getDistributor();
+  if (d) {
+    //printf("CommitB when distributor is present %s\n",OZ_toC(c,100,100));fflush(stdout);
+    if(d->commitBranch(this, c) == 0) {
+      //printf("CommitB distributor can be removed\n");fflush(stdout);
+      setDistributor(NULL);
+    }
+  } else {
+    // Committed branch is stored in the branches queue
+    //printf("CommitB whit **NO** distributor present (BR) %s\n",OZ_toC(c,100,100));fflush(stdout);
+    bq->enqueue(c);
+  }
 }
 
 void Board::setBranching(TaggedRef b) {
