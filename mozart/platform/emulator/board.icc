@@ -473,36 +473,27 @@ void Board::ensureLateThread(void) {
   Assert(getGenericSpace(true));
   TaggedRef st = getStatus();
   DEREF(st,st_ptr);
-  bool gs_stable = getGenericSpace(true)->isStable();
+  // TODO: (document!)
+  // bool gs_stable = getGenericSpace(true)->isStable();
+  // Assert(!gs_stable);
   bool st_needed = oz_isNeeded(st);
   if (!lateThread) {
     if (st_needed) {
-      if (!gs_stable) {
-	//Add a runnable lateThread
-	lateThread = oz_newThreadInject(this);
-	lateThread->pushCall(BI_PROP_GEC,NULL);
-      } else {
-	Assert(false);
-      }
+      //Add a runnable lateThread
+      lateThread = oz_newThreadInject(this);
+      lateThread->pushCall(BI_PROP_GEC,NULL);
     } else {
-      if (!gs_stable) {
-	//Add a suspended thread in status
-	lateThread = oz_newThreadSuspended(DEFAULT_PRIORITY);
-	lateThread->pushCall(BI_PROP_GEC,NULL);
-	oz_var_addQuietSusp(st_ptr, lateThread);
-      } else {
-	Assert(false);
-      }
+      //Add a suspended thread in status
+      lateThread = oz_newThreadSuspended(DEFAULT_PRIORITY);
+      lateThread->pushCall(BI_PROP_GEC,NULL);
+      oz_var_addQuietSusp(st_ptr, lateThread);
     }
   } else {
-    if (!gs_stable) {
-      if (st_needed) {
-	oz_wakeupThread(lateThread);
-      } else {
-	oz_var_addQuietSusp(st_ptr, lateThread);
-      }
+    if (st_needed) {
+      if (lateThread->isSuspended()) oz_wakeupThread(lateThread);
+      Assert(lateThread->isRunnable());
     } else {
-      Assert(false);
+      oz_var_addQuietSusp(st_ptr, lateThread);
     }
   }
 }
