@@ -157,7 +157,7 @@ void Board::bindStatus(TaggedRef t) {
   DEREF(s, sPtr);
   if (oz_isReadOnly(s)){
     //printf("bindStatus this=%p\n",this);fflush(stdout);
-      oz_bindReadOnly(sPtr, t);      
+    oz_bindReadOnly(sPtr, t);      
   }
 }
 
@@ -432,117 +432,115 @@ void Board::clearSuspList(Suspendable * killSusp) {
  */
 
 void Board::checkStability(void) {
-//	printf("Board::checkStability \n"); fflush(stdout);
-	Assert(!isRoot() && !isFailed() && !isCommitted());
-	Assert(this == oz_currentBoard());
-	crt--;
+  //	printf("Board::checkStability \n"); fflush(stdout);
+  Assert(!isRoot() && !isFailed() && !isCommitted());
+  Assert(this == oz_currentBoard());
+  crt--;
   
-	Board * pb = getParent();
+  Board * pb = getParent();
   
-	if (isStable()) {
+  if (isStable()) {
     //printf("isStable\n");fflush(stdout);
-    	if(!trail.isEmptyChunk())
-			setScript(trail.unwindGeVar());
+    if(!trail.isEmptyChunk())
+      setScript(trail.unwindGeVar());
 
-		pb->decRunnableThreads();
+    pb->decRunnableThreads();
 
-		if (getNonMono()) {
-			scheduleNonMono();
-		} else {
-			Distributor * d = getDistributor();
+    if (getNonMono()) {
+      scheduleNonMono();
+    } else {
+      Distributor * d = getDistributor();
 
 	  
-			if (d) {
-				Assert(bq->isEmpty());
-				int keep = d->notifyStable(this);
-					//printf("Board::checkStability %s\n keep %d\n %s \n",OZ_toC(branching,10,10),keep,OZ_toC(getStatus(),10,10)); fflush(stdout);
-				if (keep == -1) {
-					//	printf("Board::checkStability Old distributor\n"); fflush(stdout);
-					int n = d->getAlternatives();
-					if (n == 1) {
-						//printf("Board::checkStability Old one alternative distributor\n"); fflush(stdout);
-						if (d->commit(this,1) == 0) {
-							//printf("Board::checkStability Old distributor will be dropped\n"); fflush(stdout);
-							setDistributor(NULL);
-						}
-					} else {
-						trail.popMark();
-						Assert(!oz_onToplevel() || trail.isEmptyChunk());
-						am.setCurrent(pb, pb->getOptVar());
-						bindStatus(genBranch());
-					}					
-				} else {
-					//printf("Board::checkStability New distributor %d\n",keep); fflush(stdout);
-					if (keep == 0) {
-						//printf("Board::checkStability New distributor not keep\n"); fflush(stdout);
-						Assert(bq->isEmpty());
-						setDistributor(NULL);
-					} else {
-						//printf("Board::checkStability New distributor not implemented\n"); fflush(stdout);
-						//printf("branching: %s\n",OZ_toC(branching,100,100));fflush(stdout);
-						trail.popMark();
-						Assert(!oz_onToplevel() || trail.isEmptyChunk());
-						am.setCurrent(pb, pb->getOptVar());
-						bindStatus(genBranch());
-					}
-					//printf("Branching: %s\n", OZ_toC(branching,10,10));fflush(stdout);
-				}
-				Assert(!oz_onToplevel() || trail.isEmptyChunk());
-				
-			} else {
-				//printf("CS-> *******Succeded case *******\n");fflush(stdout);
-				// succeeded
-				trail.popMark();
-				Assert(!oz_onToplevel() || trail.isEmptyChunk());
-				am.setCurrent(pb, pb->getOptVar());
-				
-				if(gespace!=NULL) {
-					bool testGe = getGenericSpace(true)->isEntailed();
-					bindStatus(genSucceeded( (getSuspCount() == 0 && testGe) ) );
-				}
-				else {
-					bindStatus(genSucceeded( getSuspCount() == 0 ) );
-				}
-				Assert(!oz_onToplevel() || trail.isEmptyChunk());
-			}
-		}
+      if (d) {
+	Assert(bq->isEmpty());
+	int keep = d->notifyStable(this);
+	//printf("Board::checkStability %s\n keep %d\n %s \n",OZ_toC(branching,10,10),keep,OZ_toC(getStatus(),10,10)); fflush(stdout);
+	if (keep == -1) {
+	  //	printf("Board::checkStability Old distributor\n"); fflush(stdout);
+	  int n = d->getAlternatives();
+	  if (n == 1) {
+	    //printf("Board::checkStability Old one alternative distributor\n"); fflush(stdout);
+	    if (d->commit(this,1) == 0) {
+	      //printf("Board::checkStability Old distributor will be dropped\n"); fflush(stdout);
+	      setDistributor(NULL);
+	    }
+	  } else {
+	    trail.popMark();
+	    Assert(!oz_onToplevel() || trail.isEmptyChunk());
+	    am.setCurrent(pb, pb->getOptVar());
+	    bindStatus(genBranch());
+	  }					
 	} else {
-		int n = crt;
-		setScript(trail.unwind(this));
-		Assert(!oz_onToplevel() || trail.isEmptyChunk());
-		am.setCurrent(pb, pb->getOptVar());
-		
-		if (n == 0) {
-			// No runnable threads: suspended      
-			TaggedRef newVar = oz_newReadOnly(pb);
-			
-			if (getGenericSpace(true)){
-				OzVariable* nv = tagged2Var(oz_deref(newVar));
-				TaggedRef oldVar = getStatus();
-				DEREF(oldVar, oldVarPtr);
-				// Remove lateThread from oldvar susp list.
-				SuspList** suspPtr = tagged2Var(oldVar)->getSuspListRef();
-				SuspList* susp = *suspPtr;
-				//printf("checkStability else lateThread=%p,  en board.cc\n",lateThread);fflush(stdout);
-				while (susp) {	  
-					//printf("checkStability else lateThread=%p  sup=%p,  en board.cc\n",lateThread,susp->getSuspendable());fflush(stdout);	  
-					if (susp->getSuspendable() == lateThread) {
-						//printf("dentro del if,  en board.cc\n");fflush(stdout);
-						nv->addSuspSVar(susp->getSuspendable());
-						*suspPtr = susp->getNext();     // drop susp from list
-					} else {
-						suspPtr = (*suspPtr)->getNextRef();
-					}
-					susp = *suspPtr;
-				}
-			}
-			
-			bindStatus(genSuspended(newVar));
-			setStatus(newVar);
-			pb->decRunnableThreads();
-		}
-		Assert(!oz_onToplevel() || trail.isEmptyChunk());    
+	  //printf("Board::checkStability New distributor %d\n",keep); fflush(stdout);
+	  if (keep == 0) {
+	    //printf("Board::checkStability New distributor not keep\n"); fflush(stdout);
+	    Assert(bq->isEmpty());
+	    setDistributor(NULL);
+	  } else {
+	    //printf("Board::checkStability New distributor not implemented\n"); fflush(stdout);
+	    //printf("branching: %s\n",OZ_toC(branching,100,100));fflush(stdout);
+	    trail.popMark();
+	    Assert(!oz_onToplevel() || trail.isEmptyChunk());
+	    am.setCurrent(pb, pb->getOptVar());
+	    bindStatus(genBranch());
+	  }
+	  //printf("Branching: %s\n", OZ_toC(branching,10,10));fflush(stdout);
 	}
+	Assert(!oz_onToplevel() || trail.isEmptyChunk());
+				
+      } else {
+	//printf("CS-> *******Succeded case *******\n");fflush(stdout);
+	// succeeded
+	trail.popMark();
+	Assert(!oz_onToplevel() || trail.isEmptyChunk());
+	am.setCurrent(pb, pb->getOptVar());
+				
+	if(gespace!=NULL) {
+	  bool testGe = getGenericSpace(true)->isEntailed();
+	  bindStatus(genSucceeded( (getSuspCount() == 0 && testGe) ) );
+	}
+	else {
+	  bindStatus(genSucceeded( getSuspCount() == 0 ) );
+	}
+	Assert(!oz_onToplevel() || trail.isEmptyChunk());
+      }
+    }
+  } else {
+    int n = crt;
+    setScript(trail.unwind(this));
+    Assert(!oz_onToplevel() || trail.isEmptyChunk());
+    am.setCurrent(pb, pb->getOptVar());
+		
+    if (n == 0) {
+      // No runnable threads: suspended      
+      TaggedRef newVar = oz_newReadOnly(pb);
+
+      // possibly move lateThread directly to newvar's susplist			
+      if (getGenericSpace(true)){
+	OzVariable* nv = tagged2Var(oz_deref(newVar));
+	SuspList** suspPtr = tagged2Var(oz_deref(getStatus()))->getSuspListRef();
+	SuspList* susp = *suspPtr;
+	//printf("checkStability else lateThread=%p,  en board.cc\n",lateThread);fflush(stdout);
+	while (susp) {	  
+	  //printf("checkStability else lateThread=%p  sup=%p,  en board.cc\n",lateThread,susp->getSuspendable());fflush(stdout);	  
+	  if (susp->getSuspendable() == lateThread) {
+	    //printf("dentro del if,  en board.cc\n");fflush(stdout);
+	    *suspPtr = susp->getNext();      // drop lateThread from oldvar's susplist
+	    nv->addSuspSVar(lateThread);     // add lateThread into newvar's susplist
+	  } else {
+	    suspPtr = (*suspPtr)->getNextRef();
+	  }
+	  susp = *suspPtr;
+	}
+      }
+
+      bindStatus(genSuspended(newVar));
+      setStatus(newVar);
+      pb->decRunnableThreads();
+    }
+    Assert(!oz_onToplevel() || trail.isEmptyChunk());    
+  }
 } 
 
 // Branching
@@ -571,7 +569,7 @@ void Board::fail(void) {
 
 OZ_Return Board::installScript(Bool isMerging)
 {
-  //  printf("installScript on board: %p\n",this); fflush(stdout);
+  printf("installScript on board: %p\n",this); fflush(stdout);
   TaggedRef xys = oz_deref(script);
 
   setScript(oz_nil());
@@ -789,12 +787,12 @@ void Board::commitB(TaggedRef c) {
 }
 
 void Board::setBranching(TaggedRef b) {
-//	printf("Called set branching\n");fflush(stdout);
+  //	printf("Called set branching\n");fflush(stdout);
   branching = b;
 }
 
 TaggedRef Board::getBranching(void) {
-	return branching;
+  return branching;
 }
 
 
