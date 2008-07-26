@@ -8,11 +8,12 @@
 // Define a builtin operation that tells a constraint in the gecode space.
 OZ_BI_proto(BIGfdTellConstraint);
 
-TaggedRef BI_DistributeTell;
+TaggedRef BI_DistributeTell = 0;
 
 void gfd_dist_init(void) {
-  BI_DistributeTell = makeTaggedConst(new Builtin("GFD", "distribute (tell)", 2, 0,
-						  BIGfdTellConstraint, OK));
+  printf(">>>tell builtin initialization\n");fflush(stdout);
+  BI_DistributeTell = makeTaggedConst(new Builtin("GFD", "distribute (tell)",
+						  2, 0, BIGfdTellConstraint, OK));
 }
 
 
@@ -20,7 +21,17 @@ void gfd_dist_init(void) {
 inline
 void tell_dom2(Board *bb, TaggedRef var, TaggedRef val) {
   printf(">>>Inside tell_dom  \n");fflush(stdout);
-  oz_newThreadInject(bb)->pushCall(BI_DistributeTell,RefsArray::make(var,val));
+  bb->clearStatus();
+  bb->ensureLateThread();
+  Thread * lt = bb->getLateThread();
+  Assert(lt);
+  printf(">>>Inside tell_dom thread: %p \n",lt);fflush(stdout);
+  lt->printTaskStack(1000);
+  lt->pushCall(BI_DistributeTell,RefsArray::make(var,val));
+  printf(">>>Inside tell_dom after add tell \n");fflush(stdout);
+  lt->printTaskStack(1000);
+  
+  //oz_newThreadInject(bb)->pushCall(BI_DistributeTell,RefsArray::make(var,val));
 }
 
 
@@ -160,8 +171,7 @@ public:
 OZ_BI_define(BIGfdTellConstraint, 2, 0)
 {
 
-  printf(">>>Inside tell_thread  Var: %s val: %s\n", 
-	 OZ_toC(OZ_in(0),10,10),OZ_toC(OZ_in(1),10,10));fflush(stdout);
+  printf(">>>Running tell thread\n");fflush(stdout);
 
 
   Board *bb = oz_currentBoard();
