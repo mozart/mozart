@@ -11,29 +11,10 @@ OZ_BI_proto(BIGfdTellConstraint);
 TaggedRef BI_DistributeTell = 0;
 
 void gfd_dist_init(void) {
-  printf(">>>tell builtin initialization\n");fflush(stdout);
+  //printf(">>>tell builtin initialization\n");fflush(stdout);
   BI_DistributeTell = makeTaggedConst(new Builtin("GFD", "distribute (tell)",
 						  2, 0, BIGfdTellConstraint, OK));
 }
-
-
-// Insert a thread to make a tell.
-inline
-void tell_dom2(Board *bb, TaggedRef var, TaggedRef val) {
-  printf(">>>Inside tell_dom  \n");fflush(stdout);
-  bb->clearStatus();
-  bb->ensureLateThread();
-  Thread * lt = bb->getLateThread();
-  Assert(lt);
-  printf(">>>Inside tell_dom thread: %p \n",lt);fflush(stdout);
-  lt->printTaskStack(1000);
-  lt->pushCall(BI_DistributeTell,RefsArray::make(var,val));
-  printf(">>>Inside tell_dom after add tell \n");fflush(stdout);
-  lt->printTaskStack(1000);
-  
-  //oz_newThreadInject(bb)->pushCall(BI_DistributeTell,RefsArray::make(var,val));
-}
-
 
 
 class GFDDistributor : public Distributor {
@@ -62,7 +43,7 @@ public:
      \brief Creates a distributor object for a variable vector \a vs of size n
    */
   GFDDistributor(Board *bb, TaggedRef *vs, int n) {
-    printf("constructor\n");fflush(stdout);
+    //printf("constructor\n");fflush(stdout);
     vars = vs;
     size = n;
     sync = oz_newVariable(bb);
@@ -75,13 +56,13 @@ public:
      \brief Commits branching description \a bd in board bb.
    */
   virtual int commitBranch(Board *bb, TaggedRef bd) {
-    printf("commit branch: %s\n",OZ_toC(bd,10,10));fflush(stdout);
+    //printf("commit branch: %s\n",OZ_toC(bd,10,10));fflush(stdout);
 
     // This assumes bd to be in the form: Pos#Value or Pos#compl(Value)
     Assert(OZ_isTuple(bd));
     int pos = OZ_intToC(OZ_getArg(bd,0));
     
-    printf("CommitBranch: possition to commit: %d\n",pos);fflush(stdout);
+    //printf("CommitBranch: possition to commit: %d\n",pos);fflush(stdout);
 
     Assert(0 <= pos && pos < size);
     TaggedRef value = OZ_getArg(bd,1);
@@ -90,9 +71,10 @@ public:
 
     //printf(">>>Starting tell Var : %s val: %s\n", OZ_toC(vars[pos],10,10), OZ_toC(value,10,10));fflush(stdout);
     
-    tell_dom2(bb, vars[pos], value);
+    bb->prepareTell(BI_DistributeTell,RefsArray::make(vars[pos],value));
+    //tell_dom2(bb, vars[pos], value);
 
-    printf("CommitBranch: completed\n");fflush(stdout);
+    //printf("CommitBranch: completed\n");fflush(stdout);
     /* Assume the only method able to communicate the sapce to remove the dist is
        notifyStable. This can be optimized further.
     */
@@ -100,7 +82,7 @@ public:
   }
 
   virtual int notifyStable(Board *bb) {
-    printf("notifyStable called size: %d\n",size);fflush(stdout);
+    //printf("notifyStable called size: %d\n",size);fflush(stdout);
     // Ok, we are stable so it is time to select variable and values and set a new branch
     int i = 0;
     for (i=0; i<size;i++) {
@@ -118,7 +100,7 @@ public:
 
 
     if (i == size) {
-      printf("finished\n");fflush(stdout);
+      //printf("finished\n");fflush(stdout);
       (void) oz_unify(sync,AtomNil);
       // there are no more variables to distribute, we shall return.
       return 0;
@@ -130,7 +112,7 @@ public:
 
     // choose the minimum of the domain as the next value to distribute
     int val = get_IntVarInfo(vars[sel_var]).min();
-    printf("selected val\n");fflush(stdout);
+    //printf("selected val\n");fflush(stdout);
 
     // create the new branch for the space.
     // first possible branching: sel_var#val
@@ -141,9 +123,9 @@ public:
 
     TaggedRef bd = OZ_cons(fb,OZ_cons(sb,OZ_nil()));
 			  
-    printf("notifyStable setBranch %s\n",OZ_toC(bd,100,100));fflush(stdout);
+    //printf("notifyStable setBranch %s\n",OZ_toC(bd,100,100));fflush(stdout);
     bb->setBranching(bd);
-    printf("finished\n");fflush(stdout);
+    //printf("finished\n");fflush(stdout);
     return 1;
   }
 
@@ -171,7 +153,7 @@ public:
 OZ_BI_define(BIGfdTellConstraint, 2, 0)
 {
 
-  printf(">>>Running tell thread\n");fflush(stdout);
+  //printf(">>>Running tell thread\n");fflush(stdout);
 
 
   Board *bb = oz_currentBoard();
@@ -187,15 +169,17 @@ OZ_BI_define(BIGfdTellConstraint, 2, 0)
   // Post the real constraint in the gecode space
   if (OZ_isTuple(val)) {
     // case compl(v)
-    printf(">>>Inside tell_thread compl(v)  Var: %s val: %s\n", 
+    /*printf(">>>Inside tell_thread compl(v)  Var: %s val: %s\n", 
 	   OZ_toC(var,10,10),OZ_toC(val,10,10));fflush(stdout);
-
+    */
     Assert(OZ_width(val) == 1);
     Gecode::rel(bb->getGenericSpace(true),
 		get_IntVar(var), Gecode::IRT_NQ, OZ_intToC(OZ_getArg(val,0)));
   } else {
-    printf(">>>Inside tell_thread v  Var: %s val: %s\n", 
+    /*printf(">>>Inside tell_thread v  Var: %s val: %s\n", 
 	   OZ_toC(var,10,10),OZ_toC(val,10,10));fflush(stdout);
+
+    */
     Assert(OZ_isInt(val));
     Gecode::rel(bb->getGenericSpace(true),
 		get_IntVar(var), Gecode::IRT_EQ, OZ_intToC(val));
@@ -210,7 +194,7 @@ OZ_BI_define(gfd_distribute, 1, 1) {
   oz_declareNonvarIN(0,vv);
 
 
-  printf("called gfd_distribute\n");fflush(stdout);
+  //printf("called gfd_distribute\n");fflush(stdout);
   int n = 0;
   TaggedRef * vars;
 
@@ -254,9 +238,9 @@ OZ_BI_define(gfd_distribute, 1, 1) {
   if (bb->getDistributor())
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
   
-  printf("creating real object\n");fflush(stdout);
+  //printf("creating real object\n");fflush(stdout);
   GFDDistributor * gfdd = new GFDDistributor(bb,vars,n);
-  printf("associating it to the board.\n");fflush(stdout);
+  //printf("associating it to the board.\n");fflush(stdout);
   bb->setDistributor(gfdd);
 
   OZ_RETURN(gfdd->getSync());
