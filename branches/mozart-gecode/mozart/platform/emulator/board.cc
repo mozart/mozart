@@ -569,7 +569,7 @@ void Board::fail(void) {
 
 OZ_Return Board::installScript(Bool isMerging)
 {
-  printf("installScript on board: %p\n",this); fflush(stdout);
+  // printf("installScript on board: %p\n",this); fflush(stdout);
   TaggedRef xys = oz_deref(script);
 
   setScript(oz_nil());
