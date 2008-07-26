@@ -557,6 +557,23 @@ public:
      \brief Put the reference to lateThread to NULL
   */
   void deleteLateThread(void) { lateThread = NULL; }
+
+  /**
+     \brief Prepare the board for a tell operation. A tell is usually
+     performed by a distributor. This method will take a builtin call
+     and put it before the frame of the propagation thread. In this way,
+     tell constraints are *only* performed in the space when the status
+     of the space is needed.
+  */
+  void prepareTell(TaggedRef pred, RefsArray * x) {
+    // Status must be a read only variable before ensureLateThread call. 
+    clearStatus();
+    // A new tell will make the gecode space unstable and then we need a lateThread to stabilize it.
+    ensureLateThread();
+    Assert(getLateThread());
+    // Push the given tell on the lateThread stack.
+    getLateThread()->pushCall(pred,x);
+  }
 };
 
 
