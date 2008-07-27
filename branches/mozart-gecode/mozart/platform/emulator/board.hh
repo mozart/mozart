@@ -493,9 +493,9 @@ private:
   Thread *lateThread;
 public:
   /**
-     \brief Return the generic space corresponding to this board. 
-     This method will create it lazily if needed unless to is set 
-     to true (to stands for test only)
+     \brief Return the generic space corresponding to this board.
+     This method will create it lazily if needed unless to is set to
+     true (to stands for test only)
   */
   GenericSpace* getGenericSpace(bool to = false) {
     if (!to) {
@@ -511,9 +511,10 @@ public:
   }
   
   /**
-     \brief Lazily creation of lateThread. This method is used when 
-     a lateThread is needed in mozart to run generic space propagation.
+     \brief Lazily creation of lateThread. This method is used when a
+     lateThread is needed in mozart to run generic space propagation.
      The following table describes when a lateThread is needed:
+
      ---------------------------------------------------------
      | Computation    | GenericSpace | LateThrea  | Status   |
      | Space          |              |            |          |
@@ -528,8 +529,8 @@ public:
      | No Propagators |              |            |          |
      ---------------------------------------------------------
 	 
-	 The return value indicates if there was already a thread present
-	 in the space or not.
+     The return value indicates if there was already a thread present
+     in the space or not.
  */
 
   void ensureLateThread(void);
@@ -561,9 +562,9 @@ public:
   /**
      \brief Prepare the board for a tell operation. A tell is usually
      performed by a distributor. This method will take a builtin call
-     and put it before the frame of the propagation thread. In this way,
-     tell constraints are *only* performed in the space when the status
-     of the space is needed.
+     and put it before the frame of the propagation thread. In this
+     way, tell constraints are *only* performed in the space when the
+     status of the space is needed.
   */
   void prepareTell(TaggedRef pred, RefsArray * x) {
     // Status must be a read only variable before ensureLateThread call. 

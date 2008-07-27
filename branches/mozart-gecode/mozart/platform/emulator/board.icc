@@ -468,14 +468,22 @@ Bool Board::cacIsAlive(void) {
 OZ_Return oz_var_addQuietSusp(TaggedRef*, Suspendable *);
 int oz_isNeeded(TaggedRef);
 
+/*
+  \brief Ensures the presece of a lateThread in the board. State of
+  the status variable is very important for this method. If there is
+  already a lateThread in the board, this method will change its state
+  to conform the status variable.
+
+  gespace stability does not matter because a lateThread can be needed
+  in the space before posting a new tell by a distributor. In this
+  case the gespace should be stable or not.
+ */
 inline
 void Board::ensureLateThread(void) {
   Assert(getGenericSpace(true));
   TaggedRef st = getStatus();
   DEREF(st,st_ptr);
-  // TODO: (document!)
-  // bool gs_stable = getGenericSpace(true)->isStable();
-  // Assert(!gs_stable);
+  // TODO: Assert that status must be a read only variable. 
   bool st_needed = oz_isNeeded(st);
   if (!lateThread) {
     if (st_needed) {

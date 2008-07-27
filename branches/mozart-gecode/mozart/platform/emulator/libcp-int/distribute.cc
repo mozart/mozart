@@ -1,3 +1,29 @@
+/*
+ *  Main authors:
+ *     Raphael Collet <raph@info.ucl.ac.be>
+ *     Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
+ *
+ *  Contributing authors:
+ *
+ *  Copyright:
+ *    Raphael Collet, 2008
+ *    Gustavo Gutierrez, 2008
+ *
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
 
 #include "var_base.hh"
 #include "builtins.hh"
@@ -11,11 +37,10 @@ OZ_BI_proto(BIGfdTellConstraint);
 TaggedRef BI_DistributeTell = 0;
 
 void gfd_dist_init(void) {
-  //printf(">>>tell builtin initialization\n");fflush(stdout);
-  BI_DistributeTell = makeTaggedConst(new Builtin("GFD", "distribute (tell)",
-						  2, 0, BIGfdTellConstraint, OK));
+  BI_DistributeTell = 
+    makeTaggedConst(new Builtin("GFD", "distribute (tell)",
+				2, 0, BIGfdTellConstraint, OK));
 }
-
 
 class GFDDistributor : public Distributor {
 protected:
@@ -43,7 +68,6 @@ public:
      \brief Creates a distributor object for a variable vector \a vs of size n
    */
   GFDDistributor(Board *bb, TaggedRef *vs, int n) {
-    //printf("constructor\n");fflush(stdout);
     vars = vs;
     size = n;
     sync = oz_newVariable(bb);
@@ -51,39 +75,42 @@ public:
     sel_val = (TaggedRef) 0;
   }
   
+  /*
+    \brief As the distributor injects tell operations in the board
+    that not take place inmediately, termination is notified by
+    binding \a sync to an atom.
+   */
   TaggedRef getSync() { return sync; }
+  
+
   /**
      \brief Commits branching description \a bd in board bb.
-   */
+  */
   virtual int commitBranch(Board *bb, TaggedRef bd) {
-    //printf("commit branch: %s\n",OZ_toC(bd,10,10));fflush(stdout);
-
+    
     // This assumes bd to be in the form: Pos#Value or Pos#compl(Value)
     Assert(OZ_isTuple(bd));
     int pos = OZ_intToC(OZ_getArg(bd,0));
     
-    //printf("CommitBranch: possition to commit: %d\n",pos);fflush(stdout);
-
     Assert(0 <= pos && pos < size);
     TaggedRef value = OZ_getArg(bd,1);
-    //DEREF(val,val_ptr);
-    //printf("CommitBranch: val to commit: %s\n",OZ_toC(value,10,10));fflush(stdout);
-
-    //printf(">>>Starting tell Var : %s val: %s\n", OZ_toC(vars[pos],10,10), OZ_toC(value,10,10));fflush(stdout);
-    
+     
     bb->prepareTell(BI_DistributeTell,RefsArray::make(vars[pos],value));
-    //tell_dom2(bb, vars[pos], value);
-
-    //printf("CommitBranch: completed\n");fflush(stdout);
-    /* Assume the only method able to communicate the sapce to remove the dist is
-       notifyStable. This can be optimized further.
-    */
+ 
+     /* 
+	Assumes the only method able to tell the sapce to remove the
+	distributor is notifyStable. This can be optimized further.
+     */
     return 1;
   }
 
   virtual int notifyStable(Board *bb) {
-    //printf("notifyStable called size: %d\n",size);fflush(stdout);
-    // Ok, we are stable so it is time to select variable and values and set a new branch
+    
+    /*
+      The space is stable and now it is safe to select a new variable
+      with a new value for the next distribution step.
+    */
+
     int i = 0;
     for (i=0; i<size;i++) {
       if (OZ_isInt(vars[i]) || !OZ_isGeIntVar(vars[i]) ) {
@@ -96,13 +123,14 @@ public:
 	Assert(false);
       }
     }
-    //printf(">>>End selection  Var pos: %d val: %s\n", i, OZ_toC(vars[i],100,100));fflush(stdout);
-
 
     if (i == size) {
-      //printf("finished\n");fflush(stdout);
       (void) oz_unify(sync,AtomNil);
-      // there are no more variables to distribute, we shall return.
+
+      /*
+	There are no more variables to distribute in the array.  This
+	 distributor must be removed from the board.
+      */
       return 0;
     }
 
@@ -110,22 +138,25 @@ public:
     
     Assert(!OZ_isInt(vars[sel_var]));
 
-    // choose the minimum of the domain as the next value to distribute
+    // Value selection.
     int val = get_IntVarInfo(vars[sel_var]).min();
-    //printf("selected val\n");fflush(stdout);
 
-    // create the new branch for the space.
+    /*
+      After variable and value selections a branching must be created
+      for the space.  This will allow Space.ask to be notified about
+      the possibles branching descritpions that can be commited to
+      this distributor.
+     */
+
     // first possible branching: sel_var#val
     TaggedRef fb = OZ_mkTuple(OZ_atom("#"),2,OZ_int(sel_var),OZ_int(val));
+
     // second possible branching: sel_var#compl(val)
     TaggedRef sb = OZ_mkTuple(OZ_atom("#"),2,OZ_int(sel_var),
 			      OZ_mkTuple(OZ_atom("compl"),1,OZ_int(val)));
 
-    TaggedRef bd = OZ_cons(fb,OZ_cons(sb,OZ_nil()));
-			  
-    //printf("notifyStable setBranch %s\n",OZ_toC(bd,100,100));fflush(stdout);
-    bb->setBranching(bd);
-    //printf("finished\n");fflush(stdout);
+    bb->setBranching(OZ_cons(fb,OZ_cons(sb,OZ_nil())));
+
     return 1;
   }
 
@@ -147,9 +178,13 @@ public:
 
 };
 
-
-
-
+/*
+  This builtin performs the tell operation. We need a builtin because
+  the tell is generated by the search engine and in that place the
+  board installed may not correspond to the board of the tell. When
+  the built in is executed both, the board installed and the target
+  board are the same.
+ */
 OZ_BI_define(BIGfdTellConstraint, 2, 0)
 {
 
@@ -169,17 +204,10 @@ OZ_BI_define(BIGfdTellConstraint, 2, 0)
   // Post the real constraint in the gecode space
   if (OZ_isTuple(val)) {
     // case compl(v)
-    /*printf(">>>Inside tell_thread compl(v)  Var: %s val: %s\n", 
-	   OZ_toC(var,10,10),OZ_toC(val,10,10));fflush(stdout);
-    */
     Assert(OZ_width(val) == 1);
     Gecode::rel(bb->getGenericSpace(true),
 		get_IntVar(var), Gecode::IRT_NQ, OZ_intToC(OZ_getArg(val,0)));
   } else {
-    /*printf(">>>Inside tell_thread v  Var: %s val: %s\n", 
-	   OZ_toC(var,10,10),OZ_toC(val,10,10));fflush(stdout);
-
-    */
     Assert(OZ_isInt(val));
     Gecode::rel(bb->getGenericSpace(true),
 		get_IntVar(var), Gecode::IRT_EQ, OZ_intToC(val));
