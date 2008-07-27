@@ -44,16 +44,16 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
   Assert(gs);  
   
   /*
-  	The generic space could not be failed, if it does then the execution
-    of lateThread will result in an failure.
+    The generic space could not be failed, if it does then the
+    execution of lateThread will result in an failure.
   */
   if (gs->failed()) { return FAILED; }
 
   /*
-  	This thread only runs when the status variable was needed,
-	LateThread is only created runable when running at top level, 
-	otherwise it is created as a suspended thread and added to the 
-	status susp list.
+    This thread only runs when the status variable was needed,
+    LateThread is only created runable when running at top level,
+    otherwise it is created as a suspended thread and added to the
+    status susp list.
   */
   TaggedRef status = cb->getStatus();
   DEREF(status, statusPtr); 
@@ -65,8 +65,8 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
   } 
 
   /*
-  	After propagation the generic space is stable, if it is not 
-	entailed, this thread must suspend.
+    After propagation the generic space is stable, if it is not
+    entailed, this thread must suspend.
   */
   if (!gs->isEntailed())
 	return SUSPEND;
