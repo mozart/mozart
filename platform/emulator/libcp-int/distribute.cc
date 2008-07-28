@@ -83,6 +83,7 @@ public:
    */
   TaggedRef getSync() { return sync; }
   
+  void dispose(void) { oz_freeListDispose(this, sizeof(GFDDistributor)); }
 
   /**
      \brief Commits branching description \a bd in board bb. This
