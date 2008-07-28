@@ -65,7 +65,8 @@ protected:
 public:
 
   /**
-     \brief Creates a distributor object for a variable vector \a vs of size n
+     \brief Creates a distributor object for a variable vector \a vs
+     of size n
    */
   GFDDistributor(Board *bb, TaggedRef *vs, int n) {
     vars = vs;
@@ -84,7 +85,13 @@ public:
   
 
   /**
-     \brief Commits branching description \a bd in board bb.
+     \brief Commits branching description \a bd in board bb. This
+     operation is performed from the search engine. The prepareTell
+     operation push the tell on the top of the thread that performs
+     propagation. This allows all tell operations to be performed
+     *before* the propagation of the gecode space. Also, as a side
+     effect, tell operations are lazy, this is, are posted in the
+     gecode space on space status demand.
   */
   virtual int commitBranch(Board *bb, TaggedRef bd) {
     
@@ -138,7 +145,9 @@ public:
     
     Assert(!OZ_isInt(vars[sel_var]));
 
-    // Value selection.
+    /* Value selection. For this purpose get_IntVarInfo is used to not
+       generate gecode space unstability.
+     */
     int val = get_IntVarInfo(vars[sel_var]).min();
 
     /*
@@ -184,6 +193,10 @@ public:
   board installed may not correspond to the board of the tell. When
   the built in is executed both, the board installed and the target
   board are the same.
+
+  To access gecode space's variable use get_IntVar instead of
+  get_IntVarInfo to make the space unstable. Space unstability is fine
+  because after a tell the space will be unstable.
  */
 OZ_BI_define(BIGfdTellConstraint, 2, 0)
 {
@@ -221,7 +234,6 @@ OZ_BI_end
 OZ_BI_define(gfd_distribute, 1, 1) {
   oz_declareNonvarIN(0,vv);
 
-
   //printf("called gfd_distribute\n");fflush(stdout);
   int n = 0;
   TaggedRef * vars;
@@ -254,7 +266,6 @@ OZ_BI_define(gfd_distribute, 1, 1) {
     int i = n;
     while (oz_isLTuple(vs)) {
       TaggedRef v = oz_head(vs);
-      //if (!oz_isSmallInt(oz_deref(v)))
       vars[--i] = v;
       vs = oz_deref(oz_tail(vs));
       Assert(!oz_isRef(vs));
@@ -270,8 +281,7 @@ OZ_BI_define(gfd_distribute, 1, 1) {
   GFDDistributor * gfdd = new GFDDistributor(bb,vars,n);
   //printf("associating it to the board.\n");fflush(stdout);
   bb->setDistributor(gfdd);
-
-  OZ_RETURN(gfdd->getSync());
   
+  OZ_RETURN(gfdd->getSync()); 
 }
 OZ_BI_end
