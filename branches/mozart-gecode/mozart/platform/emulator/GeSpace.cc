@@ -139,17 +139,70 @@ Gecode::SpaceStatus GenericSpace::mstatus(void) {
   return ret;
 }
 
+
+void GenericSpace::reflect(std::vector<Reflection::ActorSpec>& as, 
+			   std::vector<Reflection::VarSpec>& vs) {
+  Reflection::VarMap vm;
+  Reflection::VarMapIter vmi(vm);
+  
+  // traverse actor's specification
+  for (Reflection::ActorSpecIter si(this, vm); si(); ++si) {
+    try {
+      Reflection::ActorSpec aSpec = si.actor();
+      as.push_back(aSpec);
+      printf("GeSpace.cc >> Reflect created actor\n");fflush(stdout);
+
+      // traverse variable's specification for the actor.
+      for (; vmi(); ++vmi) {
+	try {
+	  Reflection::VarSpec vSpec = vmi.spec();
+	  vs.push_back(vSpec);
+	  printf("GeSpace.cc >> Reflect created var\n");fflush(stdout);
+	} catch(Reflection::ReflectionException e) {
+	  printf("unknown exception while reflecting VARIABLE\n");fflush(stdout);
+	  Assert(false);
+	}
+      }
+    } catch(Reflection::ReflectionException e) {
+      printf("unknown exception while reflecting ACTOR Val/Var reflector??\n");fflush(stdout);
+    }
+  }
+}
+
+void GenericSpace::unreflect(std::vector<Reflection::ActorSpec>& as, 
+			     std::vector<Reflection::VarSpec>& vs) {
+  
+  printf("GeSpace.cc >> Unreflect variables: %d\n", vs.size());fflush(stdout);
+  printf("GeSpace.cc >> Unreflect actors: %d\n", as.size());fflush(stdout);
+
+  Reflection::VarMap vm;
+  Reflection::Unreflector ur(this, vm);
+  for (std::vector<Reflection::VarSpec>::iterator it=vs.begin(); it != vs.end(); ++it) {
+    ur.var(*it);   // Create variables from specifications
+    printf("GeSpace.cc >> Unreflect created var\n");fflush(stdout);
+  }
+  for (std::vector<Reflection::ActorSpec>::iterator it=as.begin(); it != as.end(); ++it) {
+    ur.post(*it);  // Post actors from specifications
+    printf("GeSpace.cc >> Unreflect created actor\n");fflush(stdout);
+  }
+  printf("GeSpace.cc >> Unreflect finished\n");fflush(stdout);
+}
+
+/**
+   \brief Fill \a vmp with the variables of this space.
+ */
 void GenericSpace::varReflect(Reflection::VarMap &vmp, bool registerOnly) {
   /*
-    Iterate on generic space references to fill the VarMap. Only variables in 
-    vars are considered. At this time some propagators are implemented in terms
-    of other and use temporary gecode variables (i.e. SumCN), those implicit
-    variables are not filled in this method. This may cause problems.
+    Iterate on generic space references to fill the VarMap. Only
+    variables in vars are considered. At this time some propagators
+    are implemented in terms of other and use temporary gecode
+    variables (i.e. SumCN), those implicit variables are not filled in
+    this method. This may cause problems.
   */
 
   // TODO: create a prefix for this generic space
 
-  //- printf("Called varReflect on %p with registerOnly set to %d\n",this,registerOnly);
+  printf("Called varReflect on %p with registerOnly set to %d\n",this,registerOnly);
   Support::Symbol p;
   for (int i=0; i<vars.getSize(); i++) {
     OZ_Term t =  *vars.getRef(i);
@@ -162,106 +215,95 @@ void GenericSpace::varReflect(Reflection::VarMap &vmp, bool registerOnly) {
       s << var->getIndex();
       Support::Symbol nn = p.copy();
       nn += Support::Symbol(s.str().c_str(),true);
-      /* TODO: if var is a local representation of a global variable and we are merging two space then 
-	 put in vmp the reflection of the global variable instead of var. Intersection??
+      /* TODO: if var is a local representation of a global variable
+	 and we are merging two space then put in vmp the reflection
+	 of the global variable instead of var. Intersection??
        */
       if (var->isLocalRep()) {
-	//- printf("Global VAR found during merge\n");fflush(stdout);
+	printf("Global VAR found during merge\n");fflush(stdout);
 	var->getGlobal()->reflect(vmp,nn,registerOnly);
       } else {
-	//- printf("Local var found during merge\n");fflush(stdout);
+	printf("Local var found during merge\n");fflush(stdout);
 	var->reflect(vmp,nn,registerOnly);	
       }
-      //- printf("Iteration %d Added symbol %s\n",i,nn.toString().c_str());fflush(stdout);
+      printf("Iteration %d Added symbol %s\n",i,nn.toString().c_str());fflush(stdout);
     }
   }
 }
 
+/**
+  \brief Merge space \a src into this. 
+*/
 void GenericSpace::merge(GenericSpace *src) {
-  //- printf("GeSpace.cc >> called space merge current number of prop %d\n",propagators());fflush(stdout);
+  printf("GeSpace.cc >> called space merge src: %p dst: %p\n",src,this);fflush(stdout);
+  printf("GeSpace.cc >> Current number of prop in this %d\n",propagators());fflush(stdout);
 
-  // Extract variables from src and fill vm
-  Reflection::VarMap svm;
-  src->varReflect(svm);
-  
-  // Extract variables from this (register only) Ask Guido.
-  
-  Reflection::VarMap tvm;
+  // get a reflection of src space.
+  std::vector<Reflection::VarSpec> src_vSpec;
+  std::vector<Reflection::ActorSpec> src_aSpec;
 
-  //- printf("GeSpace.cc >> finished VarMap fill\n");fflush(stdout);
-  
-  Reflection::Unreflector d(this, tvm);
-  Reflection::VarMapIter vmi(svm);
+  src->reflect(src_aSpec, src_vSpec);
 
-  for (Reflection::ActorSpecIter si(src,svm); si(); ++si) {
-    try {
-      Reflection::ActorSpec s = si.actor();
-      for (;vmi();++vmi) {
-	try {
-	  // create a new variable in target space
-	  d.var(vmi.spec());
-	} catch (Reflection::ReflectionException e) {
-	  //- printf("unknown exception while creating VARIABLE\n");fflush(stdout);
-	}
-      }
-	try {
-	  d.post(s);
-	} catch (Reflection::ReflectionException e) {
-	  //- printf("unknown exception while creating ACTOR\n");fflush(stdout);
-	}
-    } catch (Reflection::ReflectionException e) {
-      //- printf("FIXME!!: maybe a reflection actor\n");fflush(stdout);
-    }
-    //- printf("Iteration on actor spec\n");fflush(stdout);
-  }
-  //- printf("GeSpace.cc >> finished variable and actor creation\n");fflush(stdout);
-  
+  printf("GeSpace.cc >> Finished reflection phase\n");fflush(stdout);
+  printf("GeSpace.cc >> Starting **unreflection** phase\n");fflush(stdout);
+
+  unreflect(src_aSpec,src_vSpec);
+
   // register the variable in vars array
   /*
     Optimization: this can be done in the loop above just after calling deserializer
     to create the variable.
    */
-  //- printf("GeSpace.cc >> registering new var in the target space\n");fflush(stdout);
-  Reflection::VarMapIter newVars(svm);
-  Assert(src->getVarsSize() == svm.size());
+ //  printf("GeSpace.cc >> registering new var in the target space\n");fflush(stdout);
+//   Reflection::VarMapIter newVars(svm);
+//   Assert(src->getVarsSize() == svm.size());
   
-  for (int i=0;newVars();++newVars,i++) {
-    OZ_Term  v = src->getVarRef(i);
-    DEREF(v,v_ptr);
-    if (oz_isGeVar(v)) {
-      GeVarBase *gvb = static_cast<GeVarBase*>(oz_getExtVar(v));
-      if (!gvb->isLocalRep()) {
-	int newIndex = newVar(newVars.varImpBase(),v);
-	gvb->setIndex(newIndex);
+//   for (int i=0;newVars();++newVars,i++) {
+//     OZ_Term  v = src->getVarRef(i);
+//     DEREF(v,v_ptr);
+//     if (oz_isGeVar(v)) {
+//       GeVarBase *gvb = static_cast<GeVarBase*>(oz_getExtVar(v));
+//       if (!gvb->isLocalRep()) {
+// 	int newIndex = newVar(newVars.varImpBase(),v);
+// 	gvb->setIndex(newIndex);
 	
-	// ValRefector was not added from the old space then we have to add it here
-	// TODO: Implement serialization of reflector propagators.
-	gvb->ensureValReflection();
-	if (gvb->hasDomReflector())
-	  gvb->ensureDomReflection();
+// 	// ValRefector was not added from the old space then we have to add it here
+// 	// TODO: Implement serialization of reflector propagators.
+// 	gvb->ensureValReflection();
+// 	if (gvb->hasDomReflector())
+// 	  gvb->ensureDomReflection();
 	
-	//- printf("GeSpace.cc >> updating reference var: %d new pos %d\n",i,newIndex);
-	//- fflush(stdout);
-      }
-    } else {
-      /* 
-	 Fixme: Wat shoul we put in the array of references?
-	 Maybe copy the reference in src and put null in vars is enough
-      */
-      //- printf("GeSpace.cc >> FIXME!! not updating reference var was det.\n");
-      //- fflush(stdout);
-    }
-    
-  }
+// 	printf("GeSpace.cc >> updating reference var: %d new pos %d\n",i,newIndex);fflush(stdout);
+//       }
+//     } else {
+//       /* 
+// 	 Fixme: What should we put in the array of references?
+// 	 Maybe copy the reference in src and put null in vars is enough
+//       */
+//       printf("GeSpace.cc >> FIXME!! not updating reference var was det.\n"); fflush(stdout);
+//     }
+//   }
 
-  /*
+  
   // this call is temporal, just to have an accurate number of propagators.
+  /*
   status();
   printf("GeSpace.cc >> finished space merge current number of prop %d\n",propagators());
   printf("GeSpace.cc >> this %p src %p\n",this, src);
   fflush(stdout);
   */
 
+  /*
+    If this is the Toplevel space then we need to enforce
+    propagation. TODO: is this necessary?, if we are at toplevel space
+    then the status is always needed and propagation should run
+    automatically.
+  */
+  if (this == oz_rootBoard()->getGenericSpace()) {
+    printf("GeSpace.cc >> Merging at toplevel space, then calling propagation\n");
+    fflush(stdout);
+    status();
+  }
 
   // This is to prevent  lateThread to run twice if src is unstable. 
   if (!src->isStable())
