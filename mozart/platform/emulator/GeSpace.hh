@@ -278,6 +278,13 @@ private:
      \brief Fill vm with variables in \a vars
    */
   void varReflect(Gecode::Reflection::VarMap &vm, bool registerOnly = false);
+
+  
+  void reflect(std::vector<Gecode::Reflection::ActorSpec>& as, 
+	       std::vector<Gecode::Reflection::VarSpec>& vs);
+
+  void unreflect(std::vector<Gecode::Reflection::ActorSpec>& as, 
+		 std::vector<Gecode::Reflection::VarSpec>& vs);
   
 public:
   

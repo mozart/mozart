@@ -305,6 +305,7 @@ void Board::inject(TaggedRef proc, int arity) {
 
 inline
 OZ_Return Board::merge(Board * dst, Bool isUpward) {
+  Assert(dst == oz_currentBoard());
   // this is the board that gets merged
   //   --- it is merged with bb
 
@@ -327,40 +328,56 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
   //                    installation might wake some propagators!!!!)
   (dst->lpq).merge(src->lpq);
   
-  // GenericSpace merge
+  /*
+    GenericSpace merge. gsrc is the board that will be merged in
+    gdst. This means, taking every variable and propagator from gsrc
+    and create it in gdst. (Vs: Variables in gsrc, Ps: Propagators in
+    gsrc, Vd: Variables in gdst, Pd: Propagators in gdst)
+    
+    -----------------------------------------------
+    | gsrc      | gdst      |  resultant gdst     |
+    -----------------------------------------------
+    | NULL      | V /\ P    | gdst                |
+    | V /\ P    | NULL      | gsrc                |
+    | Vs /\ Ps  | Vd /\ Pd  | Vs U Vd /\ Ps U Pd  |
+    -----------------------------------------------
+  */
   GenericSpace * gsrc = src->getGenericSpace(true);
   GenericSpace * gdst = dst->getGenericSpace(true);
   
   /*
     TODO: optimization: if src has a generic space but it is solved do nothing.
    */
-  //printf("board.icc >> Merging spaces\n");fflush(stdout);	
-  // merging depending on gespace presence
+  printf("board.icc >> Merging spaces\n");fflush(stdout);	
+
   if (gsrc != NULL) {  
-    //printf("board.icc >> source board has a gs\n");fflush(stdout);	
+    printf("board.icc >> source board has a gs\n");fflush(stdout);	
     // there is a genericSpace in the board that gets merged
     if (gdst != NULL) {
       //printf("board.icc >> dest board has a gs (real)\n");fflush(stdout);	
       // both boards have a genericSpace then do a real merge
       gdst->merge(gsrc);
     } else {
-      /* TODO: oz_currentBoard() does not have a generic space then a clone
-	 of the space that gets merged is enough.
-	 TODO: a clone is not the most elegant way. dst's gespace must point to 
-	 the src gespace. Special care must be taken because src gespace could be
-	 gc marked.
+      /* TODO: oz_currentBoard() does not have a generic space then a
+	 clone of the space that gets merged is enough.  TODO: a clone
+	 is not the most elegant way. dst's gespace must point to the
+	 src gespace. Special care must be taken because src gespace
+	 could be gc marked.
       */
+
       /*
-	Optimization: if a GenericSpace is present in the source board but it is
-	already solved then all constraint vars are available through mozart values
-	And it is not necessary to copy/point the source space from the target space.
+	Optimization: if a GenericSpace is present in the source board
+	but it is already solved then all constraint vars are
+	available through mozart values And it is not necessary to
+	copy/point the source space from the target space.
        */
       if (!gsrc->isSolved()) {
 	/*
-	  the resulting generic space is the one in src. Pointing it from gespace
-	  attribute should be enough. It could be possible for that gespace to be
-	  marked for garbage collection, in that case unmark it. (Review Schulte's
-	  thesis to validate this).
+	  the resulting generic space is the one in src. Pointing it
+	  from gespace attribute should be enough. It could be
+	  possible for that gespace to be marked for garbage
+	  collection, in that case unmark it. (Review Schulte's thesis
+	  to validate this).
 	 */
 	dst->gespace = src->gespace;
 	if (src->gespace->gc_marked)
@@ -369,7 +386,7 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
     }
     // In any other case generic space merging is not necessary.
   }
-  //printf("board.icc >> End generic space merge\n");fflush(stdout);
+  printf("board.icc >> End generic space merge\n");fflush(stdout);
   
   // This might cause two serving threads for the same board!
 
