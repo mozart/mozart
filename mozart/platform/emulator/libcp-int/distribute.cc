@@ -133,10 +133,10 @@ public:
 
     if (i == size) {
       (void) oz_unify(sync,AtomNil);
-
+      dispose();
       /*
 	There are no more variables to distribute in the array.  This
-	 distributor must be removed from the board.
+	distributor must be removed from the board.
       */
       return 0;
     }
@@ -145,7 +145,8 @@ public:
     
     Assert(!OZ_isInt(vars[sel_var]));
 
-    /* Value selection. For this purpose get_IntVarInfo is used to not
+    /* 
+       Value selection. For this purpose get_IntVarInfo is used to not
        generate gecode space unstability.
      */
     int val = get_IntVarInfo(vars[sel_var]).min();
@@ -166,6 +167,7 @@ public:
 
     bb->setBranching(OZ_cons(fb,OZ_cons(sb,OZ_nil())));
 
+    // This distributor should be preserved.
     return 1;
   }
 

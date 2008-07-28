@@ -79,19 +79,18 @@ public:
   
   /*
     The retrn value indicates if the distributor should be kept or
-    not. Returning 1 will make the distributor to be preserved. 
+    not. Returning 1 will make the distributor to be preserved.
     Returning 0 will remove it from the board.
   */
   virtual int notifyStable(Board *bb) {
     if (bb->getBranching() == AtomNil) {
       /*
-	Stability is detected an a waitStable can be resumed. It is up to the
-	builtin to perform error detection.
+	Stability is detected an a waitStable can be resumed. It is up
+	to the builtin to perform error detection.
       */
       //printf("****called to notiyStable of new dist.\n");fflush(stdout);
       //printf("notifyStable branchng es nil\n");fflush(stdout);
       (void) oz_unify(var,AtomNil);
-      //telleq(bb,var,AtomNil);
       dispose();
       return 0;			
     } 
