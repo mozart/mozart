@@ -265,9 +265,13 @@ OZ_BI_define(BImergeSpace, 1,1) {
   Bool isUpward = (sc == sp);
   
   /*
-    TODO: think about running proagation here. If the space to be merged is not
-    stable, that means, there are propagators pending to be run it could be safer 
-    to ask for propagation in that space and then to merge.
+    TODO: think about running proagation here. If the space to be
+    merged is not stable, that means, there are propagators pending to
+    be run it could be safer to ask for propagation in that space and
+    then to merge.
+
+    The following operation may trigger propagation in sb or in sp if
+    status of sb is a variable.
   */
   if (OZ_isVariable(sb->getStatus())) {
     if (isUpward) {
