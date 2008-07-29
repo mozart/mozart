@@ -47,7 +47,7 @@ protected:
   /**
      \brief Sinchronization variable. This variable is bound when
      the distributor work is finished. 
-   */
+  */
   TaggedRef sync;
 
   /// Vector of variables to distribute
@@ -64,10 +64,6 @@ protected:
 
 public:
 
-  /**
-     \brief Creates a distributor object for a variable vector \a vs
-     of size n
-   */
   GFDDistributor(Board *bb, TaggedRef *vs, int n) {
     vars = vs;
     size = n;
@@ -75,13 +71,34 @@ public:
     sel_var = -1;
     sel_val = (TaggedRef) 0;
   }
+
+
+  virtual int select_var() = 0;
+  virtual int select_val() = 0;
   
+  virtual void finish() {
+    (void) oz_unify(sync,AtomNil);
+    dispose();
+  }
+
+  virtual void make_branch(Board *bb,int val){
+    // first possible branching: sel_var#val
+    TaggedRef fb = OZ_mkTuple(OZ_atom("#"),2,OZ_int(sel_var),OZ_int(val));
+    
+    // second possible branching: sel_var#compl(val)
+    TaggedRef sb = OZ_mkTuple(OZ_atom("#"),2,OZ_int(sel_var),
+			      OZ_mkTuple(OZ_atom("compl"),1,OZ_int(val)));
+    
+    bb->setBranching(OZ_cons(fb,OZ_cons(sb,OZ_nil())));
+  }
+
   /*
     \brief As the distributor injects tell operations in the board
     that not take place inmediately, termination is notified by
     binding \a sync to an atom.
-   */
+  */
   TaggedRef getSync() { return sync; }
+  
   
   void dispose(void) { oz_freeListDispose(this, sizeof(GFDDistributor)); }
 
@@ -105,70 +122,10 @@ public:
      
     bb->prepareTell(BI_DistributeTell,RefsArray::make(vars[pos],value));
  
-     /* 
-	Assumes the only method able to tell the sapce to remove the
-	distributor is notifyStable. This can be optimized further.
-     */
-    return 1;
-  }
-
-  virtual int notifyStable(Board *bb) {
-    
-    /*
-      The space is stable and now it is safe to select a new variable
-      with a new value for the next distribution step.
-    */
-
-    int i = 0;
-    for (i=0; i<size;i++) {
-      if (OZ_isInt(vars[i]) || !OZ_isGeIntVar(vars[i]) ) {
-	// printf(">>>Found int or non var pos: %d val: %s\n", i, OZ_toC(vars[i],100,100));fflush(stdout);
-      } else if(OZ_isGeIntVar(vars[i])) {
-	// printf(">>>Found Var pos: %d val: %s\n", i, OZ_toC(vars[i],100,100));fflush(stdout);
-	break;
-      } else {
-	//printf(">>>Found Nothing pos: %d val: %s\n", i, OZ_toC(vars[i],100,100));fflush(stdout);
-	Assert(false);
-      }
-    }
-
-    if (i == size) {
-      (void) oz_unify(sync,AtomNil);
-      dispose();
-      /*
-	There are no more variables to distribute in the array.  This
-	distributor must be removed from the board.
-      */
-      return 0;
-    }
-
-    sel_var = i;
-    
-    Assert(!OZ_isInt(vars[sel_var]));
-
     /* 
-       Value selection. For this purpose get_IntVarInfo is used to not
-       generate gecode space unstability.
-     */
-    int val = get_IntVarInfo(vars[sel_var]).min();
-
-    /*
-      After variable and value selections a branching must be created
-      for the space.  This will allow Space.ask to be notified about
-      the possibles branching descritpions that can be commited to
-      this distributor.
-     */
-
-    // first possible branching: sel_var#val
-    TaggedRef fb = OZ_mkTuple(OZ_atom("#"),2,OZ_int(sel_var),OZ_int(val));
-
-    // second possible branching: sel_var#compl(val)
-    TaggedRef sb = OZ_mkTuple(OZ_atom("#"),2,OZ_int(sel_var),
-			      OZ_mkTuple(OZ_atom("compl"),1,OZ_int(val)));
-
-    bb->setBranching(OZ_cons(fb,OZ_cons(sb,OZ_nil())));
-
-    // This distributor should be preserved.
+       Assumes the only method able to tell the sapce to remove the
+       distributor is notifyStable. This can be optimized further.
+    */
     return 1;
   }
 
@@ -187,8 +144,74 @@ public:
     t->vars = OZ_sCloneAllocBlock(size, t->vars);
     return t;
   }
-
 };
+
+class GFDNaiveDistributor: public GFDDistributor{
+public:
+	
+  /**
+     \brief Creates a distributor object for a variable vector \a vs
+     of size n
+  */
+  GFDNaiveDistributor(Board *bb, TaggedRef *vs, int n)
+    : GFDDistributor(bb,vs,n) { }
+  
+  virtual int select_var(){
+    int i = 0;
+    for (i=0; i<size;i++) {
+      if (OZ_isInt(vars[i]) || !OZ_isGeIntVar(vars[i]) ) {
+      } else if(OZ_isGeIntVar(vars[i])) {
+	break;
+      } else {
+	Assert(false);
+      }
+    }
+
+    if (i == size) {
+      return -1;
+    }
+    return i;
+  }
+	
+  virtual int select_val(){
+    return get_IntVarInfo(vars[sel_var]).min();
+  }
+	
+  virtual int notifyStable(Board *bb) {
+    /*
+      The space is stable and now it is safe to select a new variable
+      with a new value for the next distribution step.
+    */
+    sel_var = select_var();
+    if (sel_var == -1)	{
+      finish();
+      /*
+	There are no more variables to distribute in the array.  This
+	distributor must be removed from the board.
+      */
+      return 0;
+    }
+
+    Assert(!OZ_isInt(vars[sel_var]));
+
+    /* 
+       Value selection. For this purpose get_IntVarInfo is used to not
+       generate gecode space unstability.
+    */
+    int val = select_val();
+
+    /*
+      After variable and value selections a branching must be created
+      for the space.  This will allow Space.ask to be notified about
+      the possibles branching descritpions that can be commited to
+      this distributor.
+    */
+    make_branch(bb,val);
+    // This distributor should be preserved.
+    return 1;
+  }
+};
+
 
 /*
   This builtin performs the tell operation. We need a builtin because
@@ -200,7 +223,7 @@ public:
   To access gecode space's variable use get_IntVar instead of
   get_IntVarInfo to make the space unstable. Space unstability is fine
   because after a tell the space will be unstable.
- */
+*/
 OZ_BI_define(BIGfdTellConstraint, 2, 0)
 {
 
@@ -280,8 +303,8 @@ OZ_BI_define(gfd_distribute, 1, 1) {
   if (bb->getDistributor())
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
   
-  //printf("creating real object\n");fflush(stdout);
-  GFDDistributor * gfdd = new GFDDistributor(bb,vars,n);
+  //make the decision
+  GFDNaiveDistributor * gfdd = new GFDNaiveDistributor(bb,vars,n);
   //printf("associating it to the board.\n");fflush(stdout);
   bb->setDistributor(gfdd);
   
