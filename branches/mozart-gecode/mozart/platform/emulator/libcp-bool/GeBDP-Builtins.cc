@@ -4,7 +4,7 @@
  *     Juan Gabriel Torres  <juantorres@puj.edu.co>
  *
  *  Contributing authors:
- *  		Andres Felipe Barco <anfelbar@univalle.edu.co>   
+ *     Andres Felipe Barco <anfelbar@univalle.edu.co>   
  *
  *  Copyright:
  *     Diana Lorena Velasco, 2007
@@ -38,10 +38,10 @@ OZ_BI_define(gbd_rel_5,5,0){
   DeclarePropKind(4, __pk);
 
   if(OZ_isGeBoolVar(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
-/**
-    void  Gecode::rel (Space *home, BoolVar x0, IntRelType r, BoolVar x1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
-    Post propagator for $ x_0 \sim_r x_1$. 
-  */
+    /**
+       void  Gecode::rel (Space *home, BoolVar x0, IntRelType r, BoolVar x1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+       Post propagator for $ x_0 \sim_r x_1$. 
+    */
     DeclareGeBoolVar(0, __x0, home);
     DeclareIntRelType(1, __r);
     DeclareGeBoolVar(2, __x1, home);
@@ -54,10 +54,10 @@ OZ_BI_define(gbd_rel_5,5,0){
     }
   }
   else if(OZ_isBoolVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
-/**
-    void  Gecode::rel (Space *home, const BoolVarArgs &x, IntRelType r, BoolVar y, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
-    Post propagator for $ x_i \sim_r y $ for all $0\leq i<|x|$.
-  */
+    /**
+       void  Gecode::rel (Space *home, const BoolVarArgs &x, IntRelType r, BoolVar y, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+       Post propagator for $ x_i \sim_r y $ for all $0\leq i<|x|$.
+    */
     DECLARE_BOOLVARARGS(0, __x, home);
     DeclareIntRelType(1, __r);
     DeclareGeBoolVar(2, __y, home);
@@ -70,10 +70,10 @@ OZ_BI_define(gbd_rel_5,5,0){
     }
   }
   else if(OZ_isGeBoolVar(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isInt(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
-/**
-    void  Gecode::rel (Space *home, BoolVar x, IntRelType r, int n, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
-     Propagates $ x \sim_r n$. 
-  */
+    /**
+       void  Gecode::rel (Space *home, BoolVar x, IntRelType r, int n, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+       Propagates $ x \sim_r n$. 
+    */
     DeclareGeBoolVar(0, __x0, home);
     DeclareIntRelType(1, __r);
     DeclareInt2(2, __n);
@@ -86,9 +86,9 @@ OZ_BI_define(gbd_rel_5,5,0){
     }
   }
   else if(OZ_isBoolVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isInt(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
-/**
-    void Gecode::rel (Space* home, const BoolVarArgs& x, IntRelType r, int n, IntConLevel icl, PropKind pk);
-  */
+    /**
+       void Gecode::rel (Space* home, const BoolVarArgs& x, IntRelType r, int n, IntConLevel icl, PropKind pk);
+    */
     DECLARE_BOOLVARARGS(0, __x, home);
     DeclareIntRelType(1, __r);
     DeclareInt2(2, __n);
@@ -101,9 +101,9 @@ OZ_BI_define(gbd_rel_5,5,0){
     }
   }
   else if(OZ_isBoolVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isBoolVarArgs(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
-/**
-    void Gecode::rel (Space* home, const BoolVarArgs& x, IntRelType r, const BoolVarArgs& y, IntConLevel icl, PropKind pk);
-  */
+    /**
+       void Gecode::rel (Space* home, const BoolVarArgs& x, IntRelType r, const BoolVarArgs& y, IntConLevel icl, PropKind pk);
+    */
     DECLARE_BOOLVARARGS(0, __x, home);
     DeclareIntRelType(1, __r);
     DECLARE_BOOLVARARGS(2, __y, home);
@@ -116,9 +116,9 @@ OZ_BI_define(gbd_rel_5,5,0){
     }
   }
   else if(OZ_isBoolOpType(OZ_in(0)) && OZ_isBoolVarArgs(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
-/**
-    void Gecode::rel (Space* home, BoolOpType o, const BoolVarArgs& x, BoolVar y, IntConLevel icl, PropKind pk);
-  */
+    /**
+       void Gecode::rel (Space* home, BoolOpType o, const BoolVarArgs& x, BoolVar y, IntConLevel icl, PropKind pk);
+    */
     DeclareBoolOpType(0, __o);
     DECLARE_BOOLVARARGS(1, __x, home);
     DeclareGeBoolVar(2, __y, home);
@@ -131,9 +131,9 @@ OZ_BI_define(gbd_rel_5,5,0){
     }
   }
   else if(OZ_isBoolOpType(OZ_in(0)) && OZ_isBoolVarArgs(OZ_in(1)) && OZ_isInt(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
-/**
-    void Gecode::rel (Space* home, BoolOpType o, const BoolVarArgs& x, int n, IntConLevel icl, PropKind pk);
-  */
+    /**
+       void Gecode::rel (Space* home, BoolOpType o, const BoolVarArgs& x, int n, IntConLevel icl, PropKind pk);
+    */
     DeclareBoolOpType(0, __o);
     DECLARE_BOOLVARARGS(1, __x, home);
     DeclareInt2(2, __n);
@@ -160,7 +160,7 @@ OZ_BI_define(gbd_rel_4,4,0){
   DeclarePropKind(3, __pk);
 
   /**
-    void Gecode::rel (Space* home, const BoolVarArgs& x, IntRelType r, IntConLevel icl, PropKind pk);
+     void Gecode::rel (Space* home, const BoolVarArgs& x, IntRelType r, IntConLevel icl, PropKind pk);
   */
   try{
     Gecode::rel(home, __x, __r, __icl, __pk);
@@ -180,9 +180,9 @@ OZ_BI_define(gbd_rel_6,6,0){
   DeclareIntConLevel(4, __icl);
   DeclarePropKind(5, __pk);
   if(OZ_isGeBoolVar(OZ_in(0)) && OZ_isBoolOpType(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3)) && OZ_isIntConLevel(OZ_in(4)) && OZ_isPropKind(OZ_in(5))){
-  /**
-   void Gecode::rel (Space* home, BoolVar x0, BoolOpType o, BoolVar x1, BoolVar x2, IntConLevel icl, PropKind pk);
-  */
+    /**
+       void Gecode::rel (Space* home, BoolVar x0, BoolOpType o, BoolVar x1, BoolVar x2, IntConLevel icl, PropKind pk);
+    */
     DeclareGeBoolVar(3, __x2, home);
     try{
       Gecode::rel(home, __x0, __o, __x1, __x2, __icl, __pk);
@@ -193,9 +193,9 @@ OZ_BI_define(gbd_rel_6,6,0){
     }
   }
   else if(OZ_isGeBoolVar(OZ_in(0)) && OZ_isBoolOpType(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2)) && OZ_isInt(OZ_in(3)) && OZ_isIntConLevel(OZ_in(4)) && OZ_isPropKind(OZ_in(5))){
-  /**
-    void Gecode::rel (Space* home, BoolVar x0, BoolOpType o, BoolVar x1, int n, IntConLevel icl, PropKind pk);
-  */
+    /**
+       void Gecode::rel (Space* home, BoolVar x0, BoolOpType o, BoolVar x1, int n, IntConLevel icl, PropKind pk);
+    */
     DeclareInt2(3, __n);
     try{
       Gecode::rel(home, __x0, __o, __x1, __n, __icl, __pk);
@@ -213,161 +213,161 @@ OZ_BI_define(gbd_rel_6,6,0){
 }OZ_BI_end
 
 OZ_BI_define(gbd_linear_5,5,0){
-	DeclareGSpace(home);
-	DECLARE_BOOLVARARGS(0, __x, home);
-	DeclareIntRelType(1, __r);
-	DeclareIntConLevel(3, __icl);
-	DeclarePropKind(4, __pk);
+  DeclareGSpace(home);
+  DECLARE_BOOLVARARGS(0, __x, home);
+  DeclareIntRelType(1, __r);
+  DeclareIntConLevel(3, __icl);
+  DeclarePropKind(4, __pk);
  
-	if(OZ_isBoolVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isInt(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
-/**
-    void Gecode::linear (Space* home, const BoolVarArgs& x, IntRelType r, int c, IntConLevel icl, PropKind pk); 
- */
-		DeclareInt2(2, __c);
-		try{
-			Gecode::linear(home, __x, __r, __c, __icl, __pk);
+  if(OZ_isBoolVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isInt(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
+    /**
+       void Gecode::linear (Space* home, const BoolVarArgs& x, IntRelType r, int c, IntConLevel icl, PropKind pk); 
+    */
+    DeclareInt2(2, __c);
+    try{
+      Gecode::linear(home, __x, __r, __c, __icl, __pk);
    
-		}
-		catch(Exception e){
-			RAISE_GE_EXCEPTION(e);
-		}
-	}
-	else if(OZ_isBoolVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
-/**
-    void Gecode::linear (Space* home, const BoolVarArgs& x, IntRelType r, IntVar y, IntConLevel icl, PropKind pk); 
- */
-		DeclareGeIntVar(2, __y, home);
-		try{
-			Gecode::linear(home, __x, __r, __y, __icl, __pk);
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+  }
+  else if(OZ_isBoolVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
+    /**
+       void Gecode::linear (Space* home, const BoolVarArgs& x, IntRelType r, IntVar y, IntConLevel icl, PropKind pk); 
+    */
+    DeclareGeIntVar(2, __y, home);
+    try{
+      Gecode::linear(home, __x, __r, __y, __icl, __pk);
    
-		}
-		catch(Exception e){
-			RAISE_GE_EXCEPTION(e);
-		}
-	}
-	else{
-		return OZ_typeError(0, "Malformed Propagator");
-	}
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+  }
+  else{
+    return OZ_typeError(0, "Malformed Propagator");
+  }
  
-	CHECK_POST(home);
+  CHECK_POST(home);
 }OZ_BI_end
 
 OZ_BI_define(gbd_linear_6,6,0){
-	DeclareGSpace(home);
-	DeclareIntConLevel(4, __icl);
-	DeclarePropKind(5, __pk);
+  DeclareGSpace(home);
+  DeclareIntConLevel(4, __icl);
+  DeclarePropKind(5, __pk);
  
   
-	if(OZ_isBoolVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isInt(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3)) && OZ_isIntConLevel(OZ_in(4)) && OZ_isPropKind(OZ_in(5))){
-/**
-    void Gecode::linear (Space* home, const BoolVarArgs& x, IntRelType r, int c, BoolVar b, IntConLevel icl, PropKind pk); 
- */
-		DECLARE_BOOLVARARGS(0, __x, home);
-		DeclareIntRelType(1, __r);
-		DeclareInt2(2, __c);
-		DeclareGeBoolVar(3, __b, home);
-		try{
-			Gecode::linear(home, __x, __r, __c, __b, __icl, __pk);
+  if(OZ_isBoolVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isInt(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3)) && OZ_isIntConLevel(OZ_in(4)) && OZ_isPropKind(OZ_in(5))){
+    /**
+       void Gecode::linear (Space* home, const BoolVarArgs& x, IntRelType r, int c, BoolVar b, IntConLevel icl, PropKind pk); 
+    */
+    DECLARE_BOOLVARARGS(0, __x, home);
+    DeclareIntRelType(1, __r);
+    DeclareInt2(2, __c);
+    DeclareGeBoolVar(3, __b, home);
+    try{
+      Gecode::linear(home, __x, __r, __c, __b, __icl, __pk);
    
-		}
-		catch(Exception e){
-			RAISE_GE_EXCEPTION(e);
-		}
-	}
-	else if(OZ_isBoolVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3)) && OZ_isIntConLevel(OZ_in(4)) && OZ_isPropKind(OZ_in(5))){
-/**
-     void Gecode::linear (Space* home, const BoolVarArgs& x, IntRelType r, IntVar y, BoolVar b, IntConLevel icl,  PropKind pk);
- */
-		DECLARE_BOOLVARARGS(0, __x, home);
-		DeclareIntRelType(1, __r);
-		DeclareGeIntVar(2, __y, home);
-		DeclareGeBoolVar(3, __b, home);
-		try{
-			Gecode::linear(home, __x, __r, __y, __b, __icl, __pk);
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+  }
+  else if(OZ_isBoolVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3)) && OZ_isIntConLevel(OZ_in(4)) && OZ_isPropKind(OZ_in(5))){
+    /**
+       void Gecode::linear (Space* home, const BoolVarArgs& x, IntRelType r, IntVar y, BoolVar b, IntConLevel icl,  PropKind pk);
+    */
+    DECLARE_BOOLVARARGS(0, __x, home);
+    DeclareIntRelType(1, __r);
+    DeclareGeIntVar(2, __y, home);
+    DeclareGeBoolVar(3, __b, home);
+    try{
+      Gecode::linear(home, __x, __r, __y, __b, __icl, __pk);
    
-		}
-		catch(Exception e){
-			RAISE_GE_EXCEPTION(e);
-		}
-	}
-	else if(OZ_isIntArgs(OZ_in(0)) && OZ_isBoolVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isInt(OZ_in(3)) && OZ_isIntConLevel(OZ_in(4)) && OZ_isPropKind(OZ_in(5))){
-/**
-    void Gecode::linear (Space* home, const IntArgs& a, const BoolVarArgs& x, IntRelType r, int c, IntConLevel icl, PropKind pk); 
- */
-		DECLARE_INTARGS(0, __a);
-		DECLARE_BOOLVARARGS(1, __x, home);
-		DeclareIntRelType(2, __r);
-		DeclareInt2(3, __c);
-		try{
-			Gecode::linear(home, __a, __x, __r, __c, __icl, __pk);
-		}
-		catch(Exception e){
-			RAISE_GE_EXCEPTION(e);
-		}
-	}
-	else if(OZ_isIntArgs(OZ_in(0)) && OZ_isBoolVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isGeIntVar(OZ_in(3)) && OZ_isIntConLevel(OZ_in(4)) && OZ_isPropKind(OZ_in(5))){
-/**
-    void Gecode::linear (Space* home, const IntArgs& a, const BoolVarArgs& x, IntRelType r, IntVar y, IntConLevel icl, PropKind pk);  
-*/
-		DECLARE_INTARGS(0, __a);
-		DECLARE_BOOLVARARGS(1, __x, home);
-		DeclareIntRelType(2, __r);
-		DeclareGeIntVar(3, __y, home);
-		try{
-			Gecode::linear(home, __a, __x, __r, __y, __icl, __pk);
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+  }
+  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isBoolVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isInt(OZ_in(3)) && OZ_isIntConLevel(OZ_in(4)) && OZ_isPropKind(OZ_in(5))){
+    /**
+       void Gecode::linear (Space* home, const IntArgs& a, const BoolVarArgs& x, IntRelType r, int c, IntConLevel icl, PropKind pk); 
+    */
+    DECLARE_INTARGS(0, __a);
+    DECLARE_BOOLVARARGS(1, __x, home);
+    DeclareIntRelType(2, __r);
+    DeclareInt2(3, __c);
+    try{
+      Gecode::linear(home, __a, __x, __r, __c, __icl, __pk);
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+  }
+  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isBoolVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isGeIntVar(OZ_in(3)) && OZ_isIntConLevel(OZ_in(4)) && OZ_isPropKind(OZ_in(5))){
+    /**
+       void Gecode::linear (Space* home, const IntArgs& a, const BoolVarArgs& x, IntRelType r, IntVar y, IntConLevel icl, PropKind pk);  
+    */
+    DECLARE_INTARGS(0, __a);
+    DECLARE_BOOLVARARGS(1, __x, home);
+    DeclareIntRelType(2, __r);
+    DeclareGeIntVar(3, __y, home);
+    try{
+      Gecode::linear(home, __a, __x, __r, __y, __icl, __pk);
    
-		}
-		catch(Exception e){
-			RAISE_GE_EXCEPTION(e);
-		}
-	}
-	else{
-		return OZ_typeError(0, "Malformed Propagator");
-	}
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+  }
+  else{
+    return OZ_typeError(0, "Malformed Propagator");
+  }
  
-	CHECK_POST(home);
+  CHECK_POST(home);
 }OZ_BI_end
 
 OZ_BI_define(gbd_linear_7,7,0){
-	DeclareGSpace(home);
-	DECLARE_INTARGS(0, __a);
-	DECLARE_BOOLVARARGS(1, __x, home);
-	DeclareIntRelType(2, __r);
-	DeclareGeBoolVar(4, __b, home);
-	DeclareIntConLevel(5, __icl);
-	DeclarePropKind(6, __pk);
+  DeclareGSpace(home);
+  DECLARE_INTARGS(0, __a);
+  DECLARE_BOOLVARARGS(1, __x, home);
+  DeclareIntRelType(2, __r);
+  DeclareGeBoolVar(4, __b, home);
+  DeclareIntConLevel(5, __icl);
+  DeclarePropKind(6, __pk);
  
-	if(OZ_isIntArgs(OZ_in(0)) && OZ_isBoolVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isInt(OZ_in(3)) && OZ_isGeBoolVar(OZ_in(4)) && OZ_isIntConLevel(OZ_in(5)) && OZ_isPropKind(OZ_in(6))){
-/**
-    void Gecode::linear (Space* home, const IntArgs& a, const BoolVarArgs& x, IntRelType r, int c, BoolVar b, IntConLevel icl, PropKind pk);
- */ 
-		DeclareInt2(3, __c);
-		try{
-			Gecode::linear(home, __a, __x, __r, __c, __b, __icl, __pk);
+  if(OZ_isIntArgs(OZ_in(0)) && OZ_isBoolVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isInt(OZ_in(3)) && OZ_isGeBoolVar(OZ_in(4)) && OZ_isIntConLevel(OZ_in(5)) && OZ_isPropKind(OZ_in(6))){
+    /**
+       void Gecode::linear (Space* home, const IntArgs& a, const BoolVarArgs& x, IntRelType r, int c, BoolVar b, IntConLevel icl, PropKind pk);
+    */ 
+    DeclareInt2(3, __c);
+    try{
+      Gecode::linear(home, __a, __x, __r, __c, __b, __icl, __pk);
    
-		}
-		catch(Exception e){
-			RAISE_GE_EXCEPTION(e);
-		}
-	}
-	else if(OZ_isIntArgs(OZ_in(0)) && OZ_isBoolVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isGeIntVar(OZ_in(3)) && OZ_isGeBoolVar(OZ_in(4)) && OZ_isIntConLevel(OZ_in(5)) && OZ_isPropKind(OZ_in(6))){
-/**
-    void Gecode::linear (Space* home, const IntArgs& a, const BoolVarArgs& x, IntRelType r, IntVar y, BoolVar b, IntConLevel icl, PropKind pk);
- */   
-		DeclareGeIntVar(3, __y, home);
-		try{
-			Gecode::linear(home, __a, __x, __r, __y, __b, __icl, __pk);
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+  }
+  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isBoolVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isGeIntVar(OZ_in(3)) && OZ_isGeBoolVar(OZ_in(4)) && OZ_isIntConLevel(OZ_in(5)) && OZ_isPropKind(OZ_in(6))){
+    /**
+       void Gecode::linear (Space* home, const IntArgs& a, const BoolVarArgs& x, IntRelType r, IntVar y, BoolVar b, IntConLevel icl, PropKind pk);
+    */   
+    DeclareGeIntVar(3, __y, home);
+    try{
+      Gecode::linear(home, __a, __x, __r, __y, __b, __icl, __pk);
    
-		}
-		catch(Exception e){
-			RAISE_GE_EXCEPTION(e);
-		}
-	}
-	else{
-		return OZ_typeError(0, "Malformed Propagator");
-	}
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+  }
+  else{
+    return OZ_typeError(0, "Malformed Propagator");
+  }
  
-	CHECK_POST(home);
+  CHECK_POST(home);
 }OZ_BI_end
 
 #endif

@@ -84,7 +84,7 @@ public:
 
   virtual bool In(TaggedRef x);
 
-  //clone para crear variable local desde los propagadores.
+  //clone to create local variable from propagators.
   virtual TaggedRef clone(TaggedRef v);
 
   virtual bool hasSameDomain(TaggedRef v);
@@ -175,7 +175,7 @@ inline OZ_Term new_GeSetVar_init() {
 /**
    \brief Checks if the OZ_Term v represents a set constraint
    variable in the store.
- */
+*/
 inline 
 bool OZ_isGeSetVar(OZ_Term v) { 
   OZ_Term v_local = OZ_deref(v);
@@ -204,7 +204,7 @@ GeSetVar* get_GeSetVar(OZ_Term v, bool cgv = true) {
    space unstable.
 */
 inline SetVar& get_SetVar(OZ_Term v) {
-    return get_GeSetVar(v)->getSetVar();
+  return get_GeSetVar(v)->getSetVar();
 }
 
 /**
@@ -269,34 +269,6 @@ inline OZ_Return exc_GeSetVarVal(OZ_Term V1,  int val){
     return PROCEED;
 }
 
-/* These propagators are included in Gecode
-
-/*
-inline OZ_Return cardInt_GeSetVar(OZ_Term V1,  int min,  int max){
-  GenericSpace* sp = oz_currentBoard()->getGenericSpace();
-  SetView Var(get_SetVar(V1));  
-  if(Gecode::ME_GEN_FAILED==Var.cardMin(sp,min))    
-    return FAILED;
-  else{
-    if(Gecode::ME_GEN_FAILED==Var.cardMax(sp,max))    
-      return FAILED;
-    return PROCEED;
-  }
-}
-
-inline OZ_Return card_GeSetVarVal(OZ_Term V1,  int val){
-  GenericSpace* sp = oz_currentBoard()->getGenericSpace();
-  SetView Var(get_SetVar(V1));  
-  if(Gecode::ME_GEN_FAILED==Var.cardMin(sp,val))    
-    return FAILED;
-  else{
-    if(Gecode::ME_GEN_FAILED==Var.cardMax(sp,val))    
-      return FAILED;
-    return PROCEED;
-  }
-}
-*/
-
 inline OZ_Term isIn_GeSetVar(OZ_Term V1, int val, OZ_Term VBool)
 {
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
@@ -315,29 +287,29 @@ inline OZ_Term isIn_GeSetVar(OZ_Term V1, int val, OZ_Term VBool)
 }
 
 /**
-		\brief Checks if the term is a SetRelType.
+   \brief Checks if the term is a SetRelType.
 */
 inline
 bool OZ_isSetRelType(OZ_Term t){
-	int v = OZ_intToC(t);
-	return v == SRT_EQ 
-      || v == SRT_NQ
-      || v == SRT_SUB
-      || v == SRT_SUP 
-      || v == SRT_DISJ
-      || v == SRT_CMPL ? true : false;
+  int v = OZ_intToC(t);
+  return v == SRT_EQ 
+    || v == SRT_NQ
+    || v == SRT_SUB
+    || v == SRT_SUP 
+    || v == SRT_DISJ
+    || v == SRT_CMPL ? true : false;
 }
 
 /**
-		\brief Checks if the term is a SetOpType.
+   \brief Checks if the term is a SetOpType.
 */
 inline
 bool OZ_isSetOpType(OZ_Term t){
-	int v = OZ_intToC(t);
-	return v == SOT_UNION 
-      || v == SOT_DUNION
-      || v == SOT_INTER
-      || v == SOT_MINUS ? true : false;
+  int v = OZ_intToC(t);
+  return v == SOT_UNION 
+    || v == SOT_DUNION
+    || v == SOT_INTER
+    || v == SOT_MINUS ? true : false;
 }
 
 void gesvp_init(void);

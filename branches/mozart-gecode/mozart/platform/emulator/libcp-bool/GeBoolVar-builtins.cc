@@ -3,7 +3,9 @@
  *     Alberto Delgado <adelgado@cic.puj.edu.co> 
  *
  *  Contributing authors:
- *		Andres Felipe Barco (anfelbar@univalle.edu.co)
+ *    Andres Felipe Barco <anfelbar@univalle.edu.co>
+ *    Gustavo A. Gómez Farhat <gafarhat@univalle.edu.co>
+ *
  *  Copyright:
  *    Alberto Delgado, 2006-2007
  *
@@ -34,9 +36,8 @@
 using namespace Gecode;
 using namespace Gecode::Int;
 
-
 /** 
- * \brief Creates a new IntVar variable 
+ * \brief Creates a new BoolVar variable 
  * 
  * @param 1 Domain description
  * @param 2 The new variable
@@ -122,7 +123,5 @@ OZ_BI_define(boolvar_getOne,1,1)
   OZ_RETURN_BOOL(v.one());
 }
 OZ_BI_end
-
-
 
 #endif

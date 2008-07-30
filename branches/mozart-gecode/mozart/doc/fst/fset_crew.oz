@@ -32,7 +32,7 @@ in
    end
 end
 
-fun {CrewProb FlightData Crew}
+fun {AssignCrew FlightData Crew}
    CabinStaff      = {Append Crew.stewards Crew.stewardesses}
    CrewSet         = {SetOfLiterals CabinStaff}
    Stewards        = {FS.value.make
