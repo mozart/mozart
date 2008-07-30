@@ -300,8 +300,6 @@ OZ_BI_define(gfs_cardinality_3,3,0){
 OZ_BI_define(gfs_rel_3,3,0){
   DeclareGSpace(home);
   
-
-
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2))){
     DeclareGeSetVar(0, __x, home);
@@ -310,7 +308,6 @@ OZ_BI_define(gfs_rel_3,3,0){
 
     try{
       Gecode::rel(home, __x, __r, __y);
-
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -323,7 +320,6 @@ OZ_BI_define(gfs_rel_3,3,0){
     DeclareGeIntVar(2, __x, home);
     try{
       Gecode::rel(home, __s, __r, __x);
-
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -403,8 +399,6 @@ OZ_BI_define(gfs_rel_3,3,0){
 
 OZ_BI_define(gfs_rel_4,4,0){
   DeclareGSpace(home);
-  
-
 
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3))){
@@ -615,9 +609,7 @@ OZ_BI_define(gfs_rel_5,5,0){
  */
 OZ_BI_define(gfs_sequence_1,1,0){
   DeclareGSpace(home);
-  
-
-  
+    
   if(OZ_isSetVarArgs(OZ_in(0))){
     /*
       void Gecode::sequence (Space *home, const SetVarArgs &x)
@@ -641,9 +633,7 @@ OZ_BI_define(gfs_sequence_1,1,0){
 
 OZ_BI_define(gfs_sequentialUnion_2,2,0){
   DeclareGSpace(home);
-  
-
-  
+    
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1))){
     /*
       void Gecode::sequentialUnion (Space *home, const SetVarArgs &y, SetVar x)
@@ -673,9 +663,7 @@ OZ_BI_define(gfs_sequentialUnion_2,2,0){
 
 OZ_BI_define(atmostOne_2,2,0){
   DeclareGSpace(home);
-  
-
-  
+    
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1))){
     /*
       void Gecode::atmostOne (Space *home, const SetVarArgs &x, unsigned int c)
@@ -734,8 +722,6 @@ OZ_BI_define(gfs_min_2,2,0){
 OZ_BI_define(gfs_match_2,2,0){
   DeclareGSpace(home);
   
-
-  
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1))){
     /*
       void Gecode::match (Space *home, SetVar s, const IntVarArgs &x)
@@ -762,8 +748,6 @@ OZ_BI_define(gfs_match_2,2,0){
 
 OZ_BI_define(gfs_channel_2,2,0){
   DeclareGSpace(home);
-
-
 
   if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isSetVarArgs(OZ_in(1))){
     /*
@@ -805,9 +789,7 @@ OZ_BI_define(gfs_channel_2,2,0){
 
 OZ_BI_define(gfs_cardinality_2,2,0){
   DeclareGSpace(home);
-  
-
-  
+    
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1))){
     /*
       void Gecode::cardinality (Space *home, SetVar s, IntVar x)
@@ -817,7 +799,6 @@ OZ_BI_define(gfs_cardinality_2,2,0){
     DeclareGeIntVar(1, __x, home);
     try{
       Gecode::cardinality(home, __s, __x);
-
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -826,7 +807,6 @@ OZ_BI_define(gfs_cardinality_2,2,0){
   else{
     return OZ_typeError(0, "Malformed Propagator");
   }
-
   CHECK_POST(home);
 }OZ_BI_end
 
@@ -967,9 +947,6 @@ OZ_BI_define(gfs_selectInterIn_4,4,0){
 
 OZ_BI_define(gfs_selectSet_3,3,0){
   DeclareGSpace(home);
-  
-
-
   DeclareGeIntVar(1, __y, home);
   DeclareGeSetVar(2, __z, home);
 
@@ -1050,8 +1027,6 @@ OZ_BI_define(gfs_selectInter_3,3,0){
 
 OZ_BI_define(gfs_selectDisjoint_2,2,0){
   DeclareGSpace(home);
-
-
 
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1))){
     /*
