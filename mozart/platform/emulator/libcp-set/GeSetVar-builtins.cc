@@ -34,7 +34,6 @@
 
 #include "SetVarMacros.hh"
 
-
 using namespace Gecode;
 using namespace Gecode::Set;
 
@@ -152,46 +151,15 @@ OZ_BI_define(set_inf,0,1)
 } 
 OZ_BI_end
 
-
-// this will be reflect.unknown
-
-// OZ_BI_define(gfs_reflectUnknown_2,2,0){
-//   DeclareGSpace(home);
-//   int result;
-
-//   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isList(OZ_in(1))){
-//     DeclareGeSetVar(0, __s, home);
-//     DeclareGeBoolVar(1, __b, home);
-
-//     try{
-//       Gecode::dom(home, __s, Gecode::SRT_SUP, __i, __b);
-//     }
-//     catch(Exception e){
-//       RAISE_GE_EXCEPTION(e);
-//     }
-//   }
-//   else{
-//     return OZ_typeError(0, "Malformed Propagator");
-//   }
-
-//   CHECK_POST(home);
-// }OZ_BI_end
-
-// this will be value.make
-
-OZ_BI_define(gfs_valueMake_2,2,0){
+OZ_BI_define(gfs_unknownSize,1,1){
   DeclareGSpace(home);
+  int num = 0;
   
-  if(OZ_isGeIntVar(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1))){
-    DeclareGeIntVar(0, __i, home);
-    DeclareGeSetVar(1, __s, home);
-    
+  if(OZ_isGeSetVar(OZ_in(0))){
+    DeclareGeSetVar(0, __s, home);  
     try{
-      
-      printf("__i.min(), __i.max() = %d, %d\n", __i.min(), __i.max());
-      //Gecode::SetVar x(home, __i.min(), __i.max(), __i.min(), __i.max());
-      //__s.update(home, true, x);
-      // ???
+      Gecode::Set::SetView sv(__s);
+      num = sv.unknownSize();
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -200,6 +168,184 @@ OZ_BI_define(gfs_valueMake_2,2,0){
   //TODO: raise a more descriptive error
   else{
     return OZ_typeError(0, "Malformed Propagator");
+  }
+  OZ_RETURN_INT(num);
+}OZ_BI_end
+
+OZ_BI_define(gfs_unknown,1,1){
+  DeclareGSpace(home);
+  
+  if(OZ_isGeSetVar(OZ_in(0))){
+    DeclareGeSetVar(0, __s, home);  
+   
+    int cont1 = 0;
+    Gecode::SetVarUnknownRanges ranges1(__s);
+    for(;ranges1(); ++ranges1, cont1++);
+    TaggedRef array[cont1];
+
+    Gecode::SetVarUnknownRanges ranges2(__s);
+    int cont2 = 0;
+
+    while(ranges2()){
+      int min = ranges2.min();
+      int max = ranges2.max();
+
+      if(min == max){
+	array[cont2] = OZ_int(min); 
+      }
+      else{
+	array[cont2] = OZ_mkTupleC("#",2,
+				  OZ_int(min),
+				  OZ_int(max));
+      }
+      ++ranges2;
+      cont2++;
+    }
+    OZ_RETURN(OZ_toList(cont2, array));  
+  }
+}OZ_BI_end
+
+OZ_BI_define(gfs_unknownList,1,1){
+  DeclareGSpace(home);
+
+  if(OZ_isGeSetVar(OZ_in(0))){
+    DeclareGeSetVar(0, __s, home);
+
+    Gecode::Set::SetView sv(__s);
+    int n = sv.unknownSize();
+    int cont=0;
+    TaggedRef array[n];
+
+    try{
+      Gecode::SetVarUnknownValues values(__s);
+      while(values()){
+	//FIXME: makeTaggedSmallInt() is bad here, it causes an assertion due to overflow in mozart int limits
+	//but with OZ_int() the builtin blocks and it never returns :(
+	array[cont] = OZ_int(values.val());
+	++values;
+	cont++;
+      }
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+    OZ_RETURN(OZ_toList(n, array));
+  }
+  //TODO: raise a more descriptive error
+  else{
+    return OZ_typeError(0, "Malformed Propagator");
+  }
+}OZ_BI_end
+
+OZ_BI_define(gfs_getGlb,1,1){
+  DeclareGSpace(home);
+  
+  if(OZ_isGeSetVar(OZ_in(0))){
+    DeclareGeSetVar(0, __s, home);
+
+    int cont1 = 0;
+    Gecode::SetVarGlbRanges ranges1(__s);
+    for(;ranges1(); ++ranges1, cont1++);
+    TaggedRef array[cont1];
+
+    Gecode::SetVarGlbRanges ranges2(__s);
+    int cont2 = 0;
+
+    while(ranges2()){
+      int min = ranges2.min();
+      int max = ranges2.max();
+
+      if(min == max){
+	array[cont2] = OZ_int(min); 
+      }
+      else{
+	array[cont2] = OZ_mkTupleC("#",2,
+				   OZ_int(min),
+				   OZ_int(max));
+      }
+      ++ranges2;
+      cont2++;
+    }
+    OZ_RETURN(OZ_toList(cont2, array));
+  }
+}OZ_BI_end
+
+OZ_BI_define(gfs_getLub,1,1){
+  DeclareGSpace(home);
+  
+  if(OZ_isGeSetVar(OZ_in(0))){
+    DeclareGeSetVar(0, __s, home);
+
+    int cont1 = 0;
+    Gecode::SetVarLubRanges ranges1(__s);
+    for(;ranges1(); ++ranges1, cont1++);
+    TaggedRef array[cont1];
+
+    Gecode::SetVarLubRanges ranges2(__s);
+    int cont2 = 0;
+
+    while(ranges2()){
+      int min = ranges2.min();
+      int max = ranges2.max();
+
+      if(min == max){
+	array[cont2] = OZ_int(min); 
+      }
+      else{
+	array[cont2] = OZ_mkTupleC("#",2,
+				   OZ_int(min),
+				   OZ_int(max));
+      }
+      ++ranges2;
+      cont2++;
+    }
+    OZ_RETURN(OZ_toList(cont2, array));
+  }
+}OZ_BI_end
+
+OZ_BI_define(gfs_getGlbList,1,1){
+  DeclareGSpace(home);
+  
+  if(OZ_isGeSetVar(OZ_in(0))){
+    DeclareGeSetVar(0, __s, home);
+    
+    int cont1 = 0;
+    Gecode::SetVarGlbValues values1(__s);
+    for(;values1(); ++values1, cont1++);
+    TaggedRef array[cont1];
+
+    Gecode::SetVarGlbValues values2(__s);
+    int cont2 = 0;
+
+    while(values2()){
+      array[cont2] = OZ_int(values2.val()); 
+      ++values2;
+      cont2++;
+    }
+    OZ_RETURN(OZ_toList(cont2, array));
+  }
+}OZ_BI_end
+
+OZ_BI_define(gfs_getLubList,1,1){
+  DeclareGSpace(home);
+  
+  if(OZ_isGeSetVar(OZ_in(0))){
+    DeclareGeSetVar(0, __s, home);
+    
+    int cont1 = 0;
+    Gecode::SetVarLubValues values1(__s);
+    for(;values1(); ++values1, cont1++);
+    TaggedRef array[cont1];
+
+    Gecode::SetVarLubValues values2(__s);
+    int cont2 = 0;
+
+    while(values2()){
+      array[cont2] = OZ_int(values2.val()); 
+      ++values2;
+      cont2++;
+    }
+    OZ_RETURN(OZ_toList(cont2, array));
   }
 }OZ_BI_end
 
