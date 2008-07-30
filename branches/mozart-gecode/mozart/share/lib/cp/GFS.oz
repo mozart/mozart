@@ -41,7 +41,8 @@ import
    GFB at 'x-oz://boot/GBD'
    Space
    GFD
-
+   GBD
+   System
 prepare
    %%This record must reflect the SetRelType in gecode/set.hh
    Rt = '#'('=:'    :0    %Equality
@@ -74,7 +75,11 @@ export
    distinct   : Dist
    distinctN  : DistinctN
    partition  : Partition
+   makeWeights:  GFSMakeWeights
    reified: GFSReified
+
+   % Reflection
+   reflect: GFSReflect
 
    % Finite Set Intervals
    inf  : Inf
@@ -113,8 +118,13 @@ export
 
    %% Set operations
    so:    SOP
+
+   distribute:   GFSDistribute
    
 define
+   % Finite Set Constants
+   %   GFSSetValue = GFSB.'value.make'
+   
    %FsDecl = GFS.set
    GFSisVar = GFSB.isVar
    Sup = {GFSB.sup}
@@ -124,8 +134,6 @@ define
    ComplIn = GFSB.complIn
    Include = GFSB.incVal
    Exclude = GFSB.excVal
-   %CardVal = GFSB.cardVal
-   %CardInt = GFSB.cardInt
    IsIn
    Card
    CardRange
@@ -141,11 +149,27 @@ define
    DisjointN
    DistinctN
    Partition
+   GFSMakeWeights
    GFSReified
    ReifiedInclude
    GFSValue
-%   GFSValueMake = GFSB.'gfs_valueMake_2'
 
+   % Reflection
+   GFSReflect
+   GFSGetUnknown = GFSB.'gfs_unknown'
+   GFSGetUnknownList = GFSB.'gfs_unknownList'
+   GFSGetNumOfUnknown = GFSB.'gfs_unknownSize'
+   GFSGetLub = GFSB.'gfs_getLub'
+   GFSGetGlb = GFSB.'gfs_getGlb'
+   GFSGetLubList = GFSB.'gfs_getLubList'
+   GFSGetGlbList = GFSB.'gfs_getGlbList'
+   GFSGetNumOfGlb = fun {$ S}
+		       {Length {GFSGetGlbList S}}
+		    end
+   GFSGetNumOfLub = fun {$ S}
+		       {Length {GFSGetLubList S}}
+		    end
+   
    %% Gecode propagators
    Rel
    Sequence
@@ -164,163 +188,192 @@ define
    SelectInterIn
    SelectDisjoint
    SelectSet
+   GFSDistribute
    
-in
-   local
-      fun {Decl}
-	 {GFSB.bounds nil Inf#Sup}
+   fun {GFSMakeWeights WL}
+      WeightTable = {NewDictionary}
+      ScanWeightDescr =
+      proc {$ D}
+	 case D
+	 of (default#W)|T then
+	    {Dictionary.put WeightTable default W}
+	    {ScanWeightDescr T}
+	 [] ((E1#E2)#W)|T then
+	    {Dictionary.put WeightTable E1 W}
+	    {ScanWeightDescr
+	     if E1 < E2 then (((E1+1)#E2)#W)|T
+	     else T end}
+	 [] (E#W)|T then
+	    {Dictionary.put WeightTable E W}
+	    {ScanWeightDescr T}
+	 [] nil then skip
+	 end
       end
-      fun {Upper Val}
-	 {GFSB.bounds nil Val}
-      end
+      Default
+   in
+      {Dictionary.put WeightTable default 0}
+      {ScanWeightDescr WL}
+      Default = {Dictionary.get WeightTable default}
       
-      fun {Lower Val}
-	 {GFSB.bounds Val Inf#Sup}
-      end
+      fun {$ E} {Dictionary.condGet WeightTable E Default} end
+   end
 
-      proc {TupleDom N T Fun Dom Dom2}
-	 if Dom == nil then
-	    if N>0 then {Fun T.N} {TupleDom N-1 T Fun Dom Dom2} end
+   fun {Decl}
+      {GFSB.bounds nil Inf#Sup}
+   end
+   fun {Upper Val}
+      {GFSB.bounds nil Val}
+   end
+   
+   fun {Lower Val}
+      {GFSB.bounds Val Inf#Sup}
+   end
+   
+   proc {TupleDom N T Fun Dom Dom2}
+      if Dom == nil then
+	 if N>0 then {Fun T.N} {TupleDom N-1 T Fun Dom Dom2} end
+      else
+	 if Dom2==nil then
+	    if N>0 then {Fun Dom T.N} {TupleDom N-1 T Fun Dom Dom2} end
 	 else
-	    if Dom2==nil then
-	       if N>0 then {Fun Dom T.N} {TupleDom N-1 T Fun Dom Dom2} end
-	    else
-	       if N>0 then {Fun Dom Dom2 T.N} {TupleDom N-1 T Fun Dom Dom2} end
-	    end
+	    if N>0 then {Fun Dom Dom2 T.N} {TupleDom N-1 T Fun Dom Dom2} end
 	 end
       end
-      
-      proc {RecordDom As R Fun Dom Dom2}
-	 if Dom==nil then
-	    if Dom2==nil then
-	       case As of nil then skip
-	       [] A|Ar then {Fun Dom R.A} {RecordDom Ar R Fun Dom Dom2}
-	       end
-	    else
-	       case As of nil then skip
-	       [] A|Ar then {Fun Dom Dom2 R.A} {RecordDom Ar R Fun Dom Dom2}
-	       end
-	    end
-	 end
-      end
-
-      
-      fun {FsList N Fun Dom}
-	 if Dom == nil then
-	    if N>0 then {Fun}|{FsList N-1 Fun Dom}
-	    else nil
+   end
+   
+   proc {RecordDom As R Fun Dom Dom2}
+      if Dom==nil then
+	 if Dom2==nil then
+	    case As of nil then skip
+	    [] A|Ar then {Fun Dom R.A} {RecordDom Ar R Fun Dom Dom2}
 	    end
 	 else
-	    if N>0 then {Fun Dom}|{FsList N-1 Fun Dom}
-	    else nil
+	    case As of nil then skip
+	    [] A|Ar then {Fun Dom Dom2 R.A} {RecordDom Ar R Fun Dom Dom2}
 	    end
 	 end
       end
-      
-      
-      proc {FsTuple L N Fun Dom Dom2 ?T}
-	 T={MakeTuple L N} {TupleDom N T Fun Dom Dom2}
-      end
+   end
 
-      proc {FsRecord L As Fun Dom Dom2 ?R}
-	 R={MakeRecord L As} {RecordDom As R Fun Dom Dom2}
-      end
-      
-      
-      fun {FsListDecl N}
-	 {FsList N Decl nil}
-      end
-      
-      fun {FsListUpperBound N Dom}
-	 {FsList N Upper Dom}
-      end
-
-      fun {FsListLowerBound N Dom}
-	 {FsList N Lower Dom}
-      end
-
-      fun {FsListBounds N Dom1 Dom2}
-	 if N>0 then {GFSB.bounds Dom1 Dom2}|{FsListBounds N-1 Dom1 Dom2}
+   
+   fun {FsList N Fun Dom}
+      if Dom == nil then
+	 if N>0 then {Fun}|{FsList N-1 Fun Dom}
+	 else nil
+	 end
+      else
+	 if N>0 then {Fun Dom}|{FsList N-1 Fun Dom}
 	 else nil
 	 end
       end
+   end
+   
+   
+   proc {FsTuple L N Fun Dom Dom2 ?T}
+      T={MakeTuple L N} {TupleDom N T Fun Dom Dom2}
+   end
 
-      fun {FsTupleDecl L N}
-	 {FsTuple L N Decl nil nil}
+   proc {FsRecord L As Fun Dom Dom2 ?R}
+      R={MakeRecord L As} {RecordDom As R Fun Dom Dom2}
+   end
+   
+   
+   fun {FsListDecl N}
+      {FsList N Decl nil}
+   end
+   
+   fun {FsListUpperBound N Dom}
+      {FsList N Upper Dom}
+   end
+
+   fun {FsListLowerBound N Dom}
+      {FsList N Lower Dom}
+   end
+
+   fun {FsListBounds N Dom1 Dom2}
+      if N>0 then {GFSB.bounds Dom1 Dom2}|{FsListBounds N-1 Dom1 Dom2}
+      else nil
       end
+   end
 
-      fun {FsTupleUpperBound L N Dom}
-	 {FsTuple L N Upper Dom nil}
-      end
+   fun {FsTupleDecl L N}
+      {FsTuple L N Decl nil nil}
+   end
 
-      fun {FsTupleLowerBound L N Dom}
-	 {FsTuple L N Lower Dom nil}
-      end
+   fun {FsTupleUpperBound L N Dom}
+      {FsTuple L N Upper Dom nil}
+   end
 
-      fun {FsTupleBounds L N Dom1 Dom2}
-	 {FsTuple L N GFSB.bounds Dom1 Dom2}
-      end
-      
+   fun {FsTupleLowerBound L N Dom}
+      {FsTuple L N Lower Dom nil}
+   end
 
-      fun {FsRecordDecl L As}
-	 {FsRecord L As Decl nil nil}
-      end
+   fun {FsTupleBounds L N Dom1 Dom2}
+      {FsTuple L N GFSB.bounds Dom1 Dom2}
+   end
+   
 
-      fun {FsRecordUpperBound L As Dom}
-	 {FsRecord L As Upper Dom nil}
-      end
+   fun {FsRecordDecl L As}
+      {FsRecord L As Decl nil nil}
+   end
 
-      fun {FsRecordLowerBound L As Dom}
-	 {FsRecord L As Lower Dom nil}
-      end
+   fun {FsRecordUpperBound L As Dom}
+      {FsRecord L As Upper Dom nil}
+   end
 
-      fun {FsRecordBounds L As Dom1 Dom2}
-	 {FsRecord L As GFSB.bounds Dom1 Dom2}
-      end
-      
-      
-      
-      
-   in     
-      Var = var(
-	       is: GFSisVar 
-	       decl : Decl
-	       bounds : GFSB.bounds
-	       upperBound : Upper
-	       lowerBound : Lower
-	       list: '#'(decl : FsListDecl
-			 bounds : FsListBounds
-			 upperBound : FsListUpperBound
-			 lowerBound : FsListLowerBound
-			)
-	       tuple: '#'(decl: FsTupleDecl
-			  bounds : FsTupleBounds
-			  upperBound : FsTupleUpperBound
-			  lowerBound : FsTupleLowerBound
-			 )
-	       record: '#'(decl: FsRecordDecl
-			   bounds : FsRecordBounds
-			   upperBound : FsRecordUpperBound
-			   lowerBound : FsRecordLowerBound
-			  )		
-	       )
+   fun {FsRecordLowerBound L As Dom}
+      {FsRecord L As Lower Dom nil}
+   end
 
-      GFSValue = value(
+   fun {FsRecordBounds L As Dom1 Dom2}
+      {FsRecord L As GFSB.bounds Dom1 Dom2}
+   end
+   
+in     
+   Var = var(
+	    is: GFSisVar 
+	    decl : Decl
+	    bounds : GFSB.bounds
+	    upperBound : Upper
+	    lowerBound : Lower
+	    list: '#'(decl : FsListDecl
+		      bounds : FsListBounds
+		      upperBound : FsListUpperBound
+		      lowerBound : FsListLowerBound
+		     )
+	    tuple: '#'(decl: FsTupleDecl
+		       bounds : FsTupleBounds
+		       upperBound : FsTupleUpperBound
+		       lowerBound : FsTupleLowerBound
+		      )
+	    record: '#'(decl: FsRecordDecl
+			bounds : FsRecordBounds
+			upperBound : FsRecordUpperBound
+			lowerBound : FsRecordLowerBound
+		       )		
+	    )
+
+   GFSValue = value(
 		    % empty:
 % 		       {FSSetValue nil}
 % 		    universal:
 % 		       {FSSetValue FSUniversalRefl}
 % 		    singl:
 % 		       fun {$ N} {FSSetValue [N]} end
-		    %make:
-		       %GFSValueMake
+		 make:
+		    fun {$ Spec}
+		       case Spec
+		       of X#Y then {Var.bounds X Y}
+		       [] N then {Var.bounds N N}
+		       end
+		    end
 		    % is:
 % 		       FSisValue
 % 		    toString:
 % 		       FSvalueToString
-		    )
+		 )
 
-      GFSReified = reified(
+   GFSReified = reified(
 		     % isIn:
 % 			     FSIsInReif
 % 			  areIn:
@@ -332,8 +385,8 @@ in
 % 				= {FD.list {Length WList} 0#1}
 % 				= {Map WList fun {$ E} {FSIsInReif E S} end}
 % 			     end
-		      include:
-			 ReifiedInclude
+		   include:
+		      ReifiedInclude
 			  % bounds:
 % 			     FSP.'reified.bounds'
 % 			  boundsN:
@@ -345,255 +398,282 @@ in
 % 			     end
 % 			  equal:
 % 			     FSEqualReif
-		      )
-      
-      
-      proc{Dom Sc}
-	 W = {Record.width Sc}
-      in
-	 case W
-	 of 3 then
-	    {GFSP.gfs_dom_3 Sc.1 Sc.2 Sc.3}
-	 []  4 then
-	    {GFSP.gfs_dom_4 Sc.1 Sc.2 Sc.3 Sc.4}
-	 []  5 then
-	    {GFSP.gfs_dom_5 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5}
-	 else
-	    raise malformed('Dom constraint post') end
-	 end
-      end
-      
-      proc {DisjointN Mv}
-	 for I in 1..{List.lenght Mv} do
-	    for J in I.. {List.lenght Mv} do
-	       {GFSP.disjoint {List.nth Mv I} {List.nth Mv I}}
-	    end
-	 end
-      end
-      
-      proc {DistinctN Mv}
-	 for I in 1..{List.lenght Mv} do
-	    for J in I.. {List.lenght Mv} do
-	       {GFSP.distinct {List.nth Mv I} {List.nth Mv I}}
-	    end
-	 end
-      end
-      
-      proc {Partition Mv M}
-	 {DistinctN Mv}
-	 {UnionN Mv M}
-      end
-
-      fun {IsIn Var Val}
-	 Bool = {GFB.init}
-	 {GFB.isIn Var Val Bool}
-	 Var
-      end      
-
-      proc{Rel Sc}
-	 W = {Record.width Sc}
-      in
-	 case W
-	 of 3 then
-	    {GFSP.gfs_rel_3 Sc.1 Sc.2 Sc.3}
-	 []  4 then
-	    {GFSP.gfs_rel_4 Sc.1 Sc.2 Sc.3 Sc.4}
-	 []  5 then
-	    {GFSP.gfs_rel_5 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5}
-	 else
-	    raise malformed('Rel constraint post') end
-	 end
-      end
-      
-      proc{Sequence Sc}
-	 W = {Record.width Sc}
-      in
-	 case W
-	 of 1 then
-	    {GFSP.gfs_sequence_1 Sc.1}
-	 else
-	    raise malformed('Sequence constraint post') end
-	 end
-      end
-
-      proc{SequentialUnion Sc}
-	 W = {Record.width Sc}
-      in
-	 case W
-	 of 2 then
-	    {GFSP.gfs_sequentialUnion_2 Sc.1 Sc.2}
-	 else
-	    raise malformed('SequentialUnion constraint post') end
-	 end
-      end
-
-      proc{AtMostOne Sc}
-	 W = {Record.width Sc}
-      in
-	 case W
-	 of 2 then
-	    {GFSP.gfs_atMostOne_2 Sc.1 Sc.2}
-	 else
-	    raise malformed('AtMostOne constraint post') end
-	 end
-      end
-
-      proc{Min Sc}
-	 W = {Record.width Sc}
-      in
-	 case W
-	 of 2 then
-	    {GFSP.gfs_min_2 Sc.1 Sc.2}
-	 else
-	    raise malformed('Min constraint post') end
-	 end
-      end
-
-      proc{Max Sc}
-	 W = {Record.width Sc}
-      in
-	 case W
-	 of 2 then
-	    {GFSP.gfs_max_2 Sc.1 Sc.2}
-	 else
-	    raise malformed('Max constraint post') end
-	 end
-      end
-
-      proc{Match Sc}
-	 W = {Record.width Sc}
-      in
-	 case W
-	 of 2 then
-	    {GFSP.gfs_match_2 Sc.1 Sc.2}
-	 else
-	    raise malformed('Match constraint post') end
-	 end
-      end
-
-      proc{Channel Sc}
-	 W = {Record.width Sc}
-      in
-	 case W
-	 of 2 then
-	    {GFSP.gfs_channel_2 Sc.1 Sc.2}
-	 else
-	    raise malformed('Channel constraint post') end
-	 end
-      end
-      
-      proc{Card Sc}
-	 W = {Record.width Sc}
-      in
-	 case W
-	 of 2 then
-	    {GFSP.gfs_cardinality_2 Sc.1 Sc.2}
-	 else
-	    raise malformed('Card constraint post') end
-	 end
-      end
-      
-      proc{CardRange Sc}
-	 W = {Record.width Sc}
-      in
-	 case W
-	 of 3 then
-	    {GFSP.gfs_cardinality_3 Sc.1 Sc.2 Sc.3}
-	 else
-	    raise malformed('CardRange constraint post') end
-	 end
-      end  
-      
-      proc{Weights Sc}
-	 W = {Record.width Sc}
-      in
-	 case W
-	 of 4 then
-	    {GFSP.gfs_weights_4 Sc.1 Sc.2 Sc.3 Sc.4}
-	 else
-	    raise malformed('Weights constraint post') end
-	 end
-      end
-      
-      proc{SelectUnion Sc}
-	 W = {Record.width Sc}
-      in
-	 case W
-	 of 3 then
-	    {GFSP.gfs_selectUnion_3 Sc.1 Sc.2 Sc.3}
-	 else
-	    raise malformed('SelectUnion constraint post') end
-	 end
-      end
-
-      proc{SelectInter Sc}
-	 W = {Record.width Sc}
-      in
-	 case W
-	 of 3 then
-	    {GFSP.gfs_selectInter_3 Sc.1 Sc.2 Sc.3}
-	 else
-	    raise malformed('SelectInter constraint post') end
-	 end
-      end
-
-      proc{SelectInterIn Sc}
-	 W = {Record.width Sc}
-      in
-	 case W
-	 of 4 then
-	    {GFSP.gfs_selectInterIn_4 Sc.1 Sc.2 Sc.3 Sc.4}
-	 else
-	    raise malformed('SelectInterIn constraint post') end
-	 end
-      end
-
-      proc{SelectDisjoint Sc}
-	 W = {Record.width Sc}
-      in
-	 case W
-	 of 2 then
-	    {GFSP.gfs_selectDisjoint_2 Sc.1 Sc.2}
-	 else
-	    raise malformed('SelectDisjoint constraint post') end
-	 end
-      end
-
-      proc{SelectSet Sc}
-	 W = {Record.width Sc}
-      in
-	 case W
-	 of 3 then
-	    {GFSP.gfs_selectSet_3 Sc.1 Sc.2 Sc.3}
-	 else
-	    raise malformed('SelectSet constraint post') end
-	 end
-      end
-
-      proc{ReifiedInclude Sc B}
-	 W = {Record.width Sc}
-      in
-	 case W
-	 of 2 then
-	    {GFSP.gfs_reifiedInclude_3 Sc.1 Sc.2 B}
-	 else
-	    raise malformed('ReifiedInclude constraint post') end
-	 end
-      end
-
-      
-   end   
-
-%    local
-%       \insert GeSetVarDist
-%    in
-%       FsDistribute = SetVarDistribute
-%    end
+		   )
    
-   % local
-%       \insert GeSetVarDistBR
-%    in
-%       FsDistributeBR = GFSDistribute
-%    end
+   GFSReflect = reflect(
+		   unknown:
+		      GFSGetUnknown
+		   unknownList:
+		      GFSGetUnknownList
+		   lowerBound:
+		      GFSGetGlb
+		   lowerBoundList:
+		      GFSGetGlbList
+		   upperBound:
+		      GFSGetLub
+		   upperBoundList:
+		      GFSGetLubList
+		   card:
+		      fun {$ S}
+                         % FIXME: each value is computed twice
+			 if {GFSGetNumOfGlb S}=={GFSGetNumOfLub S} then
+			    {GFSGetNumOfGlb S}
+			 else
+			    {GFSGetNumOfGlb S}#{GFSGetNumOfLub S}
+			 end
+		      end
+		   cardOf:
+		      card(
+			 lowerBound:
+			    GFSGetNumOfGlb
+			 upperBound:
+			    GFSGetNumOfLub
+			 unknown:
+			    GFSGetNumOfUnknown
+			 )
+		   )
    
-end
+   proc{Dom Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 3 then
+	 {GFSP.gfs_dom_3 Sc.1 Sc.2 Sc.3}
+      []  4 then
+	 {GFSP.gfs_dom_4 Sc.1 Sc.2 Sc.3 Sc.4}
+      []  5 then
+	 {GFSP.gfs_dom_5 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5}
+      else
+	 raise malformed('Dom constraint post') end
+      end
+   end
+   
+   proc {DisjointN Mv}
+      for I in 1..{List.lenght Mv} do
+	 for J in I.. {List.lenght Mv} do
+	    {GFSP.disjoint {List.nth Mv I} {List.nth Mv I}}
+	 end
+      end
+   end
+   
+   proc {DistinctN Mv}
+      for I in 1..{List.lenght Mv} do
+	 for J in I.. {List.lenght Mv} do
+	    {GFSP.distinct {List.nth Mv I} {List.nth Mv I}}
+	 end
+      end
+   end
+   
+   proc {Partition Mv M}
+      {DistinctN Mv}
+      {UnionN Mv M}
+   end
+
+   fun {IsIn Var Val}
+      Bool = {GFB.init}
+      {GFB.isIn Var Val Bool}
+      Var
+   end      
+
+   proc{Rel Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 3 then
+	 {GFSP.gfs_rel_3 Sc.1 Sc.2 Sc.3}
+      []  4 then
+	 {GFSP.gfs_rel_4 Sc.1 Sc.2 Sc.3 Sc.4}
+      []  5 then
+	 {GFSP.gfs_rel_5 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5}
+      else
+	 raise malformed('Rel constraint post') end
+      end
+   end
+   
+   proc{Sequence Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 1 then
+	 {GFSP.gfs_sequence_1 Sc.1}
+      else
+	 raise malformed('Sequence constraint post') end
+      end
+   end
+   
+   proc{SequentialUnion Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 2 then
+	 {GFSP.gfs_sequentialUnion_2 Sc.1 Sc.2}
+      else
+	 raise malformed('SequentialUnion constraint post') end
+      end
+   end
+
+   proc{AtMostOne Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 2 then
+	 {GFSP.gfs_atMostOne_2 Sc.1 Sc.2}
+      else
+	 raise malformed('AtMostOne constraint post') end
+      end
+   end
+
+   proc{Min Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 2 then
+	 {GFSP.gfs_min_2 Sc.1 Sc.2}
+      else
+	 raise malformed('Min constraint post') end
+      end
+   end
+   
+   proc{Max Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 2 then
+	 {GFSP.gfs_max_2 Sc.1 Sc.2}
+      else
+	 raise malformed('Max constraint post') end
+      end
+   end
+   
+   proc{Match Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 2 then
+	 {GFSP.gfs_match_2 Sc.1 Sc.2}
+      else
+	 raise malformed('Match constraint post') end
+      end
+   end
+   
+   proc{Channel Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 2 then
+	 {GFSP.gfs_channel_2 Sc.1 Sc.2}
+      else
+	 raise malformed('Channel constraint post') end
+      end
+   end
+
+   proc{Card Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 2 then
+	 {GFSP.gfs_cardinality_2 Sc.1 Sc.2}
+      else
+	 raise malformed('Card constraint post') end
+      end
+   end
+
+   proc{CardRange Sc}
+      %%% for mozart's backward compatibility,
+      %%% here we prefer the call to CardRange as in {GFS.cardRange +I +J *S}
+      %%% however gecode puts the set as the first parameter, i.e.
+      %%% Gecode::cardinality (Space *home, SetVar x, unsigned int i, unsigned int j)
+      W = {Record.width Sc}
+   in
+      case W
+      of 3 then
+	 {GFSP.gfs_cardinality_3 Sc.1 Sc.2 Sc.3}
+      else
+	 raise malformed('CardRange constraint post') end
+      end
+   end  
+      
+   proc{Weights Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 4 then
+	 {GFSP.gfs_weights_4 Sc.1 Sc.2 Sc.3 Sc.4}
+      else
+	 raise malformed('Weights constraint post') end
+      end
+   end
+   
+   proc{SelectUnion Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 3 then
+	 {GFSP.gfs_selectUnion_3 Sc.1 Sc.2 Sc.3}
+      else
+	 raise malformed('SelectUnion constraint post') end
+      end
+   end
+      
+   proc{SelectInter Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 3 then
+	 {GFSP.gfs_selectInter_3 Sc.1 Sc.2 Sc.3}
+      else
+	 raise malformed('SelectInter constraint post') end
+      end
+   end
+   
+   proc{SelectInterIn Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 4 then
+	 {GFSP.gfs_selectInterIn_4 Sc.1 Sc.2 Sc.3 Sc.4}
+      else
+	 raise malformed('SelectInterIn constraint post') end
+      end
+   end
+   
+   proc{SelectDisjoint Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 2 then
+	 {GFSP.gfs_selectDisjoint_2 Sc.1 Sc.2}
+      else
+	 raise malformed('SelectDisjoint constraint post') end
+      end
+   end
+   
+   proc{SelectSet Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 3 then
+	 {GFSP.gfs_selectSet_3 Sc.1 Sc.2 Sc.3}
+      else
+	 raise malformed('SelectSet constraint post') end
+      end
+   end
+   
+   proc {ReifiedInclude Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 3 then
+	 {GFSP.gfs_reifiedInclude_3 Sc.1 Sc.2 Sc.3}
+      else
+	 raise malformed('ReifiedInclude constraint post') end
+      end
+   end
+   
+   %local
+   %   \insert GeSetVarDist
+   %in
+   %   GFSDistribute = GeSetVarDistribute
+   %end
+   
+end   
