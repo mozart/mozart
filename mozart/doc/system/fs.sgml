@@ -22,7 +22,15 @@
   -->
 
 <Chapter id="chapter.fs">
-  <Title/Finite Set Constraints: <<FS>>/
+  <Title/Finite Set Constraints: <<GFS>>/
+
+<p>
+The procedures in this module have the following properties. 
+
+<p>
+To get an unified call interface for propagators, all propagator
+posting functions take only a record as argument. This record
+contains all the parameters needed to call the propagator.
 
 <p>
 We use the following notation for operations and relations on sets.  We
@@ -45,6 +53,26 @@ specified by ?{Spec} as ?{M} = <math/
 <math/\conv(\mbox{\codeinline{oz}{[1\#3 5 7]}})/ denotes <math/\{1,2,3,5,7\}/. Further, for
 every set <<S>> we denote with <math/{D} = \convinv({S})/ a set
 description ?{D} such that <math/\conv({\tt D}) = {\tt S}/.
+
+<para><title/Relation symbols/
+There are propagator posting procedures that take an argument <<Rt>> to denote 
+an arithmetic relation <math/\sim_{Rt}/. The possible values and the associated 
+relations are summarized below. 
+<table>
+<tr><td/<<GFS.rt.'=:'>>/ <td> Equality (<math>=</math>)</td></tr>
+<tr><td/<<GFS.rt.'\\=:'>>/ <td> Disequality (<math>\neq</math>)</td></tr>
+<tr><td/<<GFS.rt.'<:'>>/ <td> SubSet (<math>\leq</math>)</td></tr>
+<tr><td/<<GFS.rt.'>:'>>/ <td> SuperSet (<math><</math>)</td></tr>
+<tr><td/<<GFS.rt.'||:'>>/ <td> Disjoin ( <math>\|</math> )</td></tr>
+<!--<tr><td/<<GFS.rt.'^:'>>/ <td> Complement (<math>^</math>)</td></tr>-->
+<tr><td/<<GFS.rt.'^:'>>/ <td> Complement </td></tr>
+</table>
+
+<para><title/Lazy propagation/
+When a propagator is posted in a computation space it does not performs any
+domain pruning. This behavior allows the implementation of batch recomputation 
+enabled search engines (REF paper). Lazy propagation is only acheved in sub-spaces, it is, when on toplevel propagation is performe eagerly. To perform propagation in a sub-space you have to ask the space to do so by calling <<Space.ask>>.
+
 <p>
 For more information on the finite set constraint system
 see&nbsp;<ptr to=MuellerMueller.WLP.97>.
@@ -55,105 +83,105 @@ see&nbsp;<ptr to=MuellerMueller.WLP.97>.
 <list>
 
 <entry>
-<index class=module/FS<and>inf<and>id/
+<index class=module/GFS<and>inf<and>id/
 <<inf>>
 <synopsis>
-<<<FS.inf
+<<<GFS.inf
 >>>
 <item>
 An integer constant that denotes the smallest possible element of a
-set.  Its value is implementation-dependent.  In Mozart <<FS.inf>> is
-0.
+set. Constant value: ~2 147 483 646.
 
 <entry>
-<index class=module/FS<and>sup<and>id/
+<index class=module/GFS<and>sup<and>id/
 <<sup>>
 <synopsis>
-<<<FS.sup
+<<<GFS.sup
 >>>
 <item>
 An integer constant that denotes the greatest possible element of a
-set.  Its value is implementation-dependent.  In Mozart <<FS.sup>> is
-134 217 726.
+set. Constant value: ~2 147 483 646.
 
 <entry>
-<index class=module/FS<and>compl<and>id/
+<index class=module/GFS<and>compl<and>id/
 <<compl>>
 <synopsis>
-<<<{FS.compl $M1 $M2}
+<<<{GFS.compl $M1 $M2}
 >>>
 <item>
-<math/\codeinline{oz}{M2} = \{\codeinline{oz}{FS.inf},\ldots,\codeinline{oz}{FS.sup}\}\setminus \codeinline{oz}{M1}/
+<math/\codeinline{oz}{M2} = \{\codeinline{oz}{GFS.inf},\ldots,\codeinline{oz}{GFS.sup}\}\setminus \codeinline{oz}{M1}/
 
 <entry>
-<index class=module/FS<and>complIn<and>id/
+<index class=module/GFS<and>complIn<and>id/
 <<complIn>>
 <synopsis>
-<<<{FS.complIn $M1 $M2 $M3}
+<<<{GFS.complIn $M1 $M2 $M3}
 >>>
 <item>
 <math/\codeinline{oz}{M3} = \codeinline{oz}{M2} \setminus \codeinline{oz}{M1}/
 
 
 <entry>
-<index class=module/FS<and>include<and>id/
+<index class=module/GFS<and>include<and>id/
 <<include>>
 <synopsis>
-<<<{FS.include +D *M}
+<<<{GFS.include +D *M}
 >>>
 <item>
-<math/\codeinline{oz}{D} \in \codeinline{oz}{M} \wedge \codeinline{oz}{FS.inf} \le \codeinline{oz}{D} \le \codeinline{oz}{FS.sup}/
+<math/\codeinline{oz}{D} \in \codeinline{oz}{M} \wedge \codeinline{oz}{GFS.inf} \le \codeinline{oz}{D} \le \codeinline{oz}{GFS.sup}/
 
 <entry>
-<index class=module/FS<and>exclude<and>id/
+<index class=module/GFS<and>exclude<and>id/
 <<exclude>>
 <synopsis>
-<<<{FS.exclude +D *M}
+<<<{GFS.exclude +D *M}
 >>>
 <item>
 <math/\codeinline{oz}{D} \notin \codeinline{oz}{M}/
 
 <entry>
-<index class=module/FS<and>card<and>id/
+<index class=module/GFS<and>card<and>id/
 <<card>>
 <synopsis>
-<<<{FS.card *M ?D}
+<<<{GFS.card *M ?D}
 >>>
 <item>
 <math/\codeinline{oz}{D} = \# {M}/
 
 <entry>
-<index class=module/FS<and>cardRange<and>id/
+<index class=module/GFS<and>cardRange<and>id/
 <<cardRange>>
 <synopsis>
-<<<{FS.cardRange +I1 +I2 *M}
+<<<{GFS.cardRange +I1 +I2 *M}
 >>>
 <item>
 <math/\codeinline{oz}{I1} \le \# {M} \le {I2}/
 
 <entry>
-<index class=module/FS<and>isIn<and>id/
+<index class=module/GFS<and>isIn<and>id/
 <<isIn>>
 <synopsis>
-<<<{FS.isIn +I *M ?B}
+<<<{GFS.isIn +I *M ?B}
 >>>
 <item>
 <math/(\codeinline{oz}{E} \in \codeinline{oz}{M}) \rightarrow \codeinline{oz}{B}/
 
-<entry>
-<index class=module/FS<and>makeWeights<and>id/
+<!--<entry>
+<index class=module/GFS<and>makeWeights<and>id/
 <<makeWeights>>
 <synopsis>
-<<<{FS.makeWeights +SpecW ?P}
+<<<{GFS.makeWeights +SpecW ?P}
 >>>
 <item>
 Returns a procedure with signature <<{P +I1 ?I2>>}. This procedure
 maps an element to a weight according to the weight description passed
-to <<FS.makeWeights>>.
+to <<GFS.makeWeights>>. -->
+
 </list>
 </section>
 
 <!-- ********************************************************************** -->
+<!--
 <section id="section.fs.integers"><title/Sets over Integers/
 <p>
 <list>
@@ -232,107 +260,107 @@ elements of <<M>> in ascending order.
 elements of <<M1>> are smaller than any element of <<M2>>.
 </list>
 </section>
-
+-->
 <!-- ********************************************************************** -->
 <section id="section.fs.standard"><title/Standard Propagators/
 <p>
 <list>
 
 <entry>
-<index class=module/FS<and>diff<and>id/
+<index class=module/GFS<and>diff<and>id/
 <<diff>>
 <synopsis>
-<<<{FS.diff $M1 $M2 $M3}
+<<<{GFS.diff $M1 $M2 $M3}
 >>>
 <item>
 <math/\codeinline{oz}{M3} = \codeinline{oz}{M1} \setminus \codeinline{oz}{M2}/
 
 <entry>
-<index class=module/FS<and>intersect<and>id/
+<index class=module/GFS<and>intersect<and>id/
 <<intersect>>
 <synopsis>
-<<<{FS.intersect $M1 $M2 $M3}
+<<<{GFS.intersect $M1 $M2 $M3}
 >>>
 <item>
 <math/\codeinline{oz}{M3} = \codeinline{oz}{M1} \cap \codeinline{oz}{M2}/
 
 <entry>
-<index class=module/FS<and>intersectN<and>id/
+<index class=module/GFS<and>intersectN<and>id/
 <<intersectN>>
 <synopsis>
-<<<{FS.intersectN *Mv *M}
+<<<{GFS.intersectN *Mv *M}
 >>>
 <item>
 <math/\codeinline{oz}{M} = \bigcap \{ \codeinline{oz}{M'} \mid \codeinline{oz}{M'} \in \codeinline{oz}{Mv}\}/
 
 <entry>
-<index class=module/FS<and>union<and>id/
+<index class=module/GFS<and>union<and>id/
 <<union>>
 <synopsis>
-<<<{FS.union $M1 $M2 $M3}
+<<<{GFS.union $M1 $M2 $M3}
 >>>
 <item>
 <math/\codeinline{oz}{M3} = \codeinline{oz}{M1} \cup \codeinline{oz}{M2}/
 
 <entry>
-<index class=module/FS<and>unionN<and>id/
+<index class=module/GFS<and>unionN<and>id/
 <<unionN>>
 <synopsis>
-<<<{FS.unionN $Mv $M}
+<<<{GFS.unionN $Mv $M}
 >>>
 <item>
 <math/\codeinline{oz}{M} = \bigcup \{ \codeinline{oz}{S} \mid \codeinline{oz}{S} \in \codeinline{oz}{Mv}\}/
 
 <entry>
-<index class=module/FS<and>subset<and>id/
+<index class=module/GFS<and>subset<and>id/
 <<subset>>
 <synopsis>
-<<<{FS.subset $M1 $M2}
+<<<{GFS.subset $M1 $M2}
 >>>
 <item>
 <math/\codeinline{oz}{M1} \subseteq \codeinline{oz}{M2}/
 
 <entry>
-<index class=module/FS<and>disjoint<and>id/
+<index class=module/GFS<and>disjoint<and>id/
 <<disjoint>>
 <synopsis>
-<<<{FS.disjoint $M1 $M2}
+<<<{GFS.disjoint $M1 $M2}
 >>>
 <item>
 <math/\codeinline{oz}{M1} \| \codeinline{oz}{M2}/
 
 <entry>
-<index class=module/FS<and>disjointN<and>id/
+<index class=module/GFS<and>disjointN<and>id/
 <<disjointN>>
 <synopsis>
-<<<{FS.disjointN *Mv}
+<<<{GFS.disjointN *Mv}
 >>>
 <item>
 All elements of the vector ?{Mv} are pairwise disjoint. 
 
 <entry>
-<index class=module/FS<and>distinct<and>id/
+<index class=module/GFS<and>distinct<and>id/
 <<distinct>>
 <synopsis>
-<<<{FS.distinct $M1 $M2}
+<<<{GFS.distinct $M1 $M2}
 >>>
 <item>
 <math/\codeinline{oz}{M1} \neq \codeinline{oz}{M2}/
 
 <entry>
-<index class=module/FS<and>distinctN<and>id/
+<index class=module/GFS<and>distinctN<and>id/
 <<distinctN>>
 <synopsis>
-<<<{FS.distinctN *MV}
+<<<{GFS.distinctN *MV}
 >>>
 <item>
 All elements of the vector ?{Mv} are pairwise distinct. 
 
 <entry>
-<index class=module/FS<and>partition<and>id/
+<index class=module/GFS<and>partition<and>id/
 <<partition>>
 <synopsis>
-<<<{FS.partition $MV $M}
+<<<{GFS.partition $MV $M}
 >>>
 <item>
 ?{Mv} is a partition of ?{M}; that is, 
@@ -347,10 +375,10 @@ union yields ?{M}.
 <list>
 
 <entry>
-<index class=module/FS<and>var<and>is/
+<index class=module/GFS<and>var<and>is/
 <<var.is>>
 <synopsis>
-<<<{FS.var.is +M ?B}
+<<<{GFS.var.is +M ?B}
 >>>
 <item>
 Tests whether <<M>> is a finite set variable.
@@ -360,37 +388,37 @@ Tests whether <<M>> is a finite set variable.
 <list>
 
 <entry>
-<index class=module/FS<and>var<and>decl/
+<index class=module/GFS<and>var<and>decl/
 <<var.decl>>
 <synopsis>
-<<<{FS.var.decl ?M}
+<<<{GFS.var.decl ?M}
 >>>
 <item>
 <math/\emptyset \subseteq {\tt M} \subseteq \uniset/
 
 <entry>
-<index class=module/FS<and>var<and>upperBound/
+<index class=module/GFS<and>var<and>upperBound/
 <<var.upperBound>>
 <synopsis>
-<<<{FS.var.upperBound +Spec ?M}
+<<<{GFS.var.upperBound +Spec ?M}
 >>>
 <item>
 <math/\emptyset \subseteq \codeinline{oz}{M} \subseteq \conv(\codeinline{oz}{Spec})/
 
 <entry>
-<index class=module/FS<and>var<and>lowerBound/
+<index class=module/GFS<and>var<and>lowerBound/
 <<var.lowerBound>>
 <synopsis>
-<<<{FS.var.lowerBound +Spec ?M}
+<<<{GFS.var.lowerBound +Spec ?M}
 >>>
 <item>
 <math/\conv({\tt Spec}) \subseteq \codeinline{oz}{M} \subseteq \uniset/
 
 <entry>
-<index class=module/FS<and>var<and>bounds/
+<index class=module/GFS<and>var<and>bounds/
 <<var.bounds>>
 <synopsis>
-<<<{FS.var.bounds +Spec1 +Spec2 ?M}
+<<<{GFS.var.bounds +Spec1 +Spec2 ?M}
 >>>
 <item>
 <math/\conv({\tt Spec1}) \subseteq {\tt M} \subseteq \conv({\tt Spec2})/
@@ -404,20 +432,20 @@ according to the following specifications.
 <list>
 
 <entry>
-<index class=module/FS<and>var<and>list<and>decl/
+<index class=module/GFS<and>var<and>list<and>decl/
 <<var.list.decl>>
 <synopsis>
-<<<{FS.var.list.decl +I ?Ms}
+<<<{GFS.var.list.decl +I ?Ms}
 >>>
 <item>
 For all elements <<M>> of <<Ms>>: 
 <math/\emptyset \subseteq \codeinline{oz}{M} \subseteq \uniset/
 
 <entry>
-<index class=module/FS<and>var<and>list<and>upperBound/
+<index class=module/GFS<and>var<and>list<and>upperBound/
 <<var.list.upperBound>>
 <synopsis>
-<<<{FS.var.list.upperBound +I +Spec ?Ms}
+<<<{GFS.var.list.upperBound +I +Spec ?Ms}
 >>>
 <item>
 For all elements <<M>> of <<Ms>>: 
@@ -425,20 +453,20 @@ For all elements <<M>> of <<Ms>>:
 \conv({\tt Spec})/
 
 <entry>
-<index class=module/FS<and>var<and>list<and>lowerBound/
+<index class=module/GFS<and>var<and>list<and>lowerBound/
 <<var.list.lowerBound>>
 <synopsis>
-<<<{FS.var.list.lowerBound +I +Spec ?Ms}
+<<<{GFS.var.list.lowerBound +I +Spec ?Ms}
 >>>
 <item>
 For all elements <<M>> of <<Ms>>: 
 <math/\conv(\codeinline{oz}{Spec}) \subseteq \codeinline{oz}{M}\subseteq \uniset/
 
 <entry>
-<index class=module/FS<and>var<and>list<and>bounds/
+<index class=module/GFS<and>var<and>list<and>bounds/
 <<var.list.bounds>>
 <synopsis>
-<<<{FS.var.list.bounds +I +Spec1 +Spec2 ?Ms}
+<<<{GFS.var.list.bounds +I +Spec1 +Spec2 ?Ms}
 >>>
 <item>
 For all elements <<M>> of <<Ms>>: 
@@ -446,6 +474,7 @@ For all elements <<M>> of <<Ms>>:
 {\tt M}\subseteq \conv({\tt Spec2})/
 </list>
 </subsection>
+
 <subsection><title/Declaring a Tuple of Variables/
 <p>
 The following functions return a tuple <<Mt>> with label <<L>>
@@ -454,10 +483,10 @@ interval variables according to the following specifications.
 <list>
 
 <entry>
-<index class=module/FS<and>var<and>tuple<and>decl/
+<index class=module/GFS<and>var<and>tuple<and>decl/
 <<var.tuple.decl>>
 <synopsis>
-<<<{FS.var.tuple.decl +L +I ?Mt}
+<<<{GFS.var.tuple.decl +L +I ?Mt}
 >>>
 <item>
 For all elements <<M>> of <<Mt>>: 
@@ -465,10 +494,10 @@ For all elements <<M>> of <<Mt>>:
 \uniset/
 
 <entry>
-<index class=module/FS<and>var<and>tuple<and>upperBound/
+<index class=module/GFS<and>var<and>tuple<and>upperBound/
 <<var.tuple.upperBound>>
 <synopsis>
-<<<{FS.var.tuple.upperBound +L +I +Spec ?Mt}
+<<<{GFS.var.tuple.upperBound +L +I +Spec ?Mt}
 >>>
 <item>
 For all elements <<M>> of <<Mt>>: 
@@ -476,10 +505,10 @@ For all elements <<M>> of <<Mt>>:
 \conv({\tt Spec})/
 
 <entry>
-<index class=module/FS<and>var<and>tuple<and>lowerBound/
+<index class=module/GFS<and>var<and>tuple<and>lowerBound/
 <<var.tuple.lowerBound>>
 <synopsis>
-<<<{FS.var.tuple.lowerBound +L +I +Spec ?Mt}
+<<<{GFS.var.tuple.lowerBound +L +I +Spec ?Mt}
 >>>
 <item>
 For all elements <<M>> of <<Mt>>: 
@@ -487,16 +516,17 @@ For all elements <<M>> of <<Mt>>:
 \codeinline{oz}{M}\subseteq \uniset/
 
 <entry>
-<index class=module/FS<and>var<and>tuple<and>bounds/
+<index class=module/GFS<and>var<and>tuple<and>bounds/
 <<var.tuple.bounds>>
 <synopsis>
-<<<{FS.var.tuple.bounds +L +M +Spec1 +Spec2 ?Mt}
+<<<{GFS.var.tuple.bounds +L +M +Spec1 +Spec2 ?Mt}
 >>>
 <item>
 For all elements <<M>> of <<Mt>>: <math/\conv({\tt Spec1})\subseteq
 {\tt M}\subseteq \conv({\tt Spec2})/
 </list>
 </subsection>
+
 <subsection><title/Declaring a Record of Variables/
 <p>
 The following functions return a record <<Mr>> with label <<L>>
@@ -505,10 +535,10 @@ interval variables according to the following specifications.
 <list>
 
 <entry>
-<index class=module/FS<and>var<and>record<and>decl/
+<index class=module/GFS<and>var<and>record<and>decl/
 <<var.record.decl>>
 <synopsis>
-<<<{FS.var.record.decl +L +Ls ?Mr}
+<<<{GFS.var.record.decl +L +Ls ?Mr}
 >>>
 <item>
 For all elements <<M>> of <<Mr>>: 
@@ -516,10 +546,10 @@ For all elements <<M>> of <<Mr>>:
 \uniset/
 
 <entry>
-<index class=module/FS<and>var<and>record<and>upperBound/
+<index class=module/GFS<and>var<and>record<and>upperBound/
 <<var.record.upperBound>>
 <synopsis>
-<<<{FS.var.record.upperBound +L +Ls +Spec ?Mr}
+<<<{GFS.var.record.upperBound +L +Ls +Spec ?Mr}
 >>>
 <item>
 For all elements <<M>> of <<Mr>>: 
@@ -527,10 +557,10 @@ For all elements <<M>> of <<Mr>>:
 \conv({\tt Spec})/
 
 <entry>
-<index class=module/FS<and>var<and>record<and>lowerBound/
+<index class=module/GFS<and>var<and>record<and>lowerBound/
 <<var.record.lowerBound>>
 <synopsis>
-<<<{FS.var.record.lowerBound +L +Ls +Spec ?Mr}
+<<<{GFS.var.record.lowerBound +L +Ls +Spec ?Mr}
 >>>
 <item>
 For all elements <<M>> of <<Mr>>: 
@@ -538,10 +568,10 @@ For all elements <<M>> of <<Mr>>:
 \codeinline{oz}{M}\subseteq \uniset/
 
 <entry>
-<index class=module/FS<and>var<and>record<and>bounds/
+<index class=module/GFS<and>var<and>record<and>bounds/
 <<var.record.bounds>>
 <synopsis>
-<<<{FS.var.record.bounds +L +Ls +Spec1 +Spec2 ?Mr}
+<<<{GFS.var.record.bounds +L +Ls +Spec1 +Spec2 ?Mr}
 >>>
 <item>
 For all elements <<M>> of <<Mr>>: <math/{\tt M} \in
@@ -554,7 +584,7 @@ For all elements <<M>> of <<Mr>>: <math/{\tt M} \in
 <section id="section.fs.consts"><title/Finite Set Constants/
 <p>
 <list>
-
+<!--
 <entry>
 <index class=module/FS<and>value<and>empty/
 <<value.empty>>
@@ -581,16 +611,16 @@ Denotes <math/\uniset/.
 >>>
 <item>
 <math/{\tt M} = \{{\tt I}\}/
-
+-->
 <entry>
-<index class=module/FS<and>value<and>make/
+<index class=module/GFS<and>value<and>make/
 <<value.make>>
 <synopsis>
-<<<{FS.value.make +Spec ?M}
+<<<{GFS.value.make +Spec ?M}
 >>>
 <item>
 <math/{\tt M} = \conv({\tt Spec})/
-
+<!--
 <entry>
 <index class=module/FS<and>value<and>is/
 <<value.is>>
@@ -608,14 +638,362 @@ Tests whether <<M>> is a finite set value or not.
 >>>
 <item>
 Converts <<M>> to a string and returns it in <<M>>.
+-->
 </list>
 </section>
 
 <!-- ********************************************************************** -->
+<section id="section.fs.dom"><title/Domain constraints/
+<p>
+
+<list>
+<entry>
+<index class=module/GFS<and>dom/
+<<dom>>
+<synopsis>
+<<<
+{GFS.dom ?*{PE}}
+>>>
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(X Rt C)>>: Propagates <math> X \sim_{Rt} C </math>.
+<item> <<post(X Rt L U)>>: Propagates <math> X \sim_{Rt} \{L,...,U\} </math>.
+<item> <<post(X Rt S)>>: Propagates <math> X \sim_{Rt} S </math>, being <<S>> a domain 
+specification.
+<item> <<post(X Rt C B)>>:  Post propagator for <math> (X \sim_{Rt} C) \Leftrightarrow B </math>, 
+being <<B>> a constraint boolean variable.
+<item> <<post(X Rt L U B)>>:  Post propagator for <math> (X \sim_{Rt} \{L,...,U\}) \Leftrightarrow B </math>,
+being <<B>> a constraint boolean variable.
+<item> <<post(X Rt S B)>>:  Post propagator for <math> (X \sim_{Rt} S) \Leftrightarrow B </math>, 
+being <<S>> a domain specification and <<B>> a constraint boolean variable.
+<item> <<post(X L U)>>: Post propagator for <math> L\leq X \leq U </math>. 
+</list>
+</list>
+</section>
+
+<!-- ********************************************************************** -->
+
+<section id="section.fs.rel"><title/Relation constraints/
+<p>
+There are propagator posting procedures that take an argument <<So>> to denote 
+an operation/relation on sets. The possible operators are:
+<table>
+<tr><td/<<GFS.so.'unionOP'>>/ <td> Union </td></tr>
+<tr><td/<<GFS.so.'disjointOP'>>/ <td> Disjoint Union </td></tr>
+<tr><td/<<GFS.so.'intersectOP'>>/ <td> Intersection </td></tr>
+<tr><td/<<GFS.so.'differenceOP'>>/ <td> Difference </td></tr>
+</table>
+<p>
+
+<list>
+<entry>
+<index class=module/GFS<and>rel/
+<<rel>>
+<synopsis>
+<<<
+{GFS.rel ?*{PE}}
+>>>
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(X Rt Y)>>: Post propagator for <math> X \sim_{Rt} Y </math>.
+<item> <<post(X Rt Y B)>>:  Post propagator for <math> (X \sim_{Rt} Y) \Leftrightarrow B </math>, 
+being <<B>> a constraint boolean variable.
+<item> <<post(X Rt IV)>>: Post propagator for <math> X \sim_{Rt} IV </math>, 
+being <<IV>> a finite domain variable.
+<item> <<post(X Rt IV B)>>:  Post propagator for <math> (X \sim_{Rt} IV) \Leftrightarrow B </math>, 
+being <<IV>> a finite domain variable and <<B>> a constraint boolean variable.
+<item> <<post(X Irt IV)>>:  Post propagator for <math> |X| \geq 1</math> or <math>\forall i\in X : i \sim_{Irt} IV  </math>, 
+being <<Irt>> a finite domain relation type and <<IV>> a finite domain variable.
+</list>
+<p>
+
+<p>
+
+<para><title/Set Operation-Relation Constraints/
+<list class=enum>
+<item> <<post(X So Y Rt Z)>>: Post propagator for <math> (X \diamond_{So} Y) \sim_{Rt} Z </math>.
+<item> <<post(So Lx Y)>>: Post propagator for <math> Y =  \diamond_{So}Lx</math>.
+<item> <<post(So Lx S Y)>>: Post propagator for <math> Y =  \diamond_{So}Lx \diamond_{So}S </math>.
+<item> <<post(S So X Rt Y)>>: Post propagator for <math> (S \diamond_{So} X) \sim_{Rt} Y </math>.
+</list>
+-Faltan algunos, pero son la permutacion del anterior, que hacer?-
+
+
+</list>
+</section>
+
+<!-- ********************************************************************** -->
+<!--
+<section id="section.fs.convex"><title/Convexity constraints/
+<p>
+
+<list>
+<entry>
+<index class=module/GFS<and>convex/
+<<convex>>
+<synopsis>
+<<<
+{GFS.convex ?*{PE}}
+>>>
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+
+</list>
+</list>
+</section>
+-->
+<!-- ********************************************************************** -->
+
+<section id="section.fs.sequence"><title/Sequence Constraints/
+<p>
+
+<list>
+<entry>
+<index class=module/GFS<and>sequence/
+<<sequence>>
+<synopsis>
+<<<
+{GFS.sequence ?*{PE}}
+>>>
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(Lx)>>: Post propagator for <math> \forall 0 \leq i \le |Lx| - 1</math>: <math>max(Lxi) \le min(Lxi + 1)</math>.
+</list>
+
+<entry>
+<index class=module/GFS<and>sequentialUnion/
+<<sequentialUnion>>
+<synopsis>
+<<<
+{GFS.sequentialUnion ?*{PE}}
+>>>
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(Lx Y)>>: Post propagator for <math> \forall 0 \leq i \le |Lx| - 1</math>: <math>max(Lxi) \le min(Lxi + 1)</math>
+    and <math> Y = \bigcup_i \in \{0,...,n-1\} Lxi </math>
+</list>
+</list>
+</section>
+
+<!-- ********************************************************************** -->
+
+<section id="section.fs.distinct"><title/Distinct constraints/
+<p>
+
+<list>
+<entry>
+<index class=module/GFS<and>distinct/
+<<atmostOne>>
+<synopsis>
+<<<
+{GFS.atmostOne ?*{PE}}
+>>>
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(Lx C)>>: Post propagator for <math> \forall 0 \leq i \le |Lx| </math>: <math>|Lxi| = C</math> 
+and <math> \forall 0 \leq i \le j \le |Lx| </math>: <math>|Lxi \cap Lxj| \leq 1</math>.
+</list>
+</list>
+</section>
+
+<!-- ********************************************************************** -->
+
+<section id="section.fs.connection"><title/Connection constraints to finite domain variables/
+<p>
+
+<list>
+
+<entry>
+<index class=module/GFS<and>connection/
+<<min>>
+<synopsis>
+<<<
+{GFS.min ?*{PE}}
+>>>
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(X IV)>>: Post propagator that propagates that <<IV>> is the minimal element of <<X>>, and that <<X>> is not empty. 
+</list>
+
+<entry>
+<index class=module/GFS<and>connection/
+<<max>>
+<synopsis>
+<<<
+{GFS.max ?*{PE}}
+>>>
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(X IV)>>: Post propagator that propagates that <<IV>> is the maximal element of <<X>>, and that <<X>> is not empty. 
+</list>
+
+<entry>
+<index class=module/GFS<and>connection/
+<<match>>
+<synopsis>
+<<<
+{GFS.match ?*{PE}}
+>>>
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+  <item> <<post(X IVs)>>: Post propagator that propagates that <<X>> contains the <math>IVsi</math>, which are sorted in non-descending order. 
+</list>
+
+<entry>
+<index class=module/GFS<and>connection/
+<<channel>>
+<synopsis>
+<<<
+{GFS.channel ?*{PE}}
+>>>
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+  <item> <<post(IVs SVs)>>: Post propagator for <math> IVsi = j \Leftrightarrow i \in SVsi  </math>,
+beign <<IVs>> a finite domain constraint variable array and <<SVs>> a set constraint variable array.
+  <item> <<post(BVs X)>>: Post propagator for <math> BVsi = 1 \Leftrightarrow i \in X  </math>,
+beign <<BVs>> a boolean constraint variable array and <<X>> a set constraint variable.
+</list>
+
+<entry>
+<index class=module/GFS<and>connection/
+<<weights>>
+<synopsis>
+<<<
+{GFS.weights ?*{PE}}
+>>>
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+  <item> <<post(E W S I)>>: Post propagator for <math> I = weights(S)  </math>,
+beign <<E>> and <<W>> array of integers. <<S>> a set constraint variable and <<I>> a finite domain constraint variable.
+<p>
+The weights are given as pairs of elements and their weight: <math> weights(Ei) = Wi  </math>.
+The upper bound of <<S>> is constrained to contain only elements from <<E>>. The weight of a set is the sum of the weights of its elements. 
+</list>
+
+</list>
+</section>
+
+<!-- ********************************************************************** -->
+
+<section id="section.fs.selection"><title/Selection constraints/
+<p>
+
+<list>
+
+<entry>
+<index class=module/GFS<and>selection/
+<<selectUnion>>
+<synopsis>
+<<<
+{GFS.selectUnion ?*{PE}}
+>>>
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(Lx Y Z)>>: Post propagator for <math> Z = \cap (Lx0,...,Lxn-1)[Y]</math>,
+beign <<Lx>> a set constraint variable array, <<Y>> and <<Z>> set constraint variables.
+<item> <<post(Lx Y Z)>>: Post propagator for <math> Z = \cap (Lx0,...,Lxn-1)[Y]</math>,
+beign <<Lx>> a finite domain constraint variable array, <<Y>> and <<Z>> set constraint variables.
+</list>
+
+<entry>
+<index class=module/GFS<and>selection/
+<<selectUnion>>
+<synopsis>
+<<<
+{GFS.selectUnion ?*{PE}}
+>>>
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(Lx Y Z)>>: Post propagator for <math> Z = \bigcup (Lx0,...,Lxn-1)[Y]</math>,
+beign <<Lx>> a set constraint variable array, <<Y>> and <<Z>> set constraint variables.
+<item> <<post(Lx Y Z)>>: Post propagator for <math> Z = \bigcup (Lx0,...,Lxn-1)[Y]</math>,
+beign <<Lx>> a finite domain constraint variable array, <<Y>> and <<Z>> set constraint variables.
+</list>
+
+<entry>
+<index class=module/GFS<and>selection/
+<<selectInter>>
+<synopsis>
+<<<
+{GFS.selectInter ?*{PE}}
+>>>
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(Lx Y Z)>>: Post propagator for <math> Z = \cap (Lx0,...,Lxn-1)[Y]</math>,
+beign <<Lx>> a set constraint variable array, <<Y>> and <<Z>> set constraint variables.
+<item> <<post(Lx Y Z S)>>: Post propagator for <math> Z = \cap (Lx0,...,Lxn-1)[Y]</math>, using <<S>> as universe,
+beign <<Lx>> a set constraint variable array, <<Y>> and <<Z>> set constraint variables and <<S>> a domain specification.
+</list>
+
+<entry>
+<index class=module/GFS<and>selection/
+<<selectDisjoint>>
+<synopsis>
+<<<
+{GFS.selectDisjoint ?*{PE}}
+>>>
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(Lx Y)>>: Post propagator for <math> \| (Lx0,...,Lxn-1)[Y]</math>,
+beign <<Lx>> a set constraint variable array and <<Y>> a set constraint variable.
+</list>
+
+<entry>
+<index class=module/GFS<and>selection/
+<<selectSet>>
+<synopsis>
+<<<
+{GFS.selectSet ?*{PE}}
+>>>
+<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(Lx IV Z)>>: Post propagator for <math> Z = (Lx0,...,Lxn-1)[IV]</math>,
+beign <<Lx>> a set constraint variable array, <<IV>> a finite domain variable and <<Z>> a set constraint variable.
+<item> <<post(Sx IV Z)>>: Post propagator for <math> Z = (Sx0,...,Sxn-1)[IV]</math>,
+beign <<Sx>> a domain specification array, <<IV>> a finite domain variable and <<Z>> a set constraint variable.
+</list>
+
+</list>
+</section>
+
+<!-- ********************************************************************** -->
+
 <section id="section.fs.reified"><title/Reified Propagators/
 <p>
 <list>
-
+<!--
 <entry>
 <index class=module/FS<and>reified<and>isIn/
 <<reified.isIn>>
@@ -637,18 +1015,18 @@ Converts <<M>> to a string and returns it in <<M>>.
 ?{Ds} are lists of the same length such that every element <math/{\tt
 D}_i/ of ?{Ds} reifies the presence of the corresponding element
 <math/{\tt I}_i/ of ?{Is} in the set ?{M}.
-
+-->
 <entry>
-<index class=module/FS<and>reified<and>include/
+<index class=module/GFS<and>reified<and>include/
 <<reified.include>>
 <synopsis>
-<<<{FS.reified.include +D1 *M $D2}
+<<<{GFS.reified.include +D1 *M $D2}
 >>>
 <item>
 ?{D2} reifies the presence of ?{D1} in the set ?{M}. This propagator
-detects in contrast to <<FS.reified.isIn>> earlier if ?{D1} is or is not
+detects in contrast to <<GFS.reified.isIn>> earlier if ?{D1} is or is not
 contained in ?{M}.
-
+<!--
 <entry>
 <index class=module/FS<and>reified<and>equal/
 <<reified.equal>>
@@ -676,11 +1054,12 @@ by constraining the corresponding element of <<Ds>> to <<0>>. An
 element in <<Ds>> not equal to <<0>> includes the corresponding set
 value in <<MVs>> in the partition. The propagator ensures a valid
 partition according to the values of <<Ds>>.
-
+-->
 </list>
 </section>
 
 <!-- ********************************************************************** -->
+<!--
 <section id="section.fs.iterating"><title/Iterating and Monitoring/
 <p>
 <list>
@@ -717,8 +1096,9 @@ determined the stream <<Is>> will be closed.
 This procedure applies <<P/1>> to all elements of <<M>>. 
 </list>
 </section>
-
+-->
 <!-- ********************************************************************** -->
+<!--
 <section id="section.fs.reflection"><title/Reflection/
 <p>
 The result of a reflective procedure depends on the current state of the
@@ -828,8 +1208,9 @@ included or excluded from ?{M}.
 
 </list>
 </section>
-
+-->
 <!-- ********************************************************************** -->
+<!--
 <section id="section.fs.distribution"><title/Distribution/
 <p>
 Given a set ?{M}, let <math/{\it lowerBound}({\tt M})/ and <math/{\it
@@ -959,5 +1340,5 @@ fun {Element +E} ... end
 </list>
 </list>
 </section>
-
+-->
 </Chapter>
