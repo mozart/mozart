@@ -61,7 +61,7 @@ notation see&nbsp;sec.infix-ps).
 The constraint store is amplified with constraints <<X::Spec>>  and
 equality between variables, &eg;, <<X=:Y>> is equivalent to <<X=Y>>.
 
-<para><title/relation symbols/
+<para><title/Relation symbols/
 There are propagator posting procedures that take an argument <<Rt>> to denote 
 an arithmetic relation <math/\sim_{Rt}/. The possible values and the associated 
 relations are summarized below. 
@@ -500,9 +500,9 @@ If in the description of a constraint below no consistency level is mentioned, t
 
 <table>
 <tr><td/<<GFD.cl.val>>/ <td> Value consistency (naive).</td></tr>
-<tr><td/<<GFD.rt.bnd>>/ <td>  Bounds consistency. </td></tr>
-<tr><td/<<GFD.rt.dom>>/ <td> Domain consistency.</td></tr>
-<tr><td/<<GFD.rt.def>>/ <td> The default consistency for a constraint. </td></tr>
+<tr><td/<<GFD.cl.bnd>>/ <td>  Bounds consistency. </td></tr>
+<tr><td/<<GFD.cl.dom>>/ <td> Domain consistency.</td></tr>
+<tr><td/<<GFD.cl.def>>/ <td> The default consistency for a constraint. </td></tr>
 </table>
 
 Consistency levels can be specified in propagator posting procedures by associating
