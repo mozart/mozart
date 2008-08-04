@@ -1,13 +1,17 @@
 %%%
 %%% Authors:
-%%%   Gert Smolka <smolka@ps.uni-sb.de>
+%%%   Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
+%%%   Alberto Delgado <adelgado@cic.puj.edu.co>
+%%%   Alejandro Arbelaez <aarbelaez@puj.edu.co>
 %%%
 %%% Copyright:
-%%%   Gert Smolka, 1998
+%%%   Gustavo Gutierrez, 2006
+%%%   Alberto Delgado, 2006
+%%%   Alejandro Arbelaez, 2006
 %%%
 %%% Last change:
-%%%   $Date: 1999/01/18 21:56:05 $ by $Author: schulte $
-%%%   $Revision: 1.2 $
+%%%   $Date$ by $Author$
+%%%   $Revision$
 %%%
 %%% This file is part of Mozart, an implementation
 %%% of Oz 3
@@ -19,6 +23,9 @@
 %%% of this file, and for a DISCLAIMER OF ALL
 %%% WARRANTIES.
 %%%
+
+%%% Adapted from a finite domain example in Mozart-Oz version 1.3.2 by 
+%%% Gert Smolka, 1998.
 
 declare
 
@@ -86,7 +93,7 @@ in
       Sum = {GFD.decl}
    in
       {GFD.tuple square NN 1#NN Square}
-      {GFD.distinct Square GFD.cl.val}
+      {GFD.distinctP post(Square)}
       %% Diagonals
       {Assert fun {$ I} {Field I I} end}
       {Assert fun {$ I} {Field I N+1-I} end}

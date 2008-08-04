@@ -20,6 +20,9 @@
 %%% WARRANTIES.
 %%%
 
+%%% Adapted from a finite domain example in Mozart-Oz version 1.3.2 by 
+%%% Gert Smolka, 1998.
+
 %%% Planning a Conference
 %%%
 %%% Eleven sessions (S1 to S11) have to take place in

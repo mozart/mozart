@@ -1,13 +1,17 @@
 %%%
 %%% Authors:
-%%%   Gert Smolka <smolka@ps.uni-sb.de>
+%%%    Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
+%%%     Alberto Delgado <adelgado@cic.puj.edu.co>
+%%%     Alejandro Arbelaez <aarbelaez@puj.edu.co>
 %%%
 %%% Copyright:
-%%%   Gert Smolka, 1998
+%%%   Gustavo Gutierrez, 2006
+%%%   Alberto Delgado, 2006
+%%%   Alejandro Arbelaez, 2006
 %%%
 %%% Last change:
-%%%   $Date: 1999/06/09 14:30:43 $ by $Author: schulte $
-%%%   $Revision: 1.3 $
+%%%   $Date$ by $Author$
+%%%   $Revision$
 %%%
 %%% This file is part of Mozart, an implementation
 %%% of Oz 3
@@ -19,6 +23,9 @@
 %%% of this file, and for a DISCLAIMER OF ALL
 %%% WARRANTIES.
 %%%
+
+%%% Adapted from a finite domain example in Mozart-Oz version 1.3.2 by 
+%%% Gert Smolka, 1998.
 
 declare
 
@@ -33,7 +40,7 @@ in
       {For 1 NbDenoms 1 proc {$ I}
                            %Change.I =<: Available.I
 			   {GFD.relP post(Change.I GFD.rt.'=<:' Available.I cl:GFD.cl.val)}
-                        end}
+			end}
       {GFD.sumC Denomination Change '=:' Amount}
       {GFD.distributeBR generic(order:naive value:max) Change}
    end

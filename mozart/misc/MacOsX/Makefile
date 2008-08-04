@@ -41,7 +41,7 @@ CD=/Users/ggutierrez/Desktop/CocoaDialog.app
 ##
 # Mozart Installation
 ##
-MOZ_INST=/Users/ggutierrez/Work/tmp/installnew
+MOZ_INST=/Users/ggutierrez/Work/moz150
 
 ## Mozart documentation
 MOZ_DOC=/Users/ggutierrez/Desktop/Documentation

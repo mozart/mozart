@@ -1,13 +1,17 @@
 %%%
 %%% Authors:
-%%%   Christian Schulte
+%%%   Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
+%%%   Alberto Delgado <adelgado@cic.puj.edu.co>
+%%%   Alejandro Arbelaez <aarbelaez@puj.edu.co>
 %%%
 %%% Copyright:
-%%%   Christian Schulte, 2001
+%%%   Gustavo Gutierrez, 2006
+%%%   Alberto Delgado, 2006
+%%%   Alejandro Arbelaez, 2006
 %%%
 %%% Last change:
-%%%   $Date: 2001/05/02 15:57:12 $ by $Author: schulte $
-%%%   $Revision: 1.1 $
+%%%   $Date$ by $Author$
+%%%   $Revision$
 %%%
 %%% This file is part of Mozart, an implementation
 %%% of Oz 3
@@ -19,6 +23,9 @@
 %%% of this file, and for a DISCLAIMER OF ALL
 %%% WARRANTIES.
 %%%
+
+%%% Adapted from a finite domain example in Mozart-Oz version 1.3.2 by 
+%%% Christian Schulte, 2001.
 
 declare
 

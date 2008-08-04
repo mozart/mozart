@@ -20,6 +20,9 @@
 %%% WARRANTIES.
 %%%
 
+%%% Adapted from a finite domain example in Mozart-Oz version 1.3.2 by 
+%%% Gert Smolka, 1998.
+
 %%% A Family Puzzle
 %%% 
 %%% Maria and Clara are both heads of households,
@@ -72,7 +75,7 @@ end
 
 
 %{ExploreOne Family}
-{Show {SearchAll Family}}
+{Browse {SearchAll Family}}
 
 
 %%% Having Clara's kids first prunes better
