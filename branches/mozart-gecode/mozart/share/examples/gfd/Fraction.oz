@@ -20,6 +20,9 @@
 %%% WARRANTIES.
 %%%
 
+%%% Adapted from a finite domain example in Mozart-Oz version 1.3.2 by 
+%%% Gert Smolka, 1998.
+
 %%% crypto arithmetic
 %%% A/BC + D/EF + G/HI = 1
 %%% letters must be pairwise digits between 1 and 9

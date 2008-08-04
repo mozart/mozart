@@ -20,10 +20,13 @@
 %%% WARRANTIES.
 %%%
 
+%%% Adapted from a finite domain example in Mozart-Oz version 1.3.2 by 
+%%% Gert Smolka, 1998.
+
 declare
 
 proc{Square X S}
-   {GFD.mult X X S}
+   {GFD.multP post(X X S)}
 end
 
 proc{Pythagoras Root}
@@ -36,9 +39,9 @@ in
    {Square A AA}
    {Square B BB}
    {Square C CC}
-   {GFD.linear [AA BB] GFD.rt.'=:' CC GFD.cl.val}
-   {GFD.rel A GFD.rt.'=<:' B GFD.cl.val}
-   {GFD.rel B GFD.rt.'=<:' C GFD.cl.val}
+   {GFD.linearP post([AA BB] GFD.rt.'=:' CC)}
+   {GFD.relP post(A GFD.rt.'=<:' B)}
+   {GFD.relP post(B GFD.rt.'=<:' C)}
 
    {GFD.distribute ff Root}
 end
