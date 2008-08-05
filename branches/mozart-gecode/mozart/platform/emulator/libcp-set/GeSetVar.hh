@@ -137,6 +137,11 @@ public:
 		       bool registerOnly = false) {
     vmp.put(getGSpace(),getSetVarInfo(),p, registerOnly);
   }
+
+  virtual void ensureDomReflection(void) {
+    postDomReflector<SetView, SetVarImp, PC_SET_ANY>(getGSpace(),this);
+  }
+
 };
 
 
@@ -151,7 +156,9 @@ inline OZ_Term new_GeSetVar(IntSet glb,  IntSet lub) {
   if (oz_onToplevel())
     oz_currentBoard()->getGenericSpace()->makeUnstable();
 
-  nv->ensureValReflection();
+  //nv->ensureValReflection();
+  postValReflector<SetView,SetVarImp>(sp,index);
+
   return ref;
 }
 
@@ -163,7 +170,9 @@ inline OZ_Term new_GeSetVar_init() {
   OzVariable* ov   = extVar2Var(nv);
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
   int index        = sp->newVar(static_cast<VarImpBase*>(x.var()), ref);
-  nv->ensureValReflection();
+  
+  //nv->ensureValReflection();
+  postValReflector<SetView,SetVarImp>(sp,index);
 
   if (oz_onToplevel())
     oz_currentBoard()->getGenericSpace()->makeUnstable();
@@ -229,7 +238,8 @@ inline OZ_Term new_GeSetVarComp(OZ_Term V1) {
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
   int index        = sp->newVar(static_cast<VarImpBase*>(x.var()), ref);
   rel(sp, x, SRT_CMPL, get_SetVar(V1));
-  nv->ensureValReflection();
+  //nv->ensureValReflection();
+  postValReflector<SetView,SetVarImp>(sp,index);
   return ref;
 }
 
@@ -247,7 +257,9 @@ inline OZ_Term new_GeSetVarComplIn(OZ_Term V1,OZ_Term V2) {
   rel(sp, get_SetVar(V2),SOT_MINUS, get_SetVar(V1), SRT_EQ , x);
 
 
-  nv->ensureValReflection();
+  //nv->ensureValReflection();
+  postValReflector<SetView,SetVarImp>(sp,index);
+
   return ref;
 }
 

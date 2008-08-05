@@ -141,6 +141,10 @@ public:
 		       bool registerOnly = false) {
     vmp.put(getGSpace(),getBoolVarInfo(),p, registerOnly);
   }
+
+  virtual void ensureDomReflection(void) {
+    postDomReflector<BoolView, BoolVarImp, PC_INT_DOM>(getGSpace(),this);
+  }
 };
 
 
@@ -154,8 +158,8 @@ OZ_Term new_GeBoolVar(int min, int max) {
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
   int index        = sp->newVar(static_cast<VarImpBase*>(x.var()), ref);
 
-  nv->ensureValReflection();
-
+  //nv->ensureValReflection();
+  postValReflector<BoolView,BoolVarImp>(sp,index);
   if (oz_onToplevel())
     oz_currentBoard()->getGenericSpace()->makeUnstable();
   
