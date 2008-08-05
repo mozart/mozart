@@ -137,6 +137,11 @@ public:
 		       bool registerOnly = false) {
     vmp.put(getGSpace(),getIntVarInfo(),p,registerOnly);
   }
+
+  virtual void ensureDomReflection(void) {
+    postDomReflector<IntView, IntVarImp, PC_INT_DOM>(getGSpace(),this);
+  }
+
 };
 
 
@@ -151,7 +156,9 @@ inline OZ_Term new_GeIntVar(const IntSet& dom) {
   if (oz_onToplevel())
     oz_currentBoard()->getGenericSpace()->makeUnstable();
 
-  nv->ensureValReflection();
+  //nv->ensureValReflection();
+  postValReflector<IntView,IntVarImp>(sp,index);
+
   return ref;
 }
 
@@ -170,7 +177,9 @@ inline OZ_Term new_GeIntVarCompl(const IntSet& dom) {
   if (oz_onToplevel())
     oz_currentBoard()->getGenericSpace()->makeUnstable();
 
-  nv->ensureValReflection();
+  //nv->ensureValReflection();
+  postValReflector<IntView,IntVarImp>(sp,index);
+
   return ref;
 }
 

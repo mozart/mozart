@@ -168,28 +168,52 @@ OZ_Return GeVar<VarImp,pc>::bindV(TaggedRef* vPtr, TaggedRef val) {
   return OZ_FAILED;
 }
 
-template <class VarImp, Gecode::PropCond pc> 
+template <class View, class VarImp>
 inline
-void GeVar<VarImp,pc>::ensureValReflection(void) {
-  GenericSpace *s = oz_currentBoard()->getGenericSpace(true);
-  VarImp *vip = reinterpret_cast<VarImp*>(s->getVarInfo(index));
-  GeView<VarImp> v(vip);
-  new (s) ValReflector<VarImp>(s, v, index);
+void postValReflector(GenericSpace *home, const int index) {
+  Gecode::VarImpBase *vi = home->getVarInfo(index);
+  View vw(static_cast<VarImp*>(vi));
+  new (home) ValReflector<View>(home, vw, index);
 }
 
+// template <class VarImp, Gecode::PropCond pc> 
+// inline
+// void GeVar<VarImp,pc>::ensureValReflection(void) {
+//   Assert(false);
+//   GenericSpace *s = oz_currentBoard()->getGenericSpace(true);
+//   VarImp *vip = reinterpret_cast<VarImp*>(s->getVarInfo(index));
+//   GeView<VarImp> v(vip);
+//   //new (s) ValReflector<VarImp>(s, v, index);
+//   //postValReflector(s,index);
+// }
 
-template <class VarImp, Gecode::PropCond pc>
+
+template <class View, class VarImp, Gecode::PropCond pc>
 inline
-void GeVar<VarImp,pc>::ensureDomReflection(void) {
-  if (!hasDomRefl) {
-    GenericSpace *s = oz_currentBoard()->getGenericSpace(true);
-    VarImp *ivp = reinterpret_cast<VarImp*>(s->getVarInfo(index));
-    GeView<VarImp> v(ivp);
-    new (s) DomReflector<VarImp,pc>(s,v,index);
-    s->incForeignProps();
-    hasDomRefl = true;
+void postDomReflector(GenericSpace *home, GeVarBase *gvb) { 
+  if (!gvb->hasDomReflector()) {
+    int index = gvb->getIndex();
+    Gecode::VarImpBase *vi = home->getVarInfo(index);
+    View vw(static_cast<VarImp*>(vi));
+    new (home) DomReflector<View,pc>(home, vw, index);
+    home->incForeignProps();
+    gvb->markDomReflected();
   }
 }
+ 
+// template <class VarImp, Gecode::PropCond pc>
+// inline
+// void GeVar<VarImp,pc>::ensureDomReflection(void) {
+//   Assert(false);
+//   if (!hasDomRefl) {
+//     GenericSpace *s = oz_currentBoard()->getGenericSpace(true);
+//     VarImp *ivp = reinterpret_cast<VarImp*>(s->getVarInfo(index));
+//     GeView<VarImp> v(ivp);
+//     new (s) DomReflector<VarImp,pc>(s,v,index);
+//     s->incForeignProps();
+//     hasDomRefl = true;
+//   }
+// }
 
 #include <sstream>
 

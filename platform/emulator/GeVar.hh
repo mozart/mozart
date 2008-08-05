@@ -120,13 +120,28 @@ public:
       \brief Tests whether this GeVar represents an assigned variable.
   */
   bool hasDomReflector(void) {return hasDomRefl; }
-  
+  void markDomReflected(void) { hasDomRefl = true; }
+
   /**
      \brief Puts a propagator to reflect any change in the variable
      domain to mozart.  Should be here or in GeVar??
   */
+
+   /**
+      \brief Ensures the existence of a dom reflection propagator on
+      this variable. Creates it if needed. This propagator is used
+      when speculationg (Supervisor Thread) to ensure the suspensions
+      of the variable are kicked off.
+
+      This method is virtual because the propagator must reflect any
+      changes in the variable domain. At this time gecode does not
+      provide a generic propagation condition to represent it for any
+      constraint variable. Every specialization of this class should
+      provide a method that calls postDomReflector (GeVar.icc) with
+      the appropriate template arguments.
+  */
   virtual void ensureDomReflection(void) = 0;
-  virtual void ensureValReflection(void) = 0;
+
 
   int getUnifyC(void) { return unifyC; }
 
@@ -335,13 +350,8 @@ public:
   */
   void ensureValReflection(void);
 
-  /**
-     \brief Ensures the existence of a dom reflection propagator on
-     this variable. Creates it if needed. This propagator is used when
-     speculationg (Supervisor Thread) to ensure the suspensions of the
-     variable are kicked off.
-  */
-  void ensureDomReflection(void);
+ 
+  //void ensureDomReflection(void);
   //@}
 };
 
@@ -375,20 +385,20 @@ GeVarBase* get_GeVar(OZ_Term v) {
    \brief This Gecode propagator reflects a Gecode variable assignment
    inside Mozart. It wakes up upon determination, and bind Oz variable
 */
-template <class VarImp>
+template <class View0>
 class ValReflector :
-  public Gecode::UnaryPropagator<GeView<VarImp>, Gecode::PC_GEN_ASSIGNED>
+  public Gecode::UnaryPropagator<View0, Gecode::PC_GEN_ASSIGNED>
 {
 protected:
   int index;
 
 public:
-  ValReflector(GenericSpace* s, GeView<VarImp> v, int idx) :
-    Gecode::UnaryPropagator<GeView<VarImp>, Gecode::PC_GEN_ASSIGNED>(s, v),
+  ValReflector(GenericSpace* s, View0 v, int idx) :
+    Gecode::UnaryPropagator<View0, Gecode::PC_GEN_ASSIGNED>(s, v),
     index(idx) {}
 
   ValReflector(GenericSpace* s, bool share, ValReflector& p) :
-    Gecode::UnaryPropagator<GeView<VarImp>, Gecode::PC_GEN_ASSIGNED>(s, share, p),
+    Gecode::UnaryPropagator<View0, Gecode::PC_GEN_ASSIGNED>(s, share, p),
     index(p.index) {}
 
   virtual Gecode::Actor* copy(Gecode::Space* s, bool share) {
@@ -401,7 +411,7 @@ public:
 
   Gecode::ExecStatus propagate(Gecode::Space* s, Gecode::ModEventDelta){
 
-
+    
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
 
     if (!oz_isGeVar(ref))
@@ -435,19 +445,19 @@ public:
   variables. Hopefully this P.C will track any change in the domain of
   the variable.
 */
-template <class VarImp, Gecode::PropCond pc>
+template <class View0, Gecode::PropCond pc>
 class DomReflector :
-  public Gecode::UnaryPropagator<GeView<VarImp>, pc>
+  public Gecode::UnaryPropagator<View0, pc>
 {
 protected:
   int index;
   
 public:
-  DomReflector(GenericSpace* s, GeView<VarImp> v, int idx) :
-    Gecode::UnaryPropagator<GeView<VarImp>, pc>(s, v), index(idx) { }
+  DomReflector(GenericSpace* s, View0 v, int idx) :
+    Gecode::UnaryPropagator<View0, pc>(s, v), index(idx) { }
 
   DomReflector(GenericSpace* s, bool share, DomReflector& p) :
-    Gecode::UnaryPropagator<GeView<VarImp>, pc>(s, share, p), index(p.index) {}
+    Gecode::UnaryPropagator<View0, pc>(s, share, p), index(p.index) {}
 
   virtual Gecode::Actor* copy(Gecode::Space* s, bool share) {
     return new (s) DomReflector(static_cast<GenericSpace*>(s), share, *this);
