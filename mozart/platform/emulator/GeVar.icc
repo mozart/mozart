@@ -1,3 +1,4 @@
+/* -*- mode: C++; c-basic-offset: 2; indent-tabs-mode: nil -*- */
 /*
  *  Authors:
  *    Alberto Delgado (adelgado@cic.puj.edu.co)
@@ -34,16 +35,17 @@ OZ_Return GeVar<VarImp, pc>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
   //printf("unifyV GeVar\n");fflush(stdout);
   
   GeVar<VarImp,pc>* lgevar = this;
-  GenericSpace* space = extVar2Var(lgevar)->getBoardInternal()->getGenericSpace();
+  GenericSpace* space = 
+    extVar2Var(lgevar)->getBoardInternal()->getGenericSpace();
   
   
   /* the real condition we need to check here is:
      if (oz_isSimpleVar(*rPtr) || oz_isOptVar(*rPtr))
   */
   if (!oz_isGeVar(*rPtr)) {
-      /* This is the case when right var is either a simple var or an
-	 optimized var and this represents a global var.
-      */
+    /* This is the case when right var is either a simple var or an
+       optimized var and this represents a global var.
+    */
     oz_bindGlobalVar2(tagged2Var(*rPtr),rPtr,makeTaggedRef(lPtr));
     goto PROP;
   }
@@ -69,7 +71,8 @@ OZ_Return GeVar<VarImp, pc>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
 	if(!(rgevar->intersect(makeTaggedRef(lPtr))))
 	  return FAILED;
 	printf("Inicia deteccion de globalidad \n");fflush(stdout);
-	// store information about the local -> global relation for future merge
+	// store information about the local -> global relation for
+	// future merge
 	lgevar->setLocalRep(rgevar);
 	
 	printf("Termina deteccion de globalidad \n");fflush(stdout);
@@ -77,9 +80,9 @@ OZ_Return GeVar<VarImp, pc>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
 	disposeS();
       }else{
 	////	printf("unifyV GeIntVar this is local\n");fflush(stdout);
-	  // "this" is local.  The binding cannot go upwards, so...    
-	  //Assert(oz_isLocalVar(extVar2Var(rgeintvar)));
-	  //I don't think this assert is correct,  other can be a global var
+        // "this" is local.  The binding cannot go upwards, so...    
+        //Assert(oz_isLocalVar(extVar2Var(rgeintvar)));
+        //I don't think this assert is correct,  other can be a global var
 	//printf("local, local \n");fflush(stdout);
 	if(!(rgevar->intersect(makeTaggedRef(lPtr))))
 	  return FAILED;
@@ -105,12 +108,14 @@ OZ_Return GeVar<VarImp, pc>::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
     }
     
   }
-  /* Unification is entailed by means of an eq propagator. After post this
-     propagator the generic space must become unstable. The unstability is
-     a result of posting the propagator */
+  /* Unification is entailed by means of an eq propagator. After post
+     this propagator the generic space must become unstable. The
+     unstability is a result of posting the propagator */
   
  PROP:
-  //wakeup space propagators to inmediatly update all related variables
+  //wakeup space propagators to inmediatly update all related
+  //variables
+  
   //printf("GeVar.icc antes de status \n");fflush(stdout);
   if(space->status() == Gecode::SS_FAILED) {
     extVar2Var(this)->getBoardInternal()->setFailed();
