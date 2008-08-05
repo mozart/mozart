@@ -80,29 +80,29 @@ private:
   int size;
 
   /** 
-   * \brief Container for variables.
-   * VarImpBase is used because we need a generic way to store variables of different types in the 
-   * space.
-   * TODO: test if std::vector is efficient and if not then change it for a proper implementation
+   * \brief Container for variables.  VarImpBase is used because we
+   * need a generic way to store variables of different types in the
+   * space.  TODO: test if std::vector is efficient and if not then
+   * change it for a proper implementation
    */ 
   Gecode::Support::DynamicArray<Gecode::VarImpBase*> vars; 
   /**
-   * \brief Container for references.
-   * This vector contains references to variable nodes in the mozart heap. 
-   * There is a one-to-one correspondence between a variable in vars and a reference in 
-   * references. Position in the vector  is used to achieve this.
+   * \brief Container for references.  This vector contains references
+   * to variable nodes in the mozart heap.  There is a one-to-one
+   * correspondence between a variable in vars and a reference in
+   * references. Position in the vector is used to achieve this.
    */
   Gecode::Support::DynamicArray<OZ_Term> refs;
  
   /**
-   * \brief Root variables.
-   * Distinction between variables and root variables is needed when merging spaces.
-   * This array stores the index of variables at vars that are part of root. 
-   * TODO: replace int by VarImpBase* 
+   * \brief Root variables.  Distinction between variables and root
+   * variables is needed when merging spaces.  This array stores the
+   * index of variables at vars that are part of root.  TODO: replace
+   * int by VarImpBase*
    */
-   // TODO: remove root vars array if not needed
+  // TODO: remove root vars array if not needed
   //Gecode::Support::DynamicArray<int> root;
-
+  
   /**
      Invariant:
      vars.size() = refs.size() 
@@ -121,9 +121,9 @@ public:
     vars(0), refs(0), size(0) {}
 
   /** 
-   * \brief Copy constructor
-   * This constructor is used for cloning of boards and must *know* how to clone variables
-   * from each constraint system.
+   * \brief Copy constructor This constructor is used for cloning of
+   * boards and must *know* how to clone variables from each
+   * constraint system.
    * 
    */
   VarRefArray(Gecode::Space* s, VarRefArray& v, bool share = false);
@@ -133,8 +133,8 @@ public:
    * \brief Creates a new variable.  
    * 
    * @param x A pointer to the corresponding variable implementation
-   * @param r A reference to the mozart heap reference corresponding to the variable
-   * @return The index of the new allocated variable
+   * @param r A reference to the mozart heap reference corresponding
+   * to the variable @return The index of the new allocated variable
    */
   int newVar(Gecode::VarImpBase *x, OZ_Term r) {
     int i = size;
@@ -160,7 +160,8 @@ public:
   }
   
   /**
-     \brief Sets the root variables of this space to variables constained in vector \a v.
+     \brief Sets the root variables of this space to variables
+     constained in vector \a v.
    */
   //void setRoot(OZ_Term v);
 };
@@ -172,19 +173,19 @@ static GenericSpace* GeSpaceCollectList = NULL;
 static GenericSpace* GeSpaceCollectLast = NULL;
 // Total memory allocated in generic spaces
 static size_t GeSpaceAllocatedMem = 0;
-/* This method adds the generic space gs to the list of allocated generic spaces.
-   It must be called for all created generic space in order to put it in the
-   control of the garbage collector.
+/* This method adds the generic space gs to the list of allocated
+   generic spaces.  It must be called for all created generic space in
+   order to put it in the control of the garbage collector.
 */
 void registerGeSpace(GenericSpace* gs);
 /* Collects the memory allocated by unused generic spaces. */
 void gCollectGeSpaces(void);
 
 /** 
- * \brief Container for Gecode variables and propagators. A GenericSpace 
- * is a Gecode::Space that contains Gecode variables, which are visible in 
- * Oz as variables.  That space will also contain all the propagators created 
- * at the Oz level.
+ * \brief Container for Gecode variables and propagators. A
+ * GenericSpace is a Gecode::Space that contains Gecode variables,
+ * which are visible in Oz as variables.  That space will also contain
+ * all the propagators created at the Oz level.
  */
 class GenericSpace : public Gecode::Space {
   friend void gCollectGeSpaces(void);
@@ -198,27 +199,28 @@ private:
 
   
   /** 
-  	Space stability is used to reflect the fact that there is pending work to 
-  	do. It is for example, a new propagator was posted in this space but no call
-	to mstatus() has been performed so far. Other things that can make a space 
-	to become unstable are unification or bindings events from mozart.
+      Space stability is used to reflect the fact that there is
+      pending work to do. It is for example, a new propagator was
+      posted in this space but no call to mstatus() has been performed
+      so far. Other things that can make a space to become unstable
+      are unification or bindings events from mozart.
   */
   bool trigger;
   
   /* 
-  	Invariant: trigger is true while the GenericSpace remains stable.  It is
-	assigned to false as soon as the space becomes unstable and lateThread is
-	added to the status suspension list. If at top level space (?).  The Oz 
-	thread suspending on status will therefore be woken up when the space 
-	becomes unstable.
+     Invariant: trigger is true while the GenericSpace remains stable.
+     It is assigned to false as soon as the space becomes unstable and
+     lateThread is added to the status suspension list. If at top
+     level space (?).  The Oz thread suspending on status will
+     therefore be woken up when the space becomes unstable.
   */
 
   /*
-   * Garbage collection:
-   * Generic spaces are stored outside the mozart heap. In order to collect 
-   * memory, every time a GenericSpace is created it is added to 
-   * GeSpaceCollectList. This list is travesed by garbage collector to free
-   * memory allocated by unused gespaces. A double linked list is used for that
+   * Garbage collection: Generic spaces are stored outside the mozart
+   * heap. In order to collect memory, every time a GenericSpace is
+   * created it is added to GeSpaceCollectList. This list is travesed
+   * by garbage collector to free memory allocated by unused
+   * gespaces. A double linked list is used for that
    * purpose. gc_marked reflects whether the object is in use or not.
    */
   GenericSpace* gc_pred;    // predecessor in list
@@ -237,21 +239,21 @@ private:
   }
   
   /**
-  	\brief Sets stability of this space. This is done by binding trigger to a 
-	read only variable.
+     \brief Sets stability of this space. This is done by binding
+	trigger to a read only variable.
   */
   void makeStable(void);
 
   /**
-   * \brief This variable is used to count how many variables are 
-   * determined. This criteria is used to know when a space becomes 
-   * solved (i.e. determined = vars.size. A space is solved 
-   * when all the variables in the space become determined. 
+   * \brief This variable is used to count how many variables are
+   * determined. This criteria is used to know when a space becomes
+   * solved (i.e. determined = vars.size. A space is solved when all
+   * the variables in the space become determined.
    */
   unsigned int determined;
 
   /**
-   * \brief This variable is to count how many foreign propagators 
+   * \brief This variable is to count how many foreign propagators
    * have been posted in the space. Foreign propagators include domain
    * reflection propagators.
    */
@@ -259,8 +261,8 @@ private:
 
 
   /**
-   * \brief This variable is to count how many unification propagators 
-   * have been posted in the space. 
+   * \brief This variable is to count how many unification propagators
+   * have been posted in the space.
    */
   unsigned int unifyProps;
 
@@ -302,8 +304,8 @@ public:
   //@{
   /**
    * \brief This destructor is called by the garbage collector to free
-   * the memory allocated by an unused object. The object is also deleted 
-   * when a space becomes solved or failed.
+   * the memory allocated by an unused object. The object is also
+   * deleted when a space becomes solved or failed.
    */
   ~GenericSpace(void);
   //@}
@@ -342,11 +344,12 @@ public:
   bool isStable();
   
   /**
-  	\brief Tests if the space is entailed. A space is entailed if the number of
-	non determined variables plus the number of foreignProps (reflections) plus
-	the number of unifications is the number of propagators. Since unification
-	happens between two variables, the number of propagators enforcing unifications
-	have to be divided by two.
+     \brief Tests if the space is entailed. A space is entailed if the
+     number of non determined variables plus the number of
+     foreignProps (reflections) plus the number of unifications is the
+     number of propagators. Since unification happens between two
+     variables, the number of propagators enforcing unifications have
+     to be divided by two.
   */
   bool isEntailed(void) { 
     Assert(isStable());
@@ -359,16 +362,16 @@ public:
   }
 
   /**
-  	\brief Foreign propagators help to reflect changes in variables to mozart.
-	Those include domain reflection and variable binding.
+     \brief Foreign propagators help to reflect changes in variables
+     to mozart.  Those include domain reflection and variable binding.
   */
   void incForeignProps(void) { foreignProps++; }
   void decForeignProps(int d = 1) { foreignProps -= d; }
 
   /**
-  	\brief Every time a unification between two constraint variables takes place,
-	a propagator is used to enforce *equality* (in the sense of the underlying 
-	constraint system). 
+     \brief Every time a unification between two constraint variables
+     takes place, a propagator is used to enforce *equality* (in the
+     sense of the underlying constraint system).
   */
   void incUnifyProps(void) { unifyProps+=2; }
   void decUnifyProps(int d = 1) { unifyProps -= d; }
@@ -379,8 +382,8 @@ public:
   /** 
    * \brief Creates a new variable inside the space
    * 
-   * @param v A pointer to the var implementation
-   * @param r A reference to the mozart heap node corresponding to the variable
+   * @param v A pointer to the var implementation.  @param r A
+   * reference to the mozart heap node corresponding to the variable
    * 
    * @return The index of the new variable
    */

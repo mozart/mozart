@@ -45,7 +45,7 @@ VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share)
     refs[i] = *v.getRef(i);
     
     // clone the GeVar pointed by refs[i]
-     OZ_Term dt = OZ_deref(refs[i]);
+    OZ_Term dt = OZ_deref(refs[i]);
     if (oz_isExtVar(dt)) {
       // ensures that refs[i] is a gecode contrain variable 
       Assert(oz_getExtVar(dt)->getIdV() == OZ_EVAR_GEVAR);
@@ -69,16 +69,16 @@ GenericSpace::GenericSpace(Board* b)
     allocatedMemory(usedMem())
 {
   registerGeSpace(this);
-	GeSpaceAllocatedMem += allocatedMemory;
+  GeSpaceAllocatedMem += allocatedMemory;
   //printf("Constructor: %u %p\n",GeSpaceAllocatedMem,this);fflush(stdout);
 }
 
 inline
 GenericSpace::GenericSpace(GenericSpace& s, bool share) 
-    : Space(share, s), vars(this, s.vars, share), board(s.board), 
-	determined(s.determined), foreignProps(s.foreignProps), 
-	unifyProps(s.unifyProps), trigger(s.trigger), gc_pred(NULL), gc_succ(NULL),
-	gc_marked(false), allocatedMemory(usedMem())
+  : Space(share, s), vars(this, s.vars, share), board(s.board), 
+    determined(s.determined), foreignProps(s.foreignProps), 
+    unifyProps(s.unifyProps), trigger(s.trigger), gc_pred(NULL), gc_succ(NULL),
+    gc_marked(false), allocatedMemory(usedMem())
 {
   registerGeSpace(this);
   GeSpaceAllocatedMem += allocatedMemory;
@@ -113,18 +113,18 @@ inline
 void GenericSpace::makeStable(void) { 
   //printf("makeStable\n");fflush(stdout);
   if (!isStable())
-	trigger = true;
+    trigger = true;
 }
 
 
 void GenericSpace::makeUnstable(void) {
-	if (trigger) {
-		Board *cb = oz_currentBoard();
-		trigger = false;
-		cb->ensureLateThread();
-		TaggedRef status = cb->getStatus();
-		DEREF(status, statusPtr); 
-	}
+  if (trigger) {
+    Board *cb = oz_currentBoard();
+    trigger = false;
+    cb->ensureLateThread();
+    TaggedRef status = cb->getStatus();
+    DEREF(status, statusPtr); 
+  }
 }
 
 Gecode::SpaceStatus GenericSpace::mstatus(void) {
@@ -190,7 +190,7 @@ void GenericSpace::unreflect(std::vector<Reflection::ActorSpec>& as,
 
 /**
    \brief Fill \a vmp with the variables of this space.
- */
+*/
 void GenericSpace::varReflect(Reflection::VarMap &vmp, bool registerOnly) {
   /*
     Iterate on generic space references to fill the VarMap. Only
@@ -218,7 +218,7 @@ void GenericSpace::varReflect(Reflection::VarMap &vmp, bool registerOnly) {
       /* TODO: if var is a local representation of a global variable
 	 and we are merging two space then put in vmp the reflection
 	 of the global variable instead of var. Intersection??
-       */
+      */
       if (var->isLocalRep()) {
 	printf("Global VAR found during merge\n");fflush(stdout);
 	var->getGlobal()->reflect(vmp,nn,registerOnly);
@@ -232,7 +232,7 @@ void GenericSpace::varReflect(Reflection::VarMap &vmp, bool registerOnly) {
 }
 
 /**
-  \brief Merge space \a src into this. 
+   \brief Merge space \a src into this. 
 */
 void GenericSpace::merge(GenericSpace *src) {
   printf("GeSpace.cc >> called space merge src: %p dst: %p\n",src,this);fflush(stdout);
@@ -253,44 +253,44 @@ void GenericSpace::merge(GenericSpace *src) {
   /*
     Optimization: this can be done in the loop above just after calling deserializer
     to create the variable.
-   */
- //  printf("GeSpace.cc >> registering new var in the target space\n");fflush(stdout);
-//   Reflection::VarMapIter newVars(svm);
-//   Assert(src->getVarsSize() == svm.size());
+  */
+  //  printf("GeSpace.cc >> registering new var in the target space\n");fflush(stdout);
+  //   Reflection::VarMapIter newVars(svm);
+  //   Assert(src->getVarsSize() == svm.size());
   
-//   for (int i=0;newVars();++newVars,i++) {
-//     OZ_Term  v = src->getVarRef(i);
-//     DEREF(v,v_ptr);
-//     if (oz_isGeVar(v)) {
-//       GeVarBase *gvb = static_cast<GeVarBase*>(oz_getExtVar(v));
-//       if (!gvb->isLocalRep()) {
-// 	int newIndex = newVar(newVars.varImpBase(),v);
-// 	gvb->setIndex(newIndex);
+  //   for (int i=0;newVars();++newVars,i++) {
+  //     OZ_Term  v = src->getVarRef(i);
+  //     DEREF(v,v_ptr);
+  //     if (oz_isGeVar(v)) {
+  //       GeVarBase *gvb = static_cast<GeVarBase*>(oz_getExtVar(v));
+  //       if (!gvb->isLocalRep()) {
+  // 	int newIndex = newVar(newVars.varImpBase(),v);
+  // 	gvb->setIndex(newIndex);
 	
-// 	// ValRefector was not added from the old space then we have to add it here
-// 	// TODO: Implement serialization of reflector propagators.
-// 	gvb->ensureValReflection();
-// 	if (gvb->hasDomReflector())
-// 	  gvb->ensureDomReflection();
+  // 	// ValRefector was not added from the old space then we have to add it here
+  // 	// TODO: Implement serialization of reflector propagators.
+  // 	gvb->ensureValReflection();
+  // 	if (gvb->hasDomReflector())
+  // 	  gvb->ensureDomReflection();
 	
-// 	printf("GeSpace.cc >> updating reference var: %d new pos %d\n",i,newIndex);fflush(stdout);
-//       }
-//     } else {
-//       /* 
-// 	 Fixme: What should we put in the array of references?
-// 	 Maybe copy the reference in src and put null in vars is enough
-//       */
-//       printf("GeSpace.cc >> FIXME!! not updating reference var was det.\n"); fflush(stdout);
-//     }
-//   }
+  // 	printf("GeSpace.cc >> updating reference var: %d new pos %d\n",i,newIndex);fflush(stdout);
+  //       }
+  //     } else {
+  //       /* 
+  // 	 Fixme: What should we put in the array of references?
+  // 	 Maybe copy the reference in src and put null in vars is enough
+  //       */
+  //       printf("GeSpace.cc >> FIXME!! not updating reference var was det.\n"); fflush(stdout);
+  //     }
+  //   }
 
   
   // this call is temporal, just to have an accurate number of propagators.
   /*
-  status();
-  printf("GeSpace.cc >> finished space merge current number of prop %d\n",propagators());
-  printf("GeSpace.cc >> this %p src %p\n",this, src);
-  fflush(stdout);
+    status();
+    printf("GeSpace.cc >> finished space merge current number of prop %d\n",propagators());
+    printf("GeSpace.cc >> this %p src %p\n",this, src);
+    fflush(stdout);
   */
 
   /*
@@ -370,9 +370,9 @@ void registerGeSpace(GenericSpace* gs) {
   }
   GenericSpace::gscounter++;
   /*GenericSpace *tmp = GeSpaceCollectList;
-  for (int i = 0;tmp != NULL; tmp = tmp->gc_succ, i++) {
+    for (int i = 0;tmp != NULL; tmp = tmp->gc_succ, i++) {
     printf("uno mas %d\n",i);fflush(stdout);
-  }
+    }
   */
 }
 
@@ -380,12 +380,12 @@ void registerGeSpace(GenericSpace* gs) {
 void gCollectGeSpaces() {
   //Compute the allocated memory
   /* GenericSpace* ptr = GeSpaceCollectList;
-  size_t geAlloc = 0;
-  while (ptr != NULL) {
-    geAlloc = geAlloc + sizeof(*ptr) + ptr->allocated() + ptr->cached();
-    ptr = ptr->gc_succ;
-  }
-  printf("collecting memory: %d\n",geAlloc);fflush(stdout);
+     size_t geAlloc = 0;
+     while (ptr != NULL) {
+     geAlloc = geAlloc + sizeof(*ptr) + ptr->allocated() + ptr->cached();
+     ptr = ptr->gc_succ;
+     }
+     printf("collecting memory: %d\n",geAlloc);fflush(stdout);
   */
   //printf("Before collect there are %d generic space in memory\n",GenericSpace::gscounter);
   //fflush(stdout);

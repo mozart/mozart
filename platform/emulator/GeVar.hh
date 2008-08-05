@@ -57,7 +57,7 @@ enum GeVarType {T_GeIntVar, T_GeSetVar, T_GeBoolVar};
 
 /**
    \brief This class is intended to provide access without template
-   arguments to methods/functions used by some core and constraint 
+   arguments to methods/functions used by some core and constraint
    system independent functions such as trailing and unification.
 */
 class GeVarBase: public ExtVar {
@@ -71,19 +71,22 @@ public:
   GeVarBase(Board *b) : hasDomRefl(false), localRep(false), unifyC(0), ExtVar(b) {}
   
   /**
-     \brief Number of propagators associated with a variable. This method
-     is used to test for space stability when speculating on variables.
+     \brief Number of propagators associated with a variable. This
+     method is used to test for space stability when speculating on
+     variables.
   */
   virtual int degree(void) = 0;
   virtual int getIndex(void) = 0;
   virtual void setIndex(int) = 0;
   virtual Gecode::VarImpBase* clone(void) = 0;
   /**
-     \brief To reflect a variable is to insert it in the VarMap \a vmp. Variable type
-     information is needed at this step so this method is declared virtual. p is a
-     prefix that depends on the generic space.
-   */
-  virtual void reflect(Gecode::Reflection::VarMap &vmp, Gecode::Support::Symbol &p, 
+     \brief To reflect a variable is to insert it in the VarMap \a
+     vmp. Variable type information is needed at this step so this
+     method is declared virtual. p is a prefix that depends on the
+     generic space.
+  */
+  virtual void reflect(Gecode::Reflection::VarMap &vmp, 
+		       Gecode::Support::Symbol &p, 
 		       bool registerOnly = false ) = 0;
 
   virtual bool hasSameDomain(TaggedRef) = 0;
@@ -99,15 +102,16 @@ private:
 protected:
   
   /**
-     \brief Test whether the variable has a domain reflection propagator.
-     This propagator reflects any domain change in mozart. It is useful
-     when a variable is browsed or inspected. It is also needed to wake up the
-     supervisor thread if variable is not local to the space.
+     \brief Test whether the variable has a domain reflection
+     propagator.  This propagator reflects any domain change in
+     mozart. It is useful when a variable is browsed or inspected. It
+     is also needed to wake up the supervisor thread if variable is
+     not local to the space.
   */
   bool hasDomRefl;
- /**
-   \brief Counter for the number of unifications in which this variable 
-   is involved. 
+  /**
+     \brief Counter for the number of unifications in which this
+     variable is involved.
   */
   unsigned int unifyC;
 
@@ -118,9 +122,9 @@ public:
   bool hasDomReflector(void) {return hasDomRefl; }
   
   /**
-     \brief Puts a propagator to reflect any change in the variable domain to mozart.
-     Should be here or in GeVar??
-   */
+     \brief Puts a propagator to reflect any change in the variable
+     domain to mozart.  Should be here or in GeVar??
+  */
   virtual void ensureDomReflection(void) = 0;
   virtual void ensureValReflection(void) = 0;
 
@@ -129,10 +133,11 @@ public:
   virtual OZ_Term getVal(void) = 0;
   //@}
   
-   /// \name Variable speculation
+  /// \name Variable speculation
   //@{
   /**
-     \brief This functions returns a tagged reference to a clone of the variable v.
+     \brief This functions returns a tagged reference to a clone of
+     the variable v.
   */
   virtual TaggedRef clone(TaggedRef v) = 0;
   //@}
@@ -152,8 +157,11 @@ public:
 };
 
 /** 
- * \brief Abstract class for Oz variables that interface Gecode 
- * variables inside a GenericSpace
+ * \brief Abstract class for Oz variables that interface Gecode
+ * variables inside a GenericSpace. VarImp is the corresponding
+ * Variable implementation (e.g. IntVarImp, SetVarImp) and the
+ * propagation condition \a pc is needed to create a domain reflection
+ * propagator for this variable.
  */
 template<class VarImp, Gecode::PropCond pc> 
 class GeVar : public GeVarBase {
@@ -216,9 +224,9 @@ public:
   }
 
   /**
-  	\brief Returns the number of foreign propagators associated with a 
-  	variable. The extra 1 is because of every variable has a val reflector 
-  	associated with the variable.
+     \brief Returns the number of foreign propagators associated with
+     a variable. The extra 1 is because of every variable has a val
+     reflector associated with the variable.
   */
   virtual int varprops(void) { return hasDomRefl+unifyC+1; }
   
@@ -228,14 +236,14 @@ public:
 private:
   /**
      \brief Puts in out a textual representation of the variable.
-   */
+  */
   virtual void toStream(ostream &out) = 0;
 public:
   /**
-     \brief Called from Inspector to display variables. This method is 
-    also called by Show but it does not needs reflection because of its
-    nature.
-   */
+     \brief Called from Inspector to display variables. This method is
+     also called by Show but it does not needs reflection because of
+     its nature.
+  */
   void printStreamV(ostream &out,int depth);
   //@}
 
@@ -247,11 +255,12 @@ public:
   //@}
 
   /** 
-      \brief Add a suspendable to the variable suspension list.
-      By default this function returns PROCEED for an ExtVar. However, 
-      for constraint variables it should return SUSPEND as buil-tin mozart 
-      constraints variables (i.e FD, FS). Returning PROCCED will lead to an 
-      infinite execution of BIwait built-in when it is used.
+      \brief Add a suspendable to the variable suspension list.  By
+      default this function returns PROCEED for an ExtVar. However,
+      for constraint variables it should return SUSPEND as buil-tin
+      mozart constraints variables (i.e FD, FS). Returning PROCCED
+      will lead to an infinite execution of BIwait built-in when it is
+      used.
   */ 
   OZ_Return addSuspV(TaggedRef*, Suspendable* susp) {
     extVar2Var(this)->addSuspSVar(susp);
@@ -277,21 +286,22 @@ public:
   OZ_Return unifyV(TaggedRef* lPtr, TaggedRef* rPtr);
   
   /**
-     \brief Test whether x and y have an empty intersection.
-     This method is called when unifying two variables and the flag am.inEqEq
-     is on. If intersection is empty then there is enough information
-     to make the test == fail.
+     \brief Test whether x and y have an empty intersection.  This
+     method is called when unifying two variables and the flag
+     am.inEqEq is on. If intersection is empty then there is enough
+     information to make the test == fail.
   */
   virtual bool IsEmptyInter(TaggedRef *x, TaggedRef *y) = 0;
   
   /**
-     \brief Unification in gecode is ensured by means of an "equality" 
-     propagator. Equality must be defined according with the constraint
-     system. For finite domains, the intersection between domains is enough.
-     This method have to post a propagator in the gecode space that only 
-     subsumes when both variables get determined. It needs to ensure completeness,
-     otherwise unification may work unexpectedly.
-   */
+     \brief Unification in gecode is ensured by means of an "equality"
+     propagator. Equality must be defined according with the
+     constraint system. For finite domains, the intersection between
+     domains is enough.  This method have to post a propagator in the
+     gecode space that only subsumes when both variables get
+     determined. It needs to ensure completeness, otherwise
+     unification may work unexpectedly.
+  */
   virtual void propagator(GenericSpace *s, GeVar* x,  GeVar* y) = 0;
   
   virtual TaggedRef newVar() = 0; 
@@ -326,9 +336,10 @@ public:
   void ensureValReflection(void);
 
   /**
-     \brief Ensures the existence of a dom reflection propagator on this
-     variable. Creates it if needed. This propagator is used when speculationg 
-     (Supervisor Thread) to ensure the suspensions of the variable are kicked off.
+     \brief Ensures the existence of a dom reflection propagator on
+     this variable. Creates it if needed. This propagator is used when
+     speculationg (Supervisor Thread) to ensure the suspensions of the
+     variable are kicked off.
   */
   void ensureDomReflection(void);
   //@}
@@ -339,8 +350,8 @@ public:
 */
 inline
 bool oz_isGeVar(OzVariable *v) {
-	return v->getType() != OZ_VAR_EXT ?  false :
-					var2ExtVar(v)->getIdV() == OZ_EVAR_GEVAR;
+  return v->getType() != OZ_VAR_EXT ?  false :
+    var2ExtVar(v)->getIdV() == OZ_EVAR_GEVAR;
 }
 
 /**
@@ -361,8 +372,8 @@ GeVarBase* get_GeVar(OZ_Term v) {
 }
 
 /**
-   \brief This Gecode propagator reflects a Gecode variable assignment inside
-   Mozart. It wakes up upon determination, and bind Oz variable
+   \brief This Gecode propagator reflects a Gecode variable assignment
+   inside Mozart. It wakes up upon determination, and bind Oz variable
 */
 template <class VarImp>
 class ValReflector :
@@ -394,7 +405,7 @@ public:
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
 
     if (!oz_isGeVar(ref))
-       return Gecode::ES_SUBSUMED(this,sizeof(*this));
+      return Gecode::ES_SUBSUMED(this,sizeof(*this));
     
 
     GenericSpace *gs = static_cast<GenericSpace*>(s);
@@ -417,8 +428,12 @@ public:
 };
 
 /*
-  \brief This Gecode propagator reflects variable's domain changes to mozart.
-  It wakes up upon domain change, and kicks suspensions.
+  \brief This Gecode propagator reflects variable's domain changes to
+  mozart.  It wakes up upon domain change, and kicks suspensions. This
+  propagator is suscribed to the variable implementation with the high
+  propagation condition available for that kind of
+  variables. Hopefully this P.C will track any change in the domain of
+  the variable.
 */
 template <class VarImp, Gecode::PropCond pc>
 class DomReflector :
@@ -467,8 +482,8 @@ void checkGlobalVar(OZ_Term v) {
   ExtVar *ev = oz_getExtVar(oz_deref(v));
   if (!oz_isLocalVar(ev)) {
     //- printf("CheckGlobalVar found non local reference\n");fflush(stdout);
-    /* This is tha cease when speculating on var v (which contains glv).
-       being v the global var and nlv the new local var
+    /* This is tha cease when speculating on var v (which contains
+       glv).  being v the global var and nlv the new local var
     */
 
     TaggedRef nlv =  static_cast<GeVarBase*>(ev)->clone(v);
@@ -495,72 +510,75 @@ GeVar<VarImp,pc>* get_GeVar(OZ_Term v, bool cgv = true) {
 
 
 /*
-	Some useful macros used by each constraint system to declare variables from OZ_Term's
+  Some useful macros used by each constraint system to declare
+  variables from OZ_Term's
 */
-/* trm is or will be bind to a constraint variable. This macro is used to wait for the variable
-	if it is not defined yet (e.g. a free var).
+/* trm is or will be bind to a constraint variable. This macro is used
+   to wait for the variable if it is not defined yet (e.g. a free
+   var).
 */
-#define declareTerm(trm,varName) \
-	TaggedRef varName = (trm);\
-	{\
-		DEREF(varName,varName_ptr);\
-		Assert(!oz_isRef(varName));\
-		if (oz_isFree(varName)) {\
-			oz_suspendOn(makeTaggedRef(varName_ptr));\
-		}}
+#define declareTerm(trm,varName)		\
+  TaggedRef varName = (trm);			\
+  {						\
+    DEREF(varName,varName_ptr);			\
+    Assert(!oz_isRef(varName));			\
+    if (oz_isFree(varName)) {			\
+      oz_suspendOn(makeTaggedRef(varName_ptr));	\
+    }}
 
 /**
-	Waits until variable at position pos is defined and then declares it as an OZ_Term
+   Waits until variable at position pos is defined and then declares
+   it as an OZ_Term
 */
 #define declareInTerm(pos,varName) declareTerm(OZ_in(pos),varName)
 
 /* 
-	Some useful macros to declare VarArgs from OZ_terms (list, records, tuples)
-	type must be IntVarArgs or BoolVarargs. op is the name of a function, macro to
-	declare one variable of the corresponding array type.
+   Some useful macros to declare VarArgs from OZ_terms (list, records, tuples)
+   type must be IntVarArgs or BoolVarargs. op is the name of a function, macro to
+   declare one variable of the corresponding array type.
 */
 
-#define DECLARE_VARARGS(tIn,array,sp,type,opDecl)  		\
-int __x##tIn = 0; \
-{ \
-	declareInTerm(tIn,t);\
-	__x##tIn =  OZ_isLiteral(t) ? 0 : OZ_isCons(t) ? OZ_length(t) : OZ_width(t); \
-} \
-type array(__x##tIn);					\
-{							\
-  int sz;						\
-  OZ_Term t = OZ_deref(OZ_in(tIn));                     \
-  if(OZ_isLiteral(t)) {					\
-    sz=0;						\
-    Gecode::type _array(sz);		\
-    array=_array;					\
-  }							\
-  else if(OZ_isCons(t)) {				\
-    sz = OZ_length(t);					\
-    Gecode::type _array(sz);	\
-    for(int i=0; OZ_isCons(t); t=OZ_tail(t),i++){	\
-      opDecl(OZ_deref(OZ_head(t)),_array,i,sp); \
-    }                                                   \
-    array=_array;					\
-  }							\
-  else if(OZ_isTuple(t)) {				\
-    sz=OZ_width(t);					\
-    Gecode::type _array(sz);	\
-    for(int i=0;i<sz;i++) {				\
-      opDecl(OZ_getArg(t,i),_array,i,sp);	\
-    }							\
-    array=_array;                                       \
-  }							\
-  else {						\
-    Assert(OZ_isRecord(t));				\
-    OZ_Term al = OZ_arityList(t);			\
-    sz = OZ_width(t);					\
-    Gecode::type _array(sz);          \
-    for(int i=0; OZ_isCons(al); al=OZ_tail(al),i++) {	\
-      opDecl(OZ_subtree(t,OZ_head(al)),_array,i,sp);\
-    }							\
-    array=_array;                                       \
-    }							\
-}
+#define DECLARE_VARARGS(tIn,array,sp,type,opDecl)			\
+  int __x##tIn = 0;							\
+  {									\
+    declareInTerm(tIn,t);						\
+    __x##tIn =  OZ_isLiteral(t) ? 0 : OZ_isCons(t) ? OZ_length(t) : OZ_width(t); \
+  }									\
+  type array(__x##tIn);							\
+  {									\
+    int sz;								\
+    OZ_Term t = OZ_deref(OZ_in(tIn));					\
+    if(OZ_isLiteral(t)) {						\
+      sz=0;								\
+      Gecode::type _array(sz);						\
+      array=_array;							\
+    }									\
+    else if(OZ_isCons(t)) {						\
+      sz = OZ_length(t);						\
+      Gecode::type _array(sz);						\
+      for(int i=0; OZ_isCons(t); t=OZ_tail(t),i++){			\
+	opDecl(OZ_deref(OZ_head(t)),_array,i,sp);			\
+      }									\
+      array=_array;							\
+    }									\
+    else if(OZ_isTuple(t)) {						\
+      sz=OZ_width(t);							\
+      Gecode::type _array(sz);						\
+      for(int i=0;i<sz;i++) {						\
+	opDecl(OZ_getArg(t,i),_array,i,sp);				\
+      }									\
+      array=_array;							\
+    }									\
+    else {								\
+      Assert(OZ_isRecord(t));						\
+      OZ_Term al = OZ_arityList(t);					\
+      sz = OZ_width(t);							\
+      Gecode::type _array(sz);						\
+      for(int i=0; OZ_isCons(al); al=OZ_tail(al),i++) {			\
+	opDecl(OZ_subtree(t,OZ_head(al)),_array,i,sp);			\
+      }									\
+      array=_array;							\
+    }									\
+  }
 
 #endif
