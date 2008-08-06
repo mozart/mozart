@@ -415,10 +415,20 @@ public:
 
   virtual Gecode::Reflection::ActorSpec
   spec(const Gecode::Space* home, Gecode::Reflection::VarMap& m) const {
-    printf("Creating spaceification for ValReflector\n");fflush(stdout); 
+    printf("Creating spaceification for ValReflector\n");fflush(stdout);
+    OZ_Term ov = static_cast<const GenericSpace*>(home)->getVarRef2(index);
+    
+    printf("Creating spec ValReflector OzVariable ref %x\n",ov);fflush(stdout); 
+
+    char *address = (char*)malloc(sizeof(char)*50);
+    sprintf(address,"%x",ov);
+   
     Gecode::Reflection::ActorSpec spec(ati());
     spec << x0.spec(home, m);
-    spec << index;
+    spec <<  Gecode::Reflection::Arg::newString(address);
+
+    free(address);
+
     printf("Creating spaceification for ValReflector - finished\n");fflush(stdout); 
     return spec;
   }
@@ -427,10 +437,33 @@ public:
   post(Gecode::Space* home, Gecode::Reflection::VarMap& vars, 
        const Gecode::Reflection::ActorSpec& spec) {
     printf("Posting ValReflector from specification\n");fflush(stdout); 
+    GenericSpace *gs = static_cast<GenericSpace *>(home);
+    
     spec.checkArity(2);
     View0 x(home, vars, spec[0]);
-    int idx = spec[1]->toInt();
-    (void) new (home) ValReflector<View0>(static_cast<GenericSpace*>(home),x,idx);
+    const char * add = spec[1]->toString();
+    
+    OZ_Term ov;
+    sscanf(add,"%x",&ov);
+
+    printf("Posting ValReflector restored ov: %x\n",ov);fflush(stdout); 
+    
+    Assert(oz_isGeVar(ov));
+    /*
+      Patch ov to contain the index of the new created variable.
+     */
+    int new_index = gs->getVarsSize();
+    GeVarBase *var = get_GeVar(ov);
+    var->setIndex(new_index);
+    
+    /*
+      Add a pointer to the Variable implementation to the array of
+      constraint variables in the space.
+     */
+    int i = gs->newVar(static_cast<Gecode::VarImpBase*>(x.var()), ov);
+    Assert(new_index == i);
+    
+    (void) new (home) ValReflector<View0>(gs,x,new_index);
     printf("Posting ValReflector from specification - finished\n");fflush(stdout); 
   }
   
