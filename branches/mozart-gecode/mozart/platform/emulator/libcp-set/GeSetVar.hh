@@ -142,6 +142,10 @@ public:
     postDomReflector<SetView, SetVarImp, PC_SET_ANY>(getGSpace(),this);
   }
 
+  virtual int degree(void) { 
+    SetView vi(static_cast<SetVarImp*>(getGSpace()->getVarInfo(index))); 
+    return vi.degree(); 
+  }
 };
 
 
