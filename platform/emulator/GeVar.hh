@@ -330,10 +330,12 @@ public:
 
   void test();
 
+  /*
   int degree(void) { 
     GeView< VarImp > vi (getGSpace()->getVarInfo(index)); 
     return vi.degree(); 
   }
+  */
   //@}
 
   /// \name Reflection mechanisms
@@ -383,7 +385,9 @@ GeVarBase* get_GeVar(OZ_Term v) {
 
 /**
    \brief This Gecode propagator reflects a Gecode variable assignment
-   inside Mozart. It wakes up upon determination, and bind Oz variable
+   inside Mozart. It wakes up upon determination, and binds the
+   corresnding OzVariable. This propagator is posted via the template
+   function postValReflector (see GeVar.icc)
 */
 template <class View0>
 class ValReflector :
@@ -391,7 +395,7 @@ class ValReflector :
 {
 protected:
   int index;
-
+  using Gecode::UnaryPropagator<View0, Gecode::PC_GEN_ASSIGNED>::x0;
 public:
   ValReflector(GenericSpace* s, View0 v, int idx) :
     Gecode::UnaryPropagator<View0, Gecode::PC_GEN_ASSIGNED>(s, v),
@@ -404,7 +408,32 @@ public:
   virtual Gecode::Actor* copy(Gecode::Space* s, bool share) {
     return new (s) ValReflector(static_cast<GenericSpace*>(s), share, *this);
   }
+  
+  static Gecode::Support::Symbol ati(void) {
+    return Gecode::Reflection::mangle<View0>("ValReflector");
+  }
 
+  virtual Gecode::Reflection::ActorSpec
+  spec(const Gecode::Space* home, Gecode::Reflection::VarMap& m) const {
+    printf("Creating spaceification for ValReflector\n");fflush(stdout); 
+    Gecode::Reflection::ActorSpec spec(ati());
+    spec << x0.spec(home, m);
+    spec << index;
+    printf("Creating spaceification for ValReflector - finished\n");fflush(stdout); 
+    return spec;
+  }
+
+  static void
+  post(Gecode::Space* home, Gecode::Reflection::VarMap& vars, 
+       const Gecode::Reflection::ActorSpec& spec) {
+    printf("Posting ValReflector from specification\n");fflush(stdout); 
+    spec.checkArity(2);
+    View0 x(home, vars, spec[0]);
+    int idx = spec[1]->toInt();
+    (void) new (home) ValReflector<View0>(static_cast<GenericSpace*>(home),x,idx);
+    printf("Posting ValReflector from specification - finished\n");fflush(stdout); 
+  }
+  
   virtual OZ_Term getVarRef(GenericSpace* s) {
     return s->getVarRef(index); 
   }

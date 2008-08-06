@@ -141,8 +141,24 @@ public:
   virtual void ensureDomReflection(void) {
     postDomReflector<IntView, IntVarImp, PC_INT_DOM>(getGSpace(),this);
   }
+  
+  virtual int degree(void) { 
+    IntView vi(static_cast<IntVarImp*>(getGSpace()->getVarInfo(index))); 
+    return vi.degree(); 
+  }
 
 };
+
+/*
+  TODO: This is not the right pace to register all the instances of
+  the ValReflector propagator. But if instances are registered
+  sepparately then compilation complains about redefined symbols.
+ */
+namespace {
+  GECODE_REGISTER1(ValReflector<Gecode::Int::IntView>);
+  GECODE_REGISTER1(ValReflector<Gecode::Int::BoolView>);
+  GECODE_REGISTER1(ValReflector<Gecode::Set::SetView>);
+}
 
 
 inline OZ_Term new_GeIntVar(const IntSet& dom) {
