@@ -453,6 +453,7 @@ public:
       Patch ov to contain the index of the new created variable.
      */
     int new_index = gs->getVarsSize();
+    printf("new index for variable %d\n",new_index);fflush(stdout);
     GeVarBase *var = get_GeVar(ov);
     var->setIndex(new_index);
     
@@ -513,7 +514,7 @@ class DomReflector :
 {
 protected:
   int index;
-  
+   using Gecode::UnaryPropagator<View0,pc>::x0;
 public:
   DomReflector(GenericSpace* s, View0 v, int idx) :
     Gecode::UnaryPropagator<View0, pc>(s, v), index(idx) { }
@@ -525,6 +526,59 @@ public:
     return new (s) DomReflector(static_cast<GenericSpace*>(s), share, *this);
   }
 
+  static Gecode::Support::Symbol ati(void) {
+    return Gecode::Reflection::mangle<View0>("DomReflector");
+  }
+
+  virtual Gecode::Reflection::ActorSpec
+  spec(const Gecode::Space* home, Gecode::Reflection::VarMap& m) const {
+    printf("**DomReflector Creating spaceification\n");fflush(stdout);
+    OZ_Term ov = static_cast<const GenericSpace*>(home)->getVarRef2(index);
+    
+    printf("Creating spec ValReflector OzVariable ref %x\n",ov);fflush(stdout); 
+
+    char *address = (char*)malloc(sizeof(char)*50);
+    sprintf(address,"%x",ov);
+   
+    Gecode::Reflection::ActorSpec spec(ati());
+    spec << x0.spec(home, m);
+    spec <<  Gecode::Reflection::Arg::newString(address);
+
+    free(address);
+
+    printf("**DomReflector Creating spaceification- finished\n");fflush(stdout);
+    return spec;
+  }
+
+  static void
+  post(Gecode::Space* home, Gecode::Reflection::VarMap& vars, 
+       const Gecode::Reflection::ActorSpec& spec) {
+    printf("**DomReflector Posting from specification\n");fflush(stdout); 
+    GenericSpace *gs = static_cast<GenericSpace *>(home);
+    
+    spec.checkArity(2);
+    View0 x(home, vars, spec[0]);
+    const char * add = spec[1]->toString();
+    
+    OZ_Term ov;
+    sscanf(add,"%x",&ov);
+
+    printf("Posting ValReflector restored ov: %x\n",ov);fflush(stdout); 
+    
+    Assert(oz_isGeVar(ov));
+    int new_index = get_GeVar(ov)->getIndex();
+    
+    /*
+      TODO: Using the current index as the new inex is not a good idea
+      since this propagator should be created before ValReflector. In
+      that case, this method must be in charge to add the variable
+      pointer and to update the reference in the generic space.
+     */ 
+    Assert(false);
+    (void) new (home) DomReflector<View0,pc>(gs,x,new_index);
+    printf("Posting ValReflector from specification - finished\n");fflush(stdout); 
+}
+  
   virtual OZ_Term getVarRef(GenericSpace* s) {return s->getVarRef(index); }
 
   // this propagator should never fail nor subsume
