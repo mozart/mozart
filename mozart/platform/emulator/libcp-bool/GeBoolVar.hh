@@ -145,7 +145,13 @@ public:
   virtual void ensureDomReflection(void) {
     postDomReflector<BoolView, BoolVarImp, PC_INT_DOM>(getGSpace(),this);
   }
+  
+  virtual int degree(void) { 
+    BoolView vi(static_cast<BoolVarImp*>(getGSpace()->getVarInfo(index))); 
+    return vi.degree(); 
+  }
 };
+
 
 
 inline 
