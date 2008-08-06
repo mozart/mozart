@@ -149,6 +149,11 @@ public:
     return &(refs[n]); 
   }
 
+  OZ_Term getRef2(int n) const { 
+    Assert(n >= 0 && n < size);
+    return refs[n]; 
+  }
+
   Gecode::VarImpBase& getVar(int n) {
     Assert(n >= 0 && n < size);
     return *vars[n];
@@ -425,6 +430,10 @@ public:
    * @return reference to the mozart heap 
    */
   OZ_Term getVarRef(int n) { return *vars.getRef(n); }
+
+  OZ_Term getVarRef2(int n) const {
+    return vars.getRef2(n);
+  }
   //@}
 
  
