@@ -140,4 +140,3 @@ proc {IntVarDistribute RawSpec Vec}
       end
    end
 end
-

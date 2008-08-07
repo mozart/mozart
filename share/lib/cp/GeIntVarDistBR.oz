@@ -21,6 +21,23 @@
 %%%
 
    
+%% GeIntVar Distribution. var selection and val selection                                                                                                     
+   IvdVarSel = map( naive:      0
+                    size:       1
+                    min:        2
+                    max:        3
+                    nbProp:    4
+                    width:      5
+                  )
+
+   IvdValSel = map( min:        0
+                    mid:        1
+                    max:        2
+                    splitMin:   3
+                    splitMax:   4                                                                                                                          
+                  )
+	 
+	 
 %% Optimized and generic
 SelVal = map(min:      FdReflect.min
 	     max:      FdReflect.max
@@ -70,7 +87,7 @@ fun {PreProcessSpec Spec}
 	       else Spec
 	       end}
    IsOpt =    case FullSpec
-	      of generic(select:id filter:undet procedure:noProc
+	      of generic(select:id filter:undet %procedure:noProc
 			 order:OrdSpec value:ValSpec) then
 		 {IsAtom OrdSpec} andthen {IsAtom ValSpec}
 	      else false
@@ -89,7 +106,9 @@ end
    	 
 proc {GFDDistribute RawSpec Xs}
    case {PreProcessSpec RawSpec}
-   of gen(value:     SelVal
+   of opt(value:SelVal order:SelVar) then
+			{Wait {GFDP.distribute IvdVarSel.SelVar IvdValSel.SelVal Xs}}
+	 [] gen(value:     SelVal
 	  order:     Order
 	  select:    Select
 	  filter:    Fil) then

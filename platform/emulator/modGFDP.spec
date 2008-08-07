@@ -7,7 +7,7 @@ $boot_module_name      		  = "GFD";
 %builtins_all = 
 (
 ## Distributor
- 'distribute'    => { in =>  ['+value'],
+ 'distribute'    => { in =>  ['+int', '+int', '+value'],
                       out => ['value'],
                       bi =>  gfd_distribute },
 ##Propagators
@@ -72,6 +72,8 @@ $boot_module_name      		  = "GFD";
  
 ### Finite domain propagators from gecode
 
+## domain propagators
+
  'gfd_dom_5' => { 
      in  => ['+value', '+value', '+value', '+value', '+value'],
      out => [],
@@ -89,6 +91,8 @@ $boot_module_name      		  = "GFD";
      out => [],
      bi  => gfd_dom_6 
  },
+
+## relation propagators
 
  'gfd_rel_5' => { 
      in  => ['+value', '+value', '+value', '+value', '+value'],
@@ -108,11 +112,15 @@ $boot_module_name      		  = "GFD";
      bi  => gfd_rel_4
  },
 
+## element propagators
+
  'gfd_element_5' => { 
      in  => ['+value', '+value', '+value', '+value', '+value'],
      out => [],
      bi  => gfd_element_5 
  },
+
+## distinct propagators
 
  'gfd_distinct_3' => { 
      in  => ['+value', '+value', '+value'],
@@ -126,6 +134,8 @@ $boot_module_name      		  = "GFD";
      bi  => gfd_distinct_4 
  },
 
+## channel propagators
+
  'gfd_channel_4' => {
      in  => ['+value', '+value', '+value', '+value'],
      out => [],
@@ -138,17 +148,23 @@ $boot_module_name      		  = "GFD";
      bi  => gfd_channel_5 
  },
 
+## graph propagators
+
  'gfd_circuit_3' => { 
      in  => ['+value', '+value', '+value'],
      out => [],
      bi  => gfd_circuit_3
  },
 
+## scheduling propagators
+
  'gfd_cumulatives_9' => { 
      in  => ['+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value', '+value'],
      out => [],
      bi  => gfd_cumulatives_9 
  },
+
+## sorted propagators
 
  'gfd_sorted_4' => {
      in  => ['+value', '+value', '+value', '+value'],
@@ -161,6 +177,8 @@ $boot_module_name      		  = "GFD";
      out => [],
      bi  => gfd_sorted_5
  },
+
+## cardinality propagators
 
  'gfd_count_6' => {
      in  => ['+value', '+value', '+value', '+value', '+value', '+value'],
@@ -180,23 +198,29 @@ $boot_module_name      		  = "GFD";
      bi  => gfd_count_5
  },
 
- 'gfd_count_2' => { 
-     in  => ['+value', '+value'],
-     out => [],
-     bi  => gfd_count_2 
- },
+# this is done by gfd_count_4 and gfd_count_5
+# 'gfd_count_2' => { 
+#     in  => ['+value', '+value'],
+#     out => [],
+#     bi  => gfd_count_2 
+# },
+#
+# 'gfd_count_3' => {
+#     in  => ['+value', '+value', '+value'],
+#     out => [],
+#     bi  => gfd_count_3
+# },
 
- 'gfd_count_3' => {
-     in  => ['+value', '+value', '+value'],
-     out => [],
-     bi  => gfd_count_3
- },
+
+##  extencional propagators
 
  'gfd_extensional_4' => { 
      in  => ['+value', '+value', '+value', '+value'],
      out => [],
      bi  => gfd_extensional_4
  },
+
+## arithmetic propagators
 
  'gfd_max_5' => { 
      in  => ['+value', '+value', '+value', '+value', '+value'],
@@ -210,17 +234,18 @@ $boot_module_name      		  = "GFD";
      bi  => gfd_max_4 
  },
 
- 'gfd_max_3' => {
-     in  => ['+value', '+value', '+value'],
-     out => [],
-     bi  => gfd_max_3
- },
-
- 'gfd_max_2' => { 
-     in  => ['+value', '+value'],
-     out => [],
-     bi  => gfd_max_2 
- },
+# this is done by gfd_max_5 and gfd_max_4
+# 'gfd_max_3' => {
+#     in  => ['+value', '+value', '+value'],
+#     out => [],
+#     bi  => gfd_max_3
+# },
+#
+# 'gfd_max_2' => { 
+#     in  => ['+value', '+value'],
+#     out => [],
+#     bi  => gfd_max_2 
+# },
 
  'gfd_mult_5' => { 
      in  => ['+value', '+value', '+value', '+value', '+value'],
@@ -228,11 +253,12 @@ $boot_module_name      		  = "GFD";
      bi  => gfd_mult_5
  },
 
- 'gfd_mult_3' => {
-     in  => ['+value', '+value', '+value'],
-     out => [],
-     bi  => gfd_mult_3
- },
+# this is done by gfd_mult_5
+# 'gfd_mult_3' => {
+#     in  => ['+value', '+value', '+value'],
+#     out => [],
+#     bi  => gfd_mult_3
+# },
 
  'gfd_min_5' => {
      in  => ['+value', '+value', '+value', '+value', '+value'],
@@ -246,17 +272,19 @@ $boot_module_name      		  = "GFD";
      bi  => gfd_min_4 
  },
 
- 'gfd_min_3' => { 
-     in  => ['+value', '+value', '+value'],
-     out => [],
-     bi  => gfd_min_3
- },
+# this is done by gfd_min_5
+# 'gfd_min_3' => { 
+#     in  => ['+value', '+value', '+value'],
+#     out => [],
+#     bi  => gfd_min_3
+# },
 
- 'gfd_min_2' => {
-     in  => ['+value', '+value'],
-     out => [],
-     bi  => gfd_min_2 
- },
+# this is done by gfd_min_4
+# 'gfd_min_2' => {
+#     in  => ['+value', '+value'],
+#     out => [],
+#     bi  => gfd_min_2 
+# },
 
  'gfd_abs_4' => { 
      in  => ['+value', '+value', '+value', '+value'],
@@ -264,11 +292,15 @@ $boot_module_name      		  = "GFD";
      bi  => gfd_abs_4
  },
 
- 'gfd_abs_2' => {
-     in  => ['+value', '+value'],
-     out => [],
-     bi  => gfd_abs_2
- },
+# this is done by gfd_abs_4
+# 'gfd_abs_2' => {
+#     in  => ['+value', '+value'],
+#     out => [],
+#     bi  => gfd_abs_2
+# },
+
+
+## linear propagators
 
  'gfd_linear_5' => { 
      in  => ['+value', '+value', '+value', '+value', '+value'],

@@ -157,7 +157,7 @@ $boot_module_name     = "GFS";
  },
  
  'gfs_cardinality_2' => {
-     in  => ['+value', '+value'],
+     in  => ['+set', '+int'],
      out => [],
      bi  => gfs_cardinality_2
  },
