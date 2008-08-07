@@ -33,6 +33,8 @@
 
 /**
     Projector constraints
+    Propagators to post a projector constraint on variables. This is a Gecode propagators interface. 
+    For more information see http://www.gecode.org/gecode-doc-latest/group__TaskModelSetProjector.html
 */
 /*
 OZ_BI_define(gfs_projector_4,4,0){
@@ -133,6 +135,8 @@ OZ_BI_define(gfs_projector_5,5,0){
 
 /**
     Domain constraints
+    Propagators to post a domain constraint on variables. This is a Gecode propagators interface. 
+    For more information see http://www.gecode.org/gecode-doc-latest/group__TaskModelSetDom.html
 */
 OZ_BI_define(gfs_dom_3,3,0){
   DeclareGSpace(home);
@@ -182,8 +186,6 @@ OZ_BI_define(gfs_dom_4,4,0){
 
   DeclareGeSetVar(0, __s, home);
   DeclareSetRelType(1, __r);
-  
-
   
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
      OZ_isInt(OZ_in(2)) && OZ_isInt(OZ_in(3))){
@@ -250,8 +252,6 @@ OZ_BI_define(gfs_dom_5,5,0){
   DeclareInt2(3, __j);
   DeclareGeBoolVar(4, __b, home);
 
-
-
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
      OZ_isInt(OZ_in(2)) && OZ_isInt(OZ_in(3)) && OZ_isGeBoolVar(OZ_in(4))){
     /*
@@ -293,8 +293,11 @@ OZ_BI_define(gfs_cardinality_3,3,0){
   CHECK_POST(home);
 }OZ_BI_end
 
+
 /**
     Relation constraints
+    Propagators to post a relation constraint on variables. This is a Gecode propagators interface. 
+    For more information see http://www.gecode.org/gecode-doc-latest/group__TaskModelSetRel.html
 */
  
 OZ_BI_define(gfs_rel_3,3,0){
@@ -302,6 +305,9 @@ OZ_BI_define(gfs_rel_3,3,0){
   
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2))){
+    /**
+       rel (Space *home, SetVar x, SetRelType r, SetVar y)
+     */
     DeclareGeSetVar(0, __x, home);
     DeclareSetRelType(1, __r);
     DeclareGeSetVar(2, __y, home);
@@ -315,6 +321,9 @@ OZ_BI_define(gfs_rel_3,3,0){
   }
   else if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
 	  OZ_isGeIntVar(OZ_in(2))){
+    /**
+       rel (Space *home, SetVar s, SetRelType r, IntVar x)
+     */
     DeclareGeSetVar(0, __s, home);
     DeclareSetRelType(1, __r);
     DeclareGeIntVar(2, __x, home);
@@ -327,6 +336,9 @@ OZ_BI_define(gfs_rel_3,3,0){
   }
   else if(OZ_isGeIntVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
 	  OZ_isGeSetVar(OZ_in(2))){
+    /**
+       rel (Space *home, IntVar x, SetRelType r, SetVar s)
+     */
     DeclareGeIntVar(0, __x, home);
     DeclareSetRelType(1, __r);
     DeclareGeSetVar(2, __s, home);
@@ -340,6 +352,9 @@ OZ_BI_define(gfs_rel_3,3,0){
   }
   else if(OZ_isGeSetVar(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && 
 	  OZ_isGeIntVar(OZ_in(2))){
+    /**
+       rel (Space *home, SetVar s, IntRelType r, IntVar x)
+     */
     DeclareGeSetVar(0, __s, home);
     DeclareIntRelType(1, __r);
     DeclareGeIntVar(2, __x, home);
@@ -353,6 +368,9 @@ OZ_BI_define(gfs_rel_3,3,0){
   }
   else if(OZ_isGeIntVar(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && 
 	  OZ_isGeSetVar(OZ_in(2))){
+    /**
+       rel (Space *home, IntVar x, IntRelType r, SetVar s)
+     */
     DeclareGeIntVar(0, __x, home);
     DeclareIntRelType(1, __r);
     DeclareGeSetVar(2, __s, home);
@@ -366,6 +384,9 @@ OZ_BI_define(gfs_rel_3,3,0){
   }
   else if(OZ_isSetOpType(OZ_in(0)) && OZ_isSetVarArgs(OZ_in(1)) && 
 	  OZ_isGeSetVar(OZ_in(2))){
+    /**
+       rel (Space *home, SetOpType op, const SetVarArgs &x, SetVar y)
+     */
     DeclareSetOpType(0, __op);
     DECLARE_SETVARARGS(1, __x, home);
     DeclareGeSetVar(2, __y, home);
@@ -379,6 +400,9 @@ OZ_BI_define(gfs_rel_3,3,0){
   }
   else if(OZ_isSetOpType(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && 
 	  OZ_isGeSetVar(OZ_in(2))){
+    /**
+       rel (Space *home, SetOpType op, const IntVarArgs &x, SetVar y)
+     */
     DeclareSetOpType(0, __op);
     DECLARE_INTVARARGS(1, __x, home);
     DeclareGeSetVar(2, __y, home);
@@ -402,6 +426,9 @@ OZ_BI_define(gfs_rel_4,4,0){
 
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3))){
+    /**
+       rel (Space *home, SetVar x, SetRelType r, SetVar y, BoolVar b)
+     */
     DeclareGeSetVar(0, __x, home);
     DeclareSetRelType(1, __r);
     DeclareGeSetVar(2, __y, home);
@@ -416,6 +443,9 @@ OZ_BI_define(gfs_rel_4,4,0){
   }
   else if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
 	  OZ_isGeIntVar(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3))){
+    /**
+       rel (Space *home, SetVar s, SetRelType r, IntVar x, BoolVar b)
+     */
     DeclareGeSetVar(0, __s, home);
     DeclareSetRelType(1, __r);
     DeclareGeIntVar(2, __x, home);
@@ -430,6 +460,9 @@ OZ_BI_define(gfs_rel_4,4,0){
   }
   else if(OZ_isGeIntVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
 	  OZ_isGeSetVar(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3))){
+    /**
+       rel (Space *home, IntVar x, SetRelType r, SetVar s, BoolVar b)
+     */
     DeclareGeIntVar(0, __x, home);
     DeclareSetRelType(1, __r);
     DeclareGeSetVar(2, __s, home);
@@ -444,6 +477,9 @@ OZ_BI_define(gfs_rel_4,4,0){
   }
   else if(OZ_isSetOpType(OZ_in(0)) && OZ_isSetVarArgs(OZ_in(1)) && 
 	  OZ_isIntSet(OZ_in(2)) && OZ_isGeSetVar(OZ_in(3))){
+    /**
+       rel (Space *home, SetOpType op, const SetVarArgs &x, const IntSet &z, SetVar y)
+     */
     DeclareSetOpType(0, __op);
     DECLARE_SETVARARGS(1, __x, home);
     DECLARE_INT_SET(2, __z);
@@ -458,6 +494,9 @@ OZ_BI_define(gfs_rel_4,4,0){
   }
   else if(OZ_isSetOpType(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && 
 	  OZ_isIntSet(OZ_in(2)) && OZ_isGeSetVar(OZ_in(3))){
+    /**
+       rel (Space *home, SetOpType op, const IntVarArgs &x, const IntSet &z, SetVar y)
+     */
     DeclareSetOpType(0, __op);
     DECLARE_INTVARARGS(1, __x, home);
     DECLARE_INT_SET(2, __z);
@@ -481,12 +520,13 @@ OZ_BI_define(gfs_rel_5,5,0){
   DeclareGSpace(home);
   DeclareSetOpType(1, __op);
   DeclareSetRelType(3, __r);
-  
-
 
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetOpType(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2)) && OZ_isSetRelType(OZ_in(3)) && 
      OZ_isGeSetVar(OZ_in(4))){
+    /**
+       rel (Space *home, SetVar x, SetOpType op, SetVar y, SetRelType r, SetVar z)
+     */
     DeclareGeSetVar(0, __x, home);
     DeclareGeSetVar(2, __y, home);
     DeclareGeSetVar(4, __z, home);
@@ -501,6 +541,9 @@ OZ_BI_define(gfs_rel_5,5,0){
   else if(OZ_isIntSet(OZ_in(0)) && OZ_isSetOpType(OZ_in(1)) && 
 	  OZ_isGeSetVar(OZ_in(2)) && OZ_isSetRelType(OZ_in(3)) && 
 	  OZ_isGeSetVar(OZ_in(4))){
+    /**
+       rel (Space *home, const IntSet &x, SetOpType op, SetVar y, SetRelType r, SetVar z)
+     */
     DECLARE_INT_SET(0, __x);
     DeclareGeSetVar(2, __y, home);
     DeclareGeSetVar(4, __z, home);
@@ -515,6 +558,9 @@ OZ_BI_define(gfs_rel_5,5,0){
   else if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetOpType(OZ_in(1)) && 
 	  OZ_isIntSet(OZ_in(2)) && OZ_isSetRelType(OZ_in(3)) && 
 	  OZ_isGeSetVar(OZ_in(4))){
+    /**
+       rel (Space *home, SetVar x, SetOpType op, const IntSet &y, SetRelType r, SetVar z)
+     */
     DeclareGeSetVar(0, __x, home);
     DECLARE_INT_SET(2, __y);
     DeclareGeSetVar(4, __z, home);
@@ -529,6 +575,9 @@ OZ_BI_define(gfs_rel_5,5,0){
   else if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetOpType(OZ_in(1)) && 
 	  OZ_isGeSetVar(OZ_in(2)) && OZ_isSetRelType(OZ_in(3)) && 
 	  OZ_isIntSet(OZ_in(4))){
+    /**
+       rel (Space *home, SetVar x, SetOpType op, SetVar y, SetRelType r, const IntSet &z)
+     */
     DeclareGeSetVar(0, __x, home);
     DeclareGeSetVar(2, __y, home);
     DECLARE_INT_SET(4, __z);
@@ -543,6 +592,9 @@ OZ_BI_define(gfs_rel_5,5,0){
   else if(OZ_isIntSet(OZ_in(0)) && OZ_isSetOpType(OZ_in(1)) && 
 	  OZ_isGeSetVar(OZ_in(2)) && OZ_isSetRelType(OZ_in(3)) && 
 	  OZ_isIntSet(OZ_in(4))){
+    /**
+       rel (Space *home, const IntSet &x, SetOpType op, SetVar y, SetRelType r, const IntSet &z)
+     */
     DECLARE_INT_SET3(__x, val, 0);
     DeclareGeSetVar(2, __y, home);
     DECLARE_INT_SET3(__z, val1, 4);
@@ -557,6 +609,9 @@ OZ_BI_define(gfs_rel_5,5,0){
   else if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetOpType(OZ_in(1)) && 
 	  OZ_isIntSet(OZ_in(2)) && OZ_isSetRelType(OZ_in(3)) && 
 	  OZ_isIntSet(OZ_in(4))){
+    /**
+       rel (Space *home, SetVar x, SetOpType op, const IntSet &y, SetRelType r, const IntSet &z)
+     */
     DeclareGeSetVar(0, __x, home);
     DECLARE_INT_SET3(__y, val, 2);
     DECLARE_INT_SET3(__z, val2, 4);
@@ -577,6 +632,8 @@ OZ_BI_define(gfs_rel_5,5,0){
  
 /**
     Convexity constraints
+    Propagators to post a convexity constraint on variables. This is a Gecode propagators interface. 
+    For more information see http://www.gecode.org/gecode-doc-latest/group__TaskModelSetConvex.html
 */
 
 // OZ_BI_define(gfs_convex_1,1,0){
@@ -606,6 +663,8 @@ OZ_BI_define(gfs_rel_5,5,0){
 
  /**
     Sequence constraints  
+    Propagators to post a sequence constraint on variables. This is a Gecode propagators interface. 
+    For more information see http://www.gecode.org/gecode-doc-latest/group__TaskModelSetSequence.html
  */
 OZ_BI_define(gfs_sequence_1,1,0){
   DeclareGSpace(home);
@@ -657,8 +716,11 @@ OZ_BI_define(gfs_sequentialUnion_2,2,0){
   CHECK_POST(home);
 }OZ_BI_end
 
+
  /**
     Distinctness constraints
+    Propagators to post a distinct constraint on variables. This is a Gecode propagators interface. 
+    For more information see http://www.gecode.org/gecode-doc-latest/group__TaskModelSetDistinct.html
   */
 
 OZ_BI_define(atmostOne_2,2,0){
@@ -688,12 +750,12 @@ OZ_BI_define(atmostOne_2,2,0){
 
  /**
     Connection constraints to finite domain variables
+    Propagators to post a connection constraint on variables. This is a Gecode propagators interface. 
+    For more information see http://www.gecode.org/gecode-doc-latest/group__TaskModelSetConnect.html
 */
 
 OZ_BI_define(gfs_min_2,2,0){
   DeclareGSpace(home);
-
-
 
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1))){
     /*
@@ -866,6 +928,8 @@ OZ_BI_define(gfs_weights_4,4,0){
 
 /**
     Selection constraints
+    Propagators to post a selection constraint on variables. This is a Gecode propagators interface. 
+    For more information see http://www.gecode.org/gecode-doc-latest/group__TaskModelSetSelection.html
 */
 OZ_BI_define(gfs_selectUnion_3,3,0){
   DeclareGSpace(home);
@@ -875,8 +939,7 @@ OZ_BI_define(gfs_selectUnion_3,3,0){
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2))){
     /*
-      void Gecode::selectUnion (Space *home, const SetVarArgs &x, SetVar y, 
-      SetVar z)
+      void Gecode::selectUnion (Space *home, const SetVarArgs &x, SetVar y, SetVar z)
       Post propagator for $ z=\bigcup\langle x_0,\dots,x_{n-1}\rangle[y] $. 
      */
     DECLARE_SETVARARGS(0, __x, home);
@@ -891,8 +954,7 @@ OZ_BI_define(gfs_selectUnion_3,3,0){
   else if(OZ_isIntSetArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && 
 	  OZ_isGeSetVar(OZ_in(2))){
     /*
-      void Gecode::selectUnion (Space *home, const IntSetArgs &s, SetVar y, 
-      SetVar z)
+      void Gecode::selectUnion (Space *home, const IntSetArgs &s, SetVar y, SetVar z)
       Post propagator for $ z=\bigcup\langle s_0,\dots,s_{n-1}\rangle[y] $. 
     */
     DECLARE_INT_SET_ARGS(0, __s);
@@ -913,8 +975,6 @@ OZ_BI_define(gfs_selectUnion_3,3,0){
 
 OZ_BI_define(gfs_selectInterIn_4,4,0){
   DeclareGSpace(home);
-
-
 
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2)) && OZ_isIntSet(OZ_in(3))){ 
@@ -953,8 +1013,7 @@ OZ_BI_define(gfs_selectSet_3,3,0){
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2))){
     /*
-      void Gecode::selectSet (Space *home, const SetVarArgs &x, IntVar y, 
-      SetVar z)
+      void Gecode::selectSet (Space *home, const SetVarArgs &x, IntVar y, SetVar z)
       Post propagator for $ z=\langle x_0,\dots,x_{n-1}\rangle[y] $. 
     */
     
@@ -999,11 +1058,9 @@ OZ_BI_define(gfs_selectInter_3,3,0){
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2))){
     /*
-      void Gecode::selectInter (Space *home, const SetVarArgs &x, SetVar y, 
-      SetVar z)
+      void Gecode::selectInter (Space *home, const SetVarArgs &x, SetVar y, SetVar z)
       Post propagator for $ z=\bigcap\langle x_0,\dots,x_{n-1}\rangle[y] $ 
-      using
-      $ \mathcal{U} $ as universe. 
+      using $ \mathcal{U} $ as universe. 
     */
     
     DECLARE_SETVARARGS(0, __x, home);
@@ -1052,6 +1109,8 @@ OZ_BI_define(gfs_selectDisjoint_2,2,0){
   CHECK_POST(home);
 }OZ_BI_end
 
+
+ // this post is not really neccessary, farhat@ has to delete it!
 OZ_BI_define(gfs_reifiedInclude_3,3,0){
   DeclareGSpace(home);
 
