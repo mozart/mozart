@@ -31,6 +31,11 @@
 #include "BoolVarMacros.hh"
 
 
+/**
+   Relation Constraints
+   Propagators to post a relation constraint on variables. This is a Gecode propagators interface. 
+   For more information see http://www.gecode.org/gecode-doc-latest/group__TaskModelIntRelBool.html
+ */
 
 OZ_BI_define(gbd_rel_5,5,0){
   DeclareGSpace(home);
@@ -211,6 +216,13 @@ OZ_BI_define(gbd_rel_6,6,0){
 
   CHECK_POST(home);
 }OZ_BI_end
+
+
+/**
+   Linear Constraints
+   Propagators to post a linear constraint on variables. This is a Gecode propagators interface. 
+   For more information see http://www.gecode.org/gecode-doc-latest/group__TaskModelIntLinearBool.html
+ */
 
 OZ_BI_define(gbd_linear_5,5,0){
   DeclareGSpace(home);

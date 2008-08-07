@@ -182,8 +182,13 @@ void GenericSpace::unreflect(std::vector<Reflection::ActorSpec>& as,
     printf("GeSpace.cc >> Unreflect created var\n");fflush(stdout);
   }
   for (std::vector<Reflection::ActorSpec>::iterator it=as.begin(); it != as.end(); ++it) {
-    ur.post(*it);  // Post actors from specifications
-    printf("GeSpace.cc >> Unreflect created actor\n");fflush(stdout);
+    Reflection::ActorSpec spec = *it;
+    if (spec.ati() == "DomReflector") {
+      printf("GeSpace.cc >> Unreflect found DomReflector\n");fflush(stdout);
+    } else {
+      ur.post(spec);  // Post actors from specifications
+      printf("GeSpace.cc >> Unreflect created actor\n");fflush(stdout);
+    }
   }
   printf("GeSpace.cc >> Unreflect finished\n");fflush(stdout);
 }

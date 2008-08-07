@@ -658,7 +658,9 @@ in
 	 raise malformed('SelectSet constraint post') end
       end
    end
-   
+
+   %% This can be done using the dom propagator. Add SetRelType parameter to do that.
+   %% See record Rt in this file.
    proc {ReifiedInclude Sc}
       W = {Record.width Sc}
    in
