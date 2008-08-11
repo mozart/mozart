@@ -149,7 +149,7 @@ inline
 Bool Board::isStable(void) {
 
   if (!bq->isEmpty()) {
-    printf("isStable BQ is not empty\n");fflush(stdout);
+    //printf("isStable BQ is not empty\n");fflush(stdout);
     return NO;
   }
 
@@ -345,19 +345,19 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
   GenericSpace * gsrc = src->getGenericSpace(true);
   GenericSpace * gdst = dst->getGenericSpace(true);
   
-  printf("merge operation started: srcB: %p, tgtB: %p\n",src,dst);fflush(stdout);
+  //printf("merge operation started: srcB: %p, tgtB: %p\n",src,dst);fflush(stdout);
   /*
     TODO: optimization: if src has a generic space but it is solved do nothing.
    */
-  printf("board.icc >> Merging spaces\n");fflush(stdout);	
+  //printf("board.icc >> Merging spaces\n");fflush(stdout);	
 
   if (gsrc != NULL) {  
-    printf("board.icc >> source board has a gs\n");fflush(stdout);	
+    //printf("board.icc >> source board has a gs\n");fflush(stdout);	
     // there is a genericSpace in the board that gets merged
     if (gdst != NULL) {
       //printf("board.icc >> dest board has a gs (real)\n");fflush(stdout);	
       // both boards have a genericSpace then do a real merge
-      gdst->merge(gsrc);
+      gdst->merge(gsrc,dst);
     } else {
       /* TODO: oz_currentBoard() does not have a generic space then a
 	 clone of the space that gets merged is enough.  TODO: a clone
@@ -387,7 +387,7 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
     }
     // In any other case generic space merging is not necessary.
   }
-  printf("board.icc >> End generic space merge\n");fflush(stdout);
+  //printf("board.icc >> End generic space merge\n");fflush(stdout);
   
   // This might cause two serving threads for the same board!
 

@@ -239,9 +239,9 @@ void GenericSpace::varReflect(Reflection::VarMap &vmp, bool registerOnly) {
 /**
    \brief Merge space \a src into this. 
 */
-void GenericSpace::merge(GenericSpace *src) {
-  printf("GeSpace.cc >> called space merge src: %p dst: %p\n",src,this);fflush(stdout);
-  printf("GeSpace.cc >> Current number of prop in this %d\n",propagators());fflush(stdout);
+void GenericSpace::merge(GenericSpace *src, Board *tgt) {
+  //printf("GeSpace.cc >> called space merge src: %p dst: %p\n",src,this);fflush(stdout);
+  //printf("GeSpace.cc >> Current number of prop in this %d\n",propagators());fflush(stdout);
 
   // get a reflection of src space.
   std::vector<Reflection::VarSpec> src_vSpec;
@@ -249,47 +249,21 @@ void GenericSpace::merge(GenericSpace *src) {
 
   src->reflect(src_aSpec, src_vSpec);
 
-  printf("GeSpace.cc >> Finished reflection phase\n");fflush(stdout);
-  printf("GeSpace.cc >> Starting **unreflection** phase\n");fflush(stdout);
+  //printf("GeSpace.cc >> Finished reflection phase\n");fflush(stdout);
+  //printf("GeSpace.cc >> Starting **unreflection** phase\n");fflush(stdout);
 
   unreflect(src_aSpec,src_vSpec);
 
-  // register the variable in vars array
   /*
-    Optimization: this can be done in the loop above just after calling deserializer
-    to create the variable.
-  */
-  //  printf("GeSpace.cc >> registering new var in the target space\n");fflush(stdout);
-  //   Reflection::VarMapIter newVars(svm);
-  //   Assert(src->getVarsSize() == svm.size());
-  
-  //   for (int i=0;newVars();++newVars,i++) {
-  //     OZ_Term  v = src->getVarRef(i);
-  //     DEREF(v,v_ptr);
-  //     if (oz_isGeVar(v)) {
-  //       GeVarBase *gvb = static_cast<GeVarBase*>(oz_getExtVar(v));
-  //       if (!gvb->isLocalRep()) {
-  // 	int newIndex = newVar(newVars.varImpBase(),v);
-  // 	gvb->setIndex(newIndex);
-	
-  // 	// ValRefector was not added from the old space then we have to add it here
-  // 	// TODO: Implement serialization of reflector propagators.
-  // 	gvb->ensureValReflection();
-  // 	if (gvb->hasDomReflector())
-  // 	  gvb->ensureDomReflection();
-	
-  // 	printf("GeSpace.cc >> updating reference var: %d new pos %d\n",i,newIndex);fflush(stdout);
-  //       }
-  //     } else {
-  //       /* 
-  // 	 Fixme: What should we put in the array of references?
-  // 	 Maybe copy the reference in src and put null in vars is enough
-  //       */
-  //       printf("GeSpace.cc >> FIXME!! not updating reference var was det.\n"); fflush(stdout);
-  //     }
-  //   }
-
-  
+    TODO: (ggutierrez) Addording with Raph, the internal board of the
+    variable does not need to be changed. I have to change it manually
+    or any Show on one of the variables will crash when posting the
+    DomReflector.
+   */
+  for (int i=0; i<getVarsSize(); i++) {
+    extVar2Var(get_GeVar(getVarRef(i)))->setHome(tgt);
+  }
+ 
   // this call is temporal, just to have an accurate number of propagators.
   /*
     status();
@@ -305,7 +279,6 @@ void GenericSpace::merge(GenericSpace *src) {
     automatically.
   */
   if (this == oz_rootBoard()->getGenericSpace()) {
-    printf("GeSpace.cc >> Merging at toplevel space, then calling propagation\n");
     fflush(stdout);
     status();
   }
