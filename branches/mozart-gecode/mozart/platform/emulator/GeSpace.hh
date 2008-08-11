@@ -446,7 +446,7 @@ public:
   /**
 	\brief Merges variables and propagators of space \a src in *this.
   */
-  void merge(GenericSpace *src);
+  void merge(GenericSpace *src, Board *tgt);
 
   /// Garbage collection and space cloning for references
   //@{
