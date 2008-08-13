@@ -136,7 +136,7 @@ export
    %lex:             Lex
    
    %% Assignment propagators
-   assign: Assign
+   %assign: Assign
 
    int_ext: Int_ext
    %%Propagators
@@ -166,7 +166,8 @@ export
 
    %% Distribution
    distribute : FdDistribute
-   %distributeC : FdDistributeC
+   distributeC : FdDistributeC
+   assignC: FdAssignC
    distributeBR : FdDistributeBR
    %% Miscelaneus
    inf : FdInf
@@ -293,7 +294,7 @@ define
    %Int_reified_int =   GFDP.int_reified_int
 
    %% Assignment propagators
-   Assign = GFDP.'assign'
+   %Assign = GFDP.'assign'
 
    Int_ext = GFDP.'int_ext'
    %% Backward compatibility propagators
@@ -546,7 +547,8 @@ define
    FdSup = {GFDB.sup}
    FdIs  = GFDB.is
 
-   %FdDistributeC = GFDP.distribute
+    FdDistributeC = GFDP.distribute
+    FdAssignC = GFDP.assignC
    local
       \insert GeIntVarDist
    in

@@ -44,9 +44,22 @@ proc{Money Root}
    {GFD.relP post(M GFD.rt.'\\=:' 0 cl:GFD.cl.bnd)}
   
    {GFD.distinctP  post(Root cl:GFD.cl.bnd)}
-   {GFD.distributeBR ff Root}
+   %{GFD.distributeBR ff Root}
+   {Wait {GFD.distributeC Root}}
 end
 
+
+{Show {OS.getPID}}
+S C
+S = {Space.new Money}
+C = {Space.clone S}
+
+/*
+{Browse {Space.ask C}}
+{Space.commitB S 0#2}
+{Space.commitB C 0#compl(2)}
+
+*/
 {Show {SearchOne Money}}
 
 

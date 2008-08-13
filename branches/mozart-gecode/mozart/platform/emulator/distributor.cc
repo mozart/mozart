@@ -42,9 +42,13 @@ int Distributor::commit(Board *, int, int r) {
 }
 
 int Distributor::notifyStable(Board *) {
-	return -1;
+  return -1;
 }
 
 int Distributor::commitBranch(Board *, TaggedRef) {
-	return 0;
+  return 0;
+}
+
+OZ_Return Distributor::tell(RefsArray *x) {
+  Assert(false);
 }
