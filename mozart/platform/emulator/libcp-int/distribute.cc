@@ -29,25 +29,11 @@
 #include "builtins.hh"
 #include "GeIntVar.hh"
 #include "distributor.hh"
-#include "IntVarMacros.hh"
 
 
-/** 
- * \brief Declares a Gecode::IntSet(Const int[]) from an Oz domain description
- * 
- * @param _t Mozart domain specification 
- * @param ds The domain description in terms of list
- * 
- */
-#define DECLARE_INT_SET21(_t,ds)		\
-  OZ_Term _l = _t;				\
-  int _length = OZ_width(_l);			\
-  int _lst[_length];				\
-  for (int i = 0; i < _length; i++) {		\
-    _lst[i] = OZ_intToC(OZ_getArg(_l, i));	\
-  }						\
-  Gecode::IntSet ds(_lst, _length);
-  
+
+#include "gecode/int/branch.hh"
+
 // Define a builtin operation that tells a constraint in the gecode space.
 OZ_BI_proto(BIGfdTellConstraint);
 
@@ -59,6 +45,61 @@ void gfd_dist_init(void) {
 				2, 0, BIGfdTellConstraint, OK));
 }
 
+class ValMin {
+public:
+  int val(const GenericSpace*, IntView x) {
+    return x.min();
+  }
+
+  Gecode::ModEvent tell(GenericSpace *home, unsigned int a, IntView x, int v) {
+    printf("Called tell ValMin\n");fflush(stdout);
+    return (a == 0) ?  x.eq(home,v) : x.gr(home,v);
+    /*
+    if (a == 1) {
+      // case compl(v)
+      Gecode::rel(home,x,Gecode::IRT_NQ, v);
+    } else {
+      Assert(a == 0);
+      Gecode::rel(home,x,Gecode::IRT_EQ, v);
+    }
+    // TODO: can i fail in advance?
+    printf("Called tell ValMin - finished\n");fflush(stdout);
+   
+    return PROCEED;
+    */
+  }
+};
+class ByNone {
+public:
+  Gecode::ViewSelStatus init(const GenericSpace*, IntView x) {
+    return VSS_COMMIT;
+  }
+  Gecode::ViewSelStatus select(const GenericSpace*, IntView x) {
+    GECODE_NEVER;
+    return VSS_NONE;
+  }
+};
+
+/*
+  \brief This class encapsulates the operations that concern to
+  specific constraint system variables. For the distributor we need to
+  know when consider an OZ_Term to be a bound representation of the
+  specific constraint variable, for instance an integer is considered
+  a bound FD variable. Also we need a way to create a view from an
+  OZ_Term to be able to use gecode provided view selection strategies.
+ */
+class IntVarBasics {
+public:
+  static IntView getView(OZ_Term t) {
+    Assert(!assigned(t));
+    return IntView(get_IntVarInfo(t).var());
+  }
+  static bool assigned(OZ_Term t) {
+    return OZ_isInt(t);
+  }
+};
+
+template <class ValSel, class ViewSel>
 class GFDDistributor : public Distributor {
 protected:
   /**
@@ -74,59 +115,53 @@ protected:
   int size;
 
 #ifdef DEBUG_CHECK
-  // if debug is enabled, then store a Board pointer for some assertions
   Board *home;
+  GenericSpace *gs_home;
 #endif
-  ViewArray<IntView> xv;
+  //ViewArray<IntView> xv;
 
 public:
 
   GFDDistributor(Board *bb, TaggedRef *vs, int n) {
     vars = vs;
     size = n;
-
-#ifdef DEBUG_CHECK
-    home = bb->getGenericSpace(true);
-    Assert(home);
-#endif
-
     sync = oz_newVariable(bb);
+   
+#ifdef DEBUG_CHECK
+    home = bb;
+    gs_home = bb->getGenericSpace(true);
+    Assert(gs_home);
+#endif
     
-    xv(bb->getGenericSpace(true),n);
-    for (int i=0; i<n; i++) {
-      Assert(OZ_isGeIntVar(vs[i]));
-      xv[i] = new IntView(get_IntVarInfo(vs[i]));
+    /*
+    ViewArray<IntView> tv(bb->getGenericSpace(true), size); 
+
+    for (int i=0; i<size; i++) {
+      IntView v(get_IntVarInfo(vars[i]).var()); 
+      tv[i]=v;
     }
-    
+    xv=tv;
+    */
   }
 
-  //Returns the next variable to distribute
-  //virtual int select_var() = 0;
-  //Set the position of domain of the next variable to distibute
-  //virtual void set_pos_val() = 0;
-  
-  //The distributor work finished
-  //Bound the variable sync. 
   virtual void finish() {
     (void) oz_unify(sync,AtomNil);
     dispose();
   }
 
-  //This method makes the branches according the subdomains defined to 'pos_val'
-  //first branch ->  [ vars[sel_var][ini_pos_val], vars[sel_var][fin_pos_val] ]
-  //second branch -> [ the values that do not belong to first branch ]
-  virtual void make_branch(Board *bb){
-    //Definition of branches
-
-    // first possible branching
-    TaggedRef fb = OZ_mkTuple(OZ_atom("#"),2,OZ_int(sel_var),b1);
-    // second possible branching
-    TaggedRef sb = OZ_mkTuple(OZ_atom("#"),2,OZ_int(sel_var),b2);
-		
+  virtual void make_branch(Board *bb, int pos, int val){
+    // first possible branching: sel_var#val
+    TaggedRef fb = 
+      OZ_mkTuple(OZ_atom("#"),2,OZ_int(pos),OZ_int(val));
+    
+    // second possible branching: sel_var#compl(val)
+    TaggedRef sb = 
+      OZ_mkTuple(OZ_atom("#"),2,OZ_int(pos),
+		 OZ_mkTuple(OZ_atom("compl"),1,OZ_int(val)));
+    
     bb->setBranching(OZ_cons(fb,OZ_cons(sb,OZ_nil())));
-		
   }
-	
+
   /*
     \brief As the distributor injects tell operations in the board
     that not take place inmediately, termination is notified by
@@ -155,714 +190,200 @@ public:
     Assert(0 <= pos && pos < size);
     TaggedRef value = OZ_getArg(bd,1);
      
-    bb->prepareTell(BI_DistributeTell,RefsArray::make(vars[pos],value));
- 
+    bb->prepareTell(BI_DistributeTell,
+		    RefsArray::make(OZ_int(pos),value));
+    
     /* 
        Assumes the only method able to tell the sapce to remove the
        distributor is notifyStable. This can be optimized further.
     */
     return 1;
   }
-	
-	
-  virtual Distributor * gCollect(void) {
-    GFDDistributor * t = (GFDDistributor *) oz_hrealloc(this, sizeof(GFDDistributor));
-    OZ_gCollectTerm(t->sync);
-    t->vars = OZ_gCollectAllocBlock(size, t->vars);
-    return t;
-  }
+
+ virtual int notifyStable(Board *bb) {
+   printf("Called tell notifyStable\n");fflush(stdout);
+    /*
+      The space is stable and now it is safe to select a new variable
+      with a new value for the next distribution step.
+    */
+   GenericSpace *gs = bb->getGenericSpace(true);
+   Assert(gs);
+   /*
+     TODO: must be this board the same one in which this distributor
+     was created?. If it must then it would be better to put an
+     assertion about gs == gs_home. Answer: No, that is not true for
+     all the cases, because bb can be a clone of the space in which
+     the distributor was created and distributor cloning reuses the
+     same object with diferent variables
+   */
+
+   ViewSel vs; // For view selection
+   ValSel  vl; // Fr value selection
+   
+   int i = 0;
+   int j = 0;
+   for (j = 0; j < size && IntVarBasics::assigned(vars[j]); j++);
+   i = j;
+   int b = i++;
+   
+   if (j == size) goto finished;
+
+   Assert(j==size || !IntVarBasics::assigned(vars[b]));
+   
+
+   //printf("size before selction %d\n",xv.size());fflush(stdout);
+
+   if (vs.init(gs, IntVarBasics::getView(vars[b])) != VSS_COMMIT)
+     for (; i < size; i++){
+       if (!IntVarBasics::assigned(vars[i]))
+	 switch (vs.select(gs,IntVarBasics::getView(vars[i]))) {
+	 case VSS_SELECT: 
+	   b=i; 
+	   printf("VSS_SELECT at iteration %d\n",i);
+	   fflush(stdout);
+	   break;
+	 case VSS_COMMIT: b=i; 
+	   printf("VSS_COMMIT at iteration %d -> going to create\n",i);
+	   fflush(stdout);
+	   goto create;
+	 case VSS_NONE:
+	   printf("VSS_NONE at iteration %d -> going to finished\n",i);
+	   fflush(stdout);
+	   break;
+	 default:         GECODE_NEVER;
+	 }
+     }
+   
+ create:
+   {
+     /*
+       After variable and value selections a branching must be created
+       for the space.  This will allow Space.ask to be notified about
+       the possibles branching descritpions that can be commited to
+       this distributor.
+     */
+     IntView vb = IntVarBasics::getView(vars[b]);
+     Assert(!vb.assigned());
+     make_branch(bb, b, vl.val(gs, vb));
+   }
+
+ finished:
+   if (status()) {
+     // This distributor should be preserved.
+     return 1;
+   } else {
+     printf("Called notifyStable almost finish\n");fflush(stdout);
+     finish();
+     /*
+       There are no more variables to distribute in the array.  This
+       distributor must be removed from the board.
+     */
+     return 0;
+   }
+ }
   
-  virtual Distributor * sClone(void) {
-    GFDDistributor * t = (GFDDistributor *) oz_hrealloc(this, sizeof(GFDDistributor));
-    OZ_sCloneTerm(t->sync);
-    t->vars = OZ_sCloneAllocBlock(size, t->vars);
-    return t;
-  }
-};
-
-
-class GFDDistributor2 : public Distributor {
-protected:
-  /**
-     \brief Sinchronization variable. This variable is bound when
-     the distributor work is finished. 
-  */
-  TaggedRef sync;
-
-  /// Vector of variables to distribute
-  TaggedRef *vars;
-
-  /// Number of variables to distribute
-  int size;
-
-  /// Position of the next variable to distribute
-  int sel_var;
-	
-  /// Initial position of the domain of the next variable to distribute
-  int ini_pos_val;
-
-  /// Final position of the domain of the next variable to distribute
-  int fin_pos_val;
-
-public:
-
-  GFDDistributor2(Board *bb, TaggedRef *vs, int n) {
-    vars = vs;
-    size = n;
-    sync = oz_newVariable(bb);
-    sel_var = -1;
-    ini_pos_val = 0;
-    fin_pos_val = 0;
-  }
-
-  //Returns the next variable to distribute
-  //virtual int select_var() = 0;
-  //Set the position of domain of the next variable to distibute
-  //virtual void set_pos_val() = 0;
-  
-  //The distributor work finished
-  //Bound the variable sync. 
-  virtual void finish() {
-    (void) oz_unify(sync,AtomNil);
-    dispose();
-  }
-
-  //This method makes the branches according the subdomains defined to 'pos_val'
-  //first branch ->  [ vars[sel_var][ini_pos_val], vars[sel_var][fin_pos_val] ]
-  //second branch -> [ the values that do not belong to first branch ]
-  virtual void make_branch(Board *bb){
-    //Definition of branches
-    int _size = (fin_pos_val - ini_pos_val)+1;
-    OZ_Term b1 = OZ_tuple(OZ_atom("compl"), _size);
-    int sb1 = 0;
-    //printf("1\n");fflush(stdout);
-    OZ_Term b2 = OZ_tuple(OZ_atom("compl"), get_IntVarInfo(vars[sel_var]).size() - _size);
-    int sb2 = 0;
-    //printf("2\n");fflush(stdout);
-    IntVar Domain = get_IntVarInfo(vars[sel_var]);
-    IntVarRanges DomainRange(Domain);
-		
-    //This loop is neccesary to obtain the entire domain including 
-    //domains defined into parts
-    //i.e [0#3 5#7]  -> [0 1 2 3 5 6 7]
-    int i = 0;
-    for(;DomainRange();++DomainRange){
-      for(int j=DomainRange.min();j<=DomainRange.max();j++,i++){
-	if ((i >= ini_pos_val) && (i <= fin_pos_val)){
-	  OZ_putArg(b1,sb1,OZ_int(j));
-	  sb1++;
-	}
-	else{
-	  OZ_putArg(b2,sb2,OZ_int(j));
-	  sb2++;
-	}
+  bool status(void) {
+    for (int i=0; i < size; i++)
+      if (oz_isGeVar(vars[i])) {
+        //start = i;
+        return true;
       }
-    }
-
-    // first possible branching
-    TaggedRef fb = OZ_mkTuple(OZ_atom("#"),2,OZ_int(sel_var),b1);
-    // second possible branching
-    TaggedRef sb = OZ_mkTuple(OZ_atom("#"),2,OZ_int(sel_var),b2);
-		
-    bb->setBranching(OZ_cons(fb,OZ_cons(sb,OZ_nil())));
-		
+    return false;
   }
-	
+
   /*
-    \brief As the distributor injects tell operations in the board
-    that not take place inmediately, termination is notified by
-    binding \a sync to an atom.
+    To access gecode space's variable use get_IntVar instead of
+    get_IntVarInfo to make the space unstable. Space unstability is
+    fine because after a tell the space will be unstable.
   */
-  TaggedRef getSync() { return sync; }
-  
-  
-  void dispose(void) { oz_freeListDispose(this, sizeof(GFDDistributor2)); }
+  virtual OZ_Return tell(RefsArray *args) {
+    printf("Called tell\n");fflush(stdout);
+    int p = OZ_intToC(args->getArg(0));
+    TaggedRef val = args->getArg(1);
 
-  /**
-     \brief Commits branching description \a bd in board bb. This
-     operation is performed from the search engine. The prepareTell
-     operation push the tell on the top of the thread that performs
-     propagation. This allows all tell operations to be performed
-     *before* the propagation of the gecode space. Also, as a side
-     effect, tell operations are lazy, this is, are posted in the
-     gecode space on space status demand.
-  */
-  virtual int commitBranch(Board *bb, TaggedRef bd) {
-    
-    // This assumes bd to be in the form: Pos#Value or Pos#compl(Value)
-    Assert(OZ_isTuple(bd));
-    int pos = OZ_intToC(OZ_getArg(bd,0));
-    
-    Assert(0 <= pos && pos < size);
-    TaggedRef value = OZ_getArg(bd,1);
-     
-    bb->prepareTell(BI_DistributeTell,RefsArray::make(vars[pos],value));
- 
+    Assert(OZ_isGeIntVar(vars[p]));
+    GenericSpace *gs = oz_currentBoard()->getGenericSpace(true);
+
+    /*
+      TODO: should be this board the same one in which this
+      distributor was created?. If it should then it would be better
+      to put an assertion about gs == gs_home
+     */
+
+    ValSel vs;
+
+    unsigned int a = OZ_isTuple(val) ? 1 : 0;    
+    int v = (a == 1) ? 
+      OZ_intToC(OZ_getArg(val,0)) : OZ_intToC(val);
+
+#ifdef DEBUG_CHEK
+    if (OZ_isTuple(val)) 
+      // case compl(v)
+      Assert(OZ_width(val) == 1);
+    else 
+      Assert(OZ_isInt(val));
+#endif
+
+  
+    // Post the real constraint in the gecode space
+    printf("Tell constraint, variable at pos: %d with val %s\n",p,OZ_toC(vars[p],100,100));fflush(stdout);
+    Assert(!IntVarBasics::assigned(vars[p]));
+    vs.tell(gs,a,get_IntVar(vars[p]),v);
+
+    /* (ggutierrez) Unstability should be an effect of a tell
+       operation on the gecode space. I'm not sure about
+       Assert(!gs->isStable());
+     */
+
+    printf("Called tell - finished\n");fflush(stdout);
+
     /* 
-       Assumes the only method able to tell the sapce to remove the
-       distributor is notifyStable. This can be optimized further.
-    */
-    return 1;
+       TODO: Gecode ViewSel classes return a ModEvent with possibly
+       useful information. We can convert this to something
+       meaningfull to mozart and maybe fail the board in advance.
+     */
+    return PROCEED;
   }
-	
-	
-  int selectNaiveVar(void);
-  int selectSizeVar(void);
-  int selectMinVar(void);
-  int selectMaxVar(void);
-  int selectWidthVar(void);
-  int selectNbPropVar(void);
-	
-  void selectPosValMin(void);
-  void selectPosValMax(void);
-  void selectPosValMid(void);
-  void selectPosValSplitMin(void);
-  void selectPosValSplitMax(void);
 
   virtual Distributor * gCollect(void) {
-    GFDDistributor * t = (GFDDistributor2 *) oz_hrealloc(this, sizeof(GFDDistributor2));
+    GFDDistributor * t = 
+      (GFDDistributor *) oz_hrealloc(this, sizeof(GFDDistributor));
     OZ_gCollectTerm(t->sync);
     t->vars = OZ_gCollectAllocBlock(size, t->vars);
     return t;
   }
   
   virtual Distributor * sClone(void) {
-    GFDDistributor * t = (GFDDistributor2 *) oz_hrealloc(this, sizeof(GFDDistributor2));
+    GFDDistributor * t = 
+      (GFDDistributor *) oz_hrealloc(this, sizeof(GFDDistributor));
     OZ_sCloneTerm(t->sync);
     t->vars = OZ_sCloneAllocBlock(size, t->vars);
     return t;
   }
 };
-
-
-
-inline
-int GFDDistributor::selectNaiveVar(void){
-  int i = 0;
-  for (i=0; i<size;i++) {
-    if (OZ_isInt(vars[i]) || !OZ_isGeIntVar(vars[i]) ) {
-    } else if(OZ_isGeIntVar(vars[i])) {
-      break;
-    } else {
-      Assert(false);
-    }
-  }
-
-  if (i == size) {
-    return -1;
-  }
-  return i;
-}
-
-inline
-int GFDDistributor::selectSizeVar(void){
-  int index = -1;
-  int domain;
-  int i = 0;
-  for (i=0; i<size;i++) {
-    if (OZ_isInt(vars[i]) || !OZ_isGeIntVar(vars[i]) ) {
-    } else if(OZ_isGeIntVar(vars[i])) {
-      //Actual domain
-      //printf("3\n");fflush(stdout);
-      int d = get_IntVarInfo(vars[i]).size();
-      if (index == -1){
-	//that is the first variable
-	index = i;
-	domain = d;
-      }
-      else{//The actual domain is compared to before domain (chooses the domain size is minimal)
-	if (d < domain){
-	  index = i;
-	  domain = d;
-	}
-      }
-    } else {
-      Assert(false);
-    }
-  }
-  return index;
-}
-
-inline
-int GFDDistributor::selectMinVar(void){
-  int index = -1;
-  int domain;
-  int i = 0;
-  for (i=0; i<size;i++) {
-    if (OZ_isInt(vars[i]) || !OZ_isGeIntVar(vars[i]) ) {
-    } else if(OZ_isGeIntVar(vars[i])) {
-      //Actual domain
-      //printf("3\n");fflush(stdout);
-      int d = get_IntVarInfo(vars[i]).min();
-      if (index == -1){
-	//that is the first variable
-	index = i;
-	domain = d;
-      }
-      else{//The actual domain is compared to before domain (chooses the domain size is minimal)
-	if (d < domain){
-	  index = i;
-	  domain = d;
-	}
-      }
-    } else {
-      Assert(false);
-    }
-  }
-  return index;
-}
-
-inline
-int GFDDistributor::selectMaxVar(void){
-  int index = -1;
-  int domain;
-  int i = 0;
-  for (i=0; i<size;i++) {
-    if (OZ_isInt(vars[i]) || !OZ_isGeIntVar(vars[i]) ) {
-    } else if(OZ_isGeIntVar(vars[i])) {
-      //Actual domain
-      //printf("4\n");fflush(stdout);
-      int d = get_IntVarInfo(vars[i]).max();
-      if (index == -1){
-	//that is the first variable
-	index = i;
-	domain = d;
-      }
-      else{//The actual domain is compared to before domain (chooses the domain size is maximal)
-	if (d > domain){
-	  index = i;
-	  domain = d;
-	}
-      }
-    } else {
-      Assert(false);
-    }
-  }
-  return index;
-}
-
-
-inline
-int GFDDistributor::selectWidthVar(void){
-  int index = -1;
-  int domain;
-  int i = 0;
-  for (i=0; i<size;i++) {
-    if (OZ_isInt(vars[i]) || !OZ_isGeIntVar(vars[i]) ) {
-    } else if(OZ_isGeIntVar(vars[i])) {
-      //Actual domain
-      //printf("3\n");fflush(stdout);
-      int d = get_IntVarInfo(vars[i]).width();
-      if (index == -1){
-	//that is the first variable
-	index = i;
-	domain = d;
-      }
-      else{//The actual domain is compared to before domain (chooses the domain size is minimal)
-	if (d < domain){
-	  index = i;
-	  domain = d;
-	}
-      }
-    } else {
-      Assert(false);
-    }
-  }
-  return index;
-}
-
-
-
-inline
-int GFDDistributor::selectNbPropVar(void){
-  //skip
-}
-
-
-
-inline
-void GFDDistributor::selectPosValMin(void){
-  ini_pos_val = 0;
-  fin_pos_val = 0;
-}
-
-inline
-void GFDDistributor::selectPosValMax(void){
-  ini_pos_val = get_IntVarInfo(vars[sel_var]).size()-2;
-  fin_pos_val = ini_pos_val;
-}
-
-inline
-void GFDDistributor::selectPosValMid(void){
-  int s = get_IntVarInfo(vars[sel_var]).size();
-  ini_pos_val = s/2+s%2-1;
-  fin_pos_val = ini_pos_val;
-}
-
-
-inline
-void GFDDistributor::selectPosValSplitMin(void){
-  int s = get_IntVarInfo(vars[sel_var]).size();
-  ini_pos_val = 0;
-  fin_pos_val = s/2+s%2-1;
-}
-
-inline
-void GFDDistributor::selectPosValSplitMax(void){
-  int s = get_IntVarInfo(vars[sel_var]).size();
-  ini_pos_val = s/2+s%2;
-  fin_pos_val = s-1;
-}
-
-
-
-
-#define DefGFDDistClass(CLASS,VARSEL,VALSEL)	\
-  class CLASS : public GFDDistributor {		\
-  public:					\
-  CLASS(Board * b, TaggedRef * v, int s) :	\
-    GFDDistributor(b,v,s) {}			\
-						\
-  virtual int notifyStable(Board *bb){		\
-    sel_var = VARSEL();				\
-    if (sel_var == -1)	{			\
-      finish();					\
-      return 0;					\
-    }						\
-						\
-    Assert(!OZ_isInt(vars[sel_var]));		\
-						\
-    VALSEL();					\
-						\
-    make_branch(bb);				\
-						\
-    return 1;					\
-  }						\
-  }
-
-
-DefGFDDistClass(GFDDistNaiveMin,selectNaiveVar,selectPosValMin);
-DefGFDDistClass(GFDDistNaiveMax,selectNaiveVar,selectPosValMax);
-DefGFDDistClass(GFDDistNaiveMid,selectNaiveVar,selectPosValMid);
-DefGFDDistClass(GFDDistNaiveSplitMin,selectNaiveVar,selectPosValSplitMin);
-DefGFDDistClass(GFDDistNaiveSplitMax,selectNaiveVar,selectPosValSplitMax);
-
-DefGFDDistClass(GFDDistSizeMax,selectSizeVar,selectPosValMax);
-DefGFDDistClass(GFDDistSizeMin,selectSizeVar,selectPosValMin);
-DefGFDDistClass(GFDDistSizeMid,selectSizeVar,selectPosValMid);
-DefGFDDistClass(GFDDistSizeSplitMin,selectSizeVar,selectPosValSplitMin);
-DefGFDDistClass(GFDDistSizeSplitMax,selectSizeVar,selectPosValSplitMax);
-
-DefGFDDistClass(GFDDistMinMin,selectMinVar,selectPosValMin);
-DefGFDDistClass(GFDDistMinMax,selectMinVar,selectPosValMax);
-DefGFDDistClass(GFDDistMinMid,selectMinVar,selectPosValMid);
-DefGFDDistClass(GFDDistMinSplitMin,selectMinVar,selectPosValSplitMin);
-DefGFDDistClass(GFDDistMinSplitMax,selectMinVar,selectPosValSplitMax);
-
-DefGFDDistClass(GFDDistWidthMin,selectWidthVar,selectPosValMin);
-DefGFDDistClass(GFDDistWidthMax,selectWidthVar,selectPosValMax);
-DefGFDDistClass(GFDDistWidthMid,selectWidthVar,selectPosValMid);
-DefGFDDistClass(GFDDistWidthSplitMin,selectWidthVar,selectPosValSplitMin);
-DefGFDDistClass(GFDDistWidthSplitMax,selectWidthVar,selectPosValSplitMax);
-
-DefGFDDistClass(GFDDistMaxMin,selectMaxVar,selectPosValMin);
-DefGFDDistClass(GFDDistMaxMax,selectMaxVar,selectPosValMax);
-DefGFDDistClass(GFDDistMaxMid,selectMaxVar,selectPosValMid);
-DefGFDDistClass(GFDDistMaxSplitMin,selectMaxVar,selectPosValSplitMin);
-DefGFDDistClass(GFDDistMaxSplitMax,selectMaxVar,selectPosValSplitMax);
-
-DefGFDDistClass(GFDDistNbPropMin,selectNbPropVar,selectPosValMin);
-DefGFDDistClass(GFDDistNbPropMax,selectNbPropVar,selectPosValMax);
-DefGFDDistClass(GFDDistNbPropMid,selectNbPropVar,selectPosValMid);
-DefGFDDistClass(GFDDistNbPropSplitMin,selectNbPropVar,selectPosValSplitMin);
-DefGFDDistClass(GFDDistNbPropSplitMax,selectNbPropVar,selectPosValSplitMax);
-
-
-#define iVarNaive   0
-#define iVarSize    1
-#define iVarMin     2
-#define iVarMax     3
-#define iVarNbProp  4
-#define iVarWidth   5
-
-#define iValMin      0
-#define iValMid      1
-#define iValMax      2
-#define iValSplitMin 3
-#define iValSplitMax 4
-	
-#define PP(I,J) I*(iVarWidth+1)+J
-	
-#define PPCL(I,J)				\
-  case PP(iVar ## I,iVal ## J):			\
-  gfdd = new GFDDist ## I ## J(bb, vars, n);	\
-  break;
-
-
-class GFDNaiveDistributor: public GFDDistributor{
-public:
-	
-  /**
-     \brief Creates a distributor object for a variable vector \a vs
-     of size n
-  */
-  GFDNaiveDistributor(Board *bb, TaggedRef *vs, int n)
-    : GFDDistributor(bb,vs,n) { printf("Naive\n");fflush(stdout); }
-  
-  //Chooses the leftmost non determined variable on vars
-  virtual int select_var(){
-    int i = 0;
-    for (i=0; i<size;i++) {
-      if (OZ_isInt(vars[i]) || !OZ_isGeIntVar(vars[i]) ) {
-      } else if(OZ_isGeIntVar(vars[i])) {
-	break;
-      } else {
-	Assert(false);
-      }
-    }
-
-    if (i == size) {
-      return -1;
-    }
-    return i;
-  }
-	
-  //Chooses the position of the lower bound of the domain of sel_var
-  virtual void set_pos_val(){
-    ini_pos_val = 0;
-    fin_pos_val = 0;
-  }
-	
-  virtual int notifyStable(Board *bb) {
-    /*
-      The space is stable and now it is safe to select a new variable
-      with a new value for the next distribution step.
-    */
-    sel_var = select_var();
-    if (sel_var == -1)	{
-      finish();
-      /*
-	There are no more variables to distribute in the array.  This
-	distributor must be removed from the board.
-      */
-      return 0;
-    }
-
-    Assert(!OZ_isInt(vars[sel_var]));
-
-    set_pos_val();
-
-    /*
-      After variable and value selections a branching must be created
-      for the space.  This will allow Space.ask to be notified about
-      the possibles branching descritpions that can be commited to
-      this distributor.
-      For this purpose get_IntVarInfo is used to not generate gecode space unstability.
-    */
-    make_branch(bb);
-    // This distributor should be preserved.
-    return 1;
-  }
-};
-
-class GFDFFDistributor: public GFDDistributor{
-public:
-	
-  /**
-     \brief Creates a distributor object for a variable vector \a vs
-     of size n
-  */
-  GFDFFDistributor(Board *bb, TaggedRef *vs, int n)
-    : GFDDistributor(bb,vs,n) { printf("First Fail\n");fflush(stdout); }
-  
-  //Chooses the leftmost variable whose domain size is minimal.
-  virtual int select_var(){
-    int index = -1;
-    int domain;
-    int i = 0;
-    for (i=0; i<size;i++) {
-      if (OZ_isInt(vars[i]) || !OZ_isGeIntVar(vars[i]) ) {
-      } else if(OZ_isGeIntVar(vars[i])) {
-	//Actual domain
-	int d = get_IntVarInfo(vars[i]).size();
-	if (index == -1){
-	  //that is the first variable
-	  index = i;
-	  domain = d;
-	}
-	else{//The actual domain is compared to before domain (chooses the domain size is minimal)
-	  if (d < domain){
-	    index = i;
-	    domain = d;
-	  }
-	}
-      } else {
-	Assert(false);
-      }
-    }
-
-    return index;
-  }
-	
-  //Chooses the position of the lower bound of the domain of sel_var
-  virtual void set_pos_val(){
-    ini_pos_val = 0;
-    fin_pos_val = 0;
-  }
-	
-  virtual int notifyStable(Board *bb) {
-    /*
-      The space is stable and now it is safe to select a new variable
-      with a new value for the next distribution step.
-    */
-    sel_var = select_var();
-    if (sel_var == -1)	{
-      finish();
-      /*
-	There are no more variables to distribute in the array.  This
-	distributor must be removed from the board.
-      */
-      return 0;
-    }
-
-    Assert(!OZ_isInt(vars[sel_var]));
-
-    set_pos_val();
-
-    /*
-      After variable and value selections a branching must be created
-      for the space.  This will allow Space.ask to be notified about
-      the possibles branching descritpions that can be commited to
-      this distributor.
-      For this purpose get_IntVarInfo is used to not generate gecode space unstability.
-    */
-    make_branch(bb);
-    // This distributor should be preserved.
-    return 1;
-  }
-};
-
-class GFDSplitDistributor: public GFDDistributor{
-public:
-	
-  /**
-     \brief Creates a distributor object for a variable vector \a vs
-     of size n
-  */
-  GFDSplitDistributor(Board *bb, TaggedRef *vs, int n)
-    : GFDDistributor(bb,vs,n) { printf("Split\n");fflush(stdout); }
-		
-		
-  //Chooses the leftmost variable whose domain size is minimal.
-  virtual int select_var(){
-    int index = -1;
-    int domain;
-    int i = 0;
-    for (i=0; i<size;i++) {
-      if (OZ_isInt(vars[i]) || !OZ_isGeIntVar(vars[i]) ) {
-      } else if(OZ_isGeIntVar(vars[i])) {
-	//Actual domain
-	int d = get_IntVarInfo(vars[i]).size();
-	if (index == -1){
-	  //that is the first variable
-	  index = i;
-	  domain = d;
-	}
-	else{//The actual domain is compared to before domain (chooses the domain size is minimal)
-	  if (d < domain){
-	    index = i;
-	    domain = d;
-	  }
-	}
-      } else {
-	Assert(false);
-      }
-    }
-
-    return index;
-  }
-
-  //Chooses the middle position of the domain of sel_var
-  virtual void set_pos_val(){
-    int s = get_IntVarInfo(vars[sel_var]).size();
-    ini_pos_val = s/2+s%2-1;
-    fin_pos_val = ini_pos_val;
-  }
-	
-  virtual int notifyStable(Board *bb) {
-    /*
-      The space is stable and now it is safe to select a new variable
-      with a new value for the next distribution step.
-    */
-    sel_var = select_var();
-    if (sel_var == -1)	{
-      finish();
-      /*
-	There are no more variables to distribute in the array.  This
-	distributor must be removed from the board.
-      */
-      return 0;
-    }
-
-    Assert(!OZ_isInt(vars[sel_var]));
-
-    set_pos_val();
-    
-    /*
-      After variable and value selections a branching must be created
-      for the space.  This will allow Space.ask to be notified about
-      the possibles branching descritpions that can be commited to
-      this distributor.
-      For this purpose get_IntVarInfo is used to not generate gecode space unstability.
-    */
-    make_branch(bb);
-    // This distributor should be preserved.
-    return 1;
-  }
-};
-
 
 /*
   This builtin performs the tell operation. We need a builtin because
-  the tell is generated by the search engine and in that place the
-  board installed may not correspond to the board of the tell. When
-  the built in is executed both, the board installed and the target
-  board are the same.
-
-  To access gecode space's variable use get_IntVar instead of
-  get_IntVarInfo to make the space unstable. Space unstability is fine
-  because after a tell the space will be unstable.
+  the tell is generated by the search engine and at that time the
+  board installed may not correspond to the board of the tell
+  operation. When the built in is executed both, the board installed
+  and the target board are the same.
 */
 OZ_BI_define(BIGfdTellConstraint, 2, 0)
 {
+
+  printf(">>>Running tell thread\n");fflush(stdout);
+
   Board *bb = oz_currentBoard();
   Assert(bb->getGenericSpace(true));
-
-  // Get the variable
-  TaggedRef var = OZ_in(0);
-  Assert(OZ_isGeIntVar(var));
-
-  // Get the value
-  TaggedRef val = OZ_in(1);
-  assert(OZ_isTuple(val));
-	
-  //This macro is used to define a IntSet variable
-  //to makes the branch
-  DECLARE_INT_SET21(val,ds);
-  //printf("Tell Constraint\n");fflush(stdout);
-  Gecode::dom(bb->getGenericSpace(true),
-	      get_IntVar(var), ds);
-	
-  // TODO: can i fail in advance?
-  return PROCEED;
+  
+  return bb->getDistributor()->tell(RefsArray::make(OZ_in(0),OZ_in(1)));  
 }
 OZ_BI_end
   
   
-OZ_BI_define(gfd_distribute, 3, 1) {
-  oz_declareIntIN(0,var_sel);
-  oz_declareIntIN(1,val_sel);
-  oz_declareNonvarIN(2,vv);
+OZ_BI_define(gfd_distribute, 1, 1) {
+  oz_declareNonvarIN(0,vv);
 
   printf("called gfd_distribute\n");fflush(stdout);
   int n = 0;
@@ -893,10 +414,9 @@ OZ_BI_define(gfd_distribute, 3, 1) {
   Assert(!oz_isRef(vv));
   if (oz_isLTupleOrRef(vv)) {
     TaggedRef vs = vv;
-    int i = n;
-    while (oz_isLTuple(vs)) {
+    for (int i =0; i < n; i++) {
       TaggedRef v = oz_head(vs);
-      vars[--i] = v;
+      vars[i] = v;
       vs = oz_deref(oz_tail(vs));
       Assert(!oz_isRef(vs));
     }
@@ -907,47 +427,323 @@ OZ_BI_define(gfd_distribute, 3, 1) {
   if (bb->getDistributor())
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
   
-  //make the decision
-  GFDDistributor * gfdd;
-	
-  switch (PP(var_sel,val_sel)) {
-    PPCL(Naive,Min);
-    PPCL(Naive,Max);
-    PPCL(Naive,Mid);
-    PPCL(Naive,SplitMin);
-    PPCL(Naive,SplitMax);
-	
-    PPCL(Size,Min);
-    PPCL(Size,Max);
-    PPCL(Size,Mid);
-    PPCL(Size,SplitMin);
-    PPCL(Size,SplitMax);
-				
-    PPCL(Min,Min);
-    PPCL(Min,Max);
-    PPCL(Min,Mid);
-    PPCL(Min,SplitMin);
-    PPCL(Min,SplitMax);
-				
-    PPCL(Max,Min);
-    PPCL(Max,Max);
-    PPCL(Max,Mid);
-    PPCL(Max,SplitMin);
-    PPCL(Max,SplitMax);
-				
-    PPCL(NbProp,Min);
-    PPCL(NbProp,Max);
-    PPCL(NbProp,Mid);
-    PPCL(NbProp,SplitMin);
-    PPCL(NbProp,SplitMax);
-				
-  default:
-    Assert(false);
-  }
-	
-  //printf("associating it to the board.\n");fflush(stdout);
+  /*
+    // An example
+  GFDDistributor<Gecode::Int::Branch::ValMed<IntView>, 
+    Gecode::Int::Branch::ByMinMax<IntView> > * gfdd =
+    
+    new GFDDistributor<Gecode::Int::Branch::ValMed<IntView>, 
+    Gecode::Int::Branch::ByMinMax<IntView> >(bb,vars,n);
+  */
+  
+   GFDDistributor<Gecode::Int::Branch::ValMin<IntView>, 
+    Gecode::Int::Branch::ByDegreeMin<IntView> > * gfdd =
+    
+    new GFDDistributor<Gecode::Int::Branch::ValMin<IntView>, 
+    Gecode::Int::Branch::ByDegreeMin<IntView> >(bb,vars,n);
+
+  printf("Created distributor associating it to the board.\n");fflush(stdout);
   bb->setDistributor(gfdd);
   
   OZ_RETURN(gfdd->getSync()); 
+}
+OZ_BI_end
+
+
+template <class ValSel, class ViewSel>
+class GFDAssignment : public Distributor {
+protected:
+  /**
+     \brief Sinchronization variable. This variable is bound when
+     the distributor work is finished. 
+  */
+  TaggedRef sync;
+
+  /// Vector of variables to distribute
+  TaggedRef *vars;
+
+  /// Number of variables to distribute
+  int size;
+
+#ifdef DEBUG_CHECK
+  Board *home;
+  GenericSpace *gs_home;
+#endif
+  //ViewArray<IntView> xv;
+
+public:
+
+  GFDAssignment(Board *bb, TaggedRef *vs, int n) {
+    printf("Called assign constructor\n");fflush(stdout);
+    vars = vs;
+    size = n;
+    sync = oz_newVariable(bb);
+   
+#ifdef DEBUG_CHECK
+    home = bb;
+    gs_home = bb->getGenericSpace(true);
+    Assert(gs_home);
+#endif
+    
+  }
+
+  virtual void finish() {
+    (void) oz_unify(sync,AtomNil);
+    dispose();
+  }
+  
+  virtual void make_branch(Board *bb, int pos, int val){
+    // first possible branching: sel_var#val
+    TaggedRef fb = 
+      OZ_mkTuple(OZ_atom("#"),2,OZ_int(pos),OZ_int(val));
+    
+    // second possible branching: sel_var#compl(val)
+    TaggedRef sb = 
+      OZ_mkTuple(OZ_atom("#"),2,OZ_int(pos),
+		 OZ_mkTuple(OZ_atom("compl"),1,OZ_int(val)));
+    
+    bb->setBranching(OZ_cons(fb,OZ_cons(sb,OZ_nil())));
+  }
+
+  /*
+    \brief As the distributor injects tell operations in the board
+    that not take place inmediately, termination is notified by
+    binding \a sync to an atom.
+  */
+  TaggedRef getSync() { return sync; }
+  
+  
+  void dispose(void) { oz_freeListDispose(this, sizeof(GFDAssignment)); }
+
+  /**
+     \brief Commits branching description \a bd in board bb. This
+     operation is performed from the search engine. The prepareTell
+     operation push the tell on the top of the thread that performs
+     propagation. This allows all tell operations to be performed
+     *before* the propagation of the gecode space. Also, as a side
+     effect, tell operations are lazy, this is, are posted in the
+     gecode space on space status demand.
+  */
+  virtual int commitBranch(Board *bb, TaggedRef bd) {
+    
+    // This assumes bd to be in the form: Pos#Value or Pos#compl(Value)
+    Assert(OZ_isTuple(bd));
+    int pos = OZ_intToC(OZ_getArg(bd,0));
+    
+    Assert(0 <= pos && pos < size);
+    TaggedRef value = OZ_getArg(bd,1);
+     
+    bb->prepareTell(BI_DistributeTell,
+		    RefsArray::make(OZ_int(pos),value));
+    
+    /* 
+       Assumes the only method able to tell the sapce to remove the
+       distributor is notifyStable. This can be optimized further.
+    */
+    return 1;
+  }
+
+ virtual int notifyStable(Board *bb) {
+   printf("Called tell notifyStable\n");fflush(stdout);
+    /*
+      The space is stable and now it is safe to select a new variable
+      with a new value for the next distribution step.
+    */
+   GenericSpace *gs = bb->getGenericSpace(true);
+   Assert(gs);
+   /*
+     TODO: must be this board the same one in which this distributor
+     was created?. If it must then it would be better to put an
+     assertion about gs == gs_home. Answer: No, that is not true for
+     all the cases, because bb can be a clone of the space in which
+     the distributor was created and distributor cloning reuses the
+     same object with diferent variables
+   */
+
+   //   ViewSel vs; // For view selection
+   ValSel  vl; // Fr value selection
+   
+   int i = 0;
+   int j = 0;
+   for (j = 0; j < size && IntVarBasics::assigned(vars[j]); j++);
+   i = j;
+   int b = i++;
+   
+   if (j == size) goto finished;
+
+   Assert(j==size || !IntVarBasics::assigned(vars[b]));
+   
+   /*
+     After variable and value selections a branching must be created
+     for the space.  This will allow Space.ask to be notified about
+     the possibles branching descritpions that can be commited to
+     this distributor.
+   */
+   {
+     IntView vb = IntVarBasics::getView(vars[b]);
+     Assert(!vb.assigned());
+     make_branch(bb, b, vl.val(gs, vb));
+   }
+ finished:
+   if (status()) {
+     // This distributor should be preserved.
+     return 1;
+   } else {
+     printf("Called notifyStable almost finish\n");fflush(stdout);
+     finish();
+     /*
+       There are no more variables to distribute in the array.  This
+       distributor must be removed from the board.
+     */
+     return 0;
+   }
+ }
+  
+  bool status(void) {
+    for (int i=0; i < size; i++)
+      if (oz_isGeVar(vars[i])) {
+        //start = i;
+        return true;
+      }
+    return false;
+  }
+
+  /*
+    To access gecode space's variable use get_IntVar instead of
+    get_IntVarInfo to make the space unstable. Space unstability is
+    fine because after a tell the space will be unstable.
+  */
+  virtual OZ_Return tell(RefsArray *args) {
+    printf("Called tell\n");fflush(stdout);
+    int p = OZ_intToC(args->getArg(0));
+    TaggedRef val = args->getArg(1);
+
+    Assert(OZ_isGeIntVar(vars[p]));
+    GenericSpace *gs = oz_currentBoard()->getGenericSpace(true);
+
+    /*
+      TODO: should be this board the same one in which this
+      distributor was created?. If it should then it would be better
+      to put an assertion about gs == gs_home
+     */
+
+    ValSel vs;
+
+    unsigned int a = OZ_isTuple(val) ? 1 : 0;    
+    int v = (a == 1) ? 
+      OZ_intToC(OZ_getArg(val,0)) : OZ_intToC(val);
+
+#ifdef DEBUG_CHEK
+    if (OZ_isTuple(val)) 
+      // case compl(v)
+      Assert(OZ_width(val) == 1);
+    else 
+      Assert(OZ_isInt(val));
+#endif
+    
+    // Post the real constraint in the gecode space
+    printf("Tell constraint, variable at pos: %d with val %s\n",p,OZ_toC(vars[p],100,100));fflush(stdout);
+    Assert(!IntVarBasics::assigned(vars[p]));
+    vs.tell(gs,a,get_IntVar(vars[p]),v);
+
+    /* (ggutierrez) Unstability should be an effect of a tell
+       operation on the gecode space. I'm not sure about
+       Assert(!gs->isStable());
+     */
+
+    printf("Called tell - finished\n");fflush(stdout);
+
+    /* 
+       TODO: Gecode ViewSel classes return a ModEvent with possibly
+       useful information. We can convert this to something
+       meaningfull to mozart and maybe fail the board in advance.
+     */
+    return PROCEED;
+  }
+
+  virtual Distributor * gCollect(void) {
+    GFDAssignment * t = 
+      (GFDAssignment *) oz_hrealloc(this, sizeof(GFDAssignment));
+    OZ_gCollectTerm(t->sync);
+    t->vars = OZ_gCollectAllocBlock(size, t->vars);
+    return t;
+  }
+  
+  virtual Distributor * sClone(void) {
+    GFDAssignment * t = 
+      (GFDAssignment *) oz_hrealloc(this, sizeof(GFDAssignment));
+    OZ_sCloneTerm(t->sync);
+    t->vars = OZ_sCloneAllocBlock(size, t->vars);
+    return t;
+  }
+};
+
+  
+OZ_BI_define(gfd_assign, 1, 1) {
+  printf("called gfd_assign\n");fflush(stdout);
+  
+  oz_declareNonvarIN(0,vv);
+
+  printf("called gfd_assign\n");fflush(stdout);
+  int n = 0;
+  TaggedRef * vars;
+
+  // Assume vv is a tuple (list) of gfd variables
+  Assert(oz_isTuple(vv));
+  TaggedRef vs = vv;
+  while (oz_isLTuple(vs)) {
+    TaggedRef v = oz_head(vs);
+    //TestElement(v);
+    n++;
+    vs = oz_tail(vs);
+    DEREF(vs, vs_ptr);
+    Assert(!oz_isRef(vs));
+    if (oz_isVarOrRef(vs))
+      oz_suspendOnPtr(vs_ptr);
+  }
+
+  // If there are no variables in the input then return unit
+  if (n == 0)
+    OZ_RETURN(NameUnit);
+  
+  // This is inverse order!
+  vars = (TaggedRef *) oz_freeListMalloc(sizeof(TaggedRef) * n);
+  
+  // fill in the vars vector 
+  Assert(!oz_isRef(vv));
+  if (oz_isLTupleOrRef(vv)) {
+    TaggedRef vs = vv;
+    for (int i =0; i < n; i++) {
+      TaggedRef v = oz_head(vs);
+      vars[i] = v;
+      vs = oz_deref(oz_tail(vs));
+      Assert(!oz_isRef(vs));
+    }
+  }
+
+  Board * bb = oz_currentBoard();
+  
+  if (bb->getDistributor())
+    return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
+  
+  /*
+    // An example
+  GFDDistributor<Gecode::Int::Branch::ValMed<IntView>, 
+    Gecode::Int::Branch::ByMinMax<IntView> > * gfdd =
+    
+    new GFDDistributor<Gecode::Int::Branch::ValMed<IntView>, 
+    Gecode::Int::Branch::ByMinMax<IntView> >(bb,vars,n);
+  */
+  
+   GFDAssignment<Gecode::Int::Branch::ValMin<IntView>, 
+    Gecode::Int::Branch::ByNone<IntView> > * gfda =
+    
+     new GFDAssignment<Gecode::Int::Branch::ValMin<IntView>, 
+    Gecode::Int::Branch::ByNone<IntView> >(bb,vars,n);
+
+   printf("Created assignment associating it to the board.\n");fflush(stdout);
+   bb->setDistributor(gfda);
+  
+  OZ_RETURN(gfda->getSync()); 
 }
 OZ_BI_end
