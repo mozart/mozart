@@ -29,6 +29,7 @@
 #endif
 
 #include "mem.hh"
+#include "refsarray.hh"
 
 class Distributor {
 public:
@@ -60,6 +61,8 @@ public:
     preserved. Other values can be used for early error detection.
   */
   virtual int commitBranch(Board *, TaggedRef );
+
+  virtual OZ_Return tell(RefsArray *x);
 	
   virtual Distributor * gCollect(void) = 0;
   virtual Distributor * sClone(void) = 0;
