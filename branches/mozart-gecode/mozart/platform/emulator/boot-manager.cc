@@ -4,8 +4,7 @@
  *    Christian Schulte <schulte@ps.uni-sb.de>
  * 
  *  Contributors:
-* 			Andres Felipe Barco (anfelbar@univalle.edu.co)
-*
+ *    
  *  Copyright:
  *    Christian Schulte, 1998
  * 
@@ -519,6 +518,7 @@ void initBuiltins() {
   BI_bindReadOnly      = string2Builtin("INTERNAL", "bindReadOnly");
   BI_varToReadOnly     = string2Builtin("INTERNAL", "varToReadOnly");
   BI_PROP_GEC          = string2Builtin("INTERNAL", "gec_propagate");
+  BI_GEC_TELL_CONST    = string2Builtin("INTERNAL", "gec_tellConstraint");
 
   BI_waitGetChoice     = string2Builtin("INTERNAL", "waitGetChoice");
   BI_bindCSync         = string2Builtin("INTERNAL", "bindCSync");

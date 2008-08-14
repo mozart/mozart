@@ -34,51 +34,11 @@
 
 #include "gecode/int/branch.hh"
 
-// Define a builtin operation that tells a constraint in the gecode space.
-OZ_BI_proto(BIGfdTellConstraint);
 
-TaggedRef BI_DistributeTell = 0;
+using namespace Gecode::Int::Branch;
 
-void gfd_dist_init(void) {
-  BI_DistributeTell = 
-    makeTaggedConst(new Builtin("GFD", "distribute (tell)",
-				2, 0, BIGfdTellConstraint, OK));
-}
-
-class ValMin {
-public:
-  int val(const GenericSpace*, IntView x) {
-    return x.min();
-  }
-
-  Gecode::ModEvent tell(GenericSpace *home, unsigned int a, IntView x, int v) {
-    printf("Called tell ValMin\n");fflush(stdout);
-    return (a == 0) ?  x.eq(home,v) : x.gr(home,v);
-    /*
-    if (a == 1) {
-      // case compl(v)
-      Gecode::rel(home,x,Gecode::IRT_NQ, v);
-    } else {
-      Assert(a == 0);
-      Gecode::rel(home,x,Gecode::IRT_EQ, v);
-    }
-    // TODO: can i fail in advance?
-    printf("Called tell ValMin - finished\n");fflush(stdout);
-   
-    return PROCEED;
-    */
-  }
-};
-class ByNone {
-public:
-  Gecode::ViewSelStatus init(const GenericSpace*, IntView x) {
-    return VSS_COMMIT;
-  }
-  Gecode::ViewSelStatus select(const GenericSpace*, IntView x) {
-    GECODE_NEVER;
-    return VSS_NONE;
-  }
-};
+// TODO: Remove the call to this function from GeIntVar
+void gfd_dist_init(void) { }
 
 /*
   \brief This class encapsulates the operations that concern to
@@ -90,16 +50,22 @@ public:
  */
 class IntVarBasics {
 public:
-  static IntView getView(OZ_Term t) {
-    Assert(!assigned(t));
-    return IntView(get_IntVarInfo(t).var());
+  static IntView getView(OZ_Term t, bool affect_stability = false) {
+    Assert(OZ_isGeIntVar(t));
+    if (!affect_stability)
+      return IntView(get_IntVarInfo(t).var());
+    return IntView(get_IntVar(t).var());
   }
   static bool assigned(OZ_Term t) {
-    return OZ_isInt(t);
+    if (OZ_isInt(t)) {
+      return true;
+    }
+    Assert(OZ_isGeIntVar(t));
+    return getView(t).assigned();
   }
 };
 
-template <class ValSel, class ViewSel>
+template <class ViewSel, class ValSel>
 class GFDDistributor : public Distributor {
 protected:
   /**
@@ -190,7 +156,7 @@ public:
     Assert(0 <= pos && pos < size);
     TaggedRef value = OZ_getArg(bd,1);
      
-    bb->prepareTell(BI_DistributeTell,
+    bb->prepareTell(BI_GEC_TELL_CONST,
 		    RefsArray::make(OZ_int(pos),value));
     
     /* 
@@ -201,13 +167,11 @@ public:
   }
 
  virtual int notifyStable(Board *bb) {
-   printf("Called tell notifyStable\n");fflush(stdout);
-    /*
-      The space is stable and now it is safe to select a new variable
-      with a new value for the next distribution step.
-    */
+   /*
+     The space is stable and now it is safe to select a new variable
+     with a new value for the next distribution step.
+   */
    GenericSpace *gs = bb->getGenericSpace(true);
-   Assert(gs);
    /*
      TODO: must be this board the same one in which this distributor
      was created?. If it must then it would be better to put an
@@ -227,29 +191,21 @@ public:
    int b = i++;
    
    if (j == size) goto finished;
-
    Assert(j==size || !IntVarBasics::assigned(vars[b]));
    
-
-   //printf("size before selction %d\n",xv.size());fflush(stdout);
+   /* 
+      At this point there is work to do so the generic space could not
+      be NULL.
+    */
+   Assert(gs);
 
    if (vs.init(gs, IntVarBasics::getView(vars[b])) != VSS_COMMIT)
      for (; i < size; i++){
        if (!IntVarBasics::assigned(vars[i]))
 	 switch (vs.select(gs,IntVarBasics::getView(vars[i]))) {
-	 case VSS_SELECT: 
-	   b=i; 
-	   printf("VSS_SELECT at iteration %d\n",i);
-	   fflush(stdout);
-	   break;
-	 case VSS_COMMIT: b=i; 
-	   printf("VSS_COMMIT at iteration %d -> going to create\n",i);
-	   fflush(stdout);
-	   goto create;
-	 case VSS_NONE:
-	   printf("VSS_NONE at iteration %d -> going to finished\n",i);
-	   fflush(stdout);
-	   break;
+	 case VSS_SELECT: b=i; break;
+	 case VSS_COMMIT: b=i; goto create;
+	 case VSS_NONE:   break;
 	 default:         GECODE_NEVER;
 	 }
      }
@@ -272,7 +228,6 @@ public:
      // This distributor should be preserved.
      return 1;
    } else {
-     printf("Called notifyStable almost finish\n");fflush(stdout);
      finish();
      /*
        There are no more variables to distribute in the array.  This
@@ -284,7 +239,7 @@ public:
   
   bool status(void) {
     for (int i=0; i < size; i++)
-      if (oz_isGeVar(vars[i])) {
+      if (!IntVarBasics::assigned(vars[i])) {
         //start = i;
         return true;
       }
@@ -297,7 +252,6 @@ public:
     fine because after a tell the space will be unstable.
   */
   virtual OZ_Return tell(RefsArray *args) {
-    printf("Called tell\n");fflush(stdout);
     int p = OZ_intToC(args->getArg(0));
     TaggedRef val = args->getArg(1);
 
@@ -326,16 +280,13 @@ public:
 
   
     // Post the real constraint in the gecode space
-    printf("Tell constraint, variable at pos: %d with val %s\n",p,OZ_toC(vars[p],100,100));fflush(stdout);
     Assert(!IntVarBasics::assigned(vars[p]));
-    vs.tell(gs,a,get_IntVar(vars[p]),v);
+    vs.tell(gs,a,IntVarBasics::getView(vars[p],true),v);
 
     /* (ggutierrez) Unstability should be an effect of a tell
        operation on the gecode space. I'm not sure about
        Assert(!gs->isStable());
      */
-
-    printf("Called tell - finished\n");fflush(stdout);
 
     /* 
        TODO: Gecode ViewSel classes return a ModEvent with possibly
@@ -362,30 +313,9 @@ public:
   }
 };
 
-/*
-  This builtin performs the tell operation. We need a builtin because
-  the tell is generated by the search engine and at that time the
-  board installed may not correspond to the board of the tell
-  operation. When the built in is executed both, the board installed
-  and the target board are the same.
-*/
-OZ_BI_define(BIGfdTellConstraint, 2, 0)
-{
-
-  printf(">>>Running tell thread\n");fflush(stdout);
-
-  Board *bb = oz_currentBoard();
-  Assert(bb->getGenericSpace(true));
-  
-  return bb->getDistributor()->tell(RefsArray::make(OZ_in(0),OZ_in(1)));  
-}
-OZ_BI_end
-  
-  
 OZ_BI_define(gfd_distribute, 1, 1) {
   oz_declareNonvarIN(0,vv);
 
-  printf("called gfd_distribute\n");fflush(stdout);
   int n = 0;
   TaggedRef * vars;
 
@@ -427,22 +357,9 @@ OZ_BI_define(gfd_distribute, 1, 1) {
   if (bb->getDistributor())
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
   
-  /*
-    // An example
-  GFDDistributor<Gecode::Int::Branch::ValMed<IntView>, 
-    Gecode::Int::Branch::ByMinMax<IntView> > * gfdd =
-    
-    new GFDDistributor<Gecode::Int::Branch::ValMed<IntView>, 
-    Gecode::Int::Branch::ByMinMax<IntView> >(bb,vars,n);
-  */
-  
-   GFDDistributor<Gecode::Int::Branch::ValMin<IntView>, 
-    Gecode::Int::Branch::ByDegreeMin<IntView> > * gfdd =
-    
-    new GFDDistributor<Gecode::Int::Branch::ValMin<IntView>, 
-    Gecode::Int::Branch::ByDegreeMin<IntView> >(bb,vars,n);
+  GFDDistributor<ByDegreeMin<IntView>,ValMin<IntView> > * gfdd =
+    new GFDDistributor<ByDegreeMin<IntView>, ValMin<IntView> >(bb,vars,n);
 
-  printf("Created distributor associating it to the board.\n");fflush(stdout);
   bb->setDistributor(gfdd);
   
   OZ_RETURN(gfdd->getSync()); 
@@ -450,7 +367,7 @@ OZ_BI_define(gfd_distribute, 1, 1) {
 OZ_BI_end
 
 
-template <class ValSel, class ViewSel>
+template <class ViewSel, class ValSel>
 class GFDAssignment : public Distributor {
 protected:
   /**
@@ -469,12 +386,10 @@ protected:
   Board *home;
   GenericSpace *gs_home;
 #endif
-  //ViewArray<IntView> xv;
 
 public:
 
   GFDAssignment(Board *bb, TaggedRef *vs, int n) {
-    printf("Called assign constructor\n");fflush(stdout);
     vars = vs;
     size = n;
     sync = oz_newVariable(bb);
@@ -533,7 +448,7 @@ public:
     Assert(0 <= pos && pos < size);
     TaggedRef value = OZ_getArg(bd,1);
      
-    bb->prepareTell(BI_DistributeTell,
+    bb->prepareTell(BI_GEC_TELL_CONST,
 		    RefsArray::make(OZ_int(pos),value));
     
     /* 
@@ -544,13 +459,11 @@ public:
   }
 
  virtual int notifyStable(Board *bb) {
-   printf("Called tell notifyStable\n");fflush(stdout);
-    /*
-      The space is stable and now it is safe to select a new variable
-      with a new value for the next distribution step.
-    */
+   /*
+     The space is stable and now it is safe to select a new variable
+     with a new value for the next distribution step.
+   */
    GenericSpace *gs = bb->getGenericSpace(true);
-   Assert(gs);
    /*
      TODO: must be this board the same one in which this distributor
      was created?. If it must then it would be better to put an
@@ -560,7 +473,6 @@ public:
      same object with diferent variables
    */
 
-   //   ViewSel vs; // For view selection
    ValSel  vl; // Fr value selection
    
    int i = 0;
@@ -572,6 +484,12 @@ public:
    if (j == size) goto finished;
 
    Assert(j==size || !IntVarBasics::assigned(vars[b]));
+
+   /* 
+      At this point there is work to do so the generic space could not
+      be NULL.
+    */
+   Assert(gs);
    
    /*
      After variable and value selections a branching must be created
@@ -589,7 +507,6 @@ public:
      // This distributor should be preserved.
      return 1;
    } else {
-     printf("Called notifyStable almost finish\n");fflush(stdout);
      finish();
      /*
        There are no more variables to distribute in the array.  This
@@ -601,7 +518,7 @@ public:
   
   bool status(void) {
     for (int i=0; i < size; i++)
-      if (oz_isGeVar(vars[i])) {
+      if (!IntVarBasics::assigned(vars[i])) {
         //start = i;
         return true;
       }
@@ -614,13 +531,12 @@ public:
     fine because after a tell the space will be unstable.
   */
   virtual OZ_Return tell(RefsArray *args) {
-    printf("Called tell\n");fflush(stdout);
     int p = OZ_intToC(args->getArg(0));
     TaggedRef val = args->getArg(1);
-
+    
     Assert(OZ_isGeIntVar(vars[p]));
     GenericSpace *gs = oz_currentBoard()->getGenericSpace(true);
-
+    
     /*
       TODO: should be this board the same one in which this
       distributor was created?. If it should then it would be better
@@ -642,16 +558,13 @@ public:
 #endif
     
     // Post the real constraint in the gecode space
-    printf("Tell constraint, variable at pos: %d with val %s\n",p,OZ_toC(vars[p],100,100));fflush(stdout);
     Assert(!IntVarBasics::assigned(vars[p]));
-    vs.tell(gs,a,get_IntVar(vars[p]),v);
+    vs.tell(gs,a,IntVarBasics::getView(vars[p],true),v);
 
     /* (ggutierrez) Unstability should be an effect of a tell
        operation on the gecode space. I'm not sure about
        Assert(!gs->isStable());
      */
-
-    printf("Called tell - finished\n");fflush(stdout);
 
     /* 
        TODO: Gecode ViewSel classes return a ModEvent with possibly
@@ -680,11 +593,8 @@ public:
 
   
 OZ_BI_define(gfd_assign, 1, 1) {
-  printf("called gfd_assign\n");fflush(stdout);
-  
   oz_declareNonvarIN(0,vv);
 
-  printf("called gfd_assign\n");fflush(stdout);
   int n = 0;
   TaggedRef * vars;
 
@@ -726,22 +636,9 @@ OZ_BI_define(gfd_assign, 1, 1) {
   if (bb->getDistributor())
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
   
-  /*
-    // An example
-  GFDDistributor<Gecode::Int::Branch::ValMed<IntView>, 
-    Gecode::Int::Branch::ByMinMax<IntView> > * gfdd =
-    
-    new GFDDistributor<Gecode::Int::Branch::ValMed<IntView>, 
-    Gecode::Int::Branch::ByMinMax<IntView> >(bb,vars,n);
-  */
-  
-   GFDAssignment<Gecode::Int::Branch::ValMin<IntView>, 
-    Gecode::Int::Branch::ByNone<IntView> > * gfda =
-    
-     new GFDAssignment<Gecode::Int::Branch::ValMin<IntView>, 
-    Gecode::Int::Branch::ByNone<IntView> >(bb,vars,n);
+  GFDAssignment<ByNone<IntView>,ValMin<IntView> > * gfda =
+    new GFDAssignment<ByNone<IntView>,ValMin<IntView> >(bb,vars,n);
 
-   printf("Created assignment associating it to the board.\n");fflush(stdout);
    bb->setDistributor(gfda);
   
   OZ_RETURN(gfda->getSync()); 
