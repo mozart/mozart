@@ -340,25 +340,88 @@ public:
   }
 };
 
-OZ_BI_define(gfd_distribute, 1, 1) {
-  oz_declareNonvarIN(0,vv);
+#define iVarByNone       0
+#define iVarBySizeMin    1
+#define iVarByDegreeMin  2
+#define iVarByDegreeMax  3
+#define iVarByVarNbProp  4
+#define iVarByVarWidth   5
+
+#define iValMin          0
+#define iValMed          1
+#define iValMax          2
+#define iValSplitMin     3
+#define iValSplitMax     4
+
+#define PP(I,J) I*(iVarByVarWidth+1)+J  
+
+#define PPCL(I,J)					\
+  case PP(iVar ## I, i ## J):				\
+  GFDDistributor<IntView,int,I<IntView>,		\
+		 J<IntView> > * I ## J;	\
+							\
+  I ## J = new GFDDistributor<IntView,int,I<IntView>,	\
+			      J<IntView> >(bb,vars,n);	\
+  bb->setDistributor(I ## J);				\
+  OZ_RETURN((I ## J)->getSync());			\
+  break;
+
+
+OZ_BI_define(gfd_distribute, 3, 1) {
+  oz_declareIntIN(0,var_sel);
+  oz_declareIntIN(1,val_sel);
+  oz_declareNonvarIN(2,vv);
 
   int n = 0;
   TaggedRef * vars;
 
-  // Assume vv is a tuple (list) of gfd variables
-  Assert(oz_isTuple(vv));
-  TaggedRef vs = vv;
-  while (oz_isLTuple(vs)) {
-    TaggedRef v = oz_head(vs);
-    //TestElement(v);
-    n++;
-    vs = oz_tail(vs);
-    DEREF(vs, vs_ptr);
-    Assert(!oz_isRef(vs));
-    if (oz_isVarOrRef(vs))
-      oz_suspendOnPtr(vs_ptr);
-  }
+//   // Assume vv is a tuple (list) of gfd variables
+//   Assert(oz_isTuple(vv));
+//   TaggedRef vs = vv;
+//   while (oz_isLTuple(vs)) {
+//     TaggedRef v = oz_head(vs);
+//     //TestElement(v);
+//     n++;
+//     vs = oz_tail(vs);
+//     DEREF(vs, vs_ptr);
+//     Assert(!oz_isRef(vs));
+//     if (oz_isVarOrRef(vs))
+//       oz_suspendOnPtr(vs_ptr);
+//   }
+
+
+  if (oz_isLiteral(vv)) {
+    ;
+  } else if (oz_isLTupleOrRef(vv)) {
+    
+    TaggedRef vs = vv;
+    
+    while (oz_isLTuple(vs)) {
+      TaggedRef v = oz_head(vs);
+      //TestElement(v);
+      n++;
+      vs = oz_tail(vs);
+      DEREF(vs, vs_ptr);
+      Assert(!oz_isRef(vs));
+      if (oz_isVarOrRef(vs))
+	oz_suspendOnPtr(vs_ptr);
+    }
+    
+    if (!oz_isNil(vs))
+      oz_typeError(0,"vector of finite domains");
+    
+  } else if (oz_isSRecord(vv)) {
+    
+    for (int i = tagged2SRecord(vv)->getWidth(); i--; ) {
+      TaggedRef v = tagged2SRecord(vv)->getArg(i);
+      //TestElement(v);
+      n++;
+    }
+    
+  } else 
+    oz_typeError(0,"vector of finite domains");
+  
+  
 
   // If there are no variables in the input then return unit
   if (n == 0)
@@ -371,25 +434,82 @@ OZ_BI_define(gfd_distribute, 1, 1) {
   Assert(!oz_isRef(vv));
   if (oz_isLTupleOrRef(vv)) {
     TaggedRef vs = vv;
-    for (int i =0; i < n; i++) {
+    /*    for (int i =0; i < n; i++) {
       TaggedRef v = oz_head(vs);
       vars[i] = v;
       vs = oz_deref(oz_tail(vs));
       Assert(!oz_isRef(vs));
+      }*/
+    int i = n;
+    while (oz_isLTuple(vs)) {
+      TaggedRef v = oz_head(vs);
+      vars[i] = v;
+      vars[--i] = v;
+      vs = oz_deref(oz_tail(vs));
+      Assert(!oz_isRef(vs));
     }
+  } else {
+      int j = 0;
+      for (int i = tagged2SRecord(vv)->getWidth(); i--; ) {
+	TaggedRef v = tagged2SRecord(vv)->getArg(i);
+	vars[j++] = v;
+      }
   }
 
   Board * bb = oz_currentBoard();
   
   if (bb->getDistributor())
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
-  
-  GFDDistributor<IntView,int,ByDegreeMin<IntView>,ValMin<IntView> > * gfdd =
+  /*
+    GFDDistributor<IntView,int,ByDegreeMin<IntView>,ValMin<IntView> > * gfdd =
     new GFDDistributor<IntView,int,ByDegreeMin<IntView>, ValMin<IntView> >(bb,vars,n);
+  */
 
-  bb->setDistributor(gfdd);
+  switch (PP(var_sel,val_sel)) {
+    
+    PPCL(ByNone,ValMin);
+    PPCL(ByNone,ValMax);
+    PPCL(ByNone,ValMed);
+    PPCL(ByNone,ValSplitMin);
+    PPCL(ByNone,ValSplitMax);
+    
+    PPCL(BySizeMin,ValMin);
+    PPCL(BySizeMin,ValMax);
+    PPCL(BySizeMin,ValMed);
+    PPCL(BySizeMin,ValSplitMin);
+    PPCL(BySizeMin,ValSplitMax);
+    
+    PPCL(ByDegreeMin,ValMin);
+    PPCL(ByDegreeMin,ValMax);
+    PPCL(ByDegreeMin,ValMed);
+    PPCL(ByDegreeMin,ValSplitMin);
+    PPCL(ByDegreeMin,ValSplitMax);
+    
+    PPCL(ByDegreeMax,ValMin);
+    PPCL(ByDegreeMax,ValMax);
+    PPCL(ByDegreeMax,ValMed);
+    PPCL(ByDegreeMax,ValSplitMin);
+    PPCL(ByDegreeMax,ValSplitMax);
+    
+    /*PPCL(Width,Min);
+    PPCL(Width,Max);
+    PPCL(Width,Mid);
+    PPCL(Width,SplitMin);
+    PPCL(Width,SplitMax);
+    
+    PPCL(NbProp,Min);
+    PPCL(NbProp,Max);
+    PPCL(NbProp,Mid);
+    PPCL(NbProp,SplitMin);
+    PPCL(NbProp,SplitMax);
+    */
+  default:
+   Assert(false);
+  }
+
+  //bb->setDistributor(gfdd);
   
-  OZ_RETURN(gfdd->getSync()); 
+  //OZ_RETURN(gfdd->getSync()); 
 }
 OZ_BI_end
 

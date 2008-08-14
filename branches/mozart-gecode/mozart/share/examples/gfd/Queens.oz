@@ -40,22 +40,8 @@ fun{Queens N}
       {GFD.distinctP post(Root cl:GFD.cl.val)}
       {GFD.distinctP post(C1 Root cl:GFD.cl.val)}
       {GFD.distinctP post(C2 Root cl:GFD.cl.val)}
-
-      {Wait {GFD.distributeC Root}}
-      %{Wait {GFD.assignC Root}}
+      {GFD.distributeBR generic(order:min value:splitMax) Root}
    end
 end
 
-{Show {OS.getPID}}
-%{Delay 10000}
 {Show {SearchAll {Queens 6}}}
-
-%S  C A B C D
-
-%S = {Space.new {Queens 6}}
-/*
-{Browse {Space.ask S}}
-{Space.commitB S 2#5}
-
-[[5 3 1 6 4 2] [4 1 5 2 6 3] [3 6 2 5 1 4] [2 4 6 1 3 5]]
-*/
