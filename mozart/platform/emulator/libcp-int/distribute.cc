@@ -413,20 +413,20 @@ OZ_BI_define(gfd_distribute, 3, 1) {
   Assert(!oz_isRef(vv));
   if (oz_isLTupleOrRef(vv)) {
     TaggedRef vs = vv;
-    /*    for (int i =0; i < n; i++) {
+    for (int i =0; i < n; i++) {
       TaggedRef v = oz_head(vs);
       vars[i] = v;
       vs = oz_deref(oz_tail(vs));
       Assert(!oz_isRef(vs));
-      }*/
-    int i = n;
+    }
+    /*    int i = n;
     while (oz_isLTuple(vs)) {
       TaggedRef v = oz_head(vs);
       vars[i] = v;
       vars[--i] = v;
       vs = oz_deref(oz_tail(vs));
       Assert(!oz_isRef(vs));
-    }
+      }*/
   } else {
       int j = 0;
       for (int i = tagged2SRecord(vv)->getWidth(); i--; ) {
