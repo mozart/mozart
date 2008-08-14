@@ -294,8 +294,8 @@ public:
 
     unsigned int a = OZ_isTuple(val) ? 1 : 0;    
     Val v = (a == 1) ? 
-      VarBasics<IntView,int>::getValue((OZ_getArg(val,0))) :
-      VarBasics<IntView,int>::getValue(val);
+      VarBasics<View,Val>::getValue((OZ_getArg(val,0))) :
+      VarBasics<View,Val>::getValue(val);
 
 #ifdef DEBUG_CHEK
     if (OZ_isTuple(val)) 
@@ -308,19 +308,13 @@ public:
   
     // Post the real constraint in the gecode space
     Assert(!(VarBasics<View,Val>::assigned(vars[p])));
-    vs.tell(gs,a,VarBasics<View,Val>::getView(vars[p],true),v);
+    return me_failed(vs.tell(gs,a,VarBasics<View,Val>::getView(vars[p],true),v))
+      ? FAILED : PROCEED;
 
     /* (ggutierrez) Unstability should be an effect of a tell
        operation on the gecode space. I'm not sure about
        Assert(!gs->isStable());
      */
-
-    /* 
-       TODO: Gecode ViewSel classes return a ModEvent with possibly
-       useful information. We can convert this to something
-       meaningfull to mozart and maybe fail the board in advance.
-     */
-    return PROCEED;
   }
 
   virtual Distributor * gCollect(void) {
@@ -358,7 +352,7 @@ public:
 #define PPCL(I,J)					\
   case PP(iVar ## I, i ## J):				\
   GFDDistributor<IntView,int,I<IntView>,		\
-		 J<IntView> > * I ## J;	\
+		 J<IntView> > * I ## J;			\
 							\
   I ## J = new GFDDistributor<IntView,int,I<IntView>,	\
 			      J<IntView> >(bb,vars,n);	\
@@ -374,21 +368,6 @@ OZ_BI_define(gfd_distribute, 3, 1) {
 
   int n = 0;
   TaggedRef * vars;
-
-//   // Assume vv is a tuple (list) of gfd variables
-//   Assert(oz_isTuple(vv));
-//   TaggedRef vs = vv;
-//   while (oz_isLTuple(vs)) {
-//     TaggedRef v = oz_head(vs);
-//     //TestElement(v);
-//     n++;
-//     vs = oz_tail(vs);
-//     DEREF(vs, vs_ptr);
-//     Assert(!oz_isRef(vs));
-//     if (oz_isVarOrRef(vs))
-//       oz_suspendOnPtr(vs_ptr);
-//   }
-
 
   if (oz_isLiteral(vv)) {
     ;
@@ -460,11 +439,7 @@ OZ_BI_define(gfd_distribute, 3, 1) {
   
   if (bb->getDistributor())
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
-  /*
-    GFDDistributor<IntView,int,ByDegreeMin<IntView>,ValMin<IntView> > * gfdd =
-    new GFDDistributor<IntView,int,ByDegreeMin<IntView>, ValMin<IntView> >(bb,vars,n);
-  */
-
+ 
   switch (PP(var_sel,val_sel)) {
     
     PPCL(ByNone,ValMin);
@@ -507,9 +482,6 @@ OZ_BI_define(gfd_distribute, 3, 1) {
    Assert(false);
   }
 
-  //bb->setDistributor(gfdd);
-  
-  //OZ_RETURN(gfdd->getSync()); 
 }
 OZ_BI_end
 
@@ -554,15 +526,16 @@ public:
     dispose();
   }
   
-  virtual void make_branch(Board *bb, int pos, int val){
+  virtual void make_branch(Board *bb, int pos, Val val){
+    Val v = VarBasics<View,Val>::getValue(val);
     // first possible branching: sel_var#val
     TaggedRef fb = 
-      OZ_mkTuple(OZ_atom("#"),2,OZ_int(pos),OZ_int(val));
+      OZ_mkTuple(OZ_atom("#"),2,OZ_int(pos),v);
     
     // second possible branching: sel_var#compl(val)
     TaggedRef sb = 
       OZ_mkTuple(OZ_atom("#"),2,OZ_int(pos),
-		 OZ_mkTuple(OZ_atom("compl"),1,OZ_int(val)));
+		 OZ_mkTuple(OZ_atom("compl"),1,v));
     
     bb->setBranching(OZ_cons(fb,OZ_cons(sb,OZ_nil())));
   }
@@ -620,7 +593,7 @@ public:
      same object with diferent variables
    */
 
-   ValSel  vl; // Fr value selection
+   ValSel  vl; // For value selection
    
    int i = 0;
    int j = 0;
@@ -645,7 +618,7 @@ public:
      this distributor.
    */
    {
-     IntView vb = VarBasics<View,Val>::getView(vars[b]);
+     View vb = VarBasics<View,Val>::getView(vars[b]);
      Assert(!vb.assigned());
      make_branch(bb, b, vl.val(gs, vb));
    }
@@ -693,8 +666,9 @@ public:
     ValSel vs;
 
     unsigned int a = OZ_isTuple(val) ? 1 : 0;    
-    int v = (a == 1) ? 
-      OZ_intToC(OZ_getArg(val,0)) : OZ_intToC(val);
+    Val v = (a == 1) ? 
+      VarBasics<View,Val>::getValue((OZ_getArg(val,0))) :
+      VarBasics<View,Val>::getValue(val);
 
 #ifdef DEBUG_CHEK
     if (OZ_isTuple(val)) 
@@ -706,19 +680,13 @@ public:
     
     // Post the real constraint in the gecode space
     Assert(!(VarBasics<View,Val>::assigned(vars[p])));
-    vs.tell(gs,a,VarBasics<View,Val>::getView(vars[p],true),v);
+    return me_failed(vs.tell(gs,a,VarBasics<View,Val>::getView(vars[p],true),v))
+      ? FAILED : PROCEED;
 
     /* (ggutierrez) Unstability should be an effect of a tell
        operation on the gecode space. I'm not sure about
        Assert(!gs->isStable());
      */
-
-    /* 
-       TODO: Gecode ViewSel classes return a ModEvent with possibly
-       useful information. We can convert this to something
-       meaningfull to mozart and maybe fail the board in advance.
-     */
-    return PROCEED;
   }
 
   virtual Distributor * gCollect(void) {
