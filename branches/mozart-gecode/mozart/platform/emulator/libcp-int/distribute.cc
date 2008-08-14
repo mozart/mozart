@@ -48,7 +48,17 @@ void gfd_dist_init(void) { }
   a bound FD variable. Also we need a way to create a view from an
   OZ_Term to be able to use gecode provided view selection strategies.
  */
+template<class View, class Val>
 class IntVarBasics {
+public:
+  static View getView(OZ_Term t, bool affect_stability = false);
+  static bool assigned(OZ_Term t);
+  static OZ_Term getValue(Val v);
+  static Val getValue(OZ_Term v);
+};
+
+template<>
+class IntVarBasics<IntView, int> {
 public:
   static IntView getView(OZ_Term t, bool affect_stability = false) {
     Assert(OZ_isGeIntVar(t));
@@ -63,9 +73,15 @@ public:
     Assert(OZ_isGeIntVar(t));
     return getView(t).assigned();
   }
+  static OZ_Term getValue(int v) {
+    return OZ_int(v);
+  }
+  static int getValue(OZ_Term v) {
+    return OZ_intToC(v);
+  }
 };
 
-template <class ViewSel, class ValSel>
+template <class View, class Val, class ViewSel, class ValSel>
 class GFDDistributor : public Distributor {
 protected:
   /**
@@ -115,15 +131,16 @@ public:
     dispose();
   }
 
-  virtual void make_branch(Board *bb, int pos, int val){
+  virtual void make_branch(Board *bb, int pos, Val val){
+    Val v = IntVarBasics<View,Val>::getValue(val);
     // first possible branching: sel_var#val
     TaggedRef fb = 
-      OZ_mkTuple(OZ_atom("#"),2,OZ_int(pos),OZ_int(val));
+      OZ_mkTuple(OZ_atom("#"),2,OZ_int(pos),v);
     
     // second possible branching: sel_var#compl(val)
     TaggedRef sb = 
       OZ_mkTuple(OZ_atom("#"),2,OZ_int(pos),
-		 OZ_mkTuple(OZ_atom("compl"),1,OZ_int(val)));
+		 OZ_mkTuple(OZ_atom("compl"),1,v));
     
     bb->setBranching(OZ_cons(fb,OZ_cons(sb,OZ_nil())));
   }
@@ -186,12 +203,12 @@ public:
    
    int i = 0;
    int j = 0;
-   for (j = 0; j < size && IntVarBasics::assigned(vars[j]); j++);
+   for (j = 0; j < size && IntVarBasics<View,Val>::assigned(vars[j]); j++);
    i = j;
    int b = i++;
    
    if (j == size) goto finished;
-   Assert(j==size || !IntVarBasics::assigned(vars[b]));
+   Assert(j==size || !(IntVarBasics<View,Val>::assigned(vars[b])) );
    
    /* 
       At this point there is work to do so the generic space could not
@@ -199,10 +216,10 @@ public:
     */
    Assert(gs);
 
-   if (vs.init(gs, IntVarBasics::getView(vars[b])) != VSS_COMMIT)
+   if (vs.init(gs, IntVarBasics<View,Val>::getView(vars[b])) != VSS_COMMIT)
      for (; i < size; i++){
-       if (!IntVarBasics::assigned(vars[i]))
-	 switch (vs.select(gs,IntVarBasics::getView(vars[i]))) {
+       if (!IntVarBasics<View,Val>::assigned(vars[i]))
+	 switch (vs.select(gs,IntVarBasics<View,Val>::getView(vars[i]))) {
 	 case VSS_SELECT: b=i; break;
 	 case VSS_COMMIT: b=i; goto create;
 	 case VSS_NONE:   break;
@@ -218,7 +235,7 @@ public:
        the possibles branching descritpions that can be commited to
        this distributor.
      */
-     IntView vb = IntVarBasics::getView(vars[b]);
+     View vb = IntVarBasics<View,Val>::getView(vars[b]);
      Assert(!vb.assigned());
      make_branch(bb, b, vl.val(gs, vb));
    }
@@ -239,7 +256,7 @@ public:
   
   bool status(void) {
     for (int i=0; i < size; i++)
-      if (!IntVarBasics::assigned(vars[i])) {
+      if (!IntVarBasics<View,Val>::assigned(vars[i])) {
         //start = i;
         return true;
       }
@@ -267,8 +284,9 @@ public:
     ValSel vs;
 
     unsigned int a = OZ_isTuple(val) ? 1 : 0;    
-    int v = (a == 1) ? 
-      OZ_intToC(OZ_getArg(val,0)) : OZ_intToC(val);
+    Val v = (a == 1) ? 
+      IntVarBasics<IntView,int>::getValue((OZ_getArg(val,0))) :
+      IntVarBasics<IntView,int>::getValue(val);
 
 #ifdef DEBUG_CHEK
     if (OZ_isTuple(val)) 
@@ -280,8 +298,8 @@ public:
 
   
     // Post the real constraint in the gecode space
-    Assert(!IntVarBasics::assigned(vars[p]));
-    vs.tell(gs,a,IntVarBasics::getView(vars[p],true),v);
+    Assert(!(IntVarBasics<View,Val>::assigned(vars[p])));
+    vs.tell(gs,a,IntVarBasics<View,Val>::getView(vars[p],true),v);
 
     /* (ggutierrez) Unstability should be an effect of a tell
        operation on the gecode space. I'm not sure about
@@ -357,8 +375,8 @@ OZ_BI_define(gfd_distribute, 1, 1) {
   if (bb->getDistributor())
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
   
-  GFDDistributor<ByDegreeMin<IntView>,ValMin<IntView> > * gfdd =
-    new GFDDistributor<ByDegreeMin<IntView>, ValMin<IntView> >(bb,vars,n);
+  GFDDistributor<IntView,int,ByDegreeMin<IntView>,ValMin<IntView> > * gfdd =
+    new GFDDistributor<IntView,int,ByDegreeMin<IntView>, ValMin<IntView> >(bb,vars,n);
 
   bb->setDistributor(gfdd);
   
@@ -367,7 +385,7 @@ OZ_BI_define(gfd_distribute, 1, 1) {
 OZ_BI_end
 
 
-template <class ViewSel, class ValSel>
+template <class View, class Val, class ViewSel, class ValSel>
 class GFDAssignment : public Distributor {
 protected:
   /**
@@ -477,13 +495,13 @@ public:
    
    int i = 0;
    int j = 0;
-   for (j = 0; j < size && IntVarBasics::assigned(vars[j]); j++);
+   for (j = 0; j < size && IntVarBasics<View,Val>::assigned(vars[j]); j++);
    i = j;
    int b = i++;
    
    if (j == size) goto finished;
 
-   Assert(j==size || !IntVarBasics::assigned(vars[b]));
+   Assert(j==size || !(IntVarBasics<View,Val>::assigned(vars[b])));
 
    /* 
       At this point there is work to do so the generic space could not
@@ -498,7 +516,7 @@ public:
      this distributor.
    */
    {
-     IntView vb = IntVarBasics::getView(vars[b]);
+     IntView vb = IntVarBasics<View,Val>::getView(vars[b]);
      Assert(!vb.assigned());
      make_branch(bb, b, vl.val(gs, vb));
    }
@@ -518,7 +536,7 @@ public:
   
   bool status(void) {
     for (int i=0; i < size; i++)
-      if (!IntVarBasics::assigned(vars[i])) {
+      if (!IntVarBasics<View,Val>::assigned(vars[i])) {
         //start = i;
         return true;
       }
@@ -558,8 +576,8 @@ public:
 #endif
     
     // Post the real constraint in the gecode space
-    Assert(!IntVarBasics::assigned(vars[p]));
-    vs.tell(gs,a,IntVarBasics::getView(vars[p],true),v);
+    Assert(!(IntVarBasics<View,Val>::assigned(vars[p])));
+    vs.tell(gs,a,IntVarBasics<View,Val>::getView(vars[p],true),v);
 
     /* (ggutierrez) Unstability should be an effect of a tell
        operation on the gecode space. I'm not sure about
@@ -636,8 +654,8 @@ OZ_BI_define(gfd_assign, 1, 1) {
   if (bb->getDistributor())
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
   
-  GFDAssignment<ByNone<IntView>,ValMin<IntView> > * gfda =
-    new GFDAssignment<ByNone<IntView>,ValMin<IntView> >(bb,vars,n);
+  GFDAssignment<IntView,int,ByNone<IntView>,ValMin<IntView> > * gfda =
+    new GFDAssignment<IntView,int,ByNone<IntView>,ValMin<IntView> >(bb,vars,n);
 
    bb->setDistributor(gfda);
   
