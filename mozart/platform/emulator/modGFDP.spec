@@ -7,13 +7,18 @@ $boot_module_name      		  = "GFD";
 %builtins_all = 
 (
 ## Distributor
- 'distribute'    => { in =>  ['+value'],
+ 'distribute'    => { in =>  ['+int', '+int', '+value'],
                       out => ['value'],
                       bi =>  gfd_distribute },
+# 'distribute'    => { in =>  ['+value'],
+#                      out => ['value'],
+#                      bi =>  gfd_distribute },
+
 ## Assignment
- 'assignC'    => { in =>  ['+value'],
-		  out => ['value'],
-		  bi =>  gfd_assign },
+ 'assign'    => { in =>  ['+value'],
+		   out => ['value'],
+		   bi =>  gfd_assign },
+
 ##Propagators
  'int_sortedness' => { 
      in  => ['+value','+value','+int'],
@@ -61,13 +66,12 @@ $boot_module_name      		  = "GFD";
      bi  => int_disjoint
  },
 ###
- 
-## TODO: what is this for? the same as distributor?
-## 'assign' => { 
-##     in  => ['+value','int'],
-##     out => [],
-##     bi  => int_assign
-## },
+## TODO: what is this for? the same as distributor? 
+# 'assign' => { 
+#     in  => ['+value','int'],
+#     out => [],
+#     bi  => int_assign
+# },
  
  'int_ext' => {
      in  => ['+value','+value'],

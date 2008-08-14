@@ -40,7 +40,8 @@ import
    GFDB at 'x-oz://boot/GFDB'
    GFDP at 'x-oz://boot/GFDP'
    Space
-   System
+   System(nbSusps show)
+
 prepare
    %%This record must reflect the IntRelType in gecode/int.hh
    Rt = '#'('=:':0     %Equality
@@ -136,7 +137,7 @@ export
    %lex:             Lex
    
    %% Assignment propagators
-   %assign: Assign
+   assign: Assign
 
    int_ext: Int_ext
    %%Propagators
@@ -166,8 +167,7 @@ export
 
    %% Distribution
    distribute : FdDistribute
-   distributeC : FdDistributeC
-   assignC: FdAssignC
+   %distributeC : FdDistributeC
    distributeBR : FdDistributeBR
    %% Miscelaneus
    inf : FdInf
@@ -294,7 +294,7 @@ define
    %Int_reified_int =   GFDP.int_reified_int
 
    %% Assignment propagators
-   %Assign = GFDP.'assign'
+   Assign = GFDP.'assign'
 
    Int_ext = GFDP.'int_ext'
    %% Backward compatibility propagators
@@ -547,8 +547,7 @@ define
    FdSup = {GFDB.sup}
    FdIs  = GFDB.is
 
-    FdDistributeC = GFDP.distribute
-    FdAssignC = GFDP.assignC
+   %FdDistributeC = GFDP.distribute
    local
       \insert GeIntVarDist
    in
