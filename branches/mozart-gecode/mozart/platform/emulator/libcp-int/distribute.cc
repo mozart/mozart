@@ -49,7 +49,7 @@ void gfd_dist_init(void) { }
   OZ_Term to be able to use gecode provided view selection strategies.
  */
 template<class View, class Val>
-class IntVarBasics {
+class VarBasics {
 public:
   static View getView(OZ_Term t, bool affect_stability = false);
   static bool assigned(OZ_Term t);
@@ -58,7 +58,7 @@ public:
 };
 
 template<>
-class IntVarBasics<IntView, int> {
+class VarBasics<IntView, int> {
 public:
   static IntView getView(OZ_Term t, bool affect_stability = false) {
     Assert(OZ_isGeIntVar(t));
@@ -81,6 +81,15 @@ public:
   }
 };
 
+/**
+   \brief Generic implementation of a Value-Position distributor. This
+   distributor creates branches of the form pos#val or pos#compl(val)
+   for Variables of type \a View. Each time a variables is bound to a
+   value, this value is of type Val. Variable and Value selection
+   strategies are implemented by \a ViewSel and \a VarSel resp. An
+   auxiliar VarBasics class of static methods is used to convert
+   between OZ_Terms to Variables, Values, etc.
+ */
 template <class View, class Val, class ViewSel, class ValSel>
 class GFDDistributor : public Distributor {
 protected:
@@ -132,7 +141,7 @@ public:
   }
 
   virtual void make_branch(Board *bb, int pos, Val val){
-    Val v = IntVarBasics<View,Val>::getValue(val);
+    Val v = VarBasics<View,Val>::getValue(val);
     // first possible branching: sel_var#val
     TaggedRef fb = 
       OZ_mkTuple(OZ_atom("#"),2,OZ_int(pos),v);
@@ -203,12 +212,12 @@ public:
    
    int i = 0;
    int j = 0;
-   for (j = 0; j < size && IntVarBasics<View,Val>::assigned(vars[j]); j++);
+   for (j = 0; j < size && VarBasics<View,Val>::assigned(vars[j]); j++);
    i = j;
    int b = i++;
    
    if (j == size) goto finished;
-   Assert(j==size || !(IntVarBasics<View,Val>::assigned(vars[b])) );
+   Assert(j==size || !(VarBasics<View,Val>::assigned(vars[b])) );
    
    /* 
       At this point there is work to do so the generic space could not
@@ -216,10 +225,10 @@ public:
     */
    Assert(gs);
 
-   if (vs.init(gs, IntVarBasics<View,Val>::getView(vars[b])) != VSS_COMMIT)
+   if (vs.init(gs, VarBasics<View,Val>::getView(vars[b])) != VSS_COMMIT)
      for (; i < size; i++){
-       if (!IntVarBasics<View,Val>::assigned(vars[i]))
-	 switch (vs.select(gs,IntVarBasics<View,Val>::getView(vars[i]))) {
+       if (!VarBasics<View,Val>::assigned(vars[i]))
+	 switch (vs.select(gs,VarBasics<View,Val>::getView(vars[i]))) {
 	 case VSS_SELECT: b=i; break;
 	 case VSS_COMMIT: b=i; goto create;
 	 case VSS_NONE:   break;
@@ -235,7 +244,7 @@ public:
        the possibles branching descritpions that can be commited to
        this distributor.
      */
-     View vb = IntVarBasics<View,Val>::getView(vars[b]);
+     View vb = VarBasics<View,Val>::getView(vars[b]);
      Assert(!vb.assigned());
      make_branch(bb, b, vl.val(gs, vb));
    }
@@ -256,7 +265,7 @@ public:
   
   bool status(void) {
     for (int i=0; i < size; i++)
-      if (!IntVarBasics<View,Val>::assigned(vars[i])) {
+      if (!VarBasics<View,Val>::assigned(vars[i])) {
         //start = i;
         return true;
       }
@@ -285,8 +294,8 @@ public:
 
     unsigned int a = OZ_isTuple(val) ? 1 : 0;    
     Val v = (a == 1) ? 
-      IntVarBasics<IntView,int>::getValue((OZ_getArg(val,0))) :
-      IntVarBasics<IntView,int>::getValue(val);
+      VarBasics<IntView,int>::getValue((OZ_getArg(val,0))) :
+      VarBasics<IntView,int>::getValue(val);
 
 #ifdef DEBUG_CHEK
     if (OZ_isTuple(val)) 
@@ -298,8 +307,8 @@ public:
 
   
     // Post the real constraint in the gecode space
-    Assert(!(IntVarBasics<View,Val>::assigned(vars[p])));
-    vs.tell(gs,a,IntVarBasics<View,Val>::getView(vars[p],true),v);
+    Assert(!(VarBasics<View,Val>::assigned(vars[p])));
+    vs.tell(gs,a,VarBasics<View,Val>::getView(vars[p],true),v);
 
     /* (ggutierrez) Unstability should be an effect of a tell
        operation on the gecode space. I'm not sure about
@@ -495,13 +504,13 @@ public:
    
    int i = 0;
    int j = 0;
-   for (j = 0; j < size && IntVarBasics<View,Val>::assigned(vars[j]); j++);
+   for (j = 0; j < size && VarBasics<View,Val>::assigned(vars[j]); j++);
    i = j;
    int b = i++;
    
    if (j == size) goto finished;
 
-   Assert(j==size || !(IntVarBasics<View,Val>::assigned(vars[b])));
+   Assert(j==size || !(VarBasics<View,Val>::assigned(vars[b])));
 
    /* 
       At this point there is work to do so the generic space could not
@@ -516,7 +525,7 @@ public:
      this distributor.
    */
    {
-     IntView vb = IntVarBasics<View,Val>::getView(vars[b]);
+     IntView vb = VarBasics<View,Val>::getView(vars[b]);
      Assert(!vb.assigned());
      make_branch(bb, b, vl.val(gs, vb));
    }
@@ -536,7 +545,7 @@ public:
   
   bool status(void) {
     for (int i=0; i < size; i++)
-      if (!IntVarBasics<View,Val>::assigned(vars[i])) {
+      if (!VarBasics<View,Val>::assigned(vars[i])) {
         //start = i;
         return true;
       }
@@ -576,8 +585,8 @@ public:
 #endif
     
     // Post the real constraint in the gecode space
-    Assert(!(IntVarBasics<View,Val>::assigned(vars[p])));
-    vs.tell(gs,a,IntVarBasics<View,Val>::getView(vars[p],true),v);
+    Assert(!(VarBasics<View,Val>::assigned(vars[p])));
+    vs.tell(gs,a,VarBasics<View,Val>::getView(vars[p],true),v);
 
     /* (ggutierrez) Unstability should be an effect of a tell
        operation on the gecode space. I'm not sure about
