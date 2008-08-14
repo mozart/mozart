@@ -59,19 +59,25 @@
      'propagate'	 => { in  => [],
 			      out => [],
 			      BI  => BI_prop_lpq},
-
-	 'gec_propagate'	 => { in  => [],
+## Begin
+## TODO: These builtins are used from an specific place that is only related to
+## constraint programming. Should theme be here?
+     'gec_propagate'	 => { in  => [],
 			      out => [],
 			      BI  => BI_prop_gec},
 
-	 'waitGetChoice' => { in  => ['value'],
+     'waitGetChoice' => { in  => ['value'],
 	                      out => [],
 			      BI  => BIwaitGetChoice},
 
-	 'bindCSync' => { in  => ['value'],
+     'bindCSync' => { in  => ['value'],
 	                      out => [],
 			      BI  => BIbindCSync},
 
+     'gec_tellConstraint' => { in  => ['value','value'],
+	                      out => [],
+			      BI  => BIgTellConstraint},
+## END
 
      'waitStatus'	 => { in  => ['value', 'value'],
 			      out => ['value'],

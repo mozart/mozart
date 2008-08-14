@@ -59,6 +59,7 @@ TaggedRef
   BI_varToReadOnly,
   BI_raise,
   BI_PROP_GEC,
+  BI_GEC_TELL_CONST,
   BI_waitGetChoice,
   BI_bindCSync,
   __UNUSED_DUMMY_END_MARKER;
