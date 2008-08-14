@@ -26,7 +26,7 @@
                     size:       1
                     min:        2
                     max:        3
-                    nbProp:    4
+                    nbProp:     4
                     width:      5
                   )
 
@@ -107,12 +107,12 @@ end
 proc {GFDDistribute RawSpec Xs}
    case {PreProcessSpec RawSpec}
    of opt(value:SelVal order:SelVar) then
-			{Wait {GFDP.distribute IvdVarSel.SelVar IvdValSel.SelVal Xs}}
-	 [] gen(value:     SelVal
+      {Wait {GFDP.distribute IvdVarSel.SelVar IvdValSel.SelVal Xs}}
+   [] gen(value:     SelVal
 	  order:     Order
 	  select:    Select
 	  filter:    Fil) then
-
+      
       V = if {IsList Xs} then {List.toTuple '#' Xs} else Xs end
       proc {Distribute L}
 	 case {Space.getChoice}
@@ -132,7 +132,7 @@ proc {GFDDistribute RawSpec Xs}
 		       fun {$ I#X O#Acc}
 			  if {Order X Acc} then O#Acc
 			  else I#X end end LFil.1}
-		  
+	       
 	       I#X = LSel
 	       M={SelVal X}
 	    in
