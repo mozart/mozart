@@ -63,6 +63,16 @@ public:
   virtual int commitBranch(Board *, TaggedRef );
 
   virtual OZ_Return tell(RefsArray *x);
+
+  /*
+    \brief Most distributors perfom based on tell operations on the
+    store (board). Those tell operations do not have an inmediate
+    effect (lazy propagation). So the only way to detect finalization
+    is by waiting on a synchronization variable. This method is used
+    to access the synchronization variable of the distributor.
+   */
+  virtual TaggedRef getSync(void)=0;
+
 	
   virtual Distributor * gCollect(void) = 0;
   virtual Distributor * sClone(void) = 0;

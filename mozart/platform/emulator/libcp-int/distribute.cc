@@ -351,15 +351,9 @@ public:
 
 #define PPCL(I,J)					\
   case PP(iVar ## I, i ## J):				\
-  GFDDistributor<IntView,int,I<IntView>,		\
-		 J<IntView> > * I ## J;			\
-							\
-  I ## J = new GFDDistributor<IntView,int,I<IntView>,	\
-			      J<IntView> >(bb,vars,n);	\
-  bb->setDistributor(I ## J);				\
-  OZ_RETURN((I ## J)->getSync());			\
+  gfdd = new GFDDistributor<IntView,int,I<IntView>,	\
+			    J<IntView> >(bb,vars,n);	\
   break;
-
 
 OZ_BI_define(gfd_distribute, 3, 1) {
   oz_declareIntIN(0,var_sel);
@@ -439,7 +433,9 @@ OZ_BI_define(gfd_distribute, 3, 1) {
   
   if (bb->getDistributor())
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
- 
+
+  Distributor * gfdd;
+  
   switch (PP(var_sel,val_sel)) {
     
     PPCL(ByNone,ValMin);
@@ -481,6 +477,9 @@ OZ_BI_define(gfd_distribute, 3, 1) {
   default:
    Assert(false);
   }
+  
+  bb->setDistributor(gfdd);
+  OZ_RETURN(gfdd->getSync());
 
 }
 OZ_BI_end
