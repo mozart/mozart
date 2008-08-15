@@ -1469,7 +1469,7 @@ AC_DEFUN(OZ_DENYS_EVENTS,
 dnl ------------------------------------------------------------------
 dnl OZ_BUILD_UNIVERSAL
 dnl	check for --enable-build-universal
-dnl sets DENYS_EVENTS accordingly
+dnl
 dnl ------------------------------------------------------------------
 
 AC_DEFUN(OZ_BUILD_UNIVERSAL,
