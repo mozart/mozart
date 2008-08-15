@@ -33,8 +33,11 @@
 #include "var_base.hh"
 #include "GeSpace.hh"
 
+//#define RANDOM_PROPAGATE 1
+
 OZ_BI_define(BI_prop_gec, 0, 0) {
-  //printf("Thread %p running at board %p\n",oz_currentThread(), oz_currentBoard());fflush(stdout);
+  //  printf("Thread %p running at board %p\n",oz_currentThread(), oz_currentBoard());fflush(stdout);
+  //  printf("Thread genericspace running %p\n", oz_currentBoard()->getGenericSpace(true));fflush(stdout);
   using namespace Gecode;
   Board *cb = oz_currentBoard();
   /* Curren board cannot be failed */
@@ -59,6 +62,31 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
   DEREF(status, statusPtr); 
   Assert(oz_isNeeded(status) || cb->isRoot());
   Assert(!gs->isStable()); 
+
+#ifdef RANDOM_PROPAGATE
+  /*
+    (ggutierrez): Produce a random number to execute or not a real
+    propagation of the generic space. This code is temporal and has
+    the purpose of testing the possibility of alternating propagation
+    and thread executions. Fake propagation can be viewed as an
+    intermediate state in which part of the propagation is run but not
+    completely finished (preempted by the virtual machine).
+  */
+  double r = ((double)rand() / ((double)(RAND_MAX)+(double)(1)));
+  long int M = 1000;
+  double x = (r*M);
+  // create a random integer in the range [0,M)
+  int y = (int)x;
+  
+  if (y < M/3) {
+    // The space is not going to be propagated. lateThread should
+    // re-suspend on status.
+    printf("Fake propagation\n");fflush(stdout);
+    oz_var_addQuietSusp(statusPtr, oz_currentThread());
+    return SUSPEND;
+  } else {
+#endif
+  //printf("Real propagation\n");fflush(stdout); 
   if (gs->mstatus() == SS_FAILED) {
     cb->deleteGenericSpace();
     return FAILED;
@@ -77,5 +105,9 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
   }
   cb->deleteLateThread();
   return PROCEED;
+#ifdef RANDOM_PROPAGATE
+  }
+#endif
+
 } OZ_BI_end
    
