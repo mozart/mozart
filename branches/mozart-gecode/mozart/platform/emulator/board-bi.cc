@@ -73,7 +73,7 @@ public:
     oz_freeListDispose(this, sizeof(BaseDistributor));
   }
   
-  TaggedRef getVar(void) {
+  TaggedRef getSync(void){
     return var;
   }
   
@@ -515,7 +515,7 @@ OZ_BI_define(BIwaitStableSpace, 0, 0) {
   } else {
     BaseDistributor *bd = new BaseDistributor(bb);
     bb->setDistributor(bd);
-    args->setArg(0,bd->getVar());
+    args->setArg(0,bd->getSync());
   }
   
   am.prepareCall(BI_wait, args);
@@ -703,7 +703,7 @@ OZ_BI_define(BIgetChoiceSpace,0,1) {
     // TODO: return by replace by call
     BaseDistributor *bd = new BaseDistributor(bb);
     bb->setDistributor(bd);
-    answer = bd->getVar();
+    answer = bd->getSync();
   } else {
     // TODO: return by proceed
     answer = bq->dequeue();
@@ -740,7 +740,7 @@ OZ_BI_define(BIchooseSpace, 1, 1) {
     //printf("BIgetChoice: empty branch queue -> creating new distributor\n");fflush(stdout);
     BaseDistributor *bd = new BaseDistributor(bb);
     bb->setDistributor(bd);
-    answer = bd->getVar();
+    answer = bd->getSync();
   } else {
     answer = bq->dequeue();
   }
