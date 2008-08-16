@@ -41,10 +41,10 @@ public:
   GeBoolVar(int index) :
     GeVar(index,T_GeBoolVar) {}
 
+  //TODO: Be carefull this function should return a view and not a variable
   BoolVar& getBoolVar(void) {
-    GeView<Int::BoolVarImp> iv(getGSpace()->getVar(index));
-    Int::BoolView *vv = reinterpret_cast<Int::BoolView*>(&iv);
-    BoolVar *tmp = new BoolVar(*vv);
+    Int::BoolView bv(static_cast<BoolVarImp*>(getGSpace()->getVar(index)));
+    BoolVar *tmp = new BoolVar(bv);
 
     return (*tmp);
   }
@@ -52,10 +52,8 @@ public:
   // the returned reference should be constant
 
   BoolVar& getBoolVarInfo() {
-    GeView<Int::BoolVarImp> iv(getGSpace()->getVarInfo(index));
-    Int::BoolView *vv = reinterpret_cast<Int::BoolView*>(&iv);
-    BoolVar *tmp = new BoolVar(*vv);
-
+    Int::BoolView bv(static_cast<BoolVarImp*>(getGSpace()->getVarInfo(index)));
+    BoolVar *tmp = new BoolVar(bv);
     return (*tmp);
   }
   
@@ -109,18 +107,12 @@ public:
     
   // reflection mechanism 
   virtual bool assigned(void) {
-
-    GeView<Int::BoolVarImp> iv(getGSpace()->getVarInfo(index));
-    Int::BoolView *vv = reinterpret_cast<Int::BoolView*>(&iv);
-
-    return vv->assigned();
+    return BoolView(static_cast<BoolVarImp*>(getGSpace()->getVarInfo(index))).assigned();
   }
   
   virtual OZ_Term getVal(void) {
-
-    GeView<Int::BoolVarImp> iv(getGSpace()->getVarInfo(index));
-    Int::BoolView *vv = reinterpret_cast<Int::BoolView*>(&iv);
-    return OZ_int(vv->val());
+    BoolView bv = BoolView(static_cast<BoolVarImp*>(getGSpace()->getVarInfo(index)));
+    return OZ_int(bv.val());
   }
 
   virtual void reflect(Reflection::VarMap &vmp, Support::Symbol &p,

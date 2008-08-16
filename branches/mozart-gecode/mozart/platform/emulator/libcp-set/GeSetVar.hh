@@ -44,22 +44,22 @@ public:
   GeSetVar(int index) :
     GeVar(index,T_GeSetVar) {}
 
+  //TODO: Be carefull this function should return a view and not a variable
   SetVar& getSetVar(void) {
-    GeView<Set::SetVarImp> iv(getGSpace()->getVar(index));
-    Set::SetView *vv = reinterpret_cast<Set::SetView*>(&iv);
-    SetVar *tmp = new SetVar(*vv);
+    Set::SetView sv(static_cast<SetVarImp*>(getGSpace()->getVar(index)));
+    SetVar *tmp = new SetVar(sv);
     return (*tmp);
   }
 
   // the returned reference should be constant
   SetVar& getSetVarInfo() {
-    GeView<Set::SetVarImp> iv(getGSpace()->getVarInfo(index));
-    Set::SetView *vv = reinterpret_cast<Set::SetView*>(&iv);
-    SetVar *tmp = new SetVar(*vv);
+    Set::SetView sv(static_cast<SetVarImp*>(getGSpace()->getVarInfo(index)));
+    SetVar *tmp = new SetVar(sv);
     return (*tmp);
   }
 
   virtual void printDomain(void) {
+    Assert(false);
     SetVar tmp = getSetVarInfo();
   }
   
@@ -96,6 +96,7 @@ public:
     rel(s,lsetvar, Gecode::SRT_EQ,rsetvar);
   }
 
+  // TODO: see whether when getSetVarInfo is used is it possible to use a view.
   virtual ModEvent bind(GenericSpace *s, GeVar *v, OZ_Term val) {    
     printf("bind GeSetVar.hh");fflush(stdout);
     IntSetRanges tmpLB(SetValueM::tagged2SetVal(val)->getLBValue());
@@ -110,19 +111,16 @@ public:
     
   // reflection mechanism 
   virtual bool assigned(void) {
-    GeView<Set::SetVarImp> iv(getGSpace()->getVarInfo(index));
-    Set::SetView *vv = reinterpret_cast<Set::SetView*>(&iv);
-    return vv->assigned();
+    return SetView(static_cast<SetVarImp*>(getGSpace()->getVarInfo(index))).assigned();
   }
   
   virtual OZ_Term getVal(void) {
-    GeView<Set::SetVarImp> iv(getGSpace()->getVarInfo(index));
-    Set::SetView *vv = reinterpret_cast<Set::SetView*>(&iv);
-    Set::GlbRanges<Set::SetView> tmp(*vv);
-    Set::LubRanges<Set::SetView> tmp2(*vv);
+    Set::SetView vv(static_cast<SetVarImp*>(getGSpace()->getVarInfo(index)));
+    Set::GlbRanges<Set::SetView> tmp(vv);
+    Set::LubRanges<Set::SetView> tmp2(vv);
     IntSet valGlb(tmp);
     IntSet valLub(tmp2);
-    IntSet card(vv->cardMin(),vv->cardMax());    
+    IntSet card(vv.cardMin(),vv.cardMax());    
     return makeTaggedExtension(new SetValueM(valGlb, valLub, card));
   }
   
