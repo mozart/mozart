@@ -49,18 +49,17 @@ public:
   GeIntVar(int index) :
     GeVar(index,T_GeIntVar) {}
 
+  //TODO: Be carefull this function should return a view and not a variable
   IntVar& getIntVar(void) {
-    GeView<Int::IntVarImp> iv(getGSpace()->getVar(index));
-    Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
-    IntVar *tmp = new IntVar(*vv);
+    Int::IntView iv(static_cast<IntVarImp*>(getGSpace()->getVar(index)));
+    IntVar *tmp = new IntVar(iv);
     return (*tmp);
   }
 
   // the returned reference should be constant
   IntVar& getIntVarInfo() {
-    GeView<Int::IntVarImp> iv(getGSpace()->getVarInfo(index));
-    Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
-    IntVar *tmp = new IntVar(*vv);
+    Int::IntView iv(static_cast<IntVarImp*>(getGSpace()->getVarInfo(index)));
+    IntVar *tmp = new IntVar(iv);
     return (*tmp);
   }
   
@@ -115,15 +114,12 @@ public:
     
   // reflection mechanism 
   virtual bool assigned(void) {
-    GeView<Int::IntVarImp> iv(getGSpace()->getVarInfo(index));
-    Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
-    return vv->assigned();
+    return IntView(static_cast<IntVarImp*>(getGSpace()->getVarInfo(index))).assigned();
   }
   
   virtual OZ_Term getVal(void) {
-    GeView<Int::IntVarImp> iv(getGSpace()->getVarInfo(index));
-    Int::IntView *vv = reinterpret_cast<Int::IntView*>(&iv);
-    return OZ_int(vv->val());
+    IntView iv(static_cast<IntVarImp*>(getGSpace()->getVarInfo(index)));
+    return OZ_int(iv.val());
   }
   
   virtual void reflect(Reflection::VarMap &vmp, Support::Symbol &p, 
