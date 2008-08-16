@@ -166,9 +166,7 @@ public:
   GeVarBase* getGlobal(void) {
     Assert(localRep);
     return global;
-  }
-  
-  
+  }  
 };
 
 /** 
@@ -178,7 +176,6 @@ public:
  * propagation condition \a pc is needed to create a domain reflection
  * propagator for this variable.
  */
-template<class VarImp, Gecode::PropCond pc> 
 class GeVar : public GeVarBase {
 private:
   GeVarType type;    /// Type of variable (e.g IntVar, SetVar, etc)
@@ -429,7 +426,8 @@ public:
 
     free(address);
 
-    printf("Creating spaceification for ValReflector - finished\n");fflush(stdout); 
+    printf("Creating spaceification for ValReflector - finished\n");
+    fflush(stdout); 
     return spec;
   }
 
@@ -465,7 +463,8 @@ public:
     Assert(new_index == i);
     
     (void) new (home) ValReflector<View0>(gs,x,new_index);
-    printf("Posting ValReflector from specification - finished\n");fflush(stdout); 
+    printf("Posting ValReflector from specification - finished\n");
+    fflush(stdout); 
   }
   
   virtual OZ_Term getVarRef(GenericSpace* s) {
@@ -626,12 +625,12 @@ void checkGlobalVar(OZ_Term v) {
 
 template <class VarImp, Gecode::PropCond pc>
 inline
-GeVar<VarImp,pc>* get_GeVar(OZ_Term v, bool cgv = true) {
+GeVar* get_GeVar(OZ_Term v, bool cgv = true) {
   if (cgv) checkGlobalVar(v);
   OZ_Term ref = OZ_deref(v);
   Assert(oz_isGeVar(ref));
   ExtVar *ev = oz_getExtVar(ref);
-  return static_cast<GeVar<VarImp,pc>*>(ev);
+  return static_cast<GeVar*>(ev);
 }
 
 
