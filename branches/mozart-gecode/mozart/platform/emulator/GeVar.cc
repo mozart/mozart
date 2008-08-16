@@ -30,8 +30,15 @@
  
 #include "GeVar.hh"
 
-template <class VarImp, Gecode::PropCond pc>
-void GeVar<VarImp,pc>::test(){
+void GeVar::test(){
   printf("test\n");fflush(stdout);
 }
   
+#include <sstream>
+
+//template <class VarImp, Gecode::PropCond pc>
+void GeVar::printStreamV(ostream &out,int depth) {
+  //printf("GeVar->printStreamV\n");fflush(stdout);
+  ensureDomReflection();
+  toStream(out);
+}

@@ -34,18 +34,15 @@
 using namespace Gecode;
 using namespace Gecode::Set;
 
-typedef GeVar<SetVarImp,PC_SET_ANY> GeVar_Set;
-
 // A GeSetVar interfaces an SetVar inside a GenericSpace.
-class GeSetVar : public GeVar_Set {
+class GeSetVar : public GeVar {
 protected:
   /// copy constructor
-  GeSetVar(GeSetVar& gv) :
-    GeVar_Set(gv) {}
+  GeSetVar(GeSetVar& gv) : GeVar(gv) {}
 
 public:
   GeSetVar(int index) :
-    GeVar_Set(index,T_GeSetVar) {}
+    GeVar(index,T_GeSetVar) {}
 
   SetVar& getSetVar(void) {
     GeView<Set::SetVarImp> iv(getGSpace()->getVar(index));
@@ -93,17 +90,13 @@ public:
 
   virtual TaggedRef newVar(void);
 
-  virtual void propagator(GenericSpace *s, 
-			  GeVar_Set *lgevar,
-			  GeVar_Set *rgevar) {
+  virtual void propagator(GenericSpace *s, GeVar *lgevar, GeVar *rgevar) {
     SetVar& lsetvar = (static_cast<GeSetVar*>(lgevar))->getSetVarInfo();
     SetVar& rsetvar = (static_cast<GeSetVar*>(rgevar))->getSetVarInfo();    
     rel(s,lsetvar, Gecode::SRT_EQ,rsetvar);
   }
 
-  virtual ModEvent bind(GenericSpace *s, 
-			GeVar_Set *v, 
-			OZ_Term val) {    
+  virtual ModEvent bind(GenericSpace *s, GeVar *v, OZ_Term val) {    
     printf("bind GeSetVar.hh");fflush(stdout);
     IntSetRanges tmpLB(SetValueM::tagged2SetVal(val)->getLBValue());
     IntSetRanges tmpUB(SetValueM::tagged2SetVal(val)->getUBValue());
@@ -193,8 +186,7 @@ inline
 bool OZ_isGeSetVar(OZ_Term v) { 
   OZ_Term v_local = OZ_deref(v);
   if (oz_isGeVar(v_local)) {
-    GeVar_Set *gv = 
-      static_cast< GeVar_Set * >(oz_getExtVar(v_local));
+    GeVar *gv = static_cast< GeVar*>(oz_getExtVar(v_local));
     return gv->getType() == T_GeSetVar;
   }
   return false;

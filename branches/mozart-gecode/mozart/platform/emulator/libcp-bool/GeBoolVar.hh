@@ -31,23 +31,15 @@
 using namespace Gecode;
 using namespace Gecode::Int;
 
-
-typedef GeVar<BoolVarImp,PC_INT_DOM> GeVar_Bool;
-
-
 // A GeBoolVar interfaces an IntVar inside a GenericSpace.
-class GeBoolVar : public GeVar_Bool {
+class GeBoolVar : public GeVar {
 protected:
   /// copy constructor
-  GeBoolVar(GeBoolVar& gv) :
-    GeVar_Bool(gv) {}
-
+  GeBoolVar(GeBoolVar& gv) : GeVar(gv) {}
 
 public:
   GeBoolVar(int index) :
-    GeVar_Bool(index,T_GeBoolVar) {}
-
-
+    GeVar(index,T_GeBoolVar) {}
 
   BoolVar& getBoolVar(void) {
     GeView<Int::BoolVarImp> iv(getGSpace()->getVar(index));
@@ -100,19 +92,13 @@ public:
 
   virtual TaggedRef newVar(void);
 
-  virtual void propagator(GenericSpace *s, 
-
-			  GeVar_Bool *lgevar,
-			  GeVar_Bool *rgevar) {
+  virtual void propagator(GenericSpace *s, GeVar *lgevar, GeVar *rgevar) {
     BoolVar& lbvar = (static_cast<GeBoolVar*>(lgevar))->getBoolVarInfo();
     BoolVar& rbvar = (static_cast<GeBoolVar*>(rgevar))->getBoolVarInfo();    
     rel(s,lbvar,IRT_EQ,rbvar);
   }
 
-  virtual ModEvent bind(GenericSpace *s, 
-
-			GeVar_Bool *v, 
-			OZ_Term val) {
+  virtual ModEvent bind(GenericSpace *s, GeVar *v, OZ_Term val) {
     int n = OZ_intToC(val);
 
     return Int::BoolView(getBoolVarInfo()).eq(s,n);
@@ -181,8 +167,7 @@ bool OZ_isGeBoolVar(OZ_Term v) {
   OZ_Term v_local = OZ_deref(v);
   if (oz_isGeVar(v_local)) {
 
-    GeVar<Int::BoolVarImp,PC_INT_DOM> *gv = 
-      static_cast< GeVar_Bool * >(oz_getExtVar(v_local));
+    GeVar *gv = static_cast< GeVar* >(oz_getExtVar(v_local));
     return gv->getType() == T_GeBoolVar;
   }
   return false;
