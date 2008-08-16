@@ -36,23 +36,6 @@
 #include "unify.hh"
 #include "GeSpace.hh"
 
-
-template<class Var>
-class GeView: public Gecode::VarViewBase<Var> {
-protected:
-  using Gecode::VarViewBase<Var>::varimp;
-public:
-  GeView(void)
-    : Gecode::VarViewBase<Var>() {}
-  
-  void update(Gecode::Space* home, bool share, GeView<Var>& x) {
-    varimp = x.varimp->copy(home,share);
-  }
-
-  GeView(Gecode::VarImpBase *v)
-    : Gecode::VarViewBase<Var>(static_cast<Var*>(v)) {} 
-};
-
 enum GeVarType {T_GeIntVar, T_GeSetVar, T_GeBoolVar};
 
 /**
