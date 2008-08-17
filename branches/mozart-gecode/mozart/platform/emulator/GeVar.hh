@@ -548,16 +548,24 @@ public:
     printf("Posting ValReflector restored ov: %x\n",ov);fflush(stdout); 
     
     Assert(oz_isGeVar(ov));
-    int new_index = get_GeVar(ov)->getIndex();
+    int index = get_GeVar(ov)->getIndex();
     
     /*
-      TODO: Using the current index as the new inex is not a good idea
+      Explanation: When this propagator is created, there are two
+      possibilities: 1) A ValReflector propagator is already created
+      by the unreflection mechanism of the space; and 2) It is created
+      before the ValReflector corresponding to this variable. 
+
+      What is well known is that when the unreflection process ends,
+      for every variable the ValReflector propagator was executed and
+      fixed the index inside the GeVar.
+
+      Using the current index as the new inex is not a good idea
       since this propagator should be created before ValReflector. In
       that case, this method must be in charge to add the variable
       pointer and to update the reference in the generic space.
      */ 
-    Assert(false);
-    (void) new (home) DomReflector<View0,pc>(gs,x,new_index);
+    (void) new (home) DomReflector<View0,pc>(gs,x,index);
     printf("Posting ValReflector from specification - finished\n");fflush(stdout); 
 }
   
