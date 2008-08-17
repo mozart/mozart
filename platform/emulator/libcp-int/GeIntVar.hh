@@ -148,13 +148,9 @@ namespace {
   GECODE_REGISTER1(ValReflector<Gecode::Int::BoolView>);
   GECODE_REGISTER1(ValReflector<Gecode::Set::SetView>);
   
-  /*
-    // TODO: ask gecode mailing list what to do in the case of DomReflector.
-    GECODE_REGISTER1(DomReflector<Gecode::Int::IntView, Gecode::PropCond >);
-    GECODE_REGISTER1(DomReflector<Gecode::Int::BoolView, Gecode::PropCond >);
-    GECODE_REGISTER1(DomReflector<Gecode::Set::SetView, Gecode::PropCond >);
-  */
-
+  Reflection::ActorRegistrar<DomReflector<Gecode::Int::IntView,PC_INT_DOM> > r1;
+  Reflection::ActorRegistrar<DomReflector<Gecode::Int::BoolView,PC_INT_DOM> > r2;
+  Reflection::ActorRegistrar<DomReflector<Gecode::Int::SetView,PC_SET_ANY> > r3;
 }
 
 

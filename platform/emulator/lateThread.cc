@@ -60,10 +60,22 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
   */
   TaggedRef status = cb->getStatus();
   DEREF(status, statusPtr); 
-  Assert(oz_isNeeded(status) || cb->isRoot());
-  Assert(!gs->isStable()); 
+
+  /*
+    The following assertions are commented out because of speculative
+    computations. When a speculative computation take place, this
+    thread (corresponding to the global variable) will be executed. At
+    this time, neither we are at the top level space nor status
+    variabble is needed.  
+
+    TODO: We need a way to know when we are speculating and add to the
+    assertion.
+   */
+  //Assert(oz_isNeeded(status) || cb->isRoot());
+  //Assert(!gs->isStable()); 
 
 #ifdef RANDOM_PROPAGATE
+  Assert(false);
   /*
     (ggutierrez): Produce a random number to execute or not a real
     propagation of the generic space. This code is temporal and has
@@ -82,6 +94,7 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
     // The space is not going to be propagated. lateThread should
     // re-suspend on status.
     printf("Fake propagation\n");fflush(stdout);
+    // mstatus -> no ha terminado
     oz_var_addQuietSusp(statusPtr, oz_currentThread());
     return SUSPEND;
   } else {
