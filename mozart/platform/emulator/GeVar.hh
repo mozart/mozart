@@ -42,16 +42,17 @@ enum GeVarType {T_GeIntVar, T_GeSetVar, T_GeBoolVar};
    \brief This class is intended to provide access without template
    arguments to methods/functions used by some core and constraint
    system independent functions such as trailing and unification.
+
+   TODO: As GeVar has no longer template arguments, all these ethods
+   should be there.
 */
 class GeVarBase: public ExtVar {
 protected:
   GeVarBase(Board *b, GeVarBase& gv) 
-    :  hasDomRefl(gv.hasDomRefl), localRep(false), unifyC(gv.unifyC), ExtVar(b) {
-    Assert(!gv.localRep);
-  }
+    :  hasDomRefl(gv.hasDomRefl), unifyC(gv.unifyC), ExtVar(b) {}
 
 public:
-  GeVarBase(Board *b) : hasDomRefl(false), localRep(false), unifyC(0), ExtVar(b) {}
+  GeVarBase(Board *b) : hasDomRefl(false), unifyC(0), ExtVar(b) {}
   
   /**
      \brief Number of propagators associated with a variable. This
@@ -62,23 +63,10 @@ public:
   virtual int getIndex(void) = 0;
   virtual void setIndex(int) = 0;
   virtual Gecode::VarImpBase* clone(void) = 0;
-  /**
-     \brief To reflect a variable is to insert it in the VarMap \a
-     vmp. Variable type information is needed at this step so this
-     method is declared virtual. p is a prefix that depends on the
-     generic space.
-  */
-  virtual void reflect(Gecode::Reflection::VarMap &vmp, 
-		       Gecode::Support::Symbol &p, 
-		       bool registerOnly = false ) = 0;
 
   virtual bool hasSameDomain(TaggedRef) = 0;
 
   virtual int varprops(void) = 0;
-
-private:
-  bool localRep; /// Is this variable a local representation of a global var
-  GeVarBase *global; /// Corresponding global var
 
   /// \name Reflection mechanisms
   //@{
@@ -106,22 +94,18 @@ public:
   void markDomReflected(void) { hasDomRefl = true; }
 
   /**
-     \brief Puts a propagator to reflect any change in the variable
-     domain to mozart.  Should be here or in GeVar??
-  */
+     \brief Ensures the existence of a dom reflection propagator on
+     this variable. A propagator that reflects *ANY* change in the
+     domain's variable to mozart. Creates it if needed. This
+     propagator is used when speculating (Supervisor Thread) to ensure
+     the suspensions of the variable are kicked off.
 
-   /**
-      \brief Ensures the existence of a dom reflection propagator on
-      this variable. Creates it if needed. This propagator is used
-      when speculationg (Supervisor Thread) to ensure the suspensions
-      of the variable are kicked off.
-
-      This method is virtual because the propagator must reflect any
-      changes in the variable domain. At this time gecode does not
-      provide a generic propagation condition to represent it for any
-      constraint variable. Every specialization of this class should
-      provide a method that calls postDomReflector (GeVar.icc) with
-      the appropriate template arguments.
+     Note: This method is virtual because the propagator must reflect
+     any changes in the variable domain. At this time gecode does not
+     provide a generic propagation condition to represent it for any
+     constraint variable. Every specialization of this class should
+     provide a method that calls postDomReflector (GeVar.icc) with the
+     appropriate template arguments.
   */
   virtual void ensureDomReflection(void) = 0;
 
@@ -138,18 +122,7 @@ public:
      the variable v.
   */
   virtual TaggedRef clone(TaggedRef v) = 0;
-  //@}
-
-  bool isLocalRep() { return localRep; }
-  void setLocalRep(GeVarBase *glb) {
-    localRep = true;
-    global = glb;
-  }
-  
-  GeVarBase* getGlobal(void) {
-    Assert(localRep);
-    return global;
-  }  
+  //@}  
 };
 
 /** 
@@ -166,6 +139,8 @@ protected:
   int index;        /// The index inside the corresponding GenericSpace
 
   /// Copy constructor
+  // TODO: be careful with the use of getBoardInternal as this board
+  // migth be merged (see ::merge())
   GeVar(GeVar& gv) : 
     GeVarBase(extVar2Var(&gv)->getBoardInternal()), type(gv.type), 
     index(gv.index)
@@ -211,6 +186,7 @@ public:
   void setIndex(int idx) {index = idx;}
 
   /// Returns the GenericSpace associated with this variable.
+  // TODO: be careful with the use of getBoardInternal. (::merge())
   GenericSpace * getGSpace(void) {
     GenericSpace *gs =  
       extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
@@ -237,7 +213,10 @@ public:
   /**
      \brief Called from Inspector to display variables. This method is
      also called by Show but it does not needs reflection because of
-     its nature.
+     its nature. 
+
+     TODO: find a solution to not put a domainReflector propagator
+     when show is being used
   */
   void printStreamV(ostream &out,int depth);
   //@}
@@ -310,12 +289,6 @@ public:
 
   void test();
 
-  /*
-  int degree(void) { 
-    GeView< VarImp > vi (getGSpace()->getVarInfo(index)); 
-    return vi.degree(); 
-  }
-  */
   //@}
 
   /// \name Reflection mechanisms
@@ -331,9 +304,7 @@ public:
      variable and creates it if needed.
   */
   void ensureValReflection(void);
-
  
-  //void ensureDomReflection(void);
   //@}
 };
 
@@ -455,16 +426,13 @@ public:
   }
 
   Gecode::ExecStatus propagate(Gecode::Space* s, Gecode::ModEventDelta){
-
     
     OZ_Term ref = getVarRef(static_cast<GenericSpace*>(s));
 
     if (!oz_isGeVar(ref))
       return Gecode::ES_SUBSUMED(this,sizeof(*this));
     
-
     GenericSpace *gs = static_cast<GenericSpace*>(s);
-
     GeVarBase *gv = get_GeVar(ref);
     OZ_Term val = gv->getVal();
     
@@ -565,7 +533,7 @@ public:
       that case, this method must be in charge to add the variable
       pointer and to update the reference in the generic space.
      */ 
-    (void) new (home) DomReflector<View0,pc>(gs,x,index);
+    // (void) new (home) DomReflector<View0,pc>(gs,x,index);
     printf("Posting ValReflector from specification - finished\n");fflush(stdout); 
 }
   
