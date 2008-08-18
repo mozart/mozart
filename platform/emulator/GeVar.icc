@@ -69,8 +69,8 @@ OZ_Return GeVar::unifyV(TaggedRef* lPtr, TaggedRef* rPtr)
       if(!oz_isLocalVar(extVar2Var(rgevar))){
 	if(!(rgevar->intersect(makeTaggedRef(lPtr))))
 	  return FAILED;
-	printf("Inicia deteccion de globalidad \n");fflush(stdout);
-        printf("Termina deteccion de globalidad \n");fflush(stdout);
+	//printf("Globality detection starts\n");fflush(stdout);
+        //printf("Globality detection ends\n");fflush(stdout);
 	oz_bindGlobalVar2(extVar2Var(rgevar), rPtr, makeTaggedRef(lPtr));	
 	disposeS();
       }else{

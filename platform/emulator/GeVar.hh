@@ -368,11 +368,9 @@ public:
 
   virtual Gecode::Reflection::ActorSpec
   spec(const Gecode::Space* home, Gecode::Reflection::VarMap& m) const {
-    printf("Creating spaceification for ValReflector\n");fflush(stdout);
+    
     OZ_Term ov = static_cast<const GenericSpace*>(home)->getVarRef2(index);
     
-    printf("Creating spec ValReflector OzVariable ref %x\n",ov);fflush(stdout); 
-
     char *address = (char*)malloc(sizeof(char)*50);
     sprintf(address,"%x",ov);
    
@@ -382,15 +380,13 @@ public:
 
     free(address);
 
-    printf("Creating spaceification for ValReflector - finished\n");
-    fflush(stdout); 
     return spec;
   }
 
   static void
   post(Gecode::Space* home, Gecode::Reflection::VarMap& vars, 
        const Gecode::Reflection::ActorSpec& spec) {
-    printf("Posting ValReflector from specification\n");fflush(stdout); 
+    
     GenericSpace *gs = static_cast<GenericSpace *>(home);
     
     spec.checkArity(2);
@@ -400,14 +396,11 @@ public:
     OZ_Term ov;
     sscanf(add,"%x",&ov);
 
-    printf("Posting ValReflector restored ov: %x\n",ov);fflush(stdout); 
-    
     Assert(oz_isGeVar(ov));
     /*
       Patch ov to contain the index of the new created variable.
      */
     int new_index = gs->getVarsSize();
-    printf("new index for variable %d\n",new_index);fflush(stdout);
     GeVarBase *var = get_GeVar(ov);
     var->setIndex(new_index);
     
@@ -419,8 +412,6 @@ public:
     Assert(new_index == i);
     
     (void) new (home) ValReflector<View0>(gs,x,new_index);
-    printf("Posting ValReflector from specification - finished\n");
-    fflush(stdout); 
   }
   
   virtual OZ_Term getVarRef(GenericSpace* s) {
@@ -484,11 +475,9 @@ public:
 
   virtual Gecode::Reflection::ActorSpec
   spec(const Gecode::Space* home, Gecode::Reflection::VarMap& m) const {
-    printf("**DomReflector Creating spaceification\n");fflush(stdout);
+    
     OZ_Term ov = static_cast<const GenericSpace*>(home)->getVarRef2(index);
     
-    printf("Creating spec ValReflector OzVariable ref %x\n",ov);fflush(stdout); 
-
     char *address = (char*)malloc(sizeof(char)*50);
     sprintf(address,"%x",ov);
    
@@ -497,15 +486,14 @@ public:
     spec <<  Gecode::Reflection::Arg::newString(address);
 
     free(address);
-
-    printf("**DomReflector Creating spaceification- finished\n");fflush(stdout);
+    
     return spec;
   }
 
   static void
   post(Gecode::Space* home, Gecode::Reflection::VarMap& vars, 
        const Gecode::Reflection::ActorSpec& spec) {
-    printf("**DomReflector Posting from specification\n");fflush(stdout); 
+
     GenericSpace *gs = static_cast<GenericSpace *>(home);
     
     spec.checkArity(2);
@@ -517,12 +505,16 @@ public:
 
     Assert(oz_isGeVar(ov));
     GeVarBase *var = get_GeVar(ov);
-    
+
+    /*
+      If the variable had a domReflector propagator in the previous
+      space, avoid to create it. And unmark the variable as
+      unmarkDomReflected.
+     */
     if (var->hasDomReflector()) {
-      printf("Variable has a domReflector\n");fflush(stdout);
+      //printf("Variable has a domReflector\n");fflush(stdout);
       var->unmarkDomReflected();
     }
-    printf("Posting DomReflector restored ov: %x\n",ov);fflush(stdout); 
     
     Assert(oz_isGeVar(ov));
     int index = get_GeVar(ov)->getIndex();
@@ -543,7 +535,7 @@ public:
       pointer and to update the reference in the generic space.
      */ 
     // (void) new (home) DomReflector<View0,pc>(gs,x,index);
-    printf("Posting ValReflector from specification - finished\n");fflush(stdout); 
+    // printf("Posting ValReflector from specification - finished\n");fflush(stdout); 
 }
   
   virtual OZ_Term getVarRef(GenericSpace* s) {return s->getVarRef(index); }

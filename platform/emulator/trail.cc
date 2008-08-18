@@ -280,7 +280,8 @@ TaggedRef Trail::unwind(Board * b) {
 
 	  //	  if(!b->getLateThread()) { printf("YA NO HAY UN LATE THREAD PILAS\n"); fflush(stdout); }
 
-	  if(b->getLateThread()) { printf("hilo supervisor lateThread \n"); fflush(stdout); 
+	  if(b->getLateThread()) { 
+	    //printf("hilo supervisor lateThread \n"); fflush(stdout); 
 	    if (oz_var_addSusp(refPtr,b->getLateThread()) != SUSPEND ) {
 	      Assert(0);
 	    }
@@ -503,7 +504,7 @@ bool Trail::isSpeculating(void) {
     switch ( (TeType)(int)*top )  {
       
     case Te_GeVariable: {
-      printf("isSpeculing Te_GeVariable \n"); fflush(stdout);
+      //printf("isSpeculing Te_GeVariable \n"); fflush(stdout);
       TaggedRef *var = (TaggedRef*) * (top-2);
 
 
@@ -529,7 +530,7 @@ bool Trail::isSpeculating(void) {
 
       if(!vglobal->hasSameDomain(*var)) { return true; }
 
-      printf("isGeVar Te_GeVariable \n"); fflush(stdout);
+      //printf("isGeVar Te_GeVariable \n"); fflush(stdout);
       break;
     }
     case Te_Mark: { 

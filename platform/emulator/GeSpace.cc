@@ -172,47 +172,37 @@ void GenericSpace::reflect(std::vector<Reflection::ActorSpec>& as,
 void GenericSpace::unreflect(std::vector<Reflection::ActorSpec>& as, 
 			     std::vector<Reflection::VarSpec>& vs) {
   
-  printf("GeSpace.cc >> Unreflect variables: %d\n", vs.size());fflush(stdout);
-  printf("GeSpace.cc >> Unreflect actors: %d\n", as.size());fflush(stdout);
-
   Reflection::VarMap vm;
   Reflection::Unreflector ur(this, vm);
   for (std::vector<Reflection::VarSpec>::iterator it=vs.begin(); it != vs.end(); ++it) {
     ur.var(*it);   // Create variables from specifications
-    printf("GeSpace.cc >> Unreflect created var\n");fflush(stdout);
   }
   for (std::vector<Reflection::ActorSpec>::iterator it=as.begin(); it != as.end(); ++it) {
     Reflection::ActorSpec spec = *it;
-    if (spec.ati() == "DomReflector") {
-      printf("GeSpace.cc >> Unreflect found DomReflector\n");fflush(stdout);
-    } else {
-      ur.post(spec);  // Post actors from specifications
-      printf("GeSpace.cc >> Unreflect created actor\n");fflush(stdout);
-    }
+    ur.post(spec);  // Post actors from specifications
   }
-  printf("GeSpace.cc >> Unreflect finished\n");fflush(stdout);
 }
 
 /**
-   \brief Merge space \a src into this. 
+   \brief Merge space \a src into this. The corresponding board of
+   this is tgt.
 */
 void GenericSpace::merge(GenericSpace *src, Board *tgt) {
-  printf("GeSpace.cc >> called space merge src: %p dst: %p\n",src,this);fflush(stdout);
-  //printf("GeSpace.cc >> Current number of prop in this %d\n",propagators());fflush(stdout);
-
+  
   // get a reflection of src space.
   std::vector<Reflection::VarSpec> src_vSpec;
   std::vector<Reflection::ActorSpec> src_aSpec;
 
   src->reflect(src_aSpec, src_vSpec);
 
-  //printf("GeSpace.cc >> Finished reflection phase\n");fflush(stdout);
-  //printf("GeSpace.cc >> Starting **unreflection** phase\n");fflush(stdout);
-
+  /*
+    Take variables and actors from specification and rebuild them in
+    tgt.
+   */
   unreflect(src_aSpec,src_vSpec);
 
   /*
-    TODO: (ggutierrez) Addording with Raph, the internal board of the
+    TODO: (ggutierrez) According with Raph, the internal board of the
     variable does not need to be changed. I have to change it manually
     or any Show on one of the variables will crash when posting the
     DomReflector.
@@ -235,10 +225,12 @@ void GenericSpace::merge(GenericSpace *src, Board *tgt) {
     then the status is always needed and propagation should run
     automatically.
   */
-  if (this == oz_rootBoard()->getGenericSpace()) {
+  /*
+    if (this == oz_rootBoard()->getGenericSpace(true)) {
     fflush(stdout);
     status();
-  }
+    }
+  */
 
   // This is to prevent  lateThread to run twice if src is unstable. 
   if (!src->isStable())

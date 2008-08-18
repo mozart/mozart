@@ -606,8 +606,7 @@ OZ_Return Board::installScript(Bool isMerging)
     int res = PROCEED;
 
     if (oz_isGeVar(x)||oz_isGeVar(y)) {
-      printf("install script geoz %d x: %s y:%s \n",isMerging,OZ_toC(x,100,100),OZ_toC(y,100,100));
-      fflush(stdout);
+      //printf("install script geoz %d x: %s y:%s \n",isMerging,OZ_toC(x,100,100),OZ_toC(y,100,100));fflush(stdout);
       Board::ignoreWakeUp(NO);
     }
 
