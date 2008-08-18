@@ -125,6 +125,16 @@ public:
   }
 };
 
+/// Register the reflection propagators for BoolVars.
+namespace {
+  using namespace Gecode::Int;
+  
+  // ValReflector propagator
+  Reflection::ActorRegistrar<ValReflector<BoolView> > BoolValRefl;
+
+  // DomReflector
+  Reflection::ActorRegistrar<DomReflector<BoolView,PC_INT_DOM> > BoolDomRefl;
+}
 
 
 inline 

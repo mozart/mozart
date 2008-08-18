@@ -150,16 +150,16 @@ void GenericSpace::reflect(std::vector<Reflection::ActorSpec>& as,
     try {
       Reflection::ActorSpec aSpec = si.actor();
       as.push_back(aSpec);
-      printf("GeSpace.cc >> Reflect created actor\n");fflush(stdout);
+      //printf("GeSpace.cc >> Reflect created actor\n");fflush(stdout);
 
       // traverse variable's specification for the actor.
       for (; vmi(); ++vmi) {
 	try {
 	  Reflection::VarSpec vSpec = vmi.spec();
 	  vs.push_back(vSpec);
-	  printf("GeSpace.cc >> Reflect created var\n");fflush(stdout);
+	  //printf("GeSpace.cc >> Reflect created var\n");fflush(stdout);
 	} catch(Reflection::ReflectionException e) {
-	  printf("unknown exception while reflecting VARIABLE\n");fflush(stdout);
+	  //printf("unknown exception while reflecting VARIABLE\n");fflush(stdout);
 	  Assert(false);
 	}
       }

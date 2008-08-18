@@ -134,6 +134,16 @@ public:
   }
 };
 
+/// Register the reflection propagators for SetVars.
+namespace {
+  using namespace Gecode::Set;
+  
+  // ValReflector propagator
+  Reflection::ActorRegistrar<ValReflector<SetView> > SetValRefl;
+
+  // DomReflector
+  Reflection::ActorRegistrar<DomReflector<SetView,PC_SET_ANY> > SetDomRefl;
+}
 
 inline OZ_Term new_GeSetVar(IntSet glb,  IntSet lub) {
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
