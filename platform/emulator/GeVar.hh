@@ -93,6 +93,8 @@ public:
   bool hasDomReflector(void) {return hasDomRefl; }
   void markDomReflected(void) { hasDomRefl = true; }
 
+  void unmarkDomReflected(void) { hasDomRefl = false; }
+
   /**
      \brief Ensures the existence of a dom reflection propagator on
      this variable. A propagator that reflects *ANY* change in the
@@ -513,7 +515,14 @@ public:
     OZ_Term ov;
     sscanf(add,"%x",&ov);
 
-    printf("Posting ValReflector restored ov: %x\n",ov);fflush(stdout); 
+    Assert(oz_isGeVar(ov));
+    GeVarBase *var = get_GeVar(ov);
+    
+    if (var->hasDomReflector()) {
+      printf("Variable has a domReflector\n");fflush(stdout);
+      var->unmarkDomReflected();
+    }
+    printf("Posting DomReflector restored ov: %x\n",ov);fflush(stdout); 
     
     Assert(oz_isGeVar(ov));
     int index = get_GeVar(ov)->getIndex();
