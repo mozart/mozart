@@ -221,13 +221,13 @@ void GenericSpace::merge(GenericSpace *src, Board *tgt) {
     extVar2Var(get_GeVar(getVarRef(i)))->setHome(tgt);
   }
  
-  // this call is temporal, just to have an accurate number of propagators.
-  /*
-    status();
-    printf("GeSpace.cc >> finished space merge current number of prop %d\n",propagators());
-    printf("GeSpace.cc >> this %p src %p\n",this, src);
-    fflush(stdout);
-  */
+  // TODO: Should we do this only at the top level space?
+  status();
+    /*
+      printf("GeSpace.cc >> finished space merge current number of prop %d\n",propagators());
+      printf("GeSpace.cc >> this %p src %p\n",this, src);
+      fflush(stdout);
+    */
 
   /*
     If this is the Toplevel space then we need to enforce
