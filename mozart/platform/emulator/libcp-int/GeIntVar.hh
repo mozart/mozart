@@ -133,21 +133,16 @@ public:
 
 };
 
-/*
-  TODO: This is not the right pace to register all the instances of
-  the ValReflector propagator. But if instances are registered
-  sepparately then compilation complains about redefined symbols.
- */
+/// Register the reflection propagators for IntVars.
 namespace {
-  GECODE_REGISTER1(ValReflector<Gecode::Int::IntView>);
-  GECODE_REGISTER1(ValReflector<Gecode::Int::BoolView>);
-  GECODE_REGISTER1(ValReflector<Gecode::Set::SetView>);
+  using namespace Gecode::Int;
   
-  Reflection::ActorRegistrar<DomReflector<Gecode::Int::IntView,PC_INT_DOM> > r1;
-  Reflection::ActorRegistrar<DomReflector<Gecode::Int::BoolView,PC_INT_DOM> > r2;
-  Reflection::ActorRegistrar<DomReflector<Gecode::Set::SetView,PC_SET_ANY> > r3;
-}
+  // ValReflector propagator
+  Reflection::ActorRegistrar<ValReflector<IntView> > IntValRefl;
 
+  // DomReflector
+  Reflection::ActorRegistrar<DomReflector<IntView,PC_INT_DOM> > IntDomRefl;
+}
 
 inline OZ_Term new_GeIntVar(const IntSet& dom) {
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
