@@ -194,53 +194,10 @@ void GenericSpace::unreflect(std::vector<Reflection::ActorSpec>& as,
 }
 
 /**
-   \brief Fill \a vmp with the variables of this space.
-*/
-void GenericSpace::varReflect(Reflection::VarMap &vmp, bool registerOnly) {
-  /*
-    Iterate on generic space references to fill the VarMap. Only
-    variables in vars are considered. At this time some propagators
-    are implemented in terms of other and use temporary gecode
-    variables (i.e. SumCN), those implicit variables are not filled in
-    this method. This may cause problems.
-  */
-
-  // TODO: create a prefix for this generic space
-
-  printf("Called varReflect on %p with registerOnly set to %d\n",this,registerOnly);
-  Support::Symbol p;
-  for (int i=0; i<vars.getSize(); i++) {
-    OZ_Term t =  *vars.getRef(i);
-    OZ_Term dt = OZ_deref(t);
-    if (oz_isExtVar(dt)) {
-      Assert(oz_getExtVar(dt)->getIdV() == OZ_EVAR_GEVAR);
-      //
-      GeVarBase *var = static_cast<GeVarBase*>(oz_getExtVar(dt));
-      std::stringstream s;
-      s << var->getIndex();
-      Support::Symbol nn = p.copy();
-      nn += Support::Symbol(s.str().c_str(),true);
-      /* TODO: if var is a local representation of a global variable
-	 and we are merging two space then put in vmp the reflection
-	 of the global variable instead of var. Intersection??
-      */
-      if (var->isLocalRep()) {
-	printf("Global VAR found during merge\n");fflush(stdout);
-	var->getGlobal()->reflect(vmp,nn,registerOnly);
-      } else {
-	printf("Local var found during merge\n");fflush(stdout);
-	var->reflect(vmp,nn,registerOnly);	
-      }
-      printf("Iteration %d Added symbol %s\n",i,nn.toString().c_str());fflush(stdout);
-    }
-  }
-}
-
-/**
    \brief Merge space \a src into this. 
 */
 void GenericSpace::merge(GenericSpace *src, Board *tgt) {
-  //printf("GeSpace.cc >> called space merge src: %p dst: %p\n",src,this);fflush(stdout);
+  printf("GeSpace.cc >> called space merge src: %p dst: %p\n",src,this);fflush(stdout);
   //printf("GeSpace.cc >> Current number of prop in this %d\n",propagators());fflush(stdout);
 
   // get a reflection of src space.
