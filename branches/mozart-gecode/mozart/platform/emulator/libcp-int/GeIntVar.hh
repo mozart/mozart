@@ -122,11 +122,6 @@ public:
     return OZ_int(iv.val());
   }
   
-  virtual void reflect(Reflection::VarMap &vmp, Support::Symbol &p, 
-		       bool registerOnly = false) {
-    vmp.put(getGSpace(),getIntVarInfo(),p,registerOnly);
-  }
-
   virtual void ensureDomReflection(void) {
     postDomReflector<IntView, IntVarImp, PC_INT_DOM>(getGSpace(),this);
   }
@@ -150,7 +145,7 @@ namespace {
   
   Reflection::ActorRegistrar<DomReflector<Gecode::Int::IntView,PC_INT_DOM> > r1;
   Reflection::ActorRegistrar<DomReflector<Gecode::Int::BoolView,PC_INT_DOM> > r2;
-  Reflection::ActorRegistrar<DomReflector<Gecode::Int::SetView,PC_SET_ANY> > r3;
+  Reflection::ActorRegistrar<DomReflector<Gecode::Set::SetView,PC_SET_ANY> > r3;
 }
 
 

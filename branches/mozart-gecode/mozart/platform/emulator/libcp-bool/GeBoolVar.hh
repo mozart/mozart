@@ -115,11 +115,6 @@ public:
     return OZ_int(bv.val());
   }
 
-  virtual void reflect(Reflection::VarMap &vmp, Support::Symbol &p,
-		       bool registerOnly = false) {
-    vmp.put(getGSpace(),getBoolVarInfo(),p, registerOnly);
-  }
-
   virtual void ensureDomReflection(void) {
     postDomReflector<BoolView, BoolVarImp, PC_INT_DOM>(getGSpace(),this);
   }

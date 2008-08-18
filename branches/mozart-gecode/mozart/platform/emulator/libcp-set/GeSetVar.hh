@@ -124,11 +124,6 @@ public:
     return makeTaggedExtension(new SetValueM(valGlb, valLub, card));
   }
   
-  virtual void reflect(Reflection::VarMap &vmp, Support::Symbol &p,
-		       bool registerOnly = false) {
-    vmp.put(getGSpace(),getSetVarInfo(),p, registerOnly);
-  }
-
   virtual void ensureDomReflection(void) {
     postDomReflector<SetView, SetVarImp, PC_SET_ANY>(getGSpace(),this);
   }
