@@ -63,7 +63,7 @@ prepare
    fun {Deref S}
       case S
       of suspended(S)    then {Deref S}
-      [] alternatives(_) then stuck
+      [] branch(_) then stuck
       [] succeeded(S)    then S
       else S
       end
@@ -131,7 +131,7 @@ define
 	       {Dictionary.remove A I}
 	       {Space.kill G.I}
 	       {Resolve G A N-1 true E}
-	    [] alternatives(_) then
+	    [] branch(_) then
 	       {Dictionary.remove A I}
 	       {Space.kill G.I}
 	       {Resolve G A N-1 true E}
