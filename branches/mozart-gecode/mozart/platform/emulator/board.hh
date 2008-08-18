@@ -516,7 +516,7 @@ public:
      The following table describes when a lateThread is needed:
 
      ---------------------------------------------------------
-     | Computation    | GenericSpace | LateThrea  | Status   |
+     | Computation    | GenericSpace | LateThread | Status   |
      | Space          |              |            |          |
      ---------------------------------------------------------
      | Constraint Vars|     True     |   False    | Entailed |
