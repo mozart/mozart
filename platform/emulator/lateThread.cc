@@ -101,6 +101,16 @@ OZ_BI_define(BI_prop_gec, 0, 0) {
 #endif
   //printf("Real propagation\n");fflush(stdout); 
   if (gs->mstatus() == SS_FAILED) {
+    /*
+      A message to indicate that constraint propagation has resulted
+     in a failed space. A warning is just fine, anyway the space will
+     becom failed and the thread will return failed. This message is
+     just to informate the user and not only to show a
+     {INTERNAL.gec_propagate} failure message that cannot be
+     informative.
+    */
+    OZ_warning("*******Constraint propagation has lead to a failed space*******");
+    // remove the generic space as is no longer needed.
     cb->deleteGenericSpace();
     return FAILED;
   } 
