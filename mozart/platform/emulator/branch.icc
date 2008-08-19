@@ -1,0 +1,484 @@
+/* -*- mode: C++; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+/*
+ *  Main authors:
+ *     Raphael Collet <raph@info.ucl.ac.be>
+ *     Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
+ *
+ *  Contributing authors:
+ *     Andres Felipe Barco <anfelbar@univalle.edu.co>
+ *     Victor Alfonso Rivera <varivera@puj.edu.co>
+ *
+ *  Copyright:
+ *    Raphael Collet, 2008
+ *    Gustavo Gutierrez, 2008
+ *
+ *  Last change:
+ *    $Date$ by $Author$
+ *    $Revision$
+ * 
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
+ *
+ */
+
+#include "branch.hh"
+#include "gecode/int/branch.hh"
+
+
+using namespace Gecode::Int::Branch;
+
+/**
+   Distributor class methods
+ */
+template<class View, class Val, class ViewSel, class ValSel>
+inline
+GeVarDistributor<View, Val, ViewSel, ValSel>::GeVarDistributor(Board *bb, TaggedRef *vs, int n) {
+  vars = vs;
+  size = n;
+  sync = oz_newVariable(bb);
+  
+#ifdef DEBUG_CHECK
+  home = bb;
+  gs_home = bb->getGenericSpace(true);
+  Assert(gs_home);
+#endif
+}
+
+//this method is not needed.
+template<class View, class Val, class ViewSel, class ValSel>
+inline
+void GeVarDistributor<View, Val, ViewSel, ValSel>::finish(void) {
+  (void) oz_unify(sync,AtomNil);
+  dispose();
+}
+
+template<class View, class Val, class ViewSel, class ValSel>
+inline
+void GeVarDistributor<View, Val, ViewSel, ValSel>::make_branch(Board *bb, int pos, Val val){
+  Val v = VarBasics<View,Val>::getValue(val);
+  // first possible branching: sel_var#val
+  TaggedRef fb = 
+    OZ_mkTuple(OZ_atom("#"),2,OZ_int(pos),v);
+  
+  // second possible branching: sel_var#compl(val)
+  TaggedRef sb = 
+    OZ_mkTuple(OZ_atom("#"),2,OZ_int(pos),
+	       OZ_mkTuple(OZ_atom("compl"),1,v));
+  
+  bb->setBranching(OZ_cons(fb,OZ_cons(sb,OZ_nil())));
+}
+
+template<class View, class Val, class ViewSel, class ValSel>
+inline
+TaggedRef GeVarDistributor<View, Val, ViewSel, ValSel>::getSync(void) { 
+  return sync; 
+}
+
+template<class View, class Val, class ViewSel, class ValSel>  
+inline
+void GeVarDistributor<View, Val, ViewSel, ValSel>::dispose(void) { 
+  oz_freeListDispose(this, sizeof(GeVarDistributor)); 
+}
+
+template<class View, class Val, class ViewSel, class ValSel>
+inline
+int GeVarDistributor<View, Val, ViewSel, ValSel>::commitBranch(Board *bb, TaggedRef bd) {
+  
+  // This assumes bd to be in the form: Pos#Value or Pos#compl(Value)
+  Assert(OZ_isTuple(bd));
+  int pos = OZ_intToC(OZ_getArg(bd,0));
+  
+  Assert(0 <= pos && pos < size);
+  TaggedRef value = OZ_getArg(bd,1);
+  
+  bb->prepareTell(BI_GEC_TELL_CONST,
+		  RefsArray::make(OZ_int(pos),value));
+  
+  /* 
+     Assumes the only method able to tell the sapce to remove the
+     distributor is notifyStable. This can be optimized further.
+  */
+  return 1;
+}
+
+template<class View, class Val, class ViewSel, class ValSel>
+inline
+int GeVarDistributor<View, Val, ViewSel, ValSel>::notifyStable(Board *bb) {
+  /*
+    The space is stable and now it is safe to select a new variable
+    with a new value for the next distribution step.
+  */
+  GenericSpace *gs = bb->getGenericSpace(true);
+  /*
+    TODO: must be this board the same one in which this distributor
+    was created?. If it must then it would be better to put an
+    assertion about gs == gs_home. Answer: No, that is not true for
+    all the cases, because bb can be a clone of the space in which
+    the distributor was created and distributor cloning reuses the
+    same object with diferent variables
+  */
+  
+  ViewSel vs; // For view selection
+  ValSel  vl; // Fr value selection
+  
+  int i = 0;
+  int j = 0;
+  for (j = 0; j < size && VarBasics<View,Val>::assigned(vars[j]); j++);
+  i = j;
+  int b = i++;
+  
+  if (j == size) goto finished;
+  Assert(j==size || !(VarBasics<View,Val>::assigned(vars[b])) );
+  
+  /* 
+     At this point there is work to do so the generic space could not
+     be NULL.
+  */
+  Assert(gs);
+  
+  if (vs.init(gs, VarBasics<View,Val>::getView(vars[b])) != Gecode::VSS_COMMIT)
+    for (; i < size; i++){
+      if (!VarBasics<View,Val>::assigned(vars[i]))
+	switch (vs.select(gs,VarBasics<View,Val>::getView(vars[i]))) {
+	case Gecode::VSS_SELECT: b=i; break;
+	case Gecode::VSS_COMMIT: b=i; goto create;
+	case Gecode::VSS_NONE:   break;
+	default:         GECODE_NEVER;
+	}
+    }
+  
+ create:
+  {
+    /*
+      After variable and value selections a branching must be created
+      for the space.  This will allow Space.ask to be notified about
+      the possibles branching descritpions that can be commited to
+      this distributor.
+    */
+    View vb = VarBasics<View,Val>::getView(vars[b]);
+    Assert(!vb.assigned());
+    make_branch(bb, b, vl.val(gs, vb));
+  }
+  
+ finished:
+  if (status()) {
+    // This distributor should be preserved.
+    return 1;
+  } else {
+    finish();
+    /*
+      There are no more variables to distribute in the array.  This
+      distributor must be removed from the board.
+    */
+    return 0;
+  }
+}
+
+template<class View, class Val, class ViewSel, class ValSel>
+inline
+bool GeVarDistributor<View, Val, ViewSel, ValSel>::status(void) {
+  for (int i=0; i < size; i++)
+    if (!VarBasics<View,Val>::assigned(vars[i])) {
+      //start = i;
+      return true;
+    }
+  return false;
+}
+
+template<class View, class Val, class ViewSel, class ValSel>
+inline
+OZ_Return GeVarDistributor<View, Val, ViewSel, ValSel>::tell(RefsArray *args) {
+  int p = OZ_intToC(args->getArg(0));
+  TaggedRef val = args->getArg(1);
+  
+  //Assert(OZ_isGeIntVar(vars[p]));
+  GenericSpace *gs = oz_currentBoard()->getGenericSpace(true);
+  
+  /*
+    TODO: should be this board the same one in which this
+    distributor was created?. If it should then it would be better
+    to put an assertion about gs == gs_home
+  */
+  
+  ValSel vs;
+  
+  unsigned int a = OZ_isTuple(val) ? 1 : 0;    
+  Val v = (a == 1) ? 
+    VarBasics<View,Val>::getValue((OZ_getArg(val,0))) :
+    VarBasics<View,Val>::getValue(val);
+  
+#ifdef DEBUG_CHEK
+  if (OZ_isTuple(val)) 
+    // case compl(v)
+    Assert(OZ_width(val) == 1);
+  else 
+    Assert(OZ_isInt(val));
+#endif
+  
+  
+  // Post the real constraint in the gecode space
+  Assert(!(VarBasics<View,Val>::assigned(vars[p])));
+  return me_failed(vs.tell(gs,a,VarBasics<View,Val>::getView(vars[p],true),v))
+    ? FAILED : PROCEED;
+  
+  /* (ggutierrez) Unstability should be an effect of a tell
+     operation on the gecode space. I'm not sure about
+     Assert(!gs->isStable());
+  */
+}
+
+template<class View, class Val, class ViewSel, class ValSel>
+inline
+Distributor * GeVarDistributor<View, Val, ViewSel, ValSel>::gCollect(void) {
+  GeVarDistributor * t = 
+    (GeVarDistributor *) oz_hrealloc(this, sizeof(GeVarDistributor));
+  OZ_gCollectTerm(t->sync);
+  t->vars = OZ_gCollectAllocBlock(size, t->vars);
+  return t;
+}
+
+template<class View, class Val, class ViewSel, class ValSel>
+inline
+Distributor * GeVarDistributor<View, Val, ViewSel, ValSel>::sClone(void) {
+  GeVarDistributor * t = 
+    (GeVarDistributor *) oz_hrealloc(this, sizeof(GeVarDistributor));
+  OZ_sCloneTerm(t->sync);
+  t->vars = OZ_sCloneAllocBlock(size, t->vars);
+  return t;
+}
+
+/**
+   Assignenmet class methods
+*/
+template <class View, class Val, class ViewSel, class ValSel>
+inline
+GeVarAssignment<View, Val, ViewSel, ValSel>::GeVarAssignment(Board *bb, TaggedRef *vs, int n) {
+  vars = vs;
+  size = n;
+  sync = oz_newVariable(bb);
+  
+#ifdef DEBUG_CHECK
+  home = bb;
+  gs_home = bb->getGenericSpace(true);
+    Assert(gs_home);
+#endif
+    
+}
+
+
+template <class View, class Val, class ViewSel, class ValSel>
+inline
+void GeVarAssignment<View, Val, ViewSel, ValSel>::finish(void) {
+  (void) oz_unify(sync,AtomNil);
+  dispose();
+}
+ 
+
+template <class View, class Val, class ViewSel, class ValSel>
+inline
+void GeVarAssignment<View, Val, ViewSel, ValSel>::make_branch(Board *bb, int pos, Val val){
+  Val v = VarBasics<View,Val>::getValue(val);
+  // first possible branching: sel_var#val
+  TaggedRef fb = 
+    OZ_mkTuple(OZ_atom("#"),2,OZ_int(pos),v);
+  
+  // second possible branching: sel_var#compl(val)
+  TaggedRef sb = 
+    OZ_mkTuple(OZ_atom("#"),2,OZ_int(pos),
+	       OZ_mkTuple(OZ_atom("compl"),1,v));
+  
+  bb->setBranching(OZ_cons(fb,OZ_cons(sb,OZ_nil())));
+}
+
+/*
+  \brief As the distributor injects tell operations in the board
+  that not take place inmediately, termination is notified by
+  binding \a sync to an atom.
+*/
+template <class View, class Val, class ViewSel, class ValSel>
+inline
+TaggedRef GeVarAssignment<View, Val, ViewSel, ValSel>::getSync(void) {
+  return sync; 
+}
+  
+template <class View, class Val, class ViewSel, class ValSel>
+inline
+void GeVarAssignment<View, Val, ViewSel, ValSel>::dispose(void) { 
+  oz_freeListDispose(this, sizeof(GeVarAssignment)); 
+}
+
+/**
+   \brief Commits branching description \a bd in board bb. This
+   operation is performed from the search engine. The prepareTell
+   operation push the tell on the top of the thread that performs
+   propagation. This allows all tell operations to be performed
+   *before* the propagation of the gecode space. Also, as a side
+   effect, tell operations are lazy, this is, are posted in the
+   gecode space on space status demand.
+*/
+template <class View, class Val, class ViewSel, class ValSel>
+inline
+int GeVarAssignment<View, Val, ViewSel, ValSel>::commitBranch(Board *bb, TaggedRef bd) {
+  
+  // This assumes bd to be in the form: Pos#Value or Pos#compl(Value)
+  Assert(OZ_isTuple(bd));
+  int pos = OZ_intToC(OZ_getArg(bd,0));
+  
+  Assert(0 <= pos && pos < size);
+  TaggedRef value = OZ_getArg(bd,1);
+  
+  bb->prepareTell(BI_GEC_TELL_CONST,
+		  RefsArray::make(OZ_int(pos),value));
+  
+  /* 
+     Assumes the only method able to tell the sapce to remove the
+     distributor is notifyStable. This can be optimized further.
+  */
+  return 1;
+}
+
+template <class View, class Val, class ViewSel, class ValSel>
+inline
+int GeVarAssignment<View, Val, ViewSel, ValSel>::notifyStable(Board *bb) {
+  /*
+    The space is stable and now it is safe to select a new variable
+    with a new value for the next distribution step.
+  */
+  GenericSpace *gs = bb->getGenericSpace(true);
+  /*
+    TODO: must be this board the same one in which this distributor
+    was created?. If it must then it would be better to put an
+    assertion about gs == gs_home. Answer: No, that is not true for
+    all the cases, because bb can be a clone of the space in which
+    the distributor was created and distributor cloning reuses the
+    same object with diferent variables
+  */
+  
+  ValSel  vl; // For value selection
+  
+  int i = 0;
+  int j = 0;
+  for (j = 0; j < size && VarBasics<View,Val>::assigned(vars[j]); j++);
+  i = j;
+  int b = i++;
+  
+  if (j == size) goto finished;
+  
+  Assert(j==size || !(VarBasics<View,Val>::assigned(vars[b])));
+  
+  /* 
+     At this point there is work to do so the generic space could not
+     be NULL.
+  */
+  Assert(gs);
+  
+  /*
+    After variable and value selections a branching must be created
+    for the space.  This will allow Space.ask to be notified about
+    the possibles branching descritpions that can be commited to
+    this distributor.
+  */
+  {
+    View vb = VarBasics<View,Val>::getView(vars[b]);
+    Assert(!vb.assigned());
+    make_branch(bb, b, vl.val(gs, vb));
+  }
+ finished:
+  if (status()) {
+    // This distributor should be preserved.
+    return 1;
+  } else {
+    finish();
+    /*
+      There are no more variables to distribute in the array.  This
+      distributor must be removed from the board.
+    */
+    return 0;
+  }
+}
+
+
+template <class View, class Val, class ViewSel, class ValSel>
+inline
+bool GeVarAssignment<View, Val, ViewSel, ValSel>::status(void) {
+  for (int i=0; i < size; i++)
+    if (!VarBasics<View,Val>::assigned(vars[i])) {
+      //start = i;
+      return true;
+    }
+  return false;
+}
+
+/*
+  To access gecode space's variable use get_IntVar instead of
+  get_IntVarInfo to make the space unstable. Space unstability is
+  fine because after a tell the space will be unstable.
+*/
+template <class View, class Val, class ViewSel, class ValSel>
+inline
+OZ_Return GeVarAssignment<View, Val, ViewSel, ValSel>::tell(RefsArray *args) {
+  int p = OZ_intToC(args->getArg(0));
+  TaggedRef val = args->getArg(1);
+  
+  //Assert(OZ_isGeIntVar(vars[p]));
+  GenericSpace *gs = oz_currentBoard()->getGenericSpace(true);
+  
+  /*
+    TODO: should be this board the same one in which this
+    distributor was created?. If it should then it would be better
+    to put an assertion about gs == gs_home
+  */
+  
+  ValSel vs;
+  
+  unsigned int a = OZ_isTuple(val) ? 1 : 0;    
+  Val v = (a == 1) ? 
+    VarBasics<View,Val>::getValue((OZ_getArg(val,0))) :
+    VarBasics<View,Val>::getValue(val);
+  
+#ifdef DEBUG_CHEK
+  if (OZ_isTuple(val)) 
+    // case compl(v)
+    Assert(OZ_width(val) == 1);
+  else 
+    Assert(OZ_isInt(val));
+#endif
+  
+  // Post the real constraint in the gecode space
+  Assert(!(VarBasics<View,Val>::assigned(vars[p])));
+  return me_failed(vs.tell(gs,a,VarBasics<View,Val>::getView(vars[p],true),v))
+    ? FAILED : PROCEED;
+  
+  /* (ggutierrez) Unstability should be an effect of a tell
+     operation on the gecode space. I'm not sure about
+     Assert(!gs->isStable());
+  */
+}
+
+template <class View, class Val, class ViewSel, class ValSel>
+inline
+Distributor * GeVarAssignment<View, Val, ViewSel, ValSel>::gCollect(void) {
+  GeVarAssignment * t = 
+    (GeVarAssignment *) oz_hrealloc(this, sizeof(GeVarAssignment));
+  OZ_gCollectTerm(t->sync);
+  t->vars = OZ_gCollectAllocBlock(size, t->vars);
+  return t;
+}
+
+template <class View, class Val, class ViewSel, class ValSel>
+inline
+Distributor * GeVarAssignment<View, Val, ViewSel, ValSel>::sClone(void) {
+  GeVarAssignment * t = 
+    (GeVarAssignment *) oz_hrealloc(this, sizeof(GeVarAssignment));
+  OZ_sCloneTerm(t->sync);
+  t->vars = OZ_sCloneAllocBlock(size, t->vars);
+  return t;
+}
+
