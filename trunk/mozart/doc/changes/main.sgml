@@ -145,15 +145,29 @@
       <subsection>
 	<title>Emulator and base libraries</title>
 
-	<p>The <<tempFail>> detection mechanism turned out to be too
-	sensitive in the case where the round-trip time between sites
-	is not varying much.  In that case, the timeout value used to
-	trigger the <<tempFail>> is too close from the average
-	round-trip time.  Any tiny variation in the round-trip time
-	then triggers a <<tempFail>>, which is followed very soon by
-	an <<ok>> notification.  The fix consists in making the
-	timeout value at least twice the average round-trip time
-	between the sites (Raphael Collet).</p>
+	<p>
+	  <list>
+	    <item>
+	      There was a bug in the way the distribution layer is
+	      reading sockets.  This was an inappropriate attempt at
+	      optimizing, which was simply removed.  The bug was
+	      isolated by Peter Van Roy, and fixed by Raphael Collet.
+	    </item>
+
+	    <item>
+	      The <<tempFail>> detection mechanism turned out to be
+	      too sensitive in the case where the round-trip time
+	      between sites is not varying much.  In that case, the
+	      timeout value used to trigger the <<tempFail>> is too
+	      close from the average round-trip time.  Any tiny
+	      variation in the round-trip time then triggers a
+	      <<tempFail>>, which is followed very soon by an <<ok>>
+	      notification.  The fix made by Raphael Collet consists
+	      in making the timeout value at least twice the average
+	      round-trip time between the sites.
+	    </item>
+	  </list>
+	</p>
 
       </subsection>
 
