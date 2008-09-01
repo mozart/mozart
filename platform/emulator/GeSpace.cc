@@ -61,7 +61,17 @@ VarRefArray::VarRefArray(Gecode::Space* s, VarRefArray& v, bool share)
   }
 }
 
+
+/*
+  Initialization of static variables related with garbage collection
+  and allocated memory of generic spaces.
+ */
+GenericSpace * GenericSpace::GeSpaceCollectList = NULL;
+GenericSpace * GenericSpace::GeSpaceCollectLast = NULL;
+size_t GenericSpace::GeSpaceAllocatedMem = 0;
+
 int GenericSpace::gscounter = 0;
+
 
 GenericSpace::GenericSpace(Board* b) 
   : vars(), board(b), determined(0), foreignProps(0), trigger(true),
@@ -282,18 +292,18 @@ void GenericSpace::sClone() {
 void registerGeSpace(GenericSpace* gs) {
   //printf("registerSpace\n");fflush(stdout);
   //  gscounter++;
-  if (!GeSpaceCollectList) {
+  if (!GenericSpace::GeSpaceCollectList) {
     //printf("registerSpace vacia\n");fflush(stdout);
-    GeSpaceCollectList = gs;
-    GeSpaceCollectLast = gs;
+    GenericSpace::GeSpaceCollectList = gs;
+    GenericSpace::GeSpaceCollectLast = gs;
   } else {
     //printf("registerSpace otro\n");fflush(stdout);
     //Assert(gs->gc_succ == NULL);
     gs->gc_succ = NULL;
-    GenericSpace *tmp = GeSpaceCollectLast;
-    GeSpaceCollectLast->gc_succ = gs;
+    GenericSpace *tmp = GenericSpace::GeSpaceCollectLast;
+    GenericSpace::GeSpaceCollectLast->gc_succ = gs;
     gs->gc_pred = tmp;
-    GeSpaceCollectLast = gs;
+    GenericSpace::GeSpaceCollectLast = gs;
   }
   GenericSpace::gscounter++;
   /*GenericSpace *tmp = GeSpaceCollectList;
@@ -317,7 +327,7 @@ void gCollectGeSpaces() {
   //printf("Before collect there are %d generic space in memory\n",GenericSpace::gscounter);
   //fflush(stdout);
   //  printf("collecting memory used by generic spaces\n");fflush(stdout);
-  GenericSpace* cur = GeSpaceCollectList;
+  GenericSpace* cur = GenericSpace::GeSpaceCollectList;
   unsigned int i = 0;
   unsigned int j = 0;
   while (cur != NULL) {
