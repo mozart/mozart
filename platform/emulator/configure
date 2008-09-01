@@ -1756,7 +1756,7 @@ fi
 	else
 	  
   echo $ac_n "checking $CXX version is at least 3.3.2""... $ac_c" 1>&6
-echo "configure:1756: checking $CXX version is at least 3.3.2" >&5
+echo "configure:1760: checking $CXX version is at least 3.3.2" >&5
   oz_tmp_ok=no
   if oz_tmp_version1=`$CXX -dumpversion || $CXX --version 2>/dev/null`; then
     # first we try to locate the string "version"
@@ -2225,7 +2225,7 @@ fi
 	else
           
   echo $ac_n "checking $CC version is at least 3.3.2""... $ac_c" 1>&6
-echo "configure:2225: checking $CC version is at least 3.3.2" >&5
+echo "configure:2229: checking $CC version is at least 3.3.2" >&5
   oz_tmp_ok=no
   if oz_tmp_version1=`$CC -dumpversion || $CC --version 2>/dev/null`; then
     # first we try to locate the string "version"
@@ -3405,14 +3405,14 @@ The latest version at this time is 0.22.
 	    echo "$ac_t""yes" 1>&6
 	    
 	 fi
-echo $ac_n "checking for gecode 2.1.1""... $ac_c" 1>&6
-echo "configure:3410: checking for gecode 2.1.1" >&5
-	 if pkg-config --exists "gecode = 2.1.1"; then
+echo $ac_n "checking for gecode 2.2.0""... $ac_c" 1>&6
+echo "configure:3410: checking for gecode 2.2.0" >&5
+	 if pkg-config --exists "gecode = 2.2.0"; then
     	 echo "$ac_t"""yes"" 1>&6
 	 else
 	     echo "$ac_t"""no"" 1>&6
     	     { echo "configure: error: 
-The Generic Constraint Development Environment version 2.1.1 is required to
+The Generic Constraint Development Environment version 2.2.0 is required to
 build the system. It can be retrieved from:
 
         http://www.gecode.org/
