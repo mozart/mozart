@@ -43,7 +43,10 @@ public:
 
   //TODO: Be carefull this function should return a view and not a variable
   BoolVar& getBoolVar(void) {
-    Int::BoolView bv(static_cast<BoolVarImp*>(getGSpace()->getVar(index)));
+    GenericSpace *gs = getGSpace();
+    Int::BoolView bv(static_cast<BoolVarImp*>(gs->getVar(index)));
+    gs->makeUnstable();
+    
     BoolVar *tmp = new BoolVar(bv);
 
     return (*tmp);
@@ -52,7 +55,7 @@ public:
   // the returned reference should be constant
 
   BoolVar& getBoolVarInfo() {
-    Int::BoolView bv(static_cast<BoolVarImp*>(getGSpace()->getVarInfo(index)));
+    Int::BoolView bv(static_cast<BoolVarImp*>(getGSpace()->getVar(index)));
     BoolVar *tmp = new BoolVar(bv);
     return (*tmp);
   }
@@ -107,11 +110,11 @@ public:
     
   // reflection mechanism 
   virtual bool assigned(void) {
-    return BoolView(static_cast<BoolVarImp*>(getGSpace()->getVarInfo(index))).assigned();
+    return BoolView(static_cast<BoolVarImp*>(getGSpace()->getVar(index))).assigned();
   }
   
   virtual OZ_Term getVal(void) {
-    BoolView bv = BoolView(static_cast<BoolVarImp*>(getGSpace()->getVarInfo(index)));
+    BoolView bv = BoolView(static_cast<BoolVarImp*>(getGSpace()->getVar(index)));
     return OZ_int(bv.val());
   }
 
@@ -120,7 +123,7 @@ public:
   }
   
   virtual int degree(void) { 
-    BoolView vi(static_cast<BoolVarImp*>(getGSpace()->getVarInfo(index))); 
+    BoolView vi(static_cast<BoolVarImp*>(getGSpace()->getVar(index))); 
     return vi.degree(); 
   }
 };

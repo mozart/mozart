@@ -51,14 +51,16 @@ public:
 
   //TODO: Be carefull this function should return a view and not a variable
   IntVar& getIntVar(void) {
-    Int::IntView iv(static_cast<IntVarImp*>(getGSpace()->getVar(index)));
+    GenericSpace *gs = getGSpace();
+    Int::IntView iv(static_cast<IntVarImp*>(gs->getVar(index)));
+    gs->makeUnstable();
     IntVar *tmp = new IntVar(iv);
     return (*tmp);
   }
 
   // the returned reference should be constant
   IntVar& getIntVarInfo() {
-    Int::IntView iv(static_cast<IntVarImp*>(getGSpace()->getVarInfo(index)));
+    Int::IntView iv(static_cast<IntVarImp*>(getGSpace()->getVar(index)));
     IntVar *tmp = new IntVar(iv);
     return (*tmp);
   }
@@ -114,11 +116,11 @@ public:
     
   // reflection mechanism 
   virtual bool assigned(void) {
-    return IntView(static_cast<IntVarImp*>(getGSpace()->getVarInfo(index))).assigned();
+    return IntView(static_cast<IntVarImp*>(getGSpace()->getVar(index))).assigned();
   }
   
   virtual OZ_Term getVal(void) {
-    IntView iv(static_cast<IntVarImp*>(getGSpace()->getVarInfo(index)));
+    IntView iv(static_cast<IntVarImp*>(getGSpace()->getVar(index)));
     return OZ_int(iv.val());
   }
   
@@ -127,7 +129,7 @@ public:
   }
   
   virtual int degree(void) { 
-    IntView vi(static_cast<IntVarImp*>(getGSpace()->getVarInfo(index))); 
+    IntView vi(static_cast<IntVarImp*>(getGSpace()->getVar(index))); 
     return vi.degree(); 
   }
 

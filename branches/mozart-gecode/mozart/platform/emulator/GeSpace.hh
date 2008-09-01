@@ -406,17 +406,6 @@ public:
 
   Gecode::VarImpBase* getVar(int n);
 
-  /**
-   * \brief Access IntVar at a given index for 
-   * information (read only) purposes
-   *
-   * @param n Index in the IntVarArray
-   * @return A reference to the variable
-   *
-   */
-
-  Gecode::VarImpBase* getVarInfo(int n);
-
   //@}
 
   /** 
