@@ -927,11 +927,11 @@ OZ_BI_define(gfs_weights_4,4,0){
 }OZ_BI_end
 
 /**
-    Selection constraints
+    Elements constraints
     Propagators to post a selection constraint on variables. This is a Gecode propagators interface. 
     For more information see http://www.gecode.org/gecode-doc-latest/group__TaskModelSetSelection.html
 */
-OZ_BI_define(gfs_selectUnion_3,3,0){
+OZ_BI_define(gfs_elementsUnion_3,3,0){
   DeclareGSpace(home);
     
   DeclareGeSetVar(1, __y, home);
@@ -939,12 +939,12 @@ OZ_BI_define(gfs_selectUnion_3,3,0){
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2))){
     /*
-      void Gecode::selectUnion (Space *home, const SetVarArgs &x, SetVar y, SetVar z)
+      void Gecode::elementsUnion (Space *home, const SetVarArgs &x, SetVar y, SetVar z)
       Post propagator for $ z=\bigcup\langle x_0,\dots,x_{n-1}\rangle[y] $. 
      */
     DECLARE_SETVARARGS(0, __x, home);
     try{
-      Gecode::selectUnion(home, __x, __y, __z);
+      Gecode::elementsUnion(home, __x, __y, __z);
 
     }
     catch(Exception e){
@@ -954,12 +954,12 @@ OZ_BI_define(gfs_selectUnion_3,3,0){
   else if(OZ_isIntSetArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && 
 	  OZ_isGeSetVar(OZ_in(2))){
     /*
-      void Gecode::selectUnion (Space *home, const IntSetArgs &s, SetVar y, SetVar z)
+      void Gecode::elementsUnion (Space *home, const IntSetArgs &s, SetVar y, SetVar z)
       Post propagator for $ z=\bigcup\langle s_0,\dots,s_{n-1}\rangle[y] $. 
     */
     DECLARE_INT_SET_ARGS(0, __s);
     try{
-      Gecode::selectUnion(home, __s, __y, __z);
+      Gecode::elementsUnion(home, __s, __y, __z);
 
     }
     catch(Exception e){
@@ -973,13 +973,13 @@ OZ_BI_define(gfs_selectUnion_3,3,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(gfs_selectInterIn_4,4,0){
+OZ_BI_define(gfs_elementsInter_4,4,0){
   DeclareGSpace(home);
 
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2)) && OZ_isIntSet(OZ_in(3))){ 
     /*
-      void Gecode::selectInterIn (Space *home, const SetVarArgs &x, SetVar y, 
+      void Gecode::elementsInter (Space *home, const SetVarArgs &x, SetVar y, 
       SetVar z, const IntSet &u)
       Post propagator for $ z=\bigcap\langle x_0,\dots,x_{n-1}\rangle[y] $ 
       using u as universe. 
@@ -991,7 +991,7 @@ OZ_BI_define(gfs_selectInterIn_4,4,0){
     DECLARE_INT_SET(3, __u);
     
     try{
-      Gecode::selectInterIn(home, __x, __y, __z, __u);
+      Gecode::elementsInter(home, __x, __y, __z, __u);
 
     }
     catch(Exception e){
@@ -1005,7 +1005,7 @@ OZ_BI_define(gfs_selectInterIn_4,4,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(gfs_selectSet_3,3,0){
+OZ_BI_define(gfs_elements_3,3,0){
   DeclareGSpace(home);
   DeclareGeIntVar(1, __y, home);
   DeclareGeSetVar(2, __z, home);
@@ -1013,13 +1013,13 @@ OZ_BI_define(gfs_selectSet_3,3,0){
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2))){
     /*
-      void Gecode::selectSet (Space *home, const SetVarArgs &x, IntVar y, SetVar z)
+      void Gecode::element (Space *home, const SetVarArgs &x, IntVar y, SetVar z)
       Post propagator for $ z=\langle x_0,\dots,x_{n-1}\rangle[y] $. 
     */
     
     DECLARE_SETVARARGS(0, __x, home);
     try{
-      Gecode::selectSet(home, __x, __y, __z);
+      Gecode::element(home, __x, __y, __z);
 
     }
     catch(Exception e){
@@ -1036,7 +1036,7 @@ OZ_BI_define(gfs_selectSet_3,3,0){
     
     DECLARE_INT_SET_ARGS(0, __s);
     try{
-      Gecode::selectSet(home, __s, __y, __z);
+      Gecode::element(home, __s, __y, __z);
 
     }
     catch(Exception e){
@@ -1050,7 +1050,7 @@ OZ_BI_define(gfs_selectSet_3,3,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(gfs_selectInter_3,3,0){
+OZ_BI_define(gfs_elementsInter_3,3,0){
   DeclareGSpace(home);
   
 
@@ -1058,7 +1058,7 @@ OZ_BI_define(gfs_selectInter_3,3,0){
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2))){
     /*
-      void Gecode::selectInter (Space *home, const SetVarArgs &x, SetVar y, SetVar z)
+      void Gecode::elementsInter (Space *home, const SetVarArgs &x, SetVar y, SetVar z)
       Post propagator for $ z=\bigcap\langle x_0,\dots,x_{n-1}\rangle[y] $ 
       using $ \mathcal{U} $ as universe. 
     */
@@ -1068,7 +1068,7 @@ OZ_BI_define(gfs_selectInter_3,3,0){
     DeclareGeSetVar(2, __z, home);
     
     try{
-      Gecode::selectInter(home, __x, __y, __z);
+      Gecode::elementsInter(home, __x, __y, __z);
 
     }
     catch(Exception e){
@@ -1082,12 +1082,12 @@ OZ_BI_define(gfs_selectInter_3,3,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(gfs_selectDisjoint_2,2,0){
+OZ_BI_define(gfs_elementsDisjoint_2,2,0){
   DeclareGSpace(home);
 
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1))){
     /*
-      void Gecode::selectDisjoint (Space *home, const SetVarArgs &x, SetVar y)
+      void Gecode::elementsDisjoint (Space *home, const SetVarArgs &x, SetVar y)
       Post propagator for $ \parallel\langle x_0,\dots,x_{n-1}\rangle[y] $. 
     */
     
@@ -1095,7 +1095,7 @@ OZ_BI_define(gfs_selectDisjoint_2,2,0){
     DeclareGeSetVar(1, __y, home);
 
     try{
-      Gecode::selectDisjoint(home, __x, __y);
+      Gecode::elementsDisjoint(home, __x, __y);
 
     }
     catch(Exception e){
