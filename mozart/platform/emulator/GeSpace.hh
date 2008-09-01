@@ -32,9 +32,10 @@
 /**
  * @file   GeSpace.hh
  * 
- * @brief This file contains all classes and operations related to GeSpace's.
- *        A GeSpace is an object in the oz heap pointing to a GenericSpace that is a
- *        a gecode space containing contraint variables and propagators.  
+ * @brief This file contains all classes and operations related to
+ *        GeSpace's.  A GeSpace is an object in the oz heap pointing
+ *        to a GenericSpace that is a a gecode space containing
+ *        contraint variables and propagators.
  */
 
 
@@ -171,18 +172,13 @@ public:
   //void setRoot(OZ_Term v);
 };
 
-// Garbage collection related stuff 
-// Pontier to the begining of the list of allocated Generic Spaces
-static GenericSpace* GeSpaceCollectList = NULL;
-// Pointer to the last element in the list of allocated Generic Spaces
-static GenericSpace* GeSpaceCollectLast = NULL;
-// Total memory allocated in generic spaces
-static size_t GeSpaceAllocatedMem = 0;
+
 /* This method adds the generic space gs to the list of allocated
    generic spaces.  It must be called for all created generic space in
    order to put it in the control of the garbage collector.
 */
 void registerGeSpace(GenericSpace* gs);
+
 /* Collects the memory allocated by unused generic spaces. */
 void gCollectGeSpaces(void);
 
@@ -457,6 +453,26 @@ public:
   void gCollect();
   void sClone();
   //@}
+
+  /**
+     \brief Garbage collection for generic spaces. To properly handle
+     garbage collection of generic spaces a double linked list is
+     used. Every new generic space is stored in the list, when the
+     garbage collector runs, all the unused spaces are removed from
+     memory. Generic spaces are stored outside the mozart heap.
+  */
+  //@{
+  /// Pontier to the begining of the list of allocated GenericSpace's.
+  static GenericSpace* GeSpaceCollectList;
+
+  /// Pointer to the last element in the list of allocated Generic Spaces
+  static GenericSpace* GeSpaceCollectLast;
+
+  /// Total memory allocated in generic spaces
+  static size_t GeSpaceAllocatedMem;
+
+  //@}
+
 
 };
 
