@@ -46,14 +46,16 @@ public:
 
   //TODO: Be carefull this function should return a view and not a variable
   SetVar& getSetVar(void) {
-    Set::SetView sv(static_cast<SetVarImp*>(getGSpace()->getVar(index)));
+    GenericSpace *gs = getGSpace();
+    Set::SetView sv(static_cast<SetVarImp*>(gs->getVar(index)));
+    gs->makeUnstable();
     SetVar *tmp = new SetVar(sv);
     return (*tmp);
   }
 
   // the returned reference should be constant
   SetVar& getSetVarInfo() {
-    Set::SetView sv(static_cast<SetVarImp*>(getGSpace()->getVarInfo(index)));
+    Set::SetView sv(static_cast<SetVarImp*>(getGSpace()->getVar(index)));
     SetVar *tmp = new SetVar(sv);
     return (*tmp);
   }
@@ -111,11 +113,11 @@ public:
     
   // reflection mechanism 
   virtual bool assigned(void) {
-    return SetView(static_cast<SetVarImp*>(getGSpace()->getVarInfo(index))).assigned();
+    return SetView(static_cast<SetVarImp*>(getGSpace()->getVar(index))).assigned();
   }
   
   virtual OZ_Term getVal(void) {
-    Set::SetView vv(static_cast<SetVarImp*>(getGSpace()->getVarInfo(index)));
+    Set::SetView vv(static_cast<SetVarImp*>(getGSpace()->getVar(index)));
     Set::GlbRanges<Set::SetView> tmp(vv);
     Set::LubRanges<Set::SetView> tmp2(vv);
     IntSet valGlb(tmp);
@@ -129,7 +131,7 @@ public:
   }
 
   virtual int degree(void) { 
-    SetView vi(static_cast<SetVarImp*>(getGSpace()->getVarInfo(index))); 
+    SetView vi(static_cast<SetVarImp*>(getGSpace()->getVar(index))); 
     return vi.degree(); 
   }
 };
