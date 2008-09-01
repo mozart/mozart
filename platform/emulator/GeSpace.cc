@@ -255,12 +255,6 @@ int GenericSpace::newVar(Gecode::VarImpBase *v, OZ_Term r) {
 
 Gecode::VarImpBase* GenericSpace::getVar(int n) { 
   Assert(n >= 0 && n<vars.getSize() && &vars.getVar(n));
-  makeUnstable();
-  return &vars.getVar(n);
-}
-
-Gecode::VarImpBase* GenericSpace::getVarInfo(int n){
-  Assert(n >= 0 && n < vars.getSize() && &vars.getVar(n));
   return &vars.getVar(n);
 }
 

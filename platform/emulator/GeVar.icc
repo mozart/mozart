@@ -165,7 +165,7 @@ OZ_Return GeVar::bindV(TaggedRef* vPtr, TaggedRef val) {
 template <class View, class VarImp>
 inline
 void postValReflector(GenericSpace *home, const int index) {
-  Gecode::VarImpBase *vi = home->getVarInfo(index);
+  Gecode::VarImpBase *vi = home->getVar(index);
   View vw(static_cast<VarImp*>(vi));
   new (home) ValReflector<View>(home, vw, index);
 }
@@ -187,7 +187,7 @@ inline
 void postDomReflector(GenericSpace *home, GeVarBase *gvb) { 
   if (!gvb->hasDomReflector()) {
     int index = gvb->getIndex();
-    Gecode::VarImpBase *vi = home->getVarInfo(index);
+    Gecode::VarImpBase *vi = home->getVar(index);
     View vw(static_cast<VarImp*>(vi));
     new (home) DomReflector<View,pc>(home, vw, index);
     home->incForeignProps();
