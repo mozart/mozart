@@ -228,11 +228,6 @@ OZ_Return GeVarDistributor<View, Val, ViewSel, ValSel>::tell(RefsArray *args) {
   gs->makeUnstable();
   return me_failed(vs.tell(gs,a,VarBasics<View,Val>::getView(vars[p]),v))
     ? FAILED : PROCEED;
-  
-  /* (ggutierrez) Unstability should be an effect of a tell
-     operation on the gecode space. I'm not sure about
-     Assert(!gs->isStable());
-  */
 }
 
 template<class View, class Val, class ViewSel, class ValSel>
@@ -457,11 +452,6 @@ OZ_Return GeVarAssignment<View, Val, ViewSel, ValSel>::tell(RefsArray *args) {
   gs->makeUnstable();
   return me_failed(vs.tell(gs,a,VarBasics<View,Val>::getView(vars[p]),v))
     ? FAILED : PROCEED;
-  
-  /* (ggutierrez) Unstability should be an effect of a tell
-     operation on the gecode space. I'm not sure about
-     Assert(!gs->isStable());
-  */
 }
 
 template <class View, class Val, class ViewSel, class ValSel>
