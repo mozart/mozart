@@ -34,9 +34,8 @@ VPATH		= @srcdir@
 SRCDIR		= @srcdir@
 INCS		= -I$(SRCDIR) -I. -I$(SRCDIR)/.. -I..
 
-
-GECODE_LIBS	= `pkg-config --libs "gecode = ${GECODEVERSION}"`
-GECODE_INC	= `pkg-config --cflags "gecode = ${GECODEVERSION}"`
+GECODE_LIBS	= `pkg-config --libs gecode`
+GECODE_INC	= `pkg-config --cflags gecode`
 
 CFLAGS 		= $(INCS) $(GECODE_INC) $(GESPACE_CXXFLAGS) $(CPPFLAGS) 
 
