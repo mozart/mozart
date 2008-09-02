@@ -51,7 +51,7 @@ GeVarDistributor<View, Val, ViewSel, ValSel>::GeVarDistributor(Board *bb, Tagged
 #endif
 }
 
-//this method is not needed.
+//TODO: What? this method is not needed.
 template<class View, class Val, class ViewSel, class ValSel>
 inline
 void GeVarDistributor<View, Val, ViewSel, ValSel>::finish(void) {
@@ -223,9 +223,10 @@ OZ_Return GeVarDistributor<View, Val, ViewSel, ValSel>::tell(RefsArray *args) {
 #endif
   
   
-  // Post the real constraint in the gecode space
+  // Post the real constraint in the gecode space and make it unstable.
   Assert(!(VarBasics<View,Val>::assigned(vars[p])));
-  return me_failed(vs.tell(gs,a,VarBasics<View,Val>::getView(vars[p],true),v))
+  gs->makeUnstable();
+  return me_failed(vs.tell(gs,a,VarBasics<View,Val>::getView(vars[p]),v))
     ? FAILED : PROCEED;
   
   /* (ggutierrez) Unstability should be an effect of a tell
@@ -451,9 +452,10 @@ OZ_Return GeVarAssignment<View, Val, ViewSel, ValSel>::tell(RefsArray *args) {
     Assert(OZ_isInt(val));
 #endif
   
-  // Post the real constraint in the gecode space
+  // Post the real constraint in the gecode space and make it unstable
   Assert(!(VarBasics<View,Val>::assigned(vars[p])));
-  return me_failed(vs.tell(gs,a,VarBasics<View,Val>::getView(vars[p],true),v))
+  gs->makeUnstable();
+  return me_failed(vs.tell(gs,a,VarBasics<View,Val>::getView(vars[p]),v))
     ? FAILED : PROCEED;
   
   /* (ggutierrez) Unstability should be an effect of a tell

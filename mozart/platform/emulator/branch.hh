@@ -53,7 +53,7 @@ class GFDAssignment;
 template<class View, class Val>
 class VarBasics {
 public:
-  static View getView(OZ_Term t, bool affect_stability = false);
+  static View getView(OZ_Term t);
   static bool assigned(OZ_Term t);
   static OZ_Term getValue(Val v);
   static Val getValue(OZ_Term v);
