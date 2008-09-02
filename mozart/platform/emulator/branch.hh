@@ -107,7 +107,7 @@ public:
      propagation. This allows all tell operations to be performed
      *before* the propagation of the gecode space. Also, as a side
      effect, tell operations are lazy, this is, are posted in the
-     gecode space on space status demand.
+     gecode space when space status is needed.
   */
   virtual int commitBranch(Board *bb, TaggedRef bd);
   
@@ -116,9 +116,10 @@ public:
   bool status(void);
 
   /*
-    To access gecode space's variable use get_IntVar instead of
-    get_IntVarInfo to make the space unstable. Space unstability is
-    fine because after a tell the space will be unstable.
+    Important: A tell operation involves the post of a propagator in
+    the gecode space. The space needs to be *unstable* after a tell
+    call to _notify_ mozart that propagation can be performed to
+    compute a fix point.
   */
   virtual OZ_Return tell(RefsArray *args);
 
@@ -183,11 +184,12 @@ public:
   virtual int notifyStable(Board *bb);
   
   bool status(void);
-
+   
   /*
-    To access gecode space's variable use get_IntVar instead of
-    get_IntVarInfo to make the space unstable. Space unstability is
-    fine because after a tell the space will be unstable.
+    Important: A tell operation involves the post of a propagator in
+    the gecode space. The space needs to be *unstable* after a tell
+    call to _notify_ mozart that propagation can be performed to
+    compute a fix point.
   */
   virtual OZ_Return tell(RefsArray *args);
 
