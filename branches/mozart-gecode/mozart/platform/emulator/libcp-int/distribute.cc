@@ -49,11 +49,9 @@ void gfd_dist_init(void) { }
 template<>
 class VarBasics<IntView, int> {
 public:
-  static IntView getView(OZ_Term t, bool affect_stability = false) {
+  static IntView getView(OZ_Term t) {
     Assert(OZ_isGeIntVar(t));
-    if (!affect_stability)
-      return IntView(get_IntVarInfo(t).var());
-    return IntView(get_IntVar(t).var());
+    return IntView(get_IntVarInfo(t).var());
   }
   static bool assigned(OZ_Term t) {
     if (OZ_isInt(t)) {
