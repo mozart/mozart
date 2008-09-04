@@ -139,50 +139,67 @@ IntVar* declareIV(OZ_Term p) {
 #define DECLARE_INTVARARGS(tIn,array,sp) DECLARE_VARARGS(tIn,array,sp,IntVarArgs,DeclareGeIntVarVA)
 
 /**
-   ############################## Domain declaration ##########################
-*/
-
-/** 
- * \brief Inline for Declares a Gecode::Int::IntSet from an Oz domain specification
- * @param _t Mozart domain specification
+ * \brief Return a IntVar from a integer or a GeIntVar
+ * @param value integer or GeIntVar representing a IntVar
  */
-// inline
-// Gecode::IntSet* declareIntSet(OZ_Term t) {
-//   OZ_Term l = (OZ_isCons(t) ? t : OZ_cons(t, OZ_nil()));
-//   int length = OZ_length(l);
-//   int pairs[length][2];
-  
-//   for (int i = 0; OZ_isCons(l); l=OZ_tail(l), i++) {
-//     OZ_Term val = OZ_head(l);
-//     if (OZ_isInt(val)) {
-//       pairs[i][0] = OZ_intToC(val); 
-//       pairs[i][1] = OZ_intToC(val);
-//     }
-//     else if (OZ_isTuple(val)) {
-//       pairs[i][0] = OZ_intToC(OZ_getArg(val,0));
-//       pairs[i][1] = OZ_intToC(OZ_getArg(val,1));
-//     } else {
-//       // invalid element found in IntSet declaration
-//       return NULL;
-//     }
-//   }
-//   return new Gecode::IntSet(pairs,length);  
-// } 
-
-/** 
- * \brief Declares a Gecode::Int::IntSet from an Oz domain description
- * 
- * @param ds The domain description int terms of list and tuples
- * @param _t Mozart domain specification
- */
-//TODO: wait for _t if is a free var?
-/*
-  #define DECLARE_INT_SET(_t,ds)        \
-  Gecode::IntSet ds;\
-  { Gecode::IntSet *isp = declareIntSet(_t);\
-  if (isp == NULL) return OZ_typeError(0,"IntSet declaration");\
-  ds = *isp;\
+inline
+Gecode::IntVar& intOrIntVar(TaggedRef value){
+  if(OZ_isInt(value)){
+    IntVar *iv = new IntVar(oz_currentBoard()->getGenericSpace(), OZ_intToC(value), OZ_intToC(value));
+    return (*iv);
+  }else {
+    return get_IntVar(value);
   }
+}
+
+
+//the next inline replace the macro DECLARE_INTVARARGS
+/**
+ * \brief Return a IntVarArgs. Space stability is affected as a side effect.
+ * @param vaar Array of GeIntVars and/or integers
+ */
+inline
+Gecode::IntVarArgs getIntVarArgs(TaggedRef vaar){
+  int sz;
+  TaggedRef t = vaar;
+
+  Assert(OZ_isIntVarArgs(vaar));
+
+  if(OZ_isLiteral(OZ_deref(t))) {
+    sz=0;
+    IntVarArgs array(sz);
+    return array;
+  } else
+    if(OZ_isCons(t)) {
+      sz = OZ_length(t);
+      IntVarArgs array(sz);
+      for(int i=0; OZ_isCons(t); t=OZ_tail(t),i++){
+	array[i] = intOrIntVar(OZ_deref(OZ_head(t)));
+      }
+      return array;
+    } else 
+      if(OZ_isTuple(t)) {
+	sz=OZ_width(t);
+	IntVarArgs array(sz);
+	for(int i=0; i<sz; i++) {
+	  array[i] = intOrIntVar(OZ_getArg(t,i));
+	}
+	return array;
+      } else {
+	Assert(OZ_isRecord(t));
+	OZ_Term al = OZ_arityList(t);
+	sz = OZ_width(t);
+	IntVarArgs array(sz);
+	for(int i=0; OZ_isCons(al); al=OZ_tail(al),i++) {
+	  array[i] = intOrIntVar(OZ_subtree(t,OZ_head(al)));
+	}
+	return array;
+      }  
+}
+
+
+/**
+   ############################## Domain declaration ##########################
 */
 
 /** 
@@ -212,6 +229,40 @@ IntVar* declareIV(OZ_Term p) {
     }								\
   }								\
   Gecode::IntSet ds(_pairs, _length);
+
+
+// this inline replace DECLARE_INT_SET
+/**
+ * \brief Return a IntSet. 
+ * @param is List, tuple or record of domain description
+ */
+inline
+Gecode::IntSet getIntSet(TaggedRef is){
+
+  Assert(OZ_isIntSet(is));
+
+  OZ_Term list = (OZ_isCons(is) ? is : OZ_cons( is, OZ_nil()));
+  int length = OZ_length(list);
+  int pairs[length][2];
+  
+  for(int i=0; OZ_isCons(list); list = OZ_tail(list), i++){
+    OZ_Term val = OZ_head(list);
+    
+    if(OZ_isInt(val)){
+      pairs[i][0] = OZ_intToC(val);
+      pairs[i][1] = OZ_intToC(val);
+    } else
+      if (OZ_isTuple(val)){
+	pairs[i][0] = OZ_intToC(OZ_getArg(val,0));
+	pairs[i][1] = OZ_intToC(OZ_getArg(val,1));
+      }
+    else {							
+      OZ_typeError(0,"malformed domain description");	
+    }								
+  }
+  return IntSet(pairs, length);
+  
+}
 
 //TODO: what is this for? DECLARE_INT_SET is used by GFS and DECLARE_INT_SET2
 //is used by GFD, probe gfd and fix this madness!
@@ -271,6 +322,48 @@ IntVar* declareIV(OZ_Term p) {
   Gecode::PrimArgArray<IntSet> ds(length);
 
 
+/**
+ * \brief Return a IntSetArgs. 
+ * @param is List, tuple or record of domain IntSets
+ */
+inline
+Gecode::IntSetArgs getIntSetArgs(TaggedRef isa){
+  int sz;
+  TaggedRef t = isa;
+    
+  Assert(OZ_isIntSetArgs(isa));
+
+  if(OZ_isLiteral(OZ_deref(t))) {
+    sz=0;
+    IntSetArgs array(sz);
+    return array;
+  } else
+    if(OZ_isCons(t)) {
+      sz = OZ_length(t);
+      IntSetArgs array(sz);
+      for(int i=0; OZ_isCons(t); t=OZ_tail(t),i++){
+	array[i] = getIntSet(OZ_deref(OZ_head(t)));
+      }
+      return array;
+    } else 
+      if(OZ_isTuple(t)) {
+	sz=OZ_width(t);
+	IntSetArgs array(sz);
+	for(int i=0; i<sz; i++) {
+	  array[i] = getIntSet(OZ_getArg(t,i));
+	}
+	return array;
+      } else {
+	Assert(OZ_isRecord(t));
+	OZ_Term al = OZ_arityList(t);
+	sz = OZ_width(t);
+	IntSetArgs array(sz);
+	for(int i=0; OZ_isCons(al); al=OZ_tail(al),i++) {
+	  array[i] = getIntSet(OZ_subtree(t,OZ_head(al)));
+	}
+	return array;
+      }  
+}
 
 /**
  * \brief Declares a Gecode::Int:IntArgs from a list of int values.
@@ -295,60 +388,11 @@ IntVar* declareIV(OZ_Term p) {
       }									\
   }                 
 
-// TODO: improve this fuction to replace the macro
-/*
-  inline
-  IntArgs* declareIntArgs(OZ_Term t) {
-  IntArgs *array = NULL;
-  int sz = 0;             
-  
-  if(OZ_isLiteral(t)) {
-  IntArgs a(sz);
-  array = a;
-  }
-  else if(OZ_isCons(t)) {
-  sz = OZ_length(t);
-  IntArgs a(sz);
-  for(int i=0; OZ_isCons(t); t=OZ_tail(t))
-  a[i++] = OZ_intToC(OZ_head(t));
-  array = a;
-  } else if(OZ_isTuple(t)) {
-  sz = OZ_width(t);
-  IntArgs a(sz);
-  for(int i=0; i < sz; i++) {
-  OZ_Term tmp = OZ_getArg(t,i);
-  a[i] = OZ_intToC(tmp);
-  }
-  array=a;
-  }
-  else {
-  assert(OZ_isRecord(t));
-  OZ_Term al = OZ_arityList(t);
-  sz = OZ_width(t);
-  IntArgs a(sz);
-  for(int i = 0; OZ_isCons(al); al=OZ_tail(al))
-  a[i++]=OZ_intToC(OZ_subtree(t,OZ_head(al)));
-  array=a;
-  }
-  return &array;      
-  }
-*/
-
 /**
  * \brief Declares a Gecode::Int:IntArgs from a literal, list, tuple or record of int values.
  * @param tIn possition in OZ_in
  * @param array the resulting IntArgs
  */
-
-/*TODO: improve declareIntArgs to improve this too.
-  #define DECLARE_INTARGS(tIn,array)        \
-  declareInTerm(tIn,t);\
-  IntArgs array;\
-  { IntArgs *ap = declareIntArgs(t);\
-  if (ap == NULL) return OZ_typeError(0,"IntArgs declaration");\
-  array = *ap;\
-  }
-*/
 
 #define DECLARE_INTARGS(tIn,array)				\
   IntArgs array(0);						\
@@ -386,6 +430,50 @@ IntVar* declareIV(OZ_Term p) {
       array=_array;						\
     }								\
   }
+
+
+//the next inline replace the macro DECLARE_INTARGS
+/**
+ * \brief Return a IntArgs 
+ * @param is List, tuple or record of integers
+ */
+inline
+Gecode::IntArgs getIntArgs(TaggedRef inar){
+  int sz;
+
+  Assert(OZ_isIntArgs(inar));
+  
+  if(OZ_isLiteral(inar)) {
+    sz = 0;
+    IntArgs array(sz);
+    return array;
+  } else 
+    if(OZ_isCons(inar)){
+      sz = OZ_length(inar);
+      IntArgs array(sz);
+      for(int i=0; OZ_isCons(inar); inar=OZ_tail(inar)){
+	array[i++] = OZ_intToC(OZ_head(inar));
+      }
+      return array;
+    } else
+      if(OZ_isTuple(inar)) {
+	sz=OZ_width(inar);
+	IntArgs array(sz);
+	for(int i=0; i < sz; i++) {
+	  array[i] = OZ_intToC(OZ_getArg(inar,i));
+	}
+	return array;
+      } else {
+	Assert(OZ_isRecord(inar));
+	OZ_Term al = OZ_arityList(inar);
+	sz = OZ_width(inar);
+	IntArgs array(sz);
+	for(int i = 0; OZ_isCons(al); al=OZ_tail(al)){
+	  array[i++] = OZ_intToC(OZ_subtree(inar,OZ_head(al)));
+	}
+	return array;
+      }
+}
   
 /**
  * \brief Declare a Gecode::TupleSet from a domain description.
@@ -424,6 +512,17 @@ IntVar* declareIV(OZ_Term p) {
     var = (IntConLevel)__vv;						\
   }
 
+// this inline replace de macri DeclareIntConLevel
+/**
+ * \brief Return a IntConLevel.
+ * @param icl OZ integer representing the IntConLevel
+ */
+inline
+Gecode::IntConLevel getIntConLevel(TaggedRef icl){
+  Assert(OZ_isIntConLevel(icl));
+  return (IntConLevel) OZ_intToC(icl);
+}
+
 /**
  * \brief Declares a Gecode::PropKind
  * @param arg An integer defining the PropKind
@@ -436,6 +535,18 @@ IntVar* declareIV(OZ_Term p) {
     var = (PropKind)__vv;						\
   }
 
+
+// this inline replace de macro DeclarePropKind
+/**
+ * \brief Return a PropKind.
+ * @param pk OZ integer representing the PropKind
+ */
+inline
+Gecode::PropKind getPropKind(TaggedRef pk){
+  Assert(OZ_isPropKind(pk));
+  return (PropKind) OZ_intToC(pk);
+}
+
 /**
  * \brief Declares a Gecode::IntRelType
  * @param arg An integer defining the IntRelType
@@ -447,6 +558,18 @@ IntVar* declareIV(OZ_Term p) {
     OZ_TOC(arg,int,__vv,OZ_isInt,OZ_intToC,"Expected relation type") ;  \
     var = (IntRelType)__vv;						\
   }
+
+
+//this inline replace de macro DeclareIntRelType
+/**
+ * \brief Return a IntRelType.
+ * @param irt OZ integer representing the IntRelType
+ */
+inline
+Gecode::IntRelType getIntRelType(TaggedRef irt){
+  Assert(OZ_isIntRelType(irt));
+  return (IntRelType) OZ_intToC(irt);
+}
 
 /**
  * \brief Declares a Gecode::DFA::Transition for DFA
