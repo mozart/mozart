@@ -49,7 +49,7 @@ public:
     from checkStability when space stability is guaranted. Return
     values include -1 for old-style distributors, 0 for the
     distributor to report that is no longer needed in the space and 1
-    to ensure that distributor not should be removed from the
+    to ensure that distributor should not be removed from the
     space. Other values can be used in the future to report errors.
   */
   virtual int notifyStable(Board *);
@@ -80,6 +80,3 @@ public:
 };
 
 #endif
-
-
-

@@ -52,9 +52,9 @@ proc {NaiveDistribute Xs}
       case {Space.getChoice}
       of I#D  then 
 	 case D
-	 of lt(M) then V.I <: M
-	 [] gt(M) then V.I >: M
-	 [] eq(M) then V.I =: M	   
+	 of eq(M) then {GFD.relP post(V.I GFD.rt.'=:' M)}
+	 [] neq(M) then {GFD.relP post(V.I GFD.rt.'\\=:' M)}
+	 %[] lt(M) then V.I =: M	   
 	 end
 	 {Distribute L}
       [] nil then
@@ -68,7 +68,8 @@ proc {NaiveDistribute Xs}
 	    M={GFD.reflect.med X}
 	 in
 	    %{Show sel(I#M#Xs)}
-	    {Space.branch [I#eq(M) I#lt(M) I#gt(M) ]}
+	    %{Space.branch [I#eq(M) I#lt(M) I#gt(M) ]}
+	    {Space.branch [I#eq(M) I#neq(M)]}
 	    {Distribute L1}
 	 end
       end
