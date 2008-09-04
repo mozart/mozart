@@ -294,7 +294,10 @@ define
    %Int_reified_int =   GFDP.int_reified_int
 
    %% Assignment propagators
-   Assign = GFDP.'assign'
+   %%Assign = GFDP.'assign'
+   proc {Assign Spec V}
+      {Wait {GFDP.assign Spec V}}
+   end
 
    Int_ext = GFDP.'int_ext'
    %% Backward compatibility propagators

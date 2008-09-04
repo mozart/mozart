@@ -21,7 +21,7 @@
 %%%
 
    
-%% GeIntVar Distribution. var selection and val selection                                                                                                     
+%% GeIntVar Distribution. var selection and val selection
    IvdVarSel = map( naive:      0
                     size:       1
                     min:        2
@@ -34,8 +34,7 @@
                     mid:        1
                     max:        2
                     splitMin:   3
-                    splitMax:   4                                                                                                                          
-                  )
+		    splitMax:   4                                                                                                                               )
 	 
 	 
 %% Optimized and generic

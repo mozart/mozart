@@ -10,14 +10,11 @@ $boot_module_name      		  = "GFD";
  'distribute'    => { in =>  ['+int', '+int', '+value'],
                       out => ['value'],
                       bi =>  gfd_distribute },
-# 'distribute'    => { in =>  ['+value'],
-#                      out => ['value'],
-#                      bi =>  gfd_distribute },
 
 ## Assignment
- 'assign'    => { in =>  ['+value'],
-		   out => ['value'],
-		   bi =>  gfd_assign },
+ 'assign'        => { in =>  ['+atom','+value'],
+                      out => ['value'],
+                      bi =>  gfd_assign },
 
 ##Propagators
  'int_sortedness' => { 

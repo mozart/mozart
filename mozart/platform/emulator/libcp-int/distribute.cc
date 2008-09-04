@@ -220,8 +220,9 @@ OZ_BI_define(gfd_distribute, 3, 1) {
 OZ_BI_end
 
   
-OZ_BI_define(gfd_assign, 1, 1) {
-  oz_declareNonvarIN(0,vv);
+OZ_BI_define(gfd_assign, 2, 1) {
+  oz_declareNonvarIN(0,val_sel);
+  oz_declareNonvarIN(1,vv);
 
   int n = 0;
   TaggedRef * vars;
@@ -264,8 +265,25 @@ OZ_BI_define(gfd_assign, 1, 1) {
   if (bb->getDistributor())
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
   
-  GeVarAssignment<IntView,int,ByNone<IntView>,ValMin<IntView> > * gfda =
+  /*
+    GeVarAssignment<IntView,int,ByNone<IntView>,ValMin<IntView> > * gfda =
     new GeVarAssignment<IntView,int,ByNone<IntView>,ValMin<IntView> >(bb,vars,n);
+  */
+  Distributor * gfda;
+  
+  if (oz_eq(val_sel,AtomMin)) {
+    //printf("atomMin\n");fflush(stdout);
+    gfda = new GeVarAssignment<IntView,int,ByNone<IntView>,ValMin<IntView> >(bb,vars,n);
+  } else if (oz_eq(val_sel,AtomMid)) {
+    //printf("atomMid\n");fflush(stdout);
+    gfda = new GeVarAssignment<IntView,int,ByNone<IntView>,ValMed<IntView> >(bb,vars,n);
+  } else if (oz_eq(val_sel,AtomMax)) {
+    //printf("atomMax\n");fflush(stdout);
+    gfda = new GeVarAssignment<IntView,int,ByNone<IntView>,ValMax<IntView> >(bb,vars,n);
+  } else {
+    oz_typeError(0,"min/mid/max");
+  }
+
 
    bb->setDistributor(gfda);
   
