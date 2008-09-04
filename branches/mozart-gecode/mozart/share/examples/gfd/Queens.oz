@@ -40,6 +40,7 @@ fun{Queens N}
       {GFD.distinctP post(Root cl:GFD.cl.val)}
       {GFD.distinctP post(C1 Root cl:GFD.cl.val)}
       {GFD.distinctP post(C2 Root cl:GFD.cl.val)}
+      %{GFD.assign max Root}
       {GFD.distributeBR generic(order:min value:splitMax) Root}
    end
 end
