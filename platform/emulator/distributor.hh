@@ -32,6 +32,10 @@
 #include "refsarray.hh"
 
 class Distributor {
+protected:
+  /// Identifier for the distributor in the space
+  int id;
+
 public:
   USEFREELISTMEMORY;
   
@@ -73,6 +77,12 @@ public:
    */
   virtual TaggedRef getSync(void)=0;
 
+  /**
+     \brief Returns the identifier of the distributor in the space.
+     This identifier helps to distinguish which branches should be
+     commited by this distributor.
+  */
+  int getId(void) { return id; }
 	
   virtual Distributor * gCollect(void) = 0;
   virtual Distributor * sClone(void) = 0;

@@ -335,6 +335,14 @@ private:
   Distributor * dist;
   
   /**
+     \brief This variable is to support batch recomputation. The idea
+     is to identify which branching descriptions belongs to a given
+     space. That means, which ones should be commited by this
+     distributor.
+   */
+  int dist_id;
+
+  /**
      \brief Branching definition for this board. Old versions of mozart stored 
      this information in the alternatives attribute of the distributor. Now this 
      information does not consist only of numbers but anything the user wants.
@@ -366,14 +374,19 @@ public:
     dist = d;
   }
   
-	/**
+  /**
+     \brief Returns the identifier of the current distributor.
+  */
+  int getDistributorId(void) { return ++dist_id; }
+
+  /**
      \brief Returns the branching queue. This method
      is used during grabage collection or space 
      cloning.
-	 */
-	BranchQueue * getBranchQueue(void) { 
-		return bq;
-	}
+  */
+  BranchQueue * getBranchQueue(void) { 
+    return bq;
+  }
 	
   /**
      \brief Sets the branching attribute to b.
@@ -386,15 +399,15 @@ public:
   TaggedRef getBranching(void);
   
   /**
-  	\brief Replaces the status value, when it represents a branching desc., 
-	by a new branching description nbd.
+     \brief Replaces the status value, when it represents a branching desc., 
+     by a new branching description nbd.
   */
   void patchBranchStatus(TaggedRef nbd); 
   
   /**
-  	\brief Commit a branching description b to this board. If there is a pending
-	getChoice, synchronization variable is bound to c, otherwise c is enqueed in
-	in bq.
+     \brief Commit a branching description b to this board. If there
+     is a pending getChoice, synchronization variable is bound to c,
+     otherwise c is enqueed in in bq.
   */
   void commitB(TaggedRef b);
   
