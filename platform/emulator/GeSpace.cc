@@ -195,10 +195,15 @@ void GenericSpace::unreflect(std::vector<Reflection::ActorSpec>& as,
 
 /**
    \brief Merge space \a src into this. The corresponding board of
-   this is tgt.
+   this is \a tgt. \a tgt is only used to check that it is the
+   installed board (oz_currentBoard()), this property is very
+   important since Reflector propagators (DomReflector and
+   ValReflector) use this information to update the mozart reference
+   to the corresponding, merged, variables.
 */
 void GenericSpace::merge(GenericSpace *src, Board *tgt) {
-  
+  Assert(tgt == oz_currentBoard());
+
   // get a reflection of src space.
   std::vector<Reflection::VarSpec> src_vSpec;
   std::vector<Reflection::ActorSpec> src_aSpec;
@@ -211,16 +216,6 @@ void GenericSpace::merge(GenericSpace *src, Board *tgt) {
    */
   unreflect(src_aSpec,src_vSpec);
 
-  /*
-    TODO: (ggutierrez) According with Raph, the internal board of the
-    variable does not need to be changed. I have to change it manually
-    or any Show on one of the variables will crash when posting the
-    DomReflector.
-   */
-  for (int i=0; i<getVarsSize(); i++) {
-    extVar2Var(get_GeVar(getVarRef(i)))->setHome(tgt);
-  }
- 
   // TODO: Should we do this only at the top level space?
   status();
     /*
