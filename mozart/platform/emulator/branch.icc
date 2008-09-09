@@ -45,7 +45,7 @@ GeVarDistributor<View, Val, ViewSel, ValSel>::GeVarDistributor(Board *bb, Tagged
   sync = oz_newVariable(bb);
 
   // Ask the board for a new identifier of this fistributor.
-  id = bb->getDistributorId();
+  id = bb->NewDistributorId();
 }
 
 //TODO: What? this method is not needed.
@@ -264,14 +264,7 @@ inline
 GeVarAssignment<View, Val, ViewSel, ValSel>::GeVarAssignment(Board *bb, TaggedRef *vs, int n) {
   vars = vs;
   size = n;
-  sync = oz_newVariable(bb);
-  
-#ifdef DEBUG_CHECK
-  home = bb;
-  gs_home = bb->getGenericSpace(true);
-    Assert(gs_home);
-#endif
-    
+  sync = oz_newVariable(bb);    
 }
 
 
