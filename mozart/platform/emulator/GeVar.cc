@@ -38,12 +38,6 @@ void GeVar::test(){
 
 //template <class VarImp, Gecode::PropCond pc>
 void GeVar::printStreamV(ostream &out,int depth) {
-#ifdef DEBUG_CHECK
-  printf("GeVar->printStreamV Warning ensuring domReflector disabled.\n");
-  fflush(stdout);
-  toStream(out);
-#else
   ensureDomReflection();
   toStream(out);
-#endif
 }
