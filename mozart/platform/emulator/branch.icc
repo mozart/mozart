@@ -46,12 +46,6 @@ GeVarDistributor<View, Val, ViewSel, ValSel>::GeVarDistributor(Board *bb, Tagged
 
   // Ask the board for a new identifier of this fistributor.
   id = bb->getDistributorId();
-
-#ifdef DEBUG_CHECK
-  home = bb;
-  gs_home = bb->getGenericSpace(true);
-  Assert(gs_home);
-#endif
 }
 
 //TODO: What? this method is not needed.
