@@ -43,7 +43,10 @@ GeVarDistributor<View, Val, ViewSel, ValSel>::GeVarDistributor(Board *bb, Tagged
   vars = vs;
   size = n;
   sync = oz_newVariable(bb);
-  
+
+  // Ask the board for a new identifier of this fistributor.
+  id = bb->getDistributorId();
+
 #ifdef DEBUG_CHECK
   home = bb;
   gs_home = bb->getGenericSpace(true);
@@ -63,14 +66,14 @@ template<class View, class Val, class ViewSel, class ValSel>
 inline
 void GeVarDistributor<View, Val, ViewSel, ValSel>::make_branch(Board *bb, int pos, Val val){
   Val v = VarBasics<View,Val>::getValue(val);
-  // first possible branching: sel_var#val
+  // first possible branching: id#sel_var#val
   TaggedRef fb = 
-    OZ_mkTuple(OZ_atom("#"),2,OZ_int(pos),v);
+    OZ_mkTuple(OZ_atom("#"),3,OZ_int(id),OZ_int(pos),v);
   
-  // second possible branching: sel_var#compl(val)
+  // second possible branching: id#sel_var#compl(val)
   TaggedRef sb = 
-    OZ_mkTuple(OZ_atom("#"),2,OZ_int(pos),
-	       OZ_mkTuple(OZ_atom("compl"),1,v));
+    OZ_mkTuple(OZ_atom("#"),3,OZ_int(id),OZ_int(pos),
+               OZ_mkTuple(OZ_atom("compl"),1,v));
   
   bb->setBranching(OZ_cons(fb,OZ_cons(sb,OZ_nil())));
 }
@@ -91,21 +94,30 @@ template<class View, class Val, class ViewSel, class ValSel>
 inline
 int GeVarDistributor<View, Val, ViewSel, ValSel>::commitBranch(Board *bb, TaggedRef bd) {
   
-  // This assumes bd to be in the form: Pos#Value or Pos#compl(Value)
+  // This assumes bd to be in the form: id(Pos#Value) or id(Pos#compl(Value))
   Assert(OZ_isTuple(bd));
-  int pos = OZ_intToC(OZ_getArg(bd,0));
+  int bd_id = OZ_intToC(OZ_getArg(bd,0));
+  if (bd_id == id) {
+    int pos = OZ_intToC(OZ_getArg(bd,1));
   
-  Assert(0 <= pos && pos < size);
-  TaggedRef value = OZ_getArg(bd,1);
+    Assert(0 <= pos && pos < size);
+    TaggedRef value = OZ_getArg(bd,2);
   
-  bb->prepareTell(BI_GEC_TELL_CONST,
-		  RefsArray::make(OZ_int(pos),value));
+    bb->prepareTell(BI_GEC_TELL_CONST,
+                    RefsArray::make(OZ_int(pos),value));
+    
+    /* 
+       Assumes the only method able to tell the sapce to remove the
+       distributor is notifyStable. This can be optimized further.
+    */
+    return 1;
+  }
   
-  /* 
-     Assumes the only method able to tell the sapce to remove the
-     distributor is notifyStable. This can be optimized further.
-  */
-  return 1;
+  /*
+    The commited branch does not correspond to this distributor. Let's
+    delegate the responsablity to the board.
+   */
+  return -1;
 }
 
 template<class View, class Val, class ViewSel, class ValSel>
