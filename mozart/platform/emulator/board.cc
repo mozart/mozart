@@ -98,7 +98,7 @@ void newRelink(OzVariable *globalVar,  OzVariable *localVar, Board *sb)
 
 
 Board::Board() 
-  : suspCount(0), dist(0), crt(0), suspList(0), nonMonoSuspList(0),
+  : suspCount(0), dist(0), dist_id(0), crt(0), suspList(0), nonMonoSuspList(0),
     status(taggedVoidValue), rootVar(taggedVoidValue), script(taggedVoidValue), 
     parent(NULL), flags(BoTag_Root)
 {
@@ -115,7 +115,7 @@ Board::Board()
 
 
 Board::Board(Board * p) 
-  : suspCount(0), dist(0), crt(0), suspList(0), nonMonoSuspList(0),
+  : suspCount(0), dist(0), dist_id(0), crt(0), suspList(0), nonMonoSuspList(0),
     script(taggedVoidValue), parent(p), flags(0)
 {
   //printf("BOARD: copy constructor %p parent: %p\n",this,p);fflush(stdout);
@@ -769,18 +769,30 @@ void Board::unsetGlobalMarks(void) {
 }
 
 void Board::commitB(TaggedRef c) {
-  // 	this method is called from the BI_bindCSync builtin
-  // if there is a distributor in the space then call commit directly
+  // this method is called from the BI_bindCSync builtin if there
+  // is a distributor in the space then call commit directly
   Distributor *d = getDistributor();
   if (d) {
-    //printf("CommitB when distributor is present %s\n",OZ_toC(c,100,100));fflush(stdout);
-    if(d->commitBranch(this, c) == 0) {
-      //printf("CommitB distributor can be removed\n");fflush(stdout);
+    printf("CommitB when distributor is present %s\n",OZ_toC(c,100,100));fflush(stdout);
+    int res = d->commitBranch(this, c);
+    switch (res) {
+    case 0:
+      printf("CommitB distributor can be removed\n");fflush(stdout);
       setDistributor(NULL);
-    }
+      break;
+    case -1:
+      /* the current distributor was not able to handle c, assumes c
+	 belongs to another distributor. */
+      setDistributor(NULL);
+      bq->enqueue(c);
+      break;
+    default:
+      /* the current distributor should be kept. */
+      break;
+    } 
   } else {
     // Committed branch is stored in the branches queue
-    //printf("CommitB whit **NO** distributor present (BR) %s\n",OZ_toC(c,100,100));fflush(stdout);
+    printf("CommitB whit **NO** distributor present (BR) %s\n",OZ_toC(c,100,100));fflush(stdout);
     bq->enqueue(c);
   }
 }
