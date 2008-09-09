@@ -315,19 +315,6 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
   Board * src   = this;
   Board * src_p = src->getParent();
 
-  src->setCommitted(dst);
-
-  // Must be before script installation
-  dst->incSuspCount(src->getSuspCount());
-
-  // Merge constraints
-  //- printf("Before merge constraints\n");fflush(stdout);
-  OZ_Return ret = installScript(OK);
-
-  // Merge propagators (must be after script installation, since script
-  //                    installation might wake some propagators!!!!)
-  (dst->lpq).merge(src->lpq);
-  
   /*
     GenericSpace merge. gsrc is the board that will be merged in
     gdst. This means, taking every variable and propagator from gsrc
@@ -388,7 +375,22 @@ OZ_Return Board::merge(Board * dst, Bool isUpward) {
     // In any other case generic space merging is not necessary.
   }
   //printf("board.icc >> End generic space merge\n");fflush(stdout);
+
+
+  src->setCommitted(dst);
+
+  // Must be before script installation
+  dst->incSuspCount(src->getSuspCount());
+
+  // Merge constraints
+  //- printf("Before merge constraints\n");fflush(stdout);
+  OZ_Return ret = installScript(OK);
+
+  // Merge propagators (must be after script installation, since script
+  //                    installation might wake some propagators!!!!)
+  (dst->lpq).merge(src->lpq);
   
+    
   // This might cause two serving threads for the same board!
 
   Assert(oz_isCurrentBoard(dst));

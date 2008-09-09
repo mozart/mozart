@@ -371,14 +371,12 @@ public:
     
     OZ_Term ov = static_cast<const GenericSpace*>(home)->getVarRef2(index);
     
-    char *address = (char*)malloc(sizeof(char)*50);
+    static char address[2 * sizeof(OZ_Term) + 1]; 
     sprintf(address,"%x",ov);
    
     Gecode::Reflection::ActorSpec spec(ati());
     spec << x0.spec(home, m);
     spec <<  Gecode::Reflection::Arg::newString(address);
-
-    free(address);
 
     return spec;
   }
@@ -397,21 +395,33 @@ public:
     sscanf(add,"%x",&ov);
 
     Assert(oz_isGeVar(ov));
-    /*
-      Patch ov to contain the index of the new created variable.
-     */
-    int new_index = gs->getVarsSize();
     GeVarBase *var = get_GeVar(ov);
-    var->setIndex(new_index);
     
-    /*
-      Add a pointer to the Variable implementation to the array of
-      constraint variables in the space.
-     */
-    int i = gs->newVar(static_cast<Gecode::VarImpBase*>(x.var()), ov);
-    Assert(new_index == i);
+    int index = var->getIndex();
+    Board *ib = extVar2Var(get_GeVar(ov))->getBoardInternal()->derefBoard();
+    if (ib != oz_currentBoard()) {
+      printf("VR First time recreating variable%d\n", ib == oz_currentBoard());
+      fflush(stdout);
+           
+      /*
+	Patch ov to contain the index of the new created variable.
+      */
+      int new_index = gs->getVarsSize();
+      var->setIndex(new_index);
     
-    (void) new (home) ValReflector<View0>(gs,x,new_index);
+      /*
+	Add a pointer to the Variable implementation to the array of
+	constraint variables in the space.
+      */
+      int i = gs->newVar(static_cast<Gecode::VarImpBase*>(x.var()), ov);
+      Assert(new_index == i);
+      index = new_index;
+
+      // Change the internal board of the OZ_Term representing the
+      // variable
+      extVar2Var(get_GeVar(ov))->setHome(oz_currentBoard());
+    }
+    (void) new (home) ValReflector<View0>(gs,x,index);
   }
   
   virtual OZ_Term getVarRef(GenericSpace* s) {
@@ -478,14 +488,12 @@ public:
     
     OZ_Term ov = static_cast<const GenericSpace*>(home)->getVarRef2(index);
     
-    char *address = (char*)malloc(sizeof(char)*50);
+    static char address[2 * sizeof(OZ_Term) + 1];
     sprintf(address,"%x",ov);
    
     Gecode::Reflection::ActorSpec spec(ati());
     spec << x0.spec(home, m);
     spec <<  Gecode::Reflection::Arg::newString(address);
-
-    free(address);
     
     return spec;
   }
@@ -506,20 +514,33 @@ public:
     Assert(oz_isGeVar(ov));
     GeVarBase *var = get_GeVar(ov);
 
-    /*
-      If the variable had a domReflector propagator in the previous
-      space, avoid to create it. And unmark the variable as
-      unmarkDomReflected.
-     */
-    if (var->hasDomReflector()) {
-      //printf("Variable has a domReflector\n");fflush(stdout);
-      var->unmarkDomReflected();
+    int index = var->getIndex();
+    Board *ib = extVar2Var(get_GeVar(ov))->getBoardInternal()->derefBoard();
+    if (ib != oz_currentBoard()) {
+      printf("DR First time recreating variable%d\n", ib == oz_currentBoard());
+      fflush(stdout);
+           
+      /*
+	Patch ov to contain the index of the new created variable.
+      */
+      int new_index = gs->getVarsSize();
+      var->setIndex(new_index);
+    
+      /*
+	Add a pointer to the Variable implementation to the array of
+	constraint variables in the space.
+      */
+      int i = gs->newVar(static_cast<Gecode::VarImpBase*>(x.var()), ov);
+      Assert(new_index == i);
+      index = new_index;
+
+      // Change the internal board of the OZ_Term representing the
+      // variable
+      extVar2Var(get_GeVar(ov))->setHome(oz_currentBoard());
     }
-    
-    Assert(oz_isGeVar(ov));
-    int index = get_GeVar(ov)->getIndex();
-    
+
     /*
+      TODO: Reposition this comment!!
       Explanation: When this propagator is created, there are two
       possibilities: 1) A ValReflector propagator is already created
       by the unreflection mechanism of the space; and 2) It is created
@@ -534,9 +555,8 @@ public:
       that case, this method must be in charge to add the variable
       pointer and to update the reference in the generic space.
      */ 
-    // (void) new (home) DomReflector<View0,pc>(gs,x,index);
-    // printf("Posting ValReflector from specification - finished\n");fflush(stdout); 
-}
+    (void) new (home) DomReflector<View0,pc>(gs,x,index);
+  }
   
   virtual OZ_Term getVarRef(GenericSpace* s) {return s->getVarRef(index); }
 
