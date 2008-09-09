@@ -340,7 +340,7 @@ private:
      space. That means, which ones should be commited by this
      distributor.
    */
-  int dist_id;
+  int distributor_id;
 
   /**
      \brief Branching definition for this board. Old versions of mozart stored 
@@ -377,7 +377,7 @@ public:
   /**
      \brief Returns the identifier of the current distributor.
   */
-  int getDistributorId(void) { return ++dist_id; }
+  int NewDistributorId(void) { return ++distributor_id; }
 
   /**
      \brief Returns the branching queue. This method
