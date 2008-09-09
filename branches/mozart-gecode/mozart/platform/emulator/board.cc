@@ -98,7 +98,7 @@ void newRelink(OzVariable *globalVar,  OzVariable *localVar, Board *sb)
 
 
 Board::Board() 
-  : suspCount(0), dist(0), dist_id(0), crt(0), suspList(0), nonMonoSuspList(0),
+  : suspCount(0), dist(0), distributor_id(0), crt(0), suspList(0), nonMonoSuspList(0),
     status(taggedVoidValue), rootVar(taggedVoidValue), script(taggedVoidValue), 
     parent(NULL), flags(BoTag_Root)
 {
@@ -115,7 +115,7 @@ Board::Board()
 
 
 Board::Board(Board * p) 
-  : suspCount(0), dist(0), dist_id(0), crt(0), suspList(0), nonMonoSuspList(0),
+  : suspCount(0), dist(0), distributor_id(0), crt(0), suspList(0), nonMonoSuspList(0),
     script(taggedVoidValue), parent(p), flags(0)
 {
   //printf("BOARD: copy constructor %p parent: %p\n",this,p);fflush(stdout);

@@ -76,12 +76,6 @@ protected:
   /// Number of variables to distribute
   int size;
 
-#ifdef DEBUG_CHECK
-  Board *home;
-  GenericSpace *gs_home;
-#endif
-  //ViewArray<IntView> xv;
-
 public:
 
   GeVarDistributor(Board *bb, TaggedRef *vs, int n);
@@ -146,11 +140,6 @@ protected:
 
   /// Number of variables to distribute
   int size;
-
-#ifdef DEBUG_CHECK
-  Board *home;
-  GenericSpace *gs_home;
-#endif
 
 public:
 
