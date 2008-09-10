@@ -151,7 +151,8 @@ Gecode::SpaceStatus GenericSpace::mstatus(void) {
 
 
 void GenericSpace::reflect(std::vector<Reflection::ActorSpec>& as, 
-			   std::vector<Reflection::VarSpec>& vs) {
+			   std::vector<Reflection::VarSpec>& vs,
+			   bool inc_foreign_props) {
   Reflection::VarMap vm;
   Reflection::VarMapIter vmi(vm);
   
@@ -159,9 +160,15 @@ void GenericSpace::reflect(std::vector<Reflection::ActorSpec>& as,
   for (Reflection::ActorSpecIter si(this, vm); si(); ++si) {
     try {
       Reflection::ActorSpec aSpec = si.actor();
-      as.push_back(aSpec);
-      //printf("GeSpace.cc >> Reflect created actor\n");fflush(stdout);
+      
+      if (!inc_foreign_props)
+	if (aSpec.ati() == "ValReflector" || aSpec.ati() == "DomReflector") {
+	  printf("Skipping actor during reflection\n"); fflush(stdout);
+	  continue;
+	}
 
+      as.push_back(aSpec);
+      
       // traverse variable's specification for the actor.
       for (; vmi(); ++vmi) {
 	try {
@@ -241,6 +248,20 @@ void GenericSpace::merge(GenericSpace *src, Board *tgt) {
   if (!src->isStable())
     trigger = false;
 }
+
+GenericSpace * GenericSpace::getDrySpace(void) {
+  
+  GenericSpace *dry = new GenericSpace(NULL);
+  
+  // get a reflection of this space.
+  std::vector<Reflection::VarSpec> vs;
+  std::vector<Reflection::ActorSpec> as;
+
+  reflect(as, vs, false);
+  dry->unreflect(as,vs);
+  
+  return dry;
+} 
 
 int GenericSpace::newVar(Gecode::VarImpBase *v, OZ_Term r) {
   int i = vars.newVar(v,r);
