@@ -282,10 +282,21 @@ private:
    */
   void varReflect(Gecode::Reflection::VarMap &vm, bool registerOnly = false);
 
-  
+  /**
+     \brief Fill \a as with the specifictions of the actors
+     (propagators) present in the space. \a vs is filled with
+     specifications of the variables. If \a inc_foreign_props is set
+     to true, ValReflector and DomReflector actors are included.
+	  
+  */
   void reflect(std::vector<Gecode::Reflection::ActorSpec>& as, 
-	       std::vector<Gecode::Reflection::VarSpec>& vs);
+	       std::vector<Gecode::Reflection::VarSpec>& vs,
+	       bool inc_foreign_props = true);
 
+  /**
+     \brief Populate \a this with the actors and variables specified
+     by \a as and \a vs.
+   */
   void unreflect(std::vector<Gecode::Reflection::ActorSpec>& as, 
 		 std::vector<Gecode::Reflection::VarSpec>& vs);
   
@@ -416,6 +427,7 @@ public:
    */
   OZ_Term getVarRef(int n) { return *vars.getRef(n); }
 
+  // TODO: Fix this! 
   OZ_Term getVarRef2(int n) const {
     return vars.getRef2(n);
   }
@@ -429,10 +441,16 @@ public:
   Gecode::SpaceStatus mstatus(void);
   
   /**
-	\brief Merges variables and propagators of space \a src in *this.
+     \brief Merges variables and propagators of space \a src in *this.
   */
   void merge(GenericSpace *src, Board *tgt);
 
+  /**
+     \brief Create a gecode space using the reflection support but without 
+     ValReflectior and DomReflector propagators.
+  */
+  GenericSpace * getDrySpace(void);
+  
   /// Garbage collection and space cloning for references
   //@{
   /** 
@@ -464,5 +482,6 @@ public:
 
 
 };
+
 
 #endif /* __GESPACE_HH__ */
