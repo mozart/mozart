@@ -1,8 +1,0 @@
-*.o
-*.a
-.bootstrap
-Makefile
-config.*
-skel.c
-stamp-h
-flex
