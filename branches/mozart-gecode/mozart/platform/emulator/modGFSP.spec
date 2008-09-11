@@ -6,6 +6,11 @@ $boot_module_name     = "GFS";
 
 %builtins_all = 
 (
+## Distributor
+ 'distribute'    => { in =>  ['+int', '+int', '+value'],
+                      out => ['value'],
+                      bi =>  gfs_distribute },
+
  'diff' => {
      in  => ['+set', '+set', '+set'],
      out => [],
@@ -173,42 +178,11 @@ $boot_module_name     = "GFS";
      out => [],
      bi  => gfs_weights_4 
  },  
- 
- 'gfs_selectUnion_3' => {
-     in  => ['+value', '+value', '+value'],
-     out => [],
-     bi  => gfs_selectUnion_3
- },
- 
- 'gfs_selectInterIn_4' => {
-     in  => ['+value', '+value', '+value', '+value'],
-     out => [],
-     bi  => gfs_selectInterIn_4 
- },
- 
- 'gfs_selectSet_3' => { 
-     in  => ['+value', '+value', '+value'],
-     out => [],
-     bi  => gfs_selectSet_3 
- },
- 
- 'gfs_selectInter_3' => {
-     in  => ['+value', '+value', '+value'],
-     out => [],
-     bi  => gfs_selectInter_3 
- },
- 
- 'gfs_selectDisjoint_2' => {
-     in  => ['+value', '+value'],
-     out => [],
-     bi  => gfs_selectDisjoint_2
- },
- 
+
  'gfs_reifiedInclude_3' => {
      in  => ['+int', '+set', '+value'],
      out => [],
      bi  => gfs_reifiedInclude_3
  },
 
- 
 );

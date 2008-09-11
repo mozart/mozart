@@ -44,7 +44,7 @@ CFLAGS 		= $(INCS) $(GECODE_INC) $(GESPACE_CXXFLAGS) $(CPPFLAGS)
 GFSBLIBSRC	= SetValue.cc GeSetVar.cc GeSetVar-builtins.cc
 GFSBLIBOBJS	= $(GFSBLIBSRC:.cc=.o)
 
-GFSPLIBSRC	= GeSetProp-builtins.cc GeFSP-Builtins.cc
+GFSPLIBSRC	= GeSetProp-builtins.cc GeFSP-Builtins.cc distribute.cc
 GFSPLIBOBJS	= $(GFSPLIBSRC:.cc=.o)
 
 
