@@ -24,6 +24,18 @@
 %% Distribution
 %%
 
+%% GeIntVar Distribution. var selection and val selection                                                                                      
+   GfsVarSel = map( naive:         0
+                    minCard:       1
+                    maxCard:       2
+                    minUnknown:    3
+                    maxUnknown:    4
+		  )
+
+   GfsValSel = map( min:        0
+                    max:        1
+                  )
+
 local
    fun {GetFeaturePath Rec Spec Path}
       case Path of FD|T then
@@ -108,19 +120,19 @@ local
    fun {OrderFun Spec Select WT}
       CardTable =
       c(unknown:
-	   fun {$ S} {FSGetNumOfUnknown {Select S}} end
+	   fun {$ S} {GFSGetNumOfUnknown {Select S}} end
 	lowerBound:
-	   fun {$ S} {FSGetNumOfGlb {Select S}} end
+	   fun {$ S} {GFSGetNumOfGlb {Select S}} end
 	upperBound:
-	   fun {$ S} {FSGetNumOfLub {Select S}} end)
+	   fun {$ S} {GFSGetNumOfLub {Select S}} end)
       
       fun {MakeCompTableWeight F}
 	 c(unknown:
-	      fun {$ S} {F {FSGetUnknown {Select S}} WT} end
+	      fun {$ S} {F {GFSGetUnknown {Select S}} WT} end
 	   lowerBound:
-	      fun {$ S} {F {FSGetGlb     {Select S}} WT} end
+	      fun {$ S} {F {GFSGetGlb     {Select S}} WT} end
 	   upperBound:
-	      fun {$ S} {F {FSGetLub     {Select S}} WT} end)
+	      fun {$ S} {F {GFSGetLub     {Select S}} WT} end)
       end
 
       OrderFunTable =
@@ -167,21 +179,21 @@ local
       ElementFunTable =
       v(min: v(unknown:
 		  fun {$ S}
-		     {MinElement {FSReflect.unknown {Select S}}}
+		     {MinElement {GFSReflect.unknown {Select S}}}
 		  end
 	       weight:
 		  fun {$ S}
 		     {{WeightMin error}
-		      {FSReflect.unknown {Select S}} WT}
+		      {GFSReflect.unknown {Select S}} WT}
 		  end)
 	max: v(unknown:
 		  fun {$ S}
-		     {MaxElement {FSReflect.unknown {Select S}}}
+		     {MaxElement {GFSReflect.unknown {Select S}}}
 		  end
 	       weight:
 		  fun {$ S}
 		     {{WeightMax error}
-		      {FSReflect.unknown {Select S}} WT}
+		      {GFSReflect.unknown {Select S}} WT}
 		  end)
        )
    in
@@ -193,10 +205,10 @@ local
    fun {FilterFun Spec Select}
       case Spec
       of true then
-	 fun {$ X} {FSGetNumOfUnknown {Select X}} > 0 end
+	 fun {$ X} {GFSGetNumOfUnknown {Select X}} > 0 end
       else
 	 fun {$ X} Y = {Select X} in
-	    {FSGetNumOfUnknown Y} > 0 andthen  {Spec Y}
+	    {GFSGetNumOfUnknown Y} > 0 andthen  {Spec Y}
 	 end
       end 
    end
@@ -214,17 +226,20 @@ local
       end
    end
 
+   B
+   B = {GBD.decl}
+
    proc {FSDistNaive Xs}
       case Xs of nil then skip
       [] X|Xr then
 	 {Space.waitStable}
-	 Unknown={FSReflect.unknown X}
+	 Unknown={GFSReflect.unknown X}
       in
 	 if Unknown==nil then
 	    {FSDistNaive Xr}
 	 else
 	    UnknownVal = {MinElement Unknown}
-	    B = {ReifiedInclude post(UnknownVal X)}
+	    {ReifiedInclude post(UnknownVal X B)}
 	 in
 	    {GFD.distribute generic(value:max) [B]}
 	    /*
@@ -255,7 +270,7 @@ local
 	 [] HSL|_ then
 	    UnknownVal={Elem HSL}
 	    DistVar   ={Sel  HSL}
-	    B = {ReifiedInclude post(UnknownVal DistVar)}
+	    {ReifiedInclude post(UnknownVal DistVar B)}
 	 in
 	    {GFD.distribute generic(value:max) [B]}
 	    /*
@@ -269,16 +284,21 @@ local
       end
    end 
 in
-   proc {FSDistribute K Vs}
+   proc {GFSDistribute K Vs}
       L={VectorToList Vs}
    in
       case K
       of naive then {FSDistNaive L}
       else
 	 case {Label K}
-	 of generic then
+	 of opt then
+	    Order = K.order
+	    Value = K.value
+	 in
+	    {Wait {GFSP.distribute GfsVarSel.Order GfsValSel.Value L}}
+	 [] generic then
 	    Select  = {SelectFun {CondSelect K select id}}
-	    Weights = {CondSelect K weights {FSMakeWeights nil}}
+	    Weights = {CondSelect K weights {GFSMakeWeights nil}}
 	    Order   = {OrderFun {CondSelect K order order} Select Weights}
 	    Filter  = {FilterFun {CondSelect K filter true} Select}
 	    Element = {ElementFun {CondSelect K element element}
@@ -296,317 +316,3 @@ in
    end    
 end 
 
-%%
-%% Shorthands
-%%
-
-GFSCard = Card
-GFSCardRange = CardRange
-
-FSGetUnknown    = FSB.'reflect.unknown'
-FSGetGlb        = FSB.'reflect.lowerBound'
-FSGetLub        = FSB.'reflect.upperBound'
-
-FSGetCard       = FSB.'reflect.card'
-
-FSGetNumOfGlb     = FSB.'reflect.cardOf.lowerBound'
-FSGetNumOfLub     = fun {$ S}
-		       FSSup - FSInf + 1 - {FSB.getNumOfKnownNotIn S}
-		    end
-FSGetNumOfUnknown = FSB.'reflect.cardOf.unknown'
-
-FSSup           = {FSB.'sup'}
-FSInf           = 0
-FSUniversalRefl = [0#FSSup]
-FSUniversal     = {FSSetValue FSUniversalRefl}
-
-
-% fun {FSIntersectN Vs}
-%    Xs = {VectorToList Vs}
-% in
-%    {FoldR Xs FSIntersect FSUniversal}
-% end
-
-
-proc {FSIntersectN Vs U}
-   {FSP.intersectN Vs U}
-end
-
-proc {FSUnionN Vs U}
-   {FD.sum {Map {VectorToList Vs} fun {$ V} {GFSCard V} end}
-    '>=:' {GFSCard U}}
-   {FSP.unionN Vs U}
-end
-
-FSDisjointN = FSP.disjointN
-
-proc {FSDistinctN Vs}
-   Xs = {VectorToList Vs}
-in
-   {ForAllTail Xs
-    proc {$ Ts}
-       case Ts
-       of nil then skip
-       [] T|Tr then {ForAll Tr {FSDistinctWith T}}
-       end
-    end}
-end
-
-proc {FSPartition Vs U}
-      % the C++ implementation is buggy , that is why we use this
-      % implementation for the time being
-      % {FSP.partition Vs U}
-   {FSDisjointN Vs}
-   {FSUnionN Vs U}
-   {FD.sum {Map {VectorToList Vs} fun {$ V} {GFSCard V} end} '=:' {GFSCard U}}
-end
-
-fun {FSMakeWeights WL}
-   WeightTable = {NewDictionary}
-   ScanWeightDescr =
-   proc {$ D}
-      case D
-      of (default#W)|T then
-	 {Dictionary.put WeightTable default W}
-	 {ScanWeightDescr T}
-      [] ((E1#E2)#W)|T then
-	 {Dictionary.put WeightTable E1 W}
-	 {ScanWeightDescr
-	  if E1 < E2 then (((E1+1)#E2)#W)|T
-	  else T end}
-      [] (E#W)|T then
-	 {Dictionary.put WeightTable E W}
-	 {ScanWeightDescr T}
-      [] nil then skip
-      end
-   end
-   Default
-in
-   {Dictionary.put WeightTable default 0}
-   {ScanWeightDescr WL}
-   Default = {Dictionary.get WeightTable default}
-   
-   fun {$ E} {Dictionary.condGet WeightTable E Default} end
-end
-
-fun {FSCompl S}
-   {FSDiff FSUniversal S}
-end
-
-proc {FSComplIn S1 A S2}
-   {FSDisjoint S1 S2}
-   {FSUnion S1 S2 A}
-end
-
-proc {FSForAllIn S P}
-   {ForAll {FSMonitorIn S} P}
-end
-
-FSVar = var(is:
-	       FSisVar
-	    decl:
-	       fun {$} {FSSet nil FSUniversalRefl} end
-	    upperBound:
-	       fun {$ B} {FSSet nil B} end
-	    lowerBound:
-	       fun {$ A} {FSSet A FSUniversalRefl} end
-	    bounds:
-	       FSSet
-	    
-	    list:  list(decl:
-			   proc {$ Len Ss}
-			      Ss = {MakeList Len}
-			      {ForAll Ss FSVar.decl}
-			   end
-			upperBound:
-			   proc {$ Len A Ss}
-			      Ss = {MakeList Len}
-			      {ForAll Ss
-			       proc {$ X}
-				  {FSVar.upperBound A X}
-			       end}
-			   end
-			lowerBound:
-			   proc {$ Len A Ss}
-			      Ss = {MakeList Len}
-			      {ForAll Ss
-			       proc {$ X}
-				  {FSVar.lowerBound A X}
-			       end}
-			   end
-			bounds:
-			   proc {$ Len GLB LUB Ss}
-			      Ss = {MakeList Len}
-			      {ForAll Ss
-			       proc {$ X}
-				  {FSVar.bounds GLB LUB X}
-			       end}
-			   end)
-	    
-	    tuple: tuple(decl:
-			    proc {$ L Size Ss}
-			       Ss = {MakeTuple L Size}
-			       {Record.forAll Ss FSVar.decl}
-			    end
-			 upperBound:
-			    proc {$ L Size A Ss}
-			       Ss = {MakeTuple L Size}
-			       {Record.forAll Ss
-				proc {$ X}
-				   {FSVar.upperBound A X}
-				end}
-			    end
-			 lowerBound:
-			    proc {$ L Size A Ss}
-			       Ss = {MakeTuple L Size}
-			       {Record.forAll Ss
-				proc {$ X}
-				   {FSVar.lowerBound A X}
-				end}
-			    end
-			 bounds:
-			    proc {$ L Size GLB LUB Ss}
-			       Ss = {MakeTuple L Size}
-			       {Record.forAll Ss
-				proc {$ X}
-				   {FSVar.bounds GLB LUB X}
-				end}
-			    end)
-	    
-	    record: record(decl:
-			      proc {$ L Ls Ss}
-				 Ss = {MakeRecord L Ls}
-				 {Record.forAll Ss FSVar.decl}
-			      end
-			   upperBound:
-			      proc {$ L Ls A Ss}
-				 Ss = {MakeRecord L Ls}
-				 {Record.forAll Ss
-				  proc {$ X}
-				     {FSVar.upperBound A X}
-				  end}
-			      end
-			   lowerBound:
-			      proc {$ L Ls A Ss}
-				 Ss = {MakeRecord L Ls}
-				 {Record.forAll Ss
-				  proc {$ X}
-				     {FSVar.lowerBound A X}
-				  end}
-			      end
-			   bounds:
-			      proc {$ L Ls GLB LUB Ss}
-				 Ss = {MakeRecord L Ls}
-				 {Record.forAll Ss
-				  proc {$ X}
-				     {FSVar.bounds GLB LUB X}
-				  end}
-			      end)
-	   )
-
-FSValue = value(empty:
-		   {FSSetValue nil}
-		universal:
-		   {FSSetValue FSUniversalRefl}
-		singl:
-		   fun {$ N} {FSSetValue [N]} end
-		make:
-		   FSSetValue
-		is:
-		   FSisValue
-		toString:
-		   FSvalueToString)
-
-FSReified = reified(isIn:
-		       FSIsInReif
-		    areIn:
-		       proc {$ W S BList}
-			  WList = {ExpandList
-				   {FSGetGlb {FSB.'value.make' W}}}
-		       in
-			  BList
-			  = {FD.list {Length WList} 0#1}
-			  = {Map WList fun {$ E} {FSIsInReif E S} end}
-		       end
-		    include:
-		       FSP.'reified.include'
-		    bounds:
-		       FSP.'reified.bounds'
-		    boundsN:
-		       FSP.'reified.boundsN'
-		    partition:
-		       proc {$ SVs Is GSet Rs}
-			  Rs = {Map Is fun {$ I} {FD.int [0 I]} end}
-			  {FSP.'reified.partition' SVs GSet Rs}
-		       end
-		    equal:
-		       FSEqualReif)
-
-
-FSMonitorIn = FSP.monitorIn
-
-FSMonitorOut = FSP.monitorOut
-
-
-FSReflect = reflect(unknown:
-		       FSGetUnknown
-		    unknownList:
-		       fun {$ S}
-			  {ExpandList {FSGetUnknown S}}
-		       end
-		    lowerBound:
-		       FSGetGlb
-		    lowerBoundList:
-		       fun {$ S}
-			  {ExpandList {FSGetGlb S}}
-		       end
-		    upperBound:
-		       FSGetLub
-		    upperBoundList:
-		       fun {$ S}
-			  {ExpandList {FSGetLub S}}
-		       end
-		    card:
-		       FSGetCard
-		    cardOf:
-		       card(lowerBound:
-			       FSGetNumOfGlb
-			    upperBound:
-			       FSGetNumOfLub
-			    unknown:
-			       FSGetNumOfUnknown))
-
-FSInt = int(match:
-	       FSMatch
-	    minN:
-	       FSMinN
-	    maxN:
-	       FSMaxN
-	    seq:
-	       FSSeq
-	    min:
-	       FSMin
-	    max:
-	       FSMax
-	    convex:
-	       FSConvex)
-
-%%
-%% Register error formatter 
-%%
-
-{Error.registerFormatter fs
- fun {$ E}
-    T = 'error in finite set system'
- in
-    case E
-    of fs(unknownDistributionStrategy A Xs P) then
-       error(kind: T
-	     msg: 'unknown distribution strategy'
-	     items: [hint(l:'At argument' m:P)
-		     hint(l:'In statement' m:apply(A Xs))])
-    else
-       error(kind: T
-	     items: [line(oz(E))])
-    end
- end}

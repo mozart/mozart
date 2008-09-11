@@ -4,7 +4,7 @@
  *     Alberto Delgado <adelgado@cic.puj.edu.co>
  *
  *  Contributing authors:
- *     
+ *   Andres Felipe Barco <anfelbar@univalle.edu.co>   
  *
  *  Copyright:
  *     Gustavo Gutierrez, 2006
@@ -38,58 +38,82 @@ int SetValueM::id;
 OZ_Term SetValueM::printV(int n)
 {
 
-  //printf("SetValueM printV\n");fflush(stdout);
+  //Set Cardinality
   IntSet w = getCard();
-
-
-
+  //Lower Bound
   IntSet LB = getLBValue();
-  OZ_Term tupLB = OZ_tupleC("#",LB.size());
-  for(int i=0;i<LB.size();i++)
-    OZ_putArg(tupLB,i,OZ_mkTupleC("#",3,OZ_int(LB.min(i)),OZ_atom(".."),OZ_int(LB.max(i))));
-
+  //Upper Bound
   IntSet UB = getUBValue();
+
+  OZ_Term tupLB = OZ_tupleC("#",LB.size());
   OZ_Term tupUB = OZ_tupleC("#",UB.size());
 
-  for(int i=0;i<UB.size();i++)
-    OZ_putArg(tupUB,i,OZ_mkTupleC("#",3,OZ_int(UB.min(i)),OZ_atom(".."),OZ_int(UB.max(i))));
+
+  for(int i=0; i<LB.size(); ){
+    int min = LB.min(i);
+    int max = LB.max(i);
+    if (min == max){
+      printf("the min is %d...\n", min);fflush(stdout);
+      if(i+1 < LB.size())
+	OZ_putArg(tupLB, i, OZ_mkTupleC("#", 2, OZ_int(min), OZ_atom("..")));
+      else OZ_putArg(tupLB, i, OZ_mkTupleC("#", 1, OZ_int(min)));
+	
+    } else {
+      printf("the min is %d and the max is %d...\n", min, max);fflush(stdout);
+      if(i == 0 && i+1 < LB.size())
+	OZ_putArg(tupLB, i, OZ_mkTupleC("#", 4, OZ_int(min), OZ_atom(".."), OZ_int(max), OZ_atom("..")));
+      else OZ_putArg(tupLB, i, OZ_mkTupleC("#", 3, OZ_int(min), OZ_atom(".."), OZ_int(max)));
+    }
+    i++;
+    //if(i < LB.size())
+    //  OZ_putArg(tupLB, i, OZ_mkTupleC("#", 1, OZ_atom("..")));
+  }
+
+  //The determined upper bounds is get in the same way of the lower bound. 
+  //But is really neccessary?
+  //for(int i=0;i<UB.size();i++){
+    //printf("minUB of %d is %d and maxUB is %d\n", i, UB.min(i), UB.max(i));fflush(stdout);
+    //OZ_putArg(tupUB,i,OZ_mkTupleC("#",3,OZ_int(UB.min(i)),OZ_atom(".."),OZ_int(UB.max(i))));
+  //}
 
   
-  
+  //toStream();
   
   if(w.width(0)==1){
-    return OZ_mkTupleC("#",7,
-		       OZ_atom("cardinality: "),
-		       OZ_int(w.min(0)),
-		       OZ_atom("  LB {"),
-		       tupLB,		     
-		       OZ_atom("} UB {"),
-		       tupUB,
-		       OZ_atom("}"));
+    return OZ_mkTupleC("#",5,
+		       OZ_atom("{"),
+		       tupLB,
+		       OZ_atom("}"),
+		       OZ_atom("#"), // anfelbar@ this does not work, don't known why
+		       OZ_int(w.min(0)));
+    //UB {"),
+    //tupUB,
+    //OZ_atom("}"));
   }
   else{
-    return OZ_mkTupleC("#",9,
-		       OZ_atom("cardinality: {"),
+    return OZ_mkTupleC("#",7,
+		       OZ_atom("card: {"),
 		       OZ_int(w.min(0)),
 		       OZ_atom(" .. "),
 		       OZ_int(w.max(0)),
 		       OZ_atom("}  LB {"),
 		       tupLB,		     
-		       OZ_atom("} UB {"),
-		       tupUB,
 		       OZ_atom("}"));
+    //UB {"),
+    //tupUB,
+    //OZ_atom("}"));
   }
 }
-/*
-  void SetValueM::toStream(ostream &out) {
+
+/*void SetValueM::toStream(ostream &out) {
   std::stringstream oss, oss1, oss2;
   oss << getLBValue();
   oss1 << getUBValue();
   oss2 << getCard();
   
   out << "<SetVal " << oss.str().c_str() <<", "<< oss1.str().c_str() <<", "<< oss2.str().c_str() << ">"; 
-  }
-*/
+  }*/
+
 
 OZ_Extension* SetValueM::gCollectV(void)
 {
