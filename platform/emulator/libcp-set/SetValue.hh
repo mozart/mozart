@@ -59,7 +59,10 @@ public:
   //  SetValueM(OZ_Term x):lbValue(tagged2SetVal(x)->getLBValue()), ubValue(tagged2SetVal(x)->getUBValue()), card(tagged2SetVal(x)->getCard()){}
   
   
-  SetValueM(IntSet x , IntSet y, IntSet c): lbValue(static_cast<const IntSet&>(x)),ubValue(static_cast<const IntSet&>(y)), card(static_cast<const IntSet&>(c)){}
+  SetValueM(IntSet x , IntSet y, IntSet c) : 
+    lbValue(static_cast<const IntSet&>(x)),
+    ubValue(static_cast<const IntSet&>(y)),
+    card(static_cast<const IntSet&>(c)){}
 
   
   //

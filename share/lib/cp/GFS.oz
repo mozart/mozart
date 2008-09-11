@@ -40,7 +40,7 @@ import
    GFSP at 'x-oz://boot/GFSP'
    GFB at 'x-oz://boot/GBD'
    Space
-   GFD
+   GFD(decl sum rt distribute)
    GBD
    System
 prepare
@@ -106,11 +106,6 @@ export
    match: Match
    channel: Channel
    weights: Weights 
-   selectUnion: SelectUnion
-   selectInter: SelectInter
-   selectInterIn: SelectInterIn
-   selectDisjoint: SelectDisjoint
-   selectSet: SelectSet
    %rel: Rel
    
    %% Set relation types
@@ -119,7 +114,7 @@ export
    %% Set operations
    so:    SOP
 
-   distribute:   GFSDistribute
+   distribute:   FSDistribute
    
 define
    % Finite Set Constants
@@ -152,6 +147,7 @@ define
    GFSMakeWeights
    GFSReified
    ReifiedInclude
+   GFSIsInReif
    GFSValue
 
    % Reflection
@@ -183,12 +179,7 @@ define
    Channel
    Weights
 
-   SelectUnion
-   SelectInter
-   SelectInterIn
-   SelectDisjoint
-   SelectSet
-   GFSDistribute
+   FSDistribute
    
    fun {GFSMakeWeights WL}
       WeightTable = {NewDictionary}
@@ -374,8 +365,8 @@ in
 		 )
 
    GFSReified = reified(
-		     % isIn:
-% 			     FSIsInReif
+		   isIn:
+		      GFSIsInReif
 % 			  areIn:
 % 			     proc {$ W S BList}
 % 				WList = {ExpandList
@@ -470,12 +461,24 @@ in
    end
 
    fun {IsIn Var Val}
-      Bool = {GFB.init}
+      Bool = {GBD.bool}
       {GFB.isIn Var Val Bool}
-      Var
+      %Var
    end      
 
+   fun {GFSIsInReif Val Var}
+      local IVar Bool 
+      in
+	 IVar = {GFD.decl}
+	 IVar :: Val#Val
+	 Bool = {GBD.decl}
+	 {GFSP.gfs_rel_4 IVar Rt.'<:' Var Bool}
+	 Bool
+      end
+   end
+
    proc{Rel Sc}
+      %S = {Adjoin '#'(cl:Cl.def pk:Pk.def) Sc}
       W = {Record.width Sc}
    in
       case W
@@ -603,65 +606,11 @@ in
 	 raise malformed('Weights constraint post') end
       end
    end
-   
-   proc{SelectUnion Sc}
-      W = {Record.width Sc}
-   in
-      case W
-      of 3 then
-	 {GFSP.gfs_selectUnion_3 Sc.1 Sc.2 Sc.3}
-      else
-	 raise malformed('SelectUnion constraint post') end
-      end
-   end
-      
-   proc{SelectInter Sc}
-      W = {Record.width Sc}
-   in
-      case W
-      of 3 then
-	 {GFSP.gfs_selectInter_3 Sc.1 Sc.2 Sc.3}
-      else
-	 raise malformed('SelectInter constraint post') end
-      end
-   end
-   
-   proc{SelectInterIn Sc}
-      W = {Record.width Sc}
-   in
-      case W
-      of 4 then
-	 {GFSP.gfs_selectInterIn_4 Sc.1 Sc.2 Sc.3 Sc.4}
-      else
-	 raise malformed('SelectInterIn constraint post') end
-      end
-   end
-   
-   proc{SelectDisjoint Sc}
-      W = {Record.width Sc}
-   in
-      case W
-      of 2 then
-	 {GFSP.gfs_selectDisjoint_2 Sc.1 Sc.2}
-      else
-	 raise malformed('SelectDisjoint constraint post') end
-      end
-   end
-   
-   proc{SelectSet Sc}
-      W = {Record.width Sc}
-   in
-      case W
-      of 3 then
-	 {GFSP.gfs_selectSet_3 Sc.1 Sc.2 Sc.3}
-      else
-	 raise malformed('SelectSet constraint post') end
-      end
-   end
 
    %% This can be done using the dom propagator. Add SetRelType parameter to do that.
    %% See record Rt in this file.
    proc {ReifiedInclude Sc}
+      %Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
    in
       case W
@@ -672,10 +621,10 @@ in
       end
    end
    
-   %local
-   %   \insert GeSetVarDist
-   %in
-   %   GFSDistribute = GeSetVarDistribute
-   %end
+   local
+      \insert GeSetVarDist
+   in
+      FSDistribute = GFSDistribute
+   end
    
 end   
