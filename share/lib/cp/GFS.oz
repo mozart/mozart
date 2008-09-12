@@ -106,6 +106,10 @@ export
    match: Match
    channel: Channel
    weights: Weights 
+   elementsUnion: ElementsUnion
+   elementsInter: ElementsInter
+   elementsDisjoint: ElementsDisjoint
+   element: Element
    %rel: Rel
    
    %% Set relation types
@@ -178,6 +182,10 @@ define
    Match
    Channel
    Weights
+   ElementsUnion
+   ElementsInter
+   ElementsDisjoint
+   Element
 
    FSDistribute
    
@@ -604,6 +612,52 @@ in
 	 {GFSP.gfs_weights_4 Sc.1 Sc.2 Sc.3 Sc.4}
       else
 	 raise malformed('Weights constraint post') end
+      end
+   end
+
+   proc{ElementsUnion Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 3 then
+	 {GFSP.gfs_elementsUnion_3 Sc.1 Sc.2 Sc.3}
+      else
+	 raise malformed('ElementsUnion constraint post') end
+      end
+   end
+   
+   proc{ElementsInter Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 3 then
+	 {GFSP.gfs_elementsInter_3 Sc.1 Sc.2 Sc.3}
+      [] 4 then
+	 {GFSP.gfs_elementsInter_4 Sc.1 Sc.2 Sc.3 Sc.4}
+      else
+	 raise malformed('ElementsInter constraint post') end
+      end
+   end
+   
+   proc{ElementsDisjoint Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 2 then
+	 {GFSP.gfs_elementsDisjoint_2 Sc.1 Sc.2}
+      else
+	 raise malformed('ElementsDisjoint constraint post') end
+      end
+   end
+   
+   proc{Element Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 3 then
+	 {GFSP.gfs_element_3 Sc.1 Sc.2 Sc.3}
+      else
+	 raise malformed('ElementsDisjoint constraint post') end
       end
    end
 
