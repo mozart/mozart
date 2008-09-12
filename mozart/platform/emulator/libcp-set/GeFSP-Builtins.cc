@@ -926,26 +926,27 @@ OZ_BI_define(gfs_weights_4,4,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-/**
+ /**
     Elements constraints
-    Propagators to post a selection constraint on variables. This is a Gecode propagators interface. 
-    For more information see http://www.gecode.org/gecode-doc-latest/group__TaskModelSetSelection.html
-*/
+    Propagators to post a element constraint on variables. This is a Gecode
+    propagators interface. For more information see
+    http://www.gecode.org/gecode-doc-latest/group__TaskModelSetElement.html
+ */
 OZ_BI_define(gfs_elementsUnion_3,3,0){
   DeclareGSpace(home);
     
   DeclareGeSetVar(1, __y, home);
   DeclareGeSetVar(2, __z, home);
-  if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && 
+  if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) &&
      OZ_isGeSetVar(OZ_in(2))){
     /*
-      void Gecode::elementsUnion (Space *home, const SetVarArgs &x, SetVar y, SetVar z)
+      void Gecode::elementsUnion (Space *home, const SetVarArgs &x, SetVar y,
+      SetVar z)
       Post propagator for $ z=\bigcup\langle x_0,\dots,x_{n-1}\rangle[y] $. 
-     */
+    */
     DECLARE_SETVARARGS(0, __x, home);
     try{
       Gecode::elementsUnion(home, __x, __y, __z);
-
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -954,13 +955,13 @@ OZ_BI_define(gfs_elementsUnion_3,3,0){
   else if(OZ_isIntSetArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && 
 	  OZ_isGeSetVar(OZ_in(2))){
     /*
-      void Gecode::elementsUnion (Space *home, const IntSetArgs &s, SetVar y, SetVar z)
+      void Gecode::elementsUnion (Space *home, const IntSetArgs &s, SetVar y,
+      SetVar z)
       Post propagator for $ z=\bigcup\langle s_0,\dots,s_{n-1}\rangle[y] $. 
     */
     DECLARE_INT_SET_ARGS(0, __s);
     try{
       Gecode::elementsUnion(home, __s, __y, __z);
-
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -969,7 +970,7 @@ OZ_BI_define(gfs_elementsUnion_3,3,0){
   else{
     return OZ_typeError(0, "Malformed Propagator");
   }
-
+  
   CHECK_POST(home);
 }OZ_BI_end
 
@@ -992,7 +993,6 @@ OZ_BI_define(gfs_elementsInter_4,4,0){
     
     try{
       Gecode::elementsInter(home, __x, __y, __z, __u);
-
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -1001,64 +1001,17 @@ OZ_BI_define(gfs_elementsInter_4,4,0){
   else{
     return OZ_typeError(0, "Malformed Propagator");
   }
-
-  CHECK_POST(home);
-}OZ_BI_end
-
-OZ_BI_define(gfs_elements_3,3,0){
-  DeclareGSpace(home);
-  DeclareGeIntVar(1, __y, home);
-  DeclareGeSetVar(2, __z, home);
-
-  if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && 
-     OZ_isGeSetVar(OZ_in(2))){
-    /*
-      void Gecode::element (Space *home, const SetVarArgs &x, IntVar y, SetVar z)
-      Post propagator for $ z=\langle x_0,\dots,x_{n-1}\rangle[y] $. 
-    */
-    
-    DECLARE_SETVARARGS(0, __x, home);
-    try{
-      Gecode::element(home, __x, __y, __z);
-
-    }
-    catch(Exception e){
-      RAISE_GE_EXCEPTION(e);
-    }
-  }
-  else if(OZ_isIntSetArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && 
-	  OZ_isGeSetVar(OZ_in(2))){
-    /*
-      void Gecode::selectSet (Space *home, const IntSetArgs &s, IntVar y, 
-      SetVar z)
-      Post propagator for $ z=\langle s_0,\dots,s_{n-1}\rangle[y] $. 
-    */
-    
-    DECLARE_INT_SET_ARGS(0, __s);
-    try{
-      Gecode::element(home, __s, __y, __z);
-
-    }
-    catch(Exception e){
-      RAISE_GE_EXCEPTION(e);
-    }
-  }
-  else{
-    return OZ_typeError(0, "Malformed Propagator");
-  }
-
   CHECK_POST(home);
 }OZ_BI_end
 
 OZ_BI_define(gfs_elementsInter_3,3,0){
   DeclareGSpace(home);
   
-
-  
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2))){
     /*
-      void Gecode::elementsInter (Space *home, const SetVarArgs &x, SetVar y, SetVar z)
+      void Gecode::elementsInter (Space *home, const SetVarArgs &x, SetVar y,
+      SetVar z)
       Post propagator for $ z=\bigcap\langle x_0,\dots,x_{n-1}\rangle[y] $ 
       using $ \mathcal{U} $ as universe. 
     */
@@ -1069,7 +1022,6 @@ OZ_BI_define(gfs_elementsInter_3,3,0){
     
     try{
       Gecode::elementsInter(home, __x, __y, __z);
-
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -1078,7 +1030,49 @@ OZ_BI_define(gfs_elementsInter_3,3,0){
   else{
     return OZ_typeError(0, "Malformed Propagator");
   }
+  CHECK_POST(home);
+}OZ_BI_end
 
+OZ_BI_define(gfs_element_3,3,0){
+  DeclareGSpace(home);
+  DeclareGeIntVar(1, __y, home);
+  DeclareGeSetVar(2, __z, home);
+
+  if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && 
+     OZ_isGeSetVar(OZ_in(2))){
+    /*
+      void Gecode::element (Space *home, const SetVarArgs &x, IntVar y, 
+      SetVar z)
+      Post propagator for $ z=\langle x_0,\dots,x_{n-1}\rangle[y] $. 
+    */
+    
+    DECLARE_SETVARARGS(0, __x, home);
+    try{
+      Gecode::element(home, __x, __y, __z);
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+  }
+  else if(OZ_isIntSetArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && 
+	  OZ_isGeSetVar(OZ_in(2))){
+    /*
+      void Gecode::element (Space *home, const IntSetArgs &s, IntVar y, 
+      SetVar z)
+      Post propagator for $ z=\langle s_0,\dots,s_{n-1}\rangle[y] $. 
+    */
+    
+    DECLARE_INT_SET_ARGS(0, __s);
+    try{
+      Gecode::element(home, __s, __y, __z);
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+  }
+  else{
+    return OZ_typeError(0, "Malformed Propagator");
+  }
   CHECK_POST(home);
 }OZ_BI_end
 
@@ -1087,7 +1081,8 @@ OZ_BI_define(gfs_elementsDisjoint_2,2,0){
 
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1))){
     /*
-      void Gecode::elementsDisjoint (Space *home, const SetVarArgs &x, SetVar y)
+      void Gecode::elementsDisjoint (Space *home, const SetVarArgs &x, 
+      SetVar y)
       Post propagator for $ \parallel\langle x_0,\dots,x_{n-1}\rangle[y] $. 
     */
     
@@ -1096,7 +1091,6 @@ OZ_BI_define(gfs_elementsDisjoint_2,2,0){
 
     try{
       Gecode::elementsDisjoint(home, __x, __y);
-
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -1105,10 +1099,8 @@ OZ_BI_define(gfs_elementsDisjoint_2,2,0){
   else{
     return OZ_typeError(0, "Malformed Propagator");
   }
-
   CHECK_POST(home);
 }OZ_BI_end
-
 
  // this post is not really neccessary, farhat@ has to delete it!
 OZ_BI_define(gfs_reifiedInclude_3,3,0){

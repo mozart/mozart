@@ -178,7 +178,37 @@ $boot_module_name     = "GFS";
      out => [],
      bi  => gfs_weights_4 
  },  
+ 
+'gfs_elementsUnion_3' => {
+     in  => ['+value', '+set', '+set'],
+     out => [],
+     bi  => gfs_elementsUnion_3
+ },
 
+'gfs_elementsInter_3' => {
+     in  => ['+value', '+set', '+set'],
+     out => [],
+     bi  => gfs_elementsInter_3
+ },
+
+'gfs_elementsInter_4' => {
+     in  => ['+value', '+set', '+set', '+value'],
+     out => [],
+     bi  => gfs_elementsInter_4
+ },
+
+'gfs_elementsDisjoint_2' => {
+     in  => ['+value', '+set'],
+     out => [],
+     bi  => gfs_elementsDisjoint_2
+ },
+
+ 'gfs_element_3' => {
+     in  => ['+value', '+value', '+set'],
+     out => [],
+     bi  => gfs_element_3
+ },
+ 
  'gfs_reifiedInclude_3' => {
      in  => ['+int', '+set', '+value'],
      out => [],
