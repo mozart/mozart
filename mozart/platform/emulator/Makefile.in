@@ -161,7 +161,7 @@ SPACESRCS=\
 	board.cc distributor.cc
 
 
-SPACESRCS += GeSpace.cc
+SPACESRCS += GeSpace.cc search-options.cc search-misc.cc
 
 
 MEMSRCS=\

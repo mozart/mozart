@@ -1,0 +1,321 @@
+/* -*- mode: C++; c-basic-offset: 2; indent-tabs-mode: nil -*- */
+/*
+ *  Main authors:
+ *     Christian Schulte <schulte@gecode.org>
+ *
+ *  Copyright:
+ *     Christian Schulte, 2004
+ *
+ *  Last modified:
+ *     $Date: 2008-07-11 10:45:19 +0200 (Fri, 11 Jul 2008) $ by $Author: tack $
+ *     $Revision: 7344 $
+ *
+ *  This file is part of Gecode, the generic constraint
+ *  development environment:
+ *     http://www.gecode.org
+ *
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining
+ *  a copy of this software and associated documentation files (the
+ *  "Software"), to deal in the Software without restriction, including
+ *  without limitation the rights to use, copy, modify, merge, publish,
+ *  distribute, sublicense, and/or sell copies of the Software, and to
+ *  permit persons to whom the Software is furnished to do so, subject to
+ *  the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be
+ *  included in all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ *  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ *  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+ *  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+ *  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+ *  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
+#include <iostream>
+#include <iomanip>
+
+#include <ctime>
+#include <cmath>
+
+namespace {
+
+  /**
+   * \brief Stop object based on both time and failures
+   *
+   */
+  class FailTimeStop : public Gecode::Search::Stop {
+  private:
+    Gecode::Search::TimeStop *ts; ///< Used time stop object
+    Gecode::Search::FailStop *fs; ///< Used fail stop object
+    /// Initialize stop object
+    FailTimeStop(int fails, int time) {
+      ts = new Gecode::Search::TimeStop(time);
+      fs = new Gecode::Search::FailStop(fails);
+    }
+  public:
+    /// Test whether search must be stopped
+    virtual bool stop(const Gecode::Search::Statistics& s) {
+      return fs->stop(s) || ts->stop(s);
+    }
+    /// Create appropriate stop-object
+    static Gecode::Search::Stop* create(unsigned int fail, unsigned int time) {
+      if ((fail == 0) && (time == 0)) 
+        return NULL;
+      if (fail == 0) 
+        return new Gecode::Search::TimeStop(time);
+      if (time  == 0) 
+        return new Gecode::Search::FailStop(fail);
+      return new FailTimeStop(fail,time);
+    }
+  };
+
+  /// Timer interface used for examples
+  class Timer {
+  private:
+    clock_t t0; ///< Start time
+  public:
+    /// Start timer
+    void start(void) {
+      t0 = clock();
+    }
+    /// Stop timer
+    double stop(void) {
+      return (static_cast<double>(clock()-t0) / CLOCKS_PER_SEC) * 1000.0;
+    }
+    /// Stop timer and print user friendly time information
+    void stop(std::ostream& os) {
+      double t = stop();
+      double sec = floor(t / 1000.0);
+      int o_msec = static_cast<int>(t - 1000.0*sec);
+      double min = floor(sec / 60.0);
+      int o_sec = static_cast<int>(sec - 60.0*min);
+      double hour = floor(min / 60.0);
+      int o_min = static_cast<int>(min - 60.0*hour);
+      double day = floor(hour / 24.0);
+      int o_hour = static_cast<int>(hour - 24.0*day);
+      int o_day = static_cast<int>(day);
+      if (o_day)
+        os << o_day << " days, ";
+      if (o_hour)
+        os << o_hour << ":";
+      if (o_min) {
+        if (o_hour) {
+          os.width(2); os.fill('0');
+        }
+        os << o_min << ":";
+        os.width(2); os.fill('0');
+      }
+      os << o_sec << ".";
+      os.width(3); os.fill('0');
+      os << o_msec
+         << " ("
+         << std::showpoint << std::fixed
+         << std::setprecision(6) << t << " ms)";
+    }
+  };
+  
+}
+
+
+/**
+ * \brief Compute arithmetic mean of \a n elements in \a t
+ * \relates Timer
+ */
+double
+amean(double t[], int n);
+
+/**
+ * \brief Compute deviation of \a n elements in \a t
+ * \relates Timer
+ */
+double
+dev(double t[], int n);
+
+#ifdef GECODE_HAS_GIST
+
+/**
+ * \brief Traits class for search engines
+ */
+template <class Engine>
+class GistEngine {
+};
+
+/// Specialization for DFS
+template <typename S>
+class GistEngine<DFS<S> > {
+public:
+  static void explore(S* root, Gist::Inspector* i) {
+    (void) Gecode::explore(root, i);
+  }
+};
+
+/// Specialization for LDS
+template <typename S>
+class GistEngine<LDS<S> > {
+public:
+  static void explore(S* root, Gist::Inspector* i) {
+    (void) Gecode::explore(root, i);
+  }
+};
+
+/// Specialization for BAB
+template <typename S>
+class GistEngine<BAB<S> > {
+public:
+  static void explore(S* root, Gist::Inspector* i) {
+    (void) exploreBest(root, i);
+  }
+};
+
+/// Specialization for Restart
+template <typename S>
+class GistEngine<Restart<S> > {
+public:
+  static void explore(S* root, Gist::Inspector* i) {
+    (void) exploreBest(root, i);
+  }
+};
+
+#endif
+
+template <class Script, template<class> class Engine, class Options>
+void
+Example::run(const Options& o) {
+  using namespace std;
+  try {
+    switch (o.mode()) {
+    case EM_SOLUTION:
+      {
+        std::cout << o.name() << endl;
+        Timer t;
+        int i = o.solutions();
+        t.start();
+        Script* s = new Script(o);
+        unsigned int n_p = s->propagators();
+        unsigned int n_b = s->branchings();
+        unsigned long int p = 0;
+        Gecode::Search::Options so;
+        so.c_d  = o.c_d();
+        so.a_d  = o.a_d();
+        so.stop = FailTimeStop::create(o.fail(), o.time());
+        Engine<Script> e(s,so);
+        delete s;
+        do {
+          Example* ex = e.next();
+          if (ex == NULL)
+            break;
+          ex->print(std::cout);
+          delete ex;
+        } while (--i != 0);
+        Gecode::Search::Statistics stat = e.statistics();
+        std::cout << endl;
+        std::cout << "Initial" << endl
+             << "\tpropagators:   " << n_p << endl
+             << "\tbranchings:    " << n_b << endl
+             << endl
+             << "Summary" << endl
+             << "\truntime:       ";
+        t.stop(std::cout); 
+        std::cout << endl
+             << "\tsolutions:     " 
+             << abs(static_cast<int>(o.solutions()) - i) << endl
+             << "\tpropagations:  " << p+stat.propagate << endl
+             << "\tfailures:      " << stat.fail << endl
+             << "\tclones:        " << stat.clone << endl
+             << "\tcommits:       " << stat.commit << endl
+             << "\tpeak memory:   "
+             << static_cast<int>((stat.memory+1023) / 1024) << " KB"
+             << endl;
+      }
+      break;
+    case EM_STAT:
+      {
+        std::cout << o.name() << endl;
+        int i = o.solutions();
+        Script* s = new Script(o);
+        unsigned int n_p = s->propagators();
+        unsigned int n_b = s->branchings();
+        unsigned long int p = 0;
+        Gecode::Search::Options so;
+        so.c_d  = o.c_d();
+        so.a_d  = o.a_d();
+        Engine<Script> e(s,so);
+        delete s;
+        do {
+          Example* ex = e.next();
+          if (ex == NULL)
+            break;
+          delete ex;
+        } while (--i != 0);
+        Gecode::Search::Statistics stat = e.statistics();
+        std::cout << endl
+             << "\tpropagators:   " << n_p << endl
+             << "\tbranchings:    " << n_b << endl
+             << "\tsolutions:     " 
+             << abs(static_cast<int>(o.solutions()) - i) << endl
+             << "\tpropagations:  " << p+stat.propagate << endl
+             << "\tfailures:      " << stat.fail << endl
+             << "\tclones:        " << stat.clone << endl
+             << "\tcommits:       " << stat.commit << endl
+             << "\tpeak memory:   "
+             << static_cast<int>((stat.memory+1023) / 1024) << " KB"
+             << endl;
+      }
+      break;
+    case EM_TIME:
+      {
+        std::cout << o.name() << endl;
+        Timer t;
+        GECODE_AUTOARRAY(double,ts,o.samples());
+        for (unsigned int s = o.samples(); s--; ) {
+          t.start();
+          for (unsigned int k = o.iterations(); k--; ) {
+            unsigned int i = o.solutions();
+            Script* s = new Script(o);
+            Gecode::Search::Options so;
+            so.c_d  = o.c_d();
+            so.a_d  = o.a_d();
+            Engine<Script> e(s,so);
+            delete s;
+            do {
+              Example* ex = e.next();
+              if (ex == NULL)
+                break;
+              delete ex;
+            } while (--i != 0);
+          }
+          ts[s] = t.stop() / o.iterations();
+        }
+        double m = am(ts,o.samples());
+        double d = dev(ts,o.samples()) * 100.0;
+        std::cout << "\tRuntime: "
+             << setw(20) << right
+             << showpoint << fixed
+             << setprecision(6) << m << "ms"
+             << setprecision(2) << " (" << d << "% deviation)"
+             << endl;
+      }
+      break;
+#ifdef GECODE_HAS_GIST
+    case EM_GIST:
+      {
+        Gist::PrintingInspector<Script> pi(o.name());
+        Script* s = new Script(o);
+        (void) GistEngine<Engine<Script> >::explore(s, &pi);
+        delete s;
+      }
+      break;
+#endif
+    }
+  } catch (Gecode::Exception e) {
+    std::cout << "Exception: " << e.what() << "." << endl
+         << "Stopping..." << endl;
+  }
+}
+
+// STATISTICS: example-any

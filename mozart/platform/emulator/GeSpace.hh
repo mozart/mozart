@@ -484,4 +484,21 @@ public:
 };
 
 
+#include "search-support.hh"
+/*
+class DrySpace : public Gecode::Space {
+private:
+  Gecode::VarArray<Gecode::Reflection::Var> vars;
+
+public:
+  //DrySpace(std::vector<VarSpec>& vs, std::vector<ActorSpec>& as);
+
+  //Dryspace(bool share, DrySpace& d) : Space(share,d) {}
+  
+  void addBranch() { }
+
+  //  template <class Script, template<class> class Engine, class Options>
+  // static void run(const Options& opt);
+};
+*/
 #endif /* __GESPACE_HH__ */
