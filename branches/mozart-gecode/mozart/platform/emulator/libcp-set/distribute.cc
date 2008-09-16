@@ -40,22 +40,23 @@
 
 using namespace Gecode::Set::Branch;
 
-// TODO: Remove the call to this function from GeIntVar
-void gfs_dist_init(void) { }
+// TODO: Remove this comments
+//void gfs_dist_init(void) { }
 
 template<>
 class VarBasics<SetView, int> {
 public:
-  static SetView getView(OZ_Term t, bool affect_stability = false) {
+  static SetView getView(OZ_Term t) {
     Assert(OZ_isGeSetVar(t));
-    if (!affect_stability)
-      return SetView(get_SetVarInfo(t).var());
-    return SetView(get_SetVar(t).var());
+    return SetView(get_SetVarInfo(t).var());
   }
   static bool assigned(OZ_Term t) {
-    //Assert(OZ_isGeSetVar(t));
+    /**
+      TODO: if a set variable gets determined, it is no longer a GeSetVar
+      This behaviour is unespected, but we handle it just returning true if
+      the OZ_isGeSetVar returns false.
+    */
     if(!OZ_isGeSetVar(t)){
-      //printf("no es gesetvar...\n");fflush(stdout);
       return true;
     }
     return getView(t).assigned();
@@ -70,7 +71,12 @@ public:
   }
 };
 
-//var selection strategies
+/**
+   Variable selection strategies for finite sets
+   This strategies is taken from the Gecode ones.
+   See http://www.gecode.org/gecode-doc-latest/group__TaskModelSetBranch.html
+   for more information
+*/
 enum SetVarSelection {
   setVarByNone,
   setVarByMinCard,
@@ -79,29 +85,26 @@ enum SetVarSelection {
   setVarByMaxUnknown
 };
 
-//val selection strategies
+/**
+   Value selection strategies for finite sets
+   This strategies is taken from the Gecode ones.
+   See http://www.gecode.org/gecode-doc-latest/group__TaskModelSetBranch.html
+   for more information
+*/
 enum SetValSelection {
   setValMin,
   setValMax
 };
 
-/*#define iVarByNone        0
-#define iVarByMinCard     1
-#define iVarByMaxCard     2
-#define iVarByMinUnknown  3
-#define iVarByMaxUnknown  4
-
-#define iValMin           0
-#define iValMax           1
-*/
 
 #define PP(I,J) I*(setVarByMaxUnknown+1)+J  
 
-#define PPCL(I,J)					\
-  case PP(setVar ## I, set ## J):				\
+#define PPCL(I,J)							\
+  case PP(setVar ## I, set ## J):					\
   gfsd = new GeVarDistributor<SetView,int,Gecode::Set::Branch::I,	\
 			      Gecode::Set::Branch::J >(bb,vars,n);	\
   break;
+
 
 OZ_BI_define(gfs_distribute, 3, 1) {
   oz_declareIntIN(0,var_sel);
@@ -119,6 +122,7 @@ OZ_BI_define(gfs_distribute, 3, 1) {
     
     while (oz_isLTuple(vs)) {
       TaggedRef v = oz_head(vs);
+      //TODO: Tests element v to be a GeSetVar.
       //TestElement(v);
       n++;
       vs = oz_tail(vs);
@@ -129,21 +133,20 @@ OZ_BI_define(gfs_distribute, 3, 1) {
     }
     
     if (!oz_isNil(vs))
-      oz_typeError(0,"vector of finite domains");
+      oz_typeError(0,"vector of finite sets variables");
     
   } else if (oz_isSRecord(vv)) {
     
     for (int i = tagged2SRecord(vv)->getWidth(); i--; ) {
       TaggedRef v = tagged2SRecord(vv)->getArg(i);
+      //TODO: Tests element v to be a GeSetVar.
       //TestElement(v);
       n++;
     }
     
   } else 
-    oz_typeError(0,"vector of finite sets");
+    oz_typeError(0,"vector of finite sets variables");
   
-  
-
   // If there are no variables in the input then return unit
   if (n == 0)
     OZ_RETURN(NameUnit);
@@ -180,37 +183,19 @@ OZ_BI_define(gfs_distribute, 3, 1) {
     
     PPCL(ByNone,ValMin);
     PPCL(ByNone,ValMax);
+
+    PPCL(ByMinCard,ValMin);
+    PPCL(ByMinCard,ValMax);
     
-    /*PPCL(BySizeMin,ValMin);
-    PPCL(BySizeMin,ValMax);
-    PPCL(BySizeMin,ValMed);
-    PPCL(BySizeMin,ValSplitMin);
-    PPCL(BySizeMin,ValSplitMax);
+    PPCL(ByMaxCard,ValMin);
+    PPCL(ByMaxCard,ValMax);
+
+    PPCL(ByMinUnknown,ValMin);
+    PPCL(ByMinUnknown,ValMax);
     
-    PPCL(ByMinMin,ValMin);
-    PPCL(ByMinMin,ValMax);
-    PPCL(ByMinMin,ValMed);
-    PPCL(ByMinMin,ValSplitMin);
-    PPCL(ByMinMin,ValSplitMax);
-    
-    PPCL(ByMaxMax,ValMin);
-    PPCL(ByMaxMax,ValMax);
-    PPCL(ByMaxMax,ValMed);
-    PPCL(ByMaxMax,ValSplitMin);
-    PPCL(ByMaxMax,ValSplitMax);
-    
-    /*PPCL(Width,Min);
-    PPCL(Width,Max);
-    PPCL(Width,Mid);
-    PPCL(Width,SplitMin);
-    PPCL(Width,SplitMax);
-    
-    PPCL(NbProp,Min);
-    PPCL(NbProp,Max);
-    PPCL(NbProp,Mid);
-    PPCL(NbProp,SplitMin);
-    PPCL(NbProp,SplitMax);
-    */
+    PPCL(ByMaxUnknown,ValMin);
+    PPCL(ByMaxUnknown,ValMax);
+
   default:
    Assert(false);
   }
