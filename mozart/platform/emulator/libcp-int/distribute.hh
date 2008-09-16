@@ -26,6 +26,6 @@
 #ifndef __GECODE_INT_VAR_DIST_HH__
 #define __GECODE_INT_VAR_DIST_HH__
 
-void gfd_dist_init(void);
+//void gfd_dist_init(void);
 
 #endif
