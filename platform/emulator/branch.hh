@@ -39,7 +39,7 @@ template <class View, class Val, class ViewSel, class ValSel>
 class GeVarDistributor;
 
 template <class View, class Val, class ViewSel, class ValSel>
-class GFDAssignment;
+class GeVarAssignment;
 
 
 /*

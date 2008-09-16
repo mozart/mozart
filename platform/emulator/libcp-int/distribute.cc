@@ -44,7 +44,7 @@
 using namespace Gecode::Int::Branch;
 
 // TODO: Remove the call to this function from GeIntVar
-void gfd_dist_init(void) { }
+//void gfd_dist_init(void) { }
 
 template<>
 class VarBasics<IntView, int> {
@@ -68,19 +68,35 @@ public:
   }
 };
 
+/**
+   Variable selection strategies for finite domains
+   This strategies is taken from the Gecode ones.
+   See http://www.gecode.org/gecode-doc-latest/group__TaskModelIntBranch.html
+   for more information
+*/
+enum IntVarSelection {
+  iVarByNone,
+  iVarBySizeMin,
+  iVarByMinMin,
+  iVarByMaxMax,
+  iVarByDegreeMin, //this is the same of NbProp (number of propagators associated)
+  iVarByVarWidth
+};
 
-#define iVarByNone       0
-#define iVarBySizeMin    1
-#define iVarByMinMin     2
-#define iVarByMaxMax     3
-#define iVarByVarNbProp  4
-#define iVarByVarWidth   5
+/**
+   Value selection strategies for finite domains
+   This strategies is taken from the Gecode ones.
+   See http://www.gecode.org/gecode-doc-latest/group__TaskModelIntBranch.html
+   for more information
+*/
+enum IntValSelection {
+  iValMin,
+  iValMed,
+  iValMax,
+  iValSplitMin,
+  iValSplitMax
+};
 
-#define iValMin          0
-#define iValMed          1
-#define iValMax          2
-#define iValSplitMin     3
-#define iValSplitMax     4
 
 #define PP(I,J) I*(iVarByVarWidth+1)+J  
 
@@ -106,6 +122,7 @@ OZ_BI_define(gfd_distribute, 3, 1) {
     
     while (oz_isLTuple(vs)) {
       TaggedRef v = oz_head(vs);
+      //TODO:Test whether v is a GeIntVar
       //TestElement(v);
       n++;
       vs = oz_tail(vs);
@@ -122,6 +139,7 @@ OZ_BI_define(gfd_distribute, 3, 1) {
     
     for (int i = tagged2SRecord(vv)->getWidth(); i--; ) {
       TaggedRef v = tagged2SRecord(vv)->getArg(i);
+      //TODO:Test whether v is a GeIntVar
       //TestElement(v);
       n++;
     }
@@ -148,14 +166,6 @@ OZ_BI_define(gfd_distribute, 3, 1) {
       vs = oz_deref(oz_tail(vs));
       Assert(!oz_isRef(vs));
     }
-    /*    int i = n;
-    while (oz_isLTuple(vs)) {
-      TaggedRef v = oz_head(vs);
-      vars[i] = v;
-      vars[--i] = v;
-      vs = oz_deref(oz_tail(vs));
-      Assert(!oz_isRef(vs));
-      }*/
   } else {
       int j = 0;
       for (int i = tagged2SRecord(vv)->getWidth(); i--; ) {
@@ -197,17 +207,17 @@ OZ_BI_define(gfd_distribute, 3, 1) {
     PPCL(ByMaxMax,ValSplitMin);
     PPCL(ByMaxMax,ValSplitMax);
     
+    PPCL(ByDegreeMin,ValMin);
+    PPCL(ByDegreeMin,ValMax);
+    PPCL(ByDegreeMin,ValMed);
+    PPCL(ByDegreeMin,ValSplitMin);
+    PPCL(ByDegreeMin,ValSplitMax);
+    
     /*PPCL(Width,Min);
     PPCL(Width,Max);
     PPCL(Width,Mid);
     PPCL(Width,SplitMin);
     PPCL(Width,SplitMax);
-    
-    PPCL(NbProp,Min);
-    PPCL(NbProp,Max);
-    PPCL(NbProp,Mid);
-    PPCL(NbProp,SplitMin);
-    PPCL(NbProp,SplitMax);
     */
   default:
    Assert(false);
@@ -265,25 +275,17 @@ OZ_BI_define(gfd_assign, 2, 1) {
   if (bb->getDistributor())
     return oz_raise(E_ERROR,E_KERNEL,"spaceDistributor", 0);
   
-  /*
-    GeVarAssignment<IntView,int,ByNone<IntView>,ValMin<IntView> > * gfda =
-    new GeVarAssignment<IntView,int,ByNone<IntView>,ValMin<IntView> >(bb,vars,n);
-  */
   Distributor * gfda;
   
   if (oz_eq(val_sel,AtomMin)) {
-    //printf("atomMin\n");fflush(stdout);
     gfda = new GeVarAssignment<IntView,int,ByNone<IntView>,ValMin<IntView> >(bb,vars,n);
   } else if (oz_eq(val_sel,AtomMid)) {
-    //printf("atomMid\n");fflush(stdout);
     gfda = new GeVarAssignment<IntView,int,ByNone<IntView>,ValMed<IntView> >(bb,vars,n);
   } else if (oz_eq(val_sel,AtomMax)) {
-    //printf("atomMax\n");fflush(stdout);
     gfda = new GeVarAssignment<IntView,int,ByNone<IntView>,ValMax<IntView> >(bb,vars,n);
   } else {
     oz_typeError(0,"min/mid/max");
   }
-
 
    bb->setDistributor(gfda);
   
