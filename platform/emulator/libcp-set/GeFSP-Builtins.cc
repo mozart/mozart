@@ -636,30 +636,30 @@ OZ_BI_define(gfs_rel_5,5,0){
     For more information see http://www.gecode.org/gecode-doc-latest/group__TaskModelSetConvex.html
 */
 
-// OZ_BI_define(gfs_convex_1,1,0){
-//   DeclareGSpace(home);
-//   DeclareGeSetVar(0, __x, home);
-//   try{
-//     Gecode::convex(home, __x);
-//   }
-//   catch(Exception e){
-//     RAISE_GE_EXCEPTION(e);
-//   }
-//   CHECK_POST(home);
-// }OZ_BI_end
+OZ_BI_define(gfs_convex_1,1,0){
+  DeclareGSpace(home);
+  DeclareGeSetVar(0, __x, home);
+  try{
+    Gecode::convex(home, __x);
+  }
+  catch(Exception e){
+    RAISE_GE_EXCEPTION(e);
+  }
+  CHECK_POST(home);
+}OZ_BI_end
 
-// OZ_BI_define(gfs_convexHull_2,2,0){
-//   DeclareGSpace(home);
-//   DeclareGeSetVar(0, __x, home);
-//   DeclareGeSetVar(1, __y, home);
-//   try{
-//     Gecode::convexHull(home, __x, __y);
-//   }
-//   catch(Exception e){
-//     RAISE_GE_EXCEPTION(e);
-//   }
-//   CHECK_POST(home);
-// }OZ_BI_end
+OZ_BI_define(gfs_convexHull_2,2,0){
+  DeclareGSpace(home);
+  DeclareGeSetVar(0, __x, home);
+  DeclareGeSetVar(1, __y, home);
+  try{
+    Gecode::convexHull(home, __x, __y);
+  }
+  catch(Exception e){
+    RAISE_GE_EXCEPTION(e);
+  }
+  CHECK_POST(home);
+}OZ_BI_end
 
  /**
     Sequence constraints  
@@ -860,6 +860,7 @@ OZ_BI_define(gfs_cardinality_2,2,0){
     DeclareGeSetVar(0, __s, home);
     DeclareGeIntVar(1, __x, home);
     try{
+      printf("post card...\n");fflush(stdout);
       Gecode::cardinality(home, __s, __x);
     }
     catch(Exception e){

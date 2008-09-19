@@ -172,6 +172,18 @@ OZ_BI_define(gfs_unknownSize,1,1){
   OZ_RETURN_INT(num);
 }OZ_BI_end
 
+ //this has to be tested!
+OZ_BI_define(gfs_ValueToString, 1,1)
+{
+  oz_declareNonvarIN(0,in);
+
+  //if (oz_isFSetValue(in)) {
+    char *s = OZ_toC(in,100,100);
+    OZ_RETURN_STRING(s);
+    //}
+    //oz_typeError(0,"FSetValue");
+} OZ_BI_end
+
 OZ_BI_define(gfs_unknown,1,1){
   DeclareGSpace(home);
   
