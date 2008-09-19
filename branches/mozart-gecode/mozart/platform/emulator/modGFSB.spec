@@ -115,5 +115,11 @@
      out => ['int'],
      bi  => set_sup
  },
-
+ 
+ 'value.toString' => {
+     in => ['+fset'],
+     out => ['+string'],
+     bi => gfs_ValueToString
+ }
+	 
 );

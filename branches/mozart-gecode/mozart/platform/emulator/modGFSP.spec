@@ -115,15 +115,17 @@ $boot_module_name     = "GFS";
      bi  => gfs_rel_5
  },
 
-# 'gfs_convex_1' => { in  => ['+value'],
-#   out => [],
-#   bi  => gfs_convex_1 }
-# ,
-
-# 'gfs_convexHull_2' => { in  => ['+value', '+value'],
-#   out => [],
-#   bi  => gfs_convexHull_2 }
-# ,
+ 'gfs_convex_1' => { 
+     in  => ['+value'],
+     out => [],
+     bi  => gfs_convex_1 }
+ ,
+ 
+ 'gfs_convexHull_2' => { 
+     in  => ['+value', '+value'],
+     out => [],
+     bi  => gfs_convexHull_2 }
+ ,
 
  'gfs_sequence_1' => { 
      in  => ['+value'],
