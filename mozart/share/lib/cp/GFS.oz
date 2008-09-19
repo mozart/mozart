@@ -62,72 +62,117 @@ prepare
 
 export
 %%% Classify as in the Mozart docs
-   % Finite Set Interval Variables
-   var : Var
-   diff    : Diff 
-   intersect  :  Inter
-   intersectN :  InterN
-   union   : Union
-   unionN  : UnionN
-   subset  : Subset
+
+   %% Finite Set Intervals %%
+   inf        : Inf
+   sup        : Sup
+   compl      : Compl
+   complIn    : ComplIn
+   include    : Include
+   exclude    : Exclude
+   card       : Card
+   cardRange  : CardRange
+   isIn       : IsIn
+   makeWeights:  GFSMakeWeights
+
+   %% Sets over Integers %%
+   int : GFSInt
+%    This is obviesly a record with all this fields
+%    int.min
+%    int.max
+%    int.convex
+%    int.match
+%    int.minN
+%    int.maxN
+%    int.seq
+   
+   %% Standard Propagators %% 
+   
+   diff       : Diff
+   intersect  : Inter
+   intersectN : InterN
+   union      : Union
+   unionN     : UnionN
+   subset     : Subset
    disjoint   : Disj
    disjointN  : DisjointN
    distinct   : Dist
    distinctN  : DistinctN
    partition  : Partition
-   makeWeights:  GFSMakeWeights
-   reified: GFSReified
+
+   % Finite Set Interval Variables
+   var : Var % (is, decl, upperBound, 
+             %  lowerBound, bounds, list.decl, 
+             % list.upperBound, list.lowerBound, list.bounds,
+             % tuple.decl, tuple.upperBound, tuple.lowerBound,
+             % tuple.bounds, record.decl, record.upperBound,
+             % record.lowerBound, record.bounds)
+
+   %% Finite Set Constants %%
+   value: GFSValue % (empty, universal, singl, 
+                   % make, is, toString)
+
+
+   %% Reified Propagators %% 
+
+   reified: GFSReified % (isIn, areIn, include,
+                       % equal, partition)
+
+   %% Iterating and Monitoring %%
+   
+%  monitorIn : GFSMonitorIn
+   %monitorOut
+%    forAllIn
+
 
    % Reflection
-   reflect: GFSReflect
+   reflect: GFSReflect % (card, lowerBound, upperBound,
+                       % unknown, lowerBoundList, upperBoundList,
+                       % unknownList, cardOf.lowerBound,
+                       % cardOf.upperBound, cardOf.unknown)
 
-   % Finite Set Intervals
-   inf  : Inf
-   sup  : Sup
-   compl : Compl
-   complIn : ComplIn
-   include : Include
-   exclude : Exclude
-   card: Card
-   cardRange: CardRange
-   isIn  :  IsIn
 
-   % Finite Set Constants
-   value: GFSValue   
+   %% Distribution %%
+   distribute:   FSDistribute
+
    
-   %Gecode propagators
-   sequence: Sequence
+   
+   %% Gecode propagators %%
+   sequence        : Sequence
    sequentialUnion : SequentialUnion
-   atMostOne: AtMostOne
-   dom: Dom
-   
-   min: Min
-   max: Max
-   match: Match
-   channel: Channel
-   weights: Weights 
-   elementsUnion: ElementsUnion
-   elementsInter: ElementsInter
+   atMostOne       : AtMostOne
+   dom             : Dom
+   min             : Min
+   max             : Max
+   match           : Match
+   channel         : Channel
+   weights         : Weights 
+   elementsUnion   : ElementsUnion
+   elementsInter   : ElementsInter
    elementsDisjoint: ElementsDisjoint
-   element: Element
+   element         : Element
    %rel: Rel
    
-   %% Set relation types
+   %% Set relation types %%
    rt:    Rt
 
-   %% Set operations
+   %% Set operations %%
    so:    SOP
 
-   distribute:   FSDistribute
    
 define
    % Finite Set Constants
-   %   GFSSetValue = GFSB.'value.make'
-   
+   GFSSetValue
+   GFSSetValueEmpty
+   GFSSetValueToString
+
    %FsDecl = GFS.set
    GFSisVar = GFSB.isVar
    Sup = {GFSB.sup}
    Inf = {GFSB.inf}
+   GFSUniversalRefl
+   GFSUniversal
+
    Var
    Compl = GFSB.comp
    ComplIn = GFSB.complIn
@@ -153,6 +198,7 @@ define
    ReifiedInclude
    GFSIsInReif
    GFSValue
+   GFSInt
 
    % Reflection
    GFSReflect
@@ -169,6 +215,8 @@ define
    GFSGetNumOfLub = fun {$ S}
 		       {Length {GFSGetLubList S}}
 		    end
+
+%  GFSMonitorIn = GFSValue.empty
    
    %% Gecode propagators
    Rel
@@ -352,24 +400,52 @@ in
 		       )		
 	    )
 
+   %% Sets over Integers
+   GFSInt = int(
+	       min:
+		  GFSP.'gfs_min_2'
+	       max:
+		  GFSP.'gfs_max_2'
+ 	       convex:
+		  GFSP.'gfs_convex_1'
+	       convexHull:
+		  GFSP.'gfs_convexHull_2'
+	       match:
+		  GFSP.'gfs_match_2'
+% 	       minN:
+% 		  GFSP.'min'
+% 	       maxN:
+% 		  GFSP.'min'
+ 	       seq:
+		  GFSP.'gfs_sequence_1'
+	       seqUnion:
+		  GFSP.'gfs_sequentialUnion_2'
+	       )
+
+   fun {GFSSetValue Spec}
+      case Spec
+      of X#Y then {Var.bounds X Y}
+      [] N then {Var.bounds N N}
+      end
+   end
+
+   GFSUniversalRefl = [0#Sup]
+   GFSUniversal     = {GFSSetValue GFSUniversalRefl}
+   GFSSetValueToString = GFSB.'value.toString'
+
    GFSValue = value(
-		    % empty:
-% 		       {FSSetValue nil}
-% 		    universal:
-% 		       {FSSetValue FSUniversalRefl}
-% 		    singl:
-% 		       fun {$ N} {FSSetValue [N]} end
+		 empty:
+		    {GFSSetValue nil}
+		 universal:
+		    {GFSSetValue GFSUniversalRefl}
+		 singl:
+		    fun {$ N} {GFSSetValue [N]} end
 		 make:
-		    fun {$ Spec}
-		       case Spec
-		       of X#Y then {Var.bounds X Y}
-		       [] N then {Var.bounds N N}
-		       end
-		    end
+		    GFSSetValue
 		    % is:
 % 		       FSisValue
-% 		    toString:
-% 		       FSvalueToString
+		 toString:
+		    GFSSetValueToString
 		 )
 
    GFSReified = reified(
