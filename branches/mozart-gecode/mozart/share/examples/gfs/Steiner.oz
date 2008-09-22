@@ -22,8 +22,8 @@
 %%% WARRANTIES.
 %%%
 
-%%% Adapted from a finite domain example in Mozart-Oz version 1.3.2 by 
-%%% Gert Smolka, 1998.
+%%% Adapted from "Problem Solving With Finite Set Constraints in Oz. A Tutorial"
+%%% by Tobias Muller, 1998
 
 
 declare 
@@ -46,11 +46,12 @@ fun {Steiner N}
 	      end}
 	  end}
 	 
-	 {GFS.distribute opt(order:naive value:min) Ss}
+	 %{GFS.distribute opt(order:naive value:min) Ss}
+	 {GFS.distribute naive Ss}
       end 
    else proc {$ _} fail end 
    end 
 end
 
 
-{Show {SearchOne {Steiner 9}}}
+{Show {SearchOne {Steiner 7}}}

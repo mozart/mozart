@@ -773,11 +773,11 @@ void Board::commitB(TaggedRef c) {
   // is a distributor in the space then call commit directly
   Distributor *d = getDistributor();
   if (d) {
-    printf("CommitB when distributor is present %s\n",OZ_toC(c,100,100));fflush(stdout);
+    //printf("CommitB when distributor is present %s\n",OZ_toC(c,100,100));fflush(stdout);
     int res = d->commitBranch(this, c);
     switch (res) {
     case 0:
-      printf("CommitB distributor can be removed\n");fflush(stdout);
+      //printf("CommitB distributor can be removed\n");fflush(stdout);
       setDistributor(NULL);
       break;
     case -1:

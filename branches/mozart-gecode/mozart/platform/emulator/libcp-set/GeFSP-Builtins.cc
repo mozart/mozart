@@ -860,7 +860,6 @@ OZ_BI_define(gfs_cardinality_2,2,0){
     DeclareGeSetVar(0, __s, home);
     DeclareGeIntVar(1, __x, home);
     try{
-      printf("post card...\n");fflush(stdout);
       Gecode::cardinality(home, __s, __x);
     }
     catch(Exception e){
