@@ -189,7 +189,7 @@ OZ_BI_define(gfs_unknown,1,1){
   
   if(OZ_isGeSetVar(OZ_in(0))){
     DeclareGeSetVar(0, __s, home);  
-   
+
     int cont1 = 0;
     Gecode::SetVarUnknownRanges ranges1(__s);
     for(;ranges1(); ++ranges1, cont1++);
@@ -214,6 +214,12 @@ OZ_BI_define(gfs_unknown,1,1){
       cont2++;
     }
     OZ_RETURN(OZ_toList(cont2, array));  
+  } else {
+    /**anfelbar@: this is not what we want.
+    if the variables is not a setvar, raise error!
+    but, whenever a setvar, intvar or boolvar is assigned,
+    it is no more GeSetVar, GeIntVar or GeBoolVar, this is bad!*/
+    OZ_RETURN(oz_nil());
   }
 }OZ_BI_end
 

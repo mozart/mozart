@@ -40,7 +40,7 @@ import
    GFSP at 'x-oz://boot/GFSP'
    GFB at 'x-oz://boot/GBD'
    Space
-   GFD(decl sum rt distribute)
+   GFD(decl sum rt distribute distributeBR channel)
    GBD
    System
 prepare
@@ -524,16 +524,16 @@ in
    end
    
    proc {DisjointN Mv}
-      for I in 1..{List.lenght Mv} do
-	 for J in I.. {List.lenght Mv} do
+      for I in 1..{List.length Mv} do
+	 for J in I.. {List.length Mv} do
 	    {GFSP.disjoint {List.nth Mv I} {List.nth Mv I}}
 	 end
       end
    end
    
    proc {DistinctN Mv}
-      for I in 1..{List.lenght Mv} do
-	 for J in I.. {List.lenght Mv} do
+      for I in 1..{List.length Mv} do
+	 for J in I.. {List.length Mv} do
 	    {GFSP.distinct {List.nth Mv I} {List.nth Mv I}}
 	 end
       end
