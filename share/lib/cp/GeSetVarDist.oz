@@ -205,7 +205,10 @@ local
    fun {FilterFun Spec Select}
       case Spec
       of true then
-	 fun {$ X} {GFSGetNumOfUnknown {Select X}} > 0 end
+	 fun {$ X}
+	    X = {Var.decl}
+	    {GFSGetNumOfUnknown {Select X}} > 0 
+	 end
       else
 	 fun {$ X} Y = {Select X} in
 	    {GFSGetNumOfUnknown Y} > 0 andthen  {Spec Y}
@@ -226,32 +229,31 @@ local
       end
    end
 
-   B
-   B = {GBD.decl}
-
    proc {FSDistNaive Xs}
       case Xs of nil then skip
       [] X|Xr then
 	 {Space.waitStable}
 	 Unknown={GFSReflect.unknown X}
+	 B = {GBD.decl}
+	 % whit the finite domain variable I
+	 % we have a channel to distribute the boolean variable B, nice!
+	 I = {GFD.decl}
       in
 	 if Unknown==nil then
 	    {FSDistNaive Xr}
 	 else
 	    UnknownVal = {MinElement Unknown}
 	    {ReifiedInclude post(UnknownVal X B)}
+	    {GFD.channel post(B I)}
 	 in
-	    {GFD.distribute generic(value:max) [B]}
-	    /*
-	    choice {FSIsIncl UnknownVal X}
-	    []     {FSIsExcl UnknownVal X}
-	    end
-	    */
+	    {GFD.distribute generic(value:max) [I]}
+	    
 	    {FSDistNaive Xs}
 	 end
       end
    end 
-
+   
+      
    proc {FSDistGeneric SL Order FCond Elem RRobin Sel Proc}
       {Space.waitStable}
       if Proc\=unit then
@@ -264,6 +266,8 @@ local
 	 %% we just need to pick the right variable.
 	 %% this needs to be fixed eventually.
 	 SortedSL   = {Order FilteredSL}
+	 B = {GBD.decl}
+	 I = {GFD.decl}
       in
 	 case SortedSL
 	 of nil then skip
@@ -271,13 +275,11 @@ local
 	    UnknownVal={Elem HSL}
 	    DistVar   ={Sel  HSL}
 	    {ReifiedInclude post(UnknownVal DistVar B)}
+	    {GFD.channel post(B I)}
+	    {GFD.channel post(I B)}
 	 in
-	    {GFD.distribute generic(value:max) [B]}
-	    /*
-	    choice {FSIsIncl UnknownVal DistVar}
-	    []     {FSIsExcl UnknownVal DistVar}
-	    end
-	    */
+	    {GFD.distributeBR generic(value:max) [I]}
+	    
 	    {FSDistGeneric {RRobin FilteredSL}
 	     Order FCond Elem RRobin Sel Proc}
 	 end 
