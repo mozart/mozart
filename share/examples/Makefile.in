@@ -5,6 +5,9 @@
 #  Copyright:
 #    Christian Schulte, 1998
 # 
+#  Contributors:
+#    Andres Felipe Barco <anfelbar@univalle.edu.co>
+#
 #  Last change:
 #    $Date$ by $Author$
 #    $Revision$
@@ -62,7 +65,7 @@ all: $(FUNCTORS)
 EXFUNCTORS = \
 	$(FUNCTORS:%=$(OZEX)/fd/graphics/%)
 
-EXDIRS = fd grammar sampler
+EXDIRS = fd grammar sampler gfd gfs
 EXFDDIRS = fd/graphics
 EXGRDIRS = grammar/shieber
 EXSAMPLERDIRS = sampler/constraints
@@ -89,9 +92,19 @@ FD = \
 GR = \
 	hpsg shieber shieber/formalism shieber/grammar
 
+GFD = \
+	AllInterval Change Family Grocery Map-Coloring Queens \
+	AllIntervalSort Conference Fraction MagicSequence Money Safe \
+	Alpha Donald Golomb MagicSquare Pythagoras Steiner
+
+GFS = \
+	Hamming Steiner
+
 EXAMPLES = \
 	$(FD:%=$(OZEX)/fd/%.oz) \
-	$(GR:%=$(OZEX)/grammar/%.oz)
+	$(GR:%=$(OZEX)/grammar/%.oz) \
+	$(GFD:%=$(OZEX)/gfd/%.oz) \
+	$(GFS:%=$(OZEX)/gfs/%.oz)
 
 SAMPLER0 = \
 	constraints/animate-bridge constraints/bridge \
@@ -113,6 +126,10 @@ $(OZEX)/grammar/shieber/%.oz: grammar/shieber/%.oz
 $(OZEX)/sampler/%.oz: sampler/%.oz
 	$(INSTALL_FILE) $< $@
 $(OZEX)/sampler/constraints/%.oz: sampler/constraints/%.oz
+	$(INSTALL_FILE) $< $@
+$(OZEX)/gfd/%.oz: gfd/%.oz
+	$(INSTALL_FILE) $< $@
+$(OZEX)/gfs/%.oz: gfs/%.oz
 	$(INSTALL_FILE) $< $@
 
 
