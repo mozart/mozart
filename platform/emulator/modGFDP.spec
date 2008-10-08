@@ -49,6 +49,30 @@ $boot_module_name      		  = "GFD";
      out => [],
      bi  => int_sumCN
  },
+ 
+ 'reified_sumAC' => {
+     in  => ['+value', '+value', '+value', '+value', '+value', '+value', '+value'],
+     out => [],
+     bi  => reified_sumAC
+ },
+ 
+ 'reified_sumCN' => {
+     in  => ['+value', '+value', '+value', '+value', '+value', '+value','+value'],
+     out => [],
+     bi  => reified_sumCN
+ },
+ 
+  'reified_sumACN' => {
+     in  => ['+value', '+value', '+value', '+value', '+value', '+value','+value'],
+     out => [],
+     bi  => reified_sumACN
+ },
+ 
+ 'reified_dom' => {
+     in  => ['+value', '+value', '+value'],
+     out => [],
+     bi  => reified_dom
+ },
 
  ##reified_int
  'int_reified' => { 
@@ -259,6 +283,24 @@ $boot_module_name      		  = "GFD";
      bi  => gfd_mult_5
  },
 
+ 'gfd_div_5' => { 
+     in  => ['+value', '+value', '+value', '+value', '+value'],
+     out => [],
+     bi  => gfd_div_5
+ },
+
+	'gfd_mod_5' => { 
+     in  => ['+value', '+value', '+value', '+value', '+value'],
+     out => [],
+     bi  => gfd_mod_5
+ },
+	
+	'gfd_power_5' => { 
+     in  => ['+value', '+value', '+value', '+value', '+value'],
+     out => [],
+     bi  => gfd_power_5
+ },
+ 
 # this is done by gfd_mult_5
 # 'gfd_mult_3' => {
 #     in  => ['+value', '+value', '+value'],

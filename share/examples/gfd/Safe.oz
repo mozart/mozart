@@ -36,18 +36,18 @@ in
    C:::1#9
    {GFD.distinctP  post(C cl:GFD.cl.bnd)}
 
-   {GFD.linearP post([1 ~1 ~1] [C4 C6 C7] GFD.rt.'=:' 0 cl:GFD.cl.val)}
+   {GFD.sumC [1 ~1 ~1] [C4 C6 C7] '=:' 0}
    local Tmp1 Tmp2 in
       Tmp1 = {GFD.decl}
       Tmp2 = {GFD.decl}
       {GFD.multP post(C1 C2 Tmp1)}
       {GFD.multP post(Tmp1 C3 Tmp2)}
-      {GFD.linearP post([1 ~1 ~1] [Tmp2 C8 C9] GFD.rt.'=:' 0 cl:GFD.cl.val)}
+      {GFD.sumC [1 ~1 ~1] [Tmp2 C8 C9] '=:' 0}
    end
-   {GFD.linearP post([1 1 1 ~1] [C2 C3 C6 C8] GFD.rt.'<:' 0 cl:GFD.cl.val)}
-   {GFD.linearP post([1 ~1] [C9 C8] GFD.rt.'<:' 0 cl:GFD.cl.val)}
+   {GFD.sumC [1 1 1 ~1] [C2 C3 C6 C8] '<:' 0}
+   {GFD.sumC [1 ~1] [C9 C8] '<:' 0}
    for I in 1..9 do
-      {GFD.relP post({List.nth C I} GFD.rt.'\\=:' I cl:GFD.cl.val)}
+      {List.nth C I} \=: I
    end
    {GFD.distributeBR ff C}
 end

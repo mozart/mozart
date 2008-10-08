@@ -45,7 +45,7 @@ in
       K.2 =: {GFD.int 0#NN}
       for I in 1..N-1 do
 	 %% K.(I+1) >: K.I
-	 {GFD.relP post(K.(I+1) GFD.rt.'>:' K.I cl:GFD.cl.val)}
+	 K.(I+1) >: K.I
 	 for J in I+1..N do
 	    %% K.J - K.I =: {DIJ I J}
 	    {GFD.sumC [1 ~1] [K.J K.I] '=:' {DIJ I J}}
@@ -56,11 +56,6 @@ in
    end
 end
 
-proc {Better O N}
-   %%O.dm >: N.dm
-   %%{Show O.dm#N.dm}
-   {GFD.rel O.dm GFD.rt.'>:' N.dm GFD.cl.val}
-end
 
 %{Show {SearchBest {MakeGolomb 7} Better}}
 {Show {SearchOne {MakeGolomb 7}}}

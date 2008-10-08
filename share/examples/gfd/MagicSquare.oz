@@ -52,8 +52,8 @@ proc {NaiveDistribute Xs}
       case {Space.getChoice}
       of I#D  then 
 	 case D
-	 of eq(M) then {GFD.relP post(V.I GFD.rt.'=:' M)}
-	 [] neq(M) then {GFD.relP post(V.I GFD.rt.'\\=:' M)}
+	 of eq(M) then V.I =: M
+	 [] neq(M) then V.I \=: M
 	 %[] lt(M) then V.I =: M	   
 	 end
 	 {Distribute L}

@@ -6,6 +6,7 @@
  *
  *  Contributing authors:
  *			Andres Felipe Barco <anfelbar@univalle.edu.co>
+ *			Victor Rivera Zuniga <varivera@javerianacali.edu.co>
  *  Copyright:
  *    Alberto Delgado, 2006-2007
  *    Alejandro Arbelaez, 2006-2007
@@ -108,8 +109,8 @@ OZ_BI_define(int_assign,2,0)
 OZ_BI_define(int_reified,3,0)
 {
   DeclareGSpace(sp);
-  DeclareGeIntVar(0,v0,sp);
-  DECLARE_INT_SET(1,dom);
+	DECLARE_INT_SET(OZ_in(0),dom);
+  DeclareGeIntVar(1,v0,sp);
   DeclareGeBoolVar(2,b0,sp);
   
   

@@ -62,12 +62,12 @@ in
       {ForAll Constraints
        proc {$ C}
     case C
-    of before(X Y) then {GFD.relP post(Plan.X GFD.rt.'<:' Plan.Y)}
+    of before(X Y) then Plan.X <: Plan.Y
     [] disjoint(X Ys) then
-       {ForAll Ys proc {$ Y} {GFD.relP post(Plan.X GFD.rt.'\\=:' Plan.Y)} end}
+       {ForAll Ys proc {$ Y} Plan.X \=: Plan.Y end}
     end
        end}
-      {GFD.distribute ff Plan}
+      {GFD.distributeBR naive Plan}
    end
 end
 
@@ -88,4 +88,4 @@ Data = data(nbSessions: 11
 
 
 
-{Show {SearchAll {Conference Data}}}
+{Show {SearchOne {Conference Data}}}

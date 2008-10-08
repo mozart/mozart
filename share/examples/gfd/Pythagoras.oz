@@ -39,9 +39,9 @@ in
    {Square A AA}
    {Square B BB}
    {Square C CC}
-   {GFD.linearP post([AA BB] GFD.rt.'=:' CC)}
-   {GFD.relP post(A GFD.rt.'=<:' B)}
-   {GFD.relP post(B GFD.rt.'=<:' C)}
+   {GFD.sum [AA BB] '=:' CC}
+   A =<: B
+   B =<: C
 
    {GFD.distribute ff Root}
 end

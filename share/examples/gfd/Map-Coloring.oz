@@ -52,7 +52,7 @@ in
       {GFD.record color Countries 1#NbColors Color}
       {ForAll Data
        proc {$ A#Bs}
-	  {ForAll Bs proc {$ B} {GFD.relP post(Color.A GFD.rt.'\\=:' Color.B)} end}
+	  {ForAll Bs proc {$ B} Color.A \=: Color.B end}
        end}
       {GFD.distribute ff Color}
    end

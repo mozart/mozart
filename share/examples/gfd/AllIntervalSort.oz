@@ -49,17 +49,17 @@ proc{Difference X D N}
       DIFF.I = {GFD.int (1-N)-1#(N-1)}
    end
    for I in 1..(N-1) do
-      {GFD.linearP post([1 ~1] [X.(I+1) X.I] GFD.rt.'=:' DIFF.I cl:GFD.cl.bnd)}
+      {GFD.sumC [1 ~1] [X.(I+1) X.I] '=:' DIFF.I}
       {GFD.abs post(DIFF.I D.I cl:GFD.cl.bnd)}
    end
 end
 
 proc{Break_negation X}
-   {GFD.relP post(X.1 GFD.rt.'=<:' X.2 cl:GFD.cl.bnd)}
+   X.1 =<:  X.2
 end
 
 proc{Break_reversal D N}
-   {GFD.relP post(D.1 GFD.rt.'=<:' D.(N-1) cl:GFD.cl.bnd)}
+   D.1  =<:  D.(N-1)
 end
 
 fun{AllInterval N}
