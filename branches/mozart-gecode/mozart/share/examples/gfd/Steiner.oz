@@ -46,31 +46,31 @@ fun {Steiner N}
 				 proc{$ [T21 T22 T23]}
 				    
 				    B1 = {GBD.decl}
-				    {GFD.relP post(T11 GFD.rt.'=:' T21 B1)}
+				    {GFD.relP post(T11 '=:' T21 B1)}
 
 				    B2 = {GBD.decl}
-				    {GFD.relP post(T11 GFD.rt.'=:' T22 B2)}
+				    {GFD.relP post(T11 '=:' T22 B2)}
 				    
 				    B3 = {GBD.decl}
-				    {GFD.relP post(T11 GFD.rt.'=:' T23 B3)}
+				    {GFD.relP post(T11 '=:' T23 B3)}
 
 				    B4 = {GBD.decl}
-				    {GFD.relP post(T12 GFD.rt.'=:' T21 B4)}
+				    {GFD.relP post(T12 '=:' T21 B4)}
 
 				    B5 = {GBD.decl}
-				    {GFD.relP post(T12 GFD.rt.'=:' T22 B5)}
+				    {GFD.relP post(T12 '=:' T22 B5)}
 
 				    B6 = {GBD.decl}
-				    {GFD.relP post(T12 GFD.rt.'=:' T23 B6)}
+				    {GFD.relP post(T12 '=:' T23 B6)}
 
 				    B7 = {GBD.decl}
-				    {GFD.relP post(T13 GFD.rt.'=:' T21 B7)}
+				    {GFD.relP post(T13 '=:' T21 B7)}
 
 				    B8 = {GBD.decl}
-				    {GFD.relP post(T13 GFD.rt.'=:' T22 B8)}
+				    {GFD.relP post(T13 '=:' T22 B8)}
 
 				    B9 = {GBD.decl}
-				    {GFD.relP post(T13 GFD.rt.'=:' T23 B9)}
+				    {GFD.relP post(T13 '=:' T23 B9)}
 				    
 				 in
 				    {GBD.linearP
@@ -85,11 +85,11 @@ fun {Steiner N}
 				case Tr of nil then skip
 				[] [T21 T22 T23]|_
 				then
-				   {GFD.linearP
-				    post([N1N1 N1 1 ~N1N1 ~N1 ~1]
+				   {GFD.sumC
+				         [N1N1 N1 1 ~N1N1 ~N1 ~1]
 					 [T11 T12 T13 T21 T22 T23]
-					 GFD.rt.'<:'
-					 0)}
+					 '<:'
+					 0}
 				end
 			     end}
 	 

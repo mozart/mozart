@@ -33,18 +33,20 @@ fun{Queens N}
    proc{$ Root}
       C1 = {List.number 1 N 1}
       C2 = {List.number ~1 ~N ~1}
-      D L1 L2
+      %D
+      L1 L2
    in
       Root = {GFD.list N 1#N}
       {List.takeDrop Root 3 L1 L2}
-      D = {List.toTuple '#' Root}
+      %D = {List.toTuple '#' Root}
       {GFD.distinctP post(Root cl:GFD.cl.val)}
-      {GFD.distinctP post(C1 Root cl:GFD.cl.val)}
-      {GFD.distinctP post(C2 Root cl:GFD.cl.val)}
-      %{GFD.assign max Root}
-      {GFD.distributeBR generic(order:min value:splitMax) L1}
-      {GFD.distributeBR generic(order:max value:splitMax) L2}
+      {GFD.distinctP post(Root C1 cl:GFD.cl.val)}
+      {GFD.distinctP post(Root C2 cl:GFD.cl.val)}
+      %{GFD.distribute generic(order:min value:splitMax) L1}
+      {GFD.distribute algo(order:naive) L1}
+      %{GFD.distribute generic(order:max value:splitMax) L2}
+      {GFD.distribute algo(order:naive) L2}
    end
 end
 
-{Show {SearchAll {Queens 6}}}
+{Show {SearchOne {Queens 10}}}

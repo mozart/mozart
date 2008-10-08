@@ -37,8 +37,8 @@ fun{AllInterval N}
       {GFD.distinctP post(X cl:GFD.cl.bnd)}
       {GFD.distinctP post(D cl:GFD.cl.bnd)}
       
-      {GFD.relP post(X.1 GFD.rt.'=<:' X.2 cl:GFD.cl.bnd)}
-      {GFD.relP post(D.1 GFD.rt.'>=:' D.2 cl:GFD.cl.bnd)}
+      X.1 =<: X.2
+      D.1 >=: D.2
       
       {GFD.distributeBR naive Root}
    end

@@ -57,8 +57,8 @@ proc {Family Root}
    end
    proc {AgeList L}
       {GFD.list 3 0#9 L}
-      {GFD.relP post({Nth L 1} GFD.rt.'>:' {Nth L 2})}
-      {GFD.relP post({Nth L 2} GFD.rt.'>:' {Nth L 3})}
+      {Nth L 1} >: {Nth L 2}
+      {Nth L 2} >: {Nth L 3}
    end
    Maria = {FamilyC maria}
    Clara = {FamilyC clara}
@@ -67,7 +67,7 @@ proc {Family Root}
    Ages = {FoldR [Clara.girls Clara.boys Maria.girls Maria.boys] Append nil}
 in
    Root = Maria#Clara
-   {ForAll Maria.boys proc {$ A} {GFD.relP post(A GFD.rt.'>:' AgeOfMariasYoungestGirl)} end}
+   {ForAll Maria.boys proc {$ A} A >: AgeOfMariasYoungestGirl end}
    AgeOfClarasYoungestGirl =: 0
    {GFD.sum Ages '=:' 60}
    {GFD.distribute split Ages}

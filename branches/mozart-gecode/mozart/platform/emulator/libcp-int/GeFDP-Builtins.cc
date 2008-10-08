@@ -6,6 +6,7 @@
  *     Gustavo A. Gomez Farhat <gafarhat@univalle.edu.co>
  *
  *  Contributing authors:
+ *		Victor Rivera Zuniga <varivera@javerianacali.edu.co>
  *
  *  Copyright:
  *     Diana Lorena Velasco, 2007
@@ -359,15 +360,14 @@ OZ_BI_define(gfd_rel_4,4,0){
     For more information see http://www.gecode.org/gecode-doc-latest/group__TaskModelIntElement.html
  */
 OZ_BI_define(gfd_element_5,5,0){
-  DeclareGSpace(home);
+	DeclareGSpace(home);
 
   Gecode::IntVar &iv1 = intOrIntVar(OZ_in(1));
   Gecode::IntConLevel icl = getIntConLevel(OZ_in(3));
   Gecode::PropKind pk = getPropKind(OZ_in(4));  
 
-
   if(OZ_isIntArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) ){
-    /**
+		/**
        element(Space* home, const IntArgs& n, IntVar x0, IntVar x1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     */
     Gecode::IntArgs iar = getIntArgs(OZ_in(0));
@@ -381,7 +381,7 @@ OZ_BI_define(gfd_element_5,5,0){
     }
   }
   else if(OZ_isIntArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2))){
-    /**
+		/**
        element(Space* home, const IntArgs& n, IntVar x0, BoolVar x1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     */
     Gecode::IntArgs iar = getIntArgs(OZ_in(0));
@@ -395,7 +395,7 @@ OZ_BI_define(gfd_element_5,5,0){
     }
   }
   else if(OZ_isIntArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && OZ_isInt(OZ_in(2)) ){
-    /**
+		/**
        element(Space* home, const IntArgs& n, IntVar x0, int x1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     */
     Gecode::IntArgs iar = getIntArgs(OZ_in(0));
@@ -409,7 +409,7 @@ OZ_BI_define(gfd_element_5,5,0){
     }
   }
   else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) ){
-    /**
+		/**
        element(Space* home, const IntVarArgs& x, IntVar y0, IntVar y1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     */
     Gecode::IntVarArgs iva = getIntVarArgs(OZ_in(0));
@@ -423,7 +423,7 @@ OZ_BI_define(gfd_element_5,5,0){
     }
   }
   else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && OZ_isInt(OZ_in(2)) ){
-    /**
+	  /**
        element(Space* home, const IntVarArgs& x, IntVar y0, int y1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     */
     Gecode::IntVarArgs iva = getIntVarArgs(OZ_in(0));
@@ -437,7 +437,7 @@ OZ_BI_define(gfd_element_5,5,0){
     }
   }
   else if(OZ_isBoolVarArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2))){
-    /**
+		/**
        element(Space* home, const BoolVarArgs& x, IntVar y0, BoolVar y1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     */
     DECLARE_BOOLVARARGS(0, __x, home);
@@ -451,7 +451,7 @@ OZ_BI_define(gfd_element_5,5,0){
     }
   }
   else if(OZ_isBoolVarArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && OZ_isInt(OZ_in(2))){
-    /**
+	  /**
        element(Space* home, const BoolVarArgs& x, IntVar y0, int y1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     */
     DECLARE_BOOLVARARGS(0, __x, home);
@@ -1215,6 +1215,102 @@ OZ_BI_define(gfd_mult_5,5,0){
   CHECK_POST(home);
 }OZ_BI_end
 
+//Power constraint implemented by mult constraint
+OZ_BI_define(gfd_power_5,5,0){
+  DeclareGSpace(home);
+  if(OZ_isGeIntVar(OZ_in(0)) && OZ_isInt(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) ){
+    
+    
+    Gecode::IntVar &iv1 = intOrIntVar(OZ_in(0));
+		int _I = OZ_intToC(OZ_in(1));
+    Gecode::IntVar &iv2 = intOrIntVar(OZ_in(2));
+    Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(3));
+    Gecode::PropKind __PK_DEF = getPropKind(OZ_in(4));  
+    
+		IntVarArray tmpArray(home,_I,Int::Limits::min,Int::Limits::max);
+		tmpArray[0] = iv1;
+		for (int i = 0; i < _I-1; i++){
+					/**
+							mult (Space *home, IntVar x0, IntVar x1, IntVar x2, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+					*/
+					 try{
+							Gecode::mult(home,iv1,tmpArray[i],tmpArray[i+1],__ICL_DEF,__PK_DEF);
+					}
+					catch(Exception e){
+							RAISE_GE_EXCEPTION(e);
+					}
+			}
+		/**
+			rel (Space *home,IntVar x0, IntRelType r, IntVar x1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
+		*/
+		try{
+			Gecode::rel(home,iv2,IRT_EQ,tmpArray[_I-1],__ICL_DEF,__PK_DEF);
+		}
+		catch(Exception e){
+			RAISE_GE_EXCEPTION(e);
+		}
+  } else {
+    return OZ_typeError(0, "Malformed Propagator");
+  }
+
+  CHECK_POST(home);
+}OZ_BI_end
+
+
+OZ_BI_define(gfd_div_5,5,0){
+  DeclareGSpace(home);
+
+  if(OZ_isGeIntVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) ){
+    
+    /**
+       div (Space *home, IntVar x0, IntVar x1, IntVar x2, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+    */
+    Gecode::IntVar &iv1 = intOrIntVar(OZ_in(0));
+    Gecode::IntVar &iv2 = intOrIntVar(OZ_in(1));
+    Gecode::IntVar &iv3 = intOrIntVar(OZ_in(2));
+    Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(3));
+    Gecode::PropKind __PK_DEF = getPropKind(OZ_in(4));  
+    
+    try{
+      Gecode::div(home, iv1, iv2, iv3, __ICL_DEF, __PK_DEF);
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+  } else {
+    return OZ_typeError(0, "Malformed Propagator");
+  }
+
+  CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(gfd_mod_5,5,0){
+  DeclareGSpace(home);
+
+  if(OZ_isGeIntVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) ){
+    
+    /**
+       div (Space *home, IntVar x0, IntVar x1, IntVar x2, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+    */
+    Gecode::IntVar &iv1 = intOrIntVar(OZ_in(0));
+    Gecode::IntVar &iv2 = intOrIntVar(OZ_in(1));
+    Gecode::IntVar &iv3 = intOrIntVar(OZ_in(2));
+    Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(3));
+    Gecode::PropKind __PK_DEF = getPropKind(OZ_in(4));  
+    
+    try{
+      Gecode::mod(home, iv1, iv2, iv3, __ICL_DEF, __PK_DEF);
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+  } else {
+    return OZ_typeError(0, "Malformed Propagator");
+  }
+
+  CHECK_POST(home);
+}OZ_BI_end
+
 
 OZ_BI_define(gfd_min_5,5,0){
   DeclareGSpace(home);
@@ -1342,7 +1438,7 @@ OZ_BI_define(gfd_linear_5,5,0){
 
 
 OZ_BI_define(gfd_linear_6,6,0){
-  DeclareGSpace(home);
+	DeclareGSpace(home);
 
   Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(4));
   Gecode::PropKind __PK_DEF = getPropKind(OZ_in(5));  
@@ -1355,7 +1451,6 @@ OZ_BI_define(gfd_linear_6,6,0){
     Gecode::IntRelType irt = getIntRelType(OZ_in(1));
     int i = OZ_intToC(OZ_in(2));
     DeclareGeBoolVar(3, __b, home);
-    
     try{
       Gecode::linear(home, iva, irt, i, __b, __ICL_DEF, __PK_DEF);
     }
@@ -1364,7 +1459,7 @@ OZ_BI_define(gfd_linear_6,6,0){
     }
   }
   else if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3)) ){
-    /*
+		/*
       linear(Space* home, const IntVarArgs& x,  IntRelType r, IntVar y, BoolVar b, 
              IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     */
@@ -1380,7 +1475,7 @@ OZ_BI_define(gfd_linear_6,6,0){
       RAISE_GE_EXCEPTION(e);
     }
   }
-  else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isInt(OZ_in(3)) ){
+	else if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isInt(OZ_in(3)) ){
     /*
        linear(Space* home, const IntArgs& a, const IntVarArgs& x, IntRelType r, int c,
          IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
@@ -1423,19 +1518,19 @@ OZ_BI_define(gfd_linear_6,6,0){
 
 OZ_BI_define(gfd_linear_7,7,0){
   DeclareGSpace(home);
-  
   Gecode::IntArgs  __a = getIntArgs(OZ_in(0));
   Gecode::IntVarArgs  __x = getIntVarArgs(OZ_in(1));
   Gecode::IntRelType __r = getIntRelType(OZ_in(2));
   DeclareGeBoolVar(4, __b, home);
   Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(5));
-  Gecode::PropKind __PK_DEF = getPropKind(OZ_in(6));  
+  Gecode::PropKind __PK_DEF = getPropKind(OZ_in(6));
 
   if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isInt(OZ_in(3)) && OZ_isGeBoolVar(OZ_in(4))){
     /*
        linear(Space* home, const IntArgs& a, const IntVarArgs& x, IntRelType r, int c, BoolVar b,
          IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
      */
+
     int i = OZ_intToC(OZ_in(3));
     
     try{
@@ -1450,6 +1545,7 @@ OZ_BI_define(gfd_linear_7,7,0){
       linear(Space* home, const IntArgs& a, const IntVarArgs& x, IntRelType r, IntVar y, BoolVar b,
          IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
      */
+		 
     Gecode::IntVar &iv = intOrIntVar(OZ_in(3));
     
     try{

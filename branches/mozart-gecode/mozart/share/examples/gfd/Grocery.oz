@@ -47,7 +47,7 @@ proc {Grocery Root}
 in
    Root ::: 0#S
    A*B*C*D =: S*100*100*100
-   {GFD.linearP post([A B C D] GFD.rt.'=:' S)}
+   {GFD.sum [A B C D] '=:' S}
    %A+B+C+D =: S
    
    %% eliminate symmetries
