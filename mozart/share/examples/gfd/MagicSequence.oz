@@ -34,10 +34,10 @@ fun{MagicSequence N}
    in
       Seq = {GFD.tuple sequence N 0#N-1}
       for I in 0..N-1 do
-	 {GFD.countP post(Seq I GFD.rt.'=:' Seq.(I+1) cl:GFD.cl.val)}
+	 {GFD.countP post(Seq I '=:' Seq.(I+1) cl:GFD.cl.val)}
       end
-      {GFD.linearP post(Seq GFD.rt.'=:' N cl:GFD.cl.val)}
-      {GFD.linearP post(Cs Seq GFD.rt.'=:' 0 cl:GFD.cl.val)}
+      {GFD.sum Seq '=:' N}
+      {GFD.sumC Cs Seq '=:' 0}
       {GFD.distributeBR ff Seq}
    end
 end

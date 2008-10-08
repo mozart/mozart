@@ -7,6 +7,7 @@
 %%%  Contributors:
 %%%     Andres Felipe Barco <anfelbar@univalle.edu.co>
 %%%     Gustavo A. Gomez Farhat <gafarhat@univalle.edu.co>
+%%%	Victor Rivera Zuniga <varivera@javerianacali.edu.co>
 %%%
 %%% Copyright:
 %%%     Gustavo Gutierrez, 2006
@@ -29,7 +30,7 @@
 %%%
 
 functor
-
+   
 require
    CpSupport(vectorToType:   VectorToType
 	     vectorToList:   VectorToList
@@ -41,7 +42,7 @@ import
    GFDP at 'x-oz://boot/GFDP'
    Space
    System(nbSusps show)
-
+   
 prepare
    %%This record must reflect the IntRelType in gecode/int.hh
    Rt = '#'('=:':0     %Equality
@@ -69,7 +70,7 @@ prepare
 	   speed: 1  %Prefer speed over memory consumption
 	   memory:2  %Prefer little memory over speed
 	   )
-
+   
 export
    %% Telling domains
    int   : FdInt
@@ -78,13 +79,13 @@ export
    list  : FdList
    tuple : FdTuple
    record: FdRecord
-
+   
    %% Reflection
    reflect : FdReflect
-
+   
    %% Watching Domains
    watch   : FdWatch
-
+   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Clasify!!!!%%%%%%%%%%%%%
@@ -96,8 +97,8 @@ export
    int_sumCN:            Int_sumCN
   % int_disjoint:         Int_disjoint
    %int_reified_int:      Int_reified_int
-
-
+   
+   
    %%Miscellaneous propagators
    plus:            Plus
    plusD:           PlusD
@@ -105,26 +106,29 @@ export
    minusD:          MinusD
    times:           Times
    timesD:          TimesD
+   power:	    Power
    divI:            DivI
+   modI:	    ModI
+   divD:            DivI2
+   modD:            ModI2
+   distance:	    DistanceI
    less:            Less
    lessEq:          LessEq
    greater:         Greater
    greaterEq:       GreaterEq
 %   disjoint:        Disjoint 
    disjointC:       DisjointC
-
-
+   
+   
    %%Generic Propagators
    sum:             Sum
    sumC:            SumC
    sumCN:           SumCN
-  %   sumAC:           SumAC
-  %   sumACN:          SumACN
    sumD:            SumD
    sumCD:           SumCD
    sumAC:           SumAC
    sumACN:          SumACN
-
+   
    %%Reified Propagators
    reified:        Reified
    
@@ -138,7 +142,7 @@ export
    
    %% Assignment propagators
    assign: Assign
-
+   
    int_ext: Int_ext
    %%Propagators
    %Abs
@@ -161,10 +165,10 @@ export
    multP: MultP
    linearP: LinearP
    countP: CountP
-
+   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+   
    %% Distribution
    distribute : FdDistribute
    %distributeC : FdDistributeC
@@ -173,21 +177,21 @@ export
    inf : FdInf
    sup : FdSup
    is  : FdIs
-
+   
    %% Relation types
    rt: Rt
-
+   
    %% Consistency levels
    cl: Cl
-
+   
    %% Propagation kind
    pk: Pk
    
    %% Integer assignment
    ia: IA
-
+   
 define
-
+   
    %% Telling domains
    FdInt = GFDB.int
    local
@@ -220,22 +224,22 @@ define
 	 [] record then {RecordDom {Arity Vec} Vec Dom}
 	 end
       end
-
+      
       fun {FdList N Dom}
 	 if N>0 then {FdInt Dom}|{FdList N-1 Dom}
 	 else nil
 	 end
       end
-
+      
       proc {FdTuple L N Dom ?T}
 	 T={MakeTuple L N} {TupleDom N T Dom}
       end
-
+      
       proc {FdRecord L As Dom ?R}
 	 R={MakeRecord L As} {RecordDom As R Dom}
       end
    end
-
+   
    %% Reflection
    local
       fun {NBSusps X}
@@ -282,7 +286,7 @@ define
 		      min : WatchMin
 		      max : WatchMax)
    end
-
+   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%% Clasify!!!!%%%%%%%%%%%%%
    Int_sortedness = GFDP.'int_sortedness'
@@ -292,16 +296,16 @@ define
    Int_sumCN =   GFDP.int_sumCN
    %Int_disjoint =   GFDP.int_disjoint
    %Int_reified_int =   GFDP.int_reified_int
-
+   
    %% Assignment propagators
    %%Assign = GFDP.'assign'
    proc {Assign Spec V}
       {Wait {GFDP.assign Spec V}}
    end
-
+   
    Int_ext = GFDP.'int_ext'
    %% Backward compatibility propagators
-
+   
    %% Propagators Builtins      
    proc {Dom S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
@@ -319,6 +323,15 @@ define
       end
    end
 
+%%%
+   %%Determine if E belongs to Rt record
+   proc {IsRt L E ?B}
+      case L of
+	 X|Xr then if X == E then B = true else {IsRt Xr E B} end
+      else B = false
+      end
+   end
+   
    proc {RelP S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
@@ -326,16 +339,23 @@ define
       %% Assert 2 is a GFD.rt.*
       case W
       of 5 then
-	 {GFDP.gfd_rel_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+	 %%TODO: where the domain of IntVar is define (i.e. X :: 0#3),
+	 %%call relP using as second param a string (e.g '=:', '<:')
+	 %%instead a record value (i.e. GFD.rt.'*')
+	 if {IsRt {Arity Rt} Sc.2} then
+	    {GFDP.gfd_rel_5 Sc.1 Rt.(Sc.2) Sc.3 Sc.cl Sc.pk}
+	 else
+	    {GFDP.gfd_rel_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+	 end
       []  6 then
-	 {GFDP.gfd_rel_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
+	 {GFDP.gfd_rel_6 Sc.1 Rt.(Sc.2) Sc.3 Sc.4 Sc.cl Sc.pk}
       [] 4 then
-	 {GFDP.gfd_rel_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+	 {GFDP.gfd_rel_4 Sc.1 Rt.(Sc.2) Sc.cl Sc.pk}
       else
 	 raise malformed('Rel post') end
       end
    end
-
+   
    proc {Element S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
@@ -347,7 +367,7 @@ define
 	 raise malformed('Element constraint post') end
       end
    end
-
+   
    proc {Channel S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
@@ -362,7 +382,7 @@ define
 	 raise malformed('Channel constraint post') end
       end
    end
-
+   
    proc {Circuit S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
@@ -374,7 +394,7 @@ define
 	 raise malformed('Circuit constraint post') end
       end
    end
-
+   
    proc {Sorted S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
@@ -388,7 +408,7 @@ define
 	 raise malformed('Sorted constraint post') end
       end
    end
-
+   
    proc {Extensional S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
@@ -400,7 +420,7 @@ define
 	 raise malformed('Extensional constraint post') end
       end
    end
-
+   
    proc {Cumulatives S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
@@ -412,7 +432,7 @@ define
 	 raise malformed('Cumulatives constraint post') end
       end
    end
-
+   
    proc {MinP S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
@@ -426,8 +446,8 @@ define
 	 raise malformed('Min constraint post') end
       end
    end
-
-
+   
+   
    proc {MaxP S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
@@ -441,7 +461,7 @@ define
 	 raise malformed('Max constraint post') end
       end
    end
-
+   
    proc {MultP S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
@@ -465,33 +485,6 @@ define
 	 raise malformed('Abs constraint post') end
       end
    end
-
-      
-   /*
-   proc {Sqr S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
-      W = {Record.width Sc}
-   in
-      case W
-      of 4 then
-	 {GFDP.gfd_sqr_4 Sc.1 Sc.2 Sc.cl Sc.pk}
-      else
-	 raise malformed('Sqr constraint post') end
-      end
-   end
-
-   proc {Sqrt S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
-      W = {Record.width Sc}
-   in
-      case W
-      of 4 then
-	 {GFDP.gfd_sqrt_5 Sc.1 Sc.2 Sc.cl Sc.pk}
-      else
-	 raise malformed('Sqrt constraint post') end
-      end
-   end
-   */
    
    proc {LinearP S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
@@ -499,16 +492,20 @@ define
    in
       case W
       of 5 then
-	 {GFDP.gfd_linear_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+	 {GFDP.gfd_linear_5 Sc.1 Rt.(Sc.2) Sc.3 Sc.cl Sc.pk}
       [] 6 then
-	 {GFDP.gfd_linear_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
+	 if {IsRt {Arity Rt} Sc.2} then
+	    {GFDP.gfd_linear_6 Sc.1 Rt.(Sc.2) Sc.3 Sc.4 Sc.cl Sc.pk}
+	 else
+	    {GFDP.gfd_linear_6 Sc.1 Sc.2 Rt.(Sc.3) Sc.4 Sc.cl Sc.pk}
+	 end
       [] 7 then
-	 {GFDP.gfd_linear_5 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl Sc.pk}
+	 {GFDP.gfd_linear_7 Sc.1 Sc.2 Rt.(Sc.3) Sc.4 Sc.5 Sc.cl Sc.pk}
       else
 	 raise malformed('Linear constraint post') end
       end
    end
-
+   
    proc {DistinctP S}
       Sc =  Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
@@ -517,26 +514,30 @@ define
       of 3 then
 	 {GFDP.gfd_distinct_3 Sc.1 Sc.cl Sc.pk}
       [] 4 then
-	 {GFDP.gfd_distinct_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+	 {GFDP.gfd_distinct_4 Sc.2 Sc.1 Sc.cl Sc.pk}
       else
 	 raise malformed('Distinct constraint post') end
       end
    end
      
-    proc {CountP S}
+   proc {CountP S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
    in
       case W
       of 4 then
-        {GFDP.gfd_count_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+	 {GFDP.gfd_count_4 Sc.1 Sc.2 Sc.cl Sc.pk}
       [] 5 then
-         {GFDP.gfd_count_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+	 {GFDP.gfd_count_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
       [] 6 then
       % Post propagator count_6 support domain-consistency only.
-         {GFDP.gfd_count_6 Sc.1 Sc.2 Sc.3 Sc.4 Cl.dom Sc.pk}
+	 if {IsRt {Arity Rt} Sc.3} then
+	    {GFDP.gfd_count_6 Sc.1 Sc.2 Rt.(Sc.3) Sc.4 Cl.dom Sc.pk}
+	 else
+	    {GFDP.gfd_count_6 Sc.1 Sc.2 Sc.3 Sc.4 Cl.dom Sc.pk}
+	 end
       else
-   raise malformed('Count constraint post') end
+	 raise malformed('Count constraint post') end
       end
    end
    
@@ -546,10 +547,89 @@ define
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    
    %% Miscelaneus
+	 
+   proc {DivP S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 5 then
+	 {GFDP.gfd_div_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      else
+	 raise malformed('Mult constraint post') end
+      end
+   end
+   
+   proc {ModP S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 5 then
+	 {GFDP.gfd_mod_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      else
+	 raise malformed('Mod constraint post') end
+      end
+   end
+   
+   
+   proc {PowerP S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 5 then
+	 {GFDP.gfd_power_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      else
+	 raise malformed('Power constraint post') end
+      end
+   end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+   
+   %% Reified constraint not supported by Gecode
+   
+   proc {SumACP S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+	 of 7 then
+	 {GFDP.reified_sumAC Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl Sc.pk}
+      else
+	 raise malformed('sumAC constraint post') end
+      end
+   end
+   
+   proc {SumCNP S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 7 then
+	 {GFDP.reified_sumCN Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl Sc.pk}
+      else
+	 raise malformed('sumCN constraint post') end
+      end
+   end
+
+   proc {SumACNP S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 7 then
+	 {GFDP.reified_sumACN Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl Sc.pk}
+      else
+	 raise malformed('sumCN constraint post') end
+      end
+   end
+      
    FdInf = {GFDB.inf}
    FdSup = {GFDB.sup}
    FdIs  = GFDB.is
-
+   
    %FdDistributeC = GFDP.distribute
    local
       \insert GeIntVarDist

@@ -4,6 +4,8 @@
  *
  *  Contributing authors:
  *		Andres Felipe Barco <anfelbar@univalle.edu.co>
+ *		Victor Rivera Zuniga <varivera@javerianacali.edu.co>
+ *
  *  Copyright:
  *    Alejandro Arbelaez, 2006-2007
  *
@@ -257,21 +259,233 @@ OZ_BI_define(int_sumCN,4,0)
     for(int j=1;j<tamD2;j++) {
       IntVar Tmpj;
       if(OZ_isGeIntVar(Vec2[j])) {
-	Tmpj = get_IntVar(Vec2[j]);
+				Tmpj = get_IntVar(Vec2[j]);
       }
       else if(OZ_isInt(Vec2[j])) {
-	int domain = OZ_intToC(Vec2[j]);
-	Tmpj.init(sp,domain,domain);
+				int domain = OZ_intToC(Vec2[j]);
+				Tmpj.init(sp,domain,domain);
       }
       else OZ_typeError(0,"Elements inside of OZ_vector must be GeIntVar or Int: sumCN");
       mult(sp,ArregloTmp[j-1],Tmpj,ArregloTmp[j],ICL_VAL);
     }
   }
   return PROCEED;
-
 } OZ_BI_end
 
 
+/*##################### Reified Implementation ############################*/
+
+/**
+	* This method makes a scalar produt between two list or a list and matrix.
+	* This method will be use to these reified constraints not implented by Gecode.
+	*/
+IntVar scalarProduct(GenericSpace *sp, IntArgs ia, IntVarArgs iva, IntConLevel __ICL_DEF, PropKind __PK_DEF){
+	IntVarArray arrayTmp(sp,iva.size(),Int::Limits::min,Int::Limits::max);
+		for (int i = 0; i < iva.size();i++){
+				IntVar valVar;
+				int domain = ia[i];
+				valVar.init(sp,domain,domain);
+				Gecode::mult(sp,valVar,iva[i],arrayTmp[i],__ICL_DEF, __PK_DEF);
+		}
+		IntVar ScalarProduct;
+		ScalarProduct.init(sp,Int::Limits::min,Int::Limits::max);
+		Gecode::linear(sp,arrayTmp,IRT_EQ,ScalarProduct,__ICL_DEF, __PK_DEF);
+	return ScalarProduct;
+}
+
+IntVar scalarProduct(GenericSpace *sp, IntArgs ia, OZ_Term Dvv, IntConLevel __ICL_DEF, PropKind __PK_DEF){
+	int lenD;
+	OZ_Term *Mat = vectorToOzTerms2(Dvv,lenD);
+	
+	//if (lenD != ia.size()){
+		//IntVar tmp;
+		//return (IntVar)NULL;
+	//}
+	
+	/**
+		*arrayScaPro -> Each position of this vector contains ia[i]*Dv[i]; 0<= i <= ia.size()
+		*Add each position of arrayScaPro will get the scalar product 
+	*/
+	IntVarArray arrayScaPro(sp,ia.size(),Int::Limits::min,Int::Limits::max);
+	
+	for (int i=0; i<ia.size();i++){
+		int lenV;
+		OZ_Term *Vec = vectorToOzTerms2(Mat[i],lenV); //Vec -> Represents Dv[i]
+		
+		IntVar accValue(sp,Int::Limits::min,Int::Limits::max);
+		//accValue.init(sp,Int::Limits::min,Int::Limits::max);
+		
+		/**
+			* arrayTmp -> In its last position constains multiplication of each value of Dv
+		*/
+		IntVarArray arrayTmp(sp,lenV+1,Int::Limits::min,Int::Limits::max);
+		IntVar tmp(sp,1,1);
+		//tmp.init(sp,1,1);
+		arrayTmp[0] = tmp;
+		
+		for (int j=0; j<lenV;j++){
+			IntVar valVec;
+			valVec = get_IntVar(OZ_deref(Vec[j]));
+			Gecode::mult (sp, valVec, arrayTmp[j], arrayTmp[j+1]	, __ICL_DEF, __PK_DEF);
+		}
+		tmp.init(sp,ia[i],ia[i]);
+		Gecode::mult (sp, arrayTmp[lenV], tmp, arrayScaPro[i], __ICL_DEF, __PK_DEF);
+	}
+	IntVar ScalarProduct;
+	ScalarProduct.init(sp,Int::Limits::min,Int::Limits::max);
+	Gecode::linear(sp,arrayScaPro,IRT_EQ,ScalarProduct,__ICL_DEF, __PK_DEF);
+	return ScalarProduct;
+}
+
+
+/**
+	*  Implementing of reified.sumAC constraint using mult, abs, linear and rel constraint of gecode
+*/
+OZ_BI_define(reified_sumAC,7,0)
+{
+	DeclareGSpace(sp);
+	
+	if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntRelType(OZ_in(2)) && OZ_isGeIntVar(OZ_in(3)) && OZ_isGeBoolVar(OZ_in(4))){
+		IntArgs ia = getIntArgs(OZ_in(0));
+		IntVarArgs iva = getIntVarArgs(OZ_in(1));
+		IntRelType relType = getIntRelType(OZ_in(2));
+		Gecode::IntVar &D1 = intOrIntVar(OZ_in(3));
+		DeclareGeBoolVar(4, D2, sp);
+		Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(5));
+		Gecode::PropKind __PK_DEF = getPropKind(OZ_in(6));
+		
+		if (ia.size() != iva.size())
+			return OZ_typeError(0, "Vectors must have same size: reified.sumAC");
+		
+		IntVar ScalarProduct = scalarProduct(sp,ia,iva, __ICL_DEF, __PK_DEF);
+		IntVar tmpD;
+		tmpD.init(sp,Int::Limits::min,Int::Limits::max);
+		try {
+			/**
+				abs (Space *home, IntVar x0, IntVar x1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+			*/
+			Gecode::abs(sp,ScalarProduct,tmpD,ICL_VAL);
+		}
+		catch(Exception e){
+			RAISE_GE_EXCEPTION(e);
+		}
+		try {
+			/**
+				rel (Space *home, IntVar x0, IntRelType r, IntVar x1, BoolVar b, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+			*/
+			Gecode::rel (sp, tmpD, relType, D1, D2, __ICL_DEF, __PK_DEF);
+		}
+		catch(Exception e){
+			RAISE_GE_EXCEPTION(e);
+		}
+	}
+	else{
+    return OZ_typeError(0, "Malformed Propagator: reified.sumAC");
+  }
+	
+	CHECK_POST(sp);
+} OZ_BI_end
+
+/**
+	*  Implementing of reified.sumCN constraint using mult, abs, linear and rel constraint of gecode
+*/
+OZ_BI_define(reified_sumCN,7,0)
+{
+	DeclareGSpace(sp);
+	IntArgs ia = getIntArgs(OZ_in(0));
+	OZ_Term Dvv = OZ_deref(OZ_in(1));
+	DeclareIntRelType(2,relType);
+	Gecode::IntVar &D1 = intOrIntVar(OZ_in(3));
+	DeclareGeBoolVar(4, D2, sp);
+	Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(5));
+	Gecode::PropKind __PK_DEF = getPropKind(OZ_in(6));
+	IntVar ScalarProduct = scalarProduct(sp, ia, Dvv, __ICL_DEF, __PK_DEF);
+	if (ScalarProduct.size() == 0){
+		return OZ_typeError(0, "Vectors must have same size: reified.sumCN");
+		}
+
+	Gecode::rel (sp, ScalarProduct, relType, D1, D2, __ICL_DEF, __PK_DEF);
+	
+	CHECK_POST(sp);
+} OZ_BI_end
+
+/**
+	*  Implementing of reified.sumACN constraint using mult, abs, linear and rel constraint of gecode
+*/
+OZ_BI_define(reified_sumACN,7,0)
+{
+	DeclareGSpace(sp);
+	IntArgs ia = getIntArgs(OZ_in(0));
+	OZ_Term Dvv = OZ_deref(OZ_in(1));
+	DeclareIntRelType(2,relType);
+	Gecode::IntVar &D1 = intOrIntVar(OZ_in(3));
+	DeclareGeBoolVar(4, D2, sp);
+	Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(5));
+	Gecode::PropKind __PK_DEF = getPropKind(OZ_in(6));
+	
+	IntVar ScalarProduct = scalarProduct(sp, ia, Dvv, __ICL_DEF, __PK_DEF);
+	//if (ScalarProduct )
+	//		return OZ_typeError(0, "Vectors must have same size: reified.sumACN");
+	
+	IntVar ABSsp;
+	ABSsp.init(sp,Int::Limits::min,Int::Limits::max);
+	Gecode::abs(sp,ScalarProduct,ABSsp,ICL_VAL);
+	
+	Gecode::rel (sp, ABSsp, relType, D1, D2, __ICL_DEF, __PK_DEF);
+	
+	CHECK_POST(sp);
+} OZ_BI_end
+
+
+OZ_BI_define(reified_dom,3,0){
+	/*
+	*
+	*  This contraint is not implemented yet
+	*
+	*/
+
+	DeclareGSpace(sp);
+	//if (OZ_isPair(OZ_in(0))){
+	//	printf("PAIR\n");fflush(stdout);
+//	}
+	if (OZ_isInt(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2))){
+			int Spec = OZ_intToC(OZ_in(0));
+			IntVarArgs iva = getIntVarArgs(OZ_in(1));
+			DeclareGeBoolVar(2, D1, sp);
+			
+			BoolVarArray tmpArray(sp, iva.size(), 0,1);
+			for (int i = 0; i < iva.size(); i++){
+				IntSet set(iva[i].min(),iva[i].max());
+				IntVar valVar;
+				valVar.init(sp,Spec,Spec);
+				/**
+					dom (Space *home, IntVar x, const IntSet &s, BoolVar b, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+				*/
+				try{
+					Gecode::dom(sp,valVar,set,tmpArray[i],ICL_VAL);
+				}
+				catch (Exception e){
+					RAISE_GE_EXCEPTION(e);
+				}
+			}
+			BoolVar res;
+			res.init(sp,0,1);
+			/**
+				rel (Space *home, const BoolVarArgs &x, IntRelType r, BoolVar y, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+			*/
+			try{
+				Gecode::rel(sp,tmpArray,IRT_EQ,res,ICL_VAL);
+			}
+			catch (Exception e){
+				RAISE_GE_EXCEPTION(e);
+			}
+			Gecode::rel(sp,res,IRT_EQ,D1,ICL_VAL);
+	}
+	else{
+		return OZ_typeError(0, "Malformed Propagator: reified.dom");
+	}
+	CHECK_POST(sp);
+} OZ_BI_end
 // 0/1 propagators
 OZ_BI_define(bool_Gand,4,0)
 {
