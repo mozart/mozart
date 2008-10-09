@@ -1102,27 +1102,4 @@ OZ_BI_define(gfs_elementsDisjoint_2,2,0){
   CHECK_POST(home);
 }OZ_BI_end
 
- // this post is not really neccessary, farhat@ has to delete it!
-OZ_BI_define(gfs_reifiedInclude_3,3,0){
-  DeclareGSpace(home);
-
-  if(OZ_isInt(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2))){
-    DeclareInt2(0, __i);
-    DeclareGeSetVar(1, __s, home);
-    DeclareGeBoolVar(2, __b, home);
-
-    try{
-      Gecode::dom(home, __s, Gecode::SRT_SUP, __i, __b);
-    }
-    catch(Exception e){
-      RAISE_GE_EXCEPTION(e);
-    }
-  }
-  else{
-    return OZ_typeError(0, "Malformed Propagator");
-  }
-
-  CHECK_POST(home);
-}OZ_BI_end
-
 #endif
