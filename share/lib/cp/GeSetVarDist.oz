@@ -24,7 +24,7 @@
 %% Distribution
 %%
 
-%% GeIntVar Distribution. var selection and val selection                                                                                      
+%% GeSetVar Distribution. var selection and val selection                                                                                      
    GfsVarSel = map( naive:         0
                     minCard:       1
                     maxCard:       2
@@ -234,19 +234,14 @@ local
 	 {Space.waitStable}
 	 Unknown={GFSReflect.unknown X}
 	 B = {GBD.decl}
-	 % whit the finite domain variable I
-	 % we have a channel to distribute the boolean variable B, nice!
-	 I = {GFD.decl}
       in
 	 if Unknown==nil then
 	    {FSDistNaive Xr}
 	 else
 	    UnknownVal = {MinElement Unknown}
 	    {ReifiedInclude post(UnknownVal X B)}
-	    {GFD.channel post(B I)}
 	 in
-	    {GFD.distribute generic(value:max) [I]}
-	    
+	    {GBD.distribute generic(order:naive value:max) [B]}
 	    {FSDistNaive Xs}
 	 end
       end
@@ -266,7 +261,6 @@ local
 	 %% this needs to be fixed eventually.
 	 SortedSL   = {Order FilteredSL}
 	 B = {GBD.decl}
-	 I = {GFD.decl}
       in
 	 case SortedSL
 	 of nil then skip
@@ -274,10 +268,8 @@ local
 	    UnknownVal={Elem HSL}
 	    DistVar   ={Sel  HSL}
 	    {ReifiedInclude post(UnknownVal DistVar B)}
-	    {GFD.channel post(B I)}
 	 in
-	    {GFD.distributeBR generic(value:max) [I]}
-	    
+	    {GBD.distribute generic(order:naive value:max) [B]}
 	    {FSDistGeneric {RRobin FilteredSL}
 	     Order FCond Elem RRobin Sel Proc}
 	 end 

@@ -26,6 +26,12 @@
  #
  # Built-ins
  #
+
+## Distributor
+    'distribute'    => { in =>  ['+int', '+int', '+value'],
+        out => ['value'],
+        bi =>  gbd_distribute }, 
+
  
     'bool'		=> { in  => ['+value'],
 			     out => ['+int'],
