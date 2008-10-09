@@ -40,7 +40,7 @@ GECODE_INC	= `pkg-config --cflags gecode`
 
 CFLAGS 		= $(INCS) $(GECODE_INC) $(GESPACE_CXXFLAGS) $(CPPFLAGS) 
 
-GBDBLIBSRC	= GeBoolVar.cc GeBoolVar-builtins.cc
+GBDBLIBSRC	= GeBoolVar.cc GeBoolVar-builtins.cc distribute.cc
 GBDBLIBOBJS	= $(GBDBLIBSRC:.cc=.o)
 
 GBDPLIBSRC	= GeBoolProp-builtins.cc GeBDP-Builtins.cc
