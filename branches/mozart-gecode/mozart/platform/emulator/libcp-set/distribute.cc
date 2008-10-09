@@ -53,12 +53,12 @@ public:
   static bool assigned(OZ_Term t) {
     /**
       TODO: if a set variable gets determined, it is no longer a GeSetVar
-      This behaviour is unespected, but we handle it just returning true if
-      the OZ_isGeSetVar returns false.
+      This behaviour is unespected. So if term is SetValueM return true.
     */
-    if(!OZ_isGeSetVar(t)){
+    if(SetValueM::OZ_isSetValueM(t))
       return true;
-    }
+    
+    Assert(OZ_isGeSetVar(t));
     return getView(t).assigned();
   }
   

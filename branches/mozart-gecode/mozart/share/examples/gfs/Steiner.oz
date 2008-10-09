@@ -46,8 +46,8 @@ fun {Steiner N}
 	      end}
 	  end}
 	 
-	 %{GFS.distribute opt(order:naive value:min) Ss}
-	 {GFS.distribute naive Ss}
+	 {GFS.distribute generic(order:order(sel:min)) Ss}
+	 %{GFS.distribute naive Ss}
       end 
    else proc {$ _} fail end 
    end 

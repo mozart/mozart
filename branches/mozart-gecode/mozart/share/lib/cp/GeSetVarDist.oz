@@ -206,7 +206,6 @@ local
       case Spec
       of true then
 	 fun {$ X}
-	    X = {Var.decl}
 	    {GFSGetNumOfUnknown {Select X}} > 0 
 	 end
       else
@@ -276,7 +275,6 @@ local
 	    DistVar   ={Sel  HSL}
 	    {ReifiedInclude post(UnknownVal DistVar B)}
 	    {GFD.channel post(B I)}
-	    {GFD.channel post(I B)}
 	 in
 	    {GFD.distributeBR generic(value:max) [I]}
 	    

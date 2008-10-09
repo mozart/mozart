@@ -164,6 +164,10 @@ OZ_Term new_GeBoolVar(int min, int max) {
  */
 inline 
 bool OZ_isGeBoolVar(OZ_Term v) { 
+  if(OZ_isInt(v)){
+    if(OZ_intToC(v) == 0 || OZ_intToC(v) == 1)
+      return true;
+  }
   OZ_Term v_local = OZ_deref(v);
   if (oz_isGeVar(v_local)) {
 

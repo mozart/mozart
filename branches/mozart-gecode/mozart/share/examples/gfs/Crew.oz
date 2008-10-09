@@ -127,8 +127,8 @@ in
                   
       {SequencedDisjoint Flights}
  
-      %{GFS.distribute opt(order:naive value:min) Flights}
-      {GFS.distribute naive Flights}
+      {GFS.distribute generic(order:naive value:min) Flights}
+      %{GFS.distribute naive Flights}
 
       Sol = Flights
       %Sol = {Map Flights

@@ -56,8 +56,8 @@ in
 		     end}
       
       %{GFS.distribute opt(order:naive value:min) Xs}
-      {GFS.distribute naive Xs}
-      %{GFS.distribute generic(order:naive value:min) Xs}
+      %{GFS.distribute naive Xs}
+      {GFS.distribute generic(order:order(sel:min)) Xs}
    end 
 end
 

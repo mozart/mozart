@@ -190,6 +190,10 @@ inline OZ_Term new_GeSetVar_init() {
 inline 
 bool OZ_isGeSetVar(OZ_Term v) { 
   OZ_Term v_local = OZ_deref(v);
+
+  if(SetValueM::OZ_isSetValueM(v_local))
+    return true;
+  
   if (oz_isGeVar(v_local)) {
     GeVar *gv = static_cast< GeVar*>(oz_getExtVar(v_local));
     return gv->getType() == T_GeSetVar;
