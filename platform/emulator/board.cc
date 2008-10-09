@@ -792,7 +792,7 @@ void Board::commitB(TaggedRef c) {
     } 
   } else {
     // Committed branch is stored in the branches queue
-    printf("CommitB whit **NO** distributor present (BR) %s\n",OZ_toC(c,100,100));fflush(stdout);
+    //printf("CommitB whit **NO** distributor present (BR) %s\n",OZ_toC(c,100,100));fflush(stdout);
     bq->enqueue(c);
   }
 }

@@ -120,6 +120,12 @@
      in => ['+fset'],
      out => ['+string'],
      bi => gfs_ValueToString
+ },
+
+ 'value.is' => {
+     in => ['+value'],
+     out => ['+bool'],
+     bi => gfs_ValueIs
  }
 	 
 );

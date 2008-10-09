@@ -164,10 +164,13 @@ OZ_BI_define(gfs_unknownSize,1,1){
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
+  } else if(SetValueM::OZ_isSetValueM(OZ_in(0))){
+    //the setvar is now determined, return 0.
+    OZ_RETURN_INT(num);
   }
   //TODO: raise a more descriptive error
   else{
-    return OZ_typeError(0, "Malformed Propagator");
+    return OZ_typeError(0, "Malformed Propagator, Variable must be a finite set");
   }
   OZ_RETURN_INT(num);
 }OZ_BI_end
@@ -182,6 +185,18 @@ OZ_BI_define(gfs_ValueToString, 1,1)
     OZ_RETURN_STRING(s);
     //}
     //oz_typeError(0,"FSetValue");
+} OZ_BI_end
+
+OZ_BI_define(gfs_ValueIs, 1,1)
+{
+  OZ_Term term = OZ_in(0);
+  DEREF(term, term_ptr);
+  Assert(!oz_isRef(term));
+  if (oz_isVarOrRef(term))
+    oz_suspendOnPtr(term_ptr);
+  
+  OZ_RETURN(oz_bool(SetValueM::OZ_isSetValueM(term)));
+  
 } OZ_BI_end
 
 OZ_BI_define(gfs_unknown,1,1){

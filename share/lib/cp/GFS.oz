@@ -165,6 +165,7 @@ define
    GFSSetValue
    GFSSetValueEmpty
    GFSSetValueToString
+   GFSisValue
 
    %FsDecl = GFS.set
    GFSisVar = GFSB.isVar
@@ -432,6 +433,7 @@ in
    GFSUniversalRefl = [0#Sup]
    GFSUniversal     = {GFSSetValue GFSUniversalRefl}
    GFSSetValueToString = GFSB.'value.toString'
+   GFSisValue = GFSB.'value.is'
 
    GFSValue = value(
 		 empty:
@@ -442,8 +444,8 @@ in
 		    fun {$ N} {GFSSetValue [N]} end
 		 make:
 		    GFSSetValue
-		    % is:
-% 		       FSisValue
+		 is:
+		    GFSisValue
 		 toString:
 		    GFSSetValueToString
 		 )
@@ -737,15 +739,12 @@ in
       end
    end
 
-   %% This can be done using the dom propagator. Add SetRelType parameter to do that.
-   %% See record Rt in this file.
    proc {ReifiedInclude Sc}
-      %Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
    in
       case W
       of 3 then
-	 {GFSP.gfs_reifiedInclude_3 Sc.1 Sc.2 Sc.3}
+	 {Rel post(Sc.2 Rt.'>:' Sc.1 Sc.3)}
       else
 	 raise malformed('ReifiedInclude constraint post') end
       end
