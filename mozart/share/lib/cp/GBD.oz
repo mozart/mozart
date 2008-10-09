@@ -69,6 +69,18 @@ prepare
      speed: 1  %Prefer speed over memory consumption
      memory:2  %Prefer little memory over speed
      )
+
+   %% Distribition strategie selection
+
+   GbdVarSel = map( naive:     0
+		    min:       1
+                    max:       2
+		  )
+   
+   GbdValSel = map( min:        0
+		    max:        1
+                  )
+   
    
 export
    %% Telling domains
@@ -132,21 +144,21 @@ export
    %ValSel VarSel
    %%%distribute:     IntVarDistribute
    %Distribute
-   %intBranch:Distribute   
+   distribute: GBDDistribute   
 
    %%Space
    
 define
-
-	
-	%% operations
-	   BoolVar = GBDB.'bool'
-		 IsVar = GBDB.'isVar'
-     Size = GBDB.'reflect.size'
-     Zero = GBDB.'reflect.zero'
-   	 One = GBDB.'reflect.one'
-     Bool_not = GBDP.'not'
-		VarRel = GBDP.'rel_BV_BT_BV_BV'
+   
+   
+   %% operations
+   BoolVar = GBDB.'bool'
+   IsVar = GBDB.'isVar'
+   Size = GBDB.'reflect.size'
+   Zero = GBDB.'reflect.zero'
+   One = GBDB.'reflect.one'
+   Bool_not = GBDP.'not'
+   VarRel = GBDP.'rel_BV_BT_BV_BV'
 
    Reflect = reflect(size: Size
 		     zero: Zero
@@ -263,5 +275,20 @@ define
    raise malformed('Linear constraint post') end
       end
    end
+
+   %% Bool Var distribution
+   proc {GBDDistribute Spec Vs}
+      case {Label Spec}
+      of generic then
+	 Order = Spec.order
+	 Value = Spec.value
+      in
+	 {Wait {GBDB.'distribute' GbdVarSel.Value GbdValSel.Value Vs}}
+      else
+	 {Exception.raiseError
+	  fd(unknownDistributionStrategy
+	     'BD.distribute' [Spec Vs] 1)}
+      end 
+   end 
    
 end
