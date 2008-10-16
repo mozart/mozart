@@ -492,11 +492,15 @@ in
 		      GFSGetLubList
 		   card:
 		      fun {$ S}
-                         % FIXME: each value is computed twice
-			 if {GFSGetNumOfGlb S}=={GFSGetNumOfLub S} then
-			    {GFSGetNumOfGlb S}
-			 else
-			    {GFSGetNumOfGlb S}#{GFSGetNumOfLub S}
+			 local
+			    NumOfGlb = {GFSGetNumOfGlb S}
+			    NumOfLub = {GFSGetNumOfLub S}
+			 in
+			    if NumOfGlb==NumOfLub then
+			       NumOfGlb
+			    else
+			       NumOfGlb#NumOfLub
+			    end
 			 end
 		      end
 		   cardOf:
