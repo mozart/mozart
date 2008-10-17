@@ -1284,6 +1284,33 @@ OZ_BI_define(gfd_div_5,5,0){
   CHECK_POST(home);
 }OZ_BI_end
 
+OZ_BI_define(gfd_sqrt_4,4,0){
+  DeclareGSpace(home);
+
+  if(OZ_isGeIntVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1))){
+    
+    /**
+       sqrt (Space *home, IntVar x0, IntVar x1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+    */
+    Gecode::IntVar &iv1 = intOrIntVar(OZ_in(0));
+    Gecode::IntVar &iv2 = intOrIntVar(OZ_in(1));
+    Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(2));
+    Gecode::PropKind __PK_DEF = getPropKind(OZ_in(3));  
+    
+    try{
+      Gecode::sqrt (home, iv1, iv2, __ICL_DEF, __PK_DEF);
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+  } else {
+    return OZ_typeError(0, "Malformed Propagator: Sqrt");
+  }
+
+  CHECK_POST(home);
+}OZ_BI_end
+
+
 OZ_BI_define(gfd_mod_5,5,0){
   DeclareGSpace(home);
 
@@ -1306,6 +1333,34 @@ OZ_BI_define(gfd_mod_5,5,0){
     }
   } else {
     return OZ_typeError(0, "Malformed Propagator");
+  }
+
+  CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(gfd_divmod_6,6,0){
+  DeclareGSpace(home);
+
+  if(OZ_isGeIntVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) && OZ_isGeIntVar(OZ_in(4))){
+    
+    /**
+				divmod (Space *home, IntVar x0, IntVar x1, IntVar x2, IntVar x3, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+    */
+    Gecode::IntVar &iv1 = intOrIntVar(OZ_in(0));
+    Gecode::IntVar &iv2 = intOrIntVar(OZ_in(1));
+    Gecode::IntVar &iv3 = intOrIntVar(OZ_in(2));
+    Gecode::IntVar &iv4 = intOrIntVar(OZ_in(3));
+    Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(4));
+    Gecode::PropKind __PK_DEF = getPropKind(OZ_in(5));  
+    
+    try{
+      Gecode::divmod (home, iv1, iv2, iv3, iv4, __ICL_DEF, __PK_DEF);
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+  } else {
+    return OZ_typeError(0, "Malformed Propagator: divmod");
   }
 
   CHECK_POST(home);
