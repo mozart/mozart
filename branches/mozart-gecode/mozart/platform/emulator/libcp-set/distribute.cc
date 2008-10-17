@@ -97,6 +97,27 @@ enum SetValSelection {
 };
 
 
+/**
+   This Macro test whether element v is an 
+   undetermined GeSetVar or a determined one.
+   If v is varOrRef then suspend, otherwise raise error.
+ */
+#define TestGeSetVar(v)					\
+  {							\
+    DEREF(v, v_ptr);					\
+    Assert(!oz_isRef(v));				\
+    if (OZ_isGeSetVar(v)) {				\
+      n++;						\
+    } else if (SetValueM::OZ_isSetValueM(v)) {		\
+      ;							\
+    } else if (oz_isVarOrRef(v)) {			\
+      oz_suspendOnPtr(v_ptr);				\
+    } else {						\
+      oz_typeError(0,"vector of finite set domains");	\
+    }							\
+  }
+
+
 #define PP(I,J) I*(setVarByMaxUnknown+1)+J  
 
 #define PPCL(I,J)							\
@@ -122,9 +143,7 @@ OZ_BI_define(gfs_distribute, 3, 1) {
     
     while (oz_isLTuple(vs)) {
       TaggedRef v = oz_head(vs);
-      //TODO: Tests element v to be a GeSetVar.
-      //TestElement(v);
-      n++;
+      TestGeSetVar(v);
       vs = oz_tail(vs);
       DEREF(vs, vs_ptr);
       Assert(!oz_isRef(vs));
@@ -133,19 +152,17 @@ OZ_BI_define(gfs_distribute, 3, 1) {
     }
     
     if (!oz_isNil(vs))
-      oz_typeError(0,"vector of finite sets variables");
+      oz_typeError(0,"vector of finite sets domains");
     
   } else if (oz_isSRecord(vv)) {
     
     for (int i = tagged2SRecord(vv)->getWidth(); i--; ) {
       TaggedRef v = tagged2SRecord(vv)->getArg(i);
-      //TODO: Tests element v to be a GeSetVar.
-      //TestElement(v);
-      n++;
+      TestGeSetVar(v);
     }
     
   } else 
-    oz_typeError(0,"vector of finite sets variables");
+    oz_typeError(0,"vector of finite sets domains");
   
   // If there are no variables in the input then return unit
   if (n == 0)

@@ -69,6 +69,32 @@ public:
 };
 
 /**
+   Template class for width variable selection.
+   Selects the variable with greatest domain width.
+   Not implemented by gecode.
+ */
+template<class View>
+class ByWidth {
+protected:
+  /// min width and current minwidth
+  int minwidth;
+public:
+  /// Intialize with view \a x                                                                                                                             
+  ViewSelStatus init(const Gecode::Space* home, View x){
+    int minwidth = x.width();
+    return VSS_SELECT;
+  }
+  /// Possibly select better view \a x                                                                                                                     
+  ViewSelStatus select(const Gecode::Space* home, View x){
+    if(x.width() > minwidth){
+      minwidth = x.width();
+      return VSS_SELECT;
+    }
+    return VSS_NONE;
+  }
+};
+
+/**
    Variable selection strategies for finite domains
    This strategies is taken from the Gecode ones.
    See http://www.gecode.org/gecode-doc-latest/group__TaskModelIntBranch.html
@@ -80,7 +106,7 @@ enum IntVarSelection {
   iVarByMinMin,
   iVarByMaxMax,
   iVarByDegreeMin, //this is the same of NbProp (number of propagators associated)
-  iVarByVarWidth
+  iVarByWidth
 };
 
 /**
@@ -97,8 +123,28 @@ enum IntValSelection {
   iValSplitMax
 };
 
+/**
+   This Macro test whether element v is an 
+   undetermined GeIntVar or a determined one.
+   If v is varOrRef then suspend, otherwise raise error.
+ */
+#define TestGeIntVar(v)					\
+  {							\
+    DEREF(v, v_ptr);					\
+    Assert(!oz_isRef(v));				\
+    if (OZ_isGeIntVar(v)) {				\
+      n++;						\
+    } else if (OZ_isInt(v)) {			\
+      ;							\
+    } else if (oz_isVarOrRef(v)) {			\
+      oz_suspendOnPtr(v_ptr);				\
+    } else {						\
+      oz_typeError(0,"vector of finite domains");	\
+    }							\
+  }
 
-#define PP(I,J) I*(iVarByVarWidth+1)+J  
+
+#define PP(I,J) I*(iVarByWidth+1)+J  
 
 #define PPCL(I,J)					\
   case PP(iVar ## I, i ## J):				\
@@ -122,9 +168,7 @@ OZ_BI_define(gfd_distribute, 3, 1) {
     
     while (oz_isLTuple(vs)) {
       TaggedRef v = oz_head(vs);
-      //TODO:Test whether v is a GeIntVar
-      //TestElement(v);
-      n++;
+      TestGeIntVar(v);
       vs = oz_tail(vs);
       DEREF(vs, vs_ptr);
       Assert(!oz_isRef(vs));
@@ -139,9 +183,7 @@ OZ_BI_define(gfd_distribute, 3, 1) {
     
     for (int i = tagged2SRecord(vv)->getWidth(); i--; ) {
       TaggedRef v = tagged2SRecord(vv)->getArg(i);
-      //TODO:Test whether v is a GeIntVar
-      //TestElement(v);
-      n++;
+      TestGeIntVar(v);
     }
     
   } else 
@@ -213,12 +255,12 @@ OZ_BI_define(gfd_distribute, 3, 1) {
     PPCL(ByDegreeMin,ValSplitMin);
     PPCL(ByDegreeMin,ValSplitMax);
     
-    /*PPCL(Width,Min);
-    PPCL(Width,Max);
-    PPCL(Width,Mid);
-    PPCL(Width,SplitMin);
-    PPCL(Width,SplitMax);
-    */
+    PPCL(ByWidth,ValMin);
+    PPCL(ByWidth,ValMax);
+    PPCL(ByWidth,ValMed);
+    PPCL(ByWidth,ValSplitMin);
+    PPCL(ByWidth,ValSplitMax);
+    
   default:
    Assert(false);
   }
