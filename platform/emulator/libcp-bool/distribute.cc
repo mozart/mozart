@@ -63,7 +63,7 @@ public:
 };
 
 /**
-   Variable selection strategies for finite domains
+   Variable selection strategies for boolean domains
    This strategies is taken from the Gecode ones.
    See http://www.gecode.org/gecode-doc-latest/group__TaskModelIntBranch.html
    for more information
@@ -75,7 +75,7 @@ enum BoolVarSelection {
 };
 
 /**
-   Value selection strategies for finite domains
+   Value selection strategies for boolean domains
    This strategies is taken from the Gecode ones.
    See http://www.gecode.org/gecode-doc-latest/group__TaskModelIntBranch.html
    for more information
@@ -84,6 +84,28 @@ enum BoolValSelection {
   bValMin,
   bValMax
 };
+
+
+/**
+   This Macro test whether element v is an 
+   undetermined GeBoolVar or a determined one.
+   If v is varOrRef then suspend, otherwise raise error.
+*/
+#define TestGeBoolVar(v)						\
+  {									\
+    DEREF(v, v_ptr);							\
+    Assert(!oz_isRef(v));						\
+    if (OZ_isGeBoolVar(v)) {						\
+      n++;								\
+    } else if (OZ_isInt(v)) {						\
+      ;									\
+    } else if (oz_isVarOrRef(v)) {					\
+      oz_suspendOnPtr(v_ptr);						\
+    } else {								\
+      oz_typeError(0,"vector of booleans domains");			\
+    }									\
+  }
+
 
 
 #define PP(I,J) I*(bVarByDegreeMaxNoTies+1)+J  
@@ -110,9 +132,7 @@ OZ_BI_define(gbd_distribute, 3, 1) {
     
     while (oz_isLTuple(vs)) {
       TaggedRef v = oz_head(vs);
-      //TODO:Test whether v is a GeBoolVar
-      //TestElement(v);
-      n++;
+      TestGeBoolVar(v);
       vs = oz_tail(vs);
       DEREF(vs, vs_ptr);
       Assert(!oz_isRef(vs));
@@ -121,19 +141,17 @@ OZ_BI_define(gbd_distribute, 3, 1) {
     }
     
     if (!oz_isNil(vs))
-      oz_typeError(0,"vector of finite boolean domains");
+      oz_typeError(0,"vector of boolean domains");
     
   } else if (oz_isSRecord(vv)) {
     
     for (int i = tagged2SRecord(vv)->getWidth(); i--; ) {
       TaggedRef v = tagged2SRecord(vv)->getArg(i);
-      //TODO:Test whether v is a GeBoolVar
-      //TestElement(v);
-      n++;
+      TestGeBoolVar(v);
     }
     
   } else 
-    oz_typeError(0,"vector of finite boolean domains");
+    oz_typeError(0,"vector of boolean domains");
   
   
 
