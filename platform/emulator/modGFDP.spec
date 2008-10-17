@@ -288,7 +288,19 @@ $boot_module_name      		  = "GFD";
      out => [],
      bi  => gfd_div_5
  },
+ 
+ 'gfd_divmod_6' => { 
+     in  => ['+value', '+value', '+value', '+value', '+value', '+value'],
+     out => [],
+     bi  => gfd_divmod_6
+ },
 
+ 'gfd_sqrt_4' => { 
+     in  => ['+value', '+value', '+value', '+value'],
+     out => [],
+     bi  => gfd_sqrt_4
+ },
+ 
 	'gfd_mod_5' => { 
      in  => ['+value', '+value', '+value', '+value', '+value'],
      out => [],

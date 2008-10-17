@@ -118,6 +118,8 @@ export
    greaterEq:       GreaterEq
 %   disjoint:        Disjoint 
    disjointC:       DisjointC
+   sqrt:            Sqrt
+   divmod:          DivMod
    
    
    %%Generic Propagators
@@ -557,6 +559,30 @@ define
 	 {GFDP.gfd_div_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
       else
 	 raise malformed('Mult constraint post') end
+      end
+   end
+
+   proc {DivMod S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 6 then
+	 {GFDP.gfd_divmod_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
+      else
+	 raise malformed('divmod constraint post') end
+      end
+   end
+
+   proc {Sqrt S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 4 then
+	 {GFDP.gfd_sqrt_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+      else
+	 raise malformed('Sqrt constraint post') end
       end
    end
    
