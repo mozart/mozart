@@ -58,6 +58,19 @@ $boot_module_name     = "GFS";
      bi  => set_subS
  },
 
+ 'gfs_monitorIn' => { 
+     in  => ['fset','value'],
+     out => [],
+     bi  => gfs_monitorIn
+ },
+
+ 'gfs_monitorOut' => { 
+     in  => ['fset','value'],
+     out => [],
+     bi  => gfs_monitorOut
+ },
+
+
 # 'gfs_projector_4' => { in  => ['+value', '+value', '+value', '+value'],
 #   out => [],
 #   bi  => gfs_projector_4 }
