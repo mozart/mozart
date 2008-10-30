@@ -6,6 +6,7 @@
  *
  *  Contributing authors:
  *     Andres Felipe Barco <anfelbar@univalle.edu.co>
+ *     Gustavo A. Gomez Farhat <gafarhat@univalle.edu.co>
  *
  *  Copyright:
  *     Gustavo Gutierrez, 2006
@@ -15,15 +16,18 @@
  *     $Date$
  *     $Revision$
  *
- *  This file is part of GeOz, a module for integrating gecode 
- *  constraint system to Mozart: 
- *     http://home.gna.org/geoz
- *
- *  See the file "LICENSE" for information on usage and
- *  redistribution of this file, and for a
- *     DISCLAIMER OF ALL WARRANTIES.
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
  *
  */
+
 
 #ifndef __GECODE_SET_VAR_HH__
 #define __GECODE_SET_VAR_HH__
@@ -33,6 +37,20 @@
 #include "../libcp-bool/GeBoolVar.hh"
 using namespace Gecode;
 using namespace Gecode::Set;
+
+const int lim_inf = Set::Limits::min;
+const int lim_sup = Set::Limits::max;
+
+//*****************************************************************************
+
+#define GEOZ_FSETDESCR_SYNTAX						\
+  "The syntax of a " GEOZ_EM_FSETDESCR " is:\n"				\
+  "   set_descr   ::= simpl_descr | compl(simpl_descr)\n"		\
+  "   simpl_descr ::= range_descr | nil | [range_descr+]\n"		\
+  "   range_descr ::= integer | integer#integer\n"			\
+  "   integer     ::= {" _GEOZ_EM_FSETINF ",...," _GEOZ_EM_FSETSUP "}"
+
+//*****************************************************************************
 
 // A GeSetVar interfaces an SetVar inside a GenericSpace.
 class GeSetVar : public GeVar {

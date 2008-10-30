@@ -168,6 +168,63 @@ OZ_BI_define(set_distinct,2,0)
 } OZ_BI_end
 
 
+  /**
+     Monitoring builtins.
+  */
+
+#include "SetGeMozProp.hh"
+
+void MonitorIn(Gecode::Space *gs, Gecode::Set::SetView sv, OZ_Term stream) {
+  if(gs->failed()) return;
+  (void) new(gs) GeMonitorIn(gs, sv, stream);
+}
+
+void MonitorOut(Gecode::Space *gs, Gecode::Set::SetView sv, OZ_Term stream) {
+  if(gs->failed()) return;
+  (void) new(gs) GeMonitorOut(gs, sv, stream);
+}
+
+OZ_BI_define(gfs_monitorIn, 2, 0)
+{
+  DeclareGSpace(gs);
+  
+  if(OZ_isGeSetVar(OZ_in(0))){
+    DeclareGeSetVar(0, fsvar, gs);
+    Set::SetView sv = fsvar.var();
+  
+    try{
+      MonitorIn(gs, sv, OZ_in(1));
+    }
+    catch(Exception e) {
+      RAISE_GE_EXCEPTION(e);
+    }
+    CHECK_POST(gs);
+  } else {
+    return OZ_typeError(0, "expected finite set domain");
+  }
+}
+OZ_BI_end
+
+OZ_BI_define(gfs_monitorOut, 2, 0)
+{
+  DeclareGSpace(gs);
+  if(OZ_isGeSetVar(OZ_in(0))){
+    DeclareGeSetVar(0, fsvar, gs);
+    Set::SetView sv = fsvar.var();
+    try{
+      MonitorOut(gs, sv, OZ_in(1));
+    }
+    catch(Exception e) {
+      RAISE_GE_EXCEPTION(e);
+    }
+    CHECK_POST(gs);
+  } else {
+    return OZ_typeError(0, "expected finite set domain");
+  }
+}
+OZ_BI_end
+
+
 #ifndef MODULES_LINK_STATIC
 #include "../modGFSP-if.cc"
 #endif

@@ -101,8 +101,10 @@
 #define _OZ_EM_FDINF    "0"
 #define _OZ_EM_FDSUP    "134 217 726"
 #define _OZ_EM_FSETINF  "0"
+#define _GEOZ_EM_FSETINF  "~1 073 741 822"
 // loeckelt: change?
 #define _OZ_EM_FSETSUP  "134 217 726"
+#define _GEOZ_EM_FSETSUP  "1 073 741 822"
 #define _OZ_EM_INTMAX   "134 217 727"
 
 #define OZ_EM_LIT       "literal"
@@ -112,8 +114,10 @@
 #define OZ_EM_FDBOOL    "boolean finite domain integer in {0,1}"
 #define OZ_EM_FDDESCR   "description of a finite domain integer"
 #define OZ_EM_FSETVAL   "finite set of integers"
+#define GEOZ_EM_FSETVAL   "finite set of integers"
 #define OZ_EM_FSET      "finite set of integers constraint"
 #define OZ_EM_FSETDESCR "description of a finite set of integers"
+#define GEOZ_EM_FSETDESCR "description of a finite set of integers"
 #define OZ_EM_VECT      "vector of "
 #define OZ_EM_RECORD    "record of "
 #define OZ_EM_TNAME     "truth name"
