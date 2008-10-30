@@ -120,11 +120,10 @@ export
 
    %% Iterating and Monitoring %%
    
-%  monitorIn : GFSMonitorIn
-   %monitorOut
+   monitorIn : GFSMonitorIn
+   monitorOut : GFSMonitorOut
 %    forAllIn
-
-
+   
    % Reflection
    reflect: GFSReflect % (card, lowerBound, upperBound,
                        % unknown, lowerBoundList, upperBoundList,
@@ -217,7 +216,8 @@ define
 		       {Length {GFSGetLubList S}}
 		    end
 
-%  GFSMonitorIn = GFSValue.empty
+   GFSMonitorIn = GFSP.'gfs_monitorIn'
+   GFSMonitorOut = GFSP.'gfs_monitorOut'
    
    %% Gecode propagators
    Rel

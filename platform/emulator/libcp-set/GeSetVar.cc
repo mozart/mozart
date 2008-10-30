@@ -6,6 +6,7 @@
  *
  *  Contributing authors:
  *     Andres Felipe Barco <anfelbar@univalle.edu.co>
+ *     Gustavo A. Gomez Farhat <gafarhat@univalle.edu.co>
  *
  *  Copyright:
  *     Gustavo Gutierrez, 2006
@@ -15,16 +16,17 @@
  *     $Date$
  *     $Revision$
  *
- *  This file is part of GeOz, a module for integrating gecode 
- *  constraint system to Mozart: 
- *     http://home.gna.org/geoz
- *
- *  See the file "LICENSE" for information on usage and
- *  redistribution of this file, and for a
- *     DISCLAIMER OF ALL WARRANTIES.
+ *  This file is part of Mozart, an implementation 
+ *  of Oz 3:
+ *     http://www.mozart-oz.org
+ * 
+ *  See the file "LICENSE" or
+ *     http://www.mozart-oz.org/LICENSE.html
+ *  for information on usage and redistribution 
+ *  of this file, and for a DISCLAIMER OF ALL 
+ *  WARRANTIES.
  *
  */
-
 
 #include "GeSetVar.hh"
 #include "unify.hh"
@@ -100,7 +102,7 @@ bool GeSetVar::In(TaggedRef lx) {
 TaggedRef GeSetVar::clone(TaggedRef v) {
   Assert(OZ_isGeSetVar(v));
   
-  OZ_Term lv = new_GeSetVar(IntSet(Int::Limits::min,Int::Limits::max),IntSet(Int::Limits::min,Int::Limits::max));
+  OZ_Term lv = new_GeSetVar(IntSet(lim_inf, lim_sup), IntSet(lim_inf, lim_sup));
   get_GeSetVar(v,false)->intersect(lv);
   return lv;
 }
@@ -122,8 +124,8 @@ bool GeSetVar::hasSameDomain(TaggedRef v) {
 
 inline
 TaggedRef GeSetVar::newVar(void) {
-  return new_GeSetVar(IntSet(Int::Limits::min,
-			     Int::Limits::max),IntSet(Int::Limits::min,Int::Limits::max));
+  return new_GeSetVar(IntSet(lim_inf, lim_sup),
+		      IntSet(lim_inf, lim_sup));
 }
 
 

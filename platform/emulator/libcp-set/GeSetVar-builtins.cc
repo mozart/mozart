@@ -32,6 +32,7 @@
 #ifndef __GEOZ_SET_VAR_BUILTINS_CC__
 #define __GEOZ_SET_VAR_BUILTINS_CC__
 
+#include "cpi.hh"
 #include "SetVarMacros.hh"
 
 using namespace Gecode;
@@ -48,6 +49,13 @@ OZ_BI_define(new_bounds,2,1)
 {
   DECLARE_INT_SET3(dom1, val1, 0);   // the glb of the SetVar
   DECLARE_INT_SET3(dom2, val2, 1);   // the lub of the SetVar
+
+  if(dom1.min() < lim_inf || dom1.max() > lim_sup){
+    return OZ_typeError(0, GEOZ_FSETDESCR_SYNTAX);
+  }
+  if(dom2.min() < lim_inf || dom2.max() > lim_sup){
+    return OZ_typeError(1, GEOZ_FSETDESCR_SYNTAX);
+  }
   OZ_RETURN(new_GeSetVar(dom1,dom2));
 }
 OZ_BI_end
@@ -135,7 +143,7 @@ OZ_BI_end
 
 OZ_BI_define(set_sup,0,1)
 {
-  OZ_RETURN_INT(Set::Limits::max);
+  OZ_RETURN_INT(lim_sup);
 } 
 OZ_BI_end
 
@@ -147,7 +155,7 @@ OZ_BI_end
 
 OZ_BI_define(set_inf,0,1)
 {
-  OZ_RETURN_INT(Set::Limits::min);
+  OZ_RETURN_INT(lim_inf);
 } 
 OZ_BI_end
 
