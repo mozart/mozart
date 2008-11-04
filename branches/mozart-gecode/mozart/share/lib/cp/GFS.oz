@@ -76,15 +76,8 @@ export
    makeWeights:  GFSMakeWeights
 
    %% Sets over Integers %%
-   int : GFSInt
-%    This is obviesly a record with all this fields
-%    int.min
-%    int.max
-%    int.convex
-%    int.match
-%    int.minN
-%    int.maxN
-%    int.seq
+   int : GFSInt % (int.min, int.max, int.convex
+                %  int.match, int.minN, int.maxN, int.seq)
    
    %% Standard Propagators %% 
    
@@ -120,9 +113,9 @@ export
 
    %% Iterating and Monitoring %%
    
-   monitorIn : GFSMonitorIn
+   monitorIn  : GFSMonitorIn
    monitorOut : GFSMonitorOut
-%    forAllIn
+   forAllIn   : GFSForAllIn
    
    % Reflection
    reflect: GFSReflect % (card, lowerBound, upperBound,
@@ -196,6 +189,7 @@ define
    GFSMakeWeights
    GFSReified
    ReifiedInclude
+   ReifiedEqual
    GFSIsInReif
    GFSValue
    GFSInt
@@ -218,6 +212,7 @@ define
 
    GFSMonitorIn = GFSP.'gfs_monitorIn'
    GFSMonitorOut = GFSP.'gfs_monitorOut'
+   GFSForAllIn
    
    %% Gecode propagators
    Rel
@@ -473,9 +468,13 @@ in
 % 				Rs = {Map Is fun {$ I} {FD.int [0 I]} end}
 % 				{FSP.'reified.partition' SVs GSet Rs}
 % 			     end
-% 			  equal:
-% 			     FSEqualReif
+		   equal:
+		      ReifiedEqual
 		   )
+
+   proc {GFSForAllIn S P}
+      {ForAll {GFSMonitorIn S} P}
+   end
    
    GFSReflect = reflect(
 		   unknown:
@@ -751,6 +750,17 @@ in
 	 {Rel post(Sc.2 Rt.'>:' Sc.1 Sc.3)}
       else
 	 raise malformed('ReifiedInclude constraint post') end
+      end
+   end
+   
+   proc {ReifiedEqual Sc}
+      W = {Record.width Sc}
+   in
+      case W
+      of 3 then
+	 {Rel post(Sc.1 Rt.'=:' Sc.2 Sc.3)}
+      else
+	 raise malformed('ReifiedEqual constraint post') end
       end
    end
    
