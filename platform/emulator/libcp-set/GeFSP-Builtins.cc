@@ -141,6 +141,10 @@ OZ_BI_define(gfs_projector_5,5,0){
 OZ_BI_define(gfs_dom_3,3,0){
   DeclareGSpace(home);
 
+  //test whether input is ref or var
+  for(int i=0; i<3; i++)
+    SuspendPosting(OZ_in(i));
+
   DeclareGeSetVar(0, __s, home);
   DeclareSetRelType(1, __r);
 
@@ -184,6 +188,10 @@ OZ_BI_define(gfs_dom_3,3,0){
 OZ_BI_define(gfs_dom_4,4,0){
   DeclareGSpace(home);
 
+  //test whether input is ref or var
+  for(int i=0; i<4; i++)
+    SuspendPosting(OZ_in(i));
+  
   DeclareGeSetVar(0, __s, home);
   DeclareSetRelType(1, __r);
   
@@ -246,6 +254,10 @@ OZ_BI_define(gfs_dom_4,4,0){
 OZ_BI_define(gfs_dom_5,5,0){
   DeclareGSpace(home);
 
+  //test whether input is ref or var
+  for(int i=0; i<5; i++)
+    SuspendPosting(OZ_in(i));
+
   DeclareGeSetVar(0, __x, home);
   DeclareSetRelType(1, __r);
   DeclareInt2(2, __i);
@@ -273,6 +285,10 @@ OZ_BI_define(gfs_dom_5,5,0){
 
 OZ_BI_define(gfs_cardinality_3,3,0){
   DeclareGSpace(home);
+
+  //test whether input is ref or var
+  for(int i=0; i<3; i++)
+    SuspendPosting(OZ_in(i));
 
   DeclareGeSetVar(0, __x, home);
   DeclareInt2(1, __i);
@@ -303,6 +319,10 @@ OZ_BI_define(gfs_cardinality_3,3,0){
 OZ_BI_define(gfs_rel_3,3,0){
   DeclareGSpace(home);
   
+  //test whether input is ref or var
+  for(int i=0; i<3; i++)
+    SuspendPosting(OZ_in(i));
+
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2))){
     /**
@@ -424,6 +444,10 @@ OZ_BI_define(gfs_rel_3,3,0){
 OZ_BI_define(gfs_rel_4,4,0){
   DeclareGSpace(home);
 
+  //test whether input is ref or var
+  for(int i=0; i<4; i++)
+    SuspendPosting(OZ_in(i));
+
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3))){
     /**
@@ -518,6 +542,11 @@ OZ_BI_define(gfs_rel_4,4,0){
  
 OZ_BI_define(gfs_rel_5,5,0){
   DeclareGSpace(home);
+  
+  //test whether input is ref or var
+  for(int i=0; i<5; i++)
+    SuspendPosting(OZ_in(i));
+  
   DeclareSetOpType(1, __op);
   DeclareSetRelType(3, __r);
 
@@ -638,6 +667,10 @@ OZ_BI_define(gfs_rel_5,5,0){
 
 OZ_BI_define(gfs_convex_1,1,0){
   DeclareGSpace(home);
+  
+  //test whether input is ref or var
+  SuspendPosting(OZ_in(0));
+
   DeclareGeSetVar(0, __x, home);
   try{
     Gecode::convex(home, __x);
@@ -650,6 +683,11 @@ OZ_BI_define(gfs_convex_1,1,0){
 
 OZ_BI_define(gfs_convexHull_2,2,0){
   DeclareGSpace(home);
+
+  //test whether input is ref or var
+  for(int i=0; i<2; i++)
+    SuspendPosting(OZ_in(i));
+
   DeclareGeSetVar(0, __x, home);
   DeclareGeSetVar(1, __y, home);
   try{
@@ -669,6 +707,9 @@ OZ_BI_define(gfs_convexHull_2,2,0){
 OZ_BI_define(gfs_sequence_1,1,0){
   DeclareGSpace(home);
     
+  //test whether input is ref or var
+  SuspendPosting(OZ_in(0));
+
   if(OZ_isSetVarArgs(OZ_in(0))){
     /*
       void Gecode::sequence (Space *home, const SetVarArgs &x)
@@ -693,6 +734,10 @@ OZ_BI_define(gfs_sequence_1,1,0){
 OZ_BI_define(gfs_sequentialUnion_2,2,0){
   DeclareGSpace(home);
     
+  //test whether input is ref or var
+  for(int i=0; i<2; i++)
+    SuspendPosting(OZ_in(i));
+
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1))){
     /*
       void Gecode::sequentialUnion (Space *home, const SetVarArgs &y, SetVar x)
@@ -726,6 +771,10 @@ OZ_BI_define(gfs_sequentialUnion_2,2,0){
 OZ_BI_define(atmostOne_2,2,0){
   DeclareGSpace(home);
     
+  //test whether input is ref or var
+  for(int i=0; i<2; i++)
+    SuspendPosting(OZ_in(i));
+
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1))){
     /*
       void Gecode::atmostOne (Space *home, const SetVarArgs &x, unsigned int c)
@@ -757,6 +806,10 @@ OZ_BI_define(atmostOne_2,2,0){
 OZ_BI_define(gfs_min_2,2,0){
   DeclareGSpace(home);
 
+  //test whether input is ref or var
+  for(int i=0; i<2; i++)
+    SuspendPosting(OZ_in(i));
+
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1))){
     /*
       void Gecode::min (Space *home, SetVar s, IntVar x)
@@ -784,6 +837,10 @@ OZ_BI_define(gfs_min_2,2,0){
 OZ_BI_define(gfs_match_2,2,0){
   DeclareGSpace(home);
   
+  //test whether input is ref or var
+  for(int i=0; i<2; i++)
+    SuspendPosting(OZ_in(i));
+
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1))){
     /*
       void Gecode::match (Space *home, SetVar s, const IntVarArgs &x)
@@ -810,6 +867,10 @@ OZ_BI_define(gfs_match_2,2,0){
 
 OZ_BI_define(gfs_channel_2,2,0){
   DeclareGSpace(home);
+
+  //test whether input is ref or var
+  for(int i=0; i<2; i++)
+    SuspendPosting(OZ_in(i));
 
   if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isSetVarArgs(OZ_in(1))){
     /*
@@ -852,6 +913,10 @@ OZ_BI_define(gfs_channel_2,2,0){
 OZ_BI_define(gfs_cardinality_2,2,0){
   DeclareGSpace(home);
     
+  //test whether input is ref or var
+  for(int i=0; i<2; i++)
+    SuspendPosting(OZ_in(i));
+
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1))){
     /*
       void Gecode::cardinality (Space *home, SetVar s, IntVar x)
@@ -874,6 +939,10 @@ OZ_BI_define(gfs_cardinality_2,2,0){
 
 OZ_BI_define(gfs_max_2,2,0){
   DeclareGSpace(home);
+
+  //test whether input is ref or var
+  for(int i=0; i<2; i++)
+    SuspendPosting(OZ_in(i));
 
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1))){
     /*
@@ -901,6 +970,10 @@ OZ_BI_define(gfs_max_2,2,0){
 OZ_BI_define(gfs_weights_4,4,0){
   DeclareGSpace(home);
   
+  //test whether input is ref or var
+  for(int i=0; i<4; i++)
+    SuspendPosting(OZ_in(i));
+
   if(OZ_isIntArgs(OZ_in(0)) && OZ_isIntArgs(OZ_in(1)) &&
      OZ_isGeSetVar(OZ_in(2)) && OZ_isGeIntVar(OZ_in(3))){
     /*
@@ -935,6 +1008,10 @@ OZ_BI_define(gfs_weights_4,4,0){
 OZ_BI_define(gfs_elementsUnion_3,3,0){
   DeclareGSpace(home);
     
+  //test whether input is ref or var
+  for(int i=0; i<3; i++)
+    SuspendPosting(OZ_in(i));
+
   DeclareGeSetVar(1, __y, home);
   DeclareGeSetVar(2, __z, home);
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) &&
@@ -977,6 +1054,10 @@ OZ_BI_define(gfs_elementsUnion_3,3,0){
 OZ_BI_define(gfs_elementsInter_4,4,0){
   DeclareGSpace(home);
 
+  //test whether input is ref or var
+  for(int i=0; i<4; i++)
+    SuspendPosting(OZ_in(i));
+
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2)) && OZ_isIntSet(OZ_in(3))){ 
     /*
@@ -1007,6 +1088,10 @@ OZ_BI_define(gfs_elementsInter_4,4,0){
 OZ_BI_define(gfs_elementsInter_3,3,0){
   DeclareGSpace(home);
   
+  //test whether input is ref or var
+  for(int i=0; i<3; i++)
+    SuspendPosting(OZ_in(i));
+
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2))){
     /*
@@ -1035,6 +1120,11 @@ OZ_BI_define(gfs_elementsInter_3,3,0){
 
 OZ_BI_define(gfs_element_3,3,0){
   DeclareGSpace(home);
+
+  //test whether input is ref or var
+  for(int i=0; i<3; i++)
+    SuspendPosting(OZ_in(i));
+
   DeclareGeIntVar(1, __y, home);
   DeclareGeSetVar(2, __z, home);
 
@@ -1078,6 +1168,10 @@ OZ_BI_define(gfs_element_3,3,0){
 
 OZ_BI_define(gfs_elementsDisjoint_2,2,0){
   DeclareGSpace(home);
+
+  //test whether input is ref or var
+  for(int i=0; i<2; i++)
+    SuspendPosting(OZ_in(i));
 
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1))){
     /*

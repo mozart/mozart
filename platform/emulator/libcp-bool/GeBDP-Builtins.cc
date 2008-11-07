@@ -39,6 +39,11 @@
 
 OZ_BI_define(gbd_rel_5,5,0){
   DeclareGSpace(home);
+
+  //test whether input is ref or var
+  for(int i=0; i<5; i++)
+    SuspendPosting(OZ_in(i));
+  
   DeclareIntConLevel(3, __icl);
   DeclarePropKind(4, __pk);
 
@@ -159,6 +164,11 @@ OZ_BI_define(gbd_rel_5,5,0){
 
 OZ_BI_define(gbd_rel_4,4,0){
   DeclareGSpace(home);
+
+  //test whether input is ref or var
+  for(int i=0; i<4; i++)
+    SuspendPosting(OZ_in(i));
+
   DECLARE_BOOLVARARGS(0, __x, home);
   DeclareIntRelType(1, __r);
   DeclareIntConLevel(2, __icl);
@@ -179,6 +189,11 @@ OZ_BI_define(gbd_rel_4,4,0){
 
 OZ_BI_define(gbd_rel_6,6,0){
   DeclareGSpace(home);
+  
+  //test whether input is ref or var
+  for(int i=0; i<6; i++)
+    SuspendPosting(OZ_in(i));
+  
   DeclareGeBoolVar(0, __x0, home);
   DeclareBoolOpType(1, __o);
   DeclareGeBoolVar(2, __x1, home);
@@ -226,6 +241,11 @@ OZ_BI_define(gbd_rel_6,6,0){
 
 OZ_BI_define(gbd_linear_5,5,0){
   DeclareGSpace(home);
+
+  //test whether input is ref or var
+  for(int i=0; i<5; i++)
+    SuspendPosting(OZ_in(i));
+
   DECLARE_BOOLVARARGS(0, __x, home);
   DeclareIntRelType(1, __r);
   DeclareIntConLevel(3, __icl);
@@ -266,6 +286,11 @@ OZ_BI_define(gbd_linear_5,5,0){
 
 OZ_BI_define(gbd_linear_6,6,0){
   DeclareGSpace(home);
+
+  //test whether input is ref or var
+  for(int i=0; i<6; i++)
+    SuspendPosting(OZ_in(i));
+
   DeclareIntConLevel(4, __icl);
   DeclarePropKind(5, __pk);
  
@@ -342,6 +367,11 @@ OZ_BI_define(gbd_linear_6,6,0){
 
 OZ_BI_define(gbd_linear_7,7,0){
   DeclareGSpace(home);
+
+  //test whether input is ref or var
+  for(int i=0; i<7; i++)
+    SuspendPosting(OZ_in(i));
+
   DECLARE_INTARGS(0, __a);
   DECLARE_BOOLVARARGS(1, __x, home);
   DeclareIntRelType(2, __r);

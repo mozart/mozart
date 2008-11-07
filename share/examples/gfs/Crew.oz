@@ -75,9 +75,10 @@ fun {CrewProb FlightData Crew}
       flight(no:_ crew:N stewards:NStew stewardesses:NHost
              frenchspeaking:NFrench germanspeaking:NGerman
 	     spanishspeaking:NSpanish) = Flight
+
       C1 C2 C3 C4 C5
       [C1 C2 C3 C4 C5] ::: GFD.inf#GFD.sup
-      
+            
       S1 = {GFS.var.decl}
       S2 = {GFS.var.decl}
       S3 = {GFS.var.decl}
@@ -90,18 +91,19 @@ fun {CrewProb FlightData Crew}
       S3 = {GFS.intersect Team FrenchSpeaking}
       S4 = {GFS.intersect Team GermanSpeaking}
       S5 = {GFS.intersect Team SpanishSpeaking}
-      
+
       {GFS.card post(S1 C1)}
       {GFS.card post(S2 C2)}
       {GFS.card post(S3 C3)}
       {GFS.card post(S4 C4)}
       {GFS.card post(S5 C5)}
-
+      
       C1 >=: NStew
       C2 >=: NHost
       C3 >=: NFrench
       C4 >=: NGerman
       C5 >=: NSpanish
+      
    end
 
 
@@ -119,7 +121,7 @@ in
    proc {$ Sol}
       Flights = {GFS.var.list.upperBound
                  {Length FlightData}
-                 {Lits2Ints CrewSet CabinStaff}}
+		 {Lits2Ints CrewSet CabinStaff}}
    in       
       {Map FlightData proc {$ D F}
                          {TeamConstraint F D}
@@ -127,14 +129,13 @@ in
                   
       {SequencedDisjoint Flights}
  
-      {GFS.distribute generic(order:naive value:min) Flights}
-      %{GFS.distribute naive Flights}
+      %{GFS.distribute generic(order:naive value:min) Flights}
+      {GFS.distribute naive Flights}
 
-      Sol = Flights
-      %Sol = {Map Flights
-      %       fun {$ F}
-      %          {Ints2Lits CrewSet {GFS.monitorIn F}}
-      %       end}
+      Sol = {Map Flights
+	     fun {$ F}
+		{Ints2Lits CrewSet {GFS.monitorIn F}}
+	     end}
    end 
 end
 
@@ -184,4 +185,4 @@ crew(stewards:
      spanishspeaking:
 	[bill fred joe mario marilyn inez heather])
 
-{Show {SearchOne {CrewProb Flights Crew}}}
+{Browse {SearchOne {CrewProb Flights Crew}}}

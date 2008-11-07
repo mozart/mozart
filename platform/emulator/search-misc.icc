@@ -136,11 +136,11 @@ amean(double t[], int n);
 double
 dev(double t[], int n);
 
-#ifdef GECODE_HAS_GIST
+/*#ifdef GECODE_HAS_GIST
 
 /**
  * \brief Traits class for search engines
- */
+ *
 template <class Engine>
 class GistEngine {
 };
@@ -181,7 +181,7 @@ public:
   }
 };
 
-#endif
+#endif*/
 
 template <class Script, template<class> class Engine, class Options>
 void
@@ -301,7 +301,7 @@ Example::run(const Options& o) {
              << endl;
       }
       break;
-#ifdef GECODE_HAS_GIST
+      /*#ifdef GECODE_HAS_GIST
     case EM_GIST:
       {
         Gist::PrintingInspector<Script> pi(o.name());
@@ -310,7 +310,7 @@ Example::run(const Options& o) {
         delete s;
       }
       break;
-#endif
+      #endif*/
     }
   } catch (Gecode::Exception e) {
     std::cout << "Exception: " << e.what() << "." << endl

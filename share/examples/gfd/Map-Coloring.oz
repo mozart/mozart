@@ -22,14 +22,15 @@
 
 %%% Adapted from a finite domain example in Mozart-Oz version 1.3.2 by 
 %%% Gert Smolka, 1998.
+%%% This is an latin american map.
 
 declare
-Data = [ belgium     # [france netherlands germany luxemburg]
-	 germany     # [austria france luxemburg netherlands]
-	 switzerland # [italy france germany austria]	 
-	 austria     # [italy switzerland germany]
-	 france      # [spain luxemburg italy]
-	 spain       # [portugal] ]
+Data = [ colombia    # [panama ecuador peru venezuela brasil]
+	 peru        # [ecuador brasil colombia bolivia chile]
+	 argentina   # [chile uruguay paraguay bolivia]	 
+	 chile       # [peru bolivia argentina]
+	 paraguay    # [bolivia argentina brasil]
+	 brasil      # [bolivia venezuela]]
 
 fun {Unique Xs}
    case Xs of X1|X2|Xr then
@@ -52,12 +53,12 @@ in
       {GFD.record color Countries 1#NbColors Color}
       {ForAll Data
        proc {$ A#Bs}
-	  {ForAll Bs proc {$ B} Color.A \=: Color.B end}
+	  {ForAll Bs proc {$ B} {GFD.relP post(Color.A GFD.rt.'\\=:' Color.B)} end}
        end}
       {GFD.distribute ff Color}
    end
 end
 
 %{ExploreOne {MapColoring Data}}
-{Show {SearchOne {MapColoring Data}}}
+{Browse {SearchOne {MapColoring Data}}}
 
