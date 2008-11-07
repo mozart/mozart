@@ -128,18 +128,19 @@ Gecode::ExecStatus GeMonitor::propagate(Gecode::Space *s, Gecode::ModEventDelta)
       for(Gecode::SetVarLubValues itr11(svv); itr11(); ++itr11){
 	tail = stream.put(tail, OZ_int(itr11.val()));
       }
-      
-      if(x0.assigned()){
-	if (OZ_unify(tail, OZ_nil()) == FAILED){
-	  stream.fail();
-	  return ES_FAILED;
-	}
-	vanish = true;
-      }
     }
-
+      
+    if(x0.assigned()){
+      if (OZ_unify(tail, OZ_nil()) == FAILED){
+	stream.fail();
+	return ES_FAILED;
+      }
+      vanish = true;
+    }
+    
+    
   }
-
+  
   stream.leave();
   _stream = stream.getTail();
   return vanish ? ES_FIX : ES_NOFIX;
