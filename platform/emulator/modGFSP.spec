@@ -70,6 +70,18 @@ $boot_module_name     = "GFS";
      bi  => gfs_monitorOut
  },
 
+ 'gfs_intMinN' => { 
+     in  => ['fset','value'],
+     out => [],
+     bi  => gfs_intMinN
+ },
+
+ 'gfs_intMaxN' => { 
+     in  => ['fset','value'],
+     out => [],
+     bi  => gfs_intMaxN
+ },
+
 
 # 'gfs_projector_4' => { in  => ['+value', '+value', '+value', '+value'],
 #   out => [],

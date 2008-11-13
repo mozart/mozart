@@ -224,6 +224,105 @@ OZ_BI_define(gfs_monitorOut, 2, 0)
 }
 OZ_BI_end
 
+/**
+   int.minN & int.maxN builtins.
+*/
+
+void IntMinN(Gecode::Space *gs, Gecode::Set::SetView sv, ViewArray<Gecode::Int::IntView> iv) {
+  if(gs->failed()) return;
+  (void) new(gs) IntMinNElement(gs, sv, iv);
+}
+
+
+OZ_BI_define(gfs_intMinN, 2, 0)
+{
+  DeclareGSpace(gs);
+  if(OZ_isGeSetVar(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1))){
+    DeclareGeSetVar(0, fsvar, gs);
+    Set::SetView sv = fsvar.var();
+    Gecode::IntVarArgs iva = getIntVarArgs(OZ_in(1));
+
+    if(sv.cardMax() < iva.size()){
+      //return OZ_typeError(1, "SetVar, 
+                          //maximal cardinality less than array size");
+      return OZ_raiseErrorC("GFS.int.minN",1,
+			    OZ_atom("SetVar, maximal cardinality less than array size"));
+    }
+
+
+    //Gecode::IntVarArgs iva2(iva.size());
+    /** first post all IntVar's to be pair-wise disctinct 
+     Should be sorted in ascendig order, but i do not find the right propagator**/
+    try{
+      Gecode::distinct(gs, iva);
+      //Gecode::sorted(gs, iva2, iva);
+    }
+    catch(Exception e) {
+      RAISE_GE_EXCEPTION(e);
+    } 
+    
+    /** second get View and post intMinN propagator **/
+    Gecode::ViewArray<Gecode::Int::IntView> va(gs,iva);
+    try{
+      IntMinN(gs, sv, va);
+    }
+    catch(Exception e) {
+      RAISE_GE_EXCEPTION(e);
+    }
+    CHECK_POST(gs);
+  } else {
+    return OZ_typeError(0, "expected finite set domain");
+  }
+}
+OZ_BI_end
+
+
+void IntMaxN(Gecode::Space *gs, Gecode::Set::SetView sv, ViewArray<Gecode::Int::IntView> iv) {
+  if(gs->failed()) return;
+  (void) new(gs) IntMaxNElement(gs, sv, iv);
+}
+
+OZ_BI_define(gfs_intMaxN, 2, 0)
+{
+  DeclareGSpace(gs);
+  if(OZ_isGeSetVar(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1))){
+    DeclareGeSetVar(0, fsvar, gs);
+    Set::SetView sv = fsvar.var();
+    Gecode::IntVarArgs iva = getIntVarArgs(OZ_in(1));
+
+    if(sv.cardMax() < iva.size()){
+      //return OZ_typeError(1, "SetVar, 
+                          //maximal cardinality less than array size");
+      return OZ_raiseErrorC("GFS.int.minN",1,
+			    OZ_atom("SetVar, maximal cardinality less than array size"));
+    }
+
+
+    //Gecode::IntVarArgs iva2(iva.size());
+    /** first post all IntVar's to be pair-wise disctinct 
+     Should be sorted in ascendig order, but i do not find the right propagator**/
+    try{
+      Gecode::distinct(gs, iva);
+      //Gecode::sorted(gs, iva2, iva);
+    }
+    catch(Exception e) {
+      RAISE_GE_EXCEPTION(e);
+    } 
+    
+    /** second get View and post intMinN propagator **/
+    Gecode::ViewArray<Gecode::Int::IntView> va(gs,iva);
+    try{
+      IntMaxN(gs, sv, va);
+    }
+    catch(Exception e) {
+      RAISE_GE_EXCEPTION(e);
+    }
+    CHECK_POST(gs);
+  } else {
+    return OZ_typeError(0, "expected finite set domain");
+  }
+}
+OZ_BI_end
 
 #ifndef MODULES_LINK_STATIC
 #include "../modGFSP-if.cc"

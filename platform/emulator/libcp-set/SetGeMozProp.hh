@@ -27,14 +27,12 @@
 #define __SET_GEMOZ_PROPAGATORS_HH__
 
 #include "gecode/kernel.hh"
-//#include "gecode/int.hh"
 #include "gecode/set.hh"
-//#include "gecode/int/linear.hh"
-//#include "gecode/int/rel.hh"
-
+#include "gecode/set/int.hh"
 
 using namespace Gecode;
 using namespace Gecode::Set;
+using namespace Gecode::Set::Int;
 
 /**
    Propagator class for FS.monitors. This is not implemented by gecode.
@@ -216,6 +214,258 @@ public:
 
 void MonitorIn(Gecode::Space *gs, Gecode::Set::SetView sv, OZ_Term stream);
 void MonitorOut(Gecode::Space *gs, Gecode::Set::SetView sv, OZ_Term stream);
+
+
+/**
+   Propagator class for FS.int.minN. This is not implemented by gecode.
+*/
+//TODO: Inherits form Set::Int::Match is the best way?
+//Should we inherits from Gecode::Propagator?
+class IntMinNElement : 
+  public Gecode::Set::Int::Match< SetView > {
+
+protected:
+  using Match<SetView>::x0;
+  using Match<SetView>::xs;
+
+public:
+  /// Constructor for cloning \a p
+  IntMinNElement(Gecode::Space* home, bool share, IntMinNElement& p)
+    : Match<SetView> (home, share, p) {}
+
+  /// Constructor for posting
+  IntMinNElement(Gecode::Space* home, SetView y0, ViewArray<Gecode::Int::IntView> y1)
+    : Match<SetView> (home, y0, y1) {}
+
+
+  /// Copy propagator during cloning
+  virtual Actor* copy(Gecode::Space* home, bool share){
+    return new (home) IntMinNElement(home,share,*this);
+  }
+  
+  /// Perform propagation
+  virtual ExecStatus propagate(Gecode::Space* home, ModEventDelta med);
+
+};
+
+/**This method is an adaptation of min from gecode, 
+ * see http://www.gecode.org/gecode-doc-latest/minmax_8icc-source.html#l00100
+ * to obtain more information
+ */
+Gecode::ExecStatus
+IntMinNElement::propagate(Gecode::Space *home, ModEventDelta){
+  //x1 is an element of x0.ub
+  //x1 =< smallest element of x0.lb
+  //x1 =< x0.cardinialityMin-est largest element of x0.ub
+  //(these 2 take care of determined x0)
+  //No element in x0 is smaller than x1
+  //if x1 is determined, it is part of the ub.
+
+  //if the intvararg has more variables than maximal cardinatity
+  // the propagators is failed. Also in the builtin define.
+  if(x0.cardMax() < xs.size()){
+    return ES_FAILED;
+  }
+  
+  
+  LubRanges<SetView> ub(x0);
+  for(int i=0; i < xs.size(); i++){
+    GECODE_ME_CHECK(xs[i].inter_r(home,ub,false));
+  }
+  
+  
+  Gecode::SetVarGlbValues svg(x0);
+  for(int i=0; svg() && i < xs.size(); ++svg, ++i){
+    GECODE_ME_CHECK(xs[i].lq(home,svg.val()));
+  }
+  
+  //if cardMin>lbSize?
+  //assert(x0.cardMin()>=1);
+  
+  {
+    /// Compute n-th largest element in x0.lub for n = x0.cardMin()-1
+    int size = 0;
+    int maxN = BndSet::MAX_OF_EMPTY;
+    for (LubRanges<SetView> ubr(x0); ubr(); ++ubr, ++size) {}
+    GECODE_AUTOARRAY(int, ub, size*2);
+
+    int i=0;
+    for (LubRanges<SetView> ubr(x0); ubr(); ++ubr, ++i) {
+      ub[2*i]   = ubr.min();
+      ub[2*i+1] = ubr.max();
+    }
+
+    int x0cm = x0.cardMin()-1;
+    for (int i=size; i--;) {
+      int width = ub[2*i+1]-ub[2*i]+1;
+      if (width > x0cm) {
+	maxN = ub[2*i+1]-x0cm;
+	break;
+      }
+      x0cm -= width;
+    }
+    
+    for(int p=0; p < xs.size(); p++){
+      GECODE_ME_CHECK(xs[p].lq(home,maxN));
+    }
+  }
+  
+  //min-1 of the firts element must not be in the set
+  GECODE_ME_CHECK(x0.exclude(home,
+			     Set::Limits::min, xs[0].min()-1) );
+  
+  //this loop ensure every arraty argument to 
+  //be greater or equal than the element before it
+  for(int p=0; p<xs.size()-1; p++){
+    GECODE_ME_CHECK(xs[p+1].gq(home, xs[p].min()+1));
+  }
+
+  //this loop ensure every arraty argument to 
+  //be less or equal than the element before it
+  for(int p=1; p<xs.size(); p++){
+    GECODE_ME_CHECK(xs[p-1].lq(home, xs[p].max()-1));
+  }
+
+  //this loop ensure that no value between array arguments
+  // are part of the set
+  for(int p=0; p<xs.size()-1; p++){
+    int beg = xs[p].max()+1;
+    int end = xs[p+1].min()-1;
+    if(end - beg >= 0)
+      GECODE_ME_CHECK(x0.exclude(home, beg, end));
+  }
+
+  
+  int det = 0;
+  for(int p=0; p<xs.size(); p++){
+    if (xs[p].assigned()) {
+      GECODE_ME_CHECK(x0.include(home,xs[p].val()));
+      ++det;
+    }
+  }
+  
+  if(det == xs.size())
+    return ES_SUBSUMED(this,home);
+  
+  return ES_FIX;
+  
+}
+
+void IntMinN(Gecode::Space *gs, Gecode::Set::SetView sv, ViewArray<Gecode::Int::IntView> iva);
+
+
+/**
+   Propagator class for FS.int.maxN. This is not implemented by gecode.
+*/
+//TODO: Inherits form Set::Int::Match is the best way?
+//Should we inherits from Gecode::Propagator?
+class IntMaxNElement : 
+  public Gecode::Set::Int::Match< SetView > {
+
+protected:
+  using Match<SetView>::x0;
+  using Match<SetView>::xs;
+
+public:
+  /// Constructor for cloning \a p
+  IntMaxNElement(Gecode::Space* home, bool share, IntMaxNElement& p)
+    : Match<SetView> (home, share, p) {}
+
+  /// Constructor for posting
+  IntMaxNElement(Gecode::Space* home, SetView y0, ViewArray<Gecode::Int::IntView> y1)
+    : Match<SetView> (home, y0, y1) {}
+
+
+  /// Copy propagator during cloning
+  virtual Actor* copy(Gecode::Space* home, bool share){
+    return new (home) IntMaxNElement(home,share,*this);
+  }
+  
+  /// Perform propagation
+  virtual ExecStatus propagate(Gecode::Space* home, ModEventDelta med);
+
+};
+
+/**This method is an adaptation of max from gecode, 
+ * see http://www.gecode.org/gecode-doc-latest/minmax_8icc-source.html#l00208
+ * to obtain more information
+ */
+Gecode::ExecStatus
+IntMaxNElement::propagate(Gecode::Space *home, ModEventDelta){
+  //if the intvararg has more variables than maximal cardinatity
+  // the propagators is failed. Also in the builtin define.
+  if(x0.cardMax() < xs.size()){
+    return ES_FAILED;
+  }  
+  
+  LubRanges<SetView> ub(x0);
+  for(int i=0; i < xs.size(); i++){
+    GECODE_ME_CHECK(xs[i].inter_r(home,ub,false));
+  }
+  
+  //In vdo we put the values glb in descending order
+  int vdoSize = xs.size() > x0.glbSize() ? x0.glbSize() : xs.size();
+  int vdo[vdoSize];
+  
+  Gecode::SetVarGlbValues svg(x0);
+  for(int i=0; svg() && i < xs.size(); ++svg, i++){
+    vdo[vdoSize-1-i] = svg.val();
+  }
+
+  //Restrict domain of Intvars to be greater or equal
+  //than a minimal allowed value
+  for(int i=0; i<vdoSize; i++){
+    GECODE_ME_CHECK(xs[xs.size()-1-i].gq(home, vdo[i]));
+  }
+  
+  for(int i=0; i<xs.size() && (x0.cardMin()-i-1) > 0; i++){
+    GECODE_ME_CHECK(xs[xs.size()-1-i].gq(home,x0.lubMinN(x0.cardMin()-1-i)));
+  }
+
+  GECODE_ME_CHECK(x0.exclude(home,
+			     xs[xs.size()-1].max()+1,Set::Limits::max) );
+
+
+  //this loop ensure that no value between array arguments
+  // are part of the set
+  for(int p=0; p<xs.size()-1; p++){
+    int beg = xs[p].max()+1;
+    int end = xs[p+1].min()-1;
+    if(end - beg >= 0)
+      GECODE_ME_CHECK(x0.exclude(home, beg, end));
+  }
+
+  
+  //this loop ensure every arraty argument to 
+  //be greater or equal than the element before it
+  for(int p=0; p<xs.size()-1; p++){
+    GECODE_ME_CHECK(xs[p+1].gq(home, xs[p].min()+1));
+  }
+
+  //this loop ensure every arraty argument to 
+  //be less or equal than the element after it
+  for(int p=1; p<xs.size(); p++){
+    GECODE_ME_CHECK(xs[p-1].lq(home, xs[p].max()-1));
+  }
+
+  
+  int det = 0;
+  for(int p=0; p<xs.size(); p++){
+    if (xs[p].assigned()) {
+      GECODE_ME_CHECK(x0.include(home,xs[p].val()));
+      ++det;
+    }
+  }
+  
+  if(det == xs.size())
+    return ES_SUBSUMED(this,home);
+  
+  return ES_FIX;
+  
+}
+
+void IntMaxN(Gecode::Space *gs, Gecode::Set::SetView sv, ViewArray<Gecode::Int::IntView> iva);
+
 
 #endif /* __SET_GEMOZ_PROPAGATORS_HH__  */
 
