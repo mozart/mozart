@@ -408,10 +408,10 @@ in
 		  GFSP.'gfs_convexHull_2'
 	       match:
 		  GFSP.'gfs_match_2'
-% 	       minN:
-% 		  GFSP.'min'
-% 	       maxN:
-% 		  GFSP.'min'
+ 	       minN:
+		  GFSP.'gfs_intMinN'
+ 	       maxN:
+ 		  GFSP.'gfs_intMaxN'
  	       seq:
 		  GFSP.'gfs_sequence_1'
 	       seqUnion:
