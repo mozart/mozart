@@ -82,6 +82,12 @@ $boot_module_name     = "GFS";
      bi  => gfs_intMaxN
  },
 
+ 'gfs_reifiedIsIn' => { 
+     in  => ['fset','+value', '+value'],
+     out => [],
+     bi  => gfs_reifiedIsIn
+ },
+
 
 # 'gfs_projector_4' => { in  => ['+value', '+value', '+value', '+value'],
 #   out => [],

@@ -324,6 +324,40 @@ OZ_BI_define(gfs_intMaxN, 2, 0)
 }
 OZ_BI_end
 
+/**
+   Reified IsIn builtin.
+*/
+
+void IsInReified(Gecode::Space *gs, Gecode::Set::SetView sv, SingletonView sin, BoolView bv){
+  if(gs->failed()) return;
+  (void) new(gs) ReifiedIsIn(gs, sin, sv, bv);
+}
+
+
+OZ_BI_define(gfs_reifiedIsIn, 3, 0)
+{
+  DeclareGSpace(gs);
+  if(OZ_isGeIntVar(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2))){
+    DeclareGeSetVar(1, fsvar, gs);
+    //IntVar &iv = intOrIntVar(OZ_in(1));
+    DeclareGeBoolVar(2, bv, gs);
+    IntView iv(intOrIntVar(OZ_in(0)));
+    Gecode::Set::SingletonView sin(iv);
+
+    try{
+      IsInReified(gs, fsvar.var(), sin, bv.var());
+    }
+    catch(Exception e) {
+      RAISE_GE_EXCEPTION(e);
+    }
+    CHECK_POST(gs);
+  } else {
+    return OZ_typeError(0, "expected finite set domain");
+  }
+}
+OZ_BI_end
+
+
 #ifndef MODULES_LINK_STATIC
 #include "../modGFSP-if.cc"
 #endif
