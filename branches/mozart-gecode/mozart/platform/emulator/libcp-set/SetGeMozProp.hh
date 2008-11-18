@@ -29,10 +29,14 @@
 #include "gecode/kernel.hh"
 #include "gecode/set.hh"
 #include "gecode/set/int.hh"
+#include "gecode/set/rel.hh"
 
 using namespace Gecode;
+//using namespace Gecode::Int;
 using namespace Gecode::Set;
 using namespace Gecode::Set::Int;
+//using namespace Gecode::Set::Rel;
+
 
 /**
    Propagator class for FS.monitors. This is not implemented by gecode.
@@ -466,6 +470,93 @@ IntMaxNElement::propagate(Gecode::Space *home, ModEventDelta){
 
 void IntMaxN(Gecode::Space *gs, Gecode::Set::SetView sv, ViewArray<Gecode::Int::IntView> iva);
 
+
+  /**
+   * \brief %Reified isIn propagator
+   * This is a adaptation of ReSubSet propagator form gecode.
+   * The change is in the propagator actuation.
+   */
+class ReifiedIsIn :
+  public Gecode::Set::Rel::ReSubset<SingletonView,SetView> {
+public:
+  using Gecode::Set::Rel::ReSubset<SingletonView,SetView>::x0;
+  using Gecode::Set::Rel::ReSubset<SingletonView,SetView>::x1;
+  using Gecode::Set::Rel::ReSubset<SingletonView,SetView>::b;
+
+  /// Constructor for cloning \a p
+  ReifiedIsIn(Gecode::Space* home, bool share, ReifiedIsIn& ri)
+    : Gecode::Set::Rel::ReSubset<SingletonView,SetView> (home, share, ri) {}
+  
+  /// Constructor for posting
+  ReifiedIsIn(Gecode::Space* home, SingletonView iv, SetView sv, BoolView bv)
+    : Gecode::Set::Rel::ReSubset<SingletonView,SetView> (home, iv, sv, bv) {}
+    
+  /// Copy propagator during cloning
+  virtual Actor* copy(Gecode::Space* home, bool share){
+    return new (home) ReifiedIsIn(home,share,*this);
+  }
+    
+  /// Perform propagation
+  virtual ExecStatus propagate(Gecode::Space* home, ModEventDelta med);
+};
+
+
+ExecStatus ReifiedIsIn::propagate(Gecode::Space* home, ModEventDelta){  
+  // check whether cardinalities still allow subset
+  if (x0.cardMin() > x1.cardMax()) {
+    GECODE_ME_CHECK(b.zero_none(home));
+    return ES_SUBSUMED(this,home);
+  }
+  
+  // check lub(x0) subset glb(x1)
+  {
+    LubRanges<SingletonView> x0ub(x0);
+    GlbRanges<SetView> x1lb(x1);
+    Iter::Ranges::Diff<LubRanges<SingletonView>,GlbRanges<SetView> > d(x0ub,x1lb);
+    if (!d()) {
+      GECODE_ME_CHECK(b.one_none(home));
+      return ES_SUBSUMED(this,home);
+    }
+  }
+  
+  // check glb(x0) subset lub(x1)
+  {
+    GlbRanges<SingletonView> x0lb(x0);
+    LubRanges<SetView> x1ub(x1);
+    Iter::Ranges::Diff<GlbRanges<SingletonView>,LubRanges<SetView> > d(x0lb,x1ub);
+    if (d()) {
+      GECODE_ME_CHECK(b.zero_none(home));
+      return ES_SUBSUMED(this,home);
+    } else if (x0.assigned() && x1.assigned()) {
+      GECODE_ME_CHECK(b.one_none(home));
+      return ES_SUBSUMED(this,home);
+    }
+  }
+  
+  if (x0.cardMin() > 0) {
+    LubRanges<SingletonView> x0ub(x0);
+    LubRanges<SetView> x1ub(x1);
+    Iter::Ranges::Inter<LubRanges<SingletonView>,LubRanges<SetView> >
+      i(x0ub,x1ub);
+    if (!i()) {
+      GECODE_ME_CHECK(b.zero_none(home));
+      return ES_SUBSUMED(this,home);
+    }
+  }
+  
+  if (b.one())
+    GECODE_REWRITE(this,(Gecode::Set::Rel::SubSet<SingletonView,SetView>::post(home,x0,x1)));
+  
+  if (b.zero())
+    GECODE_REWRITE(this,(Gecode::Set::Rel::NoSubSet<SingletonView,SetView>::post(home,x0,x1)));
+  
+
+  return ES_FIX;
+}
+
+
+
+void IsInReified(Gecode::Space *gs, Gecode::Set::SetView sv, SingletonView sin, BoolView bv);
 
 #endif /* __SET_GEMOZ_PROPAGATORS_HH__  */
 
