@@ -190,7 +190,7 @@ define
    GFSReified
    ReifiedInclude
    ReifiedEqual
-   GFSIsInReif
+   GFSIsInReif = GFSP.'gfs_reifiedIsIn'
    GFSValue
    GFSInt
 
@@ -448,15 +448,14 @@ in
    GFSReified = reified(
 		   isIn:
 		      GFSIsInReif
-% 			  areIn:
-% 			     proc {$ W S BList}
-% 				WList = {ExpandList
-% 					 {FSGetGlb {FSB.'value.make' W}}}
-% 			     in
-% 				BList
-% 				= {FD.list {Length WList} 0#1}
-% 				= {Map WList fun {$ E} {FSIsInReif E S} end}
-% 			     end
+		   areIn:
+		      proc {$ W S BList}
+			 WList = {ExpandList
+				  {GFSGetGlb {GFSSetValue W}}}
+		      in
+			 BList = {GBD.list {Length WList} 0#1}
+			 BList = {Map WList fun {$ E} {GFSIsInReif E S} end}
+		      end
 		   include:
 		      ReifiedInclude
 			  % bounds:
@@ -555,7 +554,7 @@ in
       %Var
    end      
 
-   fun {GFSIsInReif Val Var}
+/*   fun {GFSIsInReif Val Var}
       local IVar Bool 
       in
 	 IVar = {GFD.decl}
@@ -565,7 +564,7 @@ in
 	 Bool
       end
    end
-
+*/
    proc{Rel Sc}
       %S = {Adjoin '#'(cl:Cl.def pk:Pk.def) Sc}
       W = {Record.width Sc}
