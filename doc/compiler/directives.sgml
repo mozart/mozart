@@ -51,6 +51,7 @@
     top-level Oz statements.
   <P>
     All compilation units in a file are processed sequentially.
+
   <Section>
     <Title/Compiler Directives/
     <P>
@@ -98,6 +99,8 @@
           resides, then against all directories named in the <Var
           type=env/OZPATH/ environment variable (which has standard
           <Var type=env/PATH/ syntax).
+        <P>
+          Note that surrounding the filename by single quotes avoids indentation problems of the OPI.
       </List>
     <Para class=apropos><Title/Macro Names/
       Note that although macro names have the same syntax as Oz variables,
