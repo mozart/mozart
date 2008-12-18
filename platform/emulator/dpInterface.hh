@@ -38,10 +38,6 @@
 // engine.  They implement operations that may imply distribution.
 // The function pointers are assigned once the glue layer is loaded.
 
-//
-extern Bool (*dpReady)();
-
-
 
 /************************* Entity operations **************************/
 
