@@ -693,12 +693,7 @@ OZ_BI_define(BIbreak,1,0)
 
 
 OZ_BI_define(BIinstallFaultPort,1,0){
-  oz_declareNonvarIN(0,port);
-  if (!oz_isPort(port)) {
-    oz_typeError(0,"Port");
-  }
-  g_faultPort = port;
-  OZ_protect(&g_faultPort);
+  OZ_warning("Fault port installation disabled");
   return PROCEED; 
 }OZ_BI_end
 
