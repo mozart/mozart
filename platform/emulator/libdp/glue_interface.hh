@@ -39,9 +39,6 @@ public:
   virtual PstInContainerInterface* createPstInContainer();
   virtual void GL_error(const char* const format, ...);
   virtual void GL_warning(const char* const format, ...);
-  virtual void kbr_message(int key, PstInContainerInterface*);
-  virtual void kbr_divideResp(int start, int stop, int n);
-  virtual void kbr_newResp(int start, int stop, int n, PstInContainerInterface*);
 };
 
 class ComService: public ComServiceInterface{
@@ -64,7 +61,6 @@ public:
 
 
 // defined in engine_interface together with inits
-extern MAP* glue_dss_connection;
 extern DSS_Object* dss;
 extern ComService* glue_com_connection;
 

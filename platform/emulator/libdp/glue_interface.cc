@@ -52,10 +52,6 @@ MAP::MAP() :
   Mediation_Object() {}
 
  OZ_Term g_connectPort;
- OZ_Term g_kbrStreamPort;
- OZ_Term g_defaultAcceptProcedure;
- OZ_Term g_faultPort;
-
 
 PstInContainerInterface*
 MAP::createPstInContainer(){
@@ -85,46 +81,6 @@ MAP::GL_warning(const char *format, ...){
   //OZ_warning("DSS_warning %s", format,ap);
   va_end(ap);
 }
-void
-MAP::kbr_message(int key, PstInContainerInterface* pstin){
-  PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  printf("Receiving key:%d, msg %s\n", key, toC(pst->a_term));
-  OzPort *pws = tagged2Port(g_kbrStreamPort);
-  OZ_Term msg = OZ_recordInit(oz_atom("message"),
-                              oz_cons(oz_pairA("msg", pst->a_term),
-                                      oz_cons(oz_pairAI("key", key),
-                                              oz_nil())));
-  doPortSend(pws, msg, NULL);
-}
-
-
-void
-MAP::kbr_divideResp(int start, int stop, int n){
-  printf("Divide interval ]%d %d ]\n", start, stop);
-  OzPort *pws = tagged2Port(g_kbrStreamPort);
-  OZ_Term msg = OZ_recordInit(oz_atom("divide"),
-                              oz_cons(oz_pairAI("begin",start),
-                                      oz_cons(oz_pairAI("end", stop),
-                                              oz_cons(oz_pairAI("n", n),
-                                                      oz_nil()))));
-  doPortSend(pws, msg, NULL);
-}
-
-void
-MAP::kbr_newResp(int start, int stop, int n, PstInContainerInterface* pstin){
-  printf("Divide interval ]%d %d ]\n", start, stop);
-  OzPort *pws = tagged2Port(g_kbrStreamPort);
-  PstInContainer *pst = static_cast<PstInContainer*>(pstin);
-  OZ_Term msg = OZ_recordInit(oz_atom("newResp"),
-                              oz_cons(oz_pairAI("begin",start),
-                                      oz_cons(oz_pairAI("end", stop),
-                                              oz_cons(oz_pairAI("n", n),
-                                                      oz_cons(oz_pairA("data", pst->a_term),
-                                                              oz_nil())))));
-  doPortSend(pws, msg, NULL);
-}
-
-
 
 /************************* ComService *************************/
 
