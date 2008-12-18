@@ -52,11 +52,6 @@ Bool glueInitialized = FALSE;
 DSS_Object* dss                    = NULL;
 ComService* glue_com_connection    = NULL;
 
-//
-Bool dpReadyImpl() {
-  return true;
-}
-
 // GC Routines
 //
 // These routines are now defined at Glue level, and not as it used to be
@@ -395,9 +390,6 @@ void initDP()
 
   // create mediator table
   mediatorTable     = new MediatorTable();
-
-  // init flag
-  dpReady = dpReadyImpl;
 
   // distributed operations
   initEntityOperations();
