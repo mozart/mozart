@@ -48,7 +48,6 @@
 
 #define HEART_BEAT_RATE 32
 
-Bool glueInitialized = FALSE; 
 DSS_Object* dss                    = NULL;
 ComService* glue_com_connection    = NULL; 
 
@@ -344,9 +343,10 @@ void initHeartBeat(int rate)
 
 void initDP()
 {
-  //
+  static Bool glueInitialized = FALSE; 
   if (glueInitialized) return;
   glueInitialized = OK;
+
   glue_com_connection = new ComService();
   
   // Allocate the marshalers, and unmarshalers

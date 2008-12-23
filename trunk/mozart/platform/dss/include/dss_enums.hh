@@ -388,8 +388,9 @@ enum ParamRetVal{
 // - DLL_BEHAVIOR  Characteristic behavior of the DSS like connections and such 
 // - DLL_DEBUG     Debugging info like internal messages, typically the 
 //                 necessesary info when creating a MAP.
-// - DLL_ALL       Loads of information, from internal function behavior
+// - DLL_MOST      Loads of information, from internal function behavior
 //                 to unmarshaled fields.
+// - DLL_TOO_MUCH  Messages are triggered continuously by the failure detector (RTT measure)
 
 enum DSS_LOG_LEVEL{
   DLL_NOTHING   = 0, // The loglevel is set to output nothing (i.e. no one should use the level)
@@ -397,7 +398,8 @@ enum DSS_LOG_LEVEL{
   DLL_IMPORTANT = 2,
   DLL_BEHAVIOR  = 3,
   DLL_DEBUG     = 4,
-  DLL_ALL       = 5
+  DLL_MOST      = 5,
+  DLL_TOO_MUCH  = 6
 };
 
 // The new bunch! 
