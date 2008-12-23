@@ -94,7 +94,7 @@ OTHERSRCS= \
 	print.cc base.cc ozconfig.cc \
 	foreign.cc dpInterface.cc boot-manager.cc \
 	builtins.cc vprops.cc debug.cc interFault.cc \
-	system.cc alice.cc
+	system.cc alice.cc base64.cc
 
 SUPPORTSRCS=\
 	stack.cc ozostream.cc hashtbl.cc \
