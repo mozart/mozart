@@ -34,7 +34,7 @@ LDFLAGS		= @LDFLAGS@
 REALCORESRCS = 	glue_interface.cc engine_interface.cc \
 		glue_tables.cc glue_faults.cc \
 		glue_builtins.cc \
-		glue_utils.cc pstContainer.cc dpMarshaler.cc \
+		pstContainer.cc dpMarshaler.cc \
 		glue_buffer.cc glue_site.cc \
 		glue_mediators.cc glue_marshal.cc \
 		glue_suspendedThreads.cc \
