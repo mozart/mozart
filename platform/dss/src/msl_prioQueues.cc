@@ -104,7 +104,7 @@ namespace _msl_internal{ //Start namespace
     prio_val_3(Q_PRIO_VAL_3),
     prio_val_2(Q_PRIO_VAL_2),
     noMsgs(0){
-    //dssLog(DLL_ALL,"Created PrioQueue");
+    //dssLog(DLL_MOST,"Created PrioQueue");
     for (int i=0;i<5;i++)
       qs[i].first=qs[i].last=NULL;
     unackedMsgs.first=unackedMsgs.last=NULL;

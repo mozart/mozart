@@ -161,7 +161,7 @@ namespace _dss_internal{ //Start namespace
   
   void
   CoordinatorFwdChain::m_queueProtMessage(MsgContainer *m, DSite* fromsite){
-    dssLog(DLL_ALL,"QUEUEING migratory message");
+    dssLog(DLL_MOST,"QUEUEING migratory message");
     a_deliverQueue.append(makePair(fromsite, m));
   }
   
@@ -171,19 +171,19 @@ namespace _dss_internal{ //Start namespace
   // delivered localy.
   void
   CoordinatorFwdChain::m_deliverProtMessages(DSite* dest){
-    dssLog(DLL_ALL,"DELIVERING migratory messages");
+    dssLog(DLL_MOST,"DELIVERING migratory messages");
     if (dest == m_getEnvironment()->a_myDSite) { // deliver locally
       dssLog(DLL_DEBUG,"Migratory protocol messages delivered locally");
       while (!a_deliverQueue.isEmpty()) {
 	Pair<DSite*, MsgContainer*> sm = a_deliverQueue.pop();
-	dssLog(DLL_ALL,"delivering migratory message from %s",sm.first->m_stringrep());
+	dssLog(DLL_MOST,"delivering migratory message from %s",sm.first->m_stringrep());
 	a_prot->msgReceived(sm.second, sm.first);
       }
     } else { // forward messages
       dssLog(DLL_DEBUG,"Migratory protocol messages forwarded");  
       while (!a_deliverQueue.isEmpty()) {
 	Pair<DSite*, MsgContainer*> sm = a_deliverQueue.pop();
-	dssLog(DLL_ALL,"delivering migratory message from %s",sm.first->m_stringrep());
+	dssLog(DLL_MOST,"delivering migratory message from %s",sm.first->m_stringrep());
 	m_forwardMessage(sm.second, sm.first, dest);
       }
     }
@@ -274,7 +274,7 @@ namespace _dss_internal{ //Start namespace
    void
    CoordinatorFwdChain::m_receiveAsMsg(MsgContainer *msgC, DSite* fromsite){
      int type = msgC->popIntVal();
-     dssLog(DLL_ALL,"Received AS Message:%d",type);
+     dssLog(DLL_MOST,"Received AS Message:%d",type);
 
      switch(type){
      case MA_REQUEST:{ // Initiate migration

@@ -26,7 +26,7 @@
  */
 
 
-#ifdef INTERFACE  
+#ifdef DSS_INTERFACE  
 #pragma implementation "dss_object.hh"
 #endif
 
@@ -265,6 +265,8 @@ namespace _dss_internal{
 	g_dssLogLevel = static_cast<DSS_LOG_LEVEL>(arg);
 	dssLog(g_dssLogLevel,"<= New loglevel set");
 	break;
+#endif
+#ifdef DEBUG_CHECK
       case DSS_STATIC_MEMORY_ALLOCATION:
 	printf("******* ALLOCATION STATUS *******\n");
 	Assert(0); //printf("DSites:%d ComObj:%d TCPtransObj:%d\n",
