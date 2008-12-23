@@ -34,7 +34,6 @@
 #include "dss_object.hh"
 #include "glue_interface.hh"
 #include "glue_tables.hh"
-#include "glue_utils.hh"
 #include "engine_interface.hh"
 #include "glue_site.hh"
 #include "glue_buffer.hh"
@@ -274,68 +273,6 @@ OZ_BI_define(BIinitDP, 1, 0) {
   initDP();
   return PROCEED;
 } OZ_BI_end
-
-
-// For setting up a ticket
-
-OZ_BI_define(BIgetCRC,1,1)
-{
-  oz_declareVirtualStringIN(0,s);
-
-  crc_t crc = update_crc(init_crc(),(unsigned char *) s, strlen(s));
-
-  OZ_RETURN(OZ_unsignedInt(crc));
-} OZ_BI_end
-
-#define PORT_TO_TICK_BUF_LEN 400
-unsigned char portToTickBuf[PORT_TO_TICK_BUF_LEN];
-
-OZ_BI_define(BIportToMS,1,1)
-{
-  oz_declareNonvarIN(0,prt);
-  if (!oz_isPort(prt)) { oz_typeError(0,"Port"); }
-
-  // globalize the port, and get its mediator
-  glue_globalizeEntity(prt);
-  Mediator *med = glue_getMediator(prt);
-
-  // marshal the Dss abstract entity, and entity-specific stuff
-  GlueWriteBuffer buf(portToTickBuf, PORT_TO_TICK_BUF_LEN);
-  med->getCoordinatorAssistant()->marshal(&buf, PMF_FREE);
-  med->marshalData(&buf);
-
-  // turn it into a string
-  int len = buf.bufferUsed();
-  char *str = encodeB64((char*) portToTickBuf, len);
-  OZ_RETURN(OZ_string(str));
-}OZ_BI_end
-
-
-OZ_BI_define(BImsToPort,1,1)
-{
-  oz_declareProperStringIN(0,str);
-  int len = strlen(str);
-  unsigned char* raw_buf = (unsigned char*) decodeB64((char*)str, len);
-
-  // unmarshal the Dss abstract entity, and entity-specific stuff
-  GlueReadBuffer buf(raw_buf, len);
-  AbstractEntityName aen;
-  bool trail;
-  CoordinatorAssistant* proxy = dss->unmarshalProxy(&buf, PUF_FREE, aen, trail);
-  Assert(!trail);
-
-  // build mediator and entity if not present
-  Mediator* med = dynamic_cast<Mediator*>(proxy->getAbstractEntity());
-  if (!med) { // create mediator
-    med = glue_newMediator(GLUE_PORT);
-    med->setProxy(proxy);
-  }
-  med->unmarshalData(&buf);
-  free(raw_buf);
-
-  OZ_RETURN(med->getEntity());
-
-}OZ_BI_end
 
 
 /**********************************************************************/
@@ -668,53 +605,6 @@ OZ_BI_define(BIbreak,1,0)
   }
   return oz_raise(E_SYSTEM, AtomDp, "nondistributable entity", 1, entity);
 } OZ_BI_end
-
-
-
-/**********************************************************************/
-/*   Fault Builtins                                                    */
-/**********************************************************************/
-
-
-/* NOTE
-
-
-   Due to the limited time available the implementation of
-   fault detection is not complete. Enough is implemented to
-   display the basic concepts.
-
-   Lacking fucntionality on lang-level:
-
-   + Injectors,or their only interesting format, exception raisers.
-
-   + The failure reporting over the EMU structure is lacking.
-
-*/
-
-
-OZ_BI_define(BIinstallFaultPort,1,0){
-  OZ_warning("Fault port installation disabled");
-  return PROCEED;
-}OZ_BI_end
-
-OZ_BI_define(BIdistHandlerInstall,4,1){
-  OZ_warning("Watcher installation disabled");
-  OZ_RETURN(oz_bool(TRUE));
-}OZ_BI_end
-
-
-
-
-OZ_BI_define(BIdistHandlerDeInstall,2,1){
-  OZ_Term c0        = OZ_in(0);
-  OZ_Term proc0     = OZ_in(1);
-  OZ_RETURN(oz_bool(TRUE));
-}OZ_BI_end
-
-OZ_BI_define(BIgetEntityCond,2,0){
-  OZ_warning("Watcher deinstallation disabled");
-  OZ_RETURN(oz_cons(AtomNormal,oz_nil()));
-}OZ_BI_end
 
 
 // send a value (1) on a given site (0)

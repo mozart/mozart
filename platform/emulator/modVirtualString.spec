@@ -38,5 +38,22 @@
                                      '+virtualString'],
                              out => ['+byteString'],
                              bi  => BIvsToBs},
+     # compute a CRC for a virtual string.  This could be used to add a CRC
+     # to connection tickets, for instance.
+     'getCRC'                => { in  => ['+virtualString'],
+                                  out => ['+int'],
+                                  BI  => BIvsCRC},
+     'encodeBase64' => {
+         in => ['+virtualString'],
+         out => ['+string'],
+         BI => BIvsEncodeB64,
+         },
+     'decodeBase64' => {
+         in => ['+virtualString'],
+         out => ['+string'],
+         BI => BIvsDecodeB64,
+         },
+
+
      );
 1;;
