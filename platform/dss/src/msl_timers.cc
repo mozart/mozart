@@ -73,10 +73,10 @@ namespace _msl_internal{
     Position<TimerElement*> p(a_hourList);
     while (p.hasElement()) {
       if ((*p)->a_time < MSG) {
-        //dssLog(DLL_ALL,"TIMER   (%p): Dropping hour timer %p",this,tmp);
+        //dssLog(DLL_MOST,"TIMER   (%p): Dropping hour timer %p",this,tmp);
         m_min_insert(p.pop()); // Know we are talking about a_minutes (or seconds)
       } else {
-        //dssLog(DLL_ALL,"TIMER   (%p): Postponing hour timer %p",this,(*iter));
+        //dssLog(DLL_MOST,"TIMER   (%p): Postponing hour timer %p",this,(*iter));
         (*p)->a_time -= MSG;
         p.next();
       }

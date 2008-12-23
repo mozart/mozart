@@ -27,6 +27,8 @@
 
 #if defined(INTERFACE)
 #pragma implementation "base.hh"
+#endif
+#if defined(DSS_INTERFACE)
 #pragma implementation "dss_classes.hh"
 #endif
 

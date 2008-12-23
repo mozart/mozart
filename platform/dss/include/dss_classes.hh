@@ -28,7 +28,7 @@
 #ifndef __DSS_CLASSES_HH
 #define __DSS_CLASSES_HH
 
-#ifdef INTERFACE
+#ifdef DSS_INTERFACE
 #pragma interface
 #endif
 

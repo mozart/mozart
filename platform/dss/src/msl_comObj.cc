@@ -149,7 +149,7 @@ namespace _msl_internal { //Start namespace
     a_sentClearRef(false), // Introduced to correspond to the same variable as in the old DL
     a_pred(NULL){
     a_sec.a_ticket = 0;
-    dssLog(DLL_ALL,"COMMUNICATION: ComObject created");
+    dssLog(DLL_MOST,"COMMUNICATION: ComObject created");
     //printf("ComObject %p created\n",static_cast<void*>(this));
     DebugCode(a_allocated++);
   }
@@ -853,7 +853,7 @@ namespace _msl_internal { //Start namespace
   }
 
   void ComObj::connectionLost() {
-    dssLog(DLL_ALL,"COMMUNICATION (%p): Connection lost, state=%d",this, a_state);
+    dssLog(DLL_MOST,"COMMUNICATION (%p): Connection lost, state=%d",this, a_state);
     switch(a_state) {
     case CLOSING_HARD:
     case OPENING_WF_PRESENT:
@@ -1368,7 +1368,7 @@ namespace _msl_internal { //Start namespace
   void ComObj::m_CLOSING_WF_DISCONNECT_2_CLOSING_WF_REMOTE(){
     m_close();
     m_setCState(CLOSED_WF_REMOTE);
-    dssLog(DLL_ALL,"COMMUNICATION (%p): Closed remote, setting timer", this);
+    dssLog(DLL_MOST,"COMMUNICATION (%p): Closed remote, setting timer", this);
     e_timers->setTimer(a_reopentimer,
                        (a_mslEnv->a_ipIsbehindFW)?a_mslEnv->m_getFirewallReopenTimeout():a_mslEnv->m_getReopenRemoteTimeout(),
                        if_comObj_reopen, this);
