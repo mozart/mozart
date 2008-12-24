@@ -118,9 +118,3 @@ void ComService::m_gcSweep() {
     site = site->getNext();
   }
 }
-
-ExtDataContainerInterface* 
-ComService::m_createExtDataContainer(BYTE){
-  printf("we're sending NOTHING, thus we should se no extdata containers\n"); 
-  return NULL;
-}

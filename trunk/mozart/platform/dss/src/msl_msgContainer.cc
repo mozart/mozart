@@ -45,17 +45,12 @@ namespace _msl_internal{ //Start namespace
 
   const int INITIAL_SIZE = 8;     // initial size of a_fields
 
-  namespace{
-    const int sz_MAX_DP_STRING = 4; // This is based on what??
-  }
-
   enum DataTag{
     TYPE_INT,
     TYPE_SITE,
     TYPE_END,
     TYPE_DCT,
     TYPE_ADC,
-    TYPE_CDC,
     TYPE_MSG
   };
 
@@ -94,7 +89,6 @@ namespace _msl_internal{ //Start namespace
 	  static_cast<DssCompoundTerm*>(a_fields[i].a_arg)->dispose();
 	  break;
 	case FT_ADC:
-	case FT_SDC:
 	  static_cast<ExtDataContainerInterface*>(a_fields[i].a_arg)->dispose();
 	  break;
 	case FT_MSGC:
@@ -218,28 +212,21 @@ namespace _msl_internal{ //Start namespace
 	  return true; 
 	}
       }
-      case TYPE_CDC:
       case TYPE_ADC: {
 	dssLog(DLL_TOO_MUCH,"MSGCONTAINER  (%p): deserilizing DATA AREA",this);
 	ExtDataContainerInterface *dac;
 	
 	checkSize();
 	if (checkFlag(MSG_HAS_UNMARSHALCONT) && a_suspf){
-	  Assert(a_fields[a_nof_fields].a_ft == FT_ADC ||
-		 a_fields[a_nof_fields].a_ft == FT_SDC);
+	  Assert(a_fields[a_nof_fields].a_ft == FT_ADC);
 	  // continue with current one
 	  dac = static_cast<ExtDataContainerInterface*>(a_fields[a_nof_fields].a_arg);
 	  // The marshaler always sets the DCT type. NOT USED
 	  bb->m_getByte(); 
 	} else {
 	  BYTE type = bb->m_getByte();
-	  if (msg_type == TYPE_ADC) {
-	    dac = env->a_clbck->m_createExtDataContainer(type);
-	    a_fields[a_nof_fields].a_ft = FT_ADC; 
-	  } else {
-	    dac = env->a_comService->m_createExtDataContainer(type);
-	    a_fields[a_nof_fields].a_ft = FT_SDC;
-	  }
+	  dac = env->a_clbck->m_createExtDataContainer(type);
+	  a_fields[a_nof_fields].a_ft = FT_ADC; 
 	  a_fields[a_nof_fields].a_arg = dac;
 	}
 	Assert(dac);
@@ -381,7 +368,6 @@ namespace _msl_internal{ //Start namespace
 	  static_cast<DssCompoundTerm*>(a_fields[i].a_arg)->resetMarshaling();
 	  break;
 	case FT_ADC:
-	case FT_SDC:
 	  static_cast<ExtDataContainerInterface*>(a_fields[i].a_arg)->resetMarshaling();
 	  break;
 	case FT_MSGC:
@@ -416,12 +402,6 @@ namespace _msl_internal{ //Start namespace
     return static_cast<ExtDataContainerInterface*>(m_popVal());
   }
 
-  ExtDataContainerInterface* 
-  MsgCnt::popSDC(){
-    Assert(checkCounters() && m_getFT() == FT_SDC);
-    return static_cast<ExtDataContainerInterface*>(m_popVal());
-  }
-
   PstInContainerInterface*
   MsgCnt::popPstIn() {
     return _dss_internal::gf_popPstIn(this);
@@ -449,10 +429,6 @@ namespace _msl_internal{ //Start namespace
 
   void MsgCnt::pushADC(ExtDataContainerInterface* v) {
     m_pushVal(static_cast<void*>(v), FT_ADC);
-  }
-
-  void MsgCnt::pushSDC(ExtDataContainerInterface* v) {
-    m_pushVal(static_cast<void*>(v), FT_SDC);
   }
 
   void MsgCnt::pushPstOut(PstOutContainerInterface* v) {
