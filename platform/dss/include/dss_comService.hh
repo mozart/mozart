@@ -255,14 +255,12 @@ public:
   virtual void pushDSiteVal(DSite*) = 0;
   virtual void pushIntVal(int) = 0; 
   virtual void pushADC(ExtDataContainerInterface*) = 0; 
-  virtual void pushSDC(ExtDataContainerInterface*) = 0; 
   virtual void pushPstOut(PstOutContainerInterface*) = 0;
   virtual void pushMsgC(MsgContainer*) = 0; 
   
   virtual DSite* popDSiteVal() = 0; 
   virtual int popIntVal() = 0; 
   virtual ExtDataContainerInterface* popADC() = 0; 
-  virtual ExtDataContainerInterface* popSDC() = 0; 
   virtual PstInContainerInterface* popPstIn() = 0;
   virtual MsgContainer* popMsgC() = 0; 
   
@@ -297,7 +295,6 @@ public:
   // The CsSite Object
   virtual CsSiteInterface* unmarshalCsSite(DSite* Ds, DssReadBuffer* const buf) = 0; 
   virtual CsSiteInterface *connectSelfReps(MsgnLayer* ,DSite*) = 0; 
-  virtual ExtDataContainerInterface* m_createExtDataContainer(BYTE) = 0; 
   
   // Mark all DSites used by the CSC. 
   virtual void m_gcSweep() = 0; 
