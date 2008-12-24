@@ -77,7 +77,6 @@ namespace _msl_internal{ //Start namespace
     FT_SITE,
     FT_DCT,
     FT_ADC,
-    FT_SDC,
     FT_MSGC
   };
 
@@ -205,7 +204,6 @@ namespace _msl_internal{ //Start namespace
     virtual DSite* popDSiteVal();
     virtual int popIntVal();
     virtual ExtDataContainerInterface* popADC();
-    virtual ExtDataContainerInterface* popSDC();
     virtual PstInContainerInterface* popPstIn();
     virtual MsgContainer* popMsgC();
 
@@ -214,7 +212,6 @@ namespace _msl_internal{ //Start namespace
     virtual void pushDSiteVal(DSite* s);
     virtual void pushIntVal(int v);
     virtual void pushADC(ExtDataContainerInterface* v);
-    virtual void pushSDC(ExtDataContainerInterface* v);
     virtual void pushPstOut(PstOutContainerInterface*);
     virtual void pushMsgC(MsgContainer*);
 
