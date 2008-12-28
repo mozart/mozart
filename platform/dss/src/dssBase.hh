@@ -117,8 +117,6 @@ namespace _dss_internal{ //Start namespace
   //  - DEBUG_CHECK, enables asserts
   //  - INTERFACE,   enables pragma directives
   //  - DSS_LOG,     enables the logging utility.
-  //  - EXCEPTIONS,  enables throwing of exceptions (isn't used that often for now)
-  //                 from interfaces to the MAP.
   //  - WIN32        chooses between windows environment and unix environment (header files)
 
 

@@ -32,17 +32,6 @@ private:                                \
   aclass &operator = (const aclass&)
 
 
-// ****************** Exceptions ********************
-// Exceptions are used in various functions to declare something wrong
-// has happened.
-//
-
-enum ExceptionType{
-  EXCEPTION_NO_DATA = 1  // Thrown by DssReadBuffer.getByte()
-};
-
-
-
 // ************ Abstract operation return values ********
 // The return values for the doAbstractOperation pair signals to the
 // caller how it should act.

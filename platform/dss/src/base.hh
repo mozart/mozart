@@ -134,15 +134,6 @@ void dssLog(DSS_LOG_LEVEL level, const char* const format, ...);
 
 #endif // DSS_LOG
 
-
-#ifdef EXCEPTIONS
-inline void Exception(const bool& cond, const ExceptionType& et){
-  if(cond) throw et;
-}
-#else
-inline void Exception(const bool&, const ExceptionType&){}
-#endif // EXCEPTIONS
-
 // ******************************* ENUMS AND CONSTANTS ****************************
 
 const int sz_M8bitInt   = 1;
