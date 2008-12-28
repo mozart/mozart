@@ -86,7 +86,7 @@ AC_MSG_RESULT($CXX_VERSION)
 
 dnl Basis for warnings and CXXGLAGS
 WARNINGS="-Wall -Wold-style-cast -Woverloaded-virtual -Wshadow"
-CXX_BASE="-funsigned-char \$(INCS) \$(EXCEPTS) \$(WARNINGS)"
+CXX_BASE="-funsigned-char \$(INCS) \$(WARNINGS)"
 
 AC_MSG_RESULT()
 AC_MSG_RESULT(*************** CHECKING OPTIONS ****************)
@@ -108,17 +108,6 @@ case "$enable_opt" in
 	WARNINGS="-Weffc++ $WARNINGS"
     ;;
 esac
-
-AC_MSG_CHECKING(exception handling...)
-AC_ARG_ENABLE(exceptions, [--enable-exceptions)],,)
-if test "$enable_exceptions" = yes -a "$enable_opt" != d; then
-    EXCEPTS="$EXCEPTS -fexceptions"
-    CXXFLAGS="-DEXCEPTIONS $CXXFLAGS"
-    AC_MSG_RESULT(using exceptions)
-else
-    EXCEPTS="$EXCEPTS -fno-exceptions"
-    AC_MSG_RESULT(no exceptions)
-fi
 
 AC_MSG_CHECKING(warning configuration)
 AC_ARG_ENABLE(exceptions, [--enable-warnings)],,)
@@ -266,7 +255,6 @@ fi
 
 dnl subst all variables!!
 AC_SUBST(WARNINGS)
-AC_SUBST(EXCEPTS)
 AC_SUBST(ENVTYPE)
 AC_SUBST(ENV)
 AC_SUBST(COPY_HEADERS)

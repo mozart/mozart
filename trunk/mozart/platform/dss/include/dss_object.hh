@@ -61,7 +61,6 @@
 // - DEBUG_CHECK, trigger asserts.
 // - DSS_LOG, enables the logging utility
 // - INTERFACE, enables pragma directives when debug compiling ("no inline"-ing)
-// - EXCEPTIONS, enables exceptions.
 
 
 // *************** Imported by the DSS from the MAP ***********************
