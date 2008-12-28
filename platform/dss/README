@@ -27,9 +27,6 @@
                              This option will default to dss, which includes messaging, if any dss
                              example is enabled and default to messaging if such examples are selected
 
- * "--enable-exceptions"     to enable throwing of exceptions from the DSS, exceptions are of the 
-                             ExceptionType found in dss_enums.hh
-			     
  * "--enable-warnings"       This flag is ALLWAYS TURNED ON. to disable warnings, set to "no". If set
 			     to "error" warnings are also treated as errors
 
@@ -45,6 +42,5 @@
                 types of status messages are printed. This tool might be useful during implementation
                 of a MAP layer. for more info check out the dssBase.hh in the source directory.
  * "INTERFACE", enables space-saving gcc pragma directives (for instance during debug compilation)
- * "EXCEPTION,  allows for throwing exceptions from the interface to the MAP.
  * "WIN32",     Signal that we're in the windows environment and should use such headers 
 
