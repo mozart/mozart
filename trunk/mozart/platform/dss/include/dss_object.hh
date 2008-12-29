@@ -121,13 +121,6 @@ public:
   // KBR-Interface
   
 
-  // ************** Global Names **************
-  GlobalNameInterface* createName(void* ref);
-  // unmarshalName() automatically performs a lookup in the name table
-  GlobalNameInterface* unmarshalName(DssReadBuffer*);
-
-  // names are automatically removed from the name table once deleted
-
   // ************** KBR management ********************'
   KbrInstance* m_createKbr(int K, int Bits, int Fail, KbrCallbackInterface*);
   bool  m_unmarshalKbr(DssReadBuffer* buf, KbrInstance*&); 
