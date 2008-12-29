@@ -50,7 +50,7 @@ namespace _msl_internal{ //Start namespace
     TransObj& operator=(const TransObj&){ return *this; }
 
   public:
-    virtual DssChannel* m_closeConnection() = 0; 
+    virtual void m_closeConnection() = 0; 
     // ComObj keeps track of its deliver calls so that as long as 
     // it has called deliver, and TransObj has not pulled all of its
     // messages with getNextMsgContainer, it will not say deliver again.

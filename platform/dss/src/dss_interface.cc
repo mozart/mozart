@@ -36,7 +36,6 @@
 
 #include "msl_serialize.hh"
 #include "coordinator.hh"
-#include "dss_global_name.hh"
 #include "protocols.hh"
 #include "dss_psDKS.hh"
 
@@ -67,7 +66,6 @@ namespace _dss_internal{
     a_proxyTable(             NULL),
     a_coordinatorTable(           NULL),
     a_threadTable(            NULL),
-    a_nameTable(              NULL),
     a_myDSite(                NULL),
     a_dssconf(     DssConfigData()),
     a_dssMslClbk(             NULL),
@@ -91,7 +89,6 @@ namespace _dss_internal{
     a_proxyTable       = new ProxyTable(a_dssconf.DEFAULT_PROXY_TABLE_SIZE, this);
     a_coordinatorTable     = new CoordinatorTable(a_dssconf.DEFAULT_MANAGER_TABLE_SIZE, this);
     a_threadTable      = new GlobalThreadTable(10, this);
-    a_nameTable        = new GlobalNameTable(a_dssconf.DEFAULT_NAME_TABLE_SIZE, this);
   }
 
   DSS_Environment::~DSS_Environment(){
@@ -101,7 +98,6 @@ namespace _dss_internal{
     delete a_threadTable;
     delete a_coordinatorTable;
     delete a_proxyTable;
-    delete a_nameTable;
   }
 
   DSite*
@@ -215,8 +211,6 @@ namespace _dss_internal{
 
     a_threadTable->m_gcResources();
 
-    a_nameTable->m_gcResources();
-    
     a_msgnLayer->m_gcResources();
   }
 
@@ -447,17 +441,6 @@ bool DSS_Object::m_orderEntities(AbstractEntity* const ae_first,
 
 
 // NEW IO interface
-
-
-GlobalNameInterface* DSS_Object::createName(void* ref){
-  return _a_env->a_nameTable->m_create(ref);
-}
-
-GlobalNameInterface* DSS_Object::unmarshalName(DssReadBuffer* buf){
-  return _a_env->a_nameTable->m_unmarshal(buf);
-}
-
-
 
 KbrInstance*
 DSS_Object::m_createKbr(int K, int Bits, int Fail, KbrCallbackInterface* intf){
