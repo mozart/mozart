@@ -364,21 +364,6 @@ public:
 
 };
 
-
-class DSSDLLSPEC GlobalNameInterface{
-protected:
-  void* a_ref;
-  virtual ~GlobalNameInterface() {}
-public:
-  GlobalNameInterface(void*& ref) : a_ref(ref) {}
-  void setRef(void* ref) { a_ref = ref;}
-  void* getRef(){ return a_ref; }
-  virtual void marshal(DssWriteBuffer* bb)=0;
-
-  MACRO_NO_DEFAULT_CONSTRUCTORS(GlobalNameInterface);
-};
-
-
 class DSSDLLSPEC KbrCallbackInterface{
 public:
   virtual ~KbrCallbackInterface() {}

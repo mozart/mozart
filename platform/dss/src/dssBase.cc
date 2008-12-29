@@ -72,7 +72,6 @@ namespace _dss_internal{
     a_proxyTable(             NULL),
     a_coordinatorTable(           NULL),
     a_threadTable(            NULL),
-    a_nameTable(              NULL),// .......
     a_myDSite(                NULL),
 
     a_dssconf(     DssConfigData()),

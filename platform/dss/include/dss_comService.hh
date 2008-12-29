@@ -123,10 +123,10 @@ inline int getInt(DssReadBuffer* const buf){
 
 
 const int MSG_PRIO_EAGER  = 4;
-const int MSG_PRIO_LAZY   = 0;
-const int MSG_PRIO_HIGH   = 3;
+const int MSG_PRIO_HIGH   = 3; //Used only for routing messages (indirect connections)
 const int MSG_PRIO_MEDIUM = 2;
-const int MSG_PRIO_LOW    = 1;
+const int MSG_PRIO_LOW    = 1; //Not used for now/anymore
+const int MSG_PRIO_LAZY   = 0;
 
 
 
@@ -147,7 +147,7 @@ public:
   virtual int read(void* buf, const unsigned int& len) = 0;
   virtual int write(void* buf, const unsigned int& len) = 0;
 
-  // close the channel; the object can be deleted at this point
+  // close the channel
   virtual void close() = 0;
 };
 
@@ -192,7 +192,6 @@ public:
   virtual void m_monitorRTT(int maxrtt) = 0;
 
   virtual void m_stateChange(FaultState newState) = 0;
-  virtual void m_takeDownConnection() = 0;
   virtual ConnectivityStatus  m_getChannelStatus() = 0;
   // instruct DSite that CsSite has changed M-R
   virtual void m_invalidateMarshaledRepresentation() = 0;

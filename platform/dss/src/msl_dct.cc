@@ -30,8 +30,6 @@
 #pragma implementation "msl_dct.hh"
 #endif
 
-//#include "DKS_routingTable.hh"
-//#include "DKS_dataItem.hh"
 #include "msl_serialize.hh"
 #include "msl_dct.hh"
 #include "msl_buffer.hh"
@@ -45,21 +43,6 @@ namespace _msl_internal{
     switch(type){
     case  DctT_DAC:
       return new DssSimpleDacDct();
-      //     case DctT_dksRoutingTable:
-      //       return new RoutingTableDct(NULL);
-      //     case DctT_dksMessage:
-      //       return new  DksMessageDct(e);
-    case DctT_intList:
-      return new IntListDct();
-      //     case  DctT_dksSiteVec:
-      //       return new DksSiteVecDct();
-      //     default:
-      //       Assert(0);
-      //     }
-    case DctT_appLayer:
-      return NULL;
-    case DctT_cscLayer:
-      return NULL;
     }
     return NULL;
   }
@@ -144,66 +127,5 @@ namespace _msl_internal{
     a_size = sz; a_buf = a_pos = new BYTE[sz];
     memcpy(a_pos, pos, sz);
   }
-
-
-  // *******************************************************
-
-  SimpleList<int> *IntListDct::getItems(){
-    SimpleList<int> *it = a_list;
-    a_list = NULL;
-    a_curPos = Position<int>();     // reset to an invalid position
-    return it;
-  }
-
-  IntListDct::IntListDct() :
-    a_list(new SimpleList<int>()), a_curPos(a_list) {}
-
-  IntListDct::IntListDct(SimpleList<int>* data) :
-    a_list(data), a_curPos(data) {
-    Assert(data);
-  }
-
-
-#define MIN_DI_SIZE 8
-#define DI_ENTRY 0
-#define DI_END 1
-#define DI_SUSP 2
-
-  bool IntListDct::marshal(DssWriteBuffer *bb, MsgnLayerEnv* env){
-    while (a_curPos() && bb->canWrite(MIN_DI_SIZE+1)) {
-      gf_Marshal8bitInt(bb, DI_ENTRY);
-      gf_MarshalNumber(bb, *a_curPos);
-      a_curPos++;
-    }
-    if (a_curPos.isEmpty()) {
-      gf_Marshal8bitInt(bb,DI_END); return true;
-    } else {
-      gf_Marshal8bitInt(bb,DI_SUSP); return false;
-    }
-  }
-
-  bool IntListDct::unmarshal(DssReadBuffer *bb,MsgnLayerEnv* env){
-    while(true){
-      switch(gf_Unmarshal8bitInt(bb)){
-      case DI_END:
-        a_curPos.init(*a_list);     // reinit position
-        return true;
-      case DI_SUSP:
-        return false;
-      case DI_ENTRY:
-        a_curPos.insert(gf_UnmarshalNumber(bb));
-      }
-    }
-  }
-
-  void IntListDct::dispose(){
-    if (a_list) delete a_list;
-    delete this;
-  }
-
-  void IntListDct::resetMarshaling(){
-    a_curPos.init(*a_list);
-  }
-
 
 }

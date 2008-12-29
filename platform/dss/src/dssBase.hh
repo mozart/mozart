@@ -92,7 +92,6 @@ namespace _dss_internal{ //Start namespace
   class CoordinatorTable;
   class GlobalThreadTable;
   class GlobalThread;
-  class GlobalNameTable;
   class DssMslClbk;
   class DksBackbone;
 
@@ -219,7 +218,6 @@ namespace _dss_internal{ //Start namespace
     ProxyTable*                a_proxyTable;
     CoordinatorTable*          a_coordinatorTable;
     GlobalThreadTable*         a_threadTable;
-    GlobalNameTable*           a_nameTable;
     DSite*                     a_myDSite;
 
     DssConfigData              a_dssconf;
