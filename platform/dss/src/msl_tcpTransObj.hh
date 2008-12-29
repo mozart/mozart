@@ -55,7 +55,7 @@ namespace _msl_internal{ //Start namespace
     TCPTransObj(MsgnLayerEnv* env);
     virtual ~TCPTransObj();
     
-    virtual DssChannel* m_closeConnection();
+    virtual void m_closeConnection();
     virtual void deliver();
     virtual void readyToReceive();
     

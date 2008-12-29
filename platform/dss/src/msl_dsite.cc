@@ -364,11 +364,6 @@ namespace _msl_internal{ //Start namespace
     a_comObj->handoverRoute(dstSite, len);
   }
 
-  void Site::m_takeDownConnection(){
-    if (a_comObj)
-      a_comObj->m_closeDownConnection();
-  }
-
   unsigned char* Site::m_getId(int &len){
     BYTE* p = a_key->getStringRep();
     BYTE* ret = new BYTE[RSA_MARSHALED_REPRESENTATION];

@@ -18,7 +18,7 @@ SRCMSL = msl_timers.cc mslBase.cc	\
 	msl_endRouter.cc msl_interRouter.cc 
 
 SRCDSS = dssBase.cc dss_interface.cc dss_msgLayerInterface.cc		\
-	dss_largeMessages.cc dss_global_name.cc protocols.cc		\
+	dss_largeMessages.cc protocols.cc		                \
 	coordinator.cc referenceConsistency.cc				\
 	abstractEntityImplementations.cc dss_threads.cc			\
 	protocol_once_only.cc protocol_migratory.cc			\
