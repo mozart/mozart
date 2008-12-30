@@ -58,7 +58,6 @@ namespace _dss_internal{ //Start namespace
     M_PROXY_COORD_NODEST,
     M_COORD_COORD_NODEST,
 
-    M_DKS_MSG,
     M_LAST
   };
   
