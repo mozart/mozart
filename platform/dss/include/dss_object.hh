@@ -117,19 +117,6 @@ public:
                               const int&         param,
                               const char* const  str);
 
-
-  // KBR-Interface
-
-
-  // ************** KBR management ********************'
-  KbrInstance* m_createKbr(int K, int Bits, int Fail, KbrCallbackInterface*);
-  bool  m_unmarshalKbr(DssReadBuffer* buf, KbrInstance*&);
-
-
-  // ************** Backbone management *****************
-  void m_createBackboneTicket(DssWriteBuffer* buf);
-  void m_joinBackbone(DssReadBuffer *buf);
-
   MACRO_NO_DEFAULT_CONSTRUCTORS(DSS_Object);
 };
 

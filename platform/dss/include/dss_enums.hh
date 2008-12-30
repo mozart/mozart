@@ -174,8 +174,7 @@ enum ProtocolName {
   PN_IMMUTABLE_LAZY  = 8,
   PN_IMMUTABLE_EAGER = 9,
   PN_IMMEDIATE       = 10,
-  PN_DKSBROADCAST    = 11,
-  PN_SITED           = 12,
+  PN_SITED           = 11,
   PN_MASK            = 0xF   // bit mask
 };
 const int PN_NBITS = 4;     // must be consistent with PN_MASK
@@ -201,7 +200,6 @@ enum AccessArchitecture{
   AA_NO_ARCHITECTURE    = 0x0,  // Don't use, only here for internal debugging
   AA_STATIONARY_MANAGER = 0x1,
   AA_MIGRATORY_MANAGER  = 0x2,
-  AA_MOBILE_COORDINATOR = 0x4,
   AA_MASK               = 0xF   // bit mask
 };
 const int AA_NBITS = 4;     // must be consistent with AA_MASK
@@ -414,15 +412,6 @@ enum ConnectionFailReason{
   CFR_NO_HOST,
   CFR_NO_RESOURCE,
   CFR_INVALID_ADDRESS
-};
-
-
-enum KbrResult{
-  KBR_LOCAL,
-  KBR_REMOTE,
-  KBR_FAILED_OPENING,
-  KBR_FAILED_CLOSING,
-  KBR_FAILED_INVALIDKEY
 };
 
 #endif

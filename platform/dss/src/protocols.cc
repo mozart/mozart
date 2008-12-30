@@ -31,7 +31,6 @@
 #endif
 
 #include "protocols.hh"
-#include "protocol_dksBroadcast.hh"
 #include "protocol_migratory.hh"
 #include "protocol_invalid.hh"
 #include "protocol_once_only.hh"
@@ -210,11 +209,6 @@ namespace _dss_internal{
       pman  = new ProtocolImmediateManager();
       pprox = new ProtocolImmediateProxy();
       break;
-    case PN_DKSBROADCAST:
-      pman  = new ProtocolDksBcManager();
-      pprox = new ProtocolDksBcProxy();
-      static_cast<ProtocolDksBcProxy*>(pprox)->m_initHome(env);
-      break;
     case PN_SITED:
       pman  = new ProtocolSitedManager();
       pprox = new ProtocolSitedProxy();
@@ -239,7 +233,6 @@ namespace _dss_internal{
     case PN_IMMUTABLE_LAZY:   return new ProtocolImmutableLazyProxy();
     case PN_IMMUTABLE_EAGER:  return new ProtocolImmutableEagerProxy();
     case PN_IMMEDIATE:        return new ProtocolImmediateProxy();
-    case PN_DKSBROADCAST:     return new ProtocolDksBcProxy();
     case PN_SITED:            return new ProtocolSitedProxy();
     default: Assert(0); return NULL;
     }

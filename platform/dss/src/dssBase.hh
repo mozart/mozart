@@ -93,10 +93,8 @@ namespace _dss_internal{ //Start namespace
   class GlobalThreadTable;
   class GlobalThread;
   class DssMslClbk;
-  class DksBackbone;
 
   class DSS_Environment;
-  class DksInstanceHT;
   class MD5;
 
   class DssSimpleWriteDct;
@@ -214,7 +212,6 @@ namespace _dss_internal{ //Start namespace
     // *********************** GLOBAL VARIABLES ************************
     Mediation_Object*    const a_map;
 
-    DksInstanceHT*             a_dksInstHT;
     ProxyTable*                a_proxyTable;
     CoordinatorTable*          a_coordinatorTable;
     GlobalThreadTable*         a_threadTable;
@@ -223,8 +220,6 @@ namespace _dss_internal{ //Start namespace
     DssConfigData              a_dssconf;
     DssMslClbk*                a_dssMslClbk;
     MsgnLayer*                 a_msgnLayer;
-
-    DksBackbone*                a_dksBackbone;
 
     // For evaluation of how many operations done per site.
     // This is good to know when optimizing reference handling and
@@ -271,14 +266,7 @@ namespace _dss_internal{ //Start namespace
 
     ParamRetVal     m_operateIntParam(const DSS_AREA& area, const DSS_AREA_ID& id, const int& param, int& arg);
     ParamRetVal     m_operateStrParam(const DSS_AREA& area, const DSS_AREA_ID& id, const int& param, const char* const str);
-
-    KbrInstance* m_createKbr(int K, int Bits, int Fail, KbrCallbackInterface* inf);
-    bool m_unmarshalKbr(DssReadBuffer* buf, KbrInstance* &inst);
-
-    void m_setupBackbone(DssWriteBuffer* buf);
-    void m_joinBackbone(DssReadBuffer *buf);
   };
-
 
 } // End namespace
 
