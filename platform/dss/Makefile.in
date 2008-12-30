@@ -27,10 +27,8 @@ SRCDSS = dssBase.cc dss_interface.cc dss_msgLayerInterface.cc		\
 	protocol_immediate.cc dss_netId.cc protocol_immutable_lazy.cc	\
 	protocol_immutable_eager.cc protocol_sited.cc			\
 	coordinator_stationary.cc coordinator_fwdchain.cc		\
-	coordinator_mobile.cc dgc.cc dgc_rc.cc dgc_rl2.cc dgc_fwrc.cc	\
-	dgc_irc.cc dgc_rl1.cc dgc_tl.cc dss_rl_siteHandler.cc		\
-	DKSNode.cc dss_psDKS.cc dss_dksInstance.cc dss_dssDks.cc	\
-	protocol_dksBroadcast.cc dss_dksBackbone.cc
+	dgc.cc dgc_rc.cc dgc_rl2.cc dgc_fwrc.cc	                        \
+	dgc_irc.cc dgc_rl1.cc dgc_tl.cc dss_rl_siteHandler.cc
 
 REALSRC = $(SRCMSL:%=$(SRCDIR)/%) $(SRCDSS:%=$(SRCDIR)/%)
 
