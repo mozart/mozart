@@ -414,7 +414,7 @@ $(BINDIR) $(INCDIR):
 	$(INSTALL_DIR) $@
 
 version.cc: version.sed $(filter-out version.cc,$(ALLSRCS))
-	sed -e "s/HEREGOESDATE/@OZBUILDDATE@/" \
+	sed -e "s/HEREGOESDATE/@OZBUILDDATE@@OZBUILDTIME@/" \
 	     -e "s/OZPLATFORM/$(PLATFORM)/" \
 	     $(SRCDIR)/version.sed > version.cc
 
