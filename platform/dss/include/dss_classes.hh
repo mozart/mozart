@@ -364,29 +364,5 @@ public:
   
 };
 
-class DSSDLLSPEC KbrCallbackInterface{
-public:
-  virtual ~KbrCallbackInterface() {}
-  virtual void m_kbrMessage(int key, PstInContainerInterface*)                    = 0;
-  virtual PstOutContainerInterface* m_kbrDivideResp(int start, int stop, int n)   = 0; 
-  virtual void m_kbrNewResp(int start, int stop, int n, PstInContainerInterface*) = 0; 
-  virtual void m_kbrFunctional()                                                  = 0; 
-  virtual void m_bcMessage(PstInContainerInterface*)                              = 0; 
-};
-
-class DSSDLLSPEC KbrInstance{
-protected:
-  virtual ~KbrInstance() {}
-public: 
-  virtual void m_setCallback(KbrCallbackInterface*)         = 0;
-  virtual KbrCallbackInterface* m_getCallback()             = 0;
-  virtual KbrResult m_route(int, PstOutContainerInterface*) = 0; 
-  virtual KbrResult m_broadcast(PstOutContainerInterface*)  = 0;
-  virtual int  m_getId()                                    = 0;
-  virtual void m_join()                                     = 0; 
-  virtual void m_leave()                                    = 0; 
-  virtual void m_marshal(DssWriteBuffer*)                   = 0; 
-};
-
 #endif
  

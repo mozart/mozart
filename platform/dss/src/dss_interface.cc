@@ -37,10 +37,6 @@
 #include "msl_serialize.hh"
 #include "coordinator.hh"
 #include "protocols.hh"
-#include "dss_psDKS.hh"
-
-
-#include "dss_dksBackbone.hh"
 
 #ifndef WIN32 
 #include <unistd.h> // for _exit()
@@ -62,7 +58,6 @@ namespace _dss_internal{
 				   Mediation_Object* const mo,
 				   const bool& sec):
     a_map(                      mo),
-    a_dksInstHT(              NULL),
     a_proxyTable(             NULL),
     a_coordinatorTable(           NULL),
     a_threadTable(            NULL),
@@ -70,7 +65,6 @@ namespace _dss_internal{
     a_dssconf(     DssConfigData()),
     a_dssMslClbk(             NULL),
     a_msgnLayer(              NULL),
-    a_dksBackbone(         NULL),
     a_CreateXistRefCounter(      0),
     a_CreateNonXRefCounter(      0),
     a_DuplicateXistRefCounter(   0),
@@ -85,7 +79,6 @@ namespace _dss_internal{
     a_myDSite          = a_msgnLayer->a_myDSite;
     // at this point, the msgng layer is started and runnig. 
     // Note that the DSIte is first initialized here, myDSite.  
-    a_dksInstHT        = new DksInstanceHT(10, this); 
     a_proxyTable       = new ProxyTable(a_dssconf.DEFAULT_PROXY_TABLE_SIZE, this);
     a_coordinatorTable     = new CoordinatorTable(a_dssconf.DEFAULT_MANAGER_TABLE_SIZE, this);
     a_threadTable      = new GlobalThreadTable(10, this);
@@ -207,8 +200,6 @@ namespace _dss_internal{
     //For resources connected to proxys (before also to markup the mediator)
     a_proxyTable->m_gcResources();
     
-    a_dksInstHT->m_gcResources();
-
     a_threadTable->m_gcResources();
 
     a_msgnLayer->m_gcResources();
@@ -324,55 +315,6 @@ namespace _dss_internal{
     Proxy* p2 = static_cast<Proxy*>(ae2->getCoordinatorAssistant());
     return p1->m_getNetId() < p2->m_getNetId();
   }
-
-  
-  
-  KbrInstance*
-  DSS_Environment::m_createKbr(int K, int Bits, int Fail, KbrCallbackInterface* inf){
-    printf("Clculating the DKS K:%d bits:%d 2^%d = %d\n", K, Bits, Bits, 1 << (Bits)); 
-    PS_DKS_userClass *interface = new PS_DKS_userClass( this, inf); 
-    DksInstance*      instance  = new DksInstance(1 << (Bits), K, Fail, interface, this); 
-    KbrInstanceImpl*      kInst     = new KbrInstanceImpl(instance, interface); 
-    interface->m_setKbrInstance(kInst); 
-    return kInst;
-  }
-  
-  bool
-  DSS_Environment::m_unmarshalKbr(DssReadBuffer* buf, KbrInstance* &inst){
-    DksInstance* instance;
-    bool exists  =  a_dksInstHT->m_unmarshalDksInstance(buf, instance); 
-    if(exists) {
-      PS_DKS_userClass *interface  = static_cast<PS_DKS_userClass*>(instance->getCallBackService());
-      inst = interface->m_getKbrInstance(); 
-      return true; 
-    }
-    PS_DKS_userClass *interface = new PS_DKS_userClass(this, NULL); 
-    instance->setCallBackService(interface); 
-    KbrInstanceImpl*      kInst     = new KbrInstanceImpl(instance, interface); 
-    interface->m_setKbrInstance(kInst); 
-    inst = kInst; 
-    return false; 
-  }
-
-  void
-  DSS_Environment::m_setupBackbone(DssWriteBuffer* buf){
-    if(a_dksBackbone == NULL){
-      a_dksBackbone = new DksBackbone(this); 
-      DksInstance*      instance  = new DksInstance(1 << 16, 2, 1 , a_dksBackbone, this); 
-      a_dksBackbone->a_instance = instance; 
-    }
-    a_dksBackbone->a_instance->m_marshal(buf); 
-  }
-  
-  void 
-  DSS_Environment::m_joinBackbone(DssReadBuffer *buf){
-    if(a_dksBackbone) return ; 
-    DksInstance* instance = NULL;
-    Assert(a_dksInstHT->m_unmarshalDksInstance(buf, instance) == false); 
-    a_dksBackbone = new DksBackbone(instance, this); 
-    instance->setCallBackService(a_dksBackbone);
-    instance->m_joinDksRing(); 
-  }
 }
 
 
@@ -437,27 +379,4 @@ bool DSS_Object::m_orderEntities(AbstractEntity* const ae_first,
 				 AbstractEntity* const ae_second)
 {
   return _a_env->m_orderEntities(ae_first,ae_second);
-}
-
-
-// NEW IO interface
-
-KbrInstance*
-DSS_Object::m_createKbr(int K, int Bits, int Fail, KbrCallbackInterface* intf){
-  return _a_env->m_createKbr(K, Bits, Fail, intf);
-}
-
-bool
-DSS_Object::m_unmarshalKbr(DssReadBuffer* buf, KbrInstance*& inst){
-  return _a_env->m_unmarshalKbr(buf, inst); 
-}
-
-void
-DSS_Object::m_createBackboneTicket(DssWriteBuffer* buf){
-   _a_env->m_setupBackbone(buf); 
-}
-
-void
-DSS_Object::m_joinBackbone(DssReadBuffer *buf){
-  _a_env->m_joinBackbone(buf); 
 }
