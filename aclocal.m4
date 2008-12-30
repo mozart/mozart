@@ -134,6 +134,12 @@ AC_DEFUN(OZ_BUILD_DATE,[
   OZBUILDDATE=$oz_cv_build_date;
   AC_SUBST(OZBUILDDATE)])
 
+AC_DEFUN(OZ_BUILD_TIME,[
+  AC_CACHE_CHECK([for build time],oz_cv_build_time,[
+    oz_cv_build_time=`date +"%H%M%S"`])
+  OZBUILDTIME=$oz_cv_build_time;
+  AC_SUBST(OZBUILDTIME)])
+
 AC_DEFUN(OZ_VERSION,[
   AC_CACHE_CHECK([for oz version],oz_cv_ozversion,[
     oz_cv_ozversion=`sh $SRCTOP/OZVERSION`])
@@ -192,6 +198,7 @@ AC_DEFUN(OZ_INIT, [
   AC_SUBST(CPPFLAGS)
   AC_SUBST(LDFLAGS)
   OZ_BUILD_DATE
+  OZ_BUILD_TIME
   AC_SUBST(PLATFORM)
   OZ_OZLOADSEP
   OZ_OZLOADWIN
