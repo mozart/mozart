@@ -33,7 +33,9 @@
 #include "msl_crypto.hh"
 #include "dss_classes.hh"
 
+
 namespace _msl_internal{ //Start namespace
+  const int SIZE_INT = 4;
 
   /************************* SimpleBuffer *************************/
 

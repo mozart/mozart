@@ -11,7 +11,7 @@ include ./Makefile.vars
 SRCBSE = base.cc
 
 SRCMSL = msl_timers.cc mslBase.cc	\
-	msl_buffer.cc msl_serialize.cc msl_prioQueues.cc	\
+	msl_buffer.cc msl_prioQueues.cc	\
 	msl_crypto.cc msl_dct.cc msgnLayer.cc	\
 	msl_msgContainer.cc msl_dsite.cc msl_comObj.cc 		\
 	msl_transObj.cc msl_tcpTransObj.cc			\

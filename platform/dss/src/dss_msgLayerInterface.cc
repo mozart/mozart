@@ -33,7 +33,6 @@
 #include "dss_msgLayerInterface.hh"
 #include "dss_threads.hh"
 #include <string.h>
-#include "msl_serialize.hh"
 
 namespace _dss_internal{
   

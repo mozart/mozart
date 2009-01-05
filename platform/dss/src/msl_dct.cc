@@ -30,7 +30,6 @@
 #pragma implementation "msl_dct.hh"
 #endif
 
-#include "msl_serialize.hh"
 #include "msl_dct.hh"
 #include "msl_buffer.hh"
 #include "dss_classes.hh"

@@ -33,7 +33,6 @@
 #include "msl_dsite.hh"
 #include "msl_buffer.hh"
 #include "msl_dct.hh"
-#include "msl_serialize.hh"
 
 // borrowed from dss_msgLayerInterface.hh
 namespace _dss_internal {

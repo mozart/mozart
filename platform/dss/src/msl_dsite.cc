@@ -36,7 +36,6 @@
 #include "msl_transObj.hh"
 #include "msl_buffer.hh"
 #include "msl_dct.hh"
-#include "msl_serialize.hh"
 #include "mslBase.hh"
 #include "msl_crypto.hh"
 #include "dss_enums.hh"

@@ -134,11 +134,4 @@ void dssLog(DSS_LOG_LEVEL level, const char* const format, ...);
 
 #endif // DSS_LOG
   
-// ******************************* ENUMS AND CONSTANTS ****************************
-
-const int sz_M8bitInt   = 1;
-const int sz_MNumberMax = 5;
-const int sz_MEM_COPY   = 8; // faster to loop copy than to invoke memcpy
-
-
 #endif 
