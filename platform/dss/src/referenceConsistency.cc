@@ -28,7 +28,6 @@
 #pragma implementation "referenceConsistency.hh"
 #endif
 
-#include "msl_serialize.hh"
 #include "referenceConsistency.hh"
 #include "coordinator.hh"
 #include "dss_templates.hh"

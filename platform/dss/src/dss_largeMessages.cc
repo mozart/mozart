@@ -26,7 +26,6 @@
 #include "dssBase.hh"
 #include "dss_largeMessages.hh"
 #include "dss_msgLayerInterface.hh"
-#include "msl_serialize.hh"
 namespace _dss_internal{
 
   enum LrgMsgEleType{

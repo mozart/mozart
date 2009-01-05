@@ -30,7 +30,6 @@
 
 #include "dss_threads.hh"
 #include "dssBase.hh"
-#include "msl_serialize.hh"
 #include "dss_msgLayerInterface.hh"
 
 namespace _dss_internal{ //Start namespace

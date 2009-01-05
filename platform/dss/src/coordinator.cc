@@ -29,7 +29,6 @@
 #endif
 
 #include "dssBase.hh"
-#include "msl_serialize.hh"
 #include "coordinator.hh"
 #include "coordinator_stationary.hh"
 #include "coordinator_fwdchain.hh"

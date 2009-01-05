@@ -141,19 +141,19 @@ GlueSite::m_gcFinal() {
 
 int
 GlueSite::getCsSiteSize() {
-  return SIZE_INT + tagged2ByteString(info)->getWidth();
+  return sz_MNumberMax + tagged2ByteString(info)->getWidth();
 }
 
 void
 GlueSite::marshalCsSite( DssWriteBuffer* const buf){
   ByteString* bs = tagged2ByteString(info);
-  putInt(buf, bs->getWidth());
+  gf_MarshalNumber(buf, bs->getWidth());
   putStr(buf, (char*) bs->getData(), bs->getWidth());
 }
 
 void
 GlueSite::updateCsSite( DssReadBuffer* const buf){
-  ByteString* bs = new ByteString(getInt(buf));
+  ByteString* bs = new ByteString(gf_UnmarshalNumber(buf));
   getStr(buf, (char*) bs->getData(), bs->getWidth());
   info = makeTaggedExtension(bs);
 }

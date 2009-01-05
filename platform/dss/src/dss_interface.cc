@@ -34,7 +34,6 @@
 
 /*************** DSS_INTERFACE PART I: THE ENVIRONMENT ***************/
 
-#include "msl_serialize.hh"
 #include "coordinator.hh"
 #include "protocols.hh"
 
