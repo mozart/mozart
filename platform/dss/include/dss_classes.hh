@@ -134,11 +134,6 @@ public:
   CoordinatorAssistant* getCoordinatorAssistant() const { return a_proxy; }
   void setCoordinatorAssistant(CoordinatorAssistant*);
 
-  // notify the resumption of programming system operations to the DSS
-  void remoteInitatedOperationCompleted(DssOperationId*,
-					PstOutContainerInterface*);
-  void localInitatedOperationCompleted();
-
   // abstract operation Kill - try to make the fault state permfail.
   // This operation is asynchronous, and not guaranteed to succeed.
   // Monitor requests to notify failures eagerly to this proxy.

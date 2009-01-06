@@ -116,11 +116,6 @@ namespace _dss_internal{ //Start namespace
 
     void msgReceived(::MsgContainer*,DSite*);
 
-    virtual void remoteInitatedOperationCompleted(DssOperationId*,
-						  ::PstOutContainerInterface*)
-    { Assert(0); }
-    void localInitatedOperationCompleted(){Assert(0);} 
-
     virtual FaultState siteStateChanged(DSite*, const FaultState&);
 
   private:
