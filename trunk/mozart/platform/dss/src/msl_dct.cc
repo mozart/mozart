@@ -51,14 +51,14 @@ namespace _msl_internal{
   bool
   DssSimpleDacDct::marshal(DssWriteBuffer *bb, MsgnLayerEnv*){
     if(a_mode == DSDD_READ){// loopback
-      //printf("DssSimpleDacDct(%p)::",static_cast<void*>(this)); gf_printBuf("loopback",a_buf,a_size);
+      //printf("DssSimpleDacDct(%p)::",static_cast<void*>(this));
       a_pos = a_buf;
     }
 
     a_mode = DSDD_WRITE;
     if(getPosDiff() == 0){ // haven't started yet
       if(bb->canWrite(4+1)){ //can marshal len + one byte at least
-	//printf("DssSimpleDacDct(%p)::",static_cast<void*>(this)); gf_printBuf("marshal",a_buf,a_size);
+	//printf("DssSimpleDacDct(%p)::",static_cast<void*>(this));
 	BYTE a_sizevec[4];
 	gf_integer2char(a_sizevec,a_size);
 	bb->writeToBuffer(a_sizevec,4);
@@ -68,7 +68,7 @@ namespace _msl_internal{
     int len = t_min(bb->availableSpace(), static_cast<int>(a_size)); // how much can and want we to marshal
     bb->writeToBuffer(a_pos, len);
     a_pos += len;
-    //printf("len:%d size:%d done:%s\n",len,a_size, gf_bool2string((getMarshaled() == a_size)));
+    //printf("len:%d size:%d done:%s\n",len,a_size, (getMarshaled() == a_size)?"TRUE":"FALSE");
     return (getPosDiff() == a_size);    // check if done
   }
 
@@ -92,7 +92,7 @@ namespace _msl_internal{
     bb->readFromBuffer(a_pos, len);
     bb->commitRead(len);
     a_pos += len;
-    //printf("DssSimpleDacDct(%p)::",static_cast<void*>(this)); gf_printBuf("unmarshal",a_buf,getPosDiff());
+    //printf("DssSimpleDacDct(%p)::",static_cast<void*>(this));
     if(getPosDiff() == a_size){
       a_pos = a_buf; // automatically prepare for unmarshalling
       return true;
@@ -114,7 +114,7 @@ namespace _msl_internal{
 
   int 
   DssSimpleDacDct::getData(BYTE* pos, const int& max){
-    //printf("DssSimpleDacDct::"); gf_printBuf("getData",a_buf,a_size);
+    //printf("DssSimpleDacDct::");
     int tlen = t_min(max, static_cast<int>( a_size - getPosDiff()));
     memcpy(pos, a_pos, tlen); a_pos += tlen; Assert(a_pos <= a_buf + a_size);
     return tlen;
