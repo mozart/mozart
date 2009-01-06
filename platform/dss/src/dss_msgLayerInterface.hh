@@ -201,7 +201,6 @@ namespace _dss_internal{ //Start namespace
   enum AppDataContainerType{
     ADCT_PST,
     ADCT_PDC,
-    ADCT_LMC,
     ADCT_EBA
   };
   
