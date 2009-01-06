@@ -24,10 +24,10 @@
  *
  */
 #if defined(INTERFACE)
-#pragma implementation "dss_rl_siteHandler.hh"
+#pragma implementation "dgc_rl_siteHandler.hh"
 #endif
 
-#include "dss_rl_siteHandler.hh"
+#include "dgc_rl_siteHandler.hh"
 #include "dss_comService.hh"
 
 namespace _dss_internal{

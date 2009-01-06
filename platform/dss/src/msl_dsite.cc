@@ -120,10 +120,8 @@ namespace _msl_internal{ //Start namespace
     Assert(d->canWrite(static_cast<int>(MD5_SIZE)));
     int   inlen = d->getUsed();
     BYTE* plain = d->unhook();
-    //gf_printBuf("Site:encrypt",plain,inlen);
     int retlen; BYTE* cipher;
     m_encrypt(retlen,cipher,inlen,plain);
-    //gf_printBuf("Site:encrypted",cipher,retlen);
     delete [] plain;
     return new DssSimpleDacDct(retlen,cipher); // write
   }

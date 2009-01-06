@@ -89,7 +89,7 @@ namespace _msl_internal{
     }
 
     DssSimpleDacDct(const u32& sz, BYTE* const bf):a_buf(bf),a_pos(bf),a_size(sz),a_mode(DSDD_UNDEF){
-      //printf("DssSimpleDacDct(%p)::create %d\n",static_cast<void*>(this),sz); gf_printBuf("buffer", a_buf,a_size);
+      //printf("DssSimpleDacDct(%p)::create %d\n",static_cast<void*>(this),sz);
     }
 
     virtual ~DssSimpleDacDct(){ delete [] a_buf; }

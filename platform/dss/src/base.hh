@@ -71,8 +71,6 @@
 #include "dss_enums.hh"
 
 
-char *gf_bool2string(const bool& b);
-
 // Create an integer2char, taking int and BYTE*
 inline void gf_integer2char(BYTE* const buf, const u32& e){
 #ifdef BIG_ENDIAN_HOST
@@ -89,11 +87,6 @@ inline u32 gf_char2integer(BYTE* const buf){
   return *reinterpret_cast<u32*>(buf);
 #endif
 }
-
-
-void gf_printBuf(const char* const format, BYTE* const buf, int len);
-
-
 
 void  dssError(const char* const format, ...);
 void  dssAssert(const char* const  file, const int& line, const char* const condition);

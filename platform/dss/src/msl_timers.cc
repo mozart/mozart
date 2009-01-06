@@ -224,7 +224,7 @@ namespace _msl_internal{
       sprintf(buf,"WHEEL:%3d:%4d SUSP:%s CLOCK:%s",
               a_minutes,
               a_mseconds,
-              ::gf_bool2string(a_suspended),
+              a_suspended?"TRUE":"FALSE",
               a_clock.stringrep());
       return buf;
   }
