@@ -18,7 +18,7 @@ SRCMSL = msl_timers.cc mslBase.cc	\
 	msl_endRouter.cc msl_interRouter.cc 
 
 SRCDSS = dssBase.cc dss_interface.cc dss_msgLayerInterface.cc		\
-	dss_largeMessages.cc protocols.cc		                \
+	protocols.cc		                                        \
 	coordinator.cc referenceConsistency.cc				\
 	abstractEntityImplementations.cc dss_threads.cc			\
 	protocol_once_only.cc protocol_migratory.cc			\
@@ -28,7 +28,7 @@ SRCDSS = dssBase.cc dss_interface.cc dss_msgLayerInterface.cc		\
 	protocol_immutable_eager.cc protocol_sited.cc			\
 	coordinator_stationary.cc coordinator_fwdchain.cc		\
 	dgc.cc dgc_rl2.cc dgc_fwrc.cc	                                \
-	dgc_rl1.cc dgc_tl.cc dss_rl_siteHandler.cc
+	dgc_rl1.cc dgc_tl.cc dgc_rl_siteHandler.cc
 
 REALSRC = $(SRCMSL:%=$(SRCDIR)/%) $(SRCDSS:%=$(SRCDIR)/%)
 

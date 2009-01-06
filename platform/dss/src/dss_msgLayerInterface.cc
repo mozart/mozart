@@ -230,9 +230,6 @@ namespace _dss_internal{
   }
   DssMslClbk::~DssMslClbk(){;}
 
-
-  ExtDataContainerInterface* createLrgMsgContainer(DSS_Environment*); 
-  
   ExtDataContainerInterface*   
   DssMslClbk::m_createExtDataContainer(BYTE type){
     switch(type){
@@ -243,10 +240,6 @@ namespace _dss_internal{
     case ADCT_PDC:
       {
 	return new PstDataContainer(m_getEnvironment()); 
-      }
-    case ADCT_LMC:
-      {
-	return createLrgMsgContainer(m_getEnvironment()); 
       }
     case ADCT_EBA:
       {
