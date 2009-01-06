@@ -142,10 +142,6 @@ namespace _dss_internal{ //Start namespace
     virtual OpRetVal operationWrite(GlobalThread*, PstOutContainerInterface**&);
 
     void msgReceived(::MsgContainer*,DSite*);
-    void remoteInitatedOperationCompleted(DssOperationId* opId,
-					  ::PstOutContainerInterface* pstOut) {
-      Assert(0); }
-    void localInitatedOperationCompleted(); 
 
     // check fault state
     virtual FaultState siteStateChanged(DSite*, const FaultState&);

@@ -165,7 +165,6 @@ namespace _dss_internal{
       case AEN_RELAXED_MUTABLE:
       case AEN_TRANSIENT:
       case AEN_IMMUTABLE:
-      case AEN_IMMUTABLE_UNNAMED:
 	ae_name = aen;
 	break;
       default:
