@@ -113,11 +113,6 @@ namespace _dss_internal{ //Start namespace
     virtual int  getMarshaledSize() const { return 1; }
     virtual bool m_initRemoteProt(DssReadBuffer*);
 
-    virtual void
-    remoteInitatedOperationCompleted(DssOperationId*,
-                                     PstOutContainerInterface*) { Assert(0); }
-    virtual void localInitatedOperationCompleted() { Assert(0); }
-
     // check fault state
     virtual FaultState siteStateChanged(DSite*, const FaultState&);
   };

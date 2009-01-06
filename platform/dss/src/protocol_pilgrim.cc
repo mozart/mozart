@@ -341,9 +341,8 @@ namespace _dss_internal{ //Start namespace
   void
   ProtocolPilgrimProxy::m_resumeOperations(){
     while (!a_susps.isEmpty()) {
-      if (a_susps.pop()->resumeDoLocal(NULL) == WRV_CONTINUING) a_jobsLeft++;
+      a_susps.pop()->resumeDoLocal(NULL);
     }
-    // a_jobsLeft is decremented when operations actually resume
   }
 
   void
@@ -451,14 +450,6 @@ namespace _dss_internal{ //Start namespace
     default:
       Assert(0);
     }
-  }
-
-
-  void
-  ProtocolPilgrimProxy::localInitatedOperationCompleted() {
-    Assert(hasToken() && a_jobsLeft > 0);
-    a_jobsLeft--;
-    if (a_jobsLeft == 0) m_forwardToken();
   }
 
   // interpret site failures

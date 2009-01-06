@@ -168,11 +168,6 @@ namespace _dss_internal{ //Start namespace
     //located in dss_access.cc, the only placed accessed from
     virtual char *m_stringrep();
 
-    // finalize remote callbacks and local resumptions
-    virtual void remoteInitatedOperationCompleted(DssOperationId*,
-                                                  PstOutContainerInterface*)=0;
-    virtual void localInitatedOperationCompleted() = 0;
-
     // basic protocol functionalities
     int getStatus() const { return a_status >> 2; }
     void setStatus(int v) { a_status = (v << 2) | (a_status & 3); }

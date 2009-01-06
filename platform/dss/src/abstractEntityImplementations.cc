@@ -61,20 +61,6 @@ void AbstractEntity::setCoordinatorAssistant(CoordinatorAssistant* p) {
   if (a_proxy) static_cast<Proxy*>(a_proxy)->setAbstractEntity(this);
 }
 
-void
-AbstractEntity::remoteInitatedOperationCompleted(DssOperationId* opId,
-                                                 PstOutContainerInterface* pstOut){
-  Assert(a_proxy);
-  ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
-  pp->remoteInitatedOperationCompleted(opId, pstOut);
-}
-
-void AbstractEntity::localInitatedOperationCompleted() {
-  Assert(a_proxy);
-  ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
-  pp->localInitatedOperationCompleted();
-}
-
 OpRetVal AbstractEntity::abstractOperation_Kill() {
   if (!a_proxy) return DSS_INTERNAL_ERROR_NO_PROXY;
   ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
@@ -211,8 +197,7 @@ namespace _dss_internal{ //Start namespace
       default: Assert(0); return AOCB_FINISH;
       }
     }
-    case AEN_IMMUTABLE:
-    case AEN_IMMUTABLE_UNNAMED: {
+    case AEN_IMMUTABLE: {
       ImmutableAbstractEntity* iae =
         dynamic_cast<ImmutableAbstractEntity*>(ae);
       return iae->callback_Read(tid, oid, pstin, pstout);

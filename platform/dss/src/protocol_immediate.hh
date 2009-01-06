@@ -47,8 +47,6 @@ namespace _dss_internal{ //Start namespace
   public:
     ProtocolImmediateProxy();
     virtual void msgReceived(MsgContainer*,DSite*);
-    virtual void remoteInitatedOperationCompleted(DssOperationId*, PstOutContainerInterface*);
-    virtual void localInitatedOperationCompleted();
 
     virtual bool marshal_protocol_info(DssWriteBuffer *buf, DSite *);
     virtual bool dispose_protocol_info(DssReadBuffer *buf); //töm bufferten

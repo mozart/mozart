@@ -34,8 +34,6 @@
 
 // Include algs
 #include "dgc_fwrc.hh"
-#include "dgc_irc.hh"
-#include "dgc_rc.hh"
 #include "dgc_rl1.hh"
 #include "dgc_rl2.hh"
 #include "dgc_tl.hh"
@@ -88,42 +86,19 @@ namespace _dss_internal{ //Start namespace
      case RC_ALG_TL:   gf_UnmarshalNumber(bs); break;
      case RC_ALG_RLV1: break;
      case RC_ALG_RLV2: break;
-     case RC_ALG_RC:   break;
-     case RC_ALG_IRC:  gf_Unmarshal8bitInt(bs); break;
      default:          Assert(0);
        dssError("cleanType got illegal type (%d)\n",type);
        break;
      }
    }
 
-
-//   void Reference::sf_cleanBuffer( DSS_Environment* env, DssReadBuffer* bs) {
-//     env->a_msgnLayer->m_UnmarshalDSite(bs);
-//     gf_UnmarshalNumber(bs);
-//     int len = gf_Unmarshal8bitInt(bs); //  1: load length
-//     for(int i = 0; i < len; i++){  //     For all marshaled algorithms
-//       RCalg type = static_cast<RCalg>(gf_Unmarshal8bitInt(bs) << 8);  //        2: load type, see m_buildAlgs
-//       Assert((type == RC_ALG_WRC) ||
-//           (type == RC_ALG_TL)  ||
-//           (type == RC_ALG_RC)  ||
-//           (type == RC_ALG_RLV1)||
-//           (type == RC_ALG_RLV2)||
-//           (type == RC_ALG_IRC)
-//           );
-//       sf_cleanType(type,bs);
-//     }
-//  }
-
-
   RCalg
   Reference::m_msgToGcAlg(MsgContainer *msgC, DSite* fromsite) {
     RCalg type       = static_cast<RCalg>(msgC->popIntVal()); // need type for pushing alg_removed
     Assert((type == RC_ALG_WRC) ||
            (type == RC_ALG_TL)  ||
-           (type == RC_ALG_RC)  ||
            (type == RC_ALG_RLV1)||
-           (type == RC_ALG_RLV2)||
-           (type == RC_ALG_IRC)
+           (type == RC_ALG_RLV2)
            );
     GCalgorithm *tmp = m_findAlg(type);
     if (tmp){
@@ -145,10 +120,8 @@ namespace _dss_internal{ //Start namespace
   Reference::m_removeAlgorithmType(const RCalg& atype){
     Assert((atype == RC_ALG_WRC) ||
            (atype == RC_ALG_TL)  ||
-           (atype == RC_ALG_RC)  ||
            (atype == RC_ALG_RLV1)||
-           (atype == RC_ALG_RLV2)||
-           (atype == RC_ALG_IRC)
+           (atype == RC_ALG_RLV2)
            );
     GCalgorithm **tmp = &a_algs;
     while((*tmp)!=NULL) {
@@ -182,10 +155,8 @@ namespace _dss_internal{ //Start namespace
       if(!(gc_annot & RC_ALG_PERSIST)){ // If not persistent, add algs
         if(gc_annot & RC_ALG_WRC)  a_algs = new WRC_Home(this,a_algs,m_getEnvironment()->a_dssconf.gc_wrc_alpha);
         if(gc_annot & RC_ALG_TL)   a_algs = new TL_Home(this,a_algs,m_getEnvironment()->a_dssconf.gc_tl_leaseTime);
-        if(gc_annot & RC_ALG_RC)   a_algs = new RC_Home(this,a_algs);
         if(gc_annot & RC_ALG_RLV1) a_algs = new RLV1_Home(this,a_algs);
         if(gc_annot & RC_ALG_RLV2) a_algs = new RLV2_Home(this,a_algs);
-        if(gc_annot & RC_ALG_IRC)  a_algs = new IRC_Home(this,a_algs);
         Assert(a_algs != NULL); //Else the glue made us persistent "accidentaly"
       }
     }
@@ -319,10 +290,8 @@ namespace _dss_internal{ //Start namespace
       switch(type){
       case RC_ALG_WRC:  a_algs = new  WRC_Remote(this,bs,a_algs, m_getEnvironment()->a_dssconf.gc_wrc_alpha); break;
       case RC_ALG_TL:   a_algs = new   TL_Remote(this,bs,a_algs, m_getEnvironment()->a_dssconf.gc_tl_updateTime); break;
-      case RC_ALG_RC:   a_algs = new   RC_Remote(this,bs,a_algs); break;
       case RC_ALG_RLV1: a_algs = new RLV1_Remote(this,bs,a_algs); break;
       case RC_ALG_RLV2: a_algs = new RLV2_Remote(this,bs,a_algs); break;
-      case RC_ALG_IRC:  a_algs = new  IRC_Remote(this,bs,a_algs); break;
       default:
         dssError("Remote Reference found illegal type (%d), check buffer space\n",type);
                                 Assert(0);

@@ -64,9 +64,6 @@ namespace _dss_internal{ //Start namespace
     virtual OpRetVal operationWrite(GlobalThread*, PstOutContainerInterface**&);
     virtual OpRetVal operationWrite(PstOutContainerInterface**&);
 
-    void remoteInitatedOperationCompleted(DssOperationId*, PstOutContainerInterface*) { Assert(0); }
-    void localInitatedOperationCompleted() { Assert(0); }
-
     void msgReceived(::MsgContainer*,DSite*) {}
 
     // check fault state

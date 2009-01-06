@@ -144,17 +144,10 @@ namespace _dss_internal{ //Start namespace
                                            AbsOp aop, PstInContainerInterface* arg) {
     RemoteOperation* op = new RemoteOperation(sender, caller);
     PstOutContainerInterface* ans = NULL;
-    if (a_proxy->m_doe(aop, caller, op, arg, ans) == AOCB_FINISH)
-      ProtocolSimpleChannelProxy::remoteInitatedOperationCompleted(op, ans);
-  }
-
-  void
-  ProtocolSimpleChannelProxy::remoteInitatedOperationCompleted(DssOperationId* opId,
-                                                               ::PstOutContainerInterface* pstOut)
-  {
-    RemoteOperation* op = static_cast<RemoteOperation*>(opId);
-    if (op->sender) sendToProxy(op->sender, SC_RETURN, op->caller, pstOut);
-    delete op;
+    if (a_proxy->m_doe(aop, caller, op, arg, ans) == AOCB_FINISH){
+      if (op->sender) sendToProxy(op->sender, SC_RETURN, op->caller, ans);
+      delete op;
+    }
   }
 
   void
