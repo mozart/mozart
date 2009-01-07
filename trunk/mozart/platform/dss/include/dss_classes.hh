@@ -59,15 +59,6 @@ class CoordinatorAssistant;
 
 //****************************** Not in the documantation yet *************************
 
-
-
-// Used to identify an operation
-class DSSDLLSPEC DssOperationId {
-public:
-  DssOperationId() {}
-};
-
-
 // A ThreadMediator is used to provide the DSS an interface to a
 // suspended operation in the programming system.  The operation can
 // be resumed in one of three ways:
@@ -78,9 +69,9 @@ class DSSDLLSPEC ThreadMediator{
 public:
   ThreadMediator();
   virtual ~ThreadMediator() {}
-  virtual WakeRetVal resumeDoLocal(DssOperationId*)=0;
-  virtual WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin)=0;
-  virtual WakeRetVal resumeFailed()=0;
+  virtual void resumeDoLocal()=0;
+  virtual void resumeRemoteDone(PstInContainerInterface* pstin)=0;
+  virtual void resumeFailed()=0;
 };
 
 
@@ -194,14 +185,12 @@ public:
   OpRetVal abstractOperation_Write(DssThreadId*, PstOutContainerInterface**&);
 
   /************************* SUPPLIED BY USER *************************/
-  virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
-				    DssOperationId* operation_id,
-				    PstInContainerInterface* operation,
-				    PstOutContainerInterface*& answer)=0;
-  virtual AOcallback callback_Read(DssThreadId* id_of_calling_thread,
-				   DssOperationId* operation_id,
-				   PstInContainerInterface* operation,
-				   PstOutContainerInterface*& answer)=0;
+  virtual void callback_Write(DssThreadId* id_of_calling_thread,
+			      PstInContainerInterface* operation,
+			      PstOutContainerInterface*& answer)=0;
+  virtual void callback_Read(DssThreadId* id_of_calling_thread,
+			     PstInContainerInterface* operation,
+			     PstOutContainerInterface*& answer)=0;
 };
 
 
@@ -215,13 +204,11 @@ public:
   OpRetVal abstractOperation_Write(PstOutContainerInterface**&);
 
   /************************* SUPPLIED BY USER *************************/
-  virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread, 
-				    DssOperationId* operation_id,
-				    PstInContainerInterface* operation)=0;
-  virtual AOcallback callback_Read(DssThreadId* id_of_calling_thread,
-				   DssOperationId* operation_id,
-				   PstInContainerInterface* operation,
-				   PstOutContainerInterface*& answer)=0;
+  virtual void callback_Write(DssThreadId* id_of_calling_thread, 
+			      PstInContainerInterface* operation)=0;
+  virtual void callback_Read(DssThreadId* id_of_calling_thread,
+			     PstInContainerInterface* operation,
+			     PstOutContainerInterface*& answer)=0;
 };
 
 
@@ -235,14 +222,11 @@ public:
   OpRetVal abstractOperation_Append(DssThreadId*, PstOutContainerInterface**&);
 
   /************************* SUPPLIED BY USER *************************/
-  virtual AOcallback callback_Bind(DssOperationId* operation_id,
-				   PstInContainerInterface* operation) = 0;
-  virtual AOcallback callback_Append(DssOperationId* operation_id,
-				     PstInContainerInterface* operation) = 0;
+  virtual void callback_Bind(PstInContainerInterface* operation) = 0;
+  virtual void callback_Append(PstInContainerInterface* operation) = 0;
   // summarize past Append operations; the answer (if given) is sent
   // to a new proxy as one single Append operation.
-  virtual AOcallback callback_Changes(DssOperationId* operation_id,
-				      PstOutContainerInterface*& answer)=0;
+  virtual void callback_Changes(PstOutContainerInterface*& answer)=0;
 };
 
 
@@ -255,11 +239,10 @@ public:
   OpRetVal abstractOperation_Read(DssThreadId*, PstOutContainerInterface**&);
 
   /************************* SUPPLIED BY USER *************************/
-  virtual AOcallback callback_Read(DssThreadId* id_of_calling_thread,
-				   DssOperationId* operation_id,
-				   PstInContainerInterface* operation,
-				   PstOutContainerInterface*& answer)=0;
-
+  virtual void callback_Read(DssThreadId* id_of_calling_thread,
+			     PstInContainerInterface* operation,
+			     PstOutContainerInterface*& answer)=0;
+  
   // Note.  The programming system may want to localize the entity
   // once its state has been installed.  However it should not delete
   // the abstract entity before all suspended read operations have
