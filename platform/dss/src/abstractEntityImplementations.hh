@@ -50,32 +50,18 @@ namespace _dss_internal{ //Start namespace
   // more direct (no more mediators).
 
   enum AbsOp{
-    AO_NO_OP = 0,
     AO_OO_BIND,
-    AO_OO_ACCESS,
     AO_OO_UPDATE,
     AO_OO_CHANGES,
     AO_STATE_WRITE,
     AO_STATE_READ,
-    AO_STATE_LOCK,
-    AO_STATE_UNLOCK,
-    AO_STATE_EXTRACT,
-    AO_STATE_INSTALL,
-    AO_LZ_FETCH,
-    AO_DC_SEND,
-    AO_DC_EXTRACT,
-    AO_DC_INSTALL,
-    AO_EP_W_EXEC,
-    AO_EP_W_DONE,
-    AO_EP_EXTRACT,
-    AO_EP_INSTALL
   };
 
   // apply an abstract operation on a given abstract entity
-  AOcallback applyAbstractOperation(AbstractEntity* ae, const AbsOp& aop,
-                                    DssThreadId* tid, DssOperationId* oid,
-                                    PstInContainerInterface* pstin,
-                                    PstOutContainerInterface*& pstout);
+  void applyAbstractOperation(AbstractEntity* ae, const AbsOp& aop,
+                              DssThreadId* tid,
+                              PstInContainerInterface* pstin,
+                              PstOutContainerInterface*& pstout);
 
 }
 #endif

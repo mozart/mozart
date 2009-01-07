@@ -237,14 +237,6 @@ enum ProxyUnmarshalFlag{
   PUF_FREE //Yves:unused!
 };
 
-enum AOcallback{
-  AOCB_FINISH
-};
-
-enum WakeRetVal{
-  WRV_DONE
-};
-
 enum DSS_AREA{
   DSS_STATIC,
   DSS_AREA_TABLES,

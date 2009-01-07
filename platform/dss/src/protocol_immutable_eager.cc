@@ -115,7 +115,7 @@ namespace _dss_internal{ //Start namespace
     } else {
       setStatus(true);
       a_proxy->installEntityState(builder);
-      while (!a_susps.isEmpty()) a_susps.pop()->resumeDoLocal(NULL);
+      while (!a_susps.isEmpty()) a_susps.pop()->resumeDoLocal();
     }
   }
 

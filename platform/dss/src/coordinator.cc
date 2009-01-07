@@ -100,9 +100,9 @@ namespace _dss_internal{ //Start namespace
   }
 
 
-  AOcallback
-  Coordinator::m_doe(const AbsOp& aop, DssThreadId* thid, DssOperationId* oId, PstInContainerInterface* builder, PstOutContainerInterface*& ans){
-    return a_proxy->m_doe(aop, thid, oId,  builder, ans);
+  void
+  Coordinator::m_doe(const AbsOp& aop, DssThreadId* thid, PstInContainerInterface* builder, PstOutContainerInterface*& ans){
+    return a_proxy->m_doe(aop, thid, builder, ans);
   }
 
   ::PstOutContainerInterface*
@@ -180,13 +180,12 @@ namespace _dss_internal{ //Start namespace
   }
 
 
-  AOcallback
-  Proxy::m_doe(const AbsOp& aop, DssThreadId* thid, DssOperationId* oId,
-               PstInContainerInterface* builder,
-               PstOutContainerInterface*& ans)
+  void Proxy::m_doe(const AbsOp& aop, DssThreadId* thid,
+                    PstInContainerInterface* builder,
+                    PstOutContainerInterface*& ans)
   {
     return applyAbstractOperation(a_abstractEntity, aop,
-                                  thid, oId, builder, ans);
+                                  thid, builder, ans);
   }
 
   ::PstOutContainerInterface*

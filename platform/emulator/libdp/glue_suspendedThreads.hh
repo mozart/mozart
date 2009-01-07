@@ -100,9 +100,9 @@ public:
   bool gc();        // returns TRUE and collect stuff if needed
 
   // inherited from ThreadMediator
-  virtual WakeRetVal resumeDoLocal(DssOperationId*) = 0;
-  virtual WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin) = 0;
-  virtual WakeRetVal resumeFailed();
+  virtual void resumeDoLocal() = 0;
+  virtual void resumeRemoteDone(PstInContainerInterface* pstin) = 0;
+  virtual void resumeFailed();
 
   // returns TRUE and collect stuff if needed
   virtual bool gCollect() = 0;
@@ -113,8 +113,8 @@ public:
 class SuspendedDummy : public SuspendedOperation {
 public:
   SuspendedDummy();
-  WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  void resumeDoLocal();
+  void resumeRemoteDone(PstInContainerInterface* pstin);
   bool gCollect();
 };
 
@@ -127,8 +127,8 @@ private:
   TaggedRef    result;
 public:
   SuspendedCellOp(Mediator*, OperationTag, TaggedRef*, TaggedRef*);
-  WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface*);
+  void resumeDoLocal();
+  void resumeRemoteDone(PstInContainerInterface*);
   bool gCollect();
 };
 
@@ -140,8 +140,8 @@ private:
   TaggedRef ozthread;
 public:
   SuspendedLockTake(Mediator*, TaggedRef);
-  WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  void resumeDoLocal();
+  void resumeRemoteDone(PstInContainerInterface* pstin);
   bool gCollect();
 };
 
@@ -151,8 +151,8 @@ private:
 public:
   // Note: we do not suspend the requesting thread!
   SuspendedLockRelease(Mediator*, TaggedRef);
-  WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  void resumeDoLocal();
+  void resumeRemoteDone(PstInContainerInterface* pstin);
   bool gCollect();
 };
 
@@ -165,8 +165,8 @@ private:
   TaggedRef    result;
 public:
   SuspendedArrayOp(Mediator*, OperationTag, TaggedRef*, TaggedRef*);
-  WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface*);
+  void resumeDoLocal();
+  void resumeRemoteDone(PstInContainerInterface*);
   bool gCollect();
 };
 
@@ -179,8 +179,8 @@ private:
   TaggedRef    result;
 public:
   SuspendedDictionaryOp(Mediator*, OperationTag, TaggedRef*, TaggedRef*);
-  WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface*);
+  void resumeDoLocal();
+  void resumeRemoteDone(PstInContainerInterface*);
   bool gCollect();
 };
 
@@ -193,8 +193,8 @@ private:
   TaggedRef    result;
 public:
   SuspendedObjectOp(Mediator*, OperationTag, TaggedRef*, TaggedRef*);
-  WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface*);
+  void resumeDoLocal();
+  void resumeRemoteDone(PstInContainerInterface*);
   bool gCollect();
 };
 
@@ -206,8 +206,8 @@ private:
   TaggedRef    result;
 public:
   SuspendedObjectStateOp(Mediator*, OperationTag, TaggedRef*, TaggedRef*);
-  WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface*);
+  void resumeDoLocal();
+  void resumeRemoteDone(PstInContainerInterface*);
   bool gCollect();
 };
 
@@ -220,8 +220,8 @@ private:
   TaggedRef    result;
 public:
   SuspendedChunkOp(Mediator*, OperationTag, TaggedRef*, TaggedRef*);
-  WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface*);
+  void resumeDoLocal();
+  void resumeRemoteDone(PstInContainerInterface*);
   bool gCollect();
 };
 
@@ -233,8 +233,8 @@ private:
   OZ_Term result;     // a variable
 public:
   SuspendedGenericDot(Mediator*, OZ_Term, OZ_Term);
-  WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  void resumeDoLocal();
+  void resumeRemoteDone(PstInContainerInterface* pstin);
   bool gCollect();
 };
 
@@ -245,8 +245,8 @@ private:
   OZ_Term args;     // list of arguments
 public:
   SuspendedCall(Mediator*, OZ_Term);
-  WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  void resumeDoLocal();
+  void resumeRemoteDone(PstInContainerInterface* pstin);
   bool gCollect();
 };
 
@@ -255,8 +255,8 @@ public:
 class SuspendedClassGet : public SuspendedOperation {
 public:
   SuspendedClassGet(Mediator*);
-  WakeRetVal resumeDoLocal(DssOperationId*);
-  WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin);
+  void resumeDoLocal();
+  void resumeRemoteDone(PstInContainerInterface* pstin);
   bool gCollect();
 };
 

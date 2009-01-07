@@ -116,9 +116,9 @@ namespace _dss_internal{ //Start namespace
     inline Proxy *m_getProxy() const { return a_proxy; }
     // ************* DOE Abstraction* ***************
     // used to shortcut the coordinator-proxy connection when at the same process.
-    AOcallback m_doe(const AbsOp& aop,  DssThreadId* thid, DssOperationId*,
-                     ::PstInContainerInterface* builder,
-                     ::PstOutContainerInterface*& );
+    void m_doe(const AbsOp& aop,  DssThreadId* thid,
+               ::PstInContainerInterface* builder,
+               ::PstOutContainerInterface*& );
 
     ::PstOutContainerInterface* retrieveEntityState();
     ::PstOutContainerInterface* deinstallEntityState();
@@ -253,9 +253,9 @@ namespace _dss_internal{ //Start namespace
 
     // ************* DOE Abstraction* ***************
 
-    AOcallback m_doe(const AbsOp& aop,  DssThreadId* thid,
-                     DssOperationId*, ::PstInContainerInterface* builder,
-                     ::PstOutContainerInterface*& );
+    void m_doe(const AbsOp& aop,  DssThreadId* thid,
+               ::PstInContainerInterface* builder,
+               ::PstOutContainerInterface*& );
 
     ::PstOutContainerInterface* retrieveEntityState();
     ::PstOutContainerInterface* deinstallEntityState();

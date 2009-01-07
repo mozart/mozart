@@ -341,7 +341,7 @@ namespace _dss_internal{ //Start namespace
   void
   ProtocolPilgrimProxy::m_resumeOperations(){
     while (!a_susps.isEmpty()) {
-      a_susps.pop()->resumeDoLocal(NULL);
+      a_susps.pop()->resumeDoLocal();
     }
   }
 

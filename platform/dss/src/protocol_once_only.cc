@@ -126,7 +126,7 @@ namespace _dss_internal{ //Start namespace
 
     // send an update for changes if necessary
     ::PstOutContainerInterface *ans;
-    a_coordinator->m_doe(AO_OO_CHANGES, NULL, NULL, NULL, ans);
+    a_coordinator->m_doe(AO_OO_CHANGES, NULL, NULL, ans);
     if (ans != NULL) sendToProxy(s, OO_UPDATE, ans);
   }
 
@@ -165,7 +165,7 @@ namespace _dss_internal{ //Start namespace
       GlobalThread* tid = (msg->m_isEmpty() ? NULL : popThreadId(msg));
       Assert(a_coordinator->m_getProxy() != NULL);
       PstOutContainerInterface* ans = NULL;
-      a_coordinator->m_doe(AO_OO_BIND, tid, NULL, arg, ans);
+      a_coordinator->m_doe(AO_OO_BIND, tid, arg, ans);
       setStatus(TRANS_STATUS_BOUND);
       // send OO_REDIRECT to all proxies
       while (!a_proxies.isEmpty()) sendRedirect(a_proxies.pop());
@@ -293,19 +293,19 @@ namespace _dss_internal{ //Start namespace
       // already done by the manager...
       if (!a_proxy->m_isHomeProxy()) a_proxy->installEntityState(cont);
       // resume all suspensions (not really clear about the resumeDoLocal)
-      while (!a_susps.isEmpty()) a_susps.pop()->resumeDoLocal(NULL);
+      while (!a_susps.isEmpty()) a_susps.pop()->resumeDoLocal();
       break;
     }
     case OO_UPDATE: {
       // do the callback in order to update
       PstInContainerInterface* cont = gf_popPstIn(msg);
       PstOutContainerInterface* ans;
-      a_proxy->m_doe(AO_OO_UPDATE, NULL, NULL, cont, ans);
+      a_proxy->m_doe(AO_OO_UPDATE, NULL, cont, ans);
       // resume calling thread if this is a confirmation
       if (!msg->m_isEmpty()) {
         GlobalThread* tid = popThreadId(msg);
         a_susps.remove(tid);
-        tid->resumeDoLocal(NULL);
+        tid->resumeDoLocal();
       }
       break;
     }
