@@ -129,25 +129,14 @@ namespace _dss_internal{ //Start namespace
     return false;
   }
 
-  // used for resuming callbacks when they are not atomic
-  class RemoteOperation : public DssOperationId {
-  public:
-    DSite*        sender;
-    GlobalThread* caller;
-    RemoteOperation(DSite* s, GlobalThread* t) : sender(s), caller(t) {}
-  };
-
   // perform an operation for a remote proxy (use NULL as sender for
   // asynchronuous operations)
   void
   ProtocolSimpleChannelProxy::do_operation(DSite* sender, GlobalThread* caller,
 					   AbsOp aop, PstInContainerInterface* arg) {
-    RemoteOperation* op = new RemoteOperation(sender, caller);
     PstOutContainerInterface* ans = NULL;
-    if (a_proxy->m_doe(aop, caller, op, arg, ans) == AOCB_FINISH){
-      if (op->sender) sendToProxy(op->sender, SC_RETURN, op->caller, ans);
-      delete op;
-    }
+    a_proxy->m_doe(aop, caller, arg, ans);
+    if (sender) sendToProxy(sender, SC_RETURN, caller, ans);
   }
 
   void
