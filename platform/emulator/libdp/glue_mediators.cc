@@ -422,22 +422,20 @@ PortMediator::PortMediator(TaggedRef e) : ConstMediator(GLUE_PORT) {
   setEntity(e);
 }
 
-AOcallback
-PortMediator::callback_Write(DssThreadId*, DssOperationId*,
+void
+PortMediator::callback_Write(DssThreadId*,
 			     PstInContainerInterface* pstin)
 {
   TaggedRef arg = static_cast<PstInContainer*>(pstin)->a_term;
   doPortSend(static_cast<OzPort*>(getConst()), arg, NULL);
-  return AOCB_FINISH;
 }
 
-AOcallback
-PortMediator::callback_Read(DssThreadId*, DssOperationId*,
+void
+PortMediator::callback_Read(DssThreadId*,
 			    PstInContainerInterface*,
 			    PstOutContainerInterface*&)
 {
   Assert(0);
-  return AOCB_FINISH;
 }
 
 
@@ -451,8 +449,8 @@ CellMediator::CellMediator(TaggedRef e) : ConstMediator(GLUE_CELL) {
   setEntity(e);
 }
 
-AOcallback 
-CellMediator::callback(DssThreadId*, DssOperationId*,
+void
+CellMediator::callback(DssThreadId*,
 		       PstInContainerInterface* pstin,
 		       PstOutContainerInterface*& answer)
 {
@@ -468,21 +466,20 @@ CellMediator::callback(DssThreadId*, DssOperationId*,
     Assert(ret == RAISE);
     answer = new PstOutContainer(glue_raise(am.getExceptionValue()));
   }
-  return AOCB_FINISH;
 }
 
-AOcallback
-CellMediator::callback_Write(DssThreadId* thr, DssOperationId* op,
+void
+CellMediator::callback_Write(DssThreadId* thr,
 			     PstInContainerInterface* pstin,
 			     PstOutContainerInterface*& pstout) {
-  return callback(thr, op, pstin, pstout);
+  callback(thr, pstin, pstout);
 }
 
-AOcallback
-CellMediator::callback_Read(DssThreadId* thr, DssOperationId* op,
+void
+CellMediator::callback_Read(DssThreadId* thr,
 			    PstInContainerInterface* pstin,
 			    PstOutContainerInterface*& pstout) {
-  return callback(thr, op, pstin, pstout);
+  callback(thr, pstin, pstout);
 }
 
 PstOutContainerInterface *
@@ -516,8 +513,8 @@ LockMediator::LockMediator(TaggedRef e) : ConstMediator(GLUE_LOCK) {
   setEntity(e);
 }
 
-AOcallback 
-LockMediator::callback_Write(DssThreadId*, DssOperationId*,
+void
+LockMediator::callback_Write(DssThreadId*,
 			     PstInContainerInterface* operation,
 			     PstOutContainerInterface*& answer)
 {
@@ -543,16 +540,14 @@ LockMediator::callback_Write(DssThreadId*, DssOperationId*,
       answer = NULL;
     }
   }
-  return AOCB_FINISH;
 }
 
-AOcallback 
-LockMediator::callback_Read(DssThreadId*, DssOperationId*,
+void
+LockMediator::callback_Read(DssThreadId*,
 			    PstInContainerInterface*,
 			    PstOutContainerInterface*&)
 {
   Assert(0);
-  return AOCB_FINISH;
 }
 
 PstOutContainerInterface *
@@ -604,8 +599,8 @@ ArrayMediator::ArrayMediator(TaggedRef e) : ConstMediator(GLUE_ARRAY) {
   setEntity(e);
 }
 
-AOcallback 
-ArrayMediator::callback(DssThreadId*, DssOperationId*,
+void
+ArrayMediator::callback(DssThreadId*,
 			PstInContainerInterface* pstin,
 			PstOutContainerInterface*& answer)
 {
@@ -621,21 +616,20 @@ ArrayMediator::callback(DssThreadId*, DssOperationId*,
     Assert(ret == RAISE);
     answer = new PstOutContainer(glue_raise(am.getExceptionValue()));
   }
-  return AOCB_FINISH;
 }
 
-AOcallback
-ArrayMediator::callback_Write(DssThreadId* thr, DssOperationId* op,
+void
+ArrayMediator::callback_Write(DssThreadId* thr,
 			      PstInContainerInterface* pstin,
 			      PstOutContainerInterface*& pstout) {
-  return callback(thr, op, pstin, pstout);
+  callback(thr, pstin, pstout);
 }
 
-AOcallback
-ArrayMediator::callback_Read(DssThreadId* thr, DssOperationId* op,
+void
+ArrayMediator::callback_Read(DssThreadId* thr,
 			     PstInContainerInterface* pstin,
 			     PstOutContainerInterface*& pstout) {
-  return callback(thr, op, pstin, pstout);
+  callback(thr, pstin, pstout);
 }
 
 PstOutContainerInterface*
@@ -687,8 +681,8 @@ DictionaryMediator::DictionaryMediator(TaggedRef e) :
   setEntity(e);
 }
 
-AOcallback 
-DictionaryMediator::callback(DssThreadId*, DssOperationId*,
+void
+DictionaryMediator::callback(DssThreadId*,
 			     PstInContainerInterface* pstin,
 			     PstOutContainerInterface*& answer)
 {
@@ -704,21 +698,20 @@ DictionaryMediator::callback(DssThreadId*, DssOperationId*,
     Assert(ret == RAISE);
     answer = new PstOutContainer(glue_raise(am.getExceptionValue()));
   }
-  return AOCB_FINISH;
 }
 
-AOcallback
-DictionaryMediator::callback_Write(DssThreadId* thr, DssOperationId* op,
+void
+DictionaryMediator::callback_Write(DssThreadId* thr,
 				   PstInContainerInterface* pstin,
 				   PstOutContainerInterface*& pstout) {
-  return callback(thr, op, pstin, pstout);
+  callback(thr, pstin, pstout);
 }
 
-AOcallback
-DictionaryMediator::callback_Read(DssThreadId* thr, DssOperationId* op,
+void
+DictionaryMediator::callback_Read(DssThreadId* thr,
 				  PstInContainerInterface* pstin,
 				  PstOutContainerInterface*& pstout) {
-  return callback(thr, op, pstin, pstout);
+  callback(thr, pstin, pstout);
 }
 
 PstOutContainerInterface*
@@ -773,8 +766,8 @@ bool ObjectMediator::annotate(Annotation a) {
   }
 }
 
-AOcallback
-ObjectMediator::callback_Read(DssThreadId*, DssOperationId*,
+void
+ObjectMediator::callback_Read(DssThreadId*,
 			      PstInContainerInterface* operation,
 			      PstOutContainerInterface*& answer) {
   TaggedRef msg = static_cast<PstInContainer*>(operation)->a_term;
@@ -807,7 +800,6 @@ ObjectMediator::callback_Read(DssThreadId*, DssOperationId*,
       answer = new PstOutContainer(glue_raise(am.getExceptionValue()));
     }
   }
-  return AOCB_FINISH;
 }
 
 PstOutContainerInterface*
@@ -836,8 +828,8 @@ ObjectStateMediator::ObjectStateMediator(TaggedRef e) :
   setEntity(e);
 }
 
-AOcallback 
-ObjectStateMediator::callback(DssThreadId*, DssOperationId*,
+void
+ObjectStateMediator::callback(DssThreadId*,
 			     PstInContainerInterface* pstin,
 			     PstOutContainerInterface*& answer)
 {
@@ -853,21 +845,20 @@ ObjectStateMediator::callback(DssThreadId*, DssOperationId*,
     Assert(ret == RAISE);
     answer = new PstOutContainer(glue_raise(am.getExceptionValue()));
   }
-  return AOCB_FINISH;
 }
 
-AOcallback
-ObjectStateMediator::callback_Write(DssThreadId* thr, DssOperationId* op,
+void
+ObjectStateMediator::callback_Write(DssThreadId* thr,
 				    PstInContainerInterface* pstin,
 				    PstOutContainerInterface*& pstout) {
-  return callback(thr, op, pstin, pstout);
+  callback(thr, pstin, pstout);
 }
 
-AOcallback
-ObjectStateMediator::callback_Read(DssThreadId* thr, DssOperationId* op,
+void
+ObjectStateMediator::callback_Read(DssThreadId* thr,
 				   PstInContainerInterface* pstin,
 				   PstOutContainerInterface*& pstout) {
-  return callback(thr, op, pstin, pstout);
+  callback(thr, pstin, pstout);
 }
 
 PstOutContainerInterface*
@@ -901,21 +892,17 @@ OzThreadMediator::OzThreadMediator(TaggedRef e) : ConstMediator(GLUE_THREAD) {
   setEntity(e);
 }
 
-AOcallback
-OzThreadMediator::callback_Write(DssThreadId*, DssOperationId*,
+void
+OzThreadMediator::callback_Write(DssThreadId*,
 				 PstInContainerInterface*,
 				 PstOutContainerInterface*&)
-{
-  return AOCB_FINISH;
-}
+{ }
 
-AOcallback
-OzThreadMediator::callback_Read(DssThreadId*, DssOperationId*,
+void
+OzThreadMediator::callback_Read(DssThreadId*,
 				PstInContainerInterface*,
 				PstOutContainerInterface*&)
-{
-  return AOCB_FINISH;
-}
+{ }
 
 PstOutContainerInterface*
 OzThreadMediator::retrieveEntityRepresentation(){
@@ -1039,19 +1026,16 @@ OzVariableMediator::installEntityRepresentation(PstInContainerInterface* pstin){
   }
 }
 
-AOcallback
-OzVariableMediator::callback_Bind(DssOperationId*,
-				  PstInContainerInterface* pstin) {
+void
+OzVariableMediator::callback_Bind(PstInContainerInterface* pstin) {
   Assert(active);
   // the variable must be bound on the coordinator's site, even if the
   // site has made it localFail.
   bind(static_cast<PstInContainer*>(pstin)->a_term);
-  return AOCB_FINISH;
 }
 
-AOcallback
-OzVariableMediator::callback_Append(DssOperationId*,
-				    PstInContainerInterface* pstin) {
+void
+OzVariableMediator::callback_Append(PstInContainerInterface* pstin) {
   // raph: The variable may have been bound at this point.  This can
   // happen when two operations Bind and Append are done concurrently
   // (a "feature" of the dss).  Therefore we check the type first.
@@ -1062,16 +1046,13 @@ OzVariableMediator::callback_Append(DssOperationId*,
     TaggedRef* ref = tagged2Ref(getEntity()); // points to the tagged ref
     oz_var_makeNeededLocal(ref);
   }
-  return AOCB_FINISH; 
 }
 
-AOcallback
-OzVariableMediator::callback_Changes(DssOperationId*,
-				     PstOutContainerInterface*& answer) {
+void
+OzVariableMediator::callback_Changes(PstOutContainerInterface*& answer) {
   // simply check whether the variable is needed
   answer = (active && oz_isNeeded(oz_deref(entity)) ?
 	    new PstOutContainer(oz_atom("needed")) : NULL);
-  return AOCB_FINISH; 
 }
 
 
@@ -1086,13 +1067,11 @@ UnusableMediator::UnusableMediator(TaggedRef e) : ConstMediator(GLUE_UNUSABLE) {
   setAnnotation(Annotation(PN_SITED, AA_NO_ARCHITECTURE, RC_ALG_NONE));
 }
 
-AOcallback
-UnusableMediator::callback_Read(DssThreadId*, DssOperationId*,
+void
+UnusableMediator::callback_Read(DssThreadId*,
 				PstInContainerInterface*,
 				PstOutContainerInterface*&)
-{
-  return AOCB_FINISH;
-}
+{ }
 
 
 
@@ -1123,8 +1102,8 @@ ChunkMediator::ChunkMediator(TaggedRef e) : TokenMediator(GLUE_CHUNK) {
   setEntity(e);
 }
 
-AOcallback
-ChunkMediator::callback_Read(DssThreadId*, DssOperationId*,
+void
+ChunkMediator::callback_Read(DssThreadId*,
 			     PstInContainerInterface* pstin,
 			     PstOutContainerInterface*& answer) {
   SChunk* chunk = static_cast<SChunk*>(getConst());
@@ -1139,7 +1118,6 @@ ChunkMediator::callback_Read(DssThreadId*, DssOperationId*,
     Assert(ret == RAISE);
     answer = new PstOutContainer(glue_raise(am.getExceptionValue()));
   }
-  return AOCB_FINISH;
 }
 
 
@@ -1155,13 +1133,12 @@ ClassMediator::ClassMediator(TaggedRef e) : TokenMediator(GLUE_CLASS) {
     setAnnotation(Annotation(PN_SITED, AA_NO_ARCHITECTURE, RC_ALG_NONE));
 }
 
-AOcallback
-ClassMediator::callback_Read(DssThreadId*, DssOperationId*,
+void
+ClassMediator::callback_Read(DssThreadId*,
 			     PstInContainerInterface* pstin,
 			     PstOutContainerInterface*& answer) {
   // no distributed operation on stationary classes!
   Assert(0);
-  return AOCB_FINISH;
 }
 
 
@@ -1178,8 +1155,8 @@ ProcedureMediator::ProcedureMediator(TaggedRef e) :
     setAnnotation(Annotation(PN_SITED, AA_NO_ARCHITECTURE, RC_ALG_NONE));
 }
 
-AOcallback
-ProcedureMediator::callback_Read(DssThreadId*, DssOperationId*,
+void
+ProcedureMediator::callback_Read(DssThreadId*,
 				 PstInContainerInterface* operation,
 				 PstOutContainerInterface*& answer) {
   // the only read operation is: call
@@ -1199,5 +1176,4 @@ ProcedureMediator::callback_Read(DssThreadId*, DssOperationId*,
   if (thread->isSuspended()) oz_wakeupThread(thread);
   //
   answer = new PstOutContainer(glue_return(ret));
-  return AOCB_FINISH;
 }
