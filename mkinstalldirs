@@ -40,7 +40,7 @@ for file in ${1+"$@"} ; do
 
      if test ! -d "${pathcomp}"; then
         echo "mkdir $pathcomp" 1>&2
-        mkdir "${pathcomp}" || errstatus=$?
+        mkdir "${pathcomp}" || test -d "${pathcomp}" || errstatus=$?
         dochmod "${pathcomp}"
      fi
 
