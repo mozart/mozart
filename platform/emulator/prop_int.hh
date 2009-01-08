@@ -114,7 +114,7 @@ OZ_Return oz_runPropagator(Propagator * p) {
     OZ_PropagatorProfile * profile = prop;
     Assert(profile);
     //
-    char * pn = profile->getPropagatorName();
+    const char * pn = profile->getPropagatorName();
     printf("<%s[%p]", pn, ozprop); fflush(stdout);
 #endif
 
@@ -137,7 +137,7 @@ OZ_Return oz_runPropagator(Propagator * p) {
     OZ_Term params = ozprop->getParameters();
     Assert(profile);
     //
-    char * pn = profile->getPropagatorName();
+    const char * pn = profile->getPropagatorName();
     printf("<%s[%p] %s", pn, ozprop, OZ_toC(params, ozconf.errorPrintDepth, ozconf.errorPrintWidth));
     fflush(stdout);
     //

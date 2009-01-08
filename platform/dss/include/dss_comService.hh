@@ -74,7 +74,7 @@ protected:
   virtual ~DssReadBuffer() {}
 
 public:
-  virtual int availableData() const = 0;
+  virtual size_t availableData() const = 0;
   virtual bool canRead(size_t wanted) const = 0;
 
   // Read out data which should be deserialized. Assumes available
@@ -90,7 +90,7 @@ protected:
   virtual ~DssWriteBuffer() {}
 
 public:
-  virtual int availableSpace() const = 0;
+  virtual size_t availableSpace() const = 0;
   virtual bool canWrite(size_t wanted) const = 0;
 
   // ZACHARIAS: Check available space before writing, I know it did

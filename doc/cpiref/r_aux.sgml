@@ -183,9 +183,9 @@ overridden on every invocation.
 <Index class=proglang><<OZ_typeErrorCPI>></Index>
 <Synopsis>
 <<<
-OZ_Return OZ_typeErrorCPI(char * __typeString,
+OZ_Return OZ_typeErrorCPI(const char * __typeString,
                           int pos,
-                          char * comment);
+                          const char * comment);
 >>>
 
 <Item>

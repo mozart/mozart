@@ -1234,7 +1234,7 @@ void FDBitVector::printLong(ostream &stream, int idnt) const
 
 void OZ_FiniteDomainImpl::printLong(ostream &stream, int idnt) const
 {
-  static char * descr_type_text[3] = {"bv_descr", "iv_descr", "fd_descr"};
+  static const char * descr_type_text[3] = {"bv_descr", "iv_descr", "fd_descr"};
 
   stream << indent(idnt) << "min_elem=" << min_elem
         << " max_elem=" << max_elem << " size=" << getSize()

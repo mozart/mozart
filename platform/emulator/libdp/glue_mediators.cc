@@ -387,7 +387,7 @@ Mediator::reportFaultState(const FaultState& fs) {
 
 void
 Mediator::print(){
-  printf("%s mediator, id %d, proxy %x, ref %x, gc(eng:%d dss:%d), con %d\n",
+  printf("%s mediator, id %d, proxy %p, ref %x, gc(eng:%d dss:%d), con %d\n",
          getPrintType(), id, getCoordinatorAssistant(), entity,
          (int) collected, (int) dss_gc_status, (int) attached);
 }

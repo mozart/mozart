@@ -281,7 +281,7 @@ OZ_BI_define(BIinitDP, 1, 0) {
 
 
 extern
-int raiseUnixError(char *f,int n, char * e, char * g);
+int raiseUnixError(const char *f,int n, const char * e, const char * g);
 
 //
 #define WRAPCALL(f, CALL, RET)                          \

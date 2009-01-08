@@ -219,7 +219,7 @@ int * OZ_findSingletons(int sz, OZ_Term * ts)
   return sgl;
 }
 
-OZ_Return OZ_typeErrorCPI(char * typeString, int pos, char * comment)
+OZ_Return OZ_typeErrorCPI(const char * typeString, int pos, const char * comment)
 {
   return typeError(pos, comment, typeString);
 }

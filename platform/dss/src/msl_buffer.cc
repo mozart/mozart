@@ -93,7 +93,7 @@ namespace _msl_internal{ //Start namespace
 
   /************************* DssReadByteBuffer *************************/
 
-  int DssReadByteBuffer::availableData() const {
+  size_t DssReadByteBuffer::availableData() const {
     return getUsed() - outerframe;
   }
 
@@ -113,7 +113,7 @@ namespace _msl_internal{ //Start namespace
 
   /************************* DssWriteByteBuffer *************************/
 
-  int DssWriteByteBuffer::availableSpace() const {
+  size_t DssWriteByteBuffer::availableSpace() const {
     return getFree() - reserved;
   }
 
@@ -149,7 +149,7 @@ namespace _msl_internal{ //Start namespace
   // The only drawback of this method is that plain data must be
   // copied between the buffer and the decrypted frame.
 
-  const int FRAME_SIZE = 512;
+  const size_t FRAME_SIZE = 512;
   const int DATA_SIZE  = 512 - 2 * SIZE_INT;
 
   static BYTE plain[FRAME_SIZE], cipher[FRAME_SIZE];
@@ -207,7 +207,8 @@ namespace _msl_internal{ //Start namespace
 
       // read data length, and check data buffer space
       len = gf_char2integer(plain);
-      if (databuffer->getFree() < len) return true;
+      Assert(len >= 0);
+      if (databuffer->getFree() < static_cast<size_t>(len)) return true;
 
       // finalize reading, and write data
       m_commitRead(FRAME_SIZE);

@@ -57,7 +57,7 @@
 namespace _msl_internal { //Start namespace
 
 
-  char *msl_mess_names[C_LAST] = {
+  const char *msl_mess_names[C_LAST] = {
     "conn_first_NOT_A_VALID_MESSAGETYPE",
     "conn_anon_present",
     "conn_init_present",
@@ -1025,7 +1025,7 @@ namespace _msl_internal { //Start namespace
       u32 ticket = dsrb->m_getInt();
       Assert(a_sec.a_ticket == 0);
 
-      if(strncmp((char*) version2, (char*) dss_version, 3) == 0){ // ok send our data
+      if(memcmp(version2, dss_version, 3) == 0){ // ok send our data
 
         m_setCState(OPENING_WF_NEGOTIATE);
 
@@ -1197,13 +1197,14 @@ namespace _msl_internal { //Start namespace
     if(dsrb != NULL && dsrb->canRead(1+3)){
       dsrb->m_readOutBuffer(version2,3);
 
-      if(strncmp((char*) version2, (char*) dss_version, 3) == 0 &&
+      if(memcmp(version2, dss_version, 3) == 0 &&
          (dsrb->canRead(1+4)) && // SIZE OF DSITE
          ((s1 = a_mslEnv->a_siteHT->m_unmarshalSite(dsrb)) != NULL) &&
          (s1->m_getFaultState() != FS_GLOBAL_PERM)
          ){
         len = dsrb->m_getInt();
-        if(dsrb->availableData() == len){
+        Assert(len >= 0);
+        if(dsrb->availableData() == static_cast<size_t>(len)){
           cipher = new BYTE[len];
           dsrb->readFromBuffer(cipher,len);
           dsrb->commitRead(len);

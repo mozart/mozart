@@ -94,19 +94,23 @@ static char *name = NULL;
 static char *display = NULL;
 static char *geometry = NULL;
 
+static char fileOpt[]="-file";
+static char fileHelp[]="File from which to read commands";
+static char geometryOpt[]="-geometry";
+static char geometryHelp[]="Initial geometry for window";
+static char displayOpt[]="-display";
+static char displayHelp[]="Display to use";
+static char nameOpt[]="-name";
+static char nameHelp[]="Name to use for application";
+static char syncOpt[]="-sync";
+static char syncHelp[]="Use synchronous mode for display server";
 static Tk_ArgvInfo argTable[] = {
-    {"-file", TK_ARGV_STRING, (char *) NULL, (char *) &fileName,
-        "File from which to read commands"},
-    {"-geometry", TK_ARGV_STRING, (char *) NULL, (char *) &geometry,
-        "Initial geometry for window"},
-    {"-display", TK_ARGV_STRING, (char *) NULL, (char *) &display,
-        "Display to use"},
-    {"-name", TK_ARGV_STRING, (char *) NULL, (char *) &name,
-        "Name to use for application"},
-    {"-sync", TK_ARGV_CONSTANT, (char *) 1, (char *) &synchronize,
-        "Use synchronous mode for display server"},
-    {(char *) NULL, TK_ARGV_END, (char *) NULL, (char *) NULL,
-        (char *) NULL}
+    {fileOpt, TK_ARGV_STRING, (char *) NULL, (char *) &fileName, fileHelp},
+    {geometryOpt, TK_ARGV_STRING, (char *) NULL, (char *) &geometry, geometryHelp},
+    {displayOpt, TK_ARGV_STRING, (char *) NULL, (char *) &display, displayHelp},
+    {nameOpt, TK_ARGV_STRING, (char *) NULL, (char *) &name, nameHelp},
+    {syncOpt, TK_ARGV_CONSTANT, (char *) 1, (char *) &synchronize, syncHelp},
+    {(char *) NULL, TK_ARGV_END, (char *) NULL, (char *) NULL, (char *) NULL}
 };
 
 /*

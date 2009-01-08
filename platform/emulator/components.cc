@@ -69,7 +69,7 @@
 class ByteSource {
 public:
   virtual OZ_Return getBytes(BYTE*, int, int&) = 0;
-  virtual char *getHeader() = 0;
+  virtual const char *getHeader() = 0;
   virtual Bool checkChecksum(crc_t) = 0;
   OZ_Return getTerm(OZ_Term, const char *compname, Bool);
   OZ_Return loadPickleBuffer(PickleBuffer*&, const char*);
@@ -81,7 +81,7 @@ private:
   crc_t checkSum;
   char *header;
 public:
-  char *getHeader() {return header; }
+  const char *getHeader() {return header; }
   virtual ~ByteSourceFD() { free(header); gzclose(fd); }
   OZ_Return getBytes(BYTE*, int, int&);
 
@@ -136,7 +136,7 @@ private:
   OZ_Datum dat;
   int      idx;
 public:
-  char *getHeader() {return ""; }
+  const char *getHeader() {return ""; }
   ByteSourceDatum(OZ_Datum d):dat(d),idx(0) {}
   virtual ~ByteSourceDatum() {}
   OZ_Return getBytes(BYTE*, int, int&);
@@ -149,9 +149,9 @@ public:
 
 class ByteSink {
 public:
-  OZ_Return putTerm(OZ_Term,char*,char*,unsigned int,Bool,Bool);
+  OZ_Return putTerm(OZ_Term,const char*,const char*,unsigned int,Bool,Bool);
   virtual OZ_Return putBytes(BYTE*,int) = 0;
-  virtual OZ_Return allocateBytes(int,char*,unsigned int,crc_t,Bool) = 0;
+  virtual OZ_Return allocateBytes(int,const char*,unsigned int,crc_t,Bool) = 0;
 };
 
 
@@ -159,15 +159,15 @@ class ByteSinkFile : public ByteSink {
 private:
   int fd;
   gzFile zfd;
-  char *filename;
+  const char *filename;
   int compressionlevel;
 public:
-  ByteSinkFile(char *s,int lvl): filename(s),fd(-1),zfd(0), compressionlevel(lvl) {}
+  ByteSinkFile(const char *s,int lvl): filename(s),fd(-1),zfd(0), compressionlevel(lvl) {}
   virtual ~ByteSinkFile() {
     if (zfd!=0) { gzclose(zfd); return; }
     if (fd!=-1) close(fd);
   }
-  OZ_Return allocateBytes(int,char*,unsigned int,crc_t,Bool);
+  OZ_Return allocateBytes(int,const char*,unsigned int,crc_t,Bool);
   OZ_Return putBytes(BYTE*,int);
 };
 
@@ -177,7 +177,7 @@ private:
 public:
   OZ_Datum dat;
   ByteSinkDatum():idx(0){ dat.size=0; dat.data=0; }
-  OZ_Return allocateBytes(int,char*,unsigned int,crc_t,Bool);
+  OZ_Return allocateBytes(int,const char*,unsigned int,crc_t,Bool);
   OZ_Return putBytes(BYTE*,int);
 };
 
@@ -186,13 +186,13 @@ public:
 // class ByteSink
 // ===================================================================
 
-OZ_Term makeGenericExc(char *id,char *msg, OZ_Term arg)
+OZ_Term makeGenericExc(const char *id, const char *msg, OZ_Term arg)
 {
   return OZ_makeException(E_ERROR,OZ_atom("dp"),"generic",
                           3,oz_atom(id),oz_atom(msg),arg);
 }
 
-OZ_Return raiseGeneric(char *id, char *msg, OZ_Term arg)
+OZ_Return raiseGeneric(const char *id, const char *msg, OZ_Term arg)
 {
   return OZ_raiseDebug(makeGenericExc(id,msg,arg));
 }
@@ -212,7 +212,7 @@ OZ_Return onlyReadOnlys(OZ_Term l) {
 }
 
 OZ_Return
-ByteSink::putTerm(OZ_Term in, char *filename, char *header,
+ByteSink::putTerm(OZ_Term in, const char *filename, const char *header,
                   unsigned int hlen,
                   Bool textmode, Bool cloneCells)
 {
@@ -306,7 +306,7 @@ ByteSink::putTerm(OZ_Term in, char *filename, char *header,
 // ===================================================================
 
 OZ_Return
-ByteSinkFile::allocateBytes(int n,char * header, unsigned int hlen, crc_t crc, Bool txtmode)
+ByteSinkFile::allocateBytes(int n, const char * header, unsigned int hlen, crc_t crc, Bool txtmode)
 {
   fd = strcmp(filename,"-")==0 ? STDOUT_FILENO
                                : open(filename,O_WRONLY|O_CREAT|O_TRUNC,0666);
@@ -361,7 +361,7 @@ ByteSinkFile::putBytes(BYTE*pos,int len)
 // ===================================================================
 
 OZ_Return
-ByteSinkDatum::allocateBytes(int n, char *, unsigned int, crc_t crc_ignored,
+ByteSinkDatum::allocateBytes(int n, const char *, unsigned int, crc_t crc_ignored,
                              Bool txtmode_ignored)
 {
   dat.size = n;
@@ -410,7 +410,7 @@ saveDatumWithCells(OZ_Term in,OZ_Datum& dat)
 }
 
 static
-OZ_Return saveIt(OZ_Term val, char *filename, char *header,
+OZ_Return saveIt(OZ_Term val, const char *filename, const char *header,
                  unsigned int hlen,
                  int compressionlevel, Bool textmode, Bool cloneCells)
 {
@@ -819,7 +819,7 @@ public:
 
 
 static
-void doRaise(TaggedRef controlvar, char *msg, const char *url,URLAction act)
+void doRaise(TaggedRef controlvar, const char *msg, const char *url,URLAction act)
 {
   ControlVarRaise(controlvar,
                   makeGenericExc("URLhandler",

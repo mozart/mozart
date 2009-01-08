@@ -66,7 +66,7 @@ namespace _dss_internal{ // Start namespace
     inline GCalgorithm* m_takeAlg(const RCalg& alg) {
       GCalgorithm** curPtr = &a_algs;
       GCalgorithm* cur;
-      while (cur = *curPtr) {
+      while ((cur = *curPtr)) {
         if (cur->a_type == alg) { *curPtr = cur->a_next; return cur; }
         curPtr = &(cur->a_next);
       }

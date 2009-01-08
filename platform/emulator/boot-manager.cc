@@ -462,7 +462,7 @@ OZ_BI_define(BIObtainGetNative,1,1) {
       return oz_raise(E_ERROR,AtomForeign,"dlOpen",2,oz_atom(filename),res);
   } else {
     // osDlopen succeeded
-    static char * if_identifier = USC "oz_init_module";
+    static const char * if_identifier = USC "oz_init_module";
     init_fun_t init_function = (init_fun_t) osDlsym(handle,if_identifier);
     if (init_function == 0)
       return oz_raise(E_ERROR,AtomForeign, "cannotFindOzInitModule", 1,

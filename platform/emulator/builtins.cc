@@ -2409,7 +2409,7 @@ OZ_BI_define(BIaritySublist,2,1)
    Numbers
    ----------------------------------------------------------------------- */
 
-static OZ_Return bombArith(char *type)
+static OZ_Return bombArith(const char *type)
 {
   oz_typeError(-1,type);
 }
@@ -4455,7 +4455,7 @@ int oz_raise(OZ_Term cat, OZ_Term key, const char *label, int arity, ...)
  *=================================================================== */
 
 static
-char *getTypeOfPos(char * t, int p)
+char *getTypeOfPos(const char * t, int p)
 {
   static char buffer[100];
   int i, bi, comma;
@@ -4475,7 +4475,7 @@ char *getTypeOfPos(char * t, int p)
   return buffer;
 }
 
-OZ_Return typeError(int Pos, char *Comment, char *TypeString)
+OZ_Return typeError(int Pos, const char *Comment, const char *TypeString)
 {
   (void) oz_raise(E_ERROR,E_KERNEL,
                   "type",5,NameUnit,NameUnit,

@@ -382,7 +382,7 @@ Furthermore an extra function is provided for raising type errors. The
 macro <code /OZ_declareAtom/ used in our example makes use of this function.
 Type errors can be signaled using
 <code display >
-OZ_Return OZ_typeError(int pos, char *expectedType);
+OZ_Return OZ_typeError(int pos, const char *expectedType);
 </code>
 This is an exception signaling that the argument at position <code /pos/
 is incorrect and the name of the expected type is <code /expectedType/.
@@ -818,7 +818,7 @@ structures and vice versa.
 <entry><<OZ_CStringToInt>>
 <index class=module/OZ_CStringToInt/
 <synopsis>
-  <code >OZ_Term OZ_CStringToInt(char *s)</code>
+  <code >OZ_Term OZ_CStringToInt(const char *s)</code>
 <item>Converts C string <code /s/ to an &Oz; integer. <code /s/ must be a valid
   integer in &Oz; syntax (see <ptr.extern to="ozdoc:notation">).
 
@@ -943,7 +943,7 @@ OZ_mkTuple(OZ_atom("f"),2,OZ_atom("a"),OZ_int(1))
 <entry><<OZ_mkTupleC>>
 <index class=module/OZ_mkTupleC/
 <synopsis>
-  <code >OZ_Term OZ_mkTupleC(char *label, int width, ...)</code>
+  <code >OZ_Term OZ_mkTupleC(const char *label, int width, ...)</code>
 <item>Analogously to <code /OZ_mkTuple/, but expects the label as a C
     string.
 
@@ -1149,14 +1149,14 @@ OZ_pair2(OZ_atom(left),OZ_string(right))
 <entry><<OZ_raiseC>>
 <index class=module/OZ_raiseC/
 <synopsis>
-  <code >OZ_Return OZ_raiseC(char *label,int arity,...)</code>
+  <code >OZ_Return OZ_raiseC(const char *label,int arity,...)</code>
 <item>Raises an exception. The exception is created from the argument
     list just the way it is done by <code /OZ_mkTupleC/.
 
 <entry><<OZ_typeError>>
 <index class=module/OZ_typeError/
 <synopsis>
-  <code >OZ_Return OZ_typeError(int pos, char *type)</code>
+  <code >OZ_Return OZ_typeError(int pos, const char *type)</code>
 <item>Raises an exception indicating that the argument at position
       <code /pos/ is of incorrect type. <code /type/ should be a string
     describing the expected type.

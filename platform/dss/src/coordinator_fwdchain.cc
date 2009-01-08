@@ -223,7 +223,8 @@ namespace _dss_internal{ //Start namespace
 
   void
   CoordinatorFwdChain::m_receiveRefMsg(MsgContainer *msgC, DSite* fromsite){
-    unsigned int e = msgC->popIntVal();
+    int e = msgC->popIntVal();
+    Assert(e>=0);
     // let's find the pair whose second element is e
     Position<Pair<HomeReference*, int> > pos(a_refList);
     while (pos() && (*pos).second != e) pos++;
@@ -314,7 +315,7 @@ namespace _dss_internal{ //Start namespace
        // raph: The former version of the push() below was dropping
        // the front element of a_refList (memory leak!)  I guess it
        // was a bug...  If not, add a "a_refList.pop()" before it.
-       a_refList.push(makePair(new HomeReference(this, a), (int) e));
+       a_refList.push(makePair(new HomeReference(this, a), static_cast<int>(e)));
 
        // send new reference
        m_sendRefUpdateCoord(fromsite);
@@ -468,9 +469,9 @@ namespace _dss_internal{ //Start namespace
       if(a_ref)
         a_ref->m_mergeReferenceInfo(bs);
       else {
-        CoordinatorFwdChain* coord =
+        CoordinatorFwdChain* coord2 =
           static_cast<CoordinatorFwdChain*>(a_coordinator);
-        coord->a_refList.front().element().first->m_mergeReferenceInfo(bs);
+        coord2->a_refList.front().element().first->m_mergeReferenceInfo(bs);
       }
       return;
     }
@@ -581,7 +582,7 @@ namespace _dss_internal{ //Start namespace
   ProxyFwdChain::m_initRemoteProxy(DssReadBuffer *bs){
     a_ps  = PROXY_STATUS_REMOTE;
     BYTE stat = bs->getByte();
-    if(stat = FWDC_REFINFO){
+    if(stat == FWDC_REFINFO){
       a_epoch        = gf_UnmarshalNumber(bs);
       a_coordSite    = m_getEnvironment()->a_msgnLayer->m_UnmarshalDSite(bs);
       a_ref          = new RemoteReference(this,bs);
@@ -614,7 +615,8 @@ namespace _dss_internal{ //Start namespace
 
   void
   ProxyFwdChain::m_receiveRefMsg(MsgContainer *msgC, DSite* fromsite){
-    unsigned int epoch = msgC->popIntVal();
+    int epoch = msgC->popIntVal();
+    Assert(epoch>=0);
     if(a_ref && epoch == a_epoch){
       RCalg remove = a_ref->m_msgToGcAlg(msgC,fromsite);
       if (remove != RC_ALG_PERSIST){

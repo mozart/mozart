@@ -666,34 +666,6 @@ VSnapshotBuilder vsb;
 /*   interface to Oz-core                                  */
 /* *********************************************************************/
 
-static
-char *tagToComment(MarshalTag tag)
-{
-  switch(tag){
-  case DIF_PORT:
-  case DIF_PORT_DEF:
-    return "port";
-  case DIF_CELL:
-  case DIF_CELL_DEF:
-    return "cell";
-  case DIF_LOCK:
-  case DIF_LOCK_DEF:
-    return "lock";
-  case DIF_OBJECT:
-  case DIF_OBJECT_DEF:
-  case DIF_VAR_OBJECT:
-  case DIF_VAR_OBJECT_DEF:
-  case DIF_STUB_OBJECT:
-  case DIF_STUB_OBJECT_DEF:
-    return "object";
-  case DIF_RESOURCE:
-  case DIF_RESOURCE_DEF:
-    return "resource";
-  default:
-    Assert(0);
-    return "";
-}}
-
 void DPBuilderCodeAreaDescriptor::gc()
 {
   Assert(current >= start && current <= end);

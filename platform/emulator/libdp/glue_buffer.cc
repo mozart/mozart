@@ -30,7 +30,7 @@ GlueReadBuffer::GlueReadBuffer(BYTE* b, int len) : ByteBuffer(b, len) {}
 
 // This one had to be redefined.  We cannot reuse availableSpace()
 // from ByteBuffer since it does not have the 'const' modifier.
-int GlueReadBuffer::availableData() const { return endMB - posMB; }
+size_t GlueReadBuffer::availableData() const { return endMB - posMB; }
 
 void GlueReadBuffer::commitRead(size_t size) {}
 
@@ -46,7 +46,7 @@ GlueWriteBuffer::GlueWriteBuffer(BYTE* b, int len) : ByteBuffer(b, len) {}
 
 // We cannot inherit this method from ByteBuffer, since it does not
 // have the 'const' modifier.
-int GlueWriteBuffer::availableSpace() const { return endMB - posMB;}
+size_t GlueWriteBuffer::availableSpace() const { return endMB - posMB;}
 
 void GlueWriteBuffer::putByte(const BYTE& c) { put(c); }
 

@@ -111,7 +111,7 @@ TaggedRef TaskStack::frameToRecord(Frame *&frame, Thread *thread, Bool verbose)
   }
 }
 
-void splitfname(const char * fname, char * &dirname, char * &basename);
+void splitfname(const char * fname, const char * &dirname, const char * &basename);
 
 TaggedRef TaskStack::findAbstrRecord(void)
 {
@@ -138,7 +138,7 @@ TaggedRef TaskStack::findAbstrRecord(void)
       if (return_value == NameUnit) {
         // retrieve information for enclosing procedure
         const char * fname = OZ_atomToC(abstr->getFile());
-        char * dirname, * basename;
+        const char * dirname, * basename;
         //
         splitfname(fname, dirname, basename);
         //

@@ -194,7 +194,7 @@ while ((RET = CALL) < 0) {                              \
 // The string returned must be used immediately.
 // The definition relies on the following errors being defined for all
 // platforms directly or as done in wsock.hh
-char *errnoToString(int aErrno) {
+const char *errnoToString(int aErrno) {
   switch(aErrno) {
   case ECONNREFUSED:
     return "Connection refused";
@@ -220,7 +220,7 @@ char *errnoToString(int aErrno) {
   }
 }
 
-int raiseUnixError(char *f,int n, char * e, char * g) {
+int raiseUnixError(const char *f,int n, const char * e, const char * g) {
   return oz_raise(E_SYSTEM,E_OS, g, 3, OZ_string(f), OZ_int(n), OZ_string(e));
 }
 
@@ -236,7 +236,7 @@ int raiseUnixError(char *f,int n, char * e, char * g) {
 
 #else
 
-static char* h_strerror(const int err) {
+static const char* h_strerror(const int err) {
   switch (err) {
   case HOST_NOT_FOUND:
     return "No such host is known.";
@@ -611,7 +611,7 @@ OZ_BI_iodefine(unix_getDir,1,1)
 OZ_BI_iodefine(unix_stat,1,1)
 {
   struct stat buf;
-  char *fileType;
+  const char *fileType;
   OZ_declareVsIN(0, filename);
 
  retry:
@@ -1352,7 +1352,7 @@ OZ_BI_iodefine(unix_acceptInet,1,3)
 
   WRAPCALL("accept",osaccept(sock,(struct sockaddr *)&from, &fromlen),fd);
 
-  char *host = inet_ntoa(from.sin_addr);
+  const char *host = inet_ntoa(from.sin_addr);
   if (strcmp(host,"127.0.0.1")==0) {  // this prevents network connections being
     host = "localhost";               // opened when working at home for example
   } else {
@@ -1393,7 +1393,7 @@ OZ_BI_iodefine(unix_accept_nonblocking,1,3)
 #endif
   //
 
-  char *host = inet_ntoa(from.sin_addr);
+  const char *host = inet_ntoa(from.sin_addr);
   if (strcmp(host,"127.0.0.1")==0) {  // this prevents network connections being
     host = "localhost";               // opened when working at home for example
   } else {

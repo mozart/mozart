@@ -96,11 +96,11 @@ namespace _msl_internal{ //Start namespace
   class DssSimpleReadBuffer : public DssReadBuffer, public SimpleBuffer {
   public:
     DssSimpleReadBuffer() : SimpleBuffer() {}
-    DssSimpleReadBuffer(BYTE* const &buf, size_t const &len)
-      : SimpleBuffer(buf, len) {}
+    DssSimpleReadBuffer(BYTE* const &buffer, size_t const &len)
+      : SimpleBuffer(buffer, len) {}
 
     // implementation of DssReadBuffer
-    virtual int availableData() const { return getFree(); }
+    virtual size_t availableData() const { return getFree(); }
     virtual bool canRead(size_t len) const {return getFree()>=len;}
     virtual void readFromBuffer(BYTE* ptr, size_t len) { m_read(ptr, len); }
     virtual void commitRead(size_t len) { m_commit(len); }
@@ -118,11 +118,11 @@ namespace _msl_internal{ //Start namespace
   // a SimpleBuffer dressed as a DssWriteBuffer
   class DssSimpleWriteBuffer : public DssWriteBuffer, public SimpleBuffer {
   public:
-    DssSimpleWriteBuffer(BYTE* const &buf, size_t const &len)
-      : SimpleBuffer(buf, len) {}
+    DssSimpleWriteBuffer(BYTE* const &buffer, size_t const &len)
+      : SimpleBuffer(buffer, len) {}
 
     // implementation of DssWriteBuffer
-    virtual int availableSpace() const { return getFree(); }
+    virtual size_t availableSpace() const { return getFree(); }
     virtual bool canWrite(size_t len) const {return getFree()>=len;}
     virtual void writeToBuffer(const BYTE* ptr, size_t len) {
       m_write(ptr, len); m_commit(len);
@@ -241,7 +241,7 @@ namespace _msl_internal{ //Start namespace
     void resetFrame() { outerframe = 0; }
 
     // implementation of DssReadBuffer
-    virtual int availableData() const;
+    virtual size_t availableData() const;
     virtual bool canRead(size_t len) const {return this->availableData()>=len;}
     virtual void readFromBuffer(BYTE* ptr, size_t len);
     virtual void commitRead(size_t len);
@@ -262,8 +262,8 @@ namespace _msl_internal{ //Start namespace
   public:
     DssCryptoReadByteBuffer(BYTE* const key, const u32& keylen,
                             const u32& iv1,  const u32& iv2,
-                            DssReadByteBuffer* const &buf)
-      : DssReadByteBuffer(buf->getSize()), databuffer(buf),
+                            DssReadByteBuffer* const &buffer)
+      : DssReadByteBuffer(buffer->getSize()), databuffer(buffer),
         crypto(key, keylen, iv1, iv2)
     {}
 
@@ -287,7 +287,7 @@ namespace _msl_internal{ //Start namespace
     void resetReserve() { reserved = 0; }
 
     // implementation of DssWriteBuffer
-    virtual int availableSpace() const;
+    virtual size_t availableSpace() const;
     virtual bool canWrite(size_t len) const {return this->availableSpace()>=len;}
     virtual void writeToBuffer(const BYTE* ptr, size_t len);
     virtual void putByte(const BYTE& b);
@@ -307,8 +307,8 @@ namespace _msl_internal{ //Start namespace
   public:
     DssCryptoWriteByteBuffer(BYTE* const key, const u32& keylen,
                              const u32& iv1,  const u32& iv2,
-                             DssWriteByteBuffer* const &buf)
-      : DssWriteByteBuffer(buf->getSize()), databuffer(buf),
+                             DssWriteByteBuffer* const &buffer)
+      : DssWriteByteBuffer(buffer->getSize()), databuffer(buffer),
         crypto(key, keylen, iv1, iv2)
     {}
 

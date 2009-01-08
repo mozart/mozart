@@ -378,8 +378,8 @@ namespace _msl_internal{ //Start namespace
 
   // ************************* Site lookup table ************************
 
-  SiteHT::SiteHT(const int& size,   MsgnLayerEnv* const env ):
-    BucketHashTable<Site>(size),
+  SiteHT::SiteHT(const int& _size,   MsgnLayerEnv* const env ):
+    BucketHashTable<Site>(_size),
 #ifdef DEBUG_CHECK
     has_mySite(false),
 #endif
@@ -431,9 +431,10 @@ namespace _msl_internal{ //Start namespace
       int key_len  = body.m_getByte();
       bool sec     = body.m_getByte();
       u32 version  = body.m_getInt();
+      Assert(body_len>=0);
       Assert(key_len == RSA_MARSHALED_REPRESENTATION);
 
-      if (body.availableData() + 2 + 2*SIZE_INT == body_len &&
+      if (body.availableData() + 2 + 2*SIZE_INT == static_cast<size_t>(body_len) &&
           body_len > RSA_MARSHALED_REPRESENTATION + SIZE_INT &&
           key_len == RSA_MARSHALED_REPRESENTATION) {
 
