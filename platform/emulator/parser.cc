@@ -1,7 +1,9 @@
-/* A Bison parser, made by GNU Bison 2.0.  */
+/* A Bison parser, made by GNU Bison 2.3.  */
 
-/* Skeleton parser for Yacc-like parsing with Bison,
-   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004 Free Software Foundation, Inc.
+/* Skeleton implementation for Bison's Yacc-like parsers in C
+
+   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
+   Free Software Foundation, Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -15,16 +17,24 @@
 
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330,
-   Boston, MA 02111-1307, USA.  */
+   Foundation, Inc., 51 Franklin Street, Fifth Floor,
+   Boston, MA 02110-1301, USA.  */
 
-/* As a special exception, when this file is copied by Bison into a
-   Bison output file, you may use that output file without restriction.
-   This special exception was added by the Free Software Foundation
-   in version 1.24 of Bison.  */
+/* As a special exception, you may create a larger work that contains
+   part or all of the Bison parser skeleton and distribute that work
+   under terms of your choice, so long as that work isn't itself a
+   parser generator using the skeleton or a modified version thereof
+   as a parser skeleton.  Alternatively, if you modify or redistribute
+   the parser skeleton itself, you may (at your option) remove this
+   special exception, which will cause the skeleton and the resulting
+   Bison output files to be licensed under the GNU General Public
+   License without this special exception.
 
-/* Written by Richard Stallman by simplifying the original so called
-   ``semantic'' parser.  */
+   This special exception was added by the Free Software Foundation in
+   version 2.2 of Bison.  */
+
+/* C LALR(1) parser skeleton written by Richard Stallman, by
+   simplifying the original so-called "semantic" parser.  */
 
 /* All symbols defined below should begin with yy or YY, to avoid
    infringing on user name space.  This should be done even for local
@@ -35,6 +45,9 @@
 
 /* Identify Bison output.  */
 #define YYBISON 1
+
+/* Bison version.  */
+#define YYBISON_VERSION "2.3"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -157,6 +170,7 @@
      T_DEREFF = 351
    };
 #endif
+/* Tokens.  */
 #define T_SWITCH 258
 #define T_SWITCHNAME 259
 #define T_LOCALSWITCHES 260
@@ -326,9 +340,9 @@ int xycharno(void) {
 }
 
 void checkDeprecation(OZ_Term coord);
-void xyreportWarning(char *kind, char *msg, OZ_Term coord);
-void xyreportError(char *kind, char *msg, OZ_Term coord);
-void xyreportError(char *kind, char *msg,
+void xyreportWarning(const char *kind, const char *msg, OZ_Term coord);
+void xyreportError(const char *kind, const char *msg, OZ_Term coord);
+void xyreportError(const char *kind, const char *msg,
 		   const char *file, int line, int column);
 
 
@@ -341,7 +355,7 @@ void xyreportError(char *kind, char *msg,
 
 static OZ_Term yyoutput;
 
-static void xyerror(char *);
+static void xyerror(const char *);
 
 //-----------------
 // Atom definitions
@@ -753,7 +767,7 @@ OZ_Term makeCons(OZ_Term first, OZ_Term second, OZ_Term pos) {
 }
 
 inline
-OZ_Term makeInt(char * chars, OZ_Term pos) {
+OZ_Term makeInt(const char * chars, OZ_Term pos) {
   SRecord * t = SRecord::newSRecord(PA_fInt, 2);
   t->setArg(0, OZ_CStringToInt(chars));
   t->setArg(1, pos);
@@ -828,14 +842,21 @@ void xy_setParserExpect() {
 # define YYERROR_VERBOSE 0
 #endif
 
-#if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
+/* Enabling the token table.  */
+#ifndef YYTOKEN_TABLE
+# define YYTOKEN_TABLE 0
+#endif
 
-typedef union YYSTYPE {
+#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+typedef union YYSTYPE
+
+{
   OZ_Term t;
   int i;
-} YYSTYPE;
-/* Line 190 of yacc.c.  */
+}
+/* Line 187 of yacc.c.  */
 
+	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1
@@ -846,17 +867,94 @@ typedef union YYSTYPE {
 /* Copy the second part of user declarations.  */
 
 
-/* Line 213 of yacc.c.  */
+/* Line 216 of yacc.c.  */
 
 
-#if ! defined (yyoverflow) || YYERROR_VERBOSE
+#ifdef short
+# undef short
+#endif
 
-# ifndef YYFREE
-#  define YYFREE free
+#ifdef YYTYPE_UINT8
+typedef YYTYPE_UINT8 yytype_uint8;
+#else
+typedef unsigned char yytype_uint8;
+#endif
+
+#ifdef YYTYPE_INT8
+typedef YYTYPE_INT8 yytype_int8;
+#elif (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+typedef signed char yytype_int8;
+#else
+typedef short int yytype_int8;
+#endif
+
+#ifdef YYTYPE_UINT16
+typedef YYTYPE_UINT16 yytype_uint16;
+#else
+typedef unsigned short int yytype_uint16;
+#endif
+
+#ifdef YYTYPE_INT16
+typedef YYTYPE_INT16 yytype_int16;
+#else
+typedef short int yytype_int16;
+#endif
+
+#ifndef YYSIZE_T
+# ifdef __SIZE_TYPE__
+#  define YYSIZE_T __SIZE_TYPE__
+# elif defined size_t
+#  define YYSIZE_T size_t
+# elif ! defined YYSIZE_T && (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+#  include <stddef.h> /* INFRINGES ON USER NAME SPACE */
+#  define YYSIZE_T size_t
+# else
+#  define YYSIZE_T unsigned int
 # endif
-# ifndef YYMALLOC
-#  define YYMALLOC malloc
+#endif
+
+#define YYSIZE_MAXIMUM ((YYSIZE_T) -1)
+
+#ifndef YY_
+# if YYENABLE_NLS
+#  if ENABLE_NLS
+#   include <libintl.h> /* INFRINGES ON USER NAME SPACE */
+#   define YY_(msgid) dgettext ("bison-runtime", msgid)
+#  endif
 # endif
+# ifndef YY_
+#  define YY_(msgid) msgid
+# endif
+#endif
+
+/* Suppress unused-variable warnings by "using" E.  */
+#if ! defined lint || defined __GNUC__
+# define YYUSE(e) ((void) (e))
+#else
+# define YYUSE(e) /* empty */
+#endif
+
+/* Identity function, used to suppress warnings about constant conditions.  */
+#ifndef lint
+# define YYID(n) (n)
+#else
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+static int
+YYID (int i)
+#else
+static int
+YYID (i)
+    int i;
+#endif
+{
+  return i;
+}
+#endif
+
+#if ! defined yyoverflow || YYERROR_VERBOSE
 
 /* The parser invokes alloca or malloc; define the necessary symbols.  */
 
@@ -864,34 +962,76 @@ typedef union YYSTYPE {
 #  if YYSTACK_USE_ALLOCA
 #   ifdef __GNUC__
 #    define YYSTACK_ALLOC __builtin_alloca
+#   elif defined __BUILTIN_VA_ARG_INCR
+#    include <alloca.h> /* INFRINGES ON USER NAME SPACE */
+#   elif defined _AIX
+#    define YYSTACK_ALLOC __alloca
+#   elif defined _MSC_VER
+#    include <malloc.h> /* INFRINGES ON USER NAME SPACE */
+#    define alloca _alloca
 #   else
 #    define YYSTACK_ALLOC alloca
+#    if ! defined _ALLOCA_H && ! defined _STDLIB_H && (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+#     include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
+#     ifndef _STDLIB_H
+#      define _STDLIB_H 1
+#     endif
+#    endif
 #   endif
 #  endif
 # endif
 
 # ifdef YYSTACK_ALLOC
-   /* Pacify GCC's `empty if-body' warning. */
-#  define YYSTACK_FREE(Ptr) do { /* empty */; } while (0)
-# else
-#  if defined (__STDC__) || defined (__cplusplus)
-#   include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
-#   define YYSIZE_T size_t
+   /* Pacify GCC's `empty if-body' warning.  */
+#  define YYSTACK_FREE(Ptr) do { /* empty */; } while (YYID (0))
+#  ifndef YYSTACK_ALLOC_MAXIMUM
+    /* The OS might guarantee only one guard page at the bottom of the stack,
+       and a page size can be as small as 4096 bytes.  So we cannot safely
+       invoke alloca (N) if N exceeds 4096.  Use a slightly smaller number
+       to allow for a few compiler-allocated temporary stack slots.  */
+#   define YYSTACK_ALLOC_MAXIMUM 4032 /* reasonable circa 2006 */
 #  endif
+# else
 #  define YYSTACK_ALLOC YYMALLOC
 #  define YYSTACK_FREE YYFREE
+#  ifndef YYSTACK_ALLOC_MAXIMUM
+#   define YYSTACK_ALLOC_MAXIMUM YYSIZE_MAXIMUM
+#  endif
+#  if (defined __cplusplus && ! defined _STDLIB_H \
+       && ! ((defined YYMALLOC || defined malloc) \
+	     && (defined YYFREE || defined free)))
+#   include <stdlib.h> /* INFRINGES ON USER NAME SPACE */
+#   ifndef _STDLIB_H
+#    define _STDLIB_H 1
+#   endif
+#  endif
+#  ifndef YYMALLOC
+#   define YYMALLOC malloc
+#   if ! defined malloc && ! defined _STDLIB_H && (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+void *malloc (YYSIZE_T); /* INFRINGES ON USER NAME SPACE */
+#   endif
+#  endif
+#  ifndef YYFREE
+#   define YYFREE free
+#   if ! defined free && ! defined _STDLIB_H && (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+void free (void *); /* INFRINGES ON USER NAME SPACE */
+#   endif
+#  endif
 # endif
-#endif /* ! defined (yyoverflow) || YYERROR_VERBOSE */
+#endif /* ! defined yyoverflow || YYERROR_VERBOSE */
 
 
-#if (! defined (yyoverflow) \
-     && (! defined (__cplusplus) \
-	 || (defined (YYSTYPE_IS_TRIVIAL) && YYSTYPE_IS_TRIVIAL)))
+#if (! defined yyoverflow \
+     && (! defined __cplusplus \
+	 || (defined YYSTYPE_IS_TRIVIAL && YYSTYPE_IS_TRIVIAL)))
 
 /* A type that is properly aligned for any stack member.  */
 union yyalloc
 {
-  short int yyss;
+  yytype_int16 yyss;
   YYSTYPE yyvs;
   };
 
@@ -901,24 +1041,24 @@ union yyalloc
 /* The size of an array large to enough to hold all stacks, each with
    N elements.  */
 # define YYSTACK_BYTES(N) \
-     ((N) * (sizeof (short int) + sizeof (YYSTYPE))			\
+     ((N) * (sizeof (yytype_int16) + sizeof (YYSTYPE)) \
       + YYSTACK_GAP_MAXIMUM)
 
 /* Copy COUNT objects from FROM to TO.  The source and destination do
    not overlap.  */
 # ifndef YYCOPY
-#  if defined (__GNUC__) && 1 < __GNUC__
+#  if defined __GNUC__ && 1 < __GNUC__
 #   define YYCOPY(To, From, Count) \
       __builtin_memcpy (To, From, (Count) * sizeof (*(From)))
 #  else
 #   define YYCOPY(To, From, Count)		\
       do					\
 	{					\
-	  register YYSIZE_T yyi;		\
+	  YYSIZE_T yyi;				\
 	  for (yyi = 0; yyi < (Count); yyi++)	\
 	    (To)[yyi] = (From)[yyi];		\
 	}					\
-      while (0)
+      while (YYID (0))
 #  endif
 # endif
 
@@ -936,39 +1076,33 @@ union yyalloc
 	yynewbytes = yystacksize * sizeof (*Stack) + YYSTACK_GAP_MAXIMUM; \
 	yyptr += yynewbytes / sizeof (*yyptr);				\
       }									\
-    while (0)
+    while (YYID (0))
 
 #endif
 
-#if defined (__STDC__) || defined (__cplusplus)
-   typedef signed char yysigned_char;
-#else
-   typedef short int yysigned_char;
-#endif
-
-/* YYFINAL -- State number of the termination state. */
+/* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  120
 /* YYLAST -- Last index in YYTABLE.  */
 #define YYLAST   2151
 
-/* YYNTOKENS -- Number of terminals. */
+/* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  118
-/* YYNNTS -- Number of nonterminals. */
+/* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  146
-/* YYNRULES -- Number of rules. */
+/* YYNRULES -- Number of rules.  */
 #define YYNRULES  377
-/* YYNRULES -- Number of states. */
+/* YYNRULES -- Number of states.  */
 #define YYNSTATES  810
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
 #define YYMAXUTOK   351
 
-#define YYTRANSLATE(YYX) 						\
+#define YYTRANSLATE(YYX)						\
   ((unsigned int) (YYX) <= YYMAXUTOK ? yytranslate[YYX] : YYUNDEFTOK)
 
 /* YYTRANSLATE[YYLEX] -- Bison symbol number corresponding to YYLEX.  */
-static const unsigned char yytranslate[] =
+static const yytype_uint8 yytranslate[] =
 {
        0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -1011,7 +1145,7 @@ static const unsigned char yytranslate[] =
 #if YYDEBUG
 /* YYPRHS[YYN] -- Index of the first RHS symbol of rule number YYN in
    YYRHS.  */
-static const unsigned short int yyprhs[] =
+static const yytype_uint16 yyprhs[] =
 {
        0,     0,     3,     6,     8,    11,    14,    16,    20,    23,
       30,    37,    43,    44,    47,    49,    51,    53,    54,    57,
@@ -1053,8 +1187,8 @@ static const unsigned short int yyprhs[] =
     1255,  1256,  1266,  1268,  1274,  1276,  1278,  1280
 };
 
-/* YYRHS -- A `-1'-separated list of the rules' RHS. */
-static const short int yyrhs[] =
+/* YYRHS -- A `-1'-separated list of the rules' RHS.  */
+static const yytype_int16 yyrhs[] =
 {
      119,     0,    -1,   120,    71,    -1,     1,    -1,   125,   121,
       -1,   218,   121,    -1,   121,    -1,   202,   140,   121,    -1,
@@ -1188,7 +1322,7 @@ static const short int yyrhs[] =
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
-static const unsigned short int yyrline[] =
+static const yytype_uint16 yyrline[] =
 {
        0,   750,   750,   752,   756,   758,   761,   763,   768,   770,
      773,   775,   779,   782,   784,   786,   788,   793,   794,   798,
@@ -1231,9 +1365,9 @@ static const unsigned short int yyrline[] =
 };
 #endif
 
-#if YYDEBUG || YYERROR_VERBOSE
-/* YYTNME[SYMBOL-NUM] -- String name of the symbol SYMBOL-NUM.
-   First, the terminals, then, starting at YYNTOKENS, nonterminals. */
+#if YYDEBUG || YYERROR_VERBOSE || YYTOKEN_TABLE
+/* YYTNAME[SYMBOL-NUM] -- String name of the symbol SYMBOL-NUM.
+   First, the terminals, then, starting at YYNTOKENS, nonterminals.  */
 static const char *const yytname[] =
 {
   "$end", "error", "$undefined", "T_SWITCH", "T_SWITCHNAME",
@@ -1290,7 +1424,7 @@ static const char *const yytname[] =
 # ifdef YYPRINT
 /* YYTOKNUM[YYLEX-NUM] -- Internal token number corresponding to
    token YYLEX-NUM.  */
-static const unsigned short int yytoknum[] =
+static const yytype_uint16 yytoknum[] =
 {
        0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
      265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
@@ -1308,7 +1442,7 @@ static const unsigned short int yytoknum[] =
 # endif
 
 /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
-static const unsigned short int yyr1[] =
+static const yytype_uint16 yyr1[] =
 {
        0,   118,   119,   119,   120,   120,   120,   120,   121,   121,
      121,   121,   121,   122,   122,   122,   122,   123,   123,   124,
@@ -1351,7 +1485,7 @@ static const unsigned short int yyr1[] =
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
-static const unsigned char yyr2[] =
+static const yytype_uint8 yyr2[] =
 {
        0,     2,     2,     1,     2,     2,     1,     3,     2,     6,
        6,     5,     0,     2,     1,     1,     1,     0,     2,     2,
@@ -1396,7 +1530,7 @@ static const unsigned char yyr2[] =
 /* YYDEFACT[STATE-NAME] -- Default rule to reduce with in state
    STATE-NUM when YYTABLE doesn't specify something else to do.  Zero
    means the default is an error.  */
-static const unsigned short int yydefact[] =
+static const yytype_uint16 yydefact[] =
 {
        0,     3,    17,    14,    15,    16,   251,   148,   258,   256,
      257,   255,   252,   152,   260,   260,   260,   260,   260,   260,
@@ -1481,8 +1615,8 @@ static const unsigned short int yydefact[] =
      377,   320,   320,   320,   324,   324,   324,   365,   368,   371
 };
 
-/* YYDEFGOTO[NTERM-NUM]. */
-static const short int yydefgoto[] =
+/* YYDEFGOTO[NTERM-NUM].  */
+static const yytype_int16 yydefgoto[] =
 {
       -1,    55,    56,    57,    58,    79,    80,   115,    60,   314,
       61,   191,   192,   392,   677,   597,   679,   187,   188,   593,
@@ -1504,7 +1638,7 @@ static const short int yydefgoto[] =
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
 #define YYPACT_NINF -584
-static const short int yypact[] =
+static const yytype_int16 yypact[] =
 {
     1151,  -584,   248,  -584,  -584,  -584,  -584,  -584,  -584,  -584,
     -584,  -584,  -584,  -584,  -584,  -584,  -584,  -584,  -584,  -584,
@@ -1590,7 +1724,7 @@ static const short int yypact[] =
 };
 
 /* YYPGOTO[NTERM-NUM].  */
-static const short int yypgoto[] =
+static const yytype_int16 yypgoto[] =
 {
     -584,  -584,   712,    14,  -584,   686,  -584,   108,   414,  -379,
      104,   575,  -584,  -584,  -584,   183,  -584,  -584,   589,   109,
@@ -1614,7 +1748,7 @@ static const short int yypgoto[] =
    number is the opposite.  If zero, do what YYDEFACT says.
    If YYTABLE_NINF, syntax error.  */
 #define YYTABLE_NINF -305
-static const short int yytable[] =
+static const yytype_int16 yytable[] =
 {
       83,    84,    86,    87,    88,   433,   488,   331,    89,    90,
       92,    93,    94,    95,    96,    97,    98,   200,   108,    99,
@@ -1834,7 +1968,7 @@ static const short int yytable[] =
        0,    54
 };
 
-static const short int yycheck[] =
+static const yytype_int16 yycheck[] =
 {
       15,    16,    17,    18,    19,   336,   384,   235,    23,    24,
       25,    26,    27,    28,    29,    30,    31,   106,    43,    34,
@@ -2056,7 +2190,7 @@ static const short int yycheck[] =
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
    symbol of state STATE-NUM.  */
-static const unsigned short int yystos[] =
+static const yytype_uint16 yystos[] =
 {
        0,     1,     3,     5,     6,     7,     8,     9,    10,    11,
       12,    14,    15,    16,    23,    25,    26,    27,    28,    30,
@@ -2141,22 +2275,6 @@ static const unsigned short int yystos[] =
      263,   256,   258,   260,   236,   236,   236,   238,   238,   238
 };
 
-#if ! defined (YYSIZE_T) && defined (__SIZE_TYPE__)
-# define YYSIZE_T __SIZE_TYPE__
-#endif
-#if ! defined (YYSIZE_T) && defined (size_t)
-# define YYSIZE_T size_t
-#endif
-#if ! defined (YYSIZE_T)
-# if defined (__STDC__) || defined (__cplusplus)
-#  include <stddef.h> /* INFRINGES ON USER NAME SPACE */
-#  define YYSIZE_T size_t
-# endif
-#endif
-#if ! defined (YYSIZE_T)
-# define YYSIZE_T unsigned int
-#endif
-
 #define yyerrok		(yyerrstatus = 0)
 #define yyclearin	(yychar = YYEMPTY)
 #define YYEMPTY		(-2)
@@ -2182,15 +2300,15 @@ do								\
       yychar = (Token);						\
       yylval = (Value);						\
       yytoken = YYTRANSLATE (yychar);				\
-      YYPOPSTACK;						\
+      YYPOPSTACK (1);						\
       goto yybackup;						\
     }								\
   else								\
-    { 								\
-      yyerror ("syntax error: cannot back up");\
+    {								\
+      yyerror (YY_("syntax error: cannot back up")); \
       YYERROR;							\
     }								\
-while (0)
+while (YYID (0))
 
 
 #define YYTERROR	1
@@ -2205,7 +2323,7 @@ while (0)
 #ifndef YYLLOC_DEFAULT
 # define YYLLOC_DEFAULT(Current, Rhs, N)				\
     do									\
-      if (N)								\
+      if (YYID (N))                                                    \
 	{								\
 	  (Current).first_line   = YYRHSLOC (Rhs, 1).first_line;	\
 	  (Current).first_column = YYRHSLOC (Rhs, 1).first_column;	\
@@ -2219,7 +2337,7 @@ while (0)
 	  (Current).first_column = (Current).last_column =		\
 	    YYRHSLOC (Rhs, 0).last_column;				\
 	}								\
-    while (0)
+    while (YYID (0))
 #endif
 
 
@@ -2231,8 +2349,8 @@ while (0)
 # if YYLTYPE_IS_TRIVIAL
 #  define YY_LOCATION_PRINT(File, Loc)			\
      fprintf (File, "%d.%d-%d.%d",			\
-              (Loc).first_line, (Loc).first_column,	\
-              (Loc).last_line,  (Loc).last_column)
+	      (Loc).first_line, (Loc).first_column,	\
+	      (Loc).last_line,  (Loc).last_column)
 # else
 #  define YY_LOCATION_PRINT(File, Loc) ((void) 0)
 # endif
@@ -2259,36 +2377,96 @@ while (0)
 do {						\
   if (yydebug)					\
     YYFPRINTF Args;				\
-} while (0)
+} while (YYID (0))
 
-# define YY_SYMBOL_PRINT(Title, Type, Value, Location)		\
-do {								\
-  if (yydebug)							\
-    {								\
-      YYFPRINTF (stderr, "%s ", Title);				\
-      yysymprint (stderr, 					\
-                  Type, Value);	\
-      YYFPRINTF (stderr, "\n");					\
-    }								\
-} while (0)
+# define YY_SYMBOL_PRINT(Title, Type, Value, Location)			  \
+do {									  \
+  if (yydebug)								  \
+    {									  \
+      YYFPRINTF (stderr, "%s ", Title);					  \
+      yy_symbol_print (stderr,						  \
+		  Type, Value); \
+      YYFPRINTF (stderr, "\n");						  \
+    }									  \
+} while (YYID (0))
+
+
+/*--------------------------------.
+| Print this symbol on YYOUTPUT.  |
+`--------------------------------*/
+
+/*ARGSUSED*/
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+static void
+yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep)
+#else
+static void
+yy_symbol_value_print (yyoutput, yytype, yyvaluep)
+    FILE *yyoutput;
+    int yytype;
+    YYSTYPE const * const yyvaluep;
+#endif
+{
+  if (!yyvaluep)
+    return;
+# ifdef YYPRINT
+  if (yytype < YYNTOKENS)
+    YYPRINT (yyoutput, yytoknum[yytype], *yyvaluep);
+# else
+  YYUSE (yyoutput);
+# endif
+  switch (yytype)
+    {
+      default:
+	break;
+    }
+}
+
+
+/*--------------------------------.
+| Print this symbol on YYOUTPUT.  |
+`--------------------------------*/
+
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+static void
+yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep)
+#else
+static void
+yy_symbol_print (yyoutput, yytype, yyvaluep)
+    FILE *yyoutput;
+    int yytype;
+    YYSTYPE const * const yyvaluep;
+#endif
+{
+  if (yytype < YYNTOKENS)
+    YYFPRINTF (yyoutput, "token %s (", yytname[yytype]);
+  else
+    YYFPRINTF (yyoutput, "nterm %s (", yytname[yytype]);
+
+  yy_symbol_value_print (yyoutput, yytype, yyvaluep);
+  YYFPRINTF (yyoutput, ")");
+}
 
 /*------------------------------------------------------------------.
 | yy_stack_print -- Print the state stack from its BOTTOM up to its |
 | TOP (included).                                                   |
 `------------------------------------------------------------------*/
 
-#if defined (__STDC__) || defined (__cplusplus)
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 static void
-yy_stack_print (short int *bottom, short int *top)
+yy_stack_print (yytype_int16 *bottom, yytype_int16 *top)
 #else
 static void
 yy_stack_print (bottom, top)
-    short int *bottom;
-    short int *top;
+    yytype_int16 *bottom;
+    yytype_int16 *top;
 #endif
 {
   YYFPRINTF (stderr, "Stack now");
-  for (/* Nothing. */; bottom <= top; ++bottom)
+  for (; bottom <= top; ++bottom)
     YYFPRINTF (stderr, " %d", *bottom);
   YYFPRINTF (stderr, "\n");
 }
@@ -2297,37 +2475,45 @@ yy_stack_print (bottom, top)
 do {								\
   if (yydebug)							\
     yy_stack_print ((Bottom), (Top));				\
-} while (0)
+} while (YYID (0))
 
 
 /*------------------------------------------------.
 | Report that the YYRULE is going to be reduced.  |
 `------------------------------------------------*/
 
-#if defined (__STDC__) || defined (__cplusplus)
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 static void
-yy_reduce_print (int yyrule)
+yy_reduce_print (YYSTYPE *yyvsp, int yyrule)
 #else
 static void
-yy_reduce_print (yyrule)
+yy_reduce_print (yyvsp, yyrule)
+    YYSTYPE *yyvsp;
     int yyrule;
 #endif
 {
+  int yynrhs = yyr2[yyrule];
   int yyi;
-  unsigned int yylno = yyrline[yyrule];
-  YYFPRINTF (stderr, "Reducing stack by rule %d (line %u), ",
-             yyrule - 1, yylno);
-  /* Print the symbols being reduced, and their result.  */
-  for (yyi = yyprhs[yyrule]; 0 <= yyrhs[yyi]; yyi++)
-    YYFPRINTF (stderr, "%s ", yytname [yyrhs[yyi]]);
-  YYFPRINTF (stderr, "-> %s\n", yytname [yyr1[yyrule]]);
+  unsigned long int yylno = yyrline[yyrule];
+  YYFPRINTF (stderr, "Reducing stack by rule %d (line %lu):\n",
+	     yyrule - 1, yylno);
+  /* The symbols being reduced.  */
+  for (yyi = 0; yyi < yynrhs; yyi++)
+    {
+      fprintf (stderr, "   $%d = ", yyi + 1);
+      yy_symbol_print (stderr, yyrhs[yyprhs[yyrule] + yyi],
+		       &(yyvsp[(yyi + 1) - (yynrhs)])
+		       		       );
+      fprintf (stderr, "\n");
+    }
 }
 
 # define YY_REDUCE_PRINT(Rule)		\
 do {					\
   if (yydebug)				\
-    yy_reduce_print (Rule);		\
-} while (0)
+    yy_reduce_print (yyvsp, Rule); \
+} while (YYID (0))
 
 /* Nonzero means print parse trace.  It is left uninitialized so that
    multiple parsers can coexist.  */
@@ -2349,7 +2535,7 @@ int yydebug;
    if the built-in stack extension method is used).
 
    Do not make this value too large; the results are undefined if
-   SIZE_MAX < YYSTACK_BYTES (YYMAXDEPTH)
+   YYSTACK_ALLOC_MAXIMUM < YYSTACK_BYTES (YYMAXDEPTH)
    evaluated with infinite-precision integer arithmetic.  */
 
 #ifndef YYMAXDEPTH
@@ -2361,45 +2547,47 @@ int yydebug;
 #if YYERROR_VERBOSE
 
 # ifndef yystrlen
-#  if defined (__GLIBC__) && defined (_STRING_H)
+#  if defined __GLIBC__ && defined _STRING_H
 #   define yystrlen strlen
 #  else
 /* Return the length of YYSTR.  */
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 static YYSIZE_T
-#   if defined (__STDC__) || defined (__cplusplus)
 yystrlen (const char *yystr)
-#   else
+#else
+static YYSIZE_T
 yystrlen (yystr)
-     const char *yystr;
-#   endif
+    const char *yystr;
+#endif
 {
-  register const char *yys = yystr;
-
-  while (*yys++ != '\0')
+  YYSIZE_T yylen;
+  for (yylen = 0; yystr[yylen]; yylen++)
     continue;
-
-  return yys - yystr - 1;
+  return yylen;
 }
 #  endif
 # endif
 
 # ifndef yystpcpy
-#  if defined (__GLIBC__) && defined (_STRING_H) && defined (_GNU_SOURCE)
+#  if defined __GLIBC__ && defined _STRING_H && defined _GNU_SOURCE
 #   define yystpcpy stpcpy
 #  else
 /* Copy YYSRC to YYDEST, returning the address of the terminating '\0' in
    YYDEST.  */
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 static char *
-#   if defined (__STDC__) || defined (__cplusplus)
 yystpcpy (char *yydest, const char *yysrc)
-#   else
+#else
+static char *
 yystpcpy (yydest, yysrc)
-     char *yydest;
-     const char *yysrc;
-#   endif
+    char *yydest;
+    const char *yysrc;
+#endif
 {
-  register char *yyd = yydest;
-  register const char *yys = yysrc;
+  char *yyd = yydest;
+  const char *yys = yysrc;
 
   while ((*yyd++ = *yys++) != '\0')
     continue;
@@ -2409,53 +2597,171 @@ yystpcpy (yydest, yysrc)
 #  endif
 # endif
 
-#endif /* !YYERROR_VERBOSE */
+# ifndef yytnamerr
+/* Copy to YYRES the contents of YYSTR after stripping away unnecessary
+   quotes and backslashes, so that it's suitable for yyerror.  The
+   heuristic is that double-quoting is unnecessary unless the string
+   contains an apostrophe, a comma, or backslash (other than
+   backslash-backslash).  YYSTR is taken from yytname.  If YYRES is
+   null, do not copy; instead, return the length of what the result
+   would have been.  */
+static YYSIZE_T
+yytnamerr (char *yyres, const char *yystr)
+{
+  if (*yystr == '"')
+    {
+      YYSIZE_T yyn = 0;
+      char const *yyp = yystr;
 
+      for (;;)
+	switch (*++yyp)
+	  {
+	  case '\'':
+	  case ',':
+	    goto do_not_strip_quotes;
+
+	  case '\\':
+	    if (*++yyp != '\\')
+	      goto do_not_strip_quotes;
+	    /* Fall through.  */
+	  default:
+	    if (yyres)
+	      yyres[yyn] = *yyp;
+	    yyn++;
+	    break;
+
+	  case '"':
+	    if (yyres)
+	      yyres[yyn] = '\0';
+	    return yyn;
+	  }
+    do_not_strip_quotes: ;
+    }
+
+  if (! yyres)
+    return yystrlen (yystr);
+
+  return yystpcpy (yyres, yystr) - yyres;
+}
+# endif
+
+/* Copy into YYRESULT an error message about the unexpected token
+   YYCHAR while in state YYSTATE.  Return the number of bytes copied,
+   including the terminating null byte.  If YYRESULT is null, do not
+   copy anything; just return the number of bytes that would be
+   copied.  As a special case, return 0 if an ordinary "syntax error"
+   message will do.  Return YYSIZE_MAXIMUM if overflow occurs during
+   size calculation.  */
+static YYSIZE_T
+yysyntax_error (char *yyresult, int yystate, int yychar)
+{
+  int yyn = yypact[yystate];
+
+  if (! (YYPACT_NINF < yyn && yyn <= YYLAST))
+    return 0;
+  else
+    {
+      int yytype = YYTRANSLATE (yychar);
+      YYSIZE_T yysize0 = yytnamerr (0, yytname[yytype]);
+      YYSIZE_T yysize = yysize0;
+      YYSIZE_T yysize1;
+      int yysize_overflow = 0;
+      enum { YYERROR_VERBOSE_ARGS_MAXIMUM = 5 };
+      char const *yyarg[YYERROR_VERBOSE_ARGS_MAXIMUM];
+      int yyx;
+
+# if 0
+      /* This is so xgettext sees the translatable formats that are
+	 constructed on the fly.  */
+      YY_("syntax error, unexpected %s");
+      YY_("syntax error, unexpected %s, expecting %s");
+      YY_("syntax error, unexpected %s, expecting %s or %s");
+      YY_("syntax error, unexpected %s, expecting %s or %s or %s");
+      YY_("syntax error, unexpected %s, expecting %s or %s or %s or %s");
+# endif
+      char *yyfmt;
+      char const *yyf;
+      static char const yyunexpected[] = "syntax error, unexpected %s";
+      static char const yyexpecting[] = ", expecting %s";
+      static char const yyor[] = " or %s";
+      char yyformat[sizeof yyunexpected
+		    + sizeof yyexpecting - 1
+		    + ((YYERROR_VERBOSE_ARGS_MAXIMUM - 2)
+		       * (sizeof yyor - 1))];
+      char const *yyprefix = yyexpecting;
+
+      /* Start YYX at -YYN if negative to avoid negative indexes in
+	 YYCHECK.  */
+      int yyxbegin = yyn < 0 ? -yyn : 0;
+
+      /* Stay within bounds of both yycheck and yytname.  */
+      int yychecklim = YYLAST - yyn + 1;
+      int yyxend = yychecklim < YYNTOKENS ? yychecklim : YYNTOKENS;
+      int yycount = 1;
+
+      yyarg[0] = yytname[yytype];
+      yyfmt = yystpcpy (yyformat, yyunexpected);
+
+      for (yyx = yyxbegin; yyx < yyxend; ++yyx)
+	if (yycheck[yyx + yyn] == yyx && yyx != YYTERROR)
+	  {
+	    if (yycount == YYERROR_VERBOSE_ARGS_MAXIMUM)
+	      {
+		yycount = 1;
+		yysize = yysize0;
+		yyformat[sizeof yyunexpected - 1] = '\0';
+		break;
+	      }
+	    yyarg[yycount++] = yytname[yyx];
+	    yysize1 = yysize + yytnamerr (0, yytname[yyx]);
+	    yysize_overflow |= (yysize1 < yysize);
+	    yysize = yysize1;
+	    yyfmt = yystpcpy (yyfmt, yyprefix);
+	    yyprefix = yyor;
+	  }
+
+      yyf = YY_(yyformat);
+      yysize1 = yysize + yystrlen (yyf);
+      yysize_overflow |= (yysize1 < yysize);
+      yysize = yysize1;
+
+      if (yysize_overflow)
+	return YYSIZE_MAXIMUM;
+
+      if (yyresult)
+	{
+	  /* Avoid sprintf, as that infringes on the user's name space.
+	     Don't have undefined behavior even if the translation
+	     produced a string with the wrong number of "%s"s.  */
+	  char *yyp = yyresult;
+	  int yyi = 0;
+	  while ((*yyp = *yyf) != '\0')
+	    {
+	      if (*yyp == '%' && yyf[1] == 's' && yyi < yycount)
+		{
+		  yyp += yytnamerr (yyp, yyarg[yyi++]);
+		  yyf += 2;
+		}
+	      else
+		{
+		  yyp++;
+		  yyf++;
+		}
+	    }
+	}
+      return yysize;
+    }
+}
+#endif /* YYERROR_VERBOSE */
 
 
-#if YYDEBUG
-/*--------------------------------.
-| Print this symbol on YYOUTPUT.  |
-`--------------------------------*/
-
-#if defined (__STDC__) || defined (__cplusplus)
-static void
-yysymprint (FILE *yyoutput, int yytype, YYSTYPE *yyvaluep)
-#else
-static void
-yysymprint (yyoutput, yytype, yyvaluep)
-    FILE *yyoutput;
-    int yytype;
-    YYSTYPE *yyvaluep;
-#endif
-{
-  /* Pacify ``unused variable'' warnings.  */
-  (void) yyvaluep;
-
-  if (yytype < YYNTOKENS)
-    YYFPRINTF (yyoutput, "token %s (", yytname[yytype]);
-  else
-    YYFPRINTF (yyoutput, "nterm %s (", yytname[yytype]);
-
-
-# ifdef YYPRINT
-  if (yytype < YYNTOKENS)
-    YYPRINT (yyoutput, yytoknum[yytype], *yyvaluep);
-# endif
-  switch (yytype)
-    {
-      default:
-        break;
-    }
-  YYFPRINTF (yyoutput, ")");
-}
-
-#endif /* ! YYDEBUG */
 /*-----------------------------------------------.
 | Release the memory associated to this symbol.  |
 `-----------------------------------------------*/
 
-#if defined (__STDC__) || defined (__cplusplus)
+/*ARGSUSED*/
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 static void
 yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep)
 #else
@@ -2466,8 +2772,7 @@ yydestruct (yymsg, yytype, yyvaluep)
     YYSTYPE *yyvaluep;
 #endif
 {
-  /* Pacify ``unused variable'' warnings.  */
-  (void) yyvaluep;
+  YYUSE (yyvaluep);
 
   if (!yymsg)
     yymsg = "Deleting";
@@ -2477,7 +2782,7 @@ yydestruct (yymsg, yytype, yyvaluep)
     {
 
       default:
-        break;
+	break;
     }
 }
 
@@ -2485,13 +2790,13 @@ yydestruct (yymsg, yytype, yyvaluep)
 /* Prevent warnings from -Wmissing-prototypes.  */
 
 #ifdef YYPARSE_PARAM
-# if defined (__STDC__) || defined (__cplusplus)
+#if defined __STDC__ || defined __cplusplus
 int yyparse (void *YYPARSE_PARAM);
-# else
+#else
 int yyparse ();
-# endif
+#endif
 #else /* ! YYPARSE_PARAM */
-#if defined (__STDC__) || defined (__cplusplus)
+#if defined __STDC__ || defined __cplusplus
 int yyparse (void);
 #else
 int yyparse ();
@@ -2516,14 +2821,18 @@ int yynerrs;
 `----------*/
 
 #ifdef YYPARSE_PARAM
-# if defined (__STDC__) || defined (__cplusplus)
-int yyparse (void *YYPARSE_PARAM)
-# else
-int yyparse (YYPARSE_PARAM)
-  void *YYPARSE_PARAM;
-# endif
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
+int
+yyparse (void *YYPARSE_PARAM)
+#else
+int
+yyparse (YYPARSE_PARAM)
+    void *YYPARSE_PARAM;
+#endif
 #else /* ! YYPARSE_PARAM */
-#if defined (__STDC__) || defined (__cplusplus)
+#if (defined __STDC__ || defined __C99__FUNC__ \
+     || defined __cplusplus || defined _MSC_VER)
 int
 yyparse (void)
 #else
@@ -2534,13 +2843,19 @@ yyparse ()
 #endif
 {
   
-  register int yystate;
-  register int yyn;
+  int yystate;
+  int yyn;
   int yyresult;
   /* Number of tokens to shift before error messages enabled.  */
   int yyerrstatus;
   /* Look-ahead token as an internal (translated) token number.  */
   int yytoken = 0;
+#if YYERROR_VERBOSE
+  /* Buffer for error messages, and its allocated size.  */
+  char yymsgbuf[128];
+  char *yymsg = yymsgbuf;
+  YYSIZE_T yymsg_alloc = sizeof yymsgbuf;
+#endif
 
   /* Three stacks and their tools:
      `yyss': related to states,
@@ -2551,18 +2866,18 @@ yyparse ()
      to reallocate them elsewhere.  */
 
   /* The state stack.  */
-  short int yyssa[YYINITDEPTH];
-  short int *yyss = yyssa;
-  register short int *yyssp;
+  yytype_int16 yyssa[YYINITDEPTH];
+  yytype_int16 *yyss = yyssa;
+  yytype_int16 *yyssp;
 
   /* The semantic value stack.  */
   YYSTYPE yyvsa[YYINITDEPTH];
   YYSTYPE *yyvs = yyvsa;
-  register YYSTYPE *yyvsp;
+  YYSTYPE *yyvsp;
 
 
 
-#define YYPOPSTACK   (yyvsp--, yyssp--)
+#define YYPOPSTACK(N)   (yyvsp -= (N), yyssp -= (N))
 
   YYSIZE_T yystacksize = YYINITDEPTH;
 
@@ -2571,9 +2886,9 @@ yyparse ()
   YYSTYPE yyval;
 
 
-  /* When reducing, the number of symbols on the RHS of the reduced
-     rule.  */
-  int yylen;
+  /* The number of symbols on the RHS of the reduced rule.
+     Keep to zero when no symbol should be popped.  */
+  int yylen = 0;
 
   YYDPRINTF ((stderr, "Starting parse\n"));
 
@@ -2590,9 +2905,6 @@ yyparse ()
   yyssp = yyss;
   yyvsp = yyvs;
 
-
-  yyvsp[0] = yylval;
-
   goto yysetstate;
 
 /*------------------------------------------------------------.
@@ -2600,8 +2912,7 @@ yyparse ()
 `------------------------------------------------------------*/
  yynewstate:
   /* In all cases, when you get here, the value and location stacks
-     have just been pushed. so pushing a state here evens the stacks.
-     */
+     have just been pushed.  So pushing a state here evens the stacks.  */
   yyssp++;
 
  yysetstate:
@@ -2614,18 +2925,18 @@ yyparse ()
 
 #ifdef yyoverflow
       {
-	/* Give user a chance to reallocate the stack. Use copies of
+	/* Give user a chance to reallocate the stack.  Use copies of
 	   these so that the &'s don't force the real ones into
 	   memory.  */
 	YYSTYPE *yyvs1 = yyvs;
-	short int *yyss1 = yyss;
+	yytype_int16 *yyss1 = yyss;
 
 
 	/* Each stack pointer address is followed by the size of the
 	   data in use in that stack, in bytes.  This used to be a
 	   conditional around just the two extra args, but that might
 	   be undefined if yyoverflow is a macro.  */
-	yyoverflow ("parser stack overflow",
+	yyoverflow (YY_("memory exhausted"),
 		    &yyss1, yysize * sizeof (*yyssp),
 		    &yyvs1, yysize * sizeof (*yyvsp),
 
@@ -2636,21 +2947,21 @@ yyparse ()
       }
 #else /* no yyoverflow */
 # ifndef YYSTACK_RELOCATE
-      goto yyoverflowlab;
+      goto yyexhaustedlab;
 # else
       /* Extend the stack our own way.  */
       if (YYMAXDEPTH <= yystacksize)
-	goto yyoverflowlab;
+	goto yyexhaustedlab;
       yystacksize *= 2;
       if (YYMAXDEPTH < yystacksize)
 	yystacksize = YYMAXDEPTH;
 
       {
-	short int *yyss1 = yyss;
+	yytype_int16 *yyss1 = yyss;
 	union yyalloc *yyptr =
 	  (union yyalloc *) YYSTACK_ALLOC (YYSTACK_BYTES (yystacksize));
 	if (! yyptr)
-	  goto yyoverflowlab;
+	  goto yyexhaustedlab;
 	YYSTACK_RELOCATE (yyss);
 	YYSTACK_RELOCATE (yyvs);
 
@@ -2681,12 +2992,10 @@ yyparse ()
 `-----------*/
 yybackup:
 
-/* Do appropriate processing given the current state.  */
-/* Read a look-ahead token if we need one and don't already have one.  */
-/* yyresume: */
+  /* Do appropriate processing given the current state.  Read a
+     look-ahead token if we need one and don't already have one.  */
 
   /* First try to decide what to do without reference to look-ahead token.  */
-
   yyn = yypact[yystate];
   if (yyn == YYPACT_NINF)
     goto yydefault;
@@ -2728,22 +3037,21 @@ yybackup:
   if (yyn == YYFINAL)
     YYACCEPT;
 
-  /* Shift the look-ahead token.  */
-  YY_SYMBOL_PRINT ("Shifting", yytoken, &yylval, &yylloc);
-
-  /* Discard the token being shifted unless it is eof.  */
-  if (yychar != YYEOF)
-    yychar = YYEMPTY;
-
-  *++yyvsp = yylval;
-
-
   /* Count tokens shifted since error; after three, turn off error
      status.  */
   if (yyerrstatus)
     yyerrstatus--;
 
+  /* Shift the look-ahead token.  */
+  YY_SYMBOL_PRINT ("Shifting", yytoken, &yylval, &yylloc);
+
+  /* Discard the shifted token unless it is eof.  */
+  if (yychar != YYEOF)
+    yychar = YYEMPTY;
+
   yystate = yyn;
+  *++yyvsp = yylval;
+
   goto yynewstate;
 
 
@@ -2780,7 +3088,7 @@ yyreduce:
     {
         case 2:
 
-    { yyoutput = (yyvsp[-1].t); YYACCEPT; }
+    { yyoutput = (yyvsp[(1) - (2)].t); YYACCEPT; }
     break;
 
   case 3:
@@ -2790,46 +3098,46 @@ yyreduce:
 
   case 4:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 5:
 
     { (yyval.t) = oz_consUnwrap(newCTerm(PA_fSynTopLevelProductionTemplates,
-					   (yyvsp[-1].t)),(yyvsp[0].t)); }
+					   (yyvsp[(1) - (2)].t)),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 6:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 7:
 
-    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fFunctor,newCTerm(PA_fDollar,(yyvsp[-2].t)),
-					   (yyvsp[-1].t),(yyvsp[-2].t)),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fFunctor,newCTerm(PA_fDollar,(yyvsp[(1) - (3)].t)),
+					   (yyvsp[(2) - (3)].t),(yyvsp[(1) - (3)].t)),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 8:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 9:
 
-    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fDeclare,(yyvsp[-3].t),newCTerm(PA_fSkip,(yyvsp[-1].t)),
-					   (yyvsp[-4].t)),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fDeclare,(yyvsp[(3) - (6)].t),newCTerm(PA_fSkip,(yyvsp[(5) - (6)].t)),
+					   (yyvsp[(2) - (6)].t)),(yyvsp[(6) - (6)].t)); }
     break;
 
   case 10:
 
-    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fDeclare,(yyvsp[-3].t),(yyvsp[-1].t),(yyvsp[-4].t)),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fDeclare,(yyvsp[(3) - (6)].t),(yyvsp[(5) - (6)].t),(yyvsp[(2) - (6)].t)),(yyvsp[(6) - (6)].t)); }
     break;
 
   case 11:
 
-    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fDeclare,(yyvsp[-2].t),
-					   newCTerm(PA_fSkip,(yyvsp[-1].t)),(yyvsp[-3].t)),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fDeclare,(yyvsp[(3) - (5)].t),
+					   newCTerm(PA_fSkip,(yyvsp[(4) - (5)].t)),(yyvsp[(2) - (5)].t)),(yyvsp[(5) - (5)].t)); }
     break;
 
   case 12:
@@ -2839,7 +3147,7 @@ yyreduce:
 
   case 13:
 
-    { (yyval.t) = newCTerm(PA_dirSwitch,(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(PA_dirSwitch,(yyvsp[(2) - (2)].t)); }
     break;
 
   case 14:
@@ -2864,7 +3172,7 @@ yyreduce:
 
   case 18:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 19:
@@ -2889,159 +3197,159 @@ yyreduce:
 
   case 21:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 22:
 
-    { (yyval.t) = newCTerm(PA_fAnd,(yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(PA_fAnd,(yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 23:
 
-    { (yyval.t) = newCTerm(PA_fEq,(yyvsp[-3].t),(yyvsp[0].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fEq,(yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 24:
 
-    { if (oz_isSRecord((yyvsp[-3].t)) && 
-                        oz_eq(OZ_label((yyvsp[-3].t)), PA_fOpApply) && 
-                        oz_eq(OZ_getArg((yyvsp[-3].t),0), AtomDot)) {
-                       (yyval.t) = newCTerm(PA_fDotAssign,(yyvsp[-3].t),(yyvsp[0].t),(yyvsp[-1].t));
+    { if (oz_isSRecord((yyvsp[(1) - (4)].t)) && 
+                        oz_eq(OZ_label((yyvsp[(1) - (4)].t)), PA_fOpApply) && 
+                        oz_eq(OZ_getArg((yyvsp[(1) - (4)].t),0), AtomDot)) {
+                       (yyval.t) = newCTerm(PA_fDotAssign,(yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t),(yyvsp[(3) - (4)].t));
 			}
                     else
-                       (yyval.t) = newCTerm(PA_fColonEquals,(yyvsp[-3].t),(yyvsp[0].t),(yyvsp[-1].t)); }
+                       (yyval.t) = newCTerm(PA_fColonEquals,(yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 25:
 
-    { (yyval.t) = newCTerm(PA_fAssign,(yyvsp[-3].t),(yyvsp[0].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fAssign,(yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 26:
 
-    { (yyval.t) = newCTerm(PA_fOrElse,(yyvsp[-3].t),(yyvsp[0].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fOrElse,(yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 27:
 
-    { (yyval.t) = newCTerm(PA_fAndThen,(yyvsp[-3].t),(yyvsp[0].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fAndThen,(yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 28:
 
-    { (yyval.t) = newCTerm(PA_fOpApply,(yyvsp[-2].t),
-				  oz_mklistUnwrap((yyvsp[-3].t),(yyvsp[0].t)),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fOpApply,(yyvsp[(2) - (4)].t),
+				  oz_mklistUnwrap((yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t)),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 29:
 
-    { (yyval.t) = newCTerm(PA_fFdCompare,(yyvsp[-2].t),(yyvsp[-3].t),(yyvsp[0].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fFdCompare,(yyvsp[(2) - (4)].t),(yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 30:
 
-    { (yyval.t) = newCTerm(PA_fFdIn,(yyvsp[-2].t),(yyvsp[-3].t),(yyvsp[0].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fFdIn,(yyvsp[(2) - (4)].t),(yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 31:
 
-    { (yyval.t) = makeCons((yyvsp[-3].t),(yyvsp[0].t),(yyvsp[-1].t)); }
+    { (yyval.t) = makeCons((yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 32:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 33:
 
     { (yyval.t) = newCTerm(PA_fRecord,
-				  newCTerm(PA_fAtom,AtomPair,(yyvsp[-1].t)),
-				  oz_consUnwrap((yyvsp[-3].t),(yyvsp[0].t))); }
+				  newCTerm(PA_fAtom,AtomPair,(yyvsp[(3) - (4)].t)),
+				  oz_consUnwrap((yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t))); }
     break;
 
   case 34:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (1)].t)); }
     break;
 
   case 35:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (3)].t),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 36:
 
-    { (yyval.t) = newCTerm(PA_fOpApply,(yyvsp[-2].t),
-				  oz_mklistUnwrap((yyvsp[-3].t),(yyvsp[0].t)),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fOpApply,(yyvsp[(2) - (4)].t),
+				  oz_mklistUnwrap((yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t)),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 37:
 
-    { (yyval.t) = newCTerm(PA_fOpApply,(yyvsp[-2].t),
-				  oz_mklistUnwrap((yyvsp[-3].t),(yyvsp[0].t)),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fOpApply,(yyvsp[(2) - (4)].t),
+				  oz_mklistUnwrap((yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t)),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 38:
 
-    { (yyval.t) = newCTerm(PA_fOpApply,(yyvsp[-2].t),
-				  oz_mklistUnwrap((yyvsp[-3].t),(yyvsp[0].t)),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fOpApply,(yyvsp[(2) - (4)].t),
+				  oz_mklistUnwrap((yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t)),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 39:
 
-    { (yyval.t) = newCTerm(PA_fObjApply,(yyvsp[-3].t),(yyvsp[0].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fObjApply,(yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 40:
 
     { (yyval.t) = newCTerm(PA_fOpApply,AtomTilde,
-				  oz_mklistUnwrap((yyvsp[0].t)),(yyvsp[-1].t)); }
+				  oz_mklistUnwrap((yyvsp[(3) - (3)].t)),(yyvsp[(2) - (3)].t)); }
     break;
 
   case 41:
 
     { (yyval.t) = newCTerm(PA_fOpApply,AtomDot,
-				  oz_mklistUnwrap((yyvsp[-3].t),(yyvsp[0].t)),(yyvsp[-1].t)); }
+				  oz_mklistUnwrap((yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t)),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 42:
 
     { (yyval.t) = newCTerm(PA_fOpApply,AtomDot,
-				  oz_mklistUnwrap((yyvsp[-1].t),makeInt(xytext,pos())),pos()); }
+				  oz_mklistUnwrap((yyvsp[(1) - (2)].t),makeInt(xytext,pos())),pos()); }
     break;
 
   case 43:
 
     { (yyval.t) = newCTerm(PA_fOpApply,AtomHat,
-				  oz_mklistUnwrap((yyvsp[-3].t),(yyvsp[0].t)),(yyvsp[-1].t)); }
+				  oz_mklistUnwrap((yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t)),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 44:
 
-    { (yyval.t) = newCTerm(PA_fAt,(yyvsp[0].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fAt,(yyvsp[(3) - (3)].t),(yyvsp[(2) - (3)].t)); }
     break;
 
   case 45:
 
     { (yyval.t) = newCTerm(PA_fOpApply,AtomDExcl,
-				  oz_mklistUnwrap((yyvsp[0].t)),(yyvsp[-1].t)); }
+				  oz_mklistUnwrap((yyvsp[(3) - (3)].t)),(yyvsp[(2) - (3)].t)); }
     break;
 
   case 46:
 
-    { (yyval.t) = newCTerm(PA_parens,(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_parens,(yyvsp[(2) - (3)].t)); }
     break;
 
   case 47:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 48:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 49:
@@ -3076,94 +3384,94 @@ yyreduce:
 
   case 55:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 56:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 57:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 58:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 59:
 
     { (yyval.t) = newCTerm(PA_fRecord,newCTerm(PA_fAtom,AtomCons,
-						     makeLongPos((yyvsp[-4].t),(yyvsp[0].t))),
-				  oz_mklistUnwrap((yyvsp[-3].t),(yyvsp[-2].t))); }
+						     makeLongPos((yyvsp[(2) - (6)].t),(yyvsp[(6) - (6)].t))),
+				  oz_mklistUnwrap((yyvsp[(3) - (6)].t),(yyvsp[(4) - (6)].t))); }
     break;
 
   case 60:
 
-    { (yyval.t) = newCTerm(PA_fApply,(yyvsp[-3].t),(yyvsp[-2].t),makeLongPos((yyvsp[-4].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fApply,(yyvsp[(3) - (6)].t),(yyvsp[(4) - (6)].t),makeLongPos((yyvsp[(2) - (6)].t),(yyvsp[(6) - (6)].t))); }
     break;
 
   case 61:
 
-    { (yyval.t) = newCTerm(PA_fProc,(yyvsp[-5].t),(yyvsp[-4].t),(yyvsp[-2].t),(yyvsp[-7].t),makeLongPos((yyvsp[-8].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fProc,(yyvsp[(5) - (10)].t),(yyvsp[(6) - (10)].t),(yyvsp[(8) - (10)].t),(yyvsp[(3) - (10)].t),makeLongPos((yyvsp[(2) - (10)].t),(yyvsp[(10) - (10)].t))); }
     break;
 
   case 62:
 
-    { (yyval.t) = newCTerm(PA_fFun,(yyvsp[-5].t),(yyvsp[-4].t),(yyvsp[-2].t),(yyvsp[-7].t),makeLongPos((yyvsp[-8].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fFun,(yyvsp[(5) - (10)].t),(yyvsp[(6) - (10)].t),(yyvsp[(8) - (10)].t),(yyvsp[(3) - (10)].t),makeLongPos((yyvsp[(2) - (10)].t),(yyvsp[(10) - (10)].t))); }
     break;
 
   case 63:
 
-    { (yyval.t) = newCTerm(PA_fFunctor,(yyvsp[-3].t),(yyvsp[-2].t),makeLongPos((yyvsp[-4].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fFunctor,(yyvsp[(3) - (6)].t),(yyvsp[(4) - (6)].t),makeLongPos((yyvsp[(2) - (6)].t),(yyvsp[(6) - (6)].t))); }
     break;
 
   case 64:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 65:
 
-    { (yyval.t) = newCTerm(PA_fLocal,(yyvsp[-3].t),(yyvsp[-1].t),(yyvsp[-4].t)); }
+    { (yyval.t) = newCTerm(PA_fLocal,(yyvsp[(3) - (6)].t),(yyvsp[(5) - (6)].t),(yyvsp[(2) - (6)].t)); }
     break;
 
   case 66:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(2) - (2)].t); }
     break;
 
   case 67:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(2) - (2)].t); }
     break;
 
   case 68:
 
-    { (yyval.t) = newCTerm(PA_fLock,(yyvsp[-2].t),makeLongPos((yyvsp[-3].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fLock,(yyvsp[(3) - (5)].t),makeLongPos((yyvsp[(2) - (5)].t),(yyvsp[(5) - (5)].t))); }
     break;
 
   case 69:
 
-    { (yyval.t) = newCTerm(PA_fLockThen,(yyvsp[-4].t),(yyvsp[-2].t),makeLongPos((yyvsp[-5].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fLockThen,(yyvsp[(3) - (7)].t),(yyvsp[(5) - (7)].t),makeLongPos((yyvsp[(2) - (7)].t),(yyvsp[(7) - (7)].t))); }
     break;
 
   case 70:
 
-    { (yyval.t) = newCTerm(PA_fThread,(yyvsp[-2].t),makeLongPos((yyvsp[-3].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fThread,(yyvsp[(3) - (5)].t),makeLongPos((yyvsp[(2) - (5)].t),(yyvsp[(5) - (5)].t))); }
     break;
 
   case 71:
 
-    { (yyval.t) = newCTerm(PA_fTry,(yyvsp[-4].t),(yyvsp[-3].t),(yyvsp[-2].t),makeLongPos((yyvsp[-5].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fTry,(yyvsp[(3) - (7)].t),(yyvsp[(4) - (7)].t),(yyvsp[(5) - (7)].t),makeLongPos((yyvsp[(2) - (7)].t),(yyvsp[(7) - (7)].t))); }
     break;
 
   case 72:
 
-    { (yyval.t) = newCTerm(PA_fRaise,(yyvsp[-2].t),makeLongPos((yyvsp[-3].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fRaise,(yyvsp[(3) - (5)].t),makeLongPos((yyvsp[(2) - (5)].t),(yyvsp[(5) - (5)].t))); }
     break;
 
   case 73:
@@ -3178,54 +3486,54 @@ yyreduce:
 
   case 75:
 
-    { (yyval.t) = newCTerm(PA_fNot,(yyvsp[-2].t),makeLongPos((yyvsp[-3].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fNot,(yyvsp[(3) - (5)].t),makeLongPos((yyvsp[(2) - (5)].t),(yyvsp[(5) - (5)].t))); }
     break;
 
   case 76:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(2) - (2)].t); }
     break;
 
   case 77:
 
-    { (yyval.t) = newCTerm(PA_fOr,(yyvsp[-2].t),makeLongPos((yyvsp[-3].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fOr,(yyvsp[(3) - (5)].t),makeLongPos((yyvsp[(2) - (5)].t),(yyvsp[(5) - (5)].t))); }
     break;
 
   case 78:
 
-    { (yyval.t) = newCTerm(PA_fDis,(yyvsp[-2].t),makeLongPos((yyvsp[-3].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fDis,(yyvsp[(3) - (5)].t),makeLongPos((yyvsp[(2) - (5)].t),(yyvsp[(5) - (5)].t))); }
     break;
 
   case 79:
 
-    { (yyval.t) = newCTerm(PA_fChoice,(yyvsp[-2].t),makeLongPos((yyvsp[-3].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fChoice,(yyvsp[(3) - (5)].t),makeLongPos((yyvsp[(2) - (5)].t),(yyvsp[(5) - (5)].t))); }
     break;
 
   case 80:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 81:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 82:
 
-    { (yyval.t) = newCTerm(PA_fMacro,(yyvsp[-2].t),makeLongPos((yyvsp[-3].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fMacro,(yyvsp[(3) - (5)].t),makeLongPos((yyvsp[(2) - (5)].t),(yyvsp[(5) - (5)].t))); }
     break;
 
   case 83:
 
     { (yyval.t) = newCTerm(PA_fLoop,
-				  newCTerm(PA_fAnd,(yyvsp[-4].t),(yyvsp[-2].t)),
-				  makeLongPos((yyvsp[-5].t),(yyvsp[0].t))); }
+				  newCTerm(PA_fAnd,(yyvsp[(3) - (7)].t),(yyvsp[(5) - (7)].t)),
+				  makeLongPos((yyvsp[(2) - (7)].t),(yyvsp[(7) - (7)].t))); }
     break;
 
   case 84:
 
-    { (yyval.t) = newCTerm(PA_fFOR,(yyvsp[-4].t),(yyvsp[-2].t),makeLongPos((yyvsp[-5].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fFOR,(yyvsp[(3) - (7)].t),(yyvsp[(5) - (7)].t),makeLongPos((yyvsp[(2) - (7)].t),(yyvsp[(7) - (7)].t))); }
     break;
 
   case 85:
@@ -3235,49 +3543,49 @@ yyreduce:
 
   case 86:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 87:
 
-    { (yyval.t) = newCTerm(oz_atom("forFlag"),(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(oz_atom("forFlag"),(yyvsp[(1) - (1)].t)); }
     break;
 
   case 88:
 
-    { (yyval.t) = newCTerm(oz_atom("forFeature"),(yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(oz_atom("forFeature"),(yyvsp[(1) - (3)].t),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 89:
 
-    { (yyval.t) = newCTerm(oz_atom("forPattern"),(yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(oz_atom("forPattern"),(yyvsp[(1) - (3)].t),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 90:
 
-    { (yyval.t) = newCTerm(oz_atom("forFrom"),(yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(oz_atom("forFrom"),(yyvsp[(1) - (3)].t),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 91:
 
-    { (yyval.t) = newCTerm(oz_atom("forGeneratorList"),(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(oz_atom("forGeneratorList"),(yyvsp[(1) - (1)].t)); }
     break;
 
   case 92:
 
-    { (yyval.t) = newCTerm(oz_atom("forGeneratorInt"),(yyvsp[-3].t),(yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(oz_atom("forGeneratorInt"),(yyvsp[(1) - (4)].t),(yyvsp[(3) - (4)].t),(yyvsp[(4) - (4)].t)); }
     break;
 
   case 93:
 
-    { (yyval.t) = newCTerm(oz_atom("forGeneratorC"),(yyvsp[-2].t),oz_headUnwrap((yyvsp[0].t)),
-                                                              oz_tailUnwrap((yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(oz_atom("forGeneratorC"),(yyvsp[(1) - (3)].t),oz_headUnwrap((yyvsp[(3) - (3)].t)),
+                                                              oz_tailUnwrap((yyvsp[(3) - (3)].t))); }
     break;
 
   case 94:
 
-    { (yyval.t) = newCTerm(oz_atom("forGeneratorC"),(yyvsp[-3].t),oz_headUnwrap((yyvsp[-1].t)),
-                                                              oz_tailUnwrap((yyvsp[-1].t))); }
+    { (yyval.t) = newCTerm(oz_atom("forGeneratorC"),(yyvsp[(2) - (5)].t),oz_headUnwrap((yyvsp[(4) - (5)].t)),
+                                                              oz_tailUnwrap((yyvsp[(4) - (5)].t))); }
     break;
 
   case 95:
@@ -3287,12 +3595,12 @@ yyreduce:
 
   case 96:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(2) - (2)].t); }
     break;
 
   case 97:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 98:
@@ -3302,13 +3610,13 @@ yyreduce:
 
   case 99:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(2) - (2)].t); }
     break;
 
   case 100:
 
     {
-		    (yyval.t) = newCTerm(PA_fAnd,(yyvsp[-1].t),(yyvsp[0].t));
+		    (yyval.t) = newCTerm(PA_fAnd,(yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t));
 		  }
     break;
 
@@ -3317,15 +3625,15 @@ yyreduce:
     {
 		    (yyval.t) = newCTerm(PA_fMacro,
 				  oz_list(newCTerm(PA_fAtom,oz_atom("for"),NameUnit),
-					  unwrap((yyvsp[-7].t)),
+					  unwrap((yyvsp[(1) - (8)].t)),
 					  newCTerm(PA_fAtom,oz_atom("from"),NameUnit),
-					  unwrap((yyvsp[-4].t)),
+					  unwrap((yyvsp[(4) - (8)].t)),
 					  newCTerm(PA_fAtom,oz_atom("to"),NameUnit),
-					  unwrap((yyvsp[-2].t)),
+					  unwrap((yyvsp[(6) - (8)].t)),
 					  newCTerm(PA_fAtom,oz_atom("by"),NameUnit),
-					  (unwrap((yyvsp[-1].t)) == 0)?makeInt("1",NameUnit):unwrap((yyvsp[-1].t)),
+					  (unwrap((yyvsp[(7) - (8)].t)) == 0)?makeInt("1",NameUnit):unwrap((yyvsp[(7) - (8)].t)),
 					  0),
-				  makeLongPos(OZ_subtree((yyvsp[-7].t),makeTaggedSmallInt(2)),(yyvsp[0].t)));
+				  makeLongPos(OZ_subtree((yyvsp[(1) - (8)].t),makeTaggedSmallInt(2)),(yyvsp[(8) - (8)].t)));
 		  }
     break;
 
@@ -3334,22 +3642,22 @@ yyreduce:
     {
 		    /* <<for X 'in' L>>
 		       <<for X = E1 'then' E2>> */
-		    if ((yyvsp[-1].t) == 0) {
+		    if ((yyvsp[(5) - (6)].t) == 0) {
 		      (yyval.t) = newCTerm(PA_fMacro,
 				    oz_list(newCTerm(PA_fAtom,oz_atom("for"),NameUnit),
-					    unwrap((yyvsp[-5].t)),
+					    unwrap((yyvsp[(1) - (6)].t)),
 					    newCTerm(PA_fAtom,oz_atom("in"),NameUnit),
-					    unwrap((yyvsp[-2].t)),
+					    unwrap((yyvsp[(4) - (6)].t)),
 					    0),
-				    makeLongPos(OZ_subtree((yyvsp[-5].t),makeTaggedSmallInt(2)),(yyvsp[0].t)));
+				    makeLongPos(OZ_subtree((yyvsp[(1) - (6)].t),makeTaggedSmallInt(2)),(yyvsp[(6) - (6)].t)));
 		    } else {
 		      (yyval.t) = newCTerm(PA_fMacro,
 				    oz_list(newCTerm(PA_fAtom,oz_atom("for"),NameUnit),
-					    newCTerm(PA_fEq,(yyvsp[-5].t),(yyvsp[-2].t),NameUnit),
+					    newCTerm(PA_fEq,(yyvsp[(1) - (6)].t),(yyvsp[(4) - (6)].t),NameUnit),
 					    newCTerm(PA_fAtom,oz_atom("next"),NameUnit),
-					    unwrap((yyvsp[-1].t)),
+					    unwrap((yyvsp[(5) - (6)].t)),
 					    0),
-				    makeLongPos(OZ_subtree((yyvsp[-5].t),makeTaggedSmallInt(2)),(yyvsp[0].t)));
+				    makeLongPos(OZ_subtree((yyvsp[(1) - (6)].t),makeTaggedSmallInt(2)),(yyvsp[(6) - (6)].t)));
 		    }
 		  }
     break;
@@ -3361,7 +3669,7 @@ yyreduce:
 
   case 105:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(2) - (2)].t); }
     break;
 
   case 106:
@@ -3371,7 +3679,7 @@ yyreduce:
 
   case 107:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 108:
@@ -3381,44 +3689,44 @@ yyreduce:
 
   case 109:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 110:
 
-    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fRequire,(yyvsp[-1].t),(yyvsp[-2].t)),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fRequire,(yyvsp[(3) - (4)].t),(yyvsp[(2) - (4)].t)),(yyvsp[(4) - (4)].t)); }
     break;
 
   case 111:
 
-    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fPrepare,(yyvsp[-3].t),(yyvsp[-1].t),(yyvsp[-4].t)),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fPrepare,(yyvsp[(3) - (6)].t),(yyvsp[(5) - (6)].t),(yyvsp[(2) - (6)].t)),(yyvsp[(6) - (6)].t)); }
     break;
 
   case 112:
 
-    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fPrepare,(yyvsp[-1].t),
-					   newCTerm(PA_fSkip,(yyvsp[-2].t)),(yyvsp[-2].t)),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fPrepare,(yyvsp[(3) - (4)].t),
+					   newCTerm(PA_fSkip,(yyvsp[(2) - (4)].t)),(yyvsp[(2) - (4)].t)),(yyvsp[(4) - (4)].t)); }
     break;
 
   case 113:
 
-    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fImport,(yyvsp[-1].t),(yyvsp[-2].t)),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fImport,(yyvsp[(3) - (4)].t),(yyvsp[(2) - (4)].t)),(yyvsp[(4) - (4)].t)); }
     break;
 
   case 114:
 
-    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fExport,(yyvsp[-1].t),(yyvsp[-2].t)),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fExport,(yyvsp[(3) - (4)].t),(yyvsp[(2) - (4)].t)),(yyvsp[(4) - (4)].t)); }
     break;
 
   case 115:
 
-    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fDefine,(yyvsp[-3].t),(yyvsp[-1].t),(yyvsp[-4].t)),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fDefine,(yyvsp[(3) - (6)].t),(yyvsp[(5) - (6)].t),(yyvsp[(2) - (6)].t)),(yyvsp[(6) - (6)].t)); }
     break;
 
   case 116:
 
-    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fDefine,(yyvsp[-1].t),
-					   newCTerm(PA_fSkip,(yyvsp[-2].t)),(yyvsp[-2].t)),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fDefine,(yyvsp[(3) - (4)].t),
+					   newCTerm(PA_fSkip,(yyvsp[(2) - (4)].t)),(yyvsp[(2) - (4)].t)),(yyvsp[(4) - (4)].t)); }
     break;
 
   case 117:
@@ -3428,37 +3736,37 @@ yyreduce:
 
   case 118:
 
-    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fImportItem,(yyvsp[-2].t),AtomNil,(yyvsp[-1].t)),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fImportItem,(yyvsp[(1) - (3)].t),AtomNil,(yyvsp[(2) - (3)].t)),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 119:
 
-    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fImportItem,(yyvsp[-5].t),(yyvsp[-3].t),(yyvsp[-1].t)),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fImportItem,(yyvsp[(1) - (6)].t),(yyvsp[(3) - (6)].t),(yyvsp[(5) - (6)].t)),(yyvsp[(6) - (6)].t)); }
     break;
 
   case 120:
 
-    { (yyval.t) = newCTerm(PA_fVar,OZ_atom(xytext),(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(PA_fVar,OZ_atom(xytext),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 121:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (1)].t)); }
     break;
 
   case 122:
 
-    { (yyval.t) = oz_mklistUnwrap(oz_pair2Unwrap((yyvsp[0].t),(yyvsp[-2].t))); }
+    { (yyval.t) = oz_mklistUnwrap(oz_pair2Unwrap((yyvsp[(3) - (3)].t),(yyvsp[(1) - (3)].t))); }
     break;
 
   case 123:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 124:
 
-    { (yyval.t) = oz_consUnwrap(oz_pair2Unwrap((yyvsp[-1].t),(yyvsp[-3].t)),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap(oz_pair2Unwrap((yyvsp[(3) - (4)].t),(yyvsp[(1) - (4)].t)),(yyvsp[(4) - (4)].t)); }
     break;
 
   case 125:
@@ -3468,7 +3776,7 @@ yyreduce:
 
   case 126:
 
-    { (yyval.t) = newCTerm(PA_fImportAt,(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(PA_fImportAt,(yyvsp[(2) - (2)].t)); }
     break;
 
   case 127:
@@ -3478,13 +3786,13 @@ yyreduce:
 
   case 128:
 
-    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fExportItem,(yyvsp[-1].t)),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fExportItem,(yyvsp[(1) - (2)].t)),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 129:
 
     { (yyval.t) = oz_consUnwrap(newCTerm(PA_fExportItem,
-					   newCTerm(PA_fColon,(yyvsp[-3].t),(yyvsp[-1].t))),(yyvsp[0].t)); }
+					   newCTerm(PA_fColon,(yyvsp[(1) - (4)].t),(yyvsp[(3) - (4)].t))),(yyvsp[(4) - (4)].t)); }
     break;
 
   case 130:
@@ -3519,12 +3827,12 @@ yyreduce:
 
   case 136:
 
-    { (yyval.t) = newCTerm(PA_fLocal,(yyvsp[-3].t),(yyvsp[0].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fLocal,(yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 137:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 138:
@@ -3534,19 +3842,19 @@ yyreduce:
 
   case 139:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 140:
 
-    { (yyval.t) = newCTerm(PA_fAtom,AtomNil,(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(PA_fAtom,AtomNil,(yyvsp[(1) - (1)].t)); }
     break;
 
   case 141:
 
     { (yyval.t) = newCTerm(PA_fRecord,
-				  newCTerm(PA_fAtom,AtomCons,(yyvsp[-2].t)),
-				  oz_mklistUnwrap((yyvsp[-1].t),(yyvsp[0].t))); }
+				  newCTerm(PA_fAtom,AtomCons,(yyvsp[(1) - (3)].t)),
+				  oz_mklistUnwrap((yyvsp[(2) - (3)].t),(yyvsp[(3) - (3)].t))); }
     break;
 
   case 142:
@@ -3556,7 +3864,7 @@ yyreduce:
 
   case 143:
 
-    { (yyval.t) = newCTerm(PA_fCatch,(yyvsp[0].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fCatch,(yyvsp[(3) - (3)].t),(yyvsp[(2) - (3)].t)); }
     break;
 
   case 144:
@@ -3566,22 +3874,22 @@ yyreduce:
 
   case 145:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(2) - (2)].t); }
     break;
 
   case 146:
 
     {
-		    (yyval.t) = newCTerm(OZ_isTrue((yyvsp[-2].t))? PA_fOpenRecord : PA_fRecord,
-				  newCTerm(PA_fAtom,(yyvsp[-6].t),makeLongPos((yyvsp[-5].t),(yyvsp[0].t))),(yyvsp[-3].t));
+		    (yyval.t) = newCTerm(OZ_isTrue((yyvsp[(5) - (7)].t))? PA_fOpenRecord : PA_fRecord,
+				  newCTerm(PA_fAtom,(yyvsp[(1) - (7)].t),makeLongPos((yyvsp[(2) - (7)].t),(yyvsp[(7) - (7)].t))),(yyvsp[(4) - (7)].t));
 		  }
     break;
 
   case 147:
 
     {
-		    (yyval.t) = newCTerm(OZ_isTrue((yyvsp[-2].t))? PA_fOpenRecord : PA_fRecord,
-				  makeVar((yyvsp[-6].t),makeLongPos((yyvsp[-5].t),(yyvsp[0].t))),(yyvsp[-3].t));
+		    (yyval.t) = newCTerm(OZ_isTrue((yyvsp[(5) - (7)].t))? PA_fOpenRecord : PA_fRecord,
+				  makeVar((yyvsp[(1) - (7)].t),makeLongPos((yyvsp[(2) - (7)].t),(yyvsp[(7) - (7)].t))),(yyvsp[(4) - (7)].t));
 		  }
     break;
 
@@ -3617,12 +3925,12 @@ yyreduce:
 
   case 154:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 155:
 
-    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fColon,(yyvsp[-3].t),(yyvsp[-1].t)),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fColon,(yyvsp[(1) - (4)].t),(yyvsp[(3) - (4)].t)),(yyvsp[(4) - (4)].t)); }
     break;
 
   case 156:
@@ -3637,17 +3945,17 @@ yyreduce:
 
   case 158:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 159:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 160:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 161:
@@ -3667,32 +3975,32 @@ yyreduce:
 
   case 164:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 165:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 166:
 
-    { (yyval.t) = newCTerm(PA_fBoolCase,(yyvsp[-4].t),(yyvsp[-2].t),(yyvsp[-1].t),makeLongPos((yyvsp[-5].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fBoolCase,(yyvsp[(2) - (6)].t),(yyvsp[(4) - (6)].t),(yyvsp[(5) - (6)].t),makeLongPos((yyvsp[(1) - (6)].t),(yyvsp[(6) - (6)].t))); }
     break;
 
   case 167:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(2) - (2)].t); }
     break;
 
   case 168:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(2) - (2)].t); }
     break;
 
   case 169:
 
-    { (yyval.t) = (yyvsp[-1].t); }
+    { (yyval.t) = (yyvsp[(2) - (3)].t); }
     break;
 
   case 170:
@@ -3702,29 +4010,29 @@ yyreduce:
 
   case 171:
 
-    { checkDeprecation((yyvsp[-3].t));
-		    (yyval.t) = newCTerm(PA_fBoolCase,(yyvsp[-5].t),(yyvsp[-2].t),(yyvsp[-1].t),makeLongPos((yyvsp[-6].t),(yyvsp[0].t)));
+    { checkDeprecation((yyvsp[(4) - (7)].t));
+		    (yyval.t) = newCTerm(PA_fBoolCase,(yyvsp[(2) - (7)].t),(yyvsp[(5) - (7)].t),(yyvsp[(6) - (7)].t),makeLongPos((yyvsp[(1) - (7)].t),(yyvsp[(7) - (7)].t)));
 		  }
     break;
 
   case 172:
 
-    { (yyval.t) = newCTerm(PA_fCase,(yyvsp[-4].t),(yyvsp[-2].t),(yyvsp[-1].t),makeLongPos((yyvsp[-5].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fCase,(yyvsp[(2) - (6)].t),(yyvsp[(4) - (6)].t),(yyvsp[(5) - (6)].t),makeLongPos((yyvsp[(1) - (6)].t),(yyvsp[(6) - (6)].t))); }
     break;
 
   case 173:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(2) - (2)].t); }
     break;
 
   case 174:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(2) - (2)].t); }
     break;
 
   case 175:
 
-    { (yyval.t) = (yyvsp[-1].t); }
+    { (yyval.t) = (yyvsp[(2) - (3)].t); }
     break;
 
   case 176:
@@ -3734,85 +4042,85 @@ yyreduce:
 
   case 177:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (1)].t)); }
     break;
 
   case 178:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (3)].t),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 179:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (3)].t),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 180:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (1)].t)); }
     break;
 
   case 181:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (3)].t),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 182:
 
-    { (yyval.t) = newCTerm(PA_fCaseClause,(yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(PA_fCaseClause,(yyvsp[(1) - (3)].t),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 183:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 184:
 
-    { (yyval.t) = newCTerm(PA_fSideCondition,(yyvsp[-3].t),
-				  newCTerm(PA_fSkip,(yyvsp[-1].t)),(yyvsp[0].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fSideCondition,(yyvsp[(1) - (4)].t),
+				  newCTerm(PA_fSkip,(yyvsp[(3) - (4)].t)),(yyvsp[(4) - (4)].t),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 185:
 
-    { (yyval.t) = newCTerm(PA_fSideCondition,(yyvsp[-5].t),(yyvsp[-2].t),(yyvsp[0].t),(yyvsp[-3].t)); }
+    { (yyval.t) = newCTerm(PA_fSideCondition,(yyvsp[(1) - (6)].t),(yyvsp[(4) - (6)].t),(yyvsp[(6) - (6)].t),(yyvsp[(3) - (6)].t)); }
     break;
 
   case 186:
 
-    { (yyval.t) = newCTerm(PA_fEq,(yyvsp[-3].t),(yyvsp[0].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fEq,(yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 187:
 
-    { (yyval.t) = makeCons((yyvsp[-3].t),(yyvsp[0].t),(yyvsp[-1].t)); }
+    { (yyval.t) = makeCons((yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 188:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 189:
 
     { (yyval.t) = newCTerm(PA_fRecord,
-				  newCTerm(PA_fAtom,AtomPair,(yyvsp[-1].t)),
-				  oz_consUnwrap((yyvsp[-3].t),(yyvsp[0].t))); }
+				  newCTerm(PA_fAtom,AtomPair,(yyvsp[(3) - (4)].t)),
+				  oz_consUnwrap((yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t))); }
     break;
 
   case 190:
 
-    { (yyval.t) = newCTerm(PA_fClass,(yyvsp[-4].t),(yyvsp[-3].t),(yyvsp[-2].t),makeLongPos((yyvsp[-5].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fClass,(yyvsp[(3) - (7)].t),(yyvsp[(4) - (7)].t),(yyvsp[(5) - (7)].t),makeLongPos((yyvsp[(2) - (7)].t),(yyvsp[(7) - (7)].t))); }
     break;
 
   case 191:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 192:
 
-    { (yyval.t) = newCTerm(PA_fDollar,(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(PA_fDollar,(yyvsp[(1) - (1)].t)); }
     break;
 
   case 193:
@@ -3822,27 +4130,27 @@ yyreduce:
 
   case 194:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 195:
 
-    { (yyval.t) = newCTerm(PA_fFrom,oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)),(yyvsp[-2].t)); }
+    { (yyval.t) = newCTerm(PA_fFrom,oz_consUnwrap((yyvsp[(3) - (4)].t),(yyvsp[(4) - (4)].t)),(yyvsp[(2) - (4)].t)); }
     break;
 
   case 196:
 
-    { (yyval.t) = newCTerm(PA_fAttr,oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)),(yyvsp[-2].t)); }
+    { (yyval.t) = newCTerm(PA_fAttr,oz_consUnwrap((yyvsp[(3) - (4)].t),(yyvsp[(4) - (4)].t)),(yyvsp[(2) - (4)].t)); }
     break;
 
   case 197:
 
-    { (yyval.t) = newCTerm(PA_fFeat,oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)),(yyvsp[-2].t)); }
+    { (yyval.t) = newCTerm(PA_fFeat,oz_consUnwrap((yyvsp[(3) - (4)].t),(yyvsp[(4) - (4)].t)),(yyvsp[(2) - (4)].t)); }
     break;
 
   case 198:
 
-    { (yyval.t) = newCTerm(PA_fProp,oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)),(yyvsp[-2].t)); }
+    { (yyval.t) = newCTerm(PA_fProp,oz_consUnwrap((yyvsp[(3) - (4)].t),(yyvsp[(4) - (4)].t)),(yyvsp[(2) - (4)].t)); }
     break;
 
   case 199:
@@ -3852,32 +4160,32 @@ yyreduce:
 
   case 200:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 201:
 
-    { (yyval.t) = oz_pair2Unwrap((yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_pair2Unwrap((yyvsp[(1) - (3)].t),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 202:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 203:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 204:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 205:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 206:
@@ -3902,32 +4210,32 @@ yyreduce:
 
   case 210:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 211:
 
-    { (yyval.t) = newCTerm(PA_fMeth,(yyvsp[-2].t),(yyvsp[-1].t),(yyvsp[-3].t)); }
+    { (yyval.t) = newCTerm(PA_fMeth,(yyvsp[(3) - (5)].t),(yyvsp[(4) - (5)].t),(yyvsp[(2) - (5)].t)); }
     break;
 
   case 212:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 213:
 
-    { (yyval.t) = newCTerm(PA_fEq,(yyvsp[-3].t),(yyvsp[0].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fEq,(yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 214:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 215:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 216:
@@ -3947,12 +4255,12 @@ yyreduce:
 
   case 219:
 
-    { (yyval.t) = newCTerm(PA_fRecord,(yyvsp[-3].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fRecord,(yyvsp[(1) - (4)].t),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 220:
 
-    { (yyval.t) = newCTerm(PA_fOpenRecord,(yyvsp[-4].t),(yyvsp[-2].t)); }
+    { (yyval.t) = newCTerm(PA_fOpenRecord,(yyvsp[(1) - (5)].t),(yyvsp[(3) - (5)].t)); }
     break;
 
   case 221:
@@ -3967,7 +4275,7 @@ yyreduce:
 
   case 223:
 
-    { (yyval.t) = newCTerm(PA_fEscape,makeVar(xytext),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fEscape,makeVar(xytext),(yyvsp[(2) - (3)].t)); }
     break;
 
   case 224:
@@ -3987,7 +4295,7 @@ yyreduce:
 
   case 227:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 228:
@@ -3997,17 +4305,17 @@ yyreduce:
 
   case 229:
 
-    { (yyval.t) = newCTerm(PA_fMethArg,(yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(PA_fMethArg,(yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 230:
 
-    { (yyval.t) = newCTerm(PA_fMethColonArg,(yyvsp[-3].t),(yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(PA_fMethColonArg,(yyvsp[(1) - (4)].t),(yyvsp[(3) - (4)].t),(yyvsp[(4) - (4)].t)); }
     break;
 
   case 231:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 232:
@@ -4022,7 +4330,7 @@ yyreduce:
 
   case 234:
 
-    { (yyval.t) = newCTerm(PA_fDefault,(yyvsp[0].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fDefault,(yyvsp[(3) - (3)].t),(yyvsp[(2) - (3)].t)); }
     break;
 
   case 235:
@@ -4032,12 +4340,12 @@ yyreduce:
 
   case 236:
 
-    { (yyval.t) = newCTerm(PA_fCond,(yyvsp[-3].t),(yyvsp[-2].t),makeLongPos((yyvsp[-4].t),(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fCond,(yyvsp[(2) - (5)].t),(yyvsp[(3) - (5)].t),makeLongPos((yyvsp[(1) - (5)].t),(yyvsp[(5) - (5)].t))); }
     break;
 
   case 237:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(2) - (2)].t); }
     break;
 
   case 238:
@@ -4047,65 +4355,65 @@ yyreduce:
 
   case 239:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (1)].t)); }
     break;
 
   case 240:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (3)].t),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 241:
 
-    { (yyval.t) = newCTerm(PA_fClause,newCTerm(PA_fSkip,(yyvsp[-1].t)),(yyvsp[-3].t),(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(PA_fClause,newCTerm(PA_fSkip,(yyvsp[(3) - (4)].t)),(yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t)); }
     break;
 
   case 242:
 
-    { (yyval.t) = newCTerm(PA_fClause,(yyvsp[-4].t),(yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(PA_fClause,(yyvsp[(1) - (5)].t),(yyvsp[(3) - (5)].t),(yyvsp[(5) - (5)].t)); }
     break;
 
   case 243:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (3)].t),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 244:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (3)].t),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 245:
 
     { (yyval.t) = newCTerm(PA_fClause,
-				  newCTerm(PA_fSkip,(yyvsp[0].t)),
-				  (yyvsp[-1].t),newCTerm(PA_fNoThen,(yyvsp[0].t))); }
+				  newCTerm(PA_fSkip,(yyvsp[(2) - (2)].t)),
+				  (yyvsp[(1) - (2)].t),newCTerm(PA_fNoThen,(yyvsp[(2) - (2)].t))); }
     break;
 
   case 246:
 
-    { (yyval.t) = newCTerm(PA_fClause,(yyvsp[-3].t),(yyvsp[-1].t),newCTerm(PA_fNoThen,(yyvsp[0].t))); }
+    { (yyval.t) = newCTerm(PA_fClause,(yyvsp[(1) - (4)].t),(yyvsp[(3) - (4)].t),newCTerm(PA_fNoThen,(yyvsp[(4) - (4)].t))); }
     break;
 
   case 247:
 
     { (yyval.t) = newCTerm(PA_fClause,
-				  newCTerm(PA_fSkip,(yyvsp[-2].t)),(yyvsp[-3].t),(yyvsp[0].t)); }
+				  newCTerm(PA_fSkip,(yyvsp[(2) - (4)].t)),(yyvsp[(1) - (4)].t),(yyvsp[(4) - (4)].t)); }
     break;
 
   case 248:
 
-    { (yyval.t) = newCTerm(PA_fClause,(yyvsp[-4].t),(yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(PA_fClause,(yyvsp[(1) - (5)].t),(yyvsp[(3) - (5)].t),(yyvsp[(5) - (5)].t)); }
     break;
 
   case 249:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (1)].t)); }
     break;
 
   case 250:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (3)].t),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 251:
@@ -4120,12 +4428,12 @@ yyreduce:
 
   case 253:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 254:
 
-    { (yyval.t) = newCTerm(PA_fEscape,(yyvsp[0].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fEscape,(yyvsp[(3) - (3)].t),(yyvsp[(2) - (3)].t)); }
     break;
 
   case 255:
@@ -4162,53 +4470,53 @@ yyreduce:
 
     { OZ_Term prefix =
 		      scannerPrefix? scannerPrefix: PA_zy;
-		    (yyval.t) = newCTerm(PA_fScanner,(yyvsp[-5].t),(yyvsp[-4].t),(yyvsp[-3].t),(yyvsp[-2].t),prefix,
-				  makeLongPos((yyvsp[-6].t),(yyvsp[0].t))); }
+		    (yyval.t) = newCTerm(PA_fScanner,(yyvsp[(3) - (8)].t),(yyvsp[(4) - (8)].t),(yyvsp[(5) - (8)].t),(yyvsp[(6) - (8)].t),prefix,
+				  makeLongPos((yyvsp[(2) - (8)].t),(yyvsp[(8) - (8)].t))); }
     break;
 
   case 262:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (1)].t)); }
     break;
 
   case 263:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (1)].t)); }
     break;
 
   case 264:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (1)].t)); }
     break;
 
   case 265:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 266:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 267:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 268:
 
-    { (yyval.t) = newCTerm(PA_fLexicalAbbreviation,(yyvsp[-3].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fLexicalAbbreviation,(yyvsp[(2) - (5)].t),(yyvsp[(4) - (5)].t)); }
     break;
 
   case 269:
 
-    { (yyval.t) = newCTerm(PA_fLexicalAbbreviation,(yyvsp[-3].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fLexicalAbbreviation,(yyvsp[(2) - (5)].t),(yyvsp[(4) - (5)].t)); }
     break;
 
   case 270:
 
-    { (yyval.t) = newCTerm(PA_fLexicalRule,(yyvsp[-2].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fLexicalRule,(yyvsp[(2) - (4)].t),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 271:
@@ -4223,7 +4531,7 @@ yyreduce:
 
   case 273:
 
-    { (yyval.t) = newCTerm(PA_fMode,(yyvsp[-2].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fMode,(yyvsp[(2) - (4)].t),(yyvsp[(3) - (4)].t)); }
     break;
 
   case 274:
@@ -4233,49 +4541,49 @@ yyreduce:
 
   case 275:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 276:
 
-    { (yyval.t) = newCTerm(PA_fInheritedModes,(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(PA_fInheritedModes,(yyvsp[(2) - (2)].t)); }
     break;
 
   case 277:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 278:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 279:
 
     { OZ_Term expect = parserExpect? parserExpect: makeTaggedSmallInt(0);
-		    (yyval.t) = newCTerm(PA_fParser,(yyvsp[-6].t),(yyvsp[-5].t),(yyvsp[-4].t),(yyvsp[-3].t),(yyvsp[-2].t),expect,
-				  makeLongPos((yyvsp[-7].t),(yyvsp[0].t))); }
+		    (yyval.t) = newCTerm(PA_fParser,(yyvsp[(3) - (9)].t),(yyvsp[(4) - (9)].t),(yyvsp[(5) - (9)].t),(yyvsp[(6) - (9)].t),(yyvsp[(7) - (9)].t),expect,
+				  makeLongPos((yyvsp[(2) - (9)].t),(yyvsp[(9) - (9)].t))); }
     break;
 
   case 280:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (1)].t)); }
     break;
 
   case 281:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (1)].t)); }
     break;
 
   case 282:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 283:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 284:
@@ -4285,47 +4593,47 @@ yyreduce:
 
   case 285:
 
-    { (yyval.t) = newCTerm(PA_fToken,(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(PA_fToken,(yyvsp[(2) - (2)].t)); }
     break;
 
   case 286:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (1)].t)); }
     break;
 
   case 287:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 288:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 289:
 
-    { (yyval.t) = oz_pair2Unwrap((yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_pair2Unwrap((yyvsp[(1) - (3)].t),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 290:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (1)].t)); }
     break;
 
   case 291:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 292:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (1)].t)); }
     break;
 
   case 293:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 294:
@@ -4335,7 +4643,7 @@ yyreduce:
 
   case 295:
 
-    { (yyval.t) = newCTerm(PA_fProductionTemplate,(yyvsp[-3].t),(yyvsp[-4].t),(yyvsp[-2].t),(yyvsp[-1].t),(yyvsp[-7].t)); }
+    { (yyval.t) = newCTerm(PA_fProductionTemplate,(yyvsp[(6) - (9)].t),(yyvsp[(5) - (9)].t),(yyvsp[(7) - (9)].t),(yyvsp[(8) - (9)].t),(yyvsp[(2) - (9)].t)); }
     break;
 
   case 296:
@@ -4350,32 +4658,32 @@ yyreduce:
 
   case 298:
 
-    { (yyval.t) = newCTerm(PA_fProductionTemplate,(yyvsp[-3].t),(yyvsp[-4].t),(yyvsp[-2].t),(yyvsp[-1].t),(yyvsp[-7].t)); }
+    { (yyval.t) = newCTerm(PA_fProductionTemplate,(yyvsp[(7) - (10)].t),(yyvsp[(6) - (10)].t),(yyvsp[(8) - (10)].t),(yyvsp[(9) - (10)].t),(yyvsp[(3) - (10)].t)); }
     break;
 
   case 299:
 
-    { (yyval.t) = newCTerm(PA_fProductionTemplate,(yyvsp[-3].t),(yyvsp[-4].t),(yyvsp[-2].t),(yyvsp[-1].t),PA_none); }
+    { (yyval.t) = newCTerm(PA_fProductionTemplate,(yyvsp[(3) - (6)].t),(yyvsp[(2) - (6)].t),(yyvsp[(4) - (6)].t),(yyvsp[(5) - (6)].t),PA_none); }
     break;
 
   case 300:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[-1].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(2) - (3)].t)); }
     break;
 
   case 301:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[-1].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (2)].t)); }
     break;
 
   case 302:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(2) - (2)].t); }
     break;
 
   case 305:
 
-    { prodName[depth] = OZ_string(OZ_atomToC(OZ_getArg((yyvsp[-1].t),0))); }
+    { prodName[depth] = OZ_string(OZ_atomToC(OZ_getArg((yyvsp[(1) - (2)].t),0))); }
     break;
 
   case 306:
@@ -4390,7 +4698,7 @@ yyreduce:
 
   case 308:
 
-    { (yyval.t) = (yyvsp[-3].t); }
+    { (yyval.t) = (yyvsp[(3) - (6)].t); }
     break;
 
   case 309:
@@ -4405,7 +4713,7 @@ yyreduce:
 
   case 311:
 
-    { (yyval.t) = (yyvsp[-3].t); }
+    { (yyval.t) = (yyvsp[(3) - (6)].t); }
     break;
 
   case 312:
@@ -4420,22 +4728,22 @@ yyreduce:
 
   case 314:
 
-    { (yyval.t) = (yyvsp[-3].t); }
+    { (yyval.t) = (yyvsp[(3) - (6)].t); }
     break;
 
   case 315:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (1)].t)); }
     break;
 
   case 316:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (3)].t),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 317:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 318:
@@ -4474,32 +4782,32 @@ yyreduce:
 
   case 326:
 
-    { (yyval.t) = (yyvsp[-1].t); }
+    { (yyval.t) = (yyvsp[(1) - (2)].t); }
     break;
 
   case 327:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (1)].t)); }
     break;
 
   case 328:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 329:
 
-    { (yyval.t) = newCTerm(PA_fSyntaxRule,(yyvsp[-2].t),AtomNil,(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fSyntaxRule,(yyvsp[(2) - (4)].t),AtomNil,(yyvsp[(3) - (4)].t)); }
     break;
 
   case 330:
 
-    { (yyval.t) = newCTerm(PA_fSyntaxRule,(yyvsp[-2].t),AtomNil,(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fSyntaxRule,(yyvsp[(2) - (4)].t),AtomNil,(yyvsp[(3) - (4)].t)); }
     break;
 
   case 331:
 
-    { (yyval.t) = newCTerm(PA_fSyntaxRule,(yyvsp[-5].t),(yyvsp[-3].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fSyntaxRule,(yyvsp[(2) - (7)].t),(yyvsp[(4) - (7)].t),(yyvsp[(6) - (7)].t)); }
     break;
 
   case 332:
@@ -4509,12 +4817,12 @@ yyreduce:
 
   case 333:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 334:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 335:
@@ -4529,34 +4837,34 @@ yyreduce:
 
   case 337:
 
-    { (yyval.t) = newCTerm(PA_fSynAlternative, (yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(PA_fSynAlternative, (yyvsp[(1) - (1)].t)); }
     break;
 
   case 338:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (1)].t)); }
     break;
 
   case 339:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (3)].t),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 340:
 
-    { OZ_Term t = (yyvsp[0].t);
+    { OZ_Term t = (yyvsp[(2) - (2)].t);
 		    while (terms[depth]) {
 		      t = oz_consUnwrap(newCTerm(PA_fSynApplication, terms[depth]->term, AtomNil), t);
 		      TermNode *tmp = terms[depth]; terms[depth] = terms[depth]->next; delete tmp;
 		    }
-		    (yyval.t) = newCTerm(PA_fSynSequence, decls[depth], t, (yyvsp[-1].t));
+		    (yyval.t) = newCTerm(PA_fSynSequence, decls[depth], t, (yyvsp[(1) - (2)].t));
 		    decls[depth] = AtomNil;
 		  }
     break;
 
   case 341:
 
-    { (yyval.t) = newCTerm(PA_fSynSequence, AtomNil, (yyvsp[0].t), (yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fSynSequence, AtomNil, (yyvsp[(3) - (3)].t), (yyvsp[(2) - (3)].t)); }
     break;
 
   case 342:
@@ -4566,31 +4874,31 @@ yyreduce:
 
   case 343:
 
-    { (yyval.t) = oz_mklistUnwrap(newCTerm(PA_fSynAction,(yyvsp[0].t))); }
+    { (yyval.t) = oz_mklistUnwrap(newCTerm(PA_fSynAction,(yyvsp[(2) - (2)].t))); }
     break;
 
   case 344:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(2) - (2)].t); }
     break;
 
   case 345:
 
-    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fSynTemplateInstantiation, (yyvsp[0].t),
+    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fSynTemplateInstantiation, (yyvsp[(5) - (5)].t),
 					   oz_consUnwrap(newCTerm(PA_fSynApplication,
 							     terms[depth]->term,
 							     AtomNil),
 						    AtomNil),
-					   (yyvsp[-2].t)),
-				  (yyvsp[-1].t));
+					   (yyvsp[(3) - (5)].t)),
+				  (yyvsp[(4) - (5)].t));
 		    TermNode *tmp = terms[depth]; terms[depth] = terms[depth]->next; delete tmp;
 		  }
     break;
 
   case 346:
 
-    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fSynAssignment, terms[depth]->term, (yyvsp[-1].t)),
-				  (yyvsp[0].t));
+    { (yyval.t) = oz_consUnwrap(newCTerm(PA_fSynAssignment, terms[depth]->term, (yyvsp[(3) - (4)].t)),
+				  (yyvsp[(4) - (4)].t));
 		    TermNode *tmp = terms[depth]; terms[depth] = terms[depth]->next; delete tmp;
 		  }
     break;
@@ -4601,91 +4909,91 @@ yyreduce:
 		      decls[depth] = oz_consUnwrap(terms[depth]->term, decls[depth]);
 		      TermNode *tmp = terms[depth]; terms[depth] = terms[depth]->next; delete tmp;
 		    }
-		    (yyval.t) = (yyvsp[0].t);
+		    (yyval.t) = (yyvsp[(2) - (2)].t);
 		  }
     break;
 
   case 348:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 349:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 350:
 
-    { terms[depth] = new TermNode((yyvsp[0].t), terms[depth]); }
+    { terms[depth] = new TermNode((yyvsp[(1) - (1)].t), terms[depth]); }
     break;
 
   case 351:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 352:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-1].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (2)].t),(yyvsp[(2) - (2)].t)); }
     break;
 
   case 353:
 
-    { (yyval.t) = newCTerm(PA_fSynAssignment,(yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = newCTerm(PA_fSynAssignment,(yyvsp[(1) - (3)].t),(yyvsp[(3) - (3)].t)); }
     break;
 
   case 354:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 355:
 
-    { (yyval.t) = newCTerm(PA_fSynApplication,(yyvsp[0].t),AtomNil); }
+    { (yyval.t) = newCTerm(PA_fSynApplication,(yyvsp[(1) - (1)].t),AtomNil); }
     break;
 
   case 356:
 
-    { (yyval.t) = newCTerm(PA_fSynTemplateInstantiation,(yyvsp[0].t),
-				  oz_consUnwrap(newCTerm(PA_fSynApplication,(yyvsp[-3].t),
+    { (yyval.t) = newCTerm(PA_fSynTemplateInstantiation,(yyvsp[(4) - (4)].t),
+				  oz_consUnwrap(newCTerm(PA_fSynApplication,(yyvsp[(1) - (4)].t),
 						    AtomNil),
-					   AtomNil),(yyvsp[-1].t));
+					   AtomNil),(yyvsp[(3) - (4)].t));
 		  }
     break;
 
   case 357:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 358:
 
     { (yyval.t) = newCTerm(PA_fSynAssignment,
-				  newCTerm(PA_fEscape,(yyvsp[-2].t),(yyvsp[-3].t)),(yyvsp[0].t)); }
+				  newCTerm(PA_fEscape,(yyvsp[(3) - (5)].t),(yyvsp[(2) - (5)].t)),(yyvsp[(5) - (5)].t)); }
     break;
 
   case 359:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 360:
 
-    { (yyval.t) = (yyvsp[0].t); }
+    { (yyval.t) = (yyvsp[(1) - (1)].t); }
     break;
 
   case 361:
 
-    { (yyval.t) = newCTerm(PA_fSynTemplateInstantiation,(yyvsp[0].t),
-				  oz_mklistUnwrap((yyvsp[-2].t)),(yyvsp[-3].t));
+    { (yyval.t) = newCTerm(PA_fSynTemplateInstantiation,(yyvsp[(5) - (5)].t),
+				  oz_mklistUnwrap((yyvsp[(3) - (5)].t)),(yyvsp[(2) - (5)].t));
 		  }
     break;
 
   case 362:
 
-    { (yyval.t) = newCTerm(PA_fSynTemplateInstantiation,(yyvsp[0].t),
-				  oz_mklistUnwrap((yyvsp[-3].t)),(yyvsp[-1].t));
+    { (yyval.t) = newCTerm(PA_fSynTemplateInstantiation,(yyvsp[(4) - (4)].t),
+				  oz_mklistUnwrap((yyvsp[(1) - (4)].t)),(yyvsp[(3) - (4)].t));
 		  }
     break;
 
@@ -4701,7 +5009,7 @@ yyreduce:
 
   case 365:
 
-    { (yyval.t) = newCTerm(PA_fSynTemplateInstantiation,(yyvsp[0].t),(yyvsp[-4].t),(yyvsp[-7].t)); }
+    { (yyval.t) = newCTerm(PA_fSynTemplateInstantiation,(yyvsp[(9) - (9)].t),(yyvsp[(5) - (9)].t),(yyvsp[(2) - (9)].t)); }
     break;
 
   case 366:
@@ -4716,7 +5024,7 @@ yyreduce:
 
   case 368:
 
-    { (yyval.t) = newCTerm(PA_fSynTemplateInstantiation,(yyvsp[0].t),(yyvsp[-4].t),(yyvsp[-7].t)); }
+    { (yyval.t) = newCTerm(PA_fSynTemplateInstantiation,(yyvsp[(9) - (9)].t),(yyvsp[(5) - (9)].t),(yyvsp[(2) - (9)].t)); }
     break;
 
   case 369:
@@ -4731,17 +5039,17 @@ yyreduce:
 
   case 371:
 
-    { (yyval.t) = newCTerm(PA_fSynTemplateInstantiation,(yyvsp[0].t),(yyvsp[-4].t),(yyvsp[-7].t)); }
+    { (yyval.t) = newCTerm(PA_fSynTemplateInstantiation,(yyvsp[(9) - (9)].t),(yyvsp[(5) - (9)].t),(yyvsp[(2) - (9)].t)); }
     break;
 
   case 372:
 
-    { (yyval.t) = newCTerm(PA_fSynApplication,(yyvsp[0].t),AtomNil); }
+    { (yyval.t) = newCTerm(PA_fSynApplication,(yyvsp[(1) - (1)].t),AtomNil); }
     break;
 
   case 373:
 
-    { (yyval.t) = newCTerm(PA_fSynApplication,(yyvsp[-4].t),(yyvsp[-1].t)); }
+    { (yyval.t) = newCTerm(PA_fSynApplication,(yyvsp[(1) - (5)].t),(yyvsp[(4) - (5)].t)); }
     break;
 
   case 374:
@@ -4756,24 +5064,23 @@ yyreduce:
 
   case 376:
 
-    { (yyval.t) = oz_mklistUnwrap((yyvsp[0].t)); }
+    { (yyval.t) = oz_mklistUnwrap((yyvsp[(1) - (1)].t)); }
     break;
 
   case 377:
 
-    { (yyval.t) = oz_consUnwrap((yyvsp[-2].t),(yyvsp[0].t)); }
+    { (yyval.t) = oz_consUnwrap((yyvsp[(1) - (3)].t),(yyvsp[(3) - (3)].t)); }
     break;
 
 
+/* Line 1267 of yacc.c.  */
+
+      default: break;
     }
+  YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
 
-/* Line 1037 of yacc.c.  */
-
-
-  yyvsp -= yylen;
-  yyssp -= yylen;
-
-
+  YYPOPSTACK (yylen);
+  yylen = 0;
   YY_STACK_PRINT (yyss, yyssp);
 
   *++yyvsp = yyval;
@@ -4802,66 +5109,41 @@ yyerrlab:
   if (!yyerrstatus)
     {
       ++yynerrs;
-#if YYERROR_VERBOSE
-      yyn = yypact[yystate];
-
-      if (YYPACT_NINF < yyn && yyn < YYLAST)
-	{
-	  YYSIZE_T yysize = 0;
-	  int yytype = YYTRANSLATE (yychar);
-	  const char* yyprefix;
-	  char *yymsg;
-	  int yyx;
-
-	  /* Start YYX at -YYN if negative to avoid negative indexes in
-	     YYCHECK.  */
-	  int yyxbegin = yyn < 0 ? -yyn : 0;
-
-	  /* Stay within bounds of both yycheck and yytname.  */
-	  int yychecklim = YYLAST - yyn;
-	  int yyxend = yychecklim < YYNTOKENS ? yychecklim : YYNTOKENS;
-	  int yycount = 0;
-
-	  yyprefix = ", expecting ";
-	  for (yyx = yyxbegin; yyx < yyxend; ++yyx)
-	    if (yycheck[yyx + yyn] == yyx && yyx != YYTERROR)
-	      {
-		yysize += yystrlen (yyprefix) + yystrlen (yytname [yyx]);
-		yycount += 1;
-		if (yycount == 5)
-		  {
-		    yysize = 0;
-		    break;
-		  }
-	      }
-	  yysize += (sizeof ("syntax error, unexpected ")
-		     + yystrlen (yytname[yytype]));
-	  yymsg = (char *) YYSTACK_ALLOC (yysize);
-	  if (yymsg != 0)
-	    {
-	      char *yyp = yystpcpy (yymsg, "syntax error, unexpected ");
-	      yyp = yystpcpy (yyp, yytname[yytype]);
-
-	      if (yycount < 5)
-		{
-		  yyprefix = ", expecting ";
-		  for (yyx = yyxbegin; yyx < yyxend; ++yyx)
-		    if (yycheck[yyx + yyn] == yyx && yyx != YYTERROR)
-		      {
-			yyp = yystpcpy (yyp, yyprefix);
-			yyp = yystpcpy (yyp, yytname[yyx]);
-			yyprefix = " or ";
-		      }
-		}
-	      yyerror (yymsg);
+#if ! YYERROR_VERBOSE
+      yyerror (YY_("syntax error"));
+#else
+      {
+	YYSIZE_T yysize = yysyntax_error (0, yystate, yychar);
+	if (yymsg_alloc < yysize && yymsg_alloc < YYSTACK_ALLOC_MAXIMUM)
+	  {
+	    YYSIZE_T yyalloc = 2 * yysize;
+	    if (! (yysize <= yyalloc && yyalloc <= YYSTACK_ALLOC_MAXIMUM))
+	      yyalloc = YYSTACK_ALLOC_MAXIMUM;
+	    if (yymsg != yymsgbuf)
 	      YYSTACK_FREE (yymsg);
-	    }
-	  else
-	    yyerror ("syntax error; also virtual memory exhausted");
-	}
-      else
-#endif /* YYERROR_VERBOSE */
-	yyerror ("syntax error");
+	    yymsg = (char *) YYSTACK_ALLOC (yyalloc);
+	    if (yymsg)
+	      yymsg_alloc = yyalloc;
+	    else
+	      {
+		yymsg = yymsgbuf;
+		yymsg_alloc = sizeof yymsgbuf;
+	      }
+	  }
+
+	if (0 < yysize && yysize <= yymsg_alloc)
+	  {
+	    (void) yysyntax_error (yymsg, yystate, yychar);
+	    yyerror (yymsg);
+	  }
+	else
+	  {
+	    yyerror (YY_("syntax error"));
+	    if (yysize != 0)
+	      goto yyexhaustedlab;
+	  }
+      }
+#endif
     }
 
 
@@ -4872,23 +5154,15 @@ yyerrlab:
 	 error, discard it.  */
 
       if (yychar <= YYEOF)
-        {
-          /* If at end of input, pop the error token,
-	     then the rest of the stack, then return failure.  */
+	{
+	  /* Return failure if at end of input.  */
 	  if (yychar == YYEOF)
-	     for (;;)
-	       {
-
-		 YYPOPSTACK;
-		 if (yyssp == yyss)
-		   YYABORT;
-		 yydestruct ("Error: popping",
-                             yystos[*yyssp], yyvsp);
-	       }
-        }
+	    YYABORT;
+	}
       else
 	{
-	  yydestruct ("Error: discarding", yytoken, &yylval);
+	  yydestruct ("Error: discarding",
+		      yytoken, &yylval);
 	  yychar = YYEMPTY;
 	}
     }
@@ -4903,15 +5177,17 @@ yyerrlab:
 `---------------------------------------------------*/
 yyerrorlab:
 
-#ifdef __GNUC__
-  /* Pacify GCC when the user code never invokes YYERROR and the label
-     yyerrorlab therefore never appears in user code.  */
-  if (0)
+  /* Pacify compilers like GCC when the user code never invokes
+     YYERROR and the label yyerrorlab therefore never appears in user
+     code.  */
+  if (/*CONSTCOND*/ 0)
      goto yyerrorlab;
-#endif
 
-yyvsp -= yylen;
-  yyssp -= yylen;
+  /* Do not reclaim the symbols of the rule which action triggered
+     this YYERROR.  */
+  YYPOPSTACK (yylen);
+  yylen = 0;
+  YY_STACK_PRINT (yyss, yyssp);
   yystate = *yyssp;
   goto yyerrlab1;
 
@@ -4941,8 +5217,9 @@ yyerrlab1:
 	YYABORT;
 
 
-      yydestruct ("Error: popping", yystos[yystate], yyvsp);
-      YYPOPSTACK;
+      yydestruct ("Error: popping",
+		  yystos[yystate], yyvsp);
+      YYPOPSTACK (1);
       yystate = *yyssp;
       YY_STACK_PRINT (yyss, yyssp);
     }
@@ -4953,7 +5230,7 @@ yyerrlab1:
   *++yyvsp = yylval;
 
 
-  /* Shift the error token. */
+  /* Shift the error token.  */
   YY_SYMBOL_PRINT ("Shifting", yystos[yyn], yyvsp, yylsp);
 
   yystate = yyn;
@@ -4971,28 +5248,43 @@ yyacceptlab:
 | yyabortlab -- YYABORT comes here.  |
 `-----------------------------------*/
 yyabortlab:
-  yydestruct ("Error: discarding lookahead",
-              yytoken, &yylval);
-  yychar = YYEMPTY;
   yyresult = 1;
   goto yyreturn;
 
 #ifndef yyoverflow
-/*----------------------------------------------.
-| yyoverflowlab -- parser overflow comes here.  |
-`----------------------------------------------*/
-yyoverflowlab:
-  yyerror ("parser stack overflow");
+/*-------------------------------------------------.
+| yyexhaustedlab -- memory exhaustion comes here.  |
+`-------------------------------------------------*/
+yyexhaustedlab:
+  yyerror (YY_("memory exhausted"));
   yyresult = 2;
   /* Fall through.  */
 #endif
 
 yyreturn:
+  if (yychar != YYEOF && yychar != YYEMPTY)
+     yydestruct ("Cleanup: discarding lookahead",
+		 yytoken, &yylval);
+  /* Do not reclaim the symbols of the rule which action triggered
+     this YYABORT or YYACCEPT.  */
+  YYPOPSTACK (yylen);
+  YY_STACK_PRINT (yyss, yyssp);
+  while (yyssp != yyss)
+    {
+      yydestruct ("Cleanup: popping",
+		  yystos[*yyssp], yyvsp);
+      YYPOPSTACK (1);
+    }
 #ifndef yyoverflow
   if (yyss != yyssa)
     YYSTACK_FREE (yyss);
 #endif
-  return yyresult;
+#if YYERROR_VERBOSE
+  if (yymsg != yymsgbuf)
+    YYSTACK_FREE (yymsg);
+#endif
+  /* Make sure YYID is used.  */
+  return YYID (yyresult);
 }
 
 
@@ -5000,7 +5292,7 @@ yyreturn:
 
 
 void checkDeprecation(OZ_Term coord) {
-  char *msg = "use `if' instead of `case' for boolean conditionals";
+  const char *msg = "use `if' instead of `case' for boolean conditionals";
   if (xy_allowDeprecated) {
     xyreportWarning("deprecation warning",msg,coord);
   } else {
@@ -5008,7 +5300,7 @@ void checkDeprecation(OZ_Term coord) {
   }
 }
 
-void xyreportWarning(char *kind, char *msg, OZ_Term coord) {
+void xyreportWarning(const char *kind, const char *msg, OZ_Term coord) {
   OZ_Term args = oz_mklist(oz_pair2(PA_coord, coord),
 			   oz_pair2(PA_kind,  OZ_atom(kind)),
 			   oz_pair2(PA_msg,   OZ_atom(msg)));
@@ -5016,7 +5308,7 @@ void xyreportWarning(char *kind, char *msg, OZ_Term coord) {
 			     xy_errorMessages);
 }
 
-void xyreportError(char *kind, char *msg, OZ_Term coord) {
+void xyreportError(const char *kind, const char *msg, OZ_Term coord) {
   OZ_Term args = oz_mklist(oz_pair2(PA_coord, coord),
 			   oz_pair2(PA_kind,  OZ_atom(kind)),
 			   oz_pair2(PA_msg,   OZ_atom(msg)));
@@ -5024,13 +5316,13 @@ void xyreportError(char *kind, char *msg, OZ_Term coord) {
 			     xy_errorMessages);
 }
 
-void xyreportError(char *kind, char *msg, const char *file,
+void xyreportError(const char *kind, const char *msg, const char *file,
 		   int line, int column) {
   xyreportError(kind,msg,OZ_mkTupleC("pos",3,OZ_atom((char*)file),
 				     oz_int(line),oz_int(column)));
 }
 
-static void xyerror(char *s) {
+static void xyerror(const char *s) {
   if (!strncmp(s, "parse error", 11)) {
     if (strlen(s) > 13) {
       xyreportError("parse error", s + 13, xyFileName, xylino, xycharno());

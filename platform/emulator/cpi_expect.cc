@@ -33,13 +33,13 @@
 #include "var_of.hh"
 #include "prop_int.hh"
 
-void splitfname(const char * fname, char * &dirname, char * &basename)
+void splitfname(const char * fname, const char * &dirname, const char * &basename)
 {
   const char delim_char = '/';
 
   const int splitlen = 1024;
   static char split[splitlen];
-  static char * empty = "";
+  static const char * empty = "";
 
 
   if (strlen(fname) > splitlen-1) {
@@ -918,7 +918,7 @@ OZ_Return OZ_Expect::impose(OZ_Propagator * p)
       OZ_Term debug_frame = OZ_head(debug_frame_raw);
 
       const char * fname = OZ_atomToC(OZ_subtree(debug_frame, AtomFile));
-      char * dirname, * basename;
+      const char * dirname, * basename;
 
       splitfname(fname, dirname, basename);
 

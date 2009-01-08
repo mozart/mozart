@@ -620,7 +620,7 @@ int engine(Bool init)
 
   TaggedRef auxTaggedA, auxTaggedB;
   int auxInt;
-  char *auxString;
+  const char *auxString;
 
 #ifdef THREADED
   if (init) {

@@ -34,7 +34,7 @@ int PropagatorReference::_id;
 //=============================================================================
 // auxiliary functions
 
-OZ_Term prop_name(char * name)
+OZ_Term prop_name(const char * name)
 {
   static struct prop_names_tab_t {
     char * internal_name;
