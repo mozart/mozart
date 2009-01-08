@@ -33,8 +33,8 @@ class GlueReadBuffer:public ByteBuffer,
   
 public: 
   GlueReadBuffer(BYTE*, int); 
-
-  virtual int availableData() const; 
+  
+  virtual size_t availableData() const; 
   virtual bool canRead(size_t len) const {return this->availableData()>=len;}
   virtual void readFromBuffer(BYTE* ptr, size_t wanted);
   virtual void commitRead(size_t read);
@@ -49,7 +49,7 @@ class GlueWriteBuffer:public ByteBuffer,
 public: 
   GlueWriteBuffer(BYTE*, int); 
 
-  virtual int availableSpace() const; 
+  virtual size_t availableSpace() const; 
   virtual bool canWrite(size_t len) const {return this->availableSpace()>=len;}
   virtual void writeToBuffer(const BYTE* ptr, size_t write); 
 
@@ -70,14 +70,14 @@ public:
   ~GlueMarshalerBuffer() {}
 
   // DssReadBuffer interface
-  virtual int availableData() const { return 1000000; }     // ahem...
+  virtual size_t availableData() const { return 1000000; }     // ahem...
   virtual bool canRead(size_t) const { return true; }
   virtual void readFromBuffer(BYTE*, size_t);
   virtual void commitRead(size_t) {}
   virtual const BYTE getByte() { return buffer->get(); }
 
   // DssWriteBuffer interface
-  virtual int availableSpace() const { return 1000000; }     // ahem...
+  virtual size_t availableSpace() const { return 1000000; }     // ahem...
   virtual bool canWrite(size_t) const { return true; }
   virtual void writeToBuffer(const BYTE* ptr, size_t write);
   virtual void putByte(const BYTE& b) { buffer->put(b); }

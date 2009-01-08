@@ -33,9 +33,6 @@
 #include "dgc.hh"
 
 namespace _dss_internal{ // Start namespace
-    class ::TimerElementInterface;
-  //
-  
 
   const int LEAST_PERIOD = 1000;
   // ******************** TL HOME ***********************

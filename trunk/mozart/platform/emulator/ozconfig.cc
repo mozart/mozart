@@ -37,7 +37,7 @@
 
 ConfigData ozconf;
 
-Bool getDefaultPropertyBool(char *p,Bool def)
+Bool getDefaultPropertyBool(const char *p,Bool def)
 {
   char *str=osgetenv(p);
   if (!str) return def;
@@ -138,7 +138,7 @@ void ConfigData::init() {
   /* set osname and cpu */
   /* "ozplatform" (defined in version.cc) has the form <osname-cpu>, 
    * so split it up */
-  extern char *ozplatform;
+  extern const char *ozplatform;
 
   osname = strdup(ozplatform);
   cpu = osname;
@@ -149,7 +149,7 @@ void ConfigData::init() {
       break;
     }
     if (*cpu=='\0') {
-      cpu = "unknown";  /* should never happen */
+      cpu = strdup("unknown");  /* should never happen */
       break;
     }
     cpu++;

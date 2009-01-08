@@ -27,6 +27,6 @@
 
 #include "config.h"
 
-char *AMVersion = OZVERSION;
-char *AMDate = "HEREGOESDATE";
-char *ozplatform = "OZPLATFORM";
+const char *AMVersion = OZVERSION;
+const char *AMDate = "HEREGOESDATE";
+const char *ozplatform = "OZPLATFORM";

@@ -78,7 +78,7 @@
 #if 2 <= URLC_DEBUG
 /* messages to stderr */
 #define URLC_MSG(s) fprintf(stderr, "%s:%d: %s\n", \
-			  __FILE__, __LINE__, ((char*)s))
+			  __FILE__, __LINE__, ((const char*)s))
 #else
 #define URLC_MSG(s)
 #endif
@@ -165,7 +165,7 @@ private:
     int clean(void); // cleans the data fields
     int tmp_file_open(char *file); // opens a temporary file 
     int tcpip_open(const char* host, int port); // opens connection
-    int writen(int sockfd, char* buf, int n); // write n bytes to socket
+    int writen(int sockfd, const char* buf, int n); // write n bytes to socket
     int write3(int sockfd, const char* p1, int lp1, // writev limited clone
 	       const char* p2, int lp2, const char* p3, int lp3);
     int descape(char* s); // de-escape the string (modifies it!)
@@ -197,7 +197,7 @@ public:
 
 /* known protocols */
 /* ##extension */
-static char* URLC_kp[] = {"http://", "file:", "ftp://", NULL};
+static const char* URLC_kp[] = {"http://", "file:", "ftp://", NULL};
 /* I love languages capable of true & full token pasting! */
 
 /* characters not to be escaped in HTTP requests.
@@ -347,7 +347,7 @@ urlc::tcpip_open(const char* h, int p)
    returns URLC_OK or reason
    */
 int
-urlc::writen(int lsockfd, char* buf, int n)
+urlc::writen(int lsockfd, const char* buf, int n)
 {
     int nwritten = 0;
     int nleft = n;
@@ -1228,7 +1228,7 @@ urlc::http_req(int sockfd)
     int n;
     int tot_len = 0;
     char* p = NULL;
-    char* req_form[] = { "GET ", path, " HTTP/1.0\r\n",
+    const char* req_form[] = { "GET ", path, " HTTP/1.0\r\n",
 			 "Host: ", host , "\r\n",
 			 "User-Agent: ", HTTP_USER_AGENT, "\r\n", 
 			 "From: tf@info.ucl.ac.be\r\n", 

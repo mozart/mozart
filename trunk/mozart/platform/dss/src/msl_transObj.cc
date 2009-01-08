@@ -69,7 +69,7 @@ namespace _msl_internal{
   /******************** marshal/unmarshal ********************/
 
   // useful sizes inside marshaled frames
-  const int HEADER1 = 1 + SIZE_INT + SIZE_INT; // byte + acknum + framesize
+  const unsigned int HEADER1 = 1 + SIZE_INT + SIZE_INT; // byte + acknum + framesize
   const int TRAILER = 1;                       // control flag
 
   void BufferedTransObj::marshal(MsgCnt *msgC, int acknum) {
@@ -131,7 +131,8 @@ namespace _msl_internal{
     if (a_unmarshalBuffer->getUsed() < HEADER1) return U_WAIT;
 
     // read header
-    BYTE b = a_unmarshalBuffer->m_getByte();     // control byte
+    DebugCode(BYTE b =)
+      a_unmarshalBuffer->m_getByte();     // control byte
     Assert(b == 0xFF);
     int acknum = a_unmarshalBuffer->m_getInt();      // ack number
     a_comObj->msgAcked(acknum);
