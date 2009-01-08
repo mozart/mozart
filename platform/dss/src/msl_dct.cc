@@ -65,7 +65,7 @@ namespace _msl_internal{
       } else
 	return false; // not done
     }
-    int len = t_min(bb->availableSpace(), static_cast<int>(a_size)); // how much can and want we to marshal
+    int len = t_min(bb->availableSpace(), a_size); // how much can and want we to marshal
     bb->writeToBuffer(a_pos, len);
     a_pos += len;
     //printf("len:%d size:%d done:%s\n",len,a_size, (getMarshaled() == a_size)?"TRUE":"FALSE");

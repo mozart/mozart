@@ -184,7 +184,7 @@ _FUNDECL(int     ,OZ_intToC,(OZ_Term));
 _FUNDECL(long    ,OZ_intToCL,(OZ_Term));
 _FUNDECL(unsigned long,OZ_intToCulong,(OZ_Term));
 _FUNDECL(int     ,OZ_boolToC,(OZ_Term));
-_FUNDECL(OZ_Term ,OZ_CStringToInt,(char *str));
+_FUNDECL(OZ_Term ,OZ_CStringToInt,(const char *str));
 _FUNDECL(char *  ,OZ_parseInt,(char *s));
 
 _FUNDECL(OZ_Term ,OZ_float,(double));
@@ -204,7 +204,7 @@ _FUNDECL(char *  ,OZ_stringToC,(OZ_Term t,int*n));
 
 _FUNDECL(char*   ,OZ_vsToC,(OZ_Term t,int*n));
 _FUNDECL(char *  ,OZ_virtualStringToC,(OZ_Term t,int*n));
-_FUNDECL(OZ_Term ,OZ_mkByteString,(char*,int));
+_FUNDECL(OZ_Term ,OZ_mkByteString,(const char*,int));
 
 
 /* tuples */
@@ -213,7 +213,7 @@ _FUNDECL(int      ,OZ_width,(OZ_Term));
 _FUNDECL(OZ_Term ,OZ_tuple,(OZ_Term, int));
 #define OZ_tupleC(s,n) OZ_tuple(OZ_atom(s),n)
 _FUNDECL(OZ_Term  ,OZ_mkTuple,(OZ_Term label,int arity,...));
-_FUNDECL(OZ_Term  ,OZ_mkTupleC,(char *label,int arity,...));
+_FUNDECL(OZ_Term  ,OZ_mkTupleC,(const char *label,int arity,...));
 
 _FUNDECL(void     ,OZ_putArg,(OZ_Term, int, OZ_Term));
 _FUNDECL(OZ_Term  ,OZ_getArg,(OZ_Term, int));
@@ -367,13 +367,13 @@ _FUNDECL(void ,OZ_gCollect,(OZ_Term *));
 _FUNDECL(void ,OZ_sClone,(OZ_Term *));
 
 /* raise exception */
-_FUNDECL(OZ_Return ,OZ_typeError,(int pos,char *type));
+_FUNDECL(OZ_Return ,OZ_typeError,(int pos,const char *type));
 _FUNDECL(OZ_Return ,OZ_raise,(OZ_Term));
 _FUNDECL(OZ_Return ,OZ_raiseDebug,(OZ_Term));
-_FUNDECL(OZ_Return ,OZ_raiseC,(char *label,int arity,...));
+_FUNDECL(OZ_Return ,OZ_raiseC,(const char *label,int arity,...));
 _FUNDECL(OZ_Return ,OZ_raiseError,(OZ_Term));
-_FUNDECL(OZ_Return ,OZ_raiseErrorC,(char *label,int arity,...));
-_FUNDECL(OZ_Term   ,OZ_makeException,(OZ_Term kind,OZ_Term key,char*label,int arity,...));
+_FUNDECL(OZ_Return ,OZ_raiseErrorC,(const char *label,int arity,...));
+_FUNDECL(OZ_Term   ,OZ_makeException,(OZ_Term kind,OZ_Term key,const char* label,int arity,...));
 
 /* Suspending builtins */
 

@@ -216,7 +216,7 @@ public:
   virtual int  getMarshaledDataSize() const;
 
   /*************** debugging ***************/
-  virtual char* getPrintType() { return "unknown"; }
+  virtual const char* getPrintType() { return "unknown"; }
   void print();
 };
 
@@ -242,7 +242,7 @@ public:
   void setConst(ConstTermWithHome* c) { setEntity(makeTaggedConst(c)); }
   virtual void attach();
   virtual void detach();
-  virtual char *getPrintType() { return "const"; }
+  virtual const char *getPrintType() { return "const"; }
 };
 
 
@@ -263,7 +263,7 @@ public:
   virtual void installEntityRepresentation(PstInContainerInterface*) {
     Assert(0); }
   virtual void unmarshalData(ByteBuffer*);
-  virtual char *getPrintType() { return "port"; }
+  virtual const char *getPrintType() { return "port"; }
 }; 
 
 
@@ -285,7 +285,7 @@ public:
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
   virtual void unmarshalData(ByteBuffer*);
-  virtual char *getPrintType() { return "cell"; }
+  virtual const char *getPrintType() { return "cell"; }
 }; 
 
 
@@ -305,7 +305,7 @@ public:
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
   virtual void unmarshalData(ByteBuffer*);
-  virtual char *getPrintType() { return "lock"; }
+  virtual const char *getPrintType() { return "lock"; }
 }; 
 
 
@@ -329,7 +329,7 @@ public:
   virtual void marshalData(ByteBuffer*);
   virtual void unmarshalData(ByteBuffer*);
   virtual int  getMarshaledDataSize() const;
-  virtual char *getPrintType() { return "array"; }
+  virtual const char *getPrintType() { return "array"; }
 }; 
 
 
@@ -351,7 +351,7 @@ public:
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
   virtual void unmarshalData(ByteBuffer*);
-  virtual char *getPrintType() { return "dictionary"; }
+  virtual const char *getPrintType() { return "dictionary"; }
 }; 
 
 
@@ -368,7 +368,7 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
   virtual void unmarshalData(ByteBuffer*);
-  virtual char *getPrintType() { return "object"; }
+  virtual const char *getPrintType() { return "object"; }
 };
 
 
@@ -390,7 +390,7 @@ public:
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
   virtual void unmarshalData(ByteBuffer*);
-  virtual char *getPrintType() { return "object state"; }
+  virtual const char *getPrintType() { return "object state"; }
 };
 
 
@@ -409,7 +409,7 @@ public:
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
   virtual void unmarshalData(ByteBuffer*);
-  virtual char *getPrintType() { return "thread"; }
+  virtual const char *getPrintType() { return "thread"; }
 };
 
 
@@ -422,7 +422,7 @@ public:
   
   virtual void attach();
   virtual void gCollectPrepare();   // overrides Mediator::gCollectPrepare()
-  virtual char *getPrintType() { return "var"; }
+  virtual const char *getPrintType() { return "var"; }
 
   void bind(TaggedRef);     // bind the variable and its fault stream
 
@@ -456,7 +456,7 @@ public:
   virtual void installEntityRepresentation(PstInContainerInterface*) {
     Assert(0); }
   virtual void unmarshalData(ByteBuffer*);
-  virtual char *getPrintType() { return "unusable"; }
+  virtual const char *getPrintType() { return "unusable"; }
 };
 
 
@@ -500,7 +500,7 @@ public:
   virtual void marshalData(ByteBuffer*);
   virtual void unmarshalData(ByteBuffer*);
   virtual int  getMarshaledDataSize() const;
-  virtual char *getPrintType() { return "chunk"; }
+  virtual const char *getPrintType() { return "chunk"; }
 };
 
 // mediators for classes
@@ -515,7 +515,7 @@ public:
   virtual void marshalData(ByteBuffer*);
   virtual void unmarshalData(ByteBuffer*);
   virtual int  getMarshaledDataSize() const;
-  virtual char *getPrintType() { return "class"; }
+  virtual const char *getPrintType() { return "class"; }
 };
 
 // mediators for procedures (Abstraction)
@@ -530,7 +530,7 @@ public:
   virtual void marshalData(ByteBuffer*);
   virtual void unmarshalData(ByteBuffer*);
   virtual int  getMarshaledDataSize() const;
-  virtual char *getPrintType() { return "procedure"; }
+  virtual const char *getPrintType() { return "procedure"; }
 };
 
 

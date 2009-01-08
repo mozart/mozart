@@ -94,7 +94,7 @@ public:
 
   virtual size_t sizeOf(void) { return sizeof(Propagator_D_D_D_I); }
   virtual OZ_Term getParameters(void) const;
-  virtual OZ_Term getParametersC(char *) const;
+  virtual OZ_Term getParametersC(const char *) const;
 };
 
 //-----------------------------------------------------------------------------
@@ -129,7 +129,7 @@ public:
 
   virtual size_t sizeOf(void) { return sizeof(Propagator_D_D_I); }
   virtual OZ_Term getParameters(void) const;
-  virtual OZ_Term getParametersC(char *) const;
+  virtual OZ_Term getParametersC(const char *) const;
 };
 
 //-----------------------------------------------------------------------------
@@ -192,7 +192,7 @@ public:
   virtual void sClone(void);
 
   virtual size_t sizeOf(void) { return sizeof(Propagator_VI_VD_I); }
-  virtual OZ_Term getParametersC(char *) const;
+  virtual OZ_Term getParametersC(const char *) const;
   
   void simplify_on_equality(void);
   void simplify(void);
@@ -284,7 +284,7 @@ public:
   virtual void sClone(void);
 
   virtual size_t sizeOf(void) { return sizeof(Propagator_VI_VD_I_D); }
-  virtual OZ_Term getParametersC(char *) const;
+  virtual OZ_Term getParametersC(const char *) const;
 };
 
 //-----------------------------------------------------------------------------
@@ -370,7 +370,7 @@ public:
   virtual void sClone(void);
 
   virtual size_t sizeOf(void) { return sizeof(Propagator_VI_VVD_I); }
-  virtual OZ_Term getParametersC(char *) const;
+  virtual OZ_Term getParametersC(const char *) const;
 };
 
 //-----------------------------------------------------------------------------
@@ -456,7 +456,7 @@ public:
   virtual void sClone(void);
 
   virtual size_t sizeOf(void) { return sizeof(Propagator_VI_VD_D); }
-  virtual OZ_Term getParametersC(char *) const;
+  virtual OZ_Term getParametersC(const char *) const;
   OZ_Boolean simplify(void);
 };
 

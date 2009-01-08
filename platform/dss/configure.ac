@@ -105,7 +105,7 @@ case "$enable_opt" in
     *)
 	AC_MSG_RESULT(compile optimized mode)
 	CXXFLAGS="-O3 -fomit-frame-pointer $CXX_BASE"
-	WARNINGS="-Weffc++ $WARNINGS"
+	WARNINGS="$WARNINGS"
     ;;
 esac
 
@@ -116,12 +116,12 @@ if test "$enable_warnings" = no; then
     WARNINGS="-Wall"
 else
     AC_MSG_RESULT(using extensive warnings)
-    if test "$VERSION" = 3; then
+    if test "$VERSION" = 3 -o "$VERSION" = ABOVE3 ; then
 	WARNINGS="$WARNINGS -Wswitch -Wreturn-type -Wunused"
     fi
     if test "$enable_opt" != d; then
-	WARNINGS="-Winline $WARNINGS"
-	if test "$VERSION" = 3; then
+	WARNINGS="$WARNINGS"
+	if test "$VERSION" = 3 -o "$VERSION" = ABOVE3 ; then
 	    WARNINGS="-Wdisabled-optimization -Wuninitialized $WARNINGS"
 	fi
     fi

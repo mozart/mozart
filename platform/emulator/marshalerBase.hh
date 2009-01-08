@@ -154,7 +154,7 @@ extern MarshalTag defmap[DIF_LAST];
 //
 const struct {
   MarshalTag tag;
-  char *name;
+  const char *name;
 } dif_names[] = {
   { DIF_UNUSED0,         "UNUSED0"},
   { DIF_SMALLINT,        "SMALLINT"},

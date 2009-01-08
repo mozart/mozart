@@ -127,7 +127,7 @@ public:
 
   int runningUnderEmacs;
 
-  char *ozHome;
+  const char *ozHome;
   char *osname, *cpu;
 
   char *emuexe;
@@ -138,7 +138,7 @@ public:
   int argC;
 
   // root functor's url
-  char *url;
+  const char *url;
   int gui;
   
 public:
