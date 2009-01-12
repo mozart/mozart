@@ -97,10 +97,10 @@ AC_MSG_RESULT()
 AC_MSG_CHECKING(compiler alternative.)
 AC_ARG_ENABLE(opt, [--enable-opt)],,)
 case "$enable_opt" in
-    debug)
+    dbg | debug)
 	AC_MSG_RESULT(compile to debug mode)
-	CXXFLAGS="-fno-inline -fno-default-inline -fno-inline-functions -DDEBUG_CHECK -DDSS_LOG -DINTERFACE -g3 -ggdb $CXX_BASE"
-	WARNINGS="-pedantic-errors"
+	CXXFLAGS="-O3 -fomit-frame-pointer -fno-inline -fno-default-inline -fno-inline-functions -DDEBUG_CHECK -DDSS_LOG -DINTERFACE -g3 -ggdb $CXX_BASE"
+	WARNINGS="-pedantic-errors $WARNINGS"
     ;;
     *)
 	AC_MSG_RESULT(compile optimized mode)
