@@ -1481,11 +1481,12 @@ void CodeArea::init(void **instrTable)
 
 #ifdef RECINSTRFETCH
 
-#define InstrDumpFile "fetchedInstr.dump"
-
 void CodeArea::writeInstr(void){
   FILE* ofile;
-  if((ofile = fopen(InstrDumpFile, "w"))){
+  static char filename[1024];
+  snprintf(filename,1000, "fetchedInstr%d.dump",getpid());
+  if((ofile = fopen(filename, "a"))){
+    fprintf(ofile,"DUMP BEGIN\n");
     int i = fetchedInstr;
 //    ofile=stdout;
     do {
@@ -1496,13 +1497,14 @@ void CodeArea::writeInstr(void){
       if(i >= RECINSTRFETCH)
         i = 0;
     } while (i != fetchedInstr);
+    fprintf(ofile,"DUMP END\n\n");
     fclose(ofile);
     fprintf(stderr,
             "Wrote the %d most recently fetched instructions in file '%s'\n",
-            RECINSTRFETCH, InstrDumpFile);
+            RECINSTRFETCH, filename);
     fflush(stderr);
   } else
-    OZ_error("Cannot open file '%s'.", InstrDumpFile);
+    OZ_error("Cannot open file '%s'.", filename);
 } // CodeArea::writeInstr
 #endif
 
