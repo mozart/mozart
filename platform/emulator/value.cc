@@ -1366,6 +1366,7 @@ void pendingThreadDrop(PendingThreadList** pt, TaggedRef t) {
       p->dispose();
       return;
     }
+    pt=&((*pt)->next);
   }
 }
 
