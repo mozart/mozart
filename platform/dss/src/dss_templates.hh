@@ -260,6 +260,9 @@ public:
   Position<T> rear() { return afterlast; }
 
   // queue operations: append(), peek(), and pop().
+  void push(T const &e) { SimpleList<T>::push(e); check();}
+  bool remove(T const &e) { bool ret=SimpleList<T>::remove(e); check(); return ret;}
+
   void append(T const &e) { afterlast.insert(e); }
   T& peek() { return front().element(); }
   T pop() {
