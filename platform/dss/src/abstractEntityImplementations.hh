@@ -54,7 +54,7 @@ namespace _dss_internal{ //Start namespace
     AO_OO_UPDATE,
     AO_OO_CHANGES,
     AO_STATE_WRITE,
-    AO_STATE_READ,
+    AO_STATE_READ
   };
 
   // apply an abstract operation on a given abstract entity        

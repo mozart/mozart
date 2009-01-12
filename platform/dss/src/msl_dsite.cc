@@ -341,7 +341,7 @@ namespace _msl_internal{ //Start namespace
     buf.m_putInt(a_version);
     buf.writeToBuffer(a_key->getStringRep(), RSA_MARSHALED_REPRESENTATION);
     a_csSite->marshalCsSite(&buf);
-    Assert(buf.getUsed() == body_len);
+    Assert(buf.getUsed() <= body_len);
     buf.drop();     // detach buffer from body (to avoid deallocation)
 
     // compute body signature (and pad with random data)

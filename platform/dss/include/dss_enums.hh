@@ -53,7 +53,7 @@ enum OpRetVal{
 enum ProxyMarshalFlag{
   PMF_ORDINARY, 
   PMF_PUSH,
-  PMF_FREE,
+  PMF_FREE
 };
 const int PMF_NBITS = 4;
 

@@ -5626,11 +5626,11 @@ if test "${enable_opt+set}" = set; then
 fi
 
 case "$enable_opt" in
-    debug)
+    dbg | debug)
 	{ echo "$as_me:$LINENO: result: compile to debug mode" >&5
 echo "${ECHO_T}compile to debug mode" >&6; }
-	CXXFLAGS="-fno-inline -fno-default-inline -fno-inline-functions -DDEBUG_CHECK -DDSS_LOG -DINTERFACE -g3 -ggdb $CXX_BASE"
-	WARNINGS="-pedantic-errors"
+	CXXFLAGS="-O3 -fomit-frame-pointer -fno-inline -fno-default-inline -fno-inline-functions -DDEBUG_CHECK -DDSS_LOG -DINTERFACE -g3 -ggdb $CXX_BASE"
+	WARNINGS="-pedantic-errors $WARNINGS"
     ;;
     *)
 	{ echo "$as_me:$LINENO: result: compile optimized mode" >&5
