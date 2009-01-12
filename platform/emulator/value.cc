@@ -1365,7 +1365,8 @@ void pendingThreadDrop(PendingThreadList** pt, TaggedRef t) {
       OZ_unifyInThread(p->controlvar, oz_unit());   // maybe not useful...
       p->dispose();
       return;
-    }
+    } 
+    pt=&((*pt)->next);
   }
 }
 
