@@ -436,7 +436,7 @@ tags:	$(CREATEDFILES) version.cc
 	for d in $(SUBDIRS); do (cd $$d; $(MAKE) tags); done
 
 clean::
-	-rm -f gmon.out  fetchedInstr.dump verb_out.txt
+	-rm -f gmon.out  fetchedInstr*.dump verb_out.txt
 
 
 new-scanner:
