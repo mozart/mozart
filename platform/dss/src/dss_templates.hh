@@ -47,9 +47,10 @@ T1 t_max(const T1& t1, const T1& t2){ return ((t1 > t2) ? t1 : t2); }
 template <class T1>
 T1 t_min(const T1& t1, const T1& t2){ return ((t1 < t2) ? t1 : t2); }
 
+  //Yves: The two following procedures are still used by MsgCnt and by GCalgorithm. (2009.1.13)
+
   // ************* Garbage collect a list ************
   //
-  //Yves: Probably unused, replaced by t_gcList(SimpleList) below.
   template<class T1>
   void t_gcList(T1* const head){
     T1* tmp = head;
@@ -170,6 +171,7 @@ public:
   // in l; pos() returns true if pos is nonempty; *pos returns the
   // element; ++pos and pos++ shift to next position.
   void operator() (SimpleList<T> &s) { init(s); }
+  void operator() (SimpleNode<T>** p) { curPtr=p; }
   bool operator() () const { return hasElement(); }
   T&   operator*  () const { return element(); }
   Position<T> operator++ (int) { next(); return *this; }
@@ -184,9 +186,10 @@ template <typename T>
 class SimpleList {
   friend class Position<T>;
 
-private:
+protected:
   SimpleNode<T>* first;     // the first node
 
+private:
   SimpleList& operator=(const SimpleList&);
   SimpleList(const SimpleList&);
 
@@ -240,11 +243,70 @@ void t_gcList(SimpleList<Pair<C1*,T2> > &list) {
     (*p).first->m_makeGCpreps();
 }
 
+template <typename T>
+void t_gcList(SimpleQueue<T> &list) {
+  t_gcList(static_cast<SimpleList<T>&>(list));
+}
 
+template <typename T>
+class QueuePosition {
+private:
+  SimpleNode<T>** curPtr;     // a pointer to a pointer to the current node
+  Position<T>* afterlastP;
+public:
+  void init(SimpleQueue<T> &s) { curPtr = &(s.first); afterlastP=&(s.afterlast);}
+  
+  QueuePosition() : curPtr(NULL) {}
+  QueuePosition(SimpleQueue<T> &s) : curPtr(&(s.first)), afterlastP(&(s.afterlast)) {}
+  QueuePosition(SimpleQueue<T> *s) : curPtr(&(s->first)), afterlastP(&(s->afterlast)) {}
+
+  // check whether the position is empty, and return the element
+  bool hasElement() const { return *curPtr; }
+  bool isEmpty() const { return !hasElement(); }
+  T& element() const { return (*curPtr)->elem; }
+  
+  // jump to next position
+  void next() { curPtr = &((*curPtr)->next); }
+  // remove the element at the current position
+  void remove() {
+    SimpleNode<T>* node = *curPtr;
+    *curPtr = node->next;
+    if(!*curPtr){
+      (*afterlastP)(curPtr);
+    }
+    delete node;
+  }
+  // remove and return the element at the current position
+  T pop() { T e = element(); remove(); return e; }
+  // find the position of an element (after-last position if not found)
+  bool find(T const &e) {
+    while (hasElement() && !(element() == e)) next();
+    return hasElement();
+  }
+
+  // similar to the one above, but more convenient for pairs
+  template <typename T1>
+  bool find(T1 const &e1) { // find the pair whose first element is e1
+    while (hasElement() && !(element().first == e1)) next();
+    return hasElement();
+  }
+
+  // basic operator overloading: pos(l) sets pos at the first position
+  // in l; pos() returns true if pos is nonempty; *pos returns the
+  // element; ++pos and pos++ shift to next position.
+  void operator() (SimpleQueue<T> &s) { init(s); }
+  bool operator() () const { return hasElement(); }
+  T&   operator*  () const { return element(); }
+  QueuePosition<T> operator++ (int) { next(); return *this; }
+  QueuePosition<T>& operator++ () { next(); return *this; }
+  bool operator== (QueuePosition<T> const &p) { return curPtr == p.curPtr; }
+};
 
 // An implementation of a FIFO queue
 template <typename T>
-class SimpleQueue : public SimpleList<T> {
+class SimpleQueue : private SimpleList<T> {
+  friend void t_gcList<>(SimpleQueue<T>&);
+  friend class QueuePosition<T>;
 private:
   Position<T> afterlast;     // the after-last position, for appending
 
