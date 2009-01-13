@@ -84,7 +84,7 @@
 
   // We enable the dssLog utility here if flag is set
 #ifdef DSS_LOG
-  static char * const s_DLL_names[] ={
+  static const char * const s_DLL_names[] ={
     "DSS_NOTHING   ",
     "DSS_PRINT_INFO",
     "DSS_IMPORTANT ",

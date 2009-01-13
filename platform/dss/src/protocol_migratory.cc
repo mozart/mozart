@@ -117,7 +117,7 @@ namespace _dss_internal{ //Start namespace
   void
   ProtocolMigratoryManager::sendMigrateInfo(::MsgContainer* msg) {
     ProtocolManager::sendMigrateInfo(msg);
-    for (Position<Pair<DSite*, int> > p(a_chain); p(); p++) {
+    for (QueuePosition<Pair<DSite*, int> > p(a_chain); p(); p++) {
       msg->pushDSiteVal((*p).first);
       msg->pushIntVal((*p).second);
     }
@@ -162,7 +162,7 @@ namespace _dss_internal{ //Start namespace
     }
     case MIGM_TOKEN_HERE: {
       if (!isPermFail() && a_chain.front().find(sender)) {
-        Position<Pair<DSite*,int> > p(a_chain);
+        QueuePosition<Pair<DSite*,int> > p(a_chain);
         // remove all elements before sender
         while ((*p).first != sender) p.pop();
       }
@@ -180,7 +180,7 @@ namespace _dss_internal{ //Start namespace
     case MIGM_FAILED_SUCC: {
       // a proxy notifies that its successor has failed
       if (!isPermFail()) {
-        Position<Pair<DSite*,int> > p(a_chain);
+        QueuePosition<Pair<DSite*,int> > p(a_chain);
         p.find(sender); p++;     // p is on the sender's successor
         Assert(p());
         p.remove();              // remove the successor
@@ -206,7 +206,7 @@ namespace _dss_internal{ //Start namespace
       // state (for the given request).
       if (!isPermFail()) {
         int reqid = msg->popIntVal();
-        Position<Pair<DSite*,int> > p(a_chain);
+        QueuePosition<Pair<DSite*,int> > p(a_chain);
         if (p.find(sender) && (*p).second == reqid) {
           // drop all elements up to sender
           while (a_chain.pop().first != sender) ;
@@ -227,9 +227,9 @@ namespace _dss_internal{ //Start namespace
 
   // inquiry protocol around a failed proxy
   void ProtocolMigratoryManager::inquire(DSite* s) {
-    Position<Pair<DSite*,int> > cur(a_chain);
+    QueuePosition<Pair<DSite*,int> > cur(a_chain);
     bool found = false;
-    Position<Pair<DSite*,int> > other;
+    QueuePosition<Pair<DSite*,int> > other;
 
     // first try to find the closest non-failed predecessor
     while ((*cur).first != s) {

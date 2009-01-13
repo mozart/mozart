@@ -73,7 +73,7 @@ namespace _msl_internal{
   const int TRAILER = 1;                       // control flag
 
   void BufferedTransObj::marshal(MsgCnt *msgC, int acknum) {
-    int framesize;
+    size_t framesize;
     BYTE* pos;
 
     dssLog(DLL_TOO_MUCH,"TRANSOBJ      (%p): Marshal  ack:%d cont:%d",

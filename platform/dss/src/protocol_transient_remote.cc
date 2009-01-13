@@ -194,7 +194,7 @@ namespace _dss_internal{ //Start namespace
   void ProtocolTransientRemoteManager::makeGCpreps() {
     ProtocolManager::makeGCpreps();
     // mark all threads in buffered messages
-    for (Position<TR_request> p(a_requests); p(); p++) (*p).makeGCpreps();
+    for (QueuePosition<TR_request> p(a_requests); p(); p++) (*p).makeGCpreps();
   }
 
   // register a remote proxy at s
@@ -238,7 +238,7 @@ namespace _dss_internal{ //Start namespace
     static_cast<ProtocolTransientRemoteProxy*>(pp)->setToken(s == mySite);
 
     // forward buffered requests
-    for (Position<TR_request> p(a_requests); p(); p++) {
+    for (QueuePosition<TR_request> p(a_requests); p(); p++) {
       TR_request req = *p;
       if (req.type == PROT_PERMFAIL)
         sendToProxy(s, PROT_PERMFAIL);
