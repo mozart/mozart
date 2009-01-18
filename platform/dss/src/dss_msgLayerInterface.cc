@@ -579,9 +579,11 @@ namespace _dss_internal{
       gf_MarshalNumber(bb, a_buffer->a_end - a_buffer->a_vec);
       printf("marshaling, EBA totSize %d\n", a_buffer->a_end - a_buffer->a_vec);
     }
-    size_t marshalSize=0;
-    if(bb->availableSpace()>40) t_min(bb->availableSpace() - 40, static_cast<size_t>(a_buffer->a_end- a_cur));
-    printf("marshaling, EBC blockSize %d\n", marshalSize);
+    size_t marshalSize = (bb->availableSpace() > 40 ?
+                          t_min(bb->availableSpace() - 40,
+                                static_cast<size_t>(a_buffer->a_end- a_cur)) :
+                          0);
+    printf("marshaling, EBC blockSize %zu\n", marshalSize);
     gf_MarshalNumber(bb, marshalSize);
     bb->writeToBuffer(a_cur, marshalSize);
     a_cur+=marshalSize;
