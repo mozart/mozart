@@ -77,4 +77,11 @@
 
 #endif
 
+
+
+// Darwin specific stuff.  MUST BE DEFINED BEFORE INCLUDING select.h!
+#ifdef DARWIN
+#define _DARWIN_UNLIMITED_SELECT 1
+#endif
+
 #endif

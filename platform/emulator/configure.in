@@ -378,8 +378,14 @@ case $platform in
         fi
         CPPFLAGS="-DWINDOWS_EMULATOR -DDSS_STATIC_LINK $oz_a $CPPFLAGS"
     ;;
-    rhapsody* | darwin*)
+    rhapsody*)
         AC_DEFINE(RHAPSODY)
+        EMULDFLAGS="-Wl,-keep_private_externs"
+        TOOLLDCMD="$CC -dynamic -bundle -flat_namespace -undefined suppress"
+        : ${oz_enable_modules_static=no}
+    ;;
+    darwin*)
+        AC_DEFINE(DARWIN)
         EMULDFLAGS="-Wl,-keep_private_externs"
         TOOLLDCMD="$CC -dynamic -bundle -flat_namespace -undefined suppress"
         : ${oz_enable_modules_static=no}
