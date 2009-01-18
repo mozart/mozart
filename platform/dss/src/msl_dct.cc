@@ -88,7 +88,7 @@ namespace _msl_internal{
       } else 
 	return false;
     }
-    int len = t_min(static_cast<u32>(bb->availableData()), (a_size - getPosDiff()));
+    int len = t_min(bb->availableData(), (a_size - getPosDiff()));
     bb->readFromBuffer(a_pos, len);
     bb->commitRead(len);
     a_pos += len;
