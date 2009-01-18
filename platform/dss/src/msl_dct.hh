@@ -73,10 +73,10 @@ namespace _msl_internal{
 
     BYTE*     a_buf;
     BYTE*     a_pos;
-    u32       a_size;
+    size_t    a_size;
     DSDD_Mode a_mode;
 
-    inline u32 getPosDiff() const { return a_pos - a_buf; }
+    inline size_t getPosDiff() const { return a_pos - a_buf; }
 
     DssSimpleDacDct(const DssSimpleDacDct&):
       a_buf(NULL),a_pos(NULL),a_size(0),a_mode(DSDD_UNDEF){}
@@ -95,7 +95,7 @@ namespace _msl_internal{
     virtual ~DssSimpleDacDct(){ delete [] a_buf; }
 
 
-    u32 getSize() const { return a_size; }
+    size_t getSize() const { return a_size; }
 
     int  getData(BYTE*, const int&);
     void putData(BYTE*, const int&);
