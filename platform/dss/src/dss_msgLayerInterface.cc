@@ -237,10 +237,6 @@ namespace _dss_internal{
       {
 	return new PstContainer(m_getEnvironment()); 
       }
-    case ADCT_PDC:
-      {
-	return new PstDataContainer(m_getEnvironment()); 
-      }
     case ADCT_EBA:
       {
 	return new EdcByteArea(NULL); 
@@ -342,13 +338,6 @@ namespace _dss_internal{
   }
 
 
-  // ******************* PstDataContainer ************************
-  // RefCntdBuffer* a_buffer; 
-  // BYTE*          a_curr; 
-  
-
-  
-  
   size_t
   InfiniteWriteBuffer::availableSpace() const {
     return 10000; // he, he, he
@@ -396,61 +385,6 @@ namespace _dss_internal{
     return a_curBuf; 
   }
     
-  
-  class RefCntdBuffer{
-    int a_refCnt; 
-    static int allocated; 
-    SimpleBlockBuffer* a_buf; 
-    PstOutContainerInterface* a_out;
-  public: 
-
-    RefCntdBuffer(int sz):
-      a_refCnt(1), a_buf(new SimpleBlockBuffer(sz)), a_out(NULL)
-    {
-      ;
-    }
-
-    RefCntdBuffer(PstOutContainerInterface**& out):
-      a_refCnt(1), a_buf(NULL), a_out(reinterpret_cast<PstOutContainerInterface*>(0xbedda))
-    {
-      printf("Creating rcb:%p tot:%d\n", this, ++allocated); 
-      out = &a_out; 
-    }
-
-    ~RefCntdBuffer(){
-      printf("Deleteing rcb:%p tot:%d\n", this, --allocated); 
-      if(a_buf) delete a_buf; 
-      a_buf = NULL; 
-    }
-    
-    
-    SimpleBlockBuffer* m_getBuffer(){
-      if(a_buf == NULL)
-	{
-	  InfiniteWriteBuffer *iw = new InfiniteWriteBuffer(); 
-	  DebugCode(bool done =)
-	    a_out->marshal(iw);
-	  Assert(done); 
-	  a_buf = iw->m_getBuffer();  
-	  printf("marshalDone size:%d\n", a_buf->a_end- a_buf->a_vec); 
-	  
-	  delete iw; 
-	}
-      return a_buf; 
-    }
-    
-    void m_addRef(){ a_refCnt++;}
-    void m_delRef(){ if(--a_refCnt == 0) delete this;}
-  };
-  
-  
-
-  
-  int RefCntdBuffer::allocated = 0; 
-  
-  
-
-  
   class ReadBlockBuffer: public DssReadBuffer{
     BYTE*          a_cur; 
     BYTE*          a_end; 
@@ -479,89 +413,6 @@ namespace _dss_internal{
   };
   
   
-  // Called when creating a completly new container
-  PstDataContainer::PstDataContainer(DSS_Environment* env, PstOutContainerInterface** &pst):
-    DSS_Environment_Base(env),a_cntdBuf(new RefCntdBuffer(pst)), a_cur(NULL){
-  }
-
-  // Called when creating a replica
-  PstDataContainer::PstDataContainer(DSS_Environment* env, RefCntdBuffer* buf):
-    DSS_Environment_Base(env),  a_cntdBuf(buf),a_cur(NULL){
-    buf->m_addRef();
-  }
-
-  // Called when unmarshaling a container
-  PstDataContainer::PstDataContainer(DSS_Environment* env): 
-    DSS_Environment_Base(env), a_cntdBuf(NULL), a_cur(NULL){
-    ;
-  }
-  
-  PstDataContainer::~PstDataContainer(){
-    if(a_cntdBuf)
-      a_cntdBuf->m_delRef();
-    a_cntdBuf = NULL; 
-  }
-  
-  PstInContainerInterface* PstDataContainer::m_getPstIn(){
-    // raph: this operation might leak memory (the returned
-    // PstInContainerInterface will not be disposed).
-    Assert(0);
-    PstInContainerInterface* pstIn = m_getEnvironment()->a_map->createPstInContainer();
-    ReadBlockBuffer rb(a_cntdBuf->m_getBuffer()); 
-    pstIn->unmarshal(&rb);
-    return pstIn; 
-}
-  
-  PstDataContainer*      PstDataContainer::m_createReplica(){
-    return new PstDataContainer(m_getEnvironment(), a_cntdBuf); 
-  }
-
-  BYTE  PstDataContainer::getType(){
-    return ADCT_PDC;
-  }
-
-  bool PstDataContainer::marshal(DssWriteBuffer *bb){
-    // We could potentially check the value of the pst pointer
-    // if set to a dummy value, we could suspend serialization and 
-    // continue when teh pst is completley filled in.... Coool!!! 
-    SimpleBlockBuffer *buf = a_cntdBuf->m_getBuffer();
-    if (a_cur == NULL){
-      a_cur = buf->a_vec; 
-      gf_MarshalNumber(bb, buf->a_end-buf->a_vec);
-      printf("marshaling, RCB totSize %d\n", buf->a_end-buf->a_vec); 
-    }
-    
-    int marshalSize =  t_min(bb->availableSpace() - 40, static_cast<size_t>(buf->a_end- a_cur));
-    printf("marshaling, RCB blockSize %d\n", marshalSize); 
-    gf_MarshalNumber(bb, marshalSize); 
-    bb->writeToBuffer(a_cur, marshalSize); 
-    a_cur+=marshalSize;
-    return a_cur == buf->a_end;  
-  }    
-  
-  bool PstDataContainer::unmarshal(DssReadBuffer *bb){
-    if(a_cur == NULL){
-      int size = gf_UnmarshalNumber(bb);
-      printf("unmarshaling, RCB totSize %d\n", size); 
-      a_cntdBuf = new RefCntdBuffer(size); 
-      a_cur = a_cntdBuf->m_getBuffer()->a_vec; 
-    }
-    int marshalSize = gf_UnmarshalNumber(bb);
-    printf("unmarshaling, RCB blockSize %d\n", marshalSize); 
-    bb->readFromBuffer(a_cur, marshalSize); 
-    bb->commitRead(marshalSize);
-    a_cur += marshalSize; 
-    return  (a_cur ==  a_cntdBuf->m_getBuffer()->a_end) ;
-  }
-  
-  void PstDataContainer::dispose(){
-    delete this; 
-  }
-  void PstDataContainer::resetMarshaling(){
-    a_cur = NULL; 
-  }
-
-
   // ********************** EdcByteArea **********************
   EdcByteArea::EdcByteArea(SimpleBlockBuffer *bb):a_buffer(bb), a_cur(NULL){;}
   
