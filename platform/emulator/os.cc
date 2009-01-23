@@ -1025,11 +1025,7 @@ int osOpenMax()
   /* socket numbers may grow very large on Windows */
   return 100000;
 #else
-  int ret = sysconf(_SC_OPEN_MAX);
-  if (ret == -1) {
-    ret = _POSIX_OPEN_MAX;
-  }
-  return ret;
+  return FD_SETSIZE;
 #endif
 }
 
