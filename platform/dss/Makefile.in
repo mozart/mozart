@@ -2,7 +2,15 @@
 
 SRCDIR	=@srcdir@/src
 VPATH   = $(SRCDIR)
+PLATFORM = @host_os@
+
+ifeq ($(PLATFORM), cygwin)
+WINGMPINC = @wingmpinc@
+INCS    = -I. -I@srcdir@/include -I$(WINGMPINC)
+else
 INCS    = -I. -I@srcdir@/include
+endif
+
 LIBS    = -lgmp
 
 include ./Makefile.vars

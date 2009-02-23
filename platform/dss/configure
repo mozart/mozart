@@ -627,6 +627,7 @@ dvidir
 pdfdir
 psdir
 libdir
+wingmpinc
 localedir
 mandir
 DEFS
@@ -735,6 +736,7 @@ dvidir='${docdir}'
 pdfdir='${docdir}'
 psdir='${docdir}'
 libdir='${exec_prefix}/lib'
+wingmpinc='${prefix}/include'
 localedir='${datarootdir}/locale'
 mandir='${datarootdir}/man'
 
@@ -1079,7 +1081,7 @@ fi
 for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
 		datadir sysconfdir sharedstatedir localstatedir includedir \
 		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir
+		libdir wingmpinc localedir mandir
 do
   eval ac_val=\$$ac_var
   case $ac_val in
@@ -6284,6 +6286,7 @@ echo "${ECHO_T}-- adding cygwin environment --" >&6; }
 	CREATE_OBJS="%.o : \$(SRCDIR)/%.cc"
 	CREATE_OBJS_COMMAND="\$(CXX) \$(CXXFLAGS) -c \$(SRCDIR)/\$*.cc -o \$*.o"
 	CXXFLAGS="-DWIN32 $CXXFLAGS -mno-cygwin"
+	wingmpinc="$windlldir/../include"
     ;;
     solaris*)
 	{ echo "$as_me:$LINENO: result: -- adding solaris environment --" >&5
@@ -6326,14 +6329,12 @@ echo "${ECHO_T}$host_cpu architecture" >&6; }
 esac
 CXXFLAGS="$CPU_FLAGS $CXXFLAGS"
 
-
 if test "$prefix" = "" -o "$prefix" = "NONE"; then
     prefix=`pwd`
     { echo "$as_me:$LINENO: WARNING: No prefix supplied" >&5
 echo "$as_me: WARNING: No prefix supplied" >&2;}
     COPY_HEADERS=""
 fi
-
 
 
 
@@ -6814,6 +6815,7 @@ gives unlimited permission to copy, distribute and modify it."
 
 ac_pwd='$ac_pwd'
 srcdir='$srcdir'
+wingmpinc='$wingmpinc'
 INSTALL='$INSTALL'
 _ACEOF
 
