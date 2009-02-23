@@ -135,8 +135,11 @@ export
    reified:        Reified
    
    %%Symbolic propagators
-   %distinct:        Distinct
-   %distinctOffset:  DistinctOffset
+   distinct:        Distinct
+   distinctB:       DistinctB
+   distinctD:       DistinctD
+   distinctOffset:  DistinctOffset
+   distinctP: DistinctP
    atMost:          AtMost
    atLeast:         AtLeast
    exactly:         Exactly
@@ -160,7 +163,6 @@ export
    sortedP: Sorted
    extensionalP: Extensional
    cumulatives: Cumulatives
-   distinctP: DistinctP
    minP: MinP
    maxP: MaxP
    abs: Abs
@@ -508,6 +510,22 @@ define
       end
    end
    
+   proc {Distinct Vec}
+      {GFDP.gfd_distinct_3 Vec Cl.val Pk.def}
+   end
+
+   proc {DistinctB Vec}
+      {GFDP.gfd_distinct_3 Vec Cl.bnd Pk.def}
+   end
+
+   proc {DistinctD Vec}
+      {GFDP.gfd_distinct_3 Vec Cl.dom Pk.def}
+   end
+
+   proc {DistinctOffset Vargs Iargs}
+      {GFDP.gfd_distinct_4 Iargs Vargs Cl.def Pk.def}
+   end
+
    proc {DistinctP S}
       Sc =  Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
