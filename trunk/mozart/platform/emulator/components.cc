@@ -506,6 +506,28 @@ Bool pickle2text()
 // class ByteSource
 // ===================================================================
 
+typedef struct {
+  int major, minor;
+} MajorMinor;
+
+// lists which pickle versions can be read
+static MajorMinor pickleCompat[] = {
+  { 4, 0 },		     // must be MARSHALERMAJOR, MARSHALERMINOR
+  { 3, 3 }
+};
+
+// returns TRUE if the given pickle version can be read
+Bool canLoadPickleVersion(int major, int minor) {
+  const int sz = sizeof(pickleCompat) / sizeof(MajorMinor);
+
+  for (int i = 0; i < sz; i++) {
+    if (major == pickleCompat[i].major && minor == pickleCompat[i].minor)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 //
 typedef enum {
   CLT_OK = 0,
@@ -526,7 +548,7 @@ LoadTermRet loadTerm(PickleBuffer *buf, char* &vers, OZ_Term &t)
   int major, minor;
   if (sscanf(vers,"%d#%d", &major, &minor) != 2)
     return (CLT_NOPICKLE);
-  if (major != MARSHALERMAJOR || minor != MARSHALERMINOR)
+  if (!canLoadPickleVersion(major, minor))
     return (CLT_WRONGVERS);
 
   t = unpickleTerm(buf);
