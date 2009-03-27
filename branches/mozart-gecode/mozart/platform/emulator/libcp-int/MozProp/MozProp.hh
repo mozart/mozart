@@ -100,17 +100,23 @@ public:
 
   Gecode::ExecStatus propagate(Gecode::Space *s, Gecode::ModEventDelta);
 };
-/*
-/*
-class DisjointCProp: public Gecode::TernaryPropagator<Gecode::Int::IntView, PC_INT_DOM >
+
+
+//------------- Reified version of Disjoint propagator
+
+class DisjointCProp: public Gecode::MixTernaryPropagator<Gecode::Int::IntView, PC_INT_DOM, Gecode::Int::IntView, PC_INT_DOM, Gecode::Int::BoolView, 
+PC_BOOL_NONE >
 {
 private:
   int xd, yd;
+  
 public:
   DisjointCProp(Gecode::Space *s, Gecode::Int::IntView x0, Gecode::Int::IntView x1, Gecode::Int::BoolView x2, int xd, int yd):
-    Gecode::TernaryPropagator<Gecode::Int::IntView, PC_INT_DOM>(s,x0,x1,static_cast<Gecode::Int::IntView>(x2)), xd(xd), yd(yd) {}
+    Gecode::MixTernaryPropagator<Gecode::Int::IntView, PC_INT_DOM, Gecode::Int::IntView, PC_INT_DOM, Gecode::Int::BoolView, 
+PC_BOOL_NONE >(s,x0,x1,x2), xd(xd), yd(yd) {}
   DisjointCProp(Gecode::Space *s, bool share, DisjointCProp &p):
-    Gecode::TernaryPropagator<Gecode::Int::IntView, PC_INT_DOM>(s,share,p), xd(xd), yd(yd) {}
+    Gecode::MixTernaryPropagator<Gecode::Int::IntView, PC_INT_DOM, Gecode::Int::IntView, PC_INT_DOM, Gecode::Int::BoolView, 
+PC_BOOL_NONE >(s,share,p), xd(xd), yd(yd) {}
 
   Gecode::Actor* copy(Gecode::Space *s, bool share) {
     return new(s) DisjointCProp(s,share,*this);
@@ -120,9 +126,9 @@ public:
   
   void LessEqX(Gecode::Space *s);
   
-  Gecode::ExecStatus propagate(Gecode::Space *s);
+  Gecode::ExecStatus propagate(Gecode::Space *s, Gecode::ModEventDelta);
 };
-*/
+
 //-------------------------------------------------------------------------------------
 
 class ReifiedIntProp: public Gecode::ReUnaryPropagator<Gecode::Int::IntView, PC_INT_DOM, Gecode::Int::BoolView>

@@ -82,10 +82,17 @@ $boot_module_name      		  = "GFD";
  },
  
  'int_disjoint' => {
-     in  => ['+value','+value','int','+value'],
+     in  => ['+value','int', '+value','+int'],
      out => [],
      bi  => int_disjoint
  },
+
+ 'int_disjointC' => {
+     in  => ['+value','int','+value','int','+value'],
+     out => [],
+     bi  => int_disjointC
+ },
+
 ###
 ## TODO: what is this for? the same as distributor? 
 # 'assign' => { 

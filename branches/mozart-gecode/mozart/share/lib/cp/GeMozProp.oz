@@ -119,7 +119,7 @@ end
    
 %%Miscellaneous propagators
 %Disjoint = Int_disjoint
-DisjointC = _
+DisjointC = GFDP.int_disjointC
 
 proc{Plus D1 D2 D3}
    {Sum [D1 D2] '=:' D3}

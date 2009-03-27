@@ -104,56 +104,82 @@ Gecode::ExecStatus DisjointProp::propagate(Gecode::Space *s, Gecode::ModEventDel
   
   return Gecode::ES_FIX;
 }
-/*
+
+////// DisjointC propagation methods
+
 void DisjointCProp::LessEqY(Gecode::Space *s) {
-  GECODE_AUTOARRAY(Gecode::Int::Linear::Term, t, 2);
+  GECODE_AUTOARRAY(Gecode::Int::Linear::Term<Gecode::Int::IntView>, t, 2);
+  
   t[0].a = 1; t[1].a = -1;
   t[0].x = x0; t[1].x = x1;
   Gecode::Int::Linear::post(s,t,2,Gecode::IRT_GQ,yd);
 }
 
 void DisjointCProp::LessEqX(Gecode::Space *s) {
-  GECODE_AUTOARRAY(Gecode::Int::Linear::Term,t,2);
+  GECODE_AUTOARRAY(Gecode::Int::Linear::Term<Gecode::Int::IntView>,t,2);
   t[0].a = -1; t[1].a = 1;
   t[0].x = x0; t[1].x = x1;
   Gecode::Int::Linear::post(s,t,2,Gecode::IRT_GQ,xd);
 }
 
-Gecode::ExecStatus DisjointCProp::propagate(Gecode::Space *s) {
+Gecode::ExecStatus DisjointCProp::propagate(Gecode::Space *s, Gecode::ModEventDelta) {
   int xl = x0.min(), xu = x0.max();
-  int yl = x1.min(), yu = x1.min();
-  Gecode::Int::BoolView b(x2);
-  
+  int yl = x1.min(), yu = x1.max();
+    
   if(xu + xd <= yl) {
-    GECODE_ME_CHECK(b.eq(s,0));
+    GECODE_ME_CHECK(x2.eq(s,0));
     return Gecode::ES_SUBSUMED(this,s);
   }
+
   if(yu + yd <= xl) {
-    GECODE_ME_CHECK(b.eq(s,1));
+    GECODE_ME_CHECK(x2.eq(s,1));
     return Gecode::ES_SUBSUMED(this,s);
   }
+
   if(xl + xd > yu) {
-    GECODE_ME_CHECK(b.eq(s,1));
+    GECODE_ME_CHECK(x2.eq(s,1));
     LessEqY(s);
     return Gecode::ES_SUBSUMED(this,s);
   }
+
   if(yl + yd > xu) {
-    GECODE_ME_CHECK(b.eq(s,0));
+    GECODE_ME_CHECK(x2.eq(s,0));
     LessEqX(s);
     return Gecode::ES_SUBSUMED(this,s);
   }
   
-  if(b.zero()) {
+  if(x2.zero()) {
     LessEqX(s);
     return Gecode::ES_SUBSUMED(this,s);
   }
-  if(b.one()) {
+
+  if(x2.one()) {
     LessEqY(s);
     return Gecode::ES_SUBSUMED(this,s);
   }
+
+  int lowx, lowy, upx, upy;
+  
+  lowx = yu-xd+1; lowy = xu-yd+1;
+  upx = yl+yd-1; upy = xl+xd-1;
+
+  if (lowx <= upx) {
+    Gecode::IntSet is(lowx,upx);
+    Gecode::IntSetRanges isr(is);
+    GECODE_ME_CHECK(x0.minus_r(s, isr));
+  }
+  
+  if (lowy <= upy) {
+    Gecode::IntSet is(lowy,upy);
+    Gecode::IntSetRanges isr(is);
+    GECODE_ME_CHECK(x1.minus_r(s, isr));
+  }
+
   return Gecode::ES_FIX;
 }
-*/
+
+
+
 //--------------------------------------------------------------------------------
 Gecode::ExecStatus ReifiedIntProp::propagate(Gecode::Space *s, Gecode::ModEventDelta) {
   //    Gecode::IntVarRanges v1(x0);
@@ -257,13 +283,13 @@ void Disjoint(Gecode::Space *s, IntVar D1, int I1, IntVar D2, int I2) {
  * @param D3 BoolVar
  */
 
-/*
+
  void DisjointC(Gecode::Space *s, IntVar D1, int I1, IntVar D2, int I2, BoolVar D3) {
 
   if(s->failed()) return;
   (void) new(s) DisjointCProp(s,D1,D2,D3,I2,I2);
   }
-*/
+
 /**
  * \brief Create a propagator that when x \in d implique  b = 1 other case b = 0
  * @param s Space
