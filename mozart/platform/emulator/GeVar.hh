@@ -400,7 +400,7 @@ public:
     int index = var->getIndex();
     Board *ib = extVar2Var(get_GeVar(ov))->getBoardInternal()->derefBoard();
     if (ib != oz_currentBoard()) {
-      printf("VR First time recreating variable%d\n", ib == oz_currentBoard());
+      //printf("VR First time recreating variable%d\n", ib == oz_currentBoard());
       fflush(stdout);
            
       /*
@@ -517,7 +517,7 @@ public:
     int index = var->getIndex();
     Board *ib = extVar2Var(get_GeVar(ov))->getBoardInternal()->derefBoard();
     if (ib != oz_currentBoard()) {
-      printf("DR First time recreating variable%d\n", ib == oz_currentBoard());
+      //printf("DR First time recreating variable%d\n", ib == oz_currentBoard());
       fflush(stdout);
            
       /*

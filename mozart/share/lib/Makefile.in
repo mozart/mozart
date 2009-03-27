@@ -95,7 +95,7 @@ export OZMAKE_VERBOSE		= no
 SPSRC   = Error ErrorFormatters Finalize Service $(DENYS_SPSRCS)
 OPSRC   = Open ZlibIO
 APSRC   = Application
-CPSRC1  = Search FD FS Combinator RecordC GFD GBD GFS
+CPSRC1  = Search FD FS Combinator RecordC GFD GBD GFS OFD
 CPSRC2  = Schedule ParSearch ParWorker ParLogging
 DPSRC   = Connection Discovery Remote RemoteServer Fault URL DPStatistics \
 	  DP DPDefaults DPErrorFormatters DPService Site $(DENYS_DPSRCS)
@@ -198,6 +198,9 @@ GBD.ozf: cp/GBD.oz
 	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 GFS.ozf: cp/GFS.oz
+	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
+
+OFD.ozf: cp/OFD.oz
 	$(COMPILE) $(shell $(CYGPATH) "$<") -o $@
 
 CpSupport.ozf: cp/CpSupport.oz Base.ozf

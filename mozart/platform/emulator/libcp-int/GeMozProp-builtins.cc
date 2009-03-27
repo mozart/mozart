@@ -76,23 +76,20 @@ OZ_BI_define(int_disjoint,4,0)
 
 OZ_BI_define(int_disjointC,5,0)
 {
-
+  DeclareGSpace(sp);
   OZ_declareInt(1,i2);
   OZ_declareInt(3,i4);
-  GenericSpace *sp;
   DeclareGeIntVar(0,v1,sp);
   DeclareGeIntVar(2,v3,sp);
-
-  DeclareGeIntVar(4,v5,sp);
-
-  /*
+  
+  DeclareGeBoolVar(4, v5, sp);
+    
   try{
     DisjointC(sp,v1,i2,v3,i4,v5);    
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
-
-    }*/
+  }
 
   return PROCEED;
 

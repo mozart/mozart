@@ -4,6 +4,9 @@
 %%%     Alberto Delgado <adelgado@cic.puj.edu.co>
 %%%     Alejandro Arbelaez <aarbelaez@puj.edu.co>
 %%%
+%%%  Contributors:
+%%%     Gustavo A. Gomez Farhat <gafarhat@univalle.edu.co>
+%%%
 %%% Copyright:
 %%%     Gustavo Gutierrez, 2006
 %%%     Alberto Delgado, 2006
@@ -30,22 +33,15 @@
 declare
 
 fun{Queens N}
-   proc{$ Root}
-      C1 = {List.number 1 N 1}
-      C2 = {List.number ~1 ~N ~1}
-      %D
-      L1 L2
+   proc{$ Row}
+      L1N = {List.number 1 N 1}
+      LM1N = {List.number ~1 ~N ~1}
    in
-      Root = {GFD.list N 1#N}
-      {List.takeDrop Root 3 L1 L2}
-      %D = {List.toTuple '#' Root}
-      {GFD.distinctP post(Root cl:GFD.cl.val)}
-      {GFD.distinctP post(Root C1 cl:GFD.cl.val)}
-      {GFD.distinctP post(Root C2 cl:GFD.cl.val)}
-      %{GFD.distribute generic(order:min value:splitMax) L1}
-      {GFD.distribute algo(order:naive) L1}
-      %{GFD.distribute generic(order:max value:splitMax) L2}
-      {GFD.distribute algo(order:naive) L2}
+      Row = {GFD.tuple queens N 1#N}
+      {GFD.distinctP post(Row cl:GFD.cl.val)}
+      {GFD.distinctOffset post(Row L1N)}
+      {GFD.distinctOffset post(Row LM1N)}
+      {GFD.distribute ff Row}
    end
 end
 
