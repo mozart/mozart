@@ -38,6 +38,9 @@ void GeVar::test(){
 
 //template <class VarImp, Gecode::PropCond pc>
 void GeVar::printStreamV(ostream &out,int depth) {
-  ensureDomReflection();
-  toStream(out);
+  if(GenericSpace *gs =  
+     extVar2Var(this)->getBoardInternal()->getGenericSpace(true)){
+    ensureDomReflection();
+    toStream(out);
+  }
 }

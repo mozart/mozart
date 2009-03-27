@@ -95,8 +95,7 @@ export
    
    %%Mozart Propagators (backward compatibility))
    int_sumCN:            Int_sumCN
-  % int_disjoint:         Int_disjoint
-   %int_reified_int:      Int_reified_int
+     %int_reified_int:      Int_reified_int
    
    
    %%Miscellaneous propagators
@@ -116,10 +115,12 @@ export
    lessEq:          LessEq
    greater:         Greater
    greaterEq:       GreaterEq
-%   disjoint:        Disjoint 
+   disjoint:        Disjoint 
    disjointC:       DisjointC
    sqrt:            Sqrt
    divmod:          DivMod
+   max:             FdMaximum
+   min:             FdMinimum
    
    
    %%Generic Propagators
@@ -298,11 +299,10 @@ define
    %%Mozart Propagators (backward compatibility))
    
    Int_sumCN =   GFDP.int_sumCN
-   %Int_disjoint =   GFDP.int_disjoint
-   %Int_reified_int =   GFDP.int_reified_int
-   
+   Disjoint = GFDP.int_disjoint
+      
    %% Assignment propagators
-   %%Assign = GFDP.'assign'
+   
    proc {Assign Spec V}
       {Wait {GFDP.assign Spec V}}
    end
@@ -522,12 +522,22 @@ define
       {GFDP.gfd_distinct_3 Vec Cl.dom Pk.def}
    end
 
-   proc {DistinctOffset Vargs Iargs}
-      {GFDP.gfd_distinct_4 Iargs Vargs Cl.def Pk.def}
+   proc {DistinctOffset S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      W = {Record.width Sc}
+   in
+      case W
+      of 4 then
+	 % Notice that in Mozart the integer list is the second argument, but in
+	 % Gecode it is the first one
+	 {GFDP.gfd_distinct_4 Sc.2 Sc.1 Sc.cl Sc.pk}
+      else
+	 raise malformed('DistinctOffset constraint post') end
+      end
    end
-
+   
    proc {DistinctP S}
-      Sc =  Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
    in
       case W
@@ -627,6 +637,14 @@ define
       else
 	 raise malformed('Power constraint post') end
       end
+   end
+
+   proc {FdMaximum V1 V2 V3}
+      {GFDP.gfd_max_5 V1 V2 V3 Cl.def Pk.def}
+   end
+
+   proc {FdMinimum V1 V2 V3}
+      {GFDP.gfd_min_5 V1 V2 V3 Cl.def Pk.def}
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
