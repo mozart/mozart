@@ -101,6 +101,7 @@ Reified.sumCN = SumCNR
 Reified.sumAC = SumACR
 Reified.sumACN = SumACNR
 Reified.distance = DistanceR
+Reified.card = GFDP.'int_reifiedCard'
 
 %%Symbolic propagators
    
