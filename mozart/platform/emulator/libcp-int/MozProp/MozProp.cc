@@ -213,6 +213,110 @@ Gecode::ExecStatus ReifiedIntProp::propagate(Gecode::Space *s, Gecode::ModEventD
   return Gecode::ES_FIX;
 }
 
+//-----------------------------------------------------------------------------
+
+Gecode::ExecStatus ReifiedCardProp::propagate(Gecode::Space *s, Gecode::ModEventDelta){
+
+  int size = x.size();
+  
+  if(size == 0)
+    return ES_FAILED;
+
+  int i, ones, zeroes, possibles;
+  int yLow = y.min(); int yUp = y.max();
+  int zLow = z.min(); int zUp = z.max();
+
+  
+  if(bo.assigned()){
+    if(bo.one()){
+      GECODE_ME_CHECK(y.lq(s, zUp));
+      GECODE_ME_CHECK(z.gq(s, yLow));
+      yUp = y.max();
+      zLow = z.min();
+    }
+  } else if (yLow > zUp) {
+    GECODE_ME_CHECK(bo.zero(s));
+    return ES_FIX;
+  }
+
+  ones = 0;
+  zeroes = 0;
+  
+  for (i = size; i--; ) 
+    if (x[i].assigned())
+      if (x[i].zero())
+	zeroes++;
+      else
+	ones++;
+  
+  possibles = size - zeroes;
+  
+
+  if ((ones > zUp) || (possibles < yLow)) {
+    GECODE_ME_CHECK(bo.zero(s));
+    return ES_FIX;
+  }
+  
+  if ((ones >= yUp) && (possibles <= zLow)) {
+    GECODE_ME_CHECK(bo.one(s));
+    return ES_FIX;
+  }
+  
+  if(bo.assigned()){
+    if (bo.one()) {
+      if ((ones == zUp) && (possibles - ones > 0)) {
+	// impose negatively
+	for (i = size; i--; ) 
+	  if (!x[i].assigned()) 
+	    GECODE_ME_CHECK(x[i].zero(s));
+	return ES_FIX;
+      }
+      
+      if ((possibles == yLow) && (possibles - ones > 0)) {
+	// impose positively
+	for (i = size; i--; ) 
+	  if (!x[i].assigned())
+	    GECODE_ME_CHECK(x[i].one(s));
+	return ES_FIX;
+      }
+      GECODE_ME_CHECK(y.lq(s, possibles));
+      GECODE_ME_CHECK(z.gq(s, ones));
+    } else if (bo.zero()) {
+      if ((ones == yLow - 1) && (possibles <= zLow) && (possibles - ones > 0)) {
+	// impose negatively
+	for (i = size; i--; ) 
+	  if (!x[i].assigned()) 
+	    GECODE_ME_CHECK(x[i].zero(s));
+	return ES_FIX;
+      }
+      
+      if ((possibles == zLow + 1) && (ones >= yUp) && (possibles - ones > 0)) {
+	// impose positively
+	for (i = size; i--; ) 
+	  if (!x[i].assigned())
+	    GECODE_ME_CHECK(x[i].one(s));
+	return ES_FIX;
+      }
+      
+      if (yUp <= ones) 
+	GECODE_ME_CHECK(z.lq(s, possibles -1));
+      if (zLow >= possibles) 
+	GECODE_ME_CHECK(y.gq(s, ones + 1));
+    }
+  } 
+ 
+  if(y.assigned() && z.assigned() && bo.assigned()){
+    for(i=0; i<size; i++){
+      if(!x[i].assigned()) return ES_NOFIX;
+    }
+    return ES_FIX;
+  }
+  
+  return ES_NOFIX;
+  
+}
+
+
 //--------------------------------------------------------------------------------
 
 /**
@@ -300,6 +404,20 @@ void Disjoint(Gecode::Space *s, IntVar D1, int I1, IntVar D2, int I2) {
 void ReifiedInt(Gecode::Space *s, Gecode::IntVar x, Gecode::BoolVar b, const Gecode::IntVar d) {
   if(s->failed()) return;
   (void) new(s) ReifiedIntProp(s, x, b,d);
+}
+
+
+/**
+ * \brief Create a propagator 
+ * @param s Space
+ * @param x IntVar
+ * @param b BoolVarArgs
+ * @param z IntVar
+ * @param bo BoolVar
+ */
+void ReifiedCard(Gecode::Space *s, IntView x, ViewArray<BoolView> y, IntView z, BoolView bo) {
+  if(s->failed()) return;
+  (void) new(s) ReifiedCardProp(s, x, y, z, bo);
 }
 
 #endif

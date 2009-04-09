@@ -152,11 +152,31 @@ public:
 
 //-------------------------------------------------------------------------------------
 
+class ReifiedCardProp : 
+  public Gecode::MixNaryOnePropagator<BoolView, PC_BOOL_VAL, IntView, PC_INT_DOM>
+{
+private:
+  IntView z;
+  BoolView bo;
+public:
+  ReifiedCardProp(Gecode::Space *s, IntView x, ViewArray<BoolView> bv, IntView _z, BoolView _bo) :
+    MixNaryOnePropagator<BoolView, PC_BOOL_VAL, IntView, PC_INT_DOM>(s,bv, x), z(_z), bo(_bo) {}
+  ReifiedCardProp(Gecode::Space *s,bool share, ReifiedCardProp &p) :
+    Gecode::MixNaryOnePropagator<BoolView, PC_BOOL_VAL, IntView, PC_INT_DOM>(s,share, *this) {}
+  Gecode::Actor* copy(Gecode::Space *s, bool share){
+    return new(s) ReifiedCardProp(s, share, *this);
+  }
+  Gecode::ExecStatus propagate(Gecode::Space *s, Gecode::ModEventDelta);
+};
+
+//-------------------------------------------------------------------------------------
+
 void WatchMin(Gecode::Space *s, IntVar a, IntVar b, int Num);
 void WatchMax(Gecode::Space *s, Gecode::IntVar a, Gecode::IntVar b, int Num);
 void WatchSize(Gecode::Space *s, IntVar a, IntVar b, int Num);
 void Disjoint(Gecode::Space *s, IntVar D1, int I1, IntVar D2, int I2);
 void DisjointC(Gecode::Space *s, IntVar D1, int I1, IntVar D2, int I2, BoolVar D3);
 void ReifiedInt(Gecode::Space *s, Gecode::IntVar x, Gecode::IntVar b, const Gecode::IntSet d);
+void ReifiedCard(Gecode::Space *s, IntView x, ViewArray<BoolView> y, IntView z, BoolView bo);
 
 #endif
