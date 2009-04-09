@@ -93,6 +93,11 @@ $boot_module_name      		  = "GFD";
      bi  => int_disjointC
  },
 
+ 'int_reifiedCard' => {
+     in  => ['+value','value','value','value'],
+     out => [],
+     bi  => gfd_reifiedCard},
+
 ###
 ## TODO: what is this for? the same as distributor? 
 # 'assign' => { 

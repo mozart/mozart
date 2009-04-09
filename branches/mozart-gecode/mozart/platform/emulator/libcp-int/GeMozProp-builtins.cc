@@ -483,6 +483,41 @@ OZ_BI_define(reified_dom,3,0){
 	}
 	CHECK_POST(sp);
 } OZ_BI_end
+
+
+OZ_BI_define(gfd_reifiedCard, 4, 0){
+
+  
+  DeclareGSpace(home);
+  IntVar& iv1 = intOrIntVar(OZ_in(0));
+  DECLARE_BOOLVARARGS(1, bva, home);
+  IntVar& iv2 = intOrIntVar(OZ_in(2));
+  DeclareGeBoolVar(3, bo, home);
+  
+  IntView ew1(iv1);
+  IntView ew2(iv2);
+  
+  ViewArray<BoolView> varr(home, bva);
+  BoolView bv(bo);
+  
+//   for(int i=0; i<bva.size(); i++){
+//     printf("bucle...\n");fflush(stdout);
+//     BoolView vvv(bva[i]);
+//     varr[i] = vvv;
+//   }
+  
+  try {
+    ReifiedCard(home, ew1, varr, ew2, bv);
+  } catch (Exception e){
+      RAISE_GE_EXCEPTION(e);
+  }
+
+
+  return PROCEED;
+
+} OZ_BI_end
+
+
 // 0/1 propagators
 OZ_BI_define(bool_Gand,4,0)
 {
