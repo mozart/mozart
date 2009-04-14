@@ -61,6 +61,19 @@
     }									\
     else return OZ_typeError(p,"SetVar or SetValue");			\
   }
+
+/**
+ * Return a SetVar pointer from a GeSetVar or SetValue
+ * @param set GeSetVar or SetValue
+ */
+inline
+SetVar * setOrSetVar(TaggedRef set){
+  if(SetValueM::OZ_isSetValueM(set)){
+    return new SetVar((oz_currentBoard()->getGenericSpace()), SetValueM::tagged2SetVal(set)->getLBValue(), SetValueM::tagged2SetVal(set)->getLBValue());
+  } else if (OZ_isGeSetVar(set)){
+    return get_SetVarPtr(set);
+  }
+}
   
 /**
  * \brief Declares a GeSetVar inside a var array. Space stability is affected as a side effect. 
@@ -88,6 +101,56 @@
  */
 #define DECLARE_SETVARARGS(tIn,array,sp) DECLARE_VARARGS(tIn,array,sp,SetVarArgs,DeclareGeSetVarVA)
 
+/**
+ * Returns a SetVarArgs from a List, tuple or
+ * record. The structure only allows GeSetVar or SetValues.
+ * @param vaar is a vector of GeSetVar or SetValues
+ */
+inline
+SetVarArgs getSetVarArgs(TaggedRef vaar){
+  int sz;
+  TaggedRef t = vaar;
+
+  Assert(OZ_isSetVarArgs(vaar));
+
+  if(OZ_isLiteral(OZ_deref(t))) {
+    sz=0;
+    SetVarArgs array(sz);
+    return array;
+  } else
+    if(OZ_isCons(t)) {
+      sz = OZ_length(t);
+      SetVarArgs array(sz);
+      for(int i=0; OZ_isCons(t); t=OZ_tail(t),i++){
+	SetVar *sv = setOrSetVar(OZ_deref(OZ_head(t)));
+	array[i] = *sv;
+	delete sv;
+      }
+      return array;
+    } else 
+      if(OZ_isTuple(t)) {
+	sz=OZ_width(t);
+	SetVarArgs array(sz);
+	for(int i=0; i<sz; i++) {
+	  SetVar *sv = setOrSetVar(OZ_getArg(t,i));
+	  array[i] = *sv;
+	  delete sv;
+	}
+	return array;
+      } else {
+	Assert(OZ_isRecord(t));
+	OZ_Term al = OZ_arityList(t);
+	sz = OZ_width(t);
+	SetVarArgs array(sz);
+	for(int i=0; OZ_isCons(al); al=OZ_tail(al),i++) {
+	  SetVar *sv = setOrSetVar(OZ_subtree(t,OZ_head(al)));
+	  array[i] = *sv;
+	  delete sv;
+	}
+	return array;
+      }  
+}
+
 
 /**
    ############################## New variables from Gecode declare macros ##############################
@@ -104,6 +167,16 @@
     OZ_TOC(arg,int,__vv,OZ_isInt,OZ_intToC,"Expected relation type") ;	\
     var = (SetRelType)__vv;						\
   }
+
+/**
+ * \brief Returns a SetRelType from a integer
+ * @param srt is a number between 0 and 5
+ */
+inline
+SetRelType getSetRelType(TaggedRef srt){
+  Assert(OZ_isSetRelType(srt));
+  return (SetRelType) OZ_intToC(srt);
+}
   
 /**
  * \brief Declares a Gecode::SetOpType form a integer value.
@@ -122,5 +195,15 @@
     default: return OZ_typeError(arg,"Expecting atom with a set operation: Union, Disjoint union, Intersection, Difference"); \
     }}	
 
+
+/**
+ * \brief Returns a SetOpType from a integer
+ * @param sot is a number between 0 and 3
+ */
+inline 
+SetOpType getSetOpType(TaggedRef sot){
+  Assert(OZ_isSetOpType(sot));
+  return (SetOpType) OZ_intToC(sot);
+}
 
 #endif

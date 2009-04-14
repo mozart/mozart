@@ -72,15 +72,36 @@ public:
   }
 
   // the returned reference should be constant
-  SetVar& getSetVarInfo() {
+  SetVar& getSetVarInfo(void) {
     Set::SetView sv(static_cast<SetVarImp*>(getGSpace()->getVar(index)));
     SetVar *tmp = new SetVar(sv);
     return (*tmp);
   }
 
+
+  /**
+   * Methods getSetVarPtr & getSetVarInfoPtr are intented to
+   * provide access to gecode variables with clean memory
+   * magnament. The returned pointer *most be deleted* whenever
+   * it is used.
+   */
+  SetVar * getSetVarPtr(void) {
+    GenericSpace *gs = getGSpace();
+    Set::SetView sv(static_cast<SetVarImp*>(gs->getVar(index)));
+    gs->makeUnstable();
+    return new SetVar(sv);
+  }
+
+  SetVar * getSetVarInfoPtr(void) {
+    Set::SetView sv(static_cast<SetVarImp*>(getGSpace()->getVar(index)));
+    return new SetVar(sv);
+  }
+
+  
+  //this is really working?
   virtual void printDomain(void) {
     Assert(false);
-    SetVar tmp = getSetVarInfo();
+    SetVar *tmp = getSetVarInfoPtr();
   }
   
   /**
@@ -111,17 +132,20 @@ public:
   virtual TaggedRef newVar(void);
 
   virtual void propagator(GenericSpace *s, GeVar *lgevar, GeVar *rgevar) {
-    SetVar& lsetvar = (static_cast<GeSetVar*>(lgevar))->getSetVarInfo();
-    SetVar& rsetvar = (static_cast<GeSetVar*>(rgevar))->getSetVarInfo();    
-    rel(s,lsetvar, Gecode::SRT_EQ,rsetvar);
+    SetVar *lsetvar = (static_cast<GeSetVar*>(lgevar))->getSetVarInfoPtr();
+    SetVar *rsetvar = (static_cast<GeSetVar*>(rgevar))->getSetVarInfoPtr();    
+    rel(s,*lsetvar, Gecode::SRT_EQ,*rsetvar);
+    delete lsetvar, rsetvar;
   }
 
   // TODO: see whether when getSetVarInfo is used is it possible to use a view.
   virtual ModEvent bind(GenericSpace *s, GeVar *v, OZ_Term val) {    
-    printf("bind GeSetVar.hh");fflush(stdout);
+    //printf("bind GeSetVar.hh");fflush(stdout);
     IntSetRanges tmpLB(SetValueM::tagged2SetVal(val)->getLBValue());
     IntSetRanges tmpUB(SetValueM::tagged2SetVal(val)->getUBValue());
-    SetView ViewVar(getSetVarInfo());    
+    SetVar *sv = getSetVarInfoPtr();
+    SetView ViewVar(*sv);    
+    delete sv;
     if(ViewVar.intersectI(s,tmpUB)!=Gecode::ME_GEN_FAILED)    
       return ViewVar.includeI(s,tmpLB);  
     return Gecode::ME_GEN_FAILED;
@@ -167,11 +191,11 @@ namespace {
 
 inline OZ_Term new_GeSetVar(IntSet glb,  IntSet lub) {
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
-  SetVar x(sp,glb, lub);
+  SetVar *x = new SetVar(sp,glb, lub);
   GeSetVar *nv = new GeSetVar(sp->getVarsSize());
   OzVariable* ov   = extVar2Var(nv);
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
-  int index        = sp->newVar(static_cast<VarImpBase*>(x.var()), ref);
+  int index        = sp->newVar(static_cast<VarImpBase*>(x->var()), ref);
 
   if (oz_onToplevel())
     oz_currentBoard()->getGenericSpace()->makeUnstable();
@@ -179,24 +203,26 @@ inline OZ_Term new_GeSetVar(IntSet glb,  IntSet lub) {
   //nv->ensureValReflection();
   postValReflector<SetView,SetVarImp>(sp,index);
 
+  delete x;
   return ref;
 }
 
 
 inline OZ_Term new_GeSetVar_init() {
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
-  SetVar x(sp);
+  SetVar *x = new SetVar(sp);
   GeSetVar *nv = new GeSetVar(sp->getVarsSize());
   OzVariable* ov   = extVar2Var(nv);
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
-  int index        = sp->newVar(static_cast<VarImpBase*>(x.var()), ref);
+  int index        = sp->newVar(static_cast<VarImpBase*>(x->var()), ref);
   
   //nv->ensureValReflection();
   postValReflector<SetView,SetVarImp>(sp,index);
 
   if (oz_onToplevel())
     oz_currentBoard()->getGenericSpace()->makeUnstable();
-
+  
+  delete x;
   return ref;
 }
 
@@ -249,20 +275,42 @@ inline SetVar& get_SetVarInfo(OZ_Term v) {
 }
 
 
+/**
+   \brief Retrieve gecode pointer variable from an OZ_Term afecting 
+   space stability. A call to this method will make the gecode
+   space unstable.
+*/
+inline
+SetVar * get_SetVarPtr(OZ_Term v) {
+  return get_GeSetVar(v)->getSetVarPtr();
+}
+
+/**
+   \brief Retrieve gecode pointer variable from an OZ_Term without afecting 
+   space stability. A call to this method will not make the gecode
+   space unstable.
+*/
+inline
+SetVar * get_SetVarInfoPtr(OZ_Term v) {
+  return get_GeSetVar(v,false)->getSetVarInfoPtr();
+}
+
+
 
 inline OZ_Term new_GeSetVarComp(OZ_Term V1) {
   
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
 
-  SetVar x(sp);
+  SetVar *x = new SetVar(sp);
   GeSetVar *nv = new GeSetVar(sp->getVarsSize());
 
   OzVariable* ov   = extVar2Var(nv);
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
-  int index        = sp->newVar(static_cast<VarImpBase*>(x.var()), ref);
-  rel(sp, x, SRT_CMPL, get_SetVar(V1));
+  int index        = sp->newVar(static_cast<VarImpBase*>(x->var()), ref);
+  rel(sp, *x, SRT_CMPL, get_SetVar(V1));
   //nv->ensureValReflection();
   postValReflector<SetView,SetVarImp>(sp,index);
+  delete x;
   return ref;
 }
 

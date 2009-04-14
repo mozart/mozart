@@ -412,8 +412,8 @@ bool GeVarAssignment<View, Val, ViewSel, ValSel>::status(void) {
 }
 
 /*
-  To access gecode space's variable use get_IntVar instead of
-  get_IntVarInfo to make the space unstable. Space unstability is
+  To access gecode space's variable use the method used to 
+  make the the space unstable. Space unstability is
   fine because after a tell the space will be unstable.
 */
 template <class View, class Val, class ViewSel, class ValSel>

@@ -40,12 +40,13 @@ OZ_BI_define(set_diff,3,0)
 {
   DeclareGSpace(gs);  
     
-  DeclareGeSetVar(0,v1,gs);
-  DeclareGeSetVar(1,v2,gs);
-  DeclareGeSetVar(2,v3,gs);
+  SetVar *v1 = setOrSetVar(OZ_in(0));
+  SetVar *v2 = setOrSetVar(OZ_in(1));
+  SetVar *v3 = setOrSetVar(OZ_in(2));
   
   try{
-    rel(gs,v1,SOT_MINUS,v2,SRT_EQ,v3);
+    rel(gs,*v1,SOT_MINUS,*v2,SRT_EQ,*v3);
+    delete v1, v2, v3;
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -57,12 +58,13 @@ OZ_BI_define(set_inter,3,0)
 {
   DeclareGSpace(gs);  
     
-  DeclareGeSetVar(0,v1,gs);
-  DeclareGeSetVar(1,v2,gs);
-  DeclareGeSetVar(2,v3,gs);
+  SetVar *v1 = setOrSetVar(OZ_in(0));
+  SetVar *v2 = setOrSetVar(OZ_in(1));
+  SetVar *v3 = setOrSetVar(OZ_in(2));
   
   try{
-    rel(gs,v1,SOT_INTER,v2,SRT_EQ,v3);
+    rel(gs,*v1,SOT_INTER,*v2,SRT_EQ,*v3);
+    delete v1, v2, v3;
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -75,10 +77,11 @@ OZ_BI_define(set_interN,2,0)
 {
   DeclareGSpace(gs);  
   DECLARE_SETVARARGS(0,var,gs); 
-  DeclareGeSetVar(1,v1,gs);
-  
+  SetVar *v1 = setOrSetVar(OZ_in(1));
+
   try{
-    rel(gs,SOT_INTER,var,v1);
+    rel(gs,SOT_INTER,var,*v1);
+    delete v1;
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -91,12 +94,13 @@ OZ_BI_define(set_union,3,0)
 {
   DeclareGSpace(gs);  
     
-  DeclareGeSetVar(0,v1,gs);
-  DeclareGeSetVar(1,v2,gs);
-  DeclareGeSetVar(2,v3,gs);
+  SetVar *v1 = setOrSetVar(OZ_in(0));
+  SetVar *v2 = setOrSetVar(OZ_in(1));
+  SetVar *v3 = setOrSetVar(OZ_in(2));
   
   try{
-    rel(gs,v1,SOT_UNION,v2,SRT_EQ,v3);
+    rel(gs,*v1,SOT_UNION,*v2,SRT_EQ,*v3);
+    delete v1, v2, v3;
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -109,10 +113,11 @@ OZ_BI_define(set_unionN,2,0)
 {
   DeclareGSpace(gs);  
   DECLARE_SETVARARGS(0,var,gs); 
-  DeclareGeSetVar(1,v1,gs);
+  SetVar *v1 = setOrSetVar(OZ_in(1));
   
   try{
-    rel(gs,SOT_UNION,var,v1);
+    rel(gs,SOT_UNION,var,*v1);
+    delete v1;
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -124,11 +129,12 @@ OZ_BI_define(set_unionN,2,0)
 OZ_BI_define(set_subS,2,0) 
 {
   DeclareGSpace(gs);  
-  DeclareGeSetVar(0,v1,gs);
-  DeclareGeSetVar(1,v2,gs);
+  SetVar *v1 = setOrSetVar(OZ_in(0));
+  SetVar *v2 = setOrSetVar(OZ_in(1));
   
   try{
-    rel(gs,v1,SRT_SUB,v2);
+    rel(gs,*v1,SRT_SUB,*v2);
+    delete v1, v2;
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -140,11 +146,12 @@ OZ_BI_define(set_subS,2,0)
 OZ_BI_define(set_disjoint,2,0) 
 {
   DeclareGSpace(gs);  
-  DeclareGeSetVar(0,v1,gs);
-  DeclareGeSetVar(1,v2,gs);
-  
+  SetVar *v1 = setOrSetVar(OZ_in(0));
+  SetVar *v2 = setOrSetVar(OZ_in(1));
+
   try{
-    rel(gs,v1,SRT_DISJ,v2);
+    rel(gs,*v1,SRT_DISJ,*v2);
+    delete v1, v2;
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -155,11 +162,12 @@ OZ_BI_define(set_disjoint,2,0)
 OZ_BI_define(set_distinct,2,0) 
 {
   DeclareGSpace(gs);  
-  DeclareGeSetVar(0,v1,gs);
-  DeclareGeSetVar(1,v2,gs);
-  
+  SetVar *v1 = setOrSetVar(OZ_in(0));
+  SetVar *v2 = setOrSetVar(OZ_in(1));
+
   try{
-    rel(gs,v1,SRT_NQ,v2);
+    rel(gs,*v1,SRT_NQ,*v2);
+    delete v1, v2;
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -189,8 +197,9 @@ OZ_BI_define(gfs_monitorIn, 2, 0)
   DeclareGSpace(gs);
   
   if(OZ_isGeSetVar(OZ_in(0))){
-    DeclareGeSetVar(0, fsvar, gs);
-    Set::SetView sv = fsvar.var();
+    SetVar *fsvar = setOrSetVar(OZ_in(0));
+    Set::SetView sv(*fsvar);
+    delete fsvar;
   
     try{
       MonitorIn(gs, sv, OZ_in(1));
@@ -209,8 +218,10 @@ OZ_BI_define(gfs_monitorOut, 2, 0)
 {
   DeclareGSpace(gs);
   if(OZ_isGeSetVar(OZ_in(0))){
-    DeclareGeSetVar(0, fsvar, gs);
-    Set::SetView sv = fsvar.var();
+    SetVar *fsvar = setOrSetVar(OZ_in(0));
+    Set::SetView sv(*fsvar);
+    delete fsvar;
+    
     try{
       MonitorOut(gs, sv, OZ_in(1));
     }
@@ -238,8 +249,9 @@ OZ_BI_define(gfs_intMinN, 2, 0)
 {
   DeclareGSpace(gs);
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1))){
-    DeclareGeSetVar(0, fsvar, gs);
-    Set::SetView sv = fsvar.var();
+    SetVar *fsvar = setOrSetVar(OZ_in(0));
+    Set::SetView sv(*fsvar);
+    delete fsvar;
     Gecode::IntVarArgs iva = getIntVarArgs(OZ_in(1));
 
     if(sv.cardMax() < iva.size()){
@@ -286,8 +298,9 @@ OZ_BI_define(gfs_intMaxN, 2, 0)
 {
   DeclareGSpace(gs);
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1))){
-    DeclareGeSetVar(0, fsvar, gs);
-    Set::SetView sv = fsvar.var();
+    SetVar *fsvar = setOrSetVar(OZ_in(0));
+    Set::SetView sv(*fsvar);
+    delete fsvar;
     Gecode::IntVarArgs iva = getIntVarArgs(OZ_in(1));
 
     if(sv.cardMax() < iva.size()){
@@ -338,14 +351,15 @@ OZ_BI_define(gfs_reifiedIsIn, 3, 0)
 {
   DeclareGSpace(gs);
   if(OZ_isGeIntVar(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2))){
-    DeclareGeSetVar(1, fsvar, gs);
-    //IntVar &iv = intOrIntVar(OZ_in(1));
-    DeclareGeBoolVar(2, bv, gs);
-    IntView iv(intOrIntVar(OZ_in(0)));
+    SetVar *fsvar = setOrSetVar(OZ_in(1));
+    BoolVar *bv = boolOrBoolVar(OZ_in(2));
+    IntVar *vaa = intOrIntVar(OZ_in(0));
+    IntView iv(*vaa);
     Gecode::Set::SingletonView sin(iv);
-
+    delete vaa;
     try{
-      IsInReified(gs, fsvar.var(), sin, bv.var());
+      IsInReified(gs, fsvar->var(), sin, bv->var());
+      delete fsvar, bv;
     }
     catch(Exception e) {
       RAISE_GE_EXCEPTION(e);

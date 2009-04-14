@@ -59,7 +59,7 @@ IntVar* declareIV(OZ_Term p, GenericSpace *s) {
     int val = OZ_intToC(p);
     v = new IntVar(s,val,val);
   } else if (OZ_isGeIntVar(p)) {
-    v = &get_IntVar(p);
+    v = get_IntVarPtr(p);
   } 
   return v;
 }
@@ -75,7 +75,7 @@ IntVar* declareIV(OZ_Term p) {
     int val = OZ_intToC(p);
     v = new IntVar(oz_currentBoard()->getGenericSpace(),val,val);
   } else if (OZ_isGeIntVar(p)) {
-    v = &get_IntVar(p);
+    v = get_IntVarPtr(p);
   } 
   return v;
 } 
@@ -126,7 +126,9 @@ IntVar* declareIV(OZ_Term p) {
       ar[i] = v;				\
     }						\
     else if(OZ_isGeIntVar(val)) {		\
-      ar[i]=get_IntVar(val);			\
+      IntVar *v = get_IntVarPtr(val);		\
+      ar[i]=(*v);				\
+      delete v;					\
     }						\
   }
   
@@ -143,12 +145,11 @@ IntVar* declareIV(OZ_Term p) {
  * @param value integer or GeIntVar representing a IntVar
  */
 inline
-Gecode::IntVar& intOrIntVar(TaggedRef value){
+Gecode::IntVar * intOrIntVar(TaggedRef value){
   if(OZ_isInt(value)){
-    IntVar *iv = new IntVar(oz_currentBoard()->getGenericSpace(), OZ_intToC(value), OZ_intToC(value));
-    return (*iv);
+    return new IntVar(oz_currentBoard()->getGenericSpace(), OZ_intToC(value), OZ_intToC(value));
   }else {
-    return get_IntVar(value);
+    return get_IntVarPtr(value);
   }
 }
 
@@ -174,7 +175,9 @@ Gecode::IntVarArgs getIntVarArgs(TaggedRef vaar){
       sz = OZ_length(t);
       IntVarArgs array(sz);
       for(int i=0; OZ_isCons(t); t=OZ_tail(t),i++){
-	array[i] = intOrIntVar(OZ_deref(OZ_head(t)));
+	IntVar *iv = intOrIntVar(OZ_deref(OZ_head(t)));
+	array[i] = *iv;
+	delete iv;
       }
       return array;
     } else 
@@ -182,7 +185,9 @@ Gecode::IntVarArgs getIntVarArgs(TaggedRef vaar){
 	sz=OZ_width(t);
 	IntVarArgs array(sz);
 	for(int i=0; i<sz; i++) {
-	  array[i] = intOrIntVar(OZ_getArg(t,i));
+	  IntVar *iv = intOrIntVar(OZ_getArg(t,i));
+	  array[i] = *iv;
+	  delete iv;
 	}
 	return array;
       } else {
@@ -191,7 +196,9 @@ Gecode::IntVarArgs getIntVarArgs(TaggedRef vaar){
 	sz = OZ_width(t);
 	IntVarArgs array(sz);
 	for(int i=0; OZ_isCons(al); al=OZ_tail(al),i++) {
-	  array[i] = intOrIntVar(OZ_subtree(t,OZ_head(al)));
+	  IntVar *iv = intOrIntVar(OZ_subtree(t,OZ_head(al)));
+	  array[i] = *iv;
+	  delete iv;
 	}
 	return array;
       }  

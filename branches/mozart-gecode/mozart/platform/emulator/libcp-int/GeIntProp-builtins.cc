@@ -109,13 +109,13 @@ OZ_BI_define(int_assign,2,0)
 OZ_BI_define(int_reified,3,0)
 {
   DeclareGSpace(sp);
-	DECLARE_INT_SET(OZ_in(0),dom);
-  DeclareGeIntVar(1,v0,sp);
-  DeclareGeBoolVar(2,b0,sp);
-  
+  DECLARE_INT_SET(OZ_in(0),dom);
+  IntVar *v0 = intOrIntVar(OZ_in(1));
+  BoolVar *b0 = boolOrBoolVar(OZ_in(2));
   
   try{
-    Gecode::dom(sp,v0,dom,b0);
+    Gecode::dom(sp,*v0,dom,*b0);
+    delete v0, b0;
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);

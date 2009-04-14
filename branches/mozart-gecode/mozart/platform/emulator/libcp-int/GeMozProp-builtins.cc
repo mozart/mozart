@@ -52,11 +52,12 @@ OZ_BI_define(int_disjoint,4,0)
   OZ_declareInt(3,i4);
 
   DeclareGSpace(sp);
-  DeclareGeIntVar(0,v1,sp);
-  DeclareGeIntVar(2,v3,sp);
-
+  IntVar *v1 = intOrIntVar(OZ_in(0));
+  IntVar *v3 = intOrIntVar(OZ_in(2));
+  
   try{
-    Disjoint(sp,v1,i2,v3,i4);
+    Disjoint(sp,*v1,i2,*v3,i4);
+    delete v1, v3;
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -79,13 +80,13 @@ OZ_BI_define(int_disjointC,5,0)
   DeclareGSpace(sp);
   OZ_declareInt(1,i2);
   OZ_declareInt(3,i4);
-  DeclareGeIntVar(0,v1,sp);
-  DeclareGeIntVar(2,v3,sp);
-  
-  DeclareGeBoolVar(4, v5, sp);
+  IntVar *v1 = intOrIntVar(OZ_in(0));
+  IntVar *v3 = intOrIntVar(OZ_in(2));
+  BoolVar *v5 = boolOrBoolVar(OZ_in(4));
     
   try{
-    DisjointC(sp,v1,i2,v3,i4,v5);    
+    DisjointC(sp,*v1,i2,*v3,i4,*v5);    
+    delete v1, v3, v5;
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -101,14 +102,14 @@ OZ_BI_define(int_watch_min,3,0)
   //  int, v2, v3;
   //GenericSpace *sp;
   DeclareGSpace(sp);
-  DeclareGeIntVar(0,v1,sp);
-  DeclareGeIntVar(1,v2,sp);
+  IntVar *v1 = intOrIntVar(OZ_in(0));
+  IntVar *v2 = intOrIntVar(OZ_in(1));
 
   OZ_declareInt(2,v3);
   try {
 
-    WatchMin(sp,v1,v2,v3);
-
+    WatchMin(sp,*v1,*v2,v3);
+    delete v1, v2;
   }
   catch(Exception e) {
     //return OZ_raiseC("prop: watch size",0);
@@ -130,20 +131,20 @@ OZ_BI_end
 OZ_BI_define(int_watch_max,3,0)
 {
   DeclareGSpace(sp);
-  DeclareGeIntVar(0,v1,sp);
-  DeclareGeIntVar(1,v2,sp);
+  IntVar *v1 = intOrIntVar(OZ_in(0));
+  IntVar *v2 = intOrIntVar(OZ_in(1));
 
   OZ_declareInt(2,v3);
   try {
 
-    WatchMax(sp,v1,v2,v3);
-
-    return PROCEED;
+    WatchMax(sp,*v1,*v2,v3);
+    delete v1, v2;
   }
   catch(Exception e) {
     return OZ_raiseC("prop: watch size",0);
   }
-
+  return PROCEED;
+  
 } OZ_BI_end
 
 /**
@@ -157,19 +158,18 @@ OZ_BI_define(int_watch_size,3,0)
 {
 
   DeclareGSpace(sp);
-  DeclareGeIntVar(0,v1,sp);
-  DeclareGeIntVar(1,v2,sp);
+  IntVar *v1 = intOrIntVar(OZ_in(0));
+  IntVar *v2 = intOrIntVar(OZ_in(1));
 
   OZ_declareInt(2,v3);
   try {
-
-    WatchSize(sp,v1,v2,v3);
-
-    return PROCEED;
+    WatchSize(sp,*v1,*v2,v3);
+    delete v1, v2;
   }
   catch(Exception e) {
     return OZ_raiseC("prop: watch size",0);
   }
+  return PROCEED;
 
 } OZ_BI_end
 
@@ -220,38 +220,37 @@ OZ_BI_define(int_sumCN,4,0)
 {
   DECLARE_INTARGS(0,x0);
   DeclareIntRelType(2,relType);
-  //  IntVar Res;
-
   DeclareGSpace(sp);
 
   OZ_Term D = OZ_deref(OZ_in(1));
   int tamD;
-
+  
   OZ_Term *Vec = vectorToOzTerms2(D,tamD);
 
-  DeclareGeIntVar(3,Res,sp);
-
+  IntVar *Res = intOrIntVar(OZ_in(3));
   IntVarArray Arreglo(sp,tamD, Int::Limits::min,Int::Limits::max);
 
-  linear(sp,x0,Arreglo,relType,Res,ICL_VAL);
+  linear(sp,x0,Arreglo,relType,*Res,ICL_VAL);
+  delete Res;
 
   for(int i=0;i<tamD;i++) {
     int tamD2;
     OZ_Term *Vec2 = vectorToOzTerms2(Vec[i],tamD2);
     IntVarArray ArregloTmp(sp,tamD2,Int::Limits::min,Int::Limits::max);
     rel(sp,Arreglo[i],IRT_EQ,ArregloTmp[tamD2-1],ICL_VAL);
-    IntVar ValVec2;
+    IntVar *ValVec2 = new IntVar();
     OZ_Term val = Vec2[0];
 
     if(OZ_isInt(val)) {
       int domain = OZ_intToC(val);
-      ValVec2.init(sp,domain,domain);
+      ValVec2->init(sp,domain,domain);
     }
-    else ValVec2 = get_IntVar(OZ_deref(val));
+    else ValVec2 = get_IntVarPtr(OZ_deref(val));
 
-    rel(sp,ArregloTmp[0],IRT_EQ,ValVec2,ICL_VAL);
+    rel(sp,ArregloTmp[0],IRT_EQ,*ValVec2,ICL_VAL);
 
-    rel(sp,ArregloTmp[0],IRT_EQ,ValVec2,ICL_VAL);
+    rel(sp,ArregloTmp[0],IRT_EQ,*ValVec2,ICL_VAL);
+    delete ValVec2;
 
     for(int j=1;j<tamD2;j++) {
       IntVar Tmpj;
@@ -346,8 +345,8 @@ OZ_BI_define(reified_sumAC,7,0)
 		IntArgs ia = getIntArgs(OZ_in(0));
 		IntVarArgs iva = getIntVarArgs(OZ_in(1));
 		IntRelType relType = getIntRelType(OZ_in(2));
-		Gecode::IntVar &D1 = intOrIntVar(OZ_in(3));
-		DeclareGeBoolVar(4, D2, sp);
+		Gecode::IntVar *D1 = intOrIntVar(OZ_in(3));
+		BoolVar *D2 = boolOrBoolVar(OZ_in(4));
 		Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(5));
 		Gecode::PropKind __PK_DEF = getPropKind(OZ_in(6));
 		
@@ -370,7 +369,8 @@ OZ_BI_define(reified_sumAC,7,0)
 			/**
 				rel (Space *home, IntVar x0, IntRelType r, IntVar x1, BoolVar b, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
 			*/
-			Gecode::rel (sp, tmpD, relType, D1, D2, __ICL_DEF, __PK_DEF);
+			Gecode::rel (sp, tmpD, relType, *D1, *D2, __ICL_DEF, __PK_DEF);
+			delete D1, D2;
 		}
 		catch(Exception e){
 			RAISE_GE_EXCEPTION(e);
@@ -392,16 +392,17 @@ OZ_BI_define(reified_sumCN,7,0)
 	IntArgs ia = getIntArgs(OZ_in(0));
 	OZ_Term Dvv = OZ_deref(OZ_in(1));
 	DeclareIntRelType(2,relType);
-	Gecode::IntVar &D1 = intOrIntVar(OZ_in(3));
-	DeclareGeBoolVar(4, D2, sp);
+	Gecode::IntVar *D1 = intOrIntVar(OZ_in(3));
+	BoolVar *D2 = boolOrBoolVar(OZ_in(4));
 	Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(5));
 	Gecode::PropKind __PK_DEF = getPropKind(OZ_in(6));
 	IntVar ScalarProduct = scalarProduct(sp, ia, Dvv, __ICL_DEF, __PK_DEF);
 	if (ScalarProduct.size() == 0){
-		return OZ_typeError(0, "Vectors must have same size: reified.sumCN");
-		}
+	  return OZ_typeError(0, "Vectors must have same size: reified.sumCN");
+	}
 
-	Gecode::rel (sp, ScalarProduct, relType, D1, D2, __ICL_DEF, __PK_DEF);
+	Gecode::rel (sp, ScalarProduct, relType, *D1, *D2, __ICL_DEF, __PK_DEF);
+	delete D1, D2;
 	
 	CHECK_POST(sp);
 } OZ_BI_end
@@ -415,8 +416,8 @@ OZ_BI_define(reified_sumACN,7,0)
 	IntArgs ia = getIntArgs(OZ_in(0));
 	OZ_Term Dvv = OZ_deref(OZ_in(1));
 	DeclareIntRelType(2,relType);
-	Gecode::IntVar &D1 = intOrIntVar(OZ_in(3));
-	DeclareGeBoolVar(4, D2, sp);
+	Gecode::IntVar *D1 = intOrIntVar(OZ_in(3));
+	BoolVar *D2 = boolOrBoolVar(OZ_in(4));
 	Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(5));
 	Gecode::PropKind __PK_DEF = getPropKind(OZ_in(6));
 	
@@ -428,8 +429,8 @@ OZ_BI_define(reified_sumACN,7,0)
 	ABSsp.init(sp,Int::Limits::min,Int::Limits::max);
 	Gecode::abs(sp,ScalarProduct,ABSsp,ICL_VAL);
 	
-	Gecode::rel (sp, ABSsp, relType, D1, D2, __ICL_DEF, __PK_DEF);
-	
+	Gecode::rel (sp, ABSsp, relType, *D1, *D2, __ICL_DEF, __PK_DEF);
+	delete D1, D2;
 	CHECK_POST(sp);
 } OZ_BI_end
 
@@ -446,40 +447,41 @@ OZ_BI_define(reified_dom,3,0){
 	//	printf("PAIR\n");fflush(stdout);
 //	}
 	if (OZ_isInt(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2))){
-			int Spec = OZ_intToC(OZ_in(0));
-			IntVarArgs iva = getIntVarArgs(OZ_in(1));
-			DeclareGeBoolVar(2, D1, sp);
-			
-			BoolVarArray tmpArray(sp, iva.size(), 0,1);
-			for (int i = 0; i < iva.size(); i++){
-				IntSet set(iva[i].min(),iva[i].max());
-				IntVar valVar;
-				valVar.init(sp,Spec,Spec);
-				/**
-					dom (Space *home, IntVar x, const IntSet &s, BoolVar b, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
-				*/
-				try{
-					Gecode::dom(sp,valVar,set,tmpArray[i],ICL_VAL);
-				}
-				catch (Exception e){
-					RAISE_GE_EXCEPTION(e);
-				}
-			}
-			BoolVar res;
-			res.init(sp,0,1);
-			/**
-				rel (Space *home, const BoolVarArgs &x, IntRelType r, BoolVar y, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
-			*/
-			try{
-				Gecode::rel(sp,tmpArray,IRT_EQ,res,ICL_VAL);
-			}
-			catch (Exception e){
-				RAISE_GE_EXCEPTION(e);
-			}
-			Gecode::rel(sp,res,IRT_EQ,D1,ICL_VAL);
+	  int Spec = OZ_intToC(OZ_in(0));
+	  IntVarArgs iva = getIntVarArgs(OZ_in(1));
+	  BoolVar *D1 = boolOrBoolVar(OZ_in(2));
+	  
+	  BoolVarArray tmpArray(sp, iva.size(), 0,1);
+	  for (int i = 0; i < iva.size(); i++){
+	    IntSet set(iva[i].min(),iva[i].max());
+	    IntVar valVar;
+	    valVar.init(sp,Spec,Spec);
+	    /**
+	       dom (Space *home, IntVar x, const IntSet &s, BoolVar b, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+	    */
+	    try{
+	      Gecode::dom(sp,valVar,set,tmpArray[i],ICL_VAL);
+	    }
+	    catch (Exception e){
+	      RAISE_GE_EXCEPTION(e);
+	    }
+	  }
+	  BoolVar res;
+	  res.init(sp,0,1);
+	  /**
+	     rel (Space *home, const BoolVarArgs &x, IntRelType r, BoolVar y, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+	  */
+	  try{
+	    Gecode::rel(sp,tmpArray,IRT_EQ,res,ICL_VAL);
+	  }
+	  catch (Exception e){
+	    RAISE_GE_EXCEPTION(e);
+	  }
+	  Gecode::rel(sp,res,IRT_EQ,*D1,ICL_VAL);
+	  delete D1;
 	}
 	else{
-		return OZ_typeError(0, "Malformed Propagator: reified.dom");
+	  return OZ_typeError(0, "Malformed Propagator: reified.dom");
 	}
 	CHECK_POST(sp);
 } OZ_BI_end
@@ -489,22 +491,17 @@ OZ_BI_define(gfd_reifiedCard, 4, 0){
 
   
   DeclareGSpace(home);
-  IntVar& iv1 = intOrIntVar(OZ_in(0));
+  IntVar *iv1 = intOrIntVar(OZ_in(0));
   DECLARE_BOOLVARARGS(1, bva, home);
-  IntVar& iv2 = intOrIntVar(OZ_in(2));
+  IntVar *iv2 = intOrIntVar(OZ_in(2));
   DeclareGeBoolVar(3, bo, home);
   
-  IntView ew1(iv1);
-  IntView ew2(iv2);
-  
+  IntView ew1(*iv1);
+  IntView ew2(*iv2);
+  delete iv1, iv2;
+
   ViewArray<BoolView> varr(home, bva);
   BoolView bv(bo);
-  
-//   for(int i=0; i<bva.size(); i++){
-//     printf("bucle...\n");fflush(stdout);
-//     BoolView vvv(bva[i]);
-//     varr[i] = vvv;
-//   }
   
   try {
     ReifiedCard(home, ew1, varr, ew2, bv);

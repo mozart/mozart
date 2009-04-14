@@ -45,7 +45,10 @@ class VarBasics<BoolView, int> {
 public:
   static BoolView getView(OZ_Term t) {
     Assert(OZ_isGeBoolVar(t));
-    return BoolView(get_BoolVarInfo(t).var());
+    BoolVar *bv = get_BoolVarInfoPtr(t);
+    BoolView vi(*bv);
+    delete bv;
+    return vi;
   }
   static bool assigned(OZ_Term t) {
     if (OZ_isInt(t)) {
