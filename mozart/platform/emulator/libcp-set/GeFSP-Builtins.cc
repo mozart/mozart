@@ -39,33 +39,36 @@
 /*
 OZ_BI_define(gfs_projector_4,4,0){
   DeclareGSpace(home);
-  DeclareGeSetVar(0, __xa, home);
-  DeclareGeSetVar(1, __ya, home);
+  SetVar *__xa = setOrSetVar(OZ_in(0));
+  SetVar *__ya = setOrSetVar(OZ_in(1));
+  
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && OZ_isProjectorSet(OZ_in(2)) && OZ_isBool(OZ_in(3))){
     DECLARE_PROJECTOR_SET(2, __ps);
     DeclareBool(3, __negated);
     try{
-      Gecode::projector(home, __xa, __ya, __ps, __negated);
+      Gecode::projector(home, *__xa, *__ya, __ps, __negated);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else if(OZ_isGeSetVar(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2)) && OZ_isProjectorSet(OZ_in(3))){
-    DeclareGeBoolVar(2, __bv, home);
+  BoolVar *__bv = boolOrBoolVar(OZ_in(2));
     DECLARE_PROJECTOR_SET(3, __ps);
     try{
-      Gecode::projector(home, __xa, __ya, __bv, __ps);
+      Gecode::projector(home, *__xa, *__ya, *__bv, __ps);
+      delete __bv;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else if(OZ_isGeSetVar(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) && OZ_isProjector(OZ_in(3))){
-    DeclareGeIntVar(2, __i, home);
+  IntVar *__i = intOrIntVar(OZ_in(2));
     DECLARE_PROJECTOR(3, __p);
     try{
-      Gecode::projector(home, __xa, __ya, __i, __p);
+      Gecode::projector(home, *__xa, *__ya, *__i, __p);
+      delete __i;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -74,6 +77,8 @@ OZ_BI_define(gfs_projector_4,4,0){
   else{
     return OZ_typeError(0, "Malformed Propagator");
   }
+  delete __xa, __ya;
+  
   CHECK_POST(home);
 }OZ_BI_end
 
@@ -93,34 +98,37 @@ OZ_BI_define(gfs_projector_3,3,0){
 
 OZ_BI_define(gfs_projector_5,5,0){
   DeclareGSpace(home);
-  DeclareGeSetVar(0, __xa, home);
-  DeclareGeSetVar(1, __ya, home);
-  DeclareGeSetVar(2, __za, home);
+  SetVar *__xa = setOrSetVar(OZ_in(0));
+  SetVar *__ya = setOrSetVar(OZ_in(1));
+  SetVar *__za = setOrSetVar(OZ_in(2));
+  
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && OZ_isGeSetVar(OZ_in(2)) && OZ_isProjectorSet(OZ_in(3)) && OZ_isBool(OZ_in(4))){
     DECLARE_PROJECTOR_SET(3, __ps);
     DeclareBool(4, __negated);
     try{
-      Gecode::projector(home, __xa, __ya, __za, __ps, __negated);
+      Gecode::projector(home, *__xa, *__ya, *__za, __ps, __negated);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else if(OZ_isGeSetVar(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && OZ_isGeSetVar(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3)) && OZ_isProjectorSet(OZ_in(4))){
-    DeclareGeBoolVar(3, __bv, home);
+  BoolVar *__bv = boolOrBoolVar(OZ_in(3));
     DECLARE_PROJECTOR_SET(4, __ps);
     try{
-      Gecode::projector(home, __xa, __ya, __za, __bv, __ps);
+      Gecode::projector(home, *__xa, *__ya, *__za, *__bv, __ps);
+      delete __bv;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
   }
   else if(OZ_isGeSetVar(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && OZ_isGeSetVar(OZ_in(2)) && OZ_isGeIntVar(OZ_in(3)) && OZ_isProjector(OZ_in(4))){
-    DeclareGeIntVar(3, __i, home);
+    IntVar *__i = intOrIntVar(OZ_in(3));
     DECLARE_PROJECTOR(4, __p);
     try{
-      Gecode::projector(home, __xa, __ya, __za, __i, __p);
+      Gecode::projector(home, *__xa, *__ya, *__za, *__i, __p);
+      delete __i;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -129,6 +137,8 @@ OZ_BI_define(gfs_projector_5,5,0){
   else{
     return OZ_typeError(0, "Malformed Propagator");
   }
+
+  delete __xa, __ya, __za;
   CHECK_POST(home);
 }OZ_BI_end
 */
@@ -145,7 +155,7 @@ OZ_BI_define(gfs_dom_3,3,0){
   for(int i=0; i<3; i++)
     SuspendPosting(OZ_in(i));
 
-  DeclareGeSetVar(0, __s, home);
+  SetVar *__s = setOrSetVar(OZ_in(0));
   DeclareSetRelType(1, __r);
 
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
@@ -156,8 +166,8 @@ OZ_BI_define(gfs_dom_3,3,0){
     */
     DeclareInt2(2, __i);
     try{
-      Gecode::dom(home, __s, __r, __i);
-
+      Gecode::dom(home, *__s, __r, __i);
+      delete __s;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -171,8 +181,8 @@ OZ_BI_define(gfs_dom_3,3,0){
     */
     DECLARE_INT_SET(2, __is);
     try{
-      Gecode::dom(home, __s, __r, __is);
-
+      Gecode::dom(home, *__s, __r, __is);
+      delete __s;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -192,7 +202,7 @@ OZ_BI_define(gfs_dom_4,4,0){
   for(int i=0; i<4; i++)
     SuspendPosting(OZ_in(i));
   
-  DeclareGeSetVar(0, __s, home);
+  SetVar *__s = setOrSetVar(OZ_in(0));
   DeclareSetRelType(1, __r);
   
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
@@ -204,7 +214,8 @@ OZ_BI_define(gfs_dom_4,4,0){
     DeclareInt2(2, __i);
     DeclareInt2(3, __j);
     try{
-      Gecode::dom(home, __s, __r, __i, __j);
+      Gecode::dom(home, *__s, __r, __i, __j);
+      delete __s;
 
     }
     catch(Exception e){
@@ -218,10 +229,10 @@ OZ_BI_define(gfs_dom_4,4,0){
       Post propagator for $ (x \sim_r \{i\}) \Leftrightarrow b $. 
     */
     DeclareInt2(2, __i);
-    DeclareGeBoolVar(3, __b, home);
+    BoolVar *__b = boolOrBoolVar(OZ_in(3));
     try{
-      Gecode::dom(home, __s, __r, __i, __b);
-
+      Gecode::dom(home, *__s, __r, __i, *__b);
+      delete __s, __b;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -235,10 +246,10 @@ OZ_BI_define(gfs_dom_4,4,0){
       Post propagator for $ (x \sim_r s) \Leftrightarrow b $. 
      */
     DECLARE_INT_SET(2, __is);
-    DeclareGeBoolVar(3, __b, home);
+    BoolVar *__b = boolOrBoolVar(OZ_in(3));
     try{
-      Gecode::dom(home, __s, __r, __is, __b);
-
+      Gecode::dom(home, *__s, __r, __is, *__b);
+      delete __s, __b;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -258,11 +269,11 @@ OZ_BI_define(gfs_dom_5,5,0){
   for(int i=0; i<5; i++)
     SuspendPosting(OZ_in(i));
 
-  DeclareGeSetVar(0, __x, home);
+  SetVar *__x = setOrSetVar(OZ_in(0));
   DeclareSetRelType(1, __r);
   DeclareInt2(2, __i);
   DeclareInt2(3, __j);
-  DeclareGeBoolVar(4, __b, home);
+  BoolVar *__b = boolOrBoolVar(OZ_in(4));
 
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
      OZ_isInt(OZ_in(2)) && OZ_isInt(OZ_in(3)) && OZ_isGeBoolVar(OZ_in(4))){
@@ -272,8 +283,8 @@ OZ_BI_define(gfs_dom_5,5,0){
       Post propagator for $ (x \sim_r \{i,\dots,j\}) \Leftrightarrow b $. 
     */
     try{
-      Gecode::dom(home, __x, __r, __i, __j, __b);
-
+      Gecode::dom(home, *__x, __r, __i, __j, *__b);
+      delete __x, __b;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -290,7 +301,7 @@ OZ_BI_define(gfs_cardinality_3,3,0){
   for(int i=0; i<3; i++)
     SuspendPosting(OZ_in(i));
 
-  DeclareGeSetVar(0, __x, home);
+  SetVar *__x = setOrSetVar(OZ_in(0));
   DeclareInt2(1, __i);
   DeclareInt2(2, __j);
 
@@ -300,7 +311,8 @@ OZ_BI_define(gfs_cardinality_3,3,0){
       Propagates $ i \leq |s| \leq j $. 
     */
     try{
-      Gecode::cardinality(home, __x, __i, __j);
+      Gecode::cardinality(home, *__x, __i, __j);
+      delete __x;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -328,12 +340,13 @@ OZ_BI_define(gfs_rel_3,3,0){
     /**
        rel (Space *home, SetVar x, SetRelType r, SetVar y)
      */
-    DeclareGeSetVar(0, __x, home);
+    SetVar *__x = setOrSetVar(OZ_in(0));
     DeclareSetRelType(1, __r);
-    DeclareGeSetVar(2, __y, home);
+    SetVar *__y = setOrSetVar(OZ_in(2));
 
     try{
-      Gecode::rel(home, __x, __r, __y);
+      Gecode::rel(home, *__x, __r, *__y);
+      delete __x, __y;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -344,11 +357,13 @@ OZ_BI_define(gfs_rel_3,3,0){
     /**
        rel (Space *home, SetVar s, SetRelType r, IntVar x)
      */
-    DeclareGeSetVar(0, __s, home);
+    SetVar *__s = setOrSetVar(OZ_in(0));
     DeclareSetRelType(1, __r);
-    DeclareGeIntVar(2, __x, home);
+    IntVar *__x = intOrIntVar(OZ_in(2));
     try{
-      Gecode::rel(home, __s, __r, __x);
+      Gecode::rel(home, *__s, __r, *__x);
+      delete __x;
+      delete __s;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -359,12 +374,13 @@ OZ_BI_define(gfs_rel_3,3,0){
     /**
        rel (Space *home, IntVar x, SetRelType r, SetVar s)
      */
-    DeclareGeIntVar(0, __x, home);
+    IntVar *__x = intOrIntVar(OZ_in(0));
     DeclareSetRelType(1, __r);
-    DeclareGeSetVar(2, __s, home);
+    SetVar *__s = setOrSetVar(OZ_in(2));
     try{
-      Gecode::rel(home, __x, __r, __s);
-
+      Gecode::rel(home, *__x, __r, *__s);
+      delete __x;
+      delete __s;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -375,12 +391,12 @@ OZ_BI_define(gfs_rel_3,3,0){
     /**
        rel (Space *home, SetVar s, IntRelType r, IntVar x)
      */
-    DeclareGeSetVar(0, __s, home);
+    SetVar *__s = setOrSetVar(OZ_in(0));
     DeclareIntRelType(1, __r);
-    DeclareGeIntVar(2, __x, home);
+    IntVar *__x = intOrIntVar(OZ_in(2));
     try{
-      Gecode::rel(home, __s, __r, __x);
-
+      Gecode::rel(home, *__s, __r, *__x);
+      delete __x, __s;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -391,12 +407,12 @@ OZ_BI_define(gfs_rel_3,3,0){
     /**
        rel (Space *home, IntVar x, IntRelType r, SetVar s)
      */
-    DeclareGeIntVar(0, __x, home);
+    IntVar *__x = intOrIntVar(OZ_in(0));
     DeclareIntRelType(1, __r);
-    DeclareGeSetVar(2, __s, home);
+    SetVar *__s = setOrSetVar(OZ_in(2));
     try{
-      Gecode::rel(home, __x, __r, __s);
-
+      Gecode::rel(home, *__x, __r, *__s);
+      delete __x, __s;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -409,10 +425,10 @@ OZ_BI_define(gfs_rel_3,3,0){
      */
     DeclareSetOpType(0, __op);
     DECLARE_SETVARARGS(1, __x, home);
-    DeclareGeSetVar(2, __y, home);
+    SetVar *__y = setOrSetVar(OZ_in(2));
     try{
-      Gecode::rel(home, __op, __x, __y);
-
+      Gecode::rel(home, __op, __x, *__y);
+      delete __y;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -425,10 +441,10 @@ OZ_BI_define(gfs_rel_3,3,0){
      */
     DeclareSetOpType(0, __op);
     DECLARE_INTVARARGS(1, __x, home);
-    DeclareGeSetVar(2, __y, home);
+    SetVar *__y = setOrSetVar(OZ_in(2));
     try{
-      Gecode::rel(home, __op, __x, __y);
-
+      Gecode::rel(home, __op, __x, *__y);
+      delete __y;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -453,13 +469,14 @@ OZ_BI_define(gfs_rel_4,4,0){
     /**
        rel (Space *home, SetVar x, SetRelType r, SetVar y, BoolVar b)
      */
-    DeclareGeSetVar(0, __x, home);
+    SetVar *__x = setOrSetVar(OZ_in(0));
     DeclareSetRelType(1, __r);
-    DeclareGeSetVar(2, __y, home);
-    DeclareGeBoolVar(3, __b, home);
+    SetVar *__y = setOrSetVar(OZ_in(2));
+    BoolVar *__b = boolOrBoolVar(OZ_in(3));
+    
     try{
-      Gecode::rel(home, __x, __r, __y, __b);
-
+      Gecode::rel(home, *__x, __r, *__y, *__b);
+      delete __x, __y, __b;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -470,13 +487,14 @@ OZ_BI_define(gfs_rel_4,4,0){
     /**
        rel (Space *home, SetVar s, SetRelType r, IntVar x, BoolVar b)
      */
-    DeclareGeSetVar(0, __s, home);
+    SetVar *__s = setOrSetVar(OZ_in(0));
     DeclareSetRelType(1, __r);
-    DeclareGeIntVar(2, __x, home);
-    DeclareGeBoolVar(3, __b, home);
+    IntVar *__x = intOrIntVar(OZ_in(2));
+    BoolVar *__b = boolOrBoolVar(OZ_in(3));
+    
     try{
-      Gecode::rel(home, __s, __r, __x, __b);
-
+      Gecode::rel(home, *__s, __r, *__x, *__b);
+      delete __x, __s, __b;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -487,13 +505,14 @@ OZ_BI_define(gfs_rel_4,4,0){
     /**
        rel (Space *home, IntVar x, SetRelType r, SetVar s, BoolVar b)
      */
-    DeclareGeIntVar(0, __x, home);
+    IntVar *__x = intOrIntVar(OZ_in(0));
     DeclareSetRelType(1, __r);
-    DeclareGeSetVar(2, __s, home);
-    DeclareGeBoolVar(3, __b, home);
-    try{
-      Gecode::rel(home, __x, __r, __s, __b);
+    SetVar *__s = setOrSetVar(OZ_in(2));
+    BoolVar *__b = boolOrBoolVar(OZ_in(3));
 
+    try{
+      Gecode::rel(home, *__x, __r, *__s, *__b);
+      delete __x, __s, __b;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -507,10 +526,10 @@ OZ_BI_define(gfs_rel_4,4,0){
     DeclareSetOpType(0, __op);
     DECLARE_SETVARARGS(1, __x, home);
     DECLARE_INT_SET(2, __z);
-    DeclareGeSetVar(3, __y, home);
+    SetVar *__y = setOrSetVar(OZ_in(3));
     try{
-      Gecode::rel(home, __op, __x, __z, __y);
-
+      Gecode::rel(home, __op, __x, __z, *__y);
+      delete __y;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -524,10 +543,10 @@ OZ_BI_define(gfs_rel_4,4,0){
     DeclareSetOpType(0, __op);
     DECLARE_INTVARARGS(1, __x, home);
     DECLARE_INT_SET(2, __z);
-    DeclareGeSetVar(3, __y, home);
+    SetVar *__y = setOrSetVar(OZ_in(3));
     try{
-      Gecode::rel(home, __op, __x, __z, __y);
-
+      Gecode::rel(home, __op, __x, __z, *__y);
+      delete __y;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -556,12 +575,12 @@ OZ_BI_define(gfs_rel_5,5,0){
     /**
        rel (Space *home, SetVar x, SetOpType op, SetVar y, SetRelType r, SetVar z)
      */
-    DeclareGeSetVar(0, __x, home);
-    DeclareGeSetVar(2, __y, home);
-    DeclareGeSetVar(4, __z, home);
+    SetVar *__x = setOrSetVar(OZ_in(0));
+    SetVar *__y = setOrSetVar(OZ_in(2));
+    SetVar *__z = setOrSetVar(OZ_in(4));
     try{
-      Gecode::rel(home, __x, __op, __y, __r, __z);
-
+      Gecode::rel(home, *__x, __op, *__y, __r,* __z);
+      delete __x, __y, __z;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -574,11 +593,11 @@ OZ_BI_define(gfs_rel_5,5,0){
        rel (Space *home, const IntSet &x, SetOpType op, SetVar y, SetRelType r, SetVar z)
      */
     DECLARE_INT_SET(0, __x);
-    DeclareGeSetVar(2, __y, home);
-    DeclareGeSetVar(4, __z, home);
+    SetVar *__y = setOrSetVar(OZ_in(2));
+    SetVar *__z = setOrSetVar(OZ_in(4));
     try{
-      Gecode::rel(home, __x, __op, __y, __r, __z);
-
+      Gecode::rel(home, __x, __op, *__y, __r, *__z);
+      delete __y, __z;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -590,12 +609,12 @@ OZ_BI_define(gfs_rel_5,5,0){
     /**
        rel (Space *home, SetVar x, SetOpType op, const IntSet &y, SetRelType r, SetVar z)
      */
-    DeclareGeSetVar(0, __x, home);
+    SetVar *__x = setOrSetVar(OZ_in(0));
     DECLARE_INT_SET(2, __y);
-    DeclareGeSetVar(4, __z, home);
+    SetVar *__z = setOrSetVar(OZ_in(4));
     try{
-      Gecode::rel(home, __x, __op, __y, __r, __z);
-
+      Gecode::rel(home, *__x, __op, __y, __r, *__z);
+      delete __x, __z;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -607,12 +626,12 @@ OZ_BI_define(gfs_rel_5,5,0){
     /**
        rel (Space *home, SetVar x, SetOpType op, SetVar y, SetRelType r, const IntSet &z)
      */
-    DeclareGeSetVar(0, __x, home);
-    DeclareGeSetVar(2, __y, home);
+    SetVar *__x = setOrSetVar(OZ_in(0));
+    SetVar *__y = setOrSetVar(OZ_in(2));
     DECLARE_INT_SET(4, __z);
     try{
-      Gecode::rel(home, __x, __op, __y, __r, __z);
-
+      Gecode::rel(home, *__x, __op, *__y, __r, __z);
+      delete __x, __y;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -625,11 +644,11 @@ OZ_BI_define(gfs_rel_5,5,0){
        rel (Space *home, const IntSet &x, SetOpType op, SetVar y, SetRelType r, const IntSet &z)
      */
     DECLARE_INT_SET3(__x, val, 0);
-    DeclareGeSetVar(2, __y, home);
+    SetVar *__y = setOrSetVar(OZ_in(2));
     DECLARE_INT_SET3(__z, val1, 4);
     try{
-      Gecode::rel(home, __x, __op, __y, __r, __z);
-
+      Gecode::rel(home, __x, __op, *__y, __r, __z);
+      delete __y;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -641,12 +660,12 @@ OZ_BI_define(gfs_rel_5,5,0){
     /**
        rel (Space *home, SetVar x, SetOpType op, const IntSet &y, SetRelType r, const IntSet &z)
      */
-    DeclareGeSetVar(0, __x, home);
+    SetVar *__x = setOrSetVar(OZ_in(0));
     DECLARE_INT_SET3(__y, val, 2);
     DECLARE_INT_SET3(__z, val2, 4);
     try{
-      Gecode::rel(home, __x, __op, __y, __r, __z);
-
+      Gecode::rel(home, *__x, __op, __y, __r, __z);
+      delete __x;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -671,9 +690,10 @@ OZ_BI_define(gfs_convex_1,1,0){
   //test whether input is ref or var
   SuspendPosting(OZ_in(0));
 
-  DeclareGeSetVar(0, __x, home);
+  SetVar *__x = setOrSetVar(OZ_in(0));
   try{
-    Gecode::convex(home, __x);
+    Gecode::convex(home, *__x);
+    delete __x;
   }
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
@@ -688,10 +708,11 @@ OZ_BI_define(gfs_convexHull_2,2,0){
   for(int i=0; i<2; i++)
     SuspendPosting(OZ_in(i));
 
-  DeclareGeSetVar(0, __x, home);
-  DeclareGeSetVar(1, __y, home);
+  SetVar *__x = setOrSetVar(OZ_in(0));
+  SetVar *__y = setOrSetVar(OZ_in(1));
   try{
-    Gecode::convexHull(home, __x, __y);
+    Gecode::convexHull(home, *__x, *__y);
+    delete __x, __y;
   }
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
@@ -745,10 +766,10 @@ OZ_BI_define(gfs_sequentialUnion_2,2,0){
       and $ x = \bigcup_{i\in\{0,\dots,n-1\}} y_i $. 
     */
     DECLARE_SETVARARGS(0, __y, home);
-    DeclareGeSetVar(1, __x, home);
+    SetVar *__x = setOrSetVar(OZ_in(1));
     try{
-      Gecode::sequentialUnion(home, __y, __x);
-
+      Gecode::sequentialUnion(home, __y, *__x);
+      delete __x;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -816,12 +837,11 @@ OZ_BI_define(gfs_min_2,2,0){
       Post propagator that propagates that x is the minimal element of s, and 
       that s is not empty. 
     */  
-    DeclareGeSetVar(0, __s, home);
-    DeclareGeIntVar(1, __x, home);
-    
+    SetVar *__s = setOrSetVar(OZ_in(0));
+    IntVar *__x = intOrIntVar(OZ_in(1));
     try{
-      Gecode::min(home, __s, __x);
-
+      Gecode::min(home, *__s, *__x);
+      delete __x, __s;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -847,12 +867,12 @@ OZ_BI_define(gfs_match_2,2,0){
       Post propagator that propagates that s contains the $x_i$, which are 
       sorted in non-descending order. 
     */
-    DeclareGeSetVar(0, __s, home);
+    SetVar *__s = setOrSetVar(OZ_in(0));
     DECLARE_INTVARARGS(1, __x, home);
 
     try{
-      Gecode::match(home, __s, __x);
-
+      Gecode::match(home, *__s, __x);
+      delete __s;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -894,10 +914,10 @@ OZ_BI_define(gfs_channel_2,2,0){
       Post propagator for $x_i=1 \Leftrightarrow i\in y$. 
     */
     DECLARE_BOOLVARARGS(0, __x, home);
-    DeclareGeSetVar(1, __y, home);
+    SetVar *__y = setOrSetVar(OZ_in(1));
     try{
-      Gecode::channel(home, __x, __y);
-
+      Gecode::channel(home, __x, *__y);
+      delete __y;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -922,10 +942,11 @@ OZ_BI_define(gfs_cardinality_2,2,0){
       void Gecode::cardinality (Space *home, SetVar s, IntVar x)
       Post propagator for $ |s|=x $. 
     */
-    DeclareGeSetVar(0, __s, home);
-    DeclareGeIntVar(1, __x, home);
+    SetVar *__s = setOrSetVar(OZ_in(0));
+    IntVar *__x = intOrIntVar(OZ_in(1));
     try{
-      Gecode::cardinality(home, __s, __x);
+      Gecode::cardinality(home, *__s, *__x);
+      delete __x, __s;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -950,11 +971,11 @@ OZ_BI_define(gfs_max_2,2,0){
       Post propagator that propagates that x is the maximal element of s, and 
       that s is not empty.
     */
-    DeclareGeSetVar(0, __s, home);
-    DeclareGeIntVar(1, __x, home);
+    SetVar *__s = setOrSetVar(OZ_in(0));
+    IntVar *__x = intOrIntVar(OZ_in(1));
     try{
-      Gecode::max(home, __s, __x);
-
+      Gecode::max(home, *__s, *__x);
+      delete __x, __s;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -983,11 +1004,11 @@ OZ_BI_define(gfs_weights_4,4,0){
     */
     DECLARE_INTARGS(0, __elements);
     DECLARE_INTARGS(1, __weights);
-    DeclareGeSetVar(2, __x, home);
-    DeclareGeIntVar(3, __y, home);
-    
+    SetVar *__x = setOrSetVar(OZ_in(2));
+    IntVar *__y = intOrIntVar(OZ_in(3));
     try{
-      Gecode::weights(home, __elements, __weights, __x, __y);
+      Gecode::weights(home, __elements, __weights, *__x, *__y);
+      delete __y, __x;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -1012,8 +1033,9 @@ OZ_BI_define(gfs_elementsUnion_3,3,0){
   for(int i=0; i<3; i++)
     SuspendPosting(OZ_in(i));
 
-  DeclareGeSetVar(1, __y, home);
-  DeclareGeSetVar(2, __z, home);
+  SetVar *__y = setOrSetVar(OZ_in(1));
+  SetVar *__z = setOrSetVar(OZ_in(2));
+
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) &&
      OZ_isGeSetVar(OZ_in(2))){
     /*
@@ -1023,7 +1045,7 @@ OZ_BI_define(gfs_elementsUnion_3,3,0){
     */
     DECLARE_SETVARARGS(0, __x, home);
     try{
-      Gecode::elementsUnion(home, __x, __y, __z);
+      Gecode::elementsUnion(home, __x, *__y, *__z);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -1038,7 +1060,7 @@ OZ_BI_define(gfs_elementsUnion_3,3,0){
     */
     DECLARE_INT_SET_ARGS(0, __s);
     try{
-      Gecode::elementsUnion(home, __s, __y, __z);
+      Gecode::elementsUnion(home, __s, *__y, *__z);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -1047,6 +1069,7 @@ OZ_BI_define(gfs_elementsUnion_3,3,0){
   else{
     return OZ_typeError(0, "Malformed Propagator");
   }
+  delete __y, __z;
   
   CHECK_POST(home);
 }OZ_BI_end
@@ -1068,12 +1091,13 @@ OZ_BI_define(gfs_elementsInter_4,4,0){
     */
     
     DECLARE_SETVARARGS(0, __x, home);
-    DeclareGeSetVar(1, __y, home);
-    DeclareGeSetVar(2, __z, home);
+    SetVar *__y = setOrSetVar(OZ_in(1));
+    SetVar *__z = setOrSetVar(OZ_in(2));
     DECLARE_INT_SET(3, __u);
     
     try{
-      Gecode::elementsInter(home, __x, __y, __z, __u);
+      Gecode::elementsInter(home, __x, *__y, *__z, __u);
+      delete __y, __z;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -1102,11 +1126,11 @@ OZ_BI_define(gfs_elementsInter_3,3,0){
     */
     
     DECLARE_SETVARARGS(0, __x, home);
-    DeclareGeSetVar(1, __y, home);
-    DeclareGeSetVar(2, __z, home);
-    
+    SetVar *__y = setOrSetVar(OZ_in(1));
+    SetVar *__z = setOrSetVar(OZ_in(2));
     try{
-      Gecode::elementsInter(home, __x, __y, __z);
+      Gecode::elementsInter(home, __x, *__y, *__z);
+      delete __y, __z;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -1125,8 +1149,9 @@ OZ_BI_define(gfs_element_3,3,0){
   for(int i=0; i<3; i++)
     SuspendPosting(OZ_in(i));
 
-  DeclareGeIntVar(1, __y, home);
-  DeclareGeSetVar(2, __z, home);
+  IntVar *__y = intOrIntVar(OZ_in(1));
+  SetVar *__z = setOrSetVar(OZ_in(2));
+  
 
   if(OZ_isSetVarArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2))){
@@ -1138,7 +1163,8 @@ OZ_BI_define(gfs_element_3,3,0){
     
     DECLARE_SETVARARGS(0, __x, home);
     try{
-      Gecode::element(home, __x, __y, __z);
+      Gecode::element(home, __x, *__y, *__z);
+      delete __y;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -1154,7 +1180,8 @@ OZ_BI_define(gfs_element_3,3,0){
     
     DECLARE_INT_SET_ARGS(0, __s);
     try{
-      Gecode::element(home, __s, __y, __z);
+      Gecode::element(home, __s, *__y, *__z);
+      delete __y;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -1163,6 +1190,8 @@ OZ_BI_define(gfs_element_3,3,0){
   else{
     return OZ_typeError(0, "Malformed Propagator");
   }
+  delete __z;
+
   CHECK_POST(home);
 }OZ_BI_end
 
@@ -1181,10 +1210,11 @@ OZ_BI_define(gfs_elementsDisjoint_2,2,0){
     */
     
     DECLARE_SETVARARGS(0, __x, home);
-    DeclareGeSetVar(1, __y, home);
+    SetVar *__y = setOrSetVar(OZ_in(1));
 
     try{
-      Gecode::elementsDisjoint(home, __x, __y);
+      Gecode::elementsDisjoint(home, __x, *__y);
+      delete __y;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);

@@ -103,8 +103,10 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getMin,1,1)
 {
-  DeclareGeIntVar1(0,v);
-  OZ_RETURN_INT(v.min());
+  IntVar *iv = intOrIntVar(OZ_in(0));
+  IntView view(*iv);
+  delete iv;
+  OZ_RETURN_INT(view.min());
 }
 OZ_BI_end
 
@@ -117,8 +119,10 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getMax,1,1)
 {
-  DeclareGeIntVar1(0,v);
-  OZ_RETURN_INT(v.max());
+  IntVar *iv = intOrIntVar(OZ_in(0));
+  IntView view(*iv);
+  delete iv;
+  OZ_RETURN_INT(view.max());
 }
 OZ_BI_end
 
@@ -130,8 +134,10 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getSize,1,1)
 {
-  DeclareGeIntVar1(0,v);
-  OZ_RETURN_INT(v.size());
+  IntVar *iv = intOrIntVar(OZ_in(0));
+  IntView view(*iv);
+  delete iv;
+  OZ_RETURN_INT(view.size());
 }
 OZ_BI_end
 
@@ -247,8 +253,10 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getMed,1,1)
 {
-  DeclareGeIntVar1(0,v);
-  OZ_RETURN_INT(v.med());
+  IntVar *iv = intOrIntVar(OZ_in(0));
+  IntView view(*iv);
+  delete iv;
+  OZ_RETURN_INT(view.med());
 }
 OZ_BI_end
 
@@ -261,8 +269,10 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getWidth,1,1)
 {
-  DeclareGeIntVar1(0,v);
-  OZ_RETURN_INT(v.width());
+  IntVar *iv = intOrIntVar(OZ_in(0));
+  IntView view(*iv);
+  delete iv;
+  OZ_RETURN_INT(view.width());
 }
 OZ_BI_end
 
@@ -274,8 +284,10 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getRegretMin,1,1)
 {
-  DeclareGeIntVar1(0,v);
-  OZ_RETURN_INT(IntView(v).regret_min());
+  IntVar *iv = intOrIntVar(OZ_in(0));
+  IntView view(*iv);
+  delete iv;
+  OZ_RETURN_INT(view.regret_min());
 }
 OZ_BI_end
 
@@ -287,8 +299,10 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getRegretMax,1,1)
 {
-  DeclareGeIntVar1(0,v);
-  OZ_RETURN_INT(IntView(v).regret_max());
+  IntVar *iv = intOrIntVar(OZ_in(0));
+  IntView view(*iv);
+  delete iv;
+  OZ_RETURN_INT(view.regret_max());
 }
 OZ_BI_end
 
@@ -300,9 +314,11 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_propSusp,1,1)
 {
-  DeclareGeIntVar1(0,v);
+  IntVar *iv = intOrIntVar(OZ_in(0));
+  IntView view(*iv);
+  delete iv;
   GeVarBase *gv = get_GeVar(OZ_in(0));
-  OZ_RETURN_INT(v.degree()-gv->varprops());
+  OZ_RETURN_INT(view.degree()-gv->varprops());
 }
 OZ_BI_end
 

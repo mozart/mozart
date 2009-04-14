@@ -64,6 +64,25 @@ public:
     IntVar *tmp = new IntVar(iv);
     return (*tmp);
   }
+
+  /**
+   * Methods getIntVarPtr & getIntVarInfoPtr are intented to
+   * provide accees to gecode variables with clean memory
+   * magnament. The returned pointer *most be deleted* when
+   * it is used.
+   */
+  IntVar * getIntVarPtr(void){
+    GenericSpace *gs = getGSpace();
+    Int::IntView iv(static_cast<IntVarImp*>(gs->getVar(index)));
+    gs->makeUnstable();
+    return new IntVar(iv);
+  }
+
+  IntVar * getIntVarInfoPtr(void){
+    GenericSpace *gs = getGSpace();
+    Int::IntView iv(static_cast<IntVarImp*>(gs->getVar(index)));
+    return new IntVar(iv);
+  }
   
   /**
      \brief Put in out a text representation of the variable.
@@ -100,16 +119,20 @@ public:
   virtual TaggedRef newVar(void);
 
   virtual void propagator(GenericSpace *s, GeVar *lgevar, GeVar *rgevar) {
-    IntVar& lintvar = (static_cast<GeIntVar*>(lgevar))->getIntVarInfo();
-    IntVar& rintvar = (static_cast<GeIntVar*>(rgevar))->getIntVarInfo();    
+    IntVar *lintvar = (static_cast<GeIntVar*>(lgevar))->getIntVarInfoPtr();
+    IntVar *rintvar = (static_cast<GeIntVar*>(rgevar))->getIntVarInfoPtr();    
     
-    rel(s,lintvar,IRT_EQ, rintvar);
+    rel(s,*lintvar,IRT_EQ, *rintvar);
+    delete lintvar;
+    delete rintvar;
   }
 
   virtual ModEvent bind(GenericSpace *s, GeVar *v, OZ_Term val) {
     int n = OZ_intToC(val);
-    Int::IntView W(getIntVarInfo());
-    return Int::IntView(getIntVarInfo()).eq(s,n);
+    IntVar *iv = getIntVarInfoPtr();
+    Int::IntView w(*iv);
+    delete iv;
+    return w.eq(s,n);
   }
 
   virtual Bool validV(OZ_Term v);
@@ -148,25 +171,25 @@ namespace {
 
 inline OZ_Term new_GeIntVar(const IntSet& dom) {
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
-  IntVar x(sp,dom);
+  IntVar *x = new IntVar(sp,dom);
   GeIntVar *nv = new GeIntVar(sp->getVarsSize());
   OzVariable* ov   = extVar2Var(nv);
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
-  int index        = sp->newVar(static_cast<VarImpBase*>(x.var()), ref);
+  int index        = sp->newVar(static_cast<VarImpBase*>(x->var()), ref);
 
   if (oz_onToplevel())
     oz_currentBoard()->getGenericSpace()->makeUnstable();
 
   //nv->ensureValReflection();
   postValReflector<IntView,IntVarImp>(sp,index);
-
+  delete x;
   return ref;
 }
 
 inline OZ_Term new_GeIntVarCompl(const IntSet& dom) {
   GenericSpace *sp = oz_currentBoard()->getGenericSpace();
-  IntVar x(sp,dom);
-  ViewRanges<IntView> xvr(x);
+  IntVar *x = new IntVar(sp,dom);
+  ViewRanges<IntView> xvr(*x);
   IntVar xcompl(sp, Gecode::Int::Limits::min, Gecode::Int::Limits::max);
   IntView xcv(xcompl);
   xcv.minus_r(sp, xvr);
@@ -180,7 +203,7 @@ inline OZ_Term new_GeIntVarCompl(const IntSet& dom) {
 
   //nv->ensureValReflection();
   postValReflector<IntView,IntVarImp>(sp,index);
-
+  delete x;
   return ref;
 }
 
@@ -230,6 +253,26 @@ inline IntVar& get_IntVarInfo(OZ_Term v) {
   return get_GeIntVar(v,false)->getIntVarInfo();
 }
 
+
+/**
+   \brief Retrieve gecode variable pointer from an OZ_Term afecting 
+   space stability. A call to this method will make the gecode
+   space unstable.
+*/
+inline
+IntVar * get_IntVarPtr(OZ_Term v){
+  return get_GeIntVar(v)->getIntVarPtr();
+}
+
+/**
+   \brief Retrieve gecode variable pointer from an OZ_Term without afecting 
+   space stability. A call to this method will not make the gecode
+   space unstable.
+*/
+inline 
+IntVar * get_IntVarInfoPtr(OZ_Term v) {
+  return get_GeIntVar(v,false)->getIntVarInfoPtr();
+}
 
 /*** Fuction for type checking of posting functions ***/
 /**
