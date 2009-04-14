@@ -42,7 +42,9 @@ Bool GeSetVar::validV(OZ_Term val) {
     IntSetRanges tmpGl(SetValueM::tagged2SetVal(val)->getLBValue());
     IntSetRanges tmpLu(SetValueM::tagged2SetVal(val)->getUBValue());
 
-    Set::SetView ViewVar(getSetVarInfo());
+    SetVar *ss = getSetVarInfoPtr();
+    Set::SetView ViewVar(*ss);
+    delete ss;
     Gecode::Set::GlbRanges<Gecode::Set::SetView> x0lb(ViewVar);
     Gecode::Set::LubRanges<Gecode::Set::SetView> x0ub(ViewVar);
 
@@ -61,9 +63,10 @@ OZ_Term GeSetVar::statusV() {
 VarImpBase* GeSetVar::clone(void) {
   GenericSpace* gs = getGSpace(); //extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
   Assert(gs);
-  SetVar &v = getSetVarInfo();
+  SetVar *v = getSetVarInfoPtr();
   SetVar x;
-  x.update(gs,false,v);
+  x.update(gs,false,*v);
+  delete v;
   return x.var();
 }
 
@@ -73,9 +76,12 @@ VarImpBase* GeSetVar::clone(void) {
 //this is quite similar to bind method
 inline
 bool GeSetVar::intersect(TaggedRef x) {
-  SetView sview1(getSetVarInfo());
-  SetView sview2(get_SetVarInfo(x));
-
+  SetVar *s1 = getSetVarInfoPtr();
+  SetVar *s2 = get_SetVarInfoPtr(x);
+  SetView sview1(*s1);
+  SetView sview2(*s2);
+  delete s1, s2;
+  
   LubRanges<SetView> x0ub(sview1);
   GlbRanges<SetView> x0lb(sview1);  
  
@@ -91,8 +97,11 @@ bool GeSetVar::intersect(TaggedRef x) {
 // If lx's Lub is a subset of the variable then In returns true otherwise it returns false
 inline
 bool GeSetVar::In(TaggedRef lx) {
-  SetView vwg(getSetVarInfo());
-  SetView vwl(get_SetVarInfo(lx));
+  SetVar *s1 = getSetVarInfoPtr();
+  SetVar *s2 = get_SetVarInfoPtr(lx);
+  SetView vwg(*s1);
+  SetView vwl(*s2);
+  delete s1, s2;
 
   Set::LubRanges<Set::SetView> lxLub(vwl);
   Set::LubRanges<Set::SetView> vLub(vwg);
@@ -109,8 +118,11 @@ TaggedRef GeSetVar::clone(TaggedRef v) {
 
 inline
 bool GeSetVar::hasSameDomain(TaggedRef v) {
-  SetView vwg(getSetVarInfo());
-  SetView vwl(get_SetVarInfo(v));
+  SetVar *s1 = getSetVarInfoPtr();
+  SetVar *s2 = get_SetVarInfoPtr(v);
+  SetView vwg(*s1);
+  SetView vwl(*s2);
+  delete s1, s2;
 
   LubRanges<SetView> xLub(vwl);
   LubRanges<SetView> xGub(vwg);
@@ -133,10 +145,12 @@ TaggedRef GeSetVar::newVar(void) {
 //We have to be very carefull here,  ther order in the parameters of the function DOES matter!!!!
 inline
 bool GeSetVar::IsEmptyInter(TaggedRef* var1,  TaggedRef* var2) {
+  SetVar *sv1 = get_SetVarInfoPtr(*var1);
+  SetVar *sv2 = get_SetVarInfoPtr(*var2);
+  SetView v1(*sv1);
+  SetView v2(*sv2);
+  delete sv1, sv2;
   
-  SetView v1(get_SetVarInfo(*var1));
-  SetView v2(get_SetVarInfo(*var2));
-
   LubRanges<SetView> x1ub(v1);
   LubRanges<SetView> x2ub(v2);
 
@@ -150,9 +164,11 @@ bool GeSetVar::IsEmptyInter(TaggedRef* var1,  TaggedRef* var2) {
 }
 
 void GeSetVar::toStream(ostream &out) {
+  SetVar *sv = getSetVarInfoPtr();
   std::stringstream oss;
-  oss << getSetVarInfo();
+  oss << *sv;
   out << "<GeSetVar " << oss.str().c_str() << ">"; 
+  delete sv;
 }
   
 

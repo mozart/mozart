@@ -36,13 +36,14 @@ using namespace Gecode::Int;
 OZ_BI_define(bool_rel_BV_BT_BV_BV,4,0)
 {
   DeclareGSpace(sp);
-  DeclareGeBoolVar(0,v1,sp);
+  BoolVar *v1 = boolOrBoolVar(OZ_in(0));
   DeclareBoolOpType(1,bt);
-  DeclareGeBoolVar(2,v2,sp);
-  DeclareGeBoolVar(3,v3,sp);
+  BoolVar *v2 = boolOrBoolVar(OZ_in(2));
+  BoolVar *v3 = boolOrBoolVar(OZ_in(3));
  
   try{
-    rel(sp,v1,bt,v2,v3);
+    rel(sp,*v1,bt,*v2,*v3);
+    delete v1, v2, v3;
   }
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
@@ -55,11 +56,12 @@ OZ_BI_define(bool_rel_BV_BT_BV_BV,4,0)
 OZ_BI_define(bool_not,3,0)
 {
   DeclareGSpace(sp);
-  DeclareGeBoolVar(0,v1,sp);
-  DeclareGeBoolVar(1,v2,sp);    
+  BoolVar *v1 = boolOrBoolVar(OZ_in(0));
+  BoolVar *v2 = boolOrBoolVar(OZ_in(1));
   OZ_declareInt(2,ConLevel); 
   try{
-    rel(sp,v1,IRT_NQ,v2,(IntConLevel)ConLevel);
+    rel(sp,*v1,IRT_NQ,*v2,(IntConLevel)ConLevel);
+    delete v1, v2;
   }
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
@@ -73,8 +75,8 @@ OZ_BI_define(bool_not,3,0)
 OZ_BI_define(bool_eq,3,0)
 {
   DeclareGSpace(sp);
-  DeclareGeBoolVar(0,v1,sp);
-  DeclareGeBoolVar(1,v2,sp);    
+  BoolVar *v1 = boolOrBoolVar(OZ_in(0));
+  BoolVar *v2 = boolOrBoolVar(OZ_in(1));
   OZ_declareInt(2,ConLevel); 
   /*
     try{
@@ -84,6 +86,7 @@ OZ_BI_define(bool_eq,3,0)
     catch(Exception e){
     RAISE_GE_EXCEPTION(e);
     }*/
+  delete v1, v2;
   CHECK_POST(sp);
 
 } OZ_BI_end
@@ -92,16 +95,18 @@ OZ_BI_define(bool_eq,3,0)
     OZ_BI_define(bool_and,4,0)
     {
     DeclareGSpace(sp);
-    DeclareGeBoolVar(0,v1,sp);
-    DeclareGeBoolVar(1,v2,sp);    
+    BoolVar *v1 = boolOrBoolVar(OZ_in(0));
+    BoolVar *v2 = boolOrBoolVar(OZ_in(1));
     DeclareIntConLevel(3,ConLevel);
  
     try{
     if(OZ_isInt(OZ_in(2)))
-    rel(sp,v1,BOT_AND,v2,OZ_intToC(OZ_in(2)),ConLevel);
+    rel(sp,*v1,BOT_AND,*v2,OZ_intToC(OZ_in(2)),ConLevel);
+    delete v1, v2;
     else{
-    DeclareGeBoolVar(2,v3,sp);
-    rel(sp,v1,BOT_AND,v2,v3,ConLevel);
+    BoolVar *v3 = boolOrBoolVar(OZ_in(2));
+    rel(sp,*v1,BOT_AND,*v2,*v3,ConLevel);
+    delete v1, v2, v3;
     }
     }
     catch(Exception e){
@@ -125,8 +130,9 @@ OZ_BI_define(bool_and_arr,3,0)
     if(OZ_isInt(OZ_in(1)))
     bool_and(sp,v1,OZ_intToC(OZ_in(1)),(IntConLevel)ConLevel);
     else{
-    DeclareGeBoolVar(1,v2,sp);
-    bool_and(sp,v1,static_cast<BoolVar>(v2),(IntConLevel)ConLevel);
+    BoolVar *v2 = boolOrBoolVar(OZ_in(1));
+    bool_and(sp,v1,*v2,(IntConLevel)ConLevel);
+    delete v2;
     }
     }
     catch(Exception e){
@@ -143,16 +149,18 @@ OZ_BI_define(bool_and_arr,3,0)
     OZ_BI_define(bool_or,4,0)
     {
     DeclareGSpace(sp);
-    DeclareGeBoolVar(0,v1,sp);
-    DeclareGeBoolVar(1,v2,sp);    
+    BoolVar *v1 = boolOrBoolVar(OZ_in(0));
+    BoolVar *v2 = boolOrBoolVar(OZ_in(1));
     DeclareIntConLevel(3,ConLevel);
   
     try{
     if(OZ_isInt(OZ_in(2)))
-    rel(sp,v1,BOT_OR,v2,OZ_intToC(OZ_in(2)),ConLevel);
+    rel(sp,*v1,BOT_OR,*v2,OZ_intToC(OZ_in(2)),ConLevel);
+    delete *v1, *v2;
     else{
-    DeclareGeBoolVar(2,v3,sp);
-    rel(sp,v1,BOT_OR,v2,v3,ConLevel);
+    BoolVar *v3 = boolOrBoolVar(OZ_in(2));
+    rel(sp,*v1,BOT_OR,*v2,*v3,ConLevel);
+    delete v1, v2, v3;
     }
     }
     catch(Exception e){
@@ -174,8 +182,9 @@ OZ_BI_define(bool_or_arr,3,0)
     if(OZ_isInt(OZ_in(1)))
     bool_or(sp,v1,OZ_intToC(OZ_in(1)),(IntConLevel)ConLevel);
     else{
-    DeclareGeBoolVar(1,v2,sp);
-    bool_or(sp,v1,static_cast<BoolVar>(v2),(IntConLevel)ConLevel);
+    BoolVar *v2 = boolOrBoolVar(OZ_in(1));
+    bool_or(sp,v1,*v2,(IntConLevel)ConLevel);
+    delete v2;
     }
     }
     catch(Exception e){
@@ -192,16 +201,17 @@ OZ_BI_define(bool_or_arr,3,0)
     OZ_BI_define(bool_imp,4,0)
     {
     DeclareGSpace(sp);
-    DeclareGeBoolVar(0,v1,sp);
-    DeclareGeBoolVar(1,v2,sp);    
+    BoolVar *v1 = boolOrBoolVar(OZ_in(0));
+    BoolVar *v2 = boolOrBoolVar(OZ_in(1));
     DeclareIntConLevel(3,ConLevel);
   
     try{
     if(OZ_isInt(OZ_in(2)))
-    rel(sp,v1,BOT_IMP,v2,OZ_intToC(OZ_in(2)),ConLevel);
+    rel(sp,*v1,BOT_IMP,*v2,OZ_intToC(OZ_in(2)),ConLevel);
+    delete v1, v2;
     else{
-    DeclareGeBoolVar(2,v3,sp);
-    rel(sp,v1,BOT_IMP,v2,v3,ConLevel);
+    BoolVar *v3 = boolOrBoolVar(OZ_in(2));
+    rel(sp,*v1,BOT_IMP,*v2,*v3,ConLevel);
     }
     }
     catch(Exception e){
@@ -217,16 +227,18 @@ OZ_BI_define(bool_or_arr,3,0)
     OZ_BI_define(bool_eqv,4,0)
     {
     DeclareGSpace(sp);
-    DeclareGeBoolVar(0,v1,sp);
-    DeclareGeBoolVar(1,v2,sp);    
+    BoolVar *v1 = boolOrBoolVar(OZ_in(0));
+    BoolVar *v2 = boolOrBoolVar(OZ_in(1));
     DeclareIntConLevel(3,ConLevel);
   
     try{
     if(OZ_isInt(OZ_in(2)))
-    rel(sp,v1,BOT_EQV,v2,OZ_intToC(OZ_in(2)),ConLevel);
+    rel(sp,*v1,BOT_EQV,*v2,OZ_intToC(OZ_in(2)),ConLevel);
+    delete v1, v2;
     else{
-    DeclareGeBoolVar(2,v3,sp);
-    rel(sp,v1,BOT_EQV,v2,v3,ConLevel);
+    BoolVar *v3 = boolOrBoolVar(OZ_in(2));
+    rel(sp,*v1,BOT_EQV,*v2,*v3,ConLevel);
+    delete v1, v2, v3;
     }
     }
     catch(Exception e){
@@ -241,16 +253,19 @@ OZ_BI_define(bool_or_arr,3,0)
     OZ_BI_define(bool_xor,4,0)
     {
     DeclareGSpace(sp);
-    DeclareGeBoolVar(0,v1,sp);
-    DeclareGeBoolVar(1,v2,sp);    
+    BoolVar *v1 = boolOrBoolVar(OZ_in(0));
+    BoolVar *v2 = boolOrBoolVar(OZ_in(1));
+    
     DeclareIntConLevel(3,ConLevel);
    
     try{
     if(OZ_isInt(OZ_in(2)))
-    rel(sp,v1,BOT_XOR,v2,OZ_intToC(OZ_in(2)),ConLevel);
+    rel(sp,*v1,BOT_XOR,*v2,OZ_intToC(OZ_in(2)),ConLevel);
+    delete v1, v2;
     else{
-    DeclareGeBoolVar(2,v3,sp);
+    BoolVar *v3 = boolOrBoolVar(OZ_in(2));
     rel(sp,v1,BOT_XOR,v2,v3,ConLevel);
+    delete v1, v2, v3;
     }
     }
     catch(Exception e){
@@ -275,16 +290,17 @@ OZ_BI_define(bool_rel,4,0) {
     return OZ_typeError(1,"Argument has to be a Relation Type");
   }
   relType=OZ_intToC(OZ_in(1));
-  DeclareGeBoolVar(0,v1,gs);
-  DeclareGeBoolVar(2,v2,gs);
+  BoolVar *v1 = boolOrBoolVar(OZ_in(0));
+  BoolVar *v2 = boolOrBoolVar(OZ_in(2));
 
   /*
     try {
-    rel(gs,v1,(IntRelType)relType,v2,(IntConLevel)consistencyLevel);
+    rel(gs,*v1,(IntRelType)relType,*v2,(IntConLevel)consistencyLevel);
     } catch (Exception e) {
     RAISE_GE_EXCEPTION(e);
     } */
   
+  delete v1, v2;
   CHECK_POST(gs);
 } OZ_BI_end
 

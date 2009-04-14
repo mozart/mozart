@@ -59,7 +59,27 @@ public:
     BoolVar *tmp = new BoolVar(bv);
     return (*tmp);
   }
+
+
+  /**
+   * Methods getBoolVarPtr & getBoolVarInfoPtr are intented to
+   * provide accees to gecode variables with clean memory
+   * magnament. The returned pointer *most be deleted* when
+   * it is used.
+   */
+  BoolVar * getBoolVarPtr(void){
+    GenericSpace *gs = getGSpace();
+    Int::BoolView bv(static_cast<BoolVarImp*>(gs->getVar(index)));
+    gs->makeUnstable();
+    return new BoolVar(bv);
+  }
+
+  BoolVar * getBoolVarInfoPtr(void) {
+    Int::BoolView bv(static_cast<BoolVarImp*>(getGSpace()->getVar(index)));
+    return new BoolVar(bv);
+  }
   
+
   /**
      \brief Put in out a text representation of the variable.
    */
@@ -94,16 +114,18 @@ public:
   virtual TaggedRef newVar(void);
 
   virtual void propagator(GenericSpace *s, GeVar *lgevar, GeVar *rgevar) {
-    BoolVar& lbvar = (static_cast<GeBoolVar*>(lgevar))->getBoolVarInfo();
-    BoolVar& rbvar = (static_cast<GeBoolVar*>(rgevar))->getBoolVarInfo();    
-    rel(s,lbvar,IRT_EQ,rbvar);
+    BoolVar *lbvar = (static_cast<GeBoolVar*>(lgevar))->getBoolVarInfoPtr();
+    BoolVar *rbvar = (static_cast<GeBoolVar*>(rgevar))->getBoolVarInfoPtr();    
+    rel(s,*lbvar,IRT_EQ,*rbvar);
+    delete lbvar, rbvar;
   }
 
   virtual ModEvent bind(GenericSpace *s, GeVar *v, OZ_Term val) {
     int n = OZ_intToC(val);
-
-    return Int::BoolView(getBoolVarInfo()).eq(s,n);
-
+    BoolVar *var = getBoolVarInfoPtr();
+    Int::BoolView bv(*var);
+    delete var;
+    return bv.eq(s,n);
   }
 
   virtual Bool validV(OZ_Term v);
@@ -204,6 +226,27 @@ inline BoolVar& get_BoolVar(OZ_Term v) {
 */
 inline BoolVar& get_BoolVarInfo(OZ_Term v) {
   return get_GeBoolVar(v,false)->getBoolVarInfo();
+}
+
+
+/**
+   \brief Retrieve gecode variable pointer from an OZ_Term afecting 
+   space stability. A call to this method will make the gecode
+   space unstable.
+*/
+inline 
+BoolVar * get_BoolVarPtr(OZ_Term v) {
+  return get_GeBoolVar(v)->getBoolVarPtr();
+}
+
+/**
+   \brief Retrieve gecode variable pointer from an OZ_Term without afecting 
+   space stability. A call to this method will not make the gecode
+   space unstable.
+*/
+inline 
+BoolVar * get_BoolVarInfoPtr(OZ_Term v) {
+  return get_GeBoolVar(v,false)->getBoolVarInfoPtr();
 }
 
 /**

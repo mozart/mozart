@@ -78,6 +78,19 @@ BoolVar* declareBV(OZ_Term p, GenericSpace *s) {
 
 
 /**
+ * \brief Return a BoolVar from a integer or a GeBoolVar
+ * @param value integer or GeBoolVar representing a BoolVar
+ */
+inline
+BoolVar * boolOrBoolVar(TaggedRef value){
+  if(OZ_isInt(value)){
+    return new BoolVar(oz_currentBoard()->getGenericSpace(), OZ_intToC(value), OZ_intToC(value));
+  }else {
+    return get_BoolVarPtr(value);
+  }
+}
+
+/**
  * \brief Declares a GeBoolVar inside a var array. Space stability is affected as a side effect.
  * @param val integer value of the new variable
  * @param ar array of variables where the new variable is posted
