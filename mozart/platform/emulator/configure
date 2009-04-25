@@ -3788,7 +3788,7 @@ EOF
 EOF
 
 	EMULDFLAGS="-Wl,-keep_private_externs"
-	TOOLLDCMD="$CC -dynamic -bundle -flat_namespace -undefined suppress"
+	TOOLLDCMD="$CC -dynamiclib -flat_namespace -undefined suppress"
 	: ${oz_enable_modules_static=no}
     ;;
     *)
