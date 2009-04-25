@@ -221,7 +221,7 @@ case "$host_os" in
 	CXXFLAGS="-DSOLARIS $CXXFLAGS"
     ;;
     darwin*)
-	DYNLD="\$(CXX) -dynamic -bundle -flat_namespace -undefined suppress"
+	DYNLD="\$(CXX) -dynamiclib -flat_namespace -undefined suppress"
     ;;
 esac
 
