@@ -57,7 +57,7 @@ in
 end
 
 
-%{Show {SearchBest {MakeGolomb 7} Better}}
-{Show {SearchOne {MakeGolomb 7}}}
+{Show {SearchBest {MakeGolomb 7} Better}}
+%{Show {SearchOne {MakeGolomb 7}}}
 
 
