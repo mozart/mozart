@@ -36,15 +36,15 @@
 PLAT=/usr/local/bin/platypus 
 
 ## Cocoa dialog
-CD=/Users/ggutierrez/Desktop/CocoaDialog.app
+CD=/Users/gg/Desktop/CocoaDialog.app
 
 ##
 # Mozart Installation
 ##
-MOZ_INST=/Users/ggutierrez/Work/moz150
+MOZ_INST=/Users/gg/Work/mg
 
 ## Mozart documentation
-MOZ_DOC=/Users/ggutierrez/Desktop/Documentation
+MOZ_DOC=/Users/gg/Desktop/Documentation
 
 ##----------------------------------------------------------------
 ## Do not modify anything bellow this line
@@ -52,6 +52,8 @@ MOZ_DOC=/Users/ggutierrez/Desktop/Documentation
 ## Directories of mozart installation to be bundled.
 MOZ_DIRS= platform bin cache share include
 
+VERSION = $(shell $(MOZ_INST)/bin/oztool version)
+DATE=$(shell date +%d%h%y)
 NAME=Mozart
 APP=$(NAME).app
 
@@ -72,7 +74,7 @@ PLATFORM=`$(MOZ_INST)/bin/oztool platform`
 EMULATOR=$(APP)/Contents/Resources/platform/$(PLATFORM)/emulator.exe
 
 ## Platypus call
-PLATCALL = $(PLAT) -D -X "oz|OZ" -V "1.4.0" -u 'Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>' -i 'appIcon.icns' script.sh ./$(APP)
+PLATCALL = $(PLAT) -D -X "oz|OZ" -V "1.5.0" -u 'Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>' -i 'appIcon.icns' script.sh ./$(APP)
 
 ##
 #Create a bundle from skel
@@ -97,7 +99,8 @@ diskimage:
 	mkdir -p tmpdir/
 	mv Mozart.app tmpdir/
 	cp -r $(MOZ_DOC) tmpdir/
-	./make-dmg.sh $(NAME).dmg tmpdir/ $(NAME)
+	cp -r $(MOZ_INST)/examples tmpdir/
+	./make-dmg.sh $(NAME)-$(VERSION)-$(DATE).dmg tmpdir/ $(NAME)
 	-rm -rf tmpdir
 	@echo finished
 

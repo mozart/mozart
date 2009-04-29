@@ -40,18 +40,49 @@ RELFWKS=@executable_path/../../../Frameworks
 
 # paths of imported shared libraries that do not match the patterns
 # shown below.  Add more grep -v's if necessary.
-BUNDLELIBS=`otool -LX $EMULATOR | sed 's/(.*$//' |
-    grep -v /usr/lib/libgcc |
-    grep -v /usr/lib/libstdc\+\+ |
-    grep -v /usr/lib/libz |
-    grep -v /System/Library/Frameworks/Tk.framework/Versions/8.4/Tk |
-    grep -v /usr/lib/libSystem`
+BUNDLELIBS=(`otool -LX $EMULATOR | sed 's/(.*$//' |                                                                 
+grep -v /usr/lib/libgcc |                                                                                                
+grep -v /usr/lib/libstdc\+\+ |                                                                                           
+grep -v /usr/lib/libz |                                                                                                  
+grep -v /System/Library/Frameworks/Tk.framework/Versions/8.4/Tk |                                                        
+grep -v /usr/lib/libSystem`)
 
-# copy libraries in the bundle, and patch the emulator
-for FILE in $BUNDLELIBS; do
+# copy libraries in the bundle and patch the emulator
+for FILE in ${BUNDLELIBS[@]}; do
     NAME=`basename $FILE`
+		echo "Copying $FILE"
     cp $FILE $BUNDLE/Contents/Frameworks/
     install_name_tool -change $FILE $RELFWKS/$NAME $EMULATOR
 done
 
-# done!
+n=${#BUNDLELIBS[@]}
+iter=0
+
+# path the internals libraries of emulator's libraries
+while [ "$iter" -lt "$n" ]
+do
+	INBUNDLELIBS=(`otool -LX ${BUNDLELIBS[$iter]} | sed 's/(.*$//' |
+	grep -v /usr/lib/libgcc |
+	grep -v /usr/lib/libstdc\+\+ |
+	grep -v /usr/lib/libz |
+	grep -v /System/Library/Frameworks/Tk.framework/Versions/8.4/Tk |
+  grep -v /usr/lib/libSystem|
+  grep -v $RELFWKS`)
+    
+  NAME=`basename ${BUNDLELIBS[$iter]}`
+  for FILE in ${INBUNDLELIBS[@]}; do
+	  INNAME=`basename $FILE`
+	  if [ ! -f $BUNDLE/Contents/Frameworks/$NAME ]
+	  then
+	    echo "Copying and patching $FILE"
+	    cp $FILE $BUNDLE/Contents/Frameworks/
+      install_name_tool -change $FILE $RELFWKS/$INNAME $BUNDLE/Contents/Frameworks/$NAME
+	    BUNDLELIBS=( ${BUNDLELIBS[@]} $FILE )
+	  fi
+  done
+  iter=`expr $iter + 1`
+  n=${#BUNDLELIBS[@]}
+done
+
+
+#done!
