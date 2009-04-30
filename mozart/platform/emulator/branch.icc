@@ -87,7 +87,6 @@ void GeVarDistributor<View, Val, ViewSel, ValSel>::dispose(void) {
 template<class View, class Val, class ViewSel, class ValSel>
 inline
 int GeVarDistributor<View, Val, ViewSel, ValSel>::commitBranch(Board *bb, TaggedRef bd) {
-  
   // This assumes bd to be in the form: id(Pos#Value) or id(Pos#compl(Value))
   Assert(OZ_isTuple(bd));
   int bd_id = OZ_intToC(OZ_getArg(bd,0));
@@ -96,7 +95,8 @@ int GeVarDistributor<View, Val, ViewSel, ValSel>::commitBranch(Board *bb, Tagged
   
     Assert(0 <= pos && pos < size);
     TaggedRef value = OZ_getArg(bd,2);
-  
+    Assert(bb->getGenericSpace(true));
+    Assert(!bb->getGenericSpace(true)->failed());
     bb->prepareTell(BI_GEC_TELL_CONST,
                     RefsArray::make(OZ_int(pos),value));
     
@@ -106,7 +106,6 @@ int GeVarDistributor<View, Val, ViewSel, ValSel>::commitBranch(Board *bb, Tagged
     */
     return 1;
   }
-  
   /*
     The commited branch does not correspond to this distributor. Let's
     delegate the responsablity to the board.
@@ -123,7 +122,7 @@ int GeVarDistributor<View, Val, ViewSel, ValSel>::notifyStable(Board *bb) {
   */
   GenericSpace *gs = bb->getGenericSpace(true);
   /*
-    TODO: must be this board the same one in which this distributor
+    TODO: must this board be the same one in which this distributor
     was created?. If it must then it would be better to put an
     assertion about gs == gs_home. Answer: No, that is not true for
     all the cases, because bb can be a clone of the space in which
@@ -206,7 +205,7 @@ OZ_Return GeVarDistributor<View, Val, ViewSel, ValSel>::tell(RefsArray *args) {
   
   //Assert(OZ_isGeIntVar(vars[p]));
   GenericSpace *gs = oz_currentBoard()->getGenericSpace(true);
-  
+  Assert(gs);
   /*
     TODO: should be this board the same one in which this
     distributor was created?. If it should then it would be better
@@ -274,7 +273,6 @@ void GeVarAssignment<View, Val, ViewSel, ValSel>::finish(void) {
   (void) oz_unify(sync,AtomNil);
   dispose();
 }
- 
 
 template <class View, class Val, class ViewSel, class ValSel>
 inline
@@ -321,7 +319,6 @@ void GeVarAssignment<View, Val, ViewSel, ValSel>::dispose(void) {
 template <class View, class Val, class ViewSel, class ValSel>
 inline
 int GeVarAssignment<View, Val, ViewSel, ValSel>::commitBranch(Board *bb, TaggedRef bd) {
-  
   // This assumes bd to be in the form: Pos#Value or Pos#compl(Value)
   Assert(OZ_isTuple(bd));
   int pos = OZ_intToC(OZ_getArg(bd,0));
@@ -329,9 +326,9 @@ int GeVarAssignment<View, Val, ViewSel, ValSel>::commitBranch(Board *bb, TaggedR
   Assert(0 <= pos && pos < size);
   TaggedRef value = OZ_getArg(bd,1);
   
+  assert(bb->getGenericSpace(true));
   bb->prepareTell(BI_GEC_TELL_CONST,
 		  RefsArray::make(OZ_int(pos),value));
-  
   /* 
      Assumes the only method able to tell the sapce to remove the
      distributor is notifyStable. This can be optimized further.

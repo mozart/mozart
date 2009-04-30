@@ -512,7 +512,7 @@ void Board::ensureLateThread(void) {
       lateThread->pushCall(BI_PROP_GEC,NULL);
     } else {
       //Add a suspended thread in status
-      lateThread = oz_newThreadSuspended(DEFAULT_PRIORITY);
+      lateThread = oz_newThreadSuspended(this,DEFAULT_PRIORITY);
       lateThread->pushCall(BI_PROP_GEC,NULL);
       oz_var_addQuietSusp(st_ptr, lateThread);
     }
@@ -525,6 +525,20 @@ void Board::ensureLateThread(void) {
     }
   }
 }
+
+inline
+void Board::prepareTell(TaggedRef pred, RefsArray * x) {
+  assert(!oz_isRootBoard(this));
+  // Status must be a read only variable before ensureLateThread call. 
+  clearStatus();
+  // A new tell will make the gecode space unstable and then we need
+  // a lateThread to stabilize it. This thread _must_ belong to this board.
+  ensureLateThread();
+  Assert(getLateThread());
+  // Push the given tell on the lateThread stack.
+  getLateThread()->pushCall(pred,x);
+}
+
 
 #ifdef OUTLINE
 #undef inline
