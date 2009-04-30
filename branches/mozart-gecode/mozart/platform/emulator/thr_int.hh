@@ -40,6 +40,8 @@ Thread * oz_newThreadInject(Board *bb);
 
 Thread * oz_newThreadSuspended(int prio=DEFAULT_PRIORITY);
 
+Thread * oz_newThreadSuspended(Board* bb, int prio=DEFAULT_PRIORITY);
+
 Thread * oz_newThreadPropagate(Board *bb);
 
 void oz_disposeThread(Thread *tt);
