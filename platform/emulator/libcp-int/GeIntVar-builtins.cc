@@ -49,12 +49,26 @@ using namespace Gecode::Int;
 OZ_BI_define(new_intvar,1,1)
 {
   OZ_declareDetTerm(0,arg);
-  if(OZ_label(arg) == AtomCompl) {
-    DECLARE_INT_SET(OZ_getArg(arg,0), dom);
-    OZ_RETURN(new_GeIntVarCompl(dom));
+  DECLARE_INT_SET(arg,dom);
+  if (OZ_isGeIntVar(OZ_in(1))) {
+    // left = right(dom)
+    GenericSpace *sp = oz_currentBoard()->getGenericSpace(); 
+    IntVar& left = get_IntVar(OZ_deref(OZ_in(1)));
+    IntVar right(sp,dom);
+    IntView vl(left), vr(right);
+    ViewRanges<IntView> vvr(vr);
+    if (vl.inter_r(sp,vvr)==ME_GEN_FAILED ) {
+      return FAILED;
+    }
+    OZ_RETURN(OZ_in(1));
+  } else {
+    if(OZ_label(arg) == AtomCompl) {
+      DECLARE_INT_SET(OZ_getArg(arg,0), dom);
+      OZ_RETURN(new_GeIntVarCompl(dom));
+    }
+    DECLARE_INT_SET(arg,dom);   // the domain of the IntVar
+    OZ_RETURN(new_GeIntVar(dom));
   }
-  DECLARE_INT_SET(arg,dom);   // the domain of the IntVar
-  OZ_RETURN(new_GeIntVar(dom));
 }
 OZ_BI_end
 
