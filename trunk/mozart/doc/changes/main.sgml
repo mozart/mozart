@@ -166,6 +166,13 @@
 	      in making the timeout value at least twice the average
 	      round-trip time between the sites.
 	    </item>
+
+	    <item>
+	      The pickler can now read pickles made with
+	      Mozart&nbsp;1.3.x.  This backward compatibility is
+	      possible since the pickle format has only been extended
+	      between versions&nbsp;1.3.x and 1.4.0.
+	    </item>
 	  </list>
 	</p>
 
