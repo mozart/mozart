@@ -29,11 +29,9 @@
 #endif
 
 #include "dssBase.hh"
-#include "msl_serialize.hh"
 #include "coordinator.hh"
 #include "coordinator_stationary.hh"
 #include "coordinator_fwdchain.hh"
-#include "coordinator_mobile.hh"
 #include "protocols.hh"
 
 
@@ -102,9 +100,9 @@ namespace _dss_internal{ //Start namespace
   }
   
   
-  AOcallback
-  Coordinator::m_doe(const AbsOp& aop, DssThreadId* thid, DssOperationId* oId, PstInContainerInterface* builder, PstOutContainerInterface*& ans){
-    return a_proxy->m_doe(aop, thid, oId,  builder, ans);
+  void
+  Coordinator::m_doe(const AbsOp& aop, DssThreadId* thid, PstInContainerInterface* builder, PstOutContainerInterface*& ans){
+    return a_proxy->m_doe(aop, thid, builder, ans);
   }
   
   ::PstOutContainerInterface* 
@@ -182,13 +180,12 @@ namespace _dss_internal{ //Start namespace
   }
   
 
-  AOcallback
-  Proxy::m_doe(const AbsOp& aop, DssThreadId* thid, DssOperationId* oId,
-	       PstInContainerInterface* builder,
-	       PstOutContainerInterface*& ans)
+  void Proxy::m_doe(const AbsOp& aop, DssThreadId* thid,
+		    PstInContainerInterface* builder,
+		    PstOutContainerInterface*& ans)
   {
     return applyAbstractOperation(a_abstractEntity, aop,
-				  thid, oId, builder, ans);
+				  thid, builder, ans);
   }
   
   ::PstOutContainerInterface* 
@@ -223,7 +220,7 @@ namespace _dss_internal{ //Start namespace
       };
       break;
     case PMF_FREE:
-      dssLog(DLL_ALL,"PROXY (%p): Persistent (Free marshalling) proxy",this);
+      dssLog(DLL_MOST,"PROXY (%p): Persistent (Free marshalling) proxy",this);
       m_makePersistent();
       break;
     default: Assert(0);
@@ -247,8 +244,7 @@ namespace _dss_internal{ //Start namespace
     m_getReferenceInfo(buf, dest);              // up to 48 (often ~10, WRC)
 
     // Returns true when the protocol is immediate, i.e., when the
-    // whole node should be distributed.  The protocol using DKS
-    // marshals a NetId + 3 numbers + a DSite.  The other protocols
+    // whole node should be distributed. Normal protocols
     // marshal at most 1 byte.
     return m_getProtocol()->marshal_protocol_info(buf, dest);
   }
@@ -414,7 +410,6 @@ namespace _dss_internal{ //Start namespace
     switch(type){
     case AA_STATIONARY_MANAGER: return new ProxyStationary(ni, prox, env);
     case AA_MIGRATORY_MANAGER:  return new ProxyFwdChain(ni, prox, env);
-    case AA_MOBILE_COORDINATOR: return new ProxyMobile(ni, prox, env);
     default: Assert(0); 
     }
     return NULL;
@@ -427,7 +422,6 @@ namespace _dss_internal{ //Start namespace
     switch(type){
     case AA_STATIONARY_MANAGER: return new CoordinatorStationary(pman,GC_annot,env);
     case AA_MIGRATORY_MANAGER:  return new CoordinatorFwdChain(pman,GC_annot, env);
-    case AA_MOBILE_COORDINATOR: return new CoordinatorMobile(pman, GC_annot, env); 
     default:  Assert(0); 
     }
     return NULL;

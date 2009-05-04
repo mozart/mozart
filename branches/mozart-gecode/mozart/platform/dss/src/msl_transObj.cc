@@ -69,14 +69,14 @@ namespace _msl_internal{
   /******************** marshal/unmarshal ********************/
 
   // useful sizes inside marshaled frames
-  const int HEADER1 = 1 + SIZE_INT + SIZE_INT; // byte + acknum + framesize
+  const unsigned int HEADER1 = 1 + SIZE_INT + SIZE_INT; // byte + acknum + framesize
   const int TRAILER = 1;                       // control flag
 
   void BufferedTransObj::marshal(MsgCnt *msgC, int acknum) {
-    int framesize;
+    size_t framesize;
     BYTE* pos;
 
-    dssLog(DLL_ALL,"TRANSOBJ      (%p): Marshal  ack:%d cont:%d",
+    dssLog(DLL_TOO_MUCH,"TRANSOBJ      (%p): Marshal  ack:%d cont:%d",
 	   this, acknum, msgC->checkFlag(MSG_HAS_MARSHALCONT));
 
     framesize = a_marshalBuffer->getFree(); // max framesize
@@ -131,7 +131,8 @@ namespace _msl_internal{
     if (a_unmarshalBuffer->getUsed() < HEADER1) return U_WAIT;
 
     // read header
-    BYTE b = a_unmarshalBuffer->m_getByte();     // control byte
+    DebugCode(BYTE b =)
+      a_unmarshalBuffer->m_getByte();     // control byte
     Assert(b == 0xFF);
     int acknum = a_unmarshalBuffer->m_getInt();      // ack number
     a_comObj->msgAcked(acknum);
@@ -182,6 +183,7 @@ namespace _msl_internal{
       // Something must be seriously wrong in the transport layer.
       // Break the connection by telling the comObj it was lost.
       // The comObj can then decide on further actions.
+      dssLog(DLL_DEBUG,"Frame corrupted!");
       a_comObj->connectionLost();
       return U_CLOSED;
     }

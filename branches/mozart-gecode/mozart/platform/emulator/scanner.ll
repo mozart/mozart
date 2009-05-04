@@ -39,7 +39,7 @@
 
 #include "parser.hh"
 
-void xyreportError(char *kind, char *message,
+void xyreportError(const char *kind, const char *message,
 		   const char *file, int line, int column);
 void xy_setScannerPrefix();
 void xy_setParserExpect();
@@ -188,7 +188,7 @@ static void push_insert(FILE *filep, char *fileName) {
   xyFileName[maxFileNameSize - 1] = '\0';
   xyFileNameAtom = OZ_atom(fileName);
   xyin = filep;
-  BEGIN(INITIAL);
+  BEGIN(0); /*INITIAL isn't yet defined so we use the synonym 0.*/
   xy_switch_to_buffer(xy_create_buffer(xyin, YY_BUF_SIZE));
   xylino = 1;
   conditional_basep = conditional_p;
@@ -327,7 +327,7 @@ static char *scExpndFileName(char *fileName, char *curfile) {
   }
 
   // search in OZPATH
-  char *path = osgetenv("OZPATH");
+  const char *path = osgetenv("OZPATH");
   if (path == NULL)
     path = ".";
 

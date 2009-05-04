@@ -28,7 +28,7 @@
 #ifndef __DSS_CLASSES_HH
 #define __DSS_CLASSES_HH
 
-#ifdef INTERFACE  
+#ifdef DSS_INTERFACE  
 #pragma interface
 #endif
 
@@ -59,15 +59,6 @@ class CoordinatorAssistant;
 
 //****************************** Not in the documantation yet *************************
 
-
-
-// Used to identify an operation
-class DSSDLLSPEC DssOperationId {
-public:
-  DssOperationId() {}
-};
-
-
 // A ThreadMediator is used to provide the DSS an interface to a
 // suspended operation in the programming system.  The operation can
 // be resumed in one of three ways:
@@ -78,9 +69,9 @@ class DSSDLLSPEC ThreadMediator{
 public:
   ThreadMediator();
   virtual ~ThreadMediator() {}
-  virtual WakeRetVal resumeDoLocal(DssOperationId*)=0;
-  virtual WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin)=0;
-  virtual WakeRetVal resumeFailed()=0;
+  virtual void resumeDoLocal()=0;
+  virtual void resumeRemoteDone(PstInContainerInterface* pstin)=0;
+  virtual void resumeFailed()=0;
 };
 
 
@@ -133,11 +124,6 @@ public:
   // get/set coordination proxy (see note below)
   CoordinatorAssistant* getCoordinatorAssistant() const { return a_proxy; }
   void setCoordinatorAssistant(CoordinatorAssistant*);
-
-  // notify the resumption of programming system operations to the DSS
-  void remoteInitatedOperationCompleted(DssOperationId*,
-					PstOutContainerInterface*);
-  void localInitatedOperationCompleted();
 
   // abstract operation Kill - try to make the fault state permfail.
   // This operation is asynchronous, and not guaranteed to succeed.
@@ -199,14 +185,12 @@ public:
   OpRetVal abstractOperation_Write(DssThreadId*, PstOutContainerInterface**&);
 
   /************************* SUPPLIED BY USER *************************/
-  virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread,
-				    DssOperationId* operation_id,
-				    PstInContainerInterface* operation,
-				    PstOutContainerInterface*& answer)=0;
-  virtual AOcallback callback_Read(DssThreadId* id_of_calling_thread,
-				   DssOperationId* operation_id,
-				   PstInContainerInterface* operation,
-				   PstOutContainerInterface*& answer)=0;
+  virtual void callback_Write(DssThreadId* id_of_calling_thread,
+			      PstInContainerInterface* operation,
+			      PstOutContainerInterface*& answer)=0;
+  virtual void callback_Read(DssThreadId* id_of_calling_thread,
+			     PstInContainerInterface* operation,
+			     PstOutContainerInterface*& answer)=0;
 };
 
 
@@ -220,13 +204,11 @@ public:
   OpRetVal abstractOperation_Write(PstOutContainerInterface**&);
 
   /************************* SUPPLIED BY USER *************************/
-  virtual AOcallback callback_Write(DssThreadId* id_of_calling_thread, 
-				    DssOperationId* operation_id,
-				    PstInContainerInterface* operation)=0;
-  virtual AOcallback callback_Read(DssThreadId* id_of_calling_thread,
-				   DssOperationId* operation_id,
-				   PstInContainerInterface* operation,
-				   PstOutContainerInterface*& answer)=0;
+  virtual void callback_Write(DssThreadId* id_of_calling_thread, 
+			      PstInContainerInterface* operation)=0;
+  virtual void callback_Read(DssThreadId* id_of_calling_thread,
+			     PstInContainerInterface* operation,
+			     PstOutContainerInterface*& answer)=0;
 };
 
 
@@ -240,14 +222,11 @@ public:
   OpRetVal abstractOperation_Append(DssThreadId*, PstOutContainerInterface**&);
 
   /************************* SUPPLIED BY USER *************************/
-  virtual AOcallback callback_Bind(DssOperationId* operation_id,
-				   PstInContainerInterface* operation) = 0;
-  virtual AOcallback callback_Append(DssOperationId* operation_id,
-				     PstInContainerInterface* operation) = 0;
+  virtual void callback_Bind(PstInContainerInterface* operation) = 0;
+  virtual void callback_Append(PstInContainerInterface* operation) = 0;
   // summarize past Append operations; the answer (if given) is sent
   // to a new proxy as one single Append operation.
-  virtual AOcallback callback_Changes(DssOperationId* operation_id,
-				      PstOutContainerInterface*& answer)=0;
+  virtual void callback_Changes(PstOutContainerInterface*& answer)=0;
 };
 
 
@@ -260,11 +239,10 @@ public:
   OpRetVal abstractOperation_Read(DssThreadId*, PstOutContainerInterface**&);
 
   /************************* SUPPLIED BY USER *************************/
-  virtual AOcallback callback_Read(DssThreadId* id_of_calling_thread,
-				   DssOperationId* operation_id,
-				   PstInContainerInterface* operation,
-				   PstOutContainerInterface*& answer)=0;
-
+  virtual void callback_Read(DssThreadId* id_of_calling_thread,
+			     PstInContainerInterface* operation,
+			     PstOutContainerInterface*& answer)=0;
+  
   // Note.  The programming system may want to localize the entity
   // once its state has been installed.  However it should not delete
   // the abstract entity before all suspended read operations have
@@ -362,45 +340,6 @@ public:
   virtual void GL_error(const char* const format, ...)=0;
   virtual void GL_warning(const char* const format, ...)=0;
   
-};
-
-
-class DSSDLLSPEC GlobalNameInterface{
-protected:
-  void* a_ref;
-  virtual ~GlobalNameInterface() {}
-public:
-  GlobalNameInterface(void*& ref) : a_ref(ref) {}
-  void setRef(void* ref) { a_ref = ref;}
-  void* getRef(){ return a_ref; }  
-  virtual void marshal(DssWriteBuffer* bb)=0;
-  
-  MACRO_NO_DEFAULT_CONSTRUCTORS(GlobalNameInterface);
-};
-
-
-class DSSDLLSPEC KbrCallbackInterface{
-public:
-  virtual ~KbrCallbackInterface() {}
-  virtual void m_kbrMessage(int key, PstInContainerInterface*)                    = 0;
-  virtual PstOutContainerInterface* m_kbrDivideResp(int start, int stop, int n)   = 0; 
-  virtual void m_kbrNewResp(int start, int stop, int n, PstInContainerInterface*) = 0; 
-  virtual void m_kbrFunctional()                                                  = 0; 
-  virtual void m_bcMessage(PstInContainerInterface*)                              = 0; 
-};
-
-class DSSDLLSPEC KbrInstance{
-protected:
-  virtual ~KbrInstance() {}
-public: 
-  virtual void m_setCallback(KbrCallbackInterface*)         = 0;
-  virtual KbrCallbackInterface* m_getCallback()             = 0;
-  virtual KbrResult m_route(int, PstOutContainerInterface*) = 0; 
-  virtual KbrResult m_broadcast(PstOutContainerInterface*)  = 0;
-  virtual int  m_getId()                                    = 0;
-  virtual void m_join()                                     = 0; 
-  virtual void m_leave()                                    = 0; 
-  virtual void m_marshal(DssWriteBuffer*)                   = 0; 
 };
 
 #endif

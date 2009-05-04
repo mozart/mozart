@@ -156,7 +156,7 @@ namespace _dss_internal{ //Start namespace
     }
     // initiate a color change, in order to diagnose a possible failure
     a_color++;
-    sendToProxy(a_ring.current(), PLGM_COLOR_START, (int) a_color);
+    sendToProxy(a_ring.current(), PLGM_COLOR_START, static_cast<int>(a_color));
   }
 
 
@@ -216,7 +216,7 @@ namespace _dss_internal{ //Start namespace
     }
     case PLGM_COLOR_START: {
       a_color++;
-      sendToProxy(a_ring.current(), PLGM_COLOR_START, (int) a_color);
+      sendToProxy(a_ring.current(), PLGM_COLOR_START, static_cast<int>(a_color));
       break;
     }
     case PLGM_COLOR_DONE: {
@@ -224,7 +224,7 @@ namespace _dss_internal{ //Start namespace
       if (a_color == col) {
 	// send a_color to all registered proxies out of the ring
 	for (Position<DSite*> p(a_proxies); p(); p++)
-	  if (!a_ring.find(*p)) sendToProxy(*p, PLGM_COLOR_DONE, (int) a_color);
+	  if (!a_ring.find(*p)) sendToProxy(*p, PLGM_COLOR_DONE, static_cast<int>(a_color));
       }
       break;
     }
@@ -318,7 +318,7 @@ namespace _dss_internal{ //Start namespace
     Assert(hasToken() && a_jobsLeft == 0);
     if (a_successor && !m_isAlone()) {
       sendToProxy(a_successor, PLGM_TOKEN,
-		  a_proxy->deinstallEntityState(), (int) a_color);
+		  a_proxy->deinstallEntityState(), static_cast<int>(a_color));
       hasToken(false);
     }
   }
@@ -333,7 +333,7 @@ namespace _dss_internal{ //Start namespace
   ProtocolPilgrimProxy::m_forwardColor() {
     isColoring(true);
     if (a_successor) {
-      sendToProxy(a_successor, PLGM_COLOR, (int) a_color);
+      sendToProxy(a_successor, PLGM_COLOR, static_cast<int>(a_color));
       isColoring(false);
     }
   }
@@ -341,9 +341,8 @@ namespace _dss_internal{ //Start namespace
   void
   ProtocolPilgrimProxy::m_resumeOperations(){
     while (!a_susps.isEmpty()) {
-      if (a_susps.pop()->resumeDoLocal(NULL) == WRV_CONTINUING) a_jobsLeft++; 
+      a_susps.pop()->resumeDoLocal();
     }
-    // a_jobsLeft is decremented when operations actually resume
   }
 
   void
@@ -427,7 +426,7 @@ namespace _dss_internal{ //Start namespace
       PilgrimColor col = msg->popIntVal();
       if (a_color == col) { // the coloring started here
 	if (a_color.isDark() || col.isDark()) { // token was met
-	  sendToManager(PLGM_COLOR_DONE, (int) col);
+	  sendToManager(PLGM_COLOR_DONE, static_cast<int>(col));
 	} else { // token has not been met, and is therefore lost
 	  sendToManager(PROT_PERMFAIL);
 	  m_lostToken();
@@ -453,14 +452,6 @@ namespace _dss_internal{ //Start namespace
     }
   }
     
-
-  void
-  ProtocolPilgrimProxy::localInitatedOperationCompleted() {
-    Assert(hasToken() && a_jobsLeft > 0);
-    a_jobsLeft--; 
-    if (a_jobsLeft == 0) m_forwardToken();
-  }
-
   // interpret site failures
   FaultState
   ProtocolPilgrimProxy::siteStateChanged(DSite* s, const FaultState& state) {
