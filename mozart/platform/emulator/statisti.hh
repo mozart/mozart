@@ -124,7 +124,7 @@ public:
 
 extern Statistics ozstat;
 
-void printTime(FILE *fd,char *s,unsigned int t);
-void printMem(FILE *fd,char *s,double m);
+void printTime(FILE *fd,const char *s,unsigned int t);
+void printMem(FILE *fd,const char *s,double m);
 
 #endif

@@ -141,19 +141,19 @@ GlueSite::m_gcFinal() {
 
 int
 GlueSite::getCsSiteSize() {
-  return SIZE_INT + tagged2ByteString(info)->getWidth();
+  return sz_MNumberMax + tagged2ByteString(info)->getWidth();
 }
 
 void    
 GlueSite::marshalCsSite( DssWriteBuffer* const buf){
   ByteString* bs = tagged2ByteString(info);
-  putInt(buf, bs->getWidth());
+  gf_MarshalNumber(buf, bs->getWidth());
   putStr(buf, (char*) bs->getData(), bs->getWidth());
 }
 
 void    
 GlueSite::updateCsSite( DssReadBuffer* const buf){
-  ByteString* bs = new ByteString(getInt(buf));
+  ByteString* bs = new ByteString(gf_UnmarshalNumber(buf));
   getStr(buf, (char*) bs->getData(), bs->getWidth());
   info = makeTaggedExtension(bs);
 }
@@ -177,7 +177,8 @@ GlueSite::reportRTT(int rtt) {
     dsite->m_stateChange(FS_OK);
     // fall through
   case FS_OK:
-    if (rtt > RTT_UPPERBOUND) rtt = RTT_UPPERBOUND;
+    rtt = min(rtt, RTT_UPPERBOUND);
+    // consider rtt <= RTT_UPPERBOUND, larger values are abnormal
     if (rtt_avg) {
       int err = rtt - rtt_avg;
       rtt_avg += err / 2;
@@ -186,7 +187,8 @@ GlueSite::reportRTT(int rtt) {
       rtt_avg = rtt;
       rtt_mdev = rtt;
     }
-    rtt_timeout = rtt_avg + rtt_mdev;
+    rtt_timeout = rtt_avg + max(rtt_mdev, rtt_avg);
+    // rtt_timeout >= 2 * rtt_avg, this avoids too much sensitivity
     dsite->m_monitorRTT(rtt_timeout);
     // fall through
   default:

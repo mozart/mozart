@@ -99,7 +99,7 @@ private:
   }
 
 public:
-  BucketHashTable(unsigned int sz) : count(0), minsize(sz) { init(sz); }
+  BucketHashTable(unsigned int sz) : minsize(sz), count(0) { init(sz); }
   ~BucketHashTable() { clear(); delete [] table; }
 
   unsigned int getSize() const { return size; }

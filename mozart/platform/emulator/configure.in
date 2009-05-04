@@ -268,6 +268,9 @@ if test "${GXX}" = yes; then
 	    EMULATE_CXXFLAGS=-finline-limit=500
 	    ;;
 	esac
+	if test "$enable_opt" = native; then
+	    oz_om="-march=native -fomit-frame-pointer"
+	fi
 	;;
 
     *-sparc)
@@ -389,10 +392,16 @@ case $platform in
 	fi
 	CPPFLAGS="-DWINDOWS_EMULATOR -DDSS_STATIC_LINK $oz_a $CPPFLAGS"
     ;;
-    rhapsody* | darwin*)
+    rhapsody*)
 	AC_DEFINE(RHAPSODY)
 	EMULDFLAGS="-Wl,-keep_private_externs"
 	TOOLLDCMD="$CC -dynamiclib -flat_namespace -undefined suppress"
+	: ${oz_enable_modules_static=no}
+    ;;
+    darwin*)
+	AC_DEFINE(DARWIN)
+	EMULDFLAGS="-Wl,-keep_private_externs"
+	TOOLLDCMD="$CC -dynamic -bundle -flat_namespace -undefined suppress"
 	: ${oz_enable_modules_static=no}
     ;;
     *)

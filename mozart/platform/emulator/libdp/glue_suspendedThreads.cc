@@ -135,11 +135,10 @@ bool SuspendedOperation::gc() {
   }
 }
 
-WakeRetVal SuspendedOperation::resumeFailed() {
+void SuspendedOperation::resumeFailed() {
   // simply forget about the control var, and release the thread id
   releaseThreadId(threadId);
   threadId = NULL;
-  return WRV_DONE;
 }
 
 
@@ -149,12 +148,12 @@ WakeRetVal SuspendedOperation::resumeFailed() {
 SuspendedDummy::SuspendedDummy() : SuspendedOperation(NULL)
 {}
 
-WakeRetVal SuspendedDummy::resumeDoLocal(DssOperationId*) {
-  resume(); return WRV_DONE;
+void SuspendedDummy::resumeDoLocal() {
+  resume();
 }
 
-WakeRetVal SuspendedDummy::resumeRemoteDone(PstInContainerInterface*) {
-  resume(); return WRV_DONE;
+void SuspendedDummy::resumeRemoteDone(PstInContainerInterface*) {
+  resume();
 }
 
 bool SuspendedDummy::gCollect() {
@@ -175,7 +174,7 @@ SuspendedCellOp::SuspendedCellOp(Mediator* med, OperationTag _op,
   suspend();
 }
 
-WakeRetVal SuspendedCellOp::resumeDoLocal(DssOperationId*) {
+void SuspendedCellOp::resumeDoLocal() {
   CellMediator* med = static_cast<CellMediator*>(getMediator());
   OzCell* cell = static_cast<OzCell*>(med->getConst());
   TaggedRef out;
@@ -186,10 +185,9 @@ WakeRetVal SuspendedCellOp::resumeDoLocal(DssOperationId*) {
     Assert(ret == RAISE);
     resumeRaise(am.getExceptionValue());
   }
-  return WRV_DONE;
 }
 
-WakeRetVal SuspendedCellOp::resumeRemoteDone(PstInContainerInterface* pstin){
+void SuspendedCellOp::resumeRemoteDone(PstInContainerInterface* pstin){
   PstInContainer* pst = static_cast<PstInContainer*>(pstin);
   if (pst == NULL) {
     resume();
@@ -198,7 +196,6 @@ WakeRetVal SuspendedCellOp::resumeRemoteDone(PstInContainerInterface* pstin){
   } else {
     resumeRaise(glue_getData(pst->a_term));
   }
-  return WRV_DONE;
 }
 
 bool SuspendedCellOp::gCollect(){
@@ -220,7 +217,7 @@ SuspendedLockTake::SuspendedLockTake(Mediator* med, TaggedRef thr) :
   suspend();
 }
 
-WakeRetVal SuspendedLockTake::resumeDoLocal(DssOperationId*) {
+void SuspendedLockTake::resumeDoLocal() {
   ConstMediator* med = static_cast<ConstMediator*>(getMediator());
   OzLock* lock = static_cast<OzLock*>(med->getConst());
   if (!lock->take(ozthread)) { // the thread must subscribe
@@ -229,10 +226,9 @@ WakeRetVal SuspendedLockTake::resumeDoLocal(DssOperationId*) {
     ctlVar = 0;
   }
   resume();
-  return WRV_DONE;
 }
 
-WakeRetVal 
+void
 SuspendedLockTake::resumeRemoteDone(PstInContainerInterface* pstin){
   PstInContainer* pst = static_cast<PstInContainer*>(pstin);
   // The result is either unit, or a control variable, on which the
@@ -242,7 +238,6 @@ SuspendedLockTake::resumeRemoteDone(PstInContainerInterface* pstin){
   Assert(ret == PROCEED);
   ctlVar = 0;
   resume();
-  return WRV_DONE;
 }
 
 bool SuspendedLockTake::gCollect() {
@@ -264,18 +259,16 @@ SuspendedLockRelease::SuspendedLockRelease(Mediator* med, TaggedRef thr) :
   // so we do not suspend it.
 }
 
-WakeRetVal SuspendedLockRelease::resumeDoLocal(DssOperationId*) {
+void SuspendedLockRelease::resumeDoLocal() {
   ConstMediator* med = static_cast<ConstMediator*>(getMediator());
   OzLock *lock = static_cast<OzLock*>(med->getConst());
   lock->release(ozthread);
   resume();
-  return WRV_DONE;
 }
 
-WakeRetVal
+void
 SuspendedLockRelease::resumeRemoteDone(PstInContainerInterface* pstin){
   resume();
-  return WRV_DONE;
 }
 
 bool SuspendedLockRelease::gCollect() {
@@ -301,7 +294,7 @@ SuspendedArrayOp::SuspendedArrayOp(Mediator* med, OperationTag _op,
   suspend();
 }
 
-WakeRetVal SuspendedArrayOp::resumeDoLocal(DssOperationId*) {
+void SuspendedArrayOp::resumeDoLocal() {
   ArrayMediator* med = static_cast<ArrayMediator*>(getMediator());
   OzArray* arr = static_cast<OzArray*>(med->getConst());
   TaggedRef out;
@@ -312,10 +305,9 @@ WakeRetVal SuspendedArrayOp::resumeDoLocal(DssOperationId*) {
     Assert(ret == RAISE);
     resumeRaise(am.getExceptionValue());
   }
-  return WRV_DONE;
 }
 
-WakeRetVal SuspendedArrayOp::resumeRemoteDone(PstInContainerInterface* pstin){
+void SuspendedArrayOp::resumeRemoteDone(PstInContainerInterface* pstin){
   PstInContainer* pst = static_cast<PstInContainer*>(pstin);
   if (pst == NULL) {
     resume();
@@ -324,7 +316,6 @@ WakeRetVal SuspendedArrayOp::resumeRemoteDone(PstInContainerInterface* pstin){
   } else {
     resumeRaise(glue_getData(pst->a_term));
   }
-  return WRV_DONE;
 }
 
 bool SuspendedArrayOp::gCollect(){
@@ -351,7 +342,7 @@ SuspendedDictionaryOp::SuspendedDictionaryOp(Mediator* med, OperationTag _op,
   suspend();
 }
 
-WakeRetVal SuspendedDictionaryOp::resumeDoLocal(DssOperationId*) {
+void SuspendedDictionaryOp::resumeDoLocal() {
   DictionaryMediator* med = static_cast<DictionaryMediator*>(getMediator());
   OzDictionary* dict = static_cast<OzDictionary*>(med->getConst());
   TaggedRef out;
@@ -362,10 +353,9 @@ WakeRetVal SuspendedDictionaryOp::resumeDoLocal(DssOperationId*) {
     Assert(ret == RAISE);
     resumeRaise(am.getExceptionValue());
   }
-  return WRV_DONE;
 }
 
-WakeRetVal SuspendedDictionaryOp::resumeRemoteDone(PstInContainerInterface* pstin){
+void SuspendedDictionaryOp::resumeRemoteDone(PstInContainerInterface* pstin){
   PstInContainer* pst = static_cast<PstInContainer*>(pstin);
   if (pst == NULL) {
     resume();
@@ -374,7 +364,6 @@ WakeRetVal SuspendedDictionaryOp::resumeRemoteDone(PstInContainerInterface* psti
   } else {
     resumeRaise(glue_getData(pst->a_term));
   }
-  return WRV_DONE;
 }
 
 bool SuspendedDictionaryOp::gCollect(){
@@ -401,7 +390,7 @@ SuspendedObjectOp::SuspendedObjectOp(Mediator* med, OperationTag _op,
   suspend();
 }
 
-WakeRetVal SuspendedObjectOp::resumeDoLocal(DssOperationId*) {
+void SuspendedObjectOp::resumeDoLocal() {
   ObjectMediator* med = static_cast<ObjectMediator*>(getMediator());
   OzObject* obj = static_cast<OzObject*>(med->getConst());
   TaggedRef out;
@@ -412,10 +401,9 @@ WakeRetVal SuspendedObjectOp::resumeDoLocal(DssOperationId*) {
     Assert(ret == RAISE);
     resumeRaise(am.getExceptionValue());
   }
-  return WRV_DONE;
 }
 
-WakeRetVal SuspendedObjectOp::resumeRemoteDone(PstInContainerInterface* pstin){
+void SuspendedObjectOp::resumeRemoteDone(PstInContainerInterface* pstin){
   PstInContainer* pst = static_cast<PstInContainer*>(pstin);
   if (pst == NULL) {
     resume();
@@ -424,7 +412,6 @@ WakeRetVal SuspendedObjectOp::resumeRemoteDone(PstInContainerInterface* pstin){
   } else {
     resumeRaise(glue_getData(pst->a_term));
   }
-  return WRV_DONE;
 }
 
 bool SuspendedObjectOp::gCollect(){
@@ -451,7 +438,7 @@ SuspendedObjectStateOp::SuspendedObjectStateOp(Mediator* med, OperationTag _op,
   suspend();
 }
 
-WakeRetVal SuspendedObjectStateOp::resumeDoLocal(DssOperationId*) {
+void SuspendedObjectStateOp::resumeDoLocal() {
   ObjectMediator* med = static_cast<ObjectMediator*>(getMediator());
   ObjectState* state = static_cast<ObjectState*>(med->getConst());
   TaggedRef out;
@@ -462,10 +449,9 @@ WakeRetVal SuspendedObjectStateOp::resumeDoLocal(DssOperationId*) {
     Assert(ret == RAISE);
     resumeRaise(am.getExceptionValue());
   }
-  return WRV_DONE;
 }
 
-WakeRetVal
+void
 SuspendedObjectStateOp::resumeRemoteDone(PstInContainerInterface* pstin){
   PstInContainer* pst = static_cast<PstInContainer*>(pstin);
   if (pst == NULL) {
@@ -475,7 +461,6 @@ SuspendedObjectStateOp::resumeRemoteDone(PstInContainerInterface* pstin){
   } else {
     resumeRaise(glue_getData(pst->a_term));
   }
-  return WRV_DONE;
 }
 
 bool SuspendedObjectStateOp::gCollect(){
@@ -502,7 +487,7 @@ SuspendedChunkOp::SuspendedChunkOp(Mediator* med, OperationTag _op,
   suspend();
 }
 
-WakeRetVal SuspendedChunkOp::resumeDoLocal(DssOperationId*) {
+void SuspendedChunkOp::resumeDoLocal() {
   ChunkMediator* med = static_cast<ChunkMediator*>(getMediator());
   SChunk* chunk = static_cast<SChunk*>(med->getConst());
   TaggedRef out;
@@ -513,10 +498,9 @@ WakeRetVal SuspendedChunkOp::resumeDoLocal(DssOperationId*) {
     Assert(ret == RAISE);
     resumeRaise(am.getExceptionValue());
   }
-  return WRV_DONE;
 }
 
-WakeRetVal SuspendedChunkOp::resumeRemoteDone(PstInContainerInterface* pstin){
+void SuspendedChunkOp::resumeRemoteDone(PstInContainerInterface* pstin){
   PstInContainer* pst = static_cast<PstInContainer*>(pstin);
   if (pst == NULL) {
     resume();
@@ -525,7 +509,6 @@ WakeRetVal SuspendedChunkOp::resumeRemoteDone(PstInContainerInterface* pstin){
   } else {
     resumeRaise(glue_getData(pst->a_term));
   }
-  return WRV_DONE;
 }
 
 bool SuspendedChunkOp::gCollect(){
@@ -548,7 +531,7 @@ SuspendedGenericDot::SuspendedGenericDot(Mediator* med,
   suspend();
 }
 
-WakeRetVal SuspendedGenericDot::resumeDoLocal(DssOperationId*) {
+void SuspendedGenericDot::resumeDoLocal() {
   TaggedRef entity = getMediator()->getEntity();
   TaggedRef out;
   switch (dotInline(entity, key, out)) {
@@ -571,10 +554,9 @@ WakeRetVal SuspendedGenericDot::resumeDoLocal(DssOperationId*) {
     // should never happen, because the state is local
     Assert(0);
   }
-  return WRV_DONE;
 }
 
-WakeRetVal
+void
 SuspendedGenericDot::resumeRemoteDone(PstInContainerInterface* pstin) {
   if (pstin) {
     PstInContainer *pst = static_cast<PstInContainer*>(pstin);
@@ -583,7 +565,6 @@ SuspendedGenericDot::resumeRemoteDone(PstInContainerInterface* pstin) {
     TaggedRef entity = getMediator()->getEntity();
     resumeRaise(OZ_makeException(E_ERROR, E_KERNEL, ".", 2, entity, key));
   }
-  return WRV_DONE;
 }
 
 bool SuspendedGenericDot::gCollect(){
@@ -606,19 +587,17 @@ SuspendedCall::SuspendedCall(Mediator* med, OZ_Term list) :
   suspend();
 }
 
-WakeRetVal SuspendedCall::resumeDoLocal(DssOperationId*) {
+void SuspendedCall::resumeDoLocal() {
   // resume by a local call
   TaggedRef entity = getMediator()->getEntity();
   resumeApply(entity, args);
-  return WRV_DONE;
 }
 
-WakeRetVal
+void
 SuspendedCall::resumeRemoteDone(PstInContainerInterface* pstin) {
   // the calling thread synchronizes on the result
   PstInContainer* pst = static_cast<PstInContainer*>(pstin);
   resumeApply(BI_wait, oz_mklist(glue_getData(pst->a_term)));
-  return WRV_DONE;
 }
 
 bool SuspendedCall::gCollect(){
@@ -640,12 +619,12 @@ SuspendedClassGet::SuspendedClassGet(Mediator* med) : SuspendedOperation(med) {
   ctlVar = cv;
 }
 
-WakeRetVal SuspendedClassGet::resumeDoLocal(DssOperationId*) {
-  resume(); return WRV_DONE;
+void SuspendedClassGet::resumeDoLocal() {
+  resume();
 }
 
-WakeRetVal SuspendedClassGet::resumeRemoteDone(PstInContainerInterface*) {
-  Assert(0); return WRV_DONE;
+void SuspendedClassGet::resumeRemoteDone(PstInContainerInterface*) {
+  Assert(0);
 }
 
 bool SuspendedClassGet::gCollect() {

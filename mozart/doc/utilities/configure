@@ -1243,9 +1243,22 @@ echo "$ac_t""$oz_cv_build_date" 1>&6
   OZBUILDDATE=$oz_cv_build_date;
   
   
+  echo $ac_n "checking for build time""... $ac_c" 1>&6
+echo "configure:1248: checking for build time" >&5
+if eval "test \"`echo '$''{'oz_cv_build_time'+set}'`\" = set"; then
+  echo $ac_n "(cached) $ac_c" 1>&6
+else
+  
+    oz_cv_build_time=`date +"%H%M%S"`
+fi
+
+echo "$ac_t""$oz_cv_build_time" 1>&6
+  OZBUILDTIME=$oz_cv_build_time;
+  
+  
   
   echo $ac_n "checking for OZLOADSEP""... $ac_c" 1>&6
-echo "configure:1249: checking for OZLOADSEP" >&5
+echo "configure:1262: checking for OZLOADSEP" >&5
 if eval "test \"`echo '$''{'oz_cv_OZLOADSEP'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1265,7 +1278,7 @@ echo "$ac_t""$oz_cv_OZLOADSEP" 1>&6
 
   
   echo $ac_n "checking for OZLOADWIN""... $ac_c" 1>&6
-echo "configure:1269: checking for OZLOADWIN" >&5
+echo "configure:1282: checking for OZLOADWIN" >&5
 if eval "test \"`echo '$''{'oz_cv_OZLOADWIN'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1305,7 +1318,7 @@ echo "$ac_t""$oz_cv_OZLOADWIN" 1>&6
     if test -z "$WITH_GLOBAL_OZ"; then
       
   echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-echo "configure:1309: checking for --with-global-oz" >&5
+echo "configure:1322: checking for --with-global-oz" >&5
   # Check whether --with-global-oz or --without-global-oz was given.
 if test "${with_global_oz+set}" = set; then
   withval="$with_global_oz"
@@ -1339,7 +1352,7 @@ fi
     # Extract the first word of "ozengine", so it can be a program name with args.
 set dummy ozengine; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1343: checking for $ac_word" >&5
+echo "configure:1356: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZENGINE'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1385,7 +1398,7 @@ fi
     if test -z "$WITH_GLOBAL_OZ"; then
       
   echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-echo "configure:1389: checking for --with-global-oz" >&5
+echo "configure:1402: checking for --with-global-oz" >&5
   # Check whether --with-global-oz or --without-global-oz was given.
 if test "${with_global_oz+set}" = set; then
   withval="$with_global_oz"
@@ -1419,7 +1432,7 @@ fi
     # Extract the first word of "ozc", so it can be a program name with args.
 set dummy ozc; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1423: checking for $ac_word" >&5
+echo "configure:1436: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1465,7 +1478,7 @@ fi
     if test -z "$WITH_GLOBAL_OZ"; then
       
   echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-echo "configure:1469: checking for --with-global-oz" >&5
+echo "configure:1482: checking for --with-global-oz" >&5
   # Check whether --with-global-oz or --without-global-oz was given.
 if test "${with_global_oz+set}" = set; then
   withval="$with_global_oz"
@@ -1499,7 +1512,7 @@ fi
     # Extract the first word of "ozl", so it can be a program name with args.
 set dummy ozl; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1503: checking for $ac_word" >&5
+echo "configure:1516: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_OZL'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1709,6 +1722,7 @@ s%@HOMECACHE@%$HOMECACHE%g
 s%@OZPLATFORM@%$OZPLATFORM%g
 s%@OZTOOL@%$OZTOOL%g
 s%@OZBUILDDATE@%$OZBUILDDATE%g
+s%@OZBUILDTIME@%$OZBUILDTIME%g
 s%@PLATFORM@%$PLATFORM%g
 s%@OZLOADSEP@%$OZLOADSEP%g
 s%@OZLOADWIN@%$OZLOADWIN%g
