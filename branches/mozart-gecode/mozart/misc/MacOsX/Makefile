@@ -79,9 +79,10 @@ PLATCALL = $(PLAT) -D -X "oz|OZ" -V "1.5.0" -u 'Gustavo Gutierrez <ggutierrez@ci
 ##
 #Create a bundle from skel
 ##
-all: bundle fixpaths 
+all: bundle fixpaths
 
 bundle:
+	rm -rf $(APP)
 	$(PLATCALL)
 	for i in $(MOZ_DIRS); do  \
 		cp -R $(MOZ_INST)/$$i $(BND_RESOURCES); \
@@ -91,7 +92,7 @@ bundle:
 
 
 fixpaths:
-	./bundlelibs.sh $(EMULATOR) $(APP)
+	python ./bundlelibs.py $(APP)
 
 
 diskimage:
