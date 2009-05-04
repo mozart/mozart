@@ -31,7 +31,7 @@
 #endif
 
 #include "dgc.hh"
-#include "dss_rl_siteHandler.hh"
+#include "dgc_rl_siteHandler.hh"
 namespace _dss_internal{ // Start namespace
     //
   //  Reference Listing Version 1

@@ -62,9 +62,6 @@ namespace _dss_internal{ //Start namespace
     void m_installState(PstInContainerInterface*);
 
     virtual void msgReceived(MsgContainer*,DSite*);   
-    virtual void remoteInitatedOperationCompleted(DssOperationId*,
-						  PstOutContainerInterface*) {}
-    virtual void localInitatedOperationCompleted() {}
 
     virtual FaultState siteStateChanged(DSite*, const FaultState&);
   };

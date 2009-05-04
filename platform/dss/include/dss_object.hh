@@ -28,7 +28,7 @@
 #ifndef __DSS_OBJECT_HH
 #define __DSS_OBJECT_HH
 
-#ifdef INTERFACE  
+#ifdef DSS_INTERFACE  
 #pragma interface
 #endif
 
@@ -61,7 +61,6 @@
 // - DEBUG_CHECK, trigger asserts.
 // - DSS_LOG, enables the logging utility
 // - INTERFACE, enables pragma directives when debug compiling ("no inline"-ing)
-// - EXCEPTIONS, enables exceptions.
 
 
 // *************** Imported by the DSS from the MAP ***********************
@@ -118,26 +117,6 @@ public:
 			      const int&         param,
 			      const char* const  str);
 
-
-  // KBR-Interface
-  
-
-  // ************** Global Names **************
-  GlobalNameInterface* createName(void* ref);
-  // unmarshalName() automatically performs a lookup in the name table
-  GlobalNameInterface* unmarshalName(DssReadBuffer*);
-
-  // names are automatically removed from the name table once deleted
-
-  // ************** KBR management ********************'
-  KbrInstance* m_createKbr(int K, int Bits, int Fail, KbrCallbackInterface*);
-  bool  m_unmarshalKbr(DssReadBuffer* buf, KbrInstance*&); 
-
-  
-  // ************** Backbone management *****************
-  void m_createBackboneTicket(DssWriteBuffer* buf);
-  void m_joinBackbone(DssReadBuffer *buf);
-  
   MACRO_NO_DEFAULT_CONSTRUCTORS(DSS_Object);
 };
 

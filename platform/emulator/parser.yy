@@ -90,9 +90,9 @@ int xycharno(void) {
 }
 
 void checkDeprecation(OZ_Term coord);
-void xyreportWarning(char *kind, char *msg, OZ_Term coord);
-void xyreportError(char *kind, char *msg, OZ_Term coord);
-void xyreportError(char *kind, char *msg,
+void xyreportWarning(const char *kind, const char *msg, OZ_Term coord);
+void xyreportError(const char *kind, const char *msg, OZ_Term coord);
+void xyreportError(const char *kind, const char *msg,
 		   const char *file, int line, int column);
 
 
@@ -105,7 +105,7 @@ void xyreportError(char *kind, char *msg,
 
 static OZ_Term yyoutput;
 
-static void xyerror(char *);
+static void xyerror(const char *);
 
 //-----------------
 // Atom definitions
@@ -517,7 +517,7 @@ OZ_Term makeCons(OZ_Term first, OZ_Term second, OZ_Term pos) {
 }
 
 inline
-OZ_Term makeInt(char * chars, OZ_Term pos) {
+OZ_Term makeInt(const char * chars, OZ_Term pos) {
   SRecord * t = SRecord::newSRecord(PA_fInt, 2);
   t->setArg(0, OZ_CStringToInt(chars));
   t->setArg(1, pos);
@@ -1883,7 +1883,7 @@ synProdCallParams
 %%
 
 void checkDeprecation(OZ_Term coord) {
-  char *msg = "use `if' instead of `case' for boolean conditionals";
+  const char *msg = "use `if' instead of `case' for boolean conditionals";
   if (xy_allowDeprecated) {
     xyreportWarning("deprecation warning",msg,coord);
   } else {
@@ -1891,7 +1891,7 @@ void checkDeprecation(OZ_Term coord) {
   }
 }
 
-void xyreportWarning(char *kind, char *msg, OZ_Term coord) {
+void xyreportWarning(const char *kind, const char *msg, OZ_Term coord) {
   OZ_Term args = oz_mklist(oz_pair2(PA_coord, coord),
 			   oz_pair2(PA_kind,  OZ_atom(kind)),
 			   oz_pair2(PA_msg,   OZ_atom(msg)));
@@ -1899,7 +1899,7 @@ void xyreportWarning(char *kind, char *msg, OZ_Term coord) {
 			     xy_errorMessages);
 }
 
-void xyreportError(char *kind, char *msg, OZ_Term coord) {
+void xyreportError(const char *kind, const char *msg, OZ_Term coord) {
   OZ_Term args = oz_mklist(oz_pair2(PA_coord, coord),
 			   oz_pair2(PA_kind,  OZ_atom(kind)),
 			   oz_pair2(PA_msg,   OZ_atom(msg)));
@@ -1907,13 +1907,13 @@ void xyreportError(char *kind, char *msg, OZ_Term coord) {
 			     xy_errorMessages);
 }
 
-void xyreportError(char *kind, char *msg, const char *file,
+void xyreportError(const char *kind, const char *msg, const char *file,
 		   int line, int column) {
   xyreportError(kind,msg,OZ_mkTupleC("pos",3,OZ_atom((char*)file),
 				     oz_int(line),oz_int(column)));
 }
 
-static void xyerror(char *s) {
+static void xyerror(const char *s) {
   if (!strncmp(s, "parse error", 11)) {
     if (strlen(s) > 13) {
       xyreportError("parse error", s + 13, xyFileName, xylino, xycharno());

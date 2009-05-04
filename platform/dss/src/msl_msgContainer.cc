@@ -33,7 +33,6 @@
 #include "msl_dsite.hh"
 #include "msl_buffer.hh"
 #include "msl_dct.hh"
-#include "msl_serialize.hh"
 
 // borrowed from dss_msgLayerInterface.hh
 namespace _dss_internal {
@@ -45,17 +44,12 @@ namespace _msl_internal{ //Start namespace
 
   const int INITIAL_SIZE = 8;     // initial size of a_fields
 
-  namespace{
-    const int sz_MAX_DP_STRING = 4; // This is based on what??
-  }
-
   enum DataTag{
     TYPE_INT,
     TYPE_SITE,
     TYPE_END,
     TYPE_DCT,
     TYPE_ADC,
-    TYPE_CDC,
     TYPE_MSG
   };
 
@@ -94,7 +88,6 @@ namespace _msl_internal{ //Start namespace
 	  static_cast<DssCompoundTerm*>(a_fields[i].a_arg)->dispose();
 	  break;
 	case FT_ADC:
-	case FT_SDC:
 	  static_cast<ExtDataContainerInterface*>(a_fields[i].a_arg)->dispose();
 	  break;
 	case FT_MSGC:
@@ -158,13 +151,13 @@ namespace _msl_internal{ //Start namespace
       case TYPE_INT: {
 	int i = bb->m_getInt();
 	m_pushVal(reinterpret_cast<void *>(i), FT_NUMBER);
-	dssLog(DLL_DEBUG, "MSGCONTAINER  (%p): deserilize INT %d", this, i);
+	dssLog(DLL_TOO_MUCH, "MSGCONTAINER  (%p): deserilize INT %d", this, i);
 	continue;
       }
       case TYPE_SITE: {
 	Site *s = env->a_siteHT->m_unmarshalSite(bb);
 	pushSiteVal(s);
-	dssLog(DLL_DEBUG, "MSGCONTAINER  (%p): deserilize SITE %s", this,
+	dssLog(DLL_TOO_MUCH, "MSGCONTAINER  (%p): deserilize SITE %s", this,
 	       s->m_stringrep());
 	continue;
       }
@@ -173,7 +166,7 @@ namespace _msl_internal{ //Start namespace
 	// it can choose to not pass information with an abstract
 	// operation, or a result from an abstract operation.
       case TYPE_DCT: {
-	dssLog(DLL_DEBUG,"MSGCONTAINER  (%p): deserilizing DATA AREA",this);
+	dssLog(DLL_TOO_MUCH,"MSGCONTAINER  (%p): deserilizing DATA AREA",this);
 	DssCompoundTerm *dac;
 
 	checkSize();
@@ -218,28 +211,21 @@ namespace _msl_internal{ //Start namespace
 	  return true; 
 	}
       }
-      case TYPE_CDC:
       case TYPE_ADC: {
-	dssLog(DLL_DEBUG,"MSGCONTAINER  (%p): deserilizing DATA AREA",this);
+	dssLog(DLL_TOO_MUCH,"MSGCONTAINER  (%p): deserilizing DATA AREA",this);
 	ExtDataContainerInterface *dac;
 	
 	checkSize();
 	if (checkFlag(MSG_HAS_UNMARSHALCONT) && a_suspf){
-	  Assert(a_fields[a_nof_fields].a_ft == FT_ADC ||
-		 a_fields[a_nof_fields].a_ft == FT_SDC);
+	  Assert(a_fields[a_nof_fields].a_ft == FT_ADC);
 	  // continue with current one
 	  dac = static_cast<ExtDataContainerInterface*>(a_fields[a_nof_fields].a_arg);
 	  // The marshaler always sets the DCT type. NOT USED
 	  bb->m_getByte(); 
 	} else {
 	  BYTE type = bb->m_getByte();
-	  if (msg_type == TYPE_ADC) {
-	    dac = env->a_clbck->m_createExtDataContainer(type);
-	    a_fields[a_nof_fields].a_ft = FT_ADC; 
-	  } else {
-	    dac = env->a_comService->m_createExtDataContainer(type);
-	    a_fields[a_nof_fields].a_ft = FT_SDC;
-	  }
+	  dac = env->a_clbck->m_createExtDataContainer(type);
+	  a_fields[a_nof_fields].a_ft = FT_ADC; 
 	  a_fields[a_nof_fields].a_arg = dac;
 	}
 	Assert(dac);
@@ -255,7 +241,7 @@ namespace _msl_internal{ //Start namespace
 	}
       }
       case TYPE_END:
-	dssLog(DLL_DEBUG,"MSGCONTAINER  (%p): deserilizing done",this);
+	dssLog(DLL_TOO_MUCH,"MSGCONTAINER  (%p): deserilizing done",this);
 	setFlag(MSG_CLEAR);
 	return true;
 	
@@ -289,7 +275,7 @@ namespace _msl_internal{ //Start namespace
       case FT_NUMBER:
 	if (bb->canWrite(1+sz_MNumberMax)) {
 	  int i = reinterpret_cast<int>(m_popVal());
-	  dssLog(DLL_DEBUG,"MSGCONTAINER  (%p): serilize INT %d", this, i);
+	  dssLog(DLL_TOO_MUCH,"MSGCONTAINER  (%p): serilize INT %d", this, i);
 	  bb->m_putByte(TYPE_INT);
 	  bb->m_putInt(i);
 	  continue; // next field;
@@ -299,7 +285,7 @@ namespace _msl_internal{ //Start namespace
 	Site* s = static_cast<Site*>(m_nextVal());
 	if (bb->canWrite(1+s->m_getMarshaledSize())) {
 	  (void) m_popVal();
-	  dssLog(DLL_DEBUG,"MSGCONTAINER  (%p): serilize SITE %s", this,
+	  dssLog(DLL_TOO_MUCH,"MSGCONTAINER  (%p): serilize SITE %s", this,
 		 s->m_stringrep());
 	  bb->m_putByte(TYPE_SITE);
 	  s->m_marshalDSite(bb);
@@ -309,7 +295,7 @@ namespace _msl_internal{ //Start namespace
 	
       case FT_DCT:
 	if (bb->canWrite(1+20)) { 
-	  dssLog(DLL_DEBUG,"MSGCONTAINER  (%p): serilize DATA_AREA", this);
+	  dssLog(DLL_TOO_MUCH,"MSGCONTAINER  (%p): serilize DATA_AREA", this);
 	  DssCompoundTerm *dac =
 	    static_cast<DssCompoundTerm*>(a_fields[a_current].a_arg);
 	  bb->m_putByte(TYPE_DCT);
@@ -323,7 +309,7 @@ namespace _msl_internal{ //Start namespace
 	
       case FT_ADC:
 	if (bb->canWrite(1+20)) { 
-	  dssLog(DLL_DEBUG,"MSGCONTAINER  (%p): serilize DATA_AREA", this);
+	  dssLog(DLL_TOO_MUCH,"MSGCONTAINER  (%p): serilize DATA_AREA", this);
 	  ExtDataContainerInterface *dac =
 	    static_cast<ExtDataContainerInterface*>(a_fields[a_current].a_arg);
 	  bb->m_putByte(TYPE_ADC);
@@ -381,7 +367,6 @@ namespace _msl_internal{ //Start namespace
 	  static_cast<DssCompoundTerm*>(a_fields[i].a_arg)->resetMarshaling();
 	  break;
 	case FT_ADC:
-	case FT_SDC:
 	  static_cast<ExtDataContainerInterface*>(a_fields[i].a_arg)->resetMarshaling();
 	  break;
 	case FT_MSGC:
@@ -416,12 +401,6 @@ namespace _msl_internal{ //Start namespace
     return static_cast<ExtDataContainerInterface*>(m_popVal());
   }
 
-  ExtDataContainerInterface* 
-  MsgCnt::popSDC(){
-    Assert(checkCounters() && m_getFT() == FT_SDC);
-    return static_cast<ExtDataContainerInterface*>(m_popVal());
-  }
-
   PstInContainerInterface*
   MsgCnt::popPstIn() {
     return _dss_internal::gf_popPstIn(this);
@@ -449,10 +428,6 @@ namespace _msl_internal{ //Start namespace
 
   void MsgCnt::pushADC(ExtDataContainerInterface* v) {
     m_pushVal(static_cast<void*>(v), FT_ADC);
-  }
-
-  void MsgCnt::pushSDC(ExtDataContainerInterface* v) {
-    m_pushVal(static_cast<void*>(v), FT_SDC);
   }
 
   void MsgCnt::pushPstOut(PstOutContainerInterface* v) {

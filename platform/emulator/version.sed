@@ -27,7 +27,13 @@
 
 #include "config.h"
 
+<<<<<<< .working
 char *AMVersion = OZVERSION;
 char *AMGecVersion = "GECVERSION";
 char *AMDate = "HEREGOESDATE";
 char *ozplatform = "OZPLATFORM";
+=======
+const char *AMVersion = OZVERSION;
+const char *AMDate = "HEREGOESDATE";
+const char *ozplatform = "OZPLATFORM";
+>>>>>>> .merge-right.r17200

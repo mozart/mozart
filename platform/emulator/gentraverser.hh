@@ -831,7 +831,7 @@ typedef StackEntry BTFrame;
 
 //
 // 
-static char* builderTaskNames[] = {
+static const char* builderTaskNames[] = {
   "spointer",
   "spointer_iterate",
   "buildValue",
@@ -926,7 +926,7 @@ public:
       //
       int maybetask = (int32) buf[index+1];
       if (maybetask >= 0 && maybetask < BT_NOTASK) {
-	char *name = builderTaskNames[maybetask];
+	const char *name = builderTaskNames[maybetask];
 	fprintf(stdout, " frame(%p) e0=%p (%s?), e1=%p, e2=%p\n",
 		buf[index], buf[index+1], name, buf[index+2], buf[index+3]);
       } else {
@@ -1269,7 +1269,7 @@ public:
       StackEntry e2 = *(--se);
       int maybetask = (int32) e0;
       if (maybetask >= 0 && maybetask < BT_NOTASK) {
-	char *name = builderTaskNames[maybetask];
+	const char *name = builderTaskNames[maybetask];
 	fprintf(stdout, " frame(%p) e0=%p (%s?), e1=%p, e2=%p\n",
 		sse, e0, name, e1, e2);
       } else {

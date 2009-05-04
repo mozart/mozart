@@ -79,9 +79,8 @@ namespace _msl_internal{
 
   /**************************** handling connection ********************/
 
-  DssChannel* EndRouter::m_closeConnection(){
+  void EndRouter::m_closeConnection(){
     dssLog(DLL_DEBUG,"EndRouter closing down");
-    return NULL;
   }
 
   void EndRouter::deliver() {
