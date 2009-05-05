@@ -1573,7 +1573,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1564: checking for $ac_word" >&5
+echo "configure:1577: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_latex2png'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1615,7 +1615,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1606: checking for $ac_word" >&5
+echo "configure:1619: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_latex'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1657,7 +1657,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1648: checking for $ac_word" >&5
+echo "configure:1661: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_pnmtopng'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1699,7 +1699,7 @@ do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-echo "configure:1690: checking for $ac_word" >&5
+echo "configure:1703: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_prog_nsgmls'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1736,11 +1736,7 @@ fi
 
 
 echo $ac_n "checking for --with-java-bin""... $ac_c" 1>&6
-<<<<<<< .working
-echo "configure:1727: checking for --with-java-bin" >&5
-=======
-echo "configure:1572: checking for --with-java-bin" >&5
->>>>>>> .merge-right.r17200
+echo "configure:1740: checking for --with-java-bin" >&5
 # Check whether --with-java-bin or --without-java-bin was given.
 if test "${with_java_bin+set}" = set; then
   withval="$with_java_bin"
@@ -1767,11 +1763,7 @@ oz_path_save=$PATH
     if test -z "$WITH_GLOBAL_OZ"; then
       
   echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-<<<<<<< .working
-echo "configure:1754: checking for --with-global-oz" >&5
-=======
-echo "configure:1599: checking for --with-global-oz" >&5
->>>>>>> .merge-right.r17200
+echo "configure:1767: checking for --with-global-oz" >&5
   # Check whether --with-global-oz or --without-global-oz was given.
 if test "${with_global_oz+set}" = set; then
   withval="$with_global_oz"
@@ -1805,11 +1797,7 @@ fi
     # Extract the first word of "java", so it can be a program name with args.
 set dummy java; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-<<<<<<< .working
-echo "configure:1788: checking for $ac_word" >&5
-=======
-echo "configure:1633: checking for $ac_word" >&5
->>>>>>> .merge-right.r17200
+echo "configure:1801: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_JAVA'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1856,11 +1844,7 @@ if test -n "$JAVA"; then
     if test -z "$WITH_GLOBAL_OZ"; then
       
   echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-<<<<<<< .working
-echo "configure:1835: checking for --with-global-oz" >&5
-=======
-echo "configure:1680: checking for --with-global-oz" >&5
->>>>>>> .merge-right.r17200
+echo "configure:1848: checking for --with-global-oz" >&5
   # Check whether --with-global-oz or --without-global-oz was given.
 if test "${with_global_oz+set}" = set; then
   withval="$with_global_oz"
@@ -1894,11 +1878,7 @@ fi
     # Extract the first word of "javac", so it can be a program name with args.
 set dummy javac; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-<<<<<<< .working
-echo "configure:1869: checking for $ac_word" >&5
-=======
-echo "configure:1714: checking for $ac_word" >&5
->>>>>>> .merge-right.r17200
+echo "configure:1882: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_JAVAC'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -1944,11 +1924,7 @@ fi
     if test -z "$WITH_GLOBAL_OZ"; then
       
   echo $ac_n "checking for --with-global-oz""... $ac_c" 1>&6
-<<<<<<< .working
-echo "configure:1915: checking for --with-global-oz" >&5
-=======
-echo "configure:1760: checking for --with-global-oz" >&5
->>>>>>> .merge-right.r17200
+echo "configure:1928: checking for --with-global-oz" >&5
   # Check whether --with-global-oz or --without-global-oz was given.
 if test "${with_global_oz+set}" = set; then
   withval="$with_global_oz"
@@ -1982,11 +1958,7 @@ fi
     # Extract the first word of "jar", so it can be a program name with args.
 set dummy jar; ac_word=$2
 echo $ac_n "checking for $ac_word""... $ac_c" 1>&6
-<<<<<<< .working
-echo "configure:1949: checking for $ac_word" >&5
-=======
-echo "configure:1794: checking for $ac_word" >&5
->>>>>>> .merge-right.r17200
+echo "configure:1962: checking for $ac_word" >&5
 if eval "test \"`echo '$''{'ac_cv_path_JAR'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
@@ -2029,22 +2001,14 @@ fi
     fi
     
   echo $ac_n "checking for class path option""... $ac_c" 1>&6
-<<<<<<< .working
-echo "configure:1992: checking for class path option" >&5
-=======
-echo "configure:1837: checking for class path option" >&5
->>>>>>> .merge-right.r17200
+echo "configure:2005: checking for class path option" >&5
   case `$JAVA -version 2>&1` in
   Kaffe*) JAVACP=-addclasspath;;
   *) JAVACP=-classpath;;
   esac
   echo "$ac_t""$JAVACP" 1>&6
   echo $ac_n "checking for --with-java-threads""... $ac_c" 1>&6
-<<<<<<< .working
-echo "configure:1999: checking for --with-java-threads" >&5
-=======
-echo "configure:1844: checking for --with-java-threads" >&5
->>>>>>> .merge-right.r17200
+echo "configure:2012: checking for --with-java-threads" >&5
   # Check whether --with-java-threads or --without-java-threads was given.
 if test "${with_java_threads+set}" = set; then
   withval="$with_java_threads"
@@ -2063,11 +2027,7 @@ PATH=$oz_path_save
 
 
 echo $ac_n "checking for --with-documents""... $ac_c" 1>&6
-<<<<<<< .working
-echo "configure:2018: checking for --with-documents" >&5
-=======
-echo "configure:1863: checking for --with-documents" >&5
->>>>>>> .merge-right.r17200
+echo "configure:2031: checking for --with-documents" >&5
 # Check whether --with-documents or --without-documents was given.
 if test "${with_documents+set}" = set; then
   withval="$with_documents"
@@ -2085,11 +2045,7 @@ DOC_DIRS=$oz_doc_dirs
 
 
 echo $ac_n "checking for --enable-chm""... $ac_c" 1>&6
-<<<<<<< .working
-echo "configure:2036: checking for --enable-chm" >&5
-=======
-echo "configure:1881: checking for --enable-chm" >&5
->>>>>>> .merge-right.r17200
+echo "configure:2049: checking for --enable-chm" >&5
 # Check whether --enable-chm or --disable-chm was given.
 if test "${enable_chm+set}" = set; then
   enableval="$enable_chm"
@@ -2110,11 +2066,7 @@ fi
 
 
 echo $ac_n "checking for --with-ozhome""... $ac_c" 1>&6
-<<<<<<< .working
-echo "configure:2057: checking for --with-ozhome" >&5
-=======
-echo "configure:1902: checking for --with-ozhome" >&5
->>>>>>> .merge-right.r17200
+echo "configure:2070: checking for --with-ozhome" >&5
 # Check whether --with-ozhome or --without-ozhome was given.
 if test "${with_ozhome+set}" = set; then
   withval="$with_ozhome"
@@ -2529,7 +2481,7 @@ if test "$no_recursion" != yes; then
       fi
     fi
 
-    cd "$ac_popdir"
+    cd $ac_popdir
   done
 fi
 

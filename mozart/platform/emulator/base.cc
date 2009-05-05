@@ -52,11 +52,7 @@ void prefixWarning()
   prefixError();
 }
 
-<<<<<<< .working
-extern char *AMVersion, *AMGecVersion, *AMDate, *ozplatform;
-=======
 extern const char *AMVersion, *AMDate, *ozplatform;
->>>>>>> .merge-right.r17200
 
 void OZ_error(OZ_CONST char *format, ...)
 {
