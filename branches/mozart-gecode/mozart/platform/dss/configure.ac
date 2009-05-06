@@ -241,11 +241,16 @@ case "$host_cpu" in
 	CPU_FLAGS="-mtune=$host_cpu -DBIG_ENDIAN_HOST"
     ;;
     *)
+	if test "$enable_opt" = native; then
+	    AC_MSG_RESULT(native architecture)
+	    CPU_FLAGS="-march=native"
+	else
 	AC_MSG_RESULT($host_cpu architecture)
 	if test "$VERSION" = ABOVE3; then
 	    CPU_FLAGS="-march=$host_cpu -mtune=$host_cpu"
 	else
 	    CPU_FLAGS="-march=$host_cpu -mcpu=$host_cpu"
+	fi
 	fi
     ;;
 esac
