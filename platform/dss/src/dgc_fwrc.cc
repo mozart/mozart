@@ -30,6 +30,7 @@
 #include "dgc_fwrc.hh"
 #include "referenceConsistency.hh"
 #include <limits.h>
+#include "msl_serialize.hh"
 
 namespace _dss_internal{
 

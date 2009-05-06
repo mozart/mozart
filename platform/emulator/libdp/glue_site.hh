@@ -139,6 +139,8 @@ void gcGlueSiteFinal();
 
 
 
+void putInt(DssWriteBuffer *buf, int i);
+int  getInt(DssReadBuffer *buf);
 void putStr(DssWriteBuffer *buf, char *str, int len);
 void getStr(DssReadBuffer *buf, char *str, int len);
 void cleanStr(DssReadBuffer *buf, int len);

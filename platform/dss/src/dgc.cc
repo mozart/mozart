@@ -46,8 +46,7 @@ namespace _dss_internal{
 
   char *
   GCalgorithm::m_stringrep(){
-    static char rep[]="not implemented"; //Yves: Much better would be to make all m_stringrep return const char*.
-    return rep;
+    return "not implemented"; 
   }
 
 

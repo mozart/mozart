@@ -87,8 +87,7 @@ static ip_address getMySiteIP()
   char *nodename = oslocalhostname();
   if(nodename==0) { 
     // OZ_warning("getMySiteIP: don't know local hostname"); 
-    nodename = (char*) malloc(10);
-    strcpy(nodename,"localhost");
+    nodename = "localhost";
   }
   
   // very simple for now

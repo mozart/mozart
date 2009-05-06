@@ -454,12 +454,12 @@ unsigned long OZ_intToCulong(OZ_Term term)
     return tagged2BigInt(term)->getUnsignedLong();
 }
 
-OZ_Term OZ_CStringToInt(const char *str)
+OZ_Term OZ_CStringToInt(char *str)
 {
   if (!str || str[0] == '\0')
     return 0;
 
-  const char *aux = str;
+  char *aux = str;
   int sign = 1;
   if (aux[0] == '~') {
     aux++;
@@ -1438,7 +1438,7 @@ OZ_Term OZ_tuple(OZ_Term label, int width)
   return makeTaggedSRecord(SRecord::newSRecord(label,width));
 }
 
-OZ_Term OZ_mkTupleC(const char *label,int arity,...)
+OZ_Term OZ_mkTupleC(char *label,int arity,...)
 {
   if (arity == 0) {
     return OZ_atom(label);
@@ -1949,7 +1949,7 @@ OZ_Return OZ_raiseDebug(OZ_Term exc) {
   return RAISE;
 }
 
-OZ_Return OZ_raiseC(const char *label,int arity,...)
+OZ_Return OZ_raiseC(char *label,int arity,...)
 {
   if (arity == 0) {
     return OZ_raise(OZ_atom(label));
@@ -1977,7 +1977,7 @@ OZ_Return OZ_raiseError(OZ_Term exc) {
   return RAISE;
 }
 
-OZ_Return OZ_raiseErrorC(const char *label,int arity,...)
+OZ_Return OZ_raiseErrorC(char *label,int arity,...)
 {
   if (arity == 0) {
     return OZ_raiseError(OZ_atom(label));
@@ -1995,7 +1995,7 @@ OZ_Return OZ_raiseErrorC(const char *label,int arity,...)
   return OZ_raiseError(tt);
 }
  
-OZ_Term OZ_makeException(OZ_Term cat, OZ_Term key, const char* label, int arity,...)
+OZ_Term OZ_makeException(OZ_Term cat,OZ_Term key,char*label,int arity,...)
 {
   OZ_Term exc=OZ_tuple(key,arity+1);
   OZ_putArg(exc,0,OZ_atom(label));
@@ -2152,7 +2152,7 @@ char *OZ_unixError(int aErrno) {
 #endif  
 }
 
-OZ_Return OZ_typeError(int pos,const char *type)
+OZ_Return OZ_typeError(int pos,char *type)
 {
   oz_typeError(pos,type);
 }

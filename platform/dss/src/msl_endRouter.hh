@@ -37,6 +37,7 @@
 namespace _msl_internal{ //Start namespace 
 
   class RouteTransController;
+  class DataAreaContainer;
   class EndRouterDeliver;
 
   class EndRouter: public BufferedTransObj {
@@ -57,7 +58,7 @@ namespace _msl_internal{ //Start namespace
     EndRouter(MsgnLayerEnv*); 
     virtual ~EndRouter() {}
 
-    virtual void m_closeConnection();
+    virtual DssChannel *m_closeConnection();
     virtual void deliver();
     virtual void readyToReceive();
 

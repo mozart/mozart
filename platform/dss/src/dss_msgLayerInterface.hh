@@ -58,6 +58,7 @@ namespace _dss_internal{ //Start namespace
     M_PROXY_COORD_NODEST,
     M_COORD_COORD_NODEST,
 
+    M_DKS_MSG,
     M_LAST
   };
   
@@ -111,6 +112,9 @@ namespace _dss_internal{ //Start namespace
     PstContainer(const PstContainer&):DSS_Environment_Base(NULL), a_pstOut(NULL), a_pstIn(NULL){}
     PstContainer& operator=(const PstContainer&){ return *this; }
   };
+
+  
+  class RefCntdBuffer;
   
   class SimpleBlockBuffer{
     public: 
@@ -127,6 +131,37 @@ namespace _dss_internal{ //Start namespace
     MACRO_NO_DEFAULT_CONSTRUCTORS(SimpleBlockBuffer);
   };
   
+  // A container class that takes a pstout as argument and isntantly masrhals it into 
+  // a serialzied representation. Replicas of the container can be created, that all 
+  // uses the same serilized representation. Thus the cost of marshaling is keept to O(1) 
+  // even if multiple copies of the pst is to be sent to remote nodes(i.e. broadcast). 
+  // However, the current version marshals in "file" mode, i.e. all entities are made
+  // persistent. 
+  // 
+  // Unmarshaling is only done when the m_getPstIn method is called. It is thus
+  // safe to receive a container withot building a structure on the PS-heap. 
+  
+  class PstDataContainer:public ExtDataContainerInterface, public DSS_Environment_Base{ 
+  public: 
+    PstDataContainer(DSS_Environment*, PstOutContainerInterface**&); 
+    PstDataContainer(DSS_Environment*, RefCntdBuffer*);
+    PstDataContainer(DSS_Environment*); 
+    virtual ~PstDataContainer();
+    PstInContainerInterface* m_getPstIn();
+    PstDataContainer*      m_createReplica(); 
+  public:
+    virtual BYTE  getType(); 
+    virtual bool marshal(DssWriteBuffer *bb);
+    virtual bool unmarshal(DssReadBuffer *bb);
+    virtual void dispose();
+    virtual void resetMarshaling();
+  private:
+    RefCntdBuffer *a_cntdBuf; 
+    BYTE*          a_cur;
+    MACRO_NO_DEFAULT_CONSTRUCTORS(PstDataContainer);
+  };
+  
+
   class EdcByteArea:public ExtDataContainerInterface{
   public: 
     EdcByteArea(SimpleBlockBuffer*); 
@@ -149,7 +184,7 @@ namespace _dss_internal{ //Start namespace
     SimpleBlockBuffer *a_curBuf; 
     BYTE *a_cur; 
   public:
-    virtual size_t  availableSpace() const;
+    virtual int  availableSpace() const;
     virtual bool canWrite(size_t len) const {return this->availableSpace()>=len;}
     virtual void writeToBuffer(const BYTE* ptr, size_t len);
     virtual void putByte(const BYTE& b);
@@ -159,10 +194,19 @@ namespace _dss_internal{ //Start namespace
     MACRO_NO_DEFAULT_CONSTRUCTORS(InfiniteWriteBuffer);
   };
 
+  
+  
+  
+
+
   enum AppDataContainerType{
     ADCT_PST,
+    ADCT_PDC,
+    ADCT_LMC,
     ADCT_EBA
   };
+  
+
 
   void gf_pushEBA(MsgContainer*, EdcByteArea* );
   EdcByteArea* gf_popEBA(MsgContainer*); 
