@@ -77,6 +77,7 @@ SocketChannel::~SocketChannel() {
 
 void
 SocketChannel::close() {
+  delete this;
 }
 
 bool

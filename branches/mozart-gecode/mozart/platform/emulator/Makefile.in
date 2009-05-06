@@ -126,7 +126,7 @@ OTHERSRCS= \
 	print.cc base.cc ozconfig.cc \
 	foreign.cc dpInterface.cc boot-manager.cc \
 	builtins.cc vprops.cc debug.cc interFault.cc \
-	system.cc alice.cc base64.cc
+	system.cc alice.cc
 
 SUPPORTSRCS=\
 	stack.cc ozostream.cc hashtbl.cc \
@@ -482,7 +482,7 @@ $(BINDIR) $(INCDIR):
 	$(INSTALL_DIR) $@
 
 version.cc: version.sed $(filter-out version.cc,$(ALLSRCS))
-	sed -e "s/HEREGOESDATE/@OZBUILDDATE@@OZBUILDTIME@/" \
+	sed -e "s/HEREGOESDATE/@OZBUILDDATE@/" \
 	     -e "s/OZPLATFORM/$(PLATFORM)/" \
 		 -e "s/GECVERSION/${GECODEVERSION}/"\
 	     $(SRCDIR)/version.sed > version.cc
@@ -505,7 +505,7 @@ tags:	$(CREATEDFILES) version.cc
 	for d in $(SUBDIRS); do (cd $$d; $(MAKE) tags); done
 
 clean::
-	-rm -f gmon.out  fetchedInstr*.dump verb_out.txt
+	-rm -f gmon.out  fetchedInstr.dump verb_out.txt
 
 
 new-scanner:

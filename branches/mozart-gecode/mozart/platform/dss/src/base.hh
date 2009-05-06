@@ -71,6 +71,8 @@
 #include "dss_enums.hh"
 
 
+char *gf_bool2string(const bool& b);
+
 // Create an integer2char, taking int and BYTE*
 inline void gf_integer2char(BYTE* const buf, const u32& e){
 #ifdef BIG_ENDIAN_HOST
@@ -87,6 +89,11 @@ inline u32 gf_char2integer(BYTE* const buf){
   return *reinterpret_cast<u32*>(buf);
 #endif
 }
+
+
+void gf_printBuf(const char* const format, BYTE* const buf, int len);
+
+
 
 void  dssError(const char* const format, ...);
 void  dssAssert(const char* const  file, const int& line, const char* const condition);
@@ -127,4 +134,20 @@ void dssLog(DSS_LOG_LEVEL level, const char* const format, ...);
 
 #endif // DSS_LOG
   
+
+#ifdef EXCEPTIONS
+inline void Exception(const bool& cond, const ExceptionType& et){
+  if(cond) throw et;
+}
+#else
+inline void Exception(const bool&, const ExceptionType&){}
+#endif // EXCEPTIONS
+
+// ******************************* ENUMS AND CONSTANTS ****************************
+
+const int sz_M8bitInt   = 1;
+const int sz_MNumberMax = 5;
+const int sz_MEM_COPY   = 8; // faster to loop copy than to invoke memcpy
+
+
 #endif 

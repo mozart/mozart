@@ -90,9 +90,9 @@ namespace _msl_internal{ //Start namespace
 
   // Class methods /////////////////////////////////////////////////////
 
-#define Q_PRIO_VAL_4 10
-#define Q_PRIO_VAL_3 10
-#define Q_PRIO_VAL_2 100
+  const int PrioQueues::Q_PRIO_VAL_4=10;
+  const int PrioQueues::Q_PRIO_VAL_3=10;
+  const int PrioQueues::Q_PRIO_VAL_2=100;
 
 
   PrioQueues::PrioQueues(Timers* tim):
@@ -102,10 +102,9 @@ namespace _msl_internal{ //Start namespace
     curq(NULL),
     prio_val_4(Q_PRIO_VAL_4),
     prio_val_3(Q_PRIO_VAL_3),
-    prio_val_2(Q_PRIO_VAL_2)
-  {
-    DebugCode(noMsgs=0);
-    //dssLog(DLL_MOST,"Created PrioQueue");
+    prio_val_2(Q_PRIO_VAL_2),
+    noMsgs(0){
+    //dssLog(DLL_ALL,"Created PrioQueue");
     for (int i=0;i<5;i++)
       qs[i].first=qs[i].last=NULL;
     unackedMsgs.first=unackedMsgs.last=NULL;
@@ -116,7 +115,7 @@ namespace _msl_internal{ //Start namespace
   void PrioQueues::enqueue(MsgCnt *msgC, int prio) {
     Assert(prio >= 0); 
     Assert(prio < 5); 
-    DebugCode(noMsgs++);
+    noMsgs++;
     if_enqueue(msgC, qs[prio]);
   }
 
@@ -162,7 +161,7 @@ namespace _msl_internal{ //Start namespace
       } while(!if_isEmpty(qs[4-1]) || !if_isEmpty(qs[3-1]) || !if_isEmpty(qs[2-1]));
     }
     Assert(ret!=NULL || hasQueued()==false || !working);
-    DebugCode(if (ret!=NULL) noMsgs--);
+    if (ret!=NULL) noMsgs--;
     return ret;
   }
 
@@ -171,7 +170,7 @@ namespace _msl_internal{ //Start namespace
   }
 
   void PrioQueues::requeue(MsgCnt *msgC) {
-    DebugCode(noMsgs++);
+    noMsgs++;
     if_addFirst(msgC,curq);
   }
   int PrioQueues::msgAcked(int num,bool resend,bool calcrtt) {
@@ -261,12 +260,16 @@ namespace _msl_internal{ //Start namespace
     return hasQueued() ||  unackedMsgs.first!=NULL;
   }
 
+  int PrioQueues::getQueueStatus() {
+    return noMsgs;
+  }
+
   void PrioQueues::clear5() {
     MsgCnt *list=qs[5-1].first;
     MsgCnt *tmp;
     qs[5-1].first=qs[5-1].last=NULL;
     while(list!=NULL) {
-      DebugCode(noMsgs--);
+      noMsgs--;
       tmp=list;
       list=list->a_next;
       // Assume for now that prio5 msgs are never in unackedList
@@ -285,7 +288,7 @@ namespace _msl_internal{ //Start namespace
     for(int i=0;i<4;i++) {
       msgC=qs[i].first;
       while(msgC!=NULL) {
-	DebugCode(noMsgs--);
+	noMsgs--;
 	tmp = msgC->a_next;
 	msgC->a_next = ans; 
 	ans = msgC; 

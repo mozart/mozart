@@ -36,6 +36,7 @@
 #include "msl_transObj.hh"
 #include "msl_buffer.hh"
 #include "msl_dct.hh"
+#include "msl_serialize.hh"
 #include "mslBase.hh"
 #include "msl_crypto.hh"
 #include "dss_enums.hh"
@@ -93,7 +94,7 @@ namespace _msl_internal{ //Start namespace
     a_isRemote(true),
     a_isGcMarked(false)
   {
-    dssLog(DLL_MOST,"REMOTE SITE: created %p",this);
+    dssLog(DLL_ALL,"REMOTE SITE: created %p",this);
     DebugCode(a_allocated++);
   }
 
@@ -120,8 +121,10 @@ namespace _msl_internal{ //Start namespace
     Assert(d->canWrite(static_cast<int>(MD5_SIZE)));
     int   inlen = d->getUsed();
     BYTE* plain = d->unhook();
+    //gf_printBuf("Site:encrypt",plain,inlen);
     int retlen; BYTE* cipher;
     m_encrypt(retlen,cipher,inlen,plain);
+    //gf_printBuf("Site:encrypted",cipher,retlen);
     delete [] plain;
     return new DssSimpleDacDct(retlen,cipher); // write
   }
@@ -341,7 +344,7 @@ namespace _msl_internal{ //Start namespace
     buf.m_putInt(a_version);
     buf.writeToBuffer(a_key->getStringRep(), RSA_MARSHALED_REPRESENTATION);
     a_csSite->marshalCsSite(&buf);
-    Assert(buf.getUsed() <= body_len);
+    Assert(buf.getUsed() == body_len);
     buf.drop();     // detach buffer from body (to avoid deallocation)
 
     // compute body signature (and pad with random data)
@@ -361,6 +364,11 @@ namespace _msl_internal{ //Start namespace
     a_comObj->handoverRoute(dstSite, len);
   }
 
+  void Site::m_takeDownConnection(){
+    if (a_comObj)
+      a_comObj->m_closeDownConnection();
+  }
+
   unsigned char* Site::m_getId(int &len){
     BYTE* p = a_key->getStringRep();
     BYTE* ret = new BYTE[RSA_MARSHALED_REPRESENTATION];
@@ -378,8 +386,8 @@ namespace _msl_internal{ //Start namespace
     
   // ************************* Site lookup table ************************
   
-  SiteHT::SiteHT(const int& _size,   MsgnLayerEnv* const env ):
-    BucketHashTable<Site>(_size),
+  SiteHT::SiteHT(const int& size,   MsgnLayerEnv* const env ):
+    BucketHashTable<Site>(size),
 #ifdef DEBUG_CHECK
     has_mySite(false), 
 #endif
@@ -431,10 +439,9 @@ namespace _msl_internal{ //Start namespace
       int key_len  = body.m_getByte();
       bool sec     = body.m_getByte();
       u32 version  = body.m_getInt();
-      Assert(body_len>=0);
       Assert(key_len == RSA_MARSHALED_REPRESENTATION);
 
-      if (body.availableData() + 2 + 2*SIZE_INT == static_cast<size_t>(body_len) &&
+      if (body.availableData() + 2 + 2*SIZE_INT == body_len &&
 	  body_len > RSA_MARSHALED_REPRESENTATION + SIZE_INT &&
 	  key_len == RSA_MARSHALED_REPRESENTATION) {
 	

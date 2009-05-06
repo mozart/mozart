@@ -59,17 +59,18 @@ namespace _msl_internal{
   
   /**************************** handling connection ********************/
 
-  void TCPTransObj::m_closeConnection() {
+  DssChannel* TCPTransObj::m_closeConnection() {
+    DssChannel *ans = a_channel;
+
     dssLog(DLL_DEBUG,"TRANSOBJ      (%p): closing down",this);
 
     if (a_channel != NULL) {
       a_channel->registerRead(false);  // Sometimes done twice!
       a_channel->registerWrite(false); // Sometimes done twice!
       a_channel->setCallback(NULL); 
-      a_channel->close();
-      delete a_channel;
       a_channel = NULL;
     }
+    return ans; 
   }
 
   void TCPTransObj::deliver() {
@@ -120,27 +121,19 @@ namespace _msl_internal{
   // return false if done, and true if more has to be read
   bool
   TCPTransObj::readDataAvailable() {  
+    int ret,len;
+    BYTE *pos;
+
     Assert(a_channel != NULL); 
     Assert(a_readBuffer->getFree() > 0);
 
-    // read from transport layer
-    a_mslEnv->a_OSReadCounter++;
-    BYTE *pos;
-    int len = a_readBuffer->getWriteBlock(pos);
-    int ret = a_channel->read(pos, len);
-    a_readBuffer->m_commitWrite(ret);
-
-    // Note: The channel may still have data available to read at this
-    // point.  This happens when 'len' is too small.  In that case, it
-    // is up to the channel to make another callback later.
-    //
-    // There was an optimization in the past, which was reading the
-    // channel again in the case ret==len.  We discarded it because it
-    // was the source of a bug when the channel was implemented with a
-    // socket.  In the case when we read *exactly* the available data
-    // in the socket, the second call was blocking.  There was no more
-    // data to read, but the system call read(2) could not return 0,
-    // because 0 means end-of-file.  So it was blocking.
+    // read from transport layer (loop twice if necessary)
+    do {
+      len = a_readBuffer->getWriteBlock(pos);
+      a_mslEnv->a_OSReadCounter++;
+      ret = a_channel->read(pos, len);
+      a_readBuffer->m_commitWrite(ret);
+    } while (ret == len && a_readBuffer->getFree() > 0);
 
     // decode data to a_unmarshalBuffer
     if (a_readBuffer->decode()) {

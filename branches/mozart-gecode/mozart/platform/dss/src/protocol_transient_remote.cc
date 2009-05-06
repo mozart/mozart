@@ -194,7 +194,7 @@ namespace _dss_internal{ //Start namespace
   void ProtocolTransientRemoteManager::makeGCpreps() {
     ProtocolManager::makeGCpreps();
     // mark all threads in buffered messages
-    for (QueuePosition<TR_request> p(a_requests); p(); p++) (*p).makeGCpreps();
+    for (Position<TR_request> p(a_requests); p(); p++) (*p).makeGCpreps();
   }
 
   // register a remote proxy at s
@@ -203,7 +203,7 @@ namespace _dss_internal{ //Start namespace
 
     // send an update for changes if necessary
     PstOutContainerInterface *ans;
-    a_coordinator->m_doe(AO_OO_CHANGES, NULL, NULL, ans);
+    a_coordinator->m_doe(AO_OO_CHANGES, NULL, NULL, NULL, ans);
     if (ans != NULL) sendToProxy(s, TR_UPDATE, ans);
   }
 
@@ -238,7 +238,7 @@ namespace _dss_internal{ //Start namespace
     static_cast<ProtocolTransientRemoteProxy*>(pp)->setToken(s == mySite);
 
     // forward buffered requests
-    for (QueuePosition<TR_request> p(a_requests); p(); p++) {
+    for (Position<TR_request> p(a_requests); p(); p++) {
       TR_request req = *p;
       if (req.type == PROT_PERMFAIL)
 	sendToProxy(s, PROT_PERMFAIL);
@@ -477,7 +477,7 @@ namespace _dss_internal{ //Start namespace
       PstInContainerInterface *arg = gf_popPstIn(msg);
       GlobalThread* tid = (msg->m_isEmpty() ? NULL : popThreadId(msg));
       PstOutContainerInterface* ans = NULL;
-      a_proxy->m_doe(AO_OO_BIND, tid, arg, ans);
+      a_proxy->m_doe(AO_OO_BIND, tid, NULL, arg, ans);
       setStatus(TRANS_STATUS_BOUND);
       if (a_proxy->m_isHomeProxy()) sendToManager(TR_BOUND);
       else sendToManager(TR_REDIRECT, a_proxy->retrieveEntityState());
@@ -494,7 +494,7 @@ namespace _dss_internal{ //Start namespace
       Assert(msgType != TR_BOUND || a_proxy->m_isHomeProxy());
       // the state has been installed, simply wake up suspensions
       setStatus(TRANS_STATUS_BOUND);
-      while (!a_susps.isEmpty()) a_susps.pop()->resumeDoLocal();
+      while (!a_susps.isEmpty()) a_susps.pop()->resumeDoLocal(NULL);
       break;
     }
     case TR_UPDATE_REQUEST: {
@@ -503,7 +503,7 @@ namespace _dss_internal{ //Start namespace
       PstInContainerInterface *arg = gf_popPstIn(msg);
       GlobalThread *tid = (msg->m_isEmpty() ? NULL : popThreadId(msg));
       PstOutContainerInterface *ans;
-      a_proxy->m_doe(AO_OO_UPDATE, tid, arg, ans);
+      a_proxy->m_doe(AO_OO_UPDATE, tid, NULL, arg, ans);
       // send TR_UPDATE_REPLY to manager
       if (tid) sendToManager(TR_UPDATE_REPLY, arg->loopBack2Out(), tid);
       else sendToManager(TR_UPDATE_REPLY, arg->loopBack2Out());
@@ -513,12 +513,12 @@ namespace _dss_internal{ //Start namespace
       // do the update
       PstInContainerInterface* arg = gf_popPstIn(msg);
       PstOutContainerInterface* ans;
-      a_proxy->m_doe(AO_OO_UPDATE, NULL, arg, ans);
+      a_proxy->m_doe(AO_OO_UPDATE, NULL, NULL, arg, ans);
       // resume calling thread if present
       if (!msg->m_isEmpty()) {
 	GlobalThread* tid = popThreadId(msg);
 	a_susps.remove(tid);
-	tid->resumeDoLocal();
+	tid->resumeDoLocal(NULL);
       }
       break;
     }

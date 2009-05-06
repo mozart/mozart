@@ -359,7 +359,7 @@ typedef void OsSigFun(int sig);
 
 typedef struct {
   int signo;
-  const char *name;
+  char *name;
   Bool pending;
   OsSigFun *chandler;
   OZ_Term  ozhandler;
@@ -766,10 +766,10 @@ int rawread(int fd, void *buf, int sz)
 
 
 static
-int rawwrite(int fd, const void *buf, int sz)
+int rawwrite(int fd, void *buf, int sz)
 {
   if (isSocket(fd))
-    return send(fd, (const char *)buf, sz, 0);
+    return send(fd, (char *)buf, sz, 0);
   
   return write(fd,buf,sz);
 }
@@ -1021,7 +1021,11 @@ int osOpenMax()
   /* socket numbers may grow very large on Windows */
   return 100000;
 #else
-  return FD_SETSIZE;
+  int ret = sysconf(_SC_OPEN_MAX);
+  if (ret == -1) {
+    ret = _POSIX_OPEN_MAX;
+  }
+  return ret;
 #endif
 }
 
@@ -1092,7 +1096,7 @@ int osdup(int fd)
     return fd;
 }
 
-char *osgetenv(const char *var)
+char *osgetenv(char *var)
 {
   char *env = static_cast<char *>(GetEnvironmentStrings());
   char *p = env;
@@ -1127,7 +1131,7 @@ char *ostmpnam(char *s) { return tmpnam(s); }
 
 int osdup(int fd) { return dup(fd); }
 
-char *osgetenv(const char *var) { return getenv(var); }
+char *osgetenv(char *var) { return getenv(var); }
 
 #endif
 
@@ -1532,12 +1536,12 @@ int ossaferead(int fd, char *buf, unsigned int len)
 
 
 /* currently no wrapping for write */
-int oswrite(int fd, const void *buf, unsigned int len)
+int oswrite(int fd, void *buf, unsigned int len)
 {
   return rawwrite(fd, buf, len);
 }
 
-int ossafewrite(int fd, const char *buf, unsigned int len)
+int ossafewrite(int fd, char *buf, unsigned int len)
 {
   int origLen = len;
 

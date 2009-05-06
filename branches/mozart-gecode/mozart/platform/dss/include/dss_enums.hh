@@ -26,6 +26,23 @@ private:                                \
   aclass(const aclass &);		\
   aclass &operator = (const aclass&)
 
+
+#define MACRO_NO_DEFAULT_EQUALITY(aclass)	\
+private:                                \
+  aclass &operator = (const aclass&)
+
+
+// ****************** Exceptions ********************
+// Exceptions are used in various functions to declare something wrong
+// has happened.
+//
+
+enum ExceptionType{
+  EXCEPTION_NO_DATA = 1  // Thrown by DssReadBuffer.getByte()
+};
+
+
+
 // ************ Abstract operation return values ********
 // The return values for the doAbstractOperation pair signals to the
 // caller how it should act.
@@ -46,6 +63,7 @@ enum OpRetVal{
   DSS_SUSPEND,
   DSS_INTERNAL_ERROR_NO_PROXY,
   DSS_INTERNAL_ERROR_NO_OP,
+  DSS_INTERNAL_ERROR_THREAD_OP,
   DSS_INTERNAL_ERROR_SEVERE
 };
 
@@ -53,9 +71,31 @@ enum OpRetVal{
 enum ProxyMarshalFlag{
   PMF_ORDINARY, 
   PMF_PUSH,
-  PMF_FREE
+  PMF_FREE,
+  PMF_MASK  = 0xF  // bit mask
 };
-const int PMF_NBITS = 4;
+const int PMF_NBITS = 4;     // must be consistent with PMF_MASK
+
+
+enum ASop{
+  ASO_MIGRATE,
+  ASO_PUSH
+};
+
+
+// ****************** DSS_GC ******************
+// The return values of the Proxy::manipulatAS function are not very
+// thorough, either the action succeded (OK) ( is successfully
+// initiated) or it failed because the argument wasn't (ARG_FAIL)
+// valid, or the operation could not be executed for the current
+// Resolver protocol (OP_FAIL).
+
+enum MASretVal{
+  MAS_OK, 
+  MAS_ARG_FAIL, 
+  MAS_OP_FAIL
+};
+
 
 // ****************** DSS_GC ******************
 // DSS_GC is the value returned from getDssGCStatus
@@ -125,6 +165,7 @@ enum AbstractEntityName {
   AEN_RELAXED_MUTABLE   = 2,
   AEN_TRANSIENT         = 3,
   AEN_IMMUTABLE         = 4,
+  AEN_IMMUTABLE_UNNAMED = 5,
   AEN_MASK              = 0xF   // bit mask
 };
 const int AEN_NBITS = 4;     // must be consistent with AE_MASK
@@ -144,7 +185,8 @@ enum ProtocolName {
   PN_IMMUTABLE_LAZY  = 8,
   PN_IMMUTABLE_EAGER = 9,
   PN_IMMEDIATE       = 10,
-  PN_SITED           = 11,
+  PN_DKSBROADCAST    = 11,
+  PN_SITED           = 12,
   PN_MASK            = 0xF   // bit mask
 };
 const int PN_NBITS = 4;     // must be consistent with PN_MASK
@@ -170,6 +212,7 @@ enum AccessArchitecture{
   AA_NO_ARCHITECTURE    = 0x0,  // Don't use, only here for internal debugging 
   AA_STATIONARY_MANAGER = 0x1,
   AA_MIGRATORY_MANAGER  = 0x2,
+  AA_MOBILE_COORDINATOR = 0x4,
   AA_MASK               = 0xF   // bit mask
 };
 const int AA_NBITS = 4;     // must be consistent with AA_MASK
@@ -185,18 +228,24 @@ const int AA_NBITS = 4;     // must be consistent with AA_MASK
 // is used, the proxy will always be a root at the home
 // - WRC, fractional WRC
 // - TL, time lease, uses a timer to keep track of external refs.
+// - RC, reference counting (don't use)
 // - RLV1, Reference Listing version 1, keeps a list of external refs's sites
 // - RLV2, version 2 of above.
+// - IRC, indirectional RC (don't use)
 
 enum RCalg{
   RC_ALG_NONE    = 0x00,   // Don't use, only here for internal debugging
   RC_ALG_PERSIST = 0x01,   // should not be combined with others!
   RC_ALG_WRC     = 0x02,
   RC_ALG_TL      = 0x04,
-  RC_ALG_RLV1    = 0x08, //Yves: unused!
-  RC_ALG_RLV2    = 0x10  //Yves: unused!
+  RC_ALG_RC      = 0x08,
+  RC_ALG_RLV1    = 0x10,
+  RC_ALG_RLV2    = 0x20,
+  RC_ALG_IRC     = 0x40,
+  RC_ALG_ERROR   = 0x80,
+  RC_ALG_MASK    = 0xFF   // bit mask
 };
-const int RC_ALG_NBITS = 8;
+const int RC_ALG_NBITS = 8;     // must be consistent with RC_ALG_MASK
 
 
 
@@ -214,7 +263,6 @@ const int RC_ALG_NBITS = 8;
 // lease. The better a connection is the shorter period needed.
 // 
 
-//Yves:unused for now
 enum RCop{
   RC_OP_REMOVE_ALG,
   RC_OP_SET_WRC_ALPHA,
@@ -234,8 +282,74 @@ enum RCop{
 
 enum ProxyUnmarshalFlag{
   PUF_ORDINARY,
-  PUF_FREE //Yves:unused!
+  PUF_FREE
 };
+
+enum AOcallback{
+  AOCB_FINISH,
+  AOCB_CONTINUE
+};
+
+enum ResumeCode{
+  TRC_CONTINUE,
+  TRC_REDO,
+  TRC_RAISE,
+  TRC_ATOMIC
+};
+
+
+enum WakeRetVal{
+  WRV_DONE,       // The operation was completed, an atomoc operation
+  WRV_CONTINUING, // The operation is scheduled to be executed
+  WRV_NO_THREAD,  // The operation is not executed, the thread is busy elsewhere
+  WRV_NO_OP       // ? 
+};
+
+
+enum BufOpRet{
+  BOR_OP_OK,
+  BOR_SPACE_UNAWAIL
+};
+
+
+enum ErrorClass {
+  EC_OK,
+  EC_GO_AHEAD,
+  EC_CONTINUE_LATER,
+  EC_LOST              // This perm only means the transObj should give up
+};
+
+
+enum ConGrantReturn{
+  CGR_CONTINUE,
+  CGR_SUSPENDED, 
+  CGR_FAILED, 
+  CGR_STATE_ERROR
+};
+
+
+enum ConnectionType{
+  CT_TCP_CONNECTION,
+  CT_ROUTE_CONNECTION
+};
+
+
+enum ConnectionFailType{
+  CFT_CONNECTION_LOST,
+  CFT_SITE_GLOBAL_PERM, 
+  CFT_SITE_LOCAL_PERM
+};
+
+
+enum SiteFaultInterest{
+  SFI_NOTDEFINEDYET
+}; 
+
+
+enum SiteFaultState{
+  SFS_NOTDEFINEDYET
+}; 
+
 
 enum DSS_AREA{
   DSS_STATIC,
@@ -246,6 +360,7 @@ enum DSS_AREA{
 
 
 enum DSS_AREA_ID{
+  DSS_AREA_NO_OP,
   DSS_STATIC_LOG_PARAMETER,
   DSS_STATIC_DEBUG_TABLES,
   DSS_STATIC_MEMORY_ALLOCATION,
@@ -255,7 +370,9 @@ enum DSS_AREA_ID{
 
 enum ParamRetVal{
   PRV_OK,
+  PRV_TYPE_ERROR,
   PRV_AREA_NOT_FOUND,
+  PRV_DYN_PARAM_NOT_FOUND,
   PRV_STAT_PARAM_NOT_FOUND
 };
 
@@ -271,9 +388,8 @@ enum ParamRetVal{
 // - DLL_BEHAVIOR  Characteristic behavior of the DSS like connections and such 
 // - DLL_DEBUG     Debugging info like internal messages, typically the 
 //                 necessesary info when creating a MAP.
-// - DLL_MOST      Loads of information, from internal function behavior
+// - DLL_ALL       Loads of information, from internal function behavior
 //                 to unmarshaled fields.
-// - DLL_TOO_MUCH  Messages are triggered continuously by the failure detector (RTT measure)
 
 enum DSS_LOG_LEVEL{
   DLL_NOTHING   = 0, // The loglevel is set to output nothing (i.e. no one should use the level)
@@ -281,8 +397,7 @@ enum DSS_LOG_LEVEL{
   DLL_IMPORTANT = 2,
   DLL_BEHAVIOR  = 3,
   DLL_DEBUG     = 4,
-  DLL_MOST      = 5,
-  DLL_TOO_MUCH  = 6
+  DLL_ALL       = 5
 };
 
 // The new bunch! 
@@ -292,5 +407,31 @@ const ConnectivityStatus CS_NONE          = 0x000;
 const ConnectivityStatus CS_COMMUNICATING = 0x001;
 const ConnectivityStatus CS_CHANNEL       = 0x002;
 const ConnectivityStatus CS_CIRCUIT       = 0x004;
+const ConnectivityStatus CS_OPENING       = 0x008;
+const ConnectivityStatus CS_CLOSING       = 0x010;
+const ConnectivityStatus CS_OPEN          = 0x020;
+const ConnectivityStatus CS_UNACKED       = 0x040;
+const ConnectivityStatus CS_FRAGMENTED    = 0x080;
+const ConnectivityStatus CS_QUEUED        = 0x100;
+const ConnectivityStatus CS_EXTNEED       = 0x200;
+const ConnectivityStatus CS_ROUTER        = 0x400;
+const ConnectivityStatus CS_CLOSED        = 0x800;
+
+enum ConnectionFailReason{
+  CFR_TIMEOUT, 
+  CFR_NO_ROUTE,
+  CFR_NO_HOST,
+  CFR_NO_RESOURCE,
+  CFR_INVALID_ADDRESS
+};
+
+
+enum KbrResult{
+  KBR_LOCAL, 
+  KBR_REMOTE,
+  KBR_FAILED_OPENING,
+  KBR_FAILED_CLOSING,
+  KBR_FAILED_INVALIDKEY
+};
 
 #endif

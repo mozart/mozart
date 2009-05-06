@@ -26,8 +26,6 @@
  
 #if defined(INTERFACE)
 #pragma implementation "mslBase.hh"
-#endif
-#if defined(DSS_INTERFACE)
 #pragma implementation "dss_comService.hh"
 #endif
 

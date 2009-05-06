@@ -113,9 +113,10 @@ local
    end
 
    fun {WeightSum CL WT}
-      {GFD.sum {Map {ExpandList CL} fun {$ X} {WT X} end} '=:'}
+      %{FD.sum {Map {ExpandList CL} fun {$ X} {WT X} end} '=:'} = {FD.decl}
+      {GFD.sum post({Map {ExpandList CL} fun {$ X} {WT X} end} GFD.rt.'=:')} = {GFD.decl}
    end
-   
+
    fun {OrderFun Spec Select WT}
       CardTable =
       c(unknown:

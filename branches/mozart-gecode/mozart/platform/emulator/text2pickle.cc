@@ -123,12 +123,10 @@ public:
   int textmode() { return mode!=0; }
   void dump() {
     while(first->next) {
-      int ret=write(fd,first->text,TBSize);
-      if(ret<=0)_exit(1);
+      write(fd,first->text,TBSize);
       first = first->next;
     }
-    int ret=write(fd,first->text,pos);
-    if(ret<=0)_exit(1);
+    write(fd,first->text,pos);
   }
   unsigned long crc();
 };
@@ -538,8 +536,7 @@ void pickle(TaggedPair *aux, PickleMarshalerBuffer *out)
   if (!out->textmode()) {
     int headerSize;
     char *header = makeHeader(out->crc(),&headerSize);
-    int ret=write(out->fd,header,headerSize);
-    if(ret<0)_exit(1);
+    write(out->fd,header,headerSize);
   }
   out->dump();
 }

@@ -36,7 +36,10 @@
 namespace _msl_internal{
 
   enum DCT_Types{
-    DctT_DAC
+    DctT_DAC,
+    DctT_intList,
+    DctT_appLayer,
+    DctT_cscLayer
   };
 
   // ERIK, VALENTIN, ZACHARIAS: To ease development, please comment
@@ -62,7 +65,9 @@ namespace _msl_internal{
   // ****************************** BUFFER TRANSPORTING*********************************
   //
   // Transports data areas, perfectly suitable to match with the
-  // simple buffers
+  // simple buffers (and yes I know this is similar to
+  // DataAreaContainers but these works...)
+ 
   class DssSimpleDacDct: public DssCompoundTerm{
   private:
     enum DSDD_Mode{
@@ -73,10 +78,10 @@ namespace _msl_internal{
 
     BYTE*     a_buf;
     BYTE*     a_pos;
-    size_t    a_size;
+    u32       a_size;
     DSDD_Mode a_mode;
 
-    inline size_t getPosDiff() const { return a_pos - a_buf; }
+    inline u32 getPosDiff() const { return a_pos - a_buf; }
 
     DssSimpleDacDct(const DssSimpleDacDct&):
       a_buf(NULL),a_pos(NULL),a_size(0),a_mode(DSDD_UNDEF){}
@@ -89,13 +94,13 @@ namespace _msl_internal{
     }
 
     DssSimpleDacDct(const u32& sz, BYTE* const bf):a_buf(bf),a_pos(bf),a_size(sz),a_mode(DSDD_UNDEF){
-      //printf("DssSimpleDacDct(%p)::create %d\n",static_cast<void*>(this),sz);
+      //printf("DssSimpleDacDct(%p)::create %d\n",static_cast<void*>(this),sz); gf_printBuf("buffer", a_buf,a_size);
     }
 
     virtual ~DssSimpleDacDct(){ delete [] a_buf; }
 
 
-    size_t getSize() const { return a_size; }
+    u32 getSize() const { return a_size; }
 
     int  getData(BYTE*, const int&);
     void putData(BYTE*, const int&);
@@ -111,5 +116,31 @@ namespace _msl_internal{
     virtual DCT_Types getType() const { return DctT_DAC; };
     virtual void resetMarshaling();
   };
+
+
+  // You want to transport unbounded long lists of
+  // integers? Use the IntListDct! This class can 
+  // probably be generalized to handle lists of
+  // any type..
+
+  class IntListDct: public DssCompoundTerm  {
+  private:
+    SimpleList<int> *a_list;
+    Position<int>   a_curPos;     // used for marshaling
+
+    IntListDct(const IntListDct&):a_list(NULL), a_curPos(){}
+    IntListDct& operator=(const IntListDct&){ return *this; }
+    
+  public:
+    IntListDct();
+    IntListDct(SimpleList<int>*);
+    virtual bool marshal(DssWriteBuffer *bb,MsgnLayerEnv* env); 
+    virtual bool unmarshal(DssReadBuffer *bb,MsgnLayerEnv* env); 
+    virtual void dispose(); 
+    virtual DCT_Types getType() const { return DctT_intList; }
+    virtual void resetMarshaling(); 
+    SimpleList<int> *getItems(); 
+  };
+
 }
 #endif

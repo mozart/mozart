@@ -32,7 +32,6 @@
 #include "abstractEntityImplementations.hh"
 #include "coordinator.hh"
 #include "protocols.hh"
-//Yves: Do we need to include all the protocols headers here?
 #include "protocol_invalid.hh"
 #include "protocol_migratory.hh"
 #include "protocol_once_only.hh"
@@ -42,6 +41,7 @@
 #include "protocol_immutable_lazy.hh"
 #include "protocol_immutable_eager.hh"
 #include "protocol_immediate.hh"
+#include "protocol_dksBroadcast.hh"
 
 using namespace _dss_internal;
 
@@ -59,6 +59,20 @@ void AbstractEntity::setCoordinatorAssistant(CoordinatorAssistant* p) {
   if (a_proxy) delete static_cast<Proxy*>(a_proxy);
   a_proxy = p;
   if (a_proxy) static_cast<Proxy*>(a_proxy)->setAbstractEntity(this);
+}
+
+void
+AbstractEntity::remoteInitatedOperationCompleted(DssOperationId* opId,
+						 PstOutContainerInterface* pstOut){
+  Assert(a_proxy);
+  ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
+  pp->remoteInitatedOperationCompleted(opId, pstOut);
+}
+
+void AbstractEntity::localInitatedOperationCompleted() {
+  Assert(a_proxy);
+  ProtocolProxy* pp = static_cast<Proxy*>(a_proxy)->m_getProtocol();
+  pp->localInitatedOperationCompleted();
 }
 
 OpRetVal AbstractEntity::abstractOperation_Kill() {
@@ -164,66 +178,47 @@ namespace _dss_internal{ //Start namespace
 
   /******************** applyAbstractOperation ********************/
 
-  void applyAbstractOperation(AbstractEntity* ae, const AbsOp& aop,
-			      DssThreadId* tid,
-			      PstInContainerInterface* pstin,
-			      PstOutContainerInterface*& pstout) {
+  AOcallback applyAbstractOperation(AbstractEntity* ae, const AbsOp& aop,
+				    DssThreadId* tid, DssOperationId* oid,
+				    PstInContainerInterface* pstin,
+				    PstOutContainerInterface*& pstout) {
     pstout = NULL;
     switch (ae->getAEName()) {
     case AEN_MUTABLE: {
       MutableAbstractEntity* mae = dynamic_cast<MutableAbstractEntity*>(ae);
       switch (aop) {
-      case AO_STATE_WRITE:
-	mae->callback_Write(tid, pstin, pstout);
-	break;
-      case AO_STATE_READ:
-	mae->callback_Read(tid, pstin, pstout);
-	break;
-      default:
-	Assert(0);
+      case AO_STATE_WRITE: return mae->callback_Write(tid, oid, pstin, pstout);
+      case AO_STATE_READ:  return mae->callback_Read(tid, oid, pstin, pstout);
+      default: Assert(0); return AOCB_FINISH;
       }
-      break;
     }
     case AEN_RELAXED_MUTABLE: {
       RelaxedMutableAbstractEntity* rmae =
 	dynamic_cast<RelaxedMutableAbstractEntity*>(ae);
       switch (aop) {
-      case AO_STATE_WRITE:
-	rmae->callback_Write(tid, pstin);
-	break;
-      case AO_STATE_READ:
-	rmae->callback_Read(tid, pstin, pstout);
-	break;
-      default: Assert(0);
+      case AO_STATE_WRITE: return rmae->callback_Write(tid, oid, pstin);
+      case AO_STATE_READ:  return rmae->callback_Read(tid, oid, pstin, pstout);
+      default: Assert(0); return AOCB_FINISH;
       }
-      break;
     }
     case AEN_TRANSIENT: {
       MonotonicAbstractEntity* mae =
 	dynamic_cast<MonotonicAbstractEntity*>(ae);
       switch (aop) {
-      case AO_OO_BIND:
-	mae->callback_Bind(pstin);
-	break;
-      case AO_OO_UPDATE:
-	mae->callback_Append(pstin);
-	break;
-      case AO_OO_CHANGES:
-	mae->callback_Changes(pstout);
-	break;
-      default:
-	Assert(0);
+      case AO_OO_BIND:    return mae->callback_Bind(oid, pstin);
+      case AO_OO_UPDATE:  return mae->callback_Append(oid, pstin);
+      case AO_OO_CHANGES: return mae->callback_Changes(oid, pstout);
+      default: Assert(0); return AOCB_FINISH;
       }
-      break;
     }
-    case AEN_IMMUTABLE: {
+    case AEN_IMMUTABLE:
+    case AEN_IMMUTABLE_UNNAMED: {
       ImmutableAbstractEntity* iae =
 	dynamic_cast<ImmutableAbstractEntity*>(ae);
-      iae->callback_Read(tid, pstin, pstout);
-      break;
+      return iae->callback_Read(tid, oid, pstin, pstout);
     }
     default:
-      Assert(0);
+      Assert(0); return AOCB_FINISH;
     }
   }
 
