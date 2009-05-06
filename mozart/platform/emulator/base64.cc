@@ -25,10 +25,10 @@
  */
 
 #if defined(INTERFACE)
-#pragma implementation "glue_utils.hh"
+#pragma implementation "base64.hh"
 #endif
 
-#include "glue_utils.hh"
+#include "base64.hh"
 #include <stdlib.h>
 
 //*********************************************************************

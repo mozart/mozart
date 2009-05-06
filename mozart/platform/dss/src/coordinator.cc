@@ -223,7 +223,7 @@ namespace _dss_internal{ //Start namespace
       };
       break;
     case PMF_FREE:
-      dssLog(DLL_ALL,"PROXY (%p): Persistent (Free marshalling) proxy",this);
+      dssLog(DLL_MOST,"PROXY (%p): Persistent (Free marshalling) proxy",this);
       m_makePersistent();
       break;
     default: Assert(0);

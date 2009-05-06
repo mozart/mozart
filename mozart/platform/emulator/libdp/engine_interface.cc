@@ -48,15 +48,8 @@
 
 #define HEART_BEAT_RATE 32
 
-Bool glueInitialized = FALSE; 
-MAP* glue_dss_connection           = NULL;
 DSS_Object* dss                    = NULL;
 ComService* glue_com_connection    = NULL; 
-
-//
-Bool dpReadyImpl() {
-  return true;
-}
 
 // GC Routines
 // 
@@ -350,10 +343,10 @@ void initHeartBeat(int rate)
 
 void initDP()
 {
-  //
+  static Bool glueInitialized = FALSE; 
   if (glueInitialized) return;
   glueInitialized = OK;
-  glue_dss_connection = new MAP();
+
   glue_com_connection = new ComService();
   
   // Allocate the marshalers, and unmarshalers
@@ -398,9 +391,6 @@ void initDP()
   // create mediator table
   mediatorTable     = new MediatorTable();
 
-  // init flag
-  dpReady = dpReadyImpl;
-
   // distributed operations
   initEntityOperations();
 
@@ -412,7 +402,7 @@ void initDP()
   gCollectMediator  = gcMediatorImpl;
 
   // Starting the DSS
-  dss = new DSS_Object(glue_com_connection, glue_dss_connection);
+  dss = new DSS_Object(glue_com_connection, new MAP());
 
   initHeartBeat(HEART_BEAT_RATE);
   OzSite_init();

@@ -94,7 +94,7 @@ namespace _msl_internal{ //Start namespace
     a_isRemote(true),
     a_isGcMarked(false)
   {
-    dssLog(DLL_ALL,"REMOTE SITE: created %p",this);
+    dssLog(DLL_MOST,"REMOTE SITE: created %p",this);
     DebugCode(a_allocated++);
   }
 
