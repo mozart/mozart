@@ -182,6 +182,7 @@ namespace _msl_internal{
       // Something must be seriously wrong in the transport layer.
       // Break the connection by telling the comObj it was lost.
       // The comObj can then decide on further actions.
+      dssLog(DLL_DEBUG,"Frame corrupted!");
       a_comObj->connectionLost();
       return U_CLOSED;
     }

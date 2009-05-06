@@ -68,17 +68,14 @@ namespace _dss_internal{
 
   DSS_Environment::DSS_Environment(const DSS_Environment& de):
     a_map(                    NULL),
-    a_dksInstHT(              NULL),
     a_proxyTable(             NULL),
     a_coordinatorTable(           NULL),
     a_threadTable(            NULL),
-    a_nameTable(              NULL),// .......
     a_myDSite(                NULL),
     
     a_dssconf(     DssConfigData()),
     a_dssMslClbk(             NULL),
     a_msgnLayer(              NULL),
-    a_dksBackbone(            NULL), 
     a_CreateXistRefCounter(      0),
     a_CreateNonXRefCounter(      0),
     a_DuplicateXistRefCounter(   0),

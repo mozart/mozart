@@ -30,12 +30,9 @@
 #include "dss_comService.hh"
 #include "dssBase.hh"
 #include "coordinator.hh"
-#include "DKSNode.hh"
 #include "dss_msgLayerInterface.hh"
 #include "dss_threads.hh"
-#include "dss_psDKS.hh"
 #include <string.h>
-#include "msl_serialize.hh"
 
 namespace _dss_internal{
   
@@ -202,12 +199,6 @@ namespace _dss_internal{
 	if(me) me->m_noCoordAtDest(sender, mtt, msg); 
 	break; 
       }
-      
-    case M_DKS_MSG:
-      {
-	m_getEnvironment()->a_dksInstHT->m_redirectMessage(msgC, sender);
-	break; 
-      }
     default:
       m_getEnvironment()->a_map->GL_error("siteReceive: unknown message %d",mt);
       break;
@@ -221,30 +212,17 @@ namespace _dss_internal{
   DssMslClbk::m_stateChange(DSite* s, const FaultState& state){
     m_getEnvironment()->a_proxyTable->m_siteStateChange(s, state); 
     m_getEnvironment()->a_coordinatorTable->m_siteStateChange(s, state); 
-
-    // printf("DKS - SiteStateChange comment out\n");
-    // m_getEnvironment()->a_dksInstHT->m_siteStateChane(s, state); 
   }
   
   void 
   DssMslClbk::m_unsentMessages(DSite* s, MsgContainer* msgs){
-    MsgContainer *tmp; //, *dks_msgs = NULL; 
+    MsgContainer *tmp;
     while(msgs!=NULL)
       {
-	// 	if(msgs->popIntVal() == M_DKS_MSG)
-	// 	  {
-	// 	    tmp = msgs->a_next; 
-	// 	    msgs->a_next = dks_msgs; 
-	// 	    dks_msgs = msgs; 
-	// 	  }
-	// 	else
-	// 	  {
 	tmp = msgs->m_getNext(); 
 	delete msgs; 
-	// 	  }
 	msgs = tmp; 
       }
-    //m_getEnvironment()->a_kbrService->m_unsentMessages(s, dks_msgs); 
   }
   
   DssMslClbk::DssMslClbk(DSS_Environment *env):DSS_Environment_Base(env){
@@ -252,9 +230,6 @@ namespace _dss_internal{
   }
   DssMslClbk::~DssMslClbk(){;}
 
-
-  ExtDataContainerInterface* createLrgMsgContainer(DSS_Environment*); 
-  
   ExtDataContainerInterface*   
   DssMslClbk::m_createExtDataContainer(BYTE type){
     switch(type){
@@ -262,21 +237,9 @@ namespace _dss_internal{
       {
 	return new PstContainer(m_getEnvironment()); 
       }
-    case ADCT_DKS_RT: 
-      {
-	return createDksRoutingTableContainer(m_getEnvironment()->a_msgnLayer); 
-      }
-    case ADCT_DKS_SV: 
-      {
-	return createDksSiteVecContainer(m_getEnvironment()->a_msgnLayer); 
-      }
     case ADCT_PDC:
       {
 	return new PstDataContainer(m_getEnvironment()); 
-      }
-    case ADCT_LMC:
-      {
-	return createLrgMsgContainer(m_getEnvironment()); 
       }
     case ADCT_EBA:
       {

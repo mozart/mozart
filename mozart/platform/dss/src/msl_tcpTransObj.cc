@@ -59,18 +59,17 @@ namespace _msl_internal{
   
   /**************************** handling connection ********************/
 
-  DssChannel* TCPTransObj::m_closeConnection() {
-    DssChannel *ans = a_channel;
-
+  void TCPTransObj::m_closeConnection() {
     dssLog(DLL_DEBUG,"TRANSOBJ      (%p): closing down",this);
 
     if (a_channel != NULL) {
       a_channel->registerRead(false);  // Sometimes done twice!
       a_channel->registerWrite(false); // Sometimes done twice!
       a_channel->setCallback(NULL); 
+      a_channel->close();
+      delete a_channel;
       a_channel = NULL;
     }
-    return ans; 
   }
 
   void TCPTransObj::deliver() {

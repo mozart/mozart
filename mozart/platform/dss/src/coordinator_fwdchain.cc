@@ -32,7 +32,6 @@
 #endif
 
 #include "dssBase.hh"
-#include "msl_serialize.hh"
 #include "coordinator.hh"
 #include "protocols.hh"
 #include "referenceConsistency.hh"

@@ -48,8 +48,6 @@ public:
   ComService();
   ~ComService() {}
 
-  virtual ExtDataContainerInterface* m_createExtDataContainer(BYTE);
-  
   // The CsSite Object
   virtual CsSiteInterface* unmarshalCsSite(DSite*, DssReadBuffer* const buf); 
   virtual CsSiteInterface *connectSelfReps(MsgnLayer*, DSite*); 

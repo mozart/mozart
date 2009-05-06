@@ -65,8 +65,6 @@ namespace _dss_internal{ //Start namespace
     virtual OpRetVal operationWrite(PstOutContainerInterface**&);
     
     void do_operation(DSite*, GlobalThread*, AbsOp, PstInContainerInterface*);
-    void remoteInitatedOperationCompleted(DssOperationId*, PstOutContainerInterface*); 
-    void localInitatedOperationCompleted() { Assert(0); }
 
     void msgReceived(::MsgContainer*,DSite*);
     bool m_initRemoteProt(DssReadBuffer*); 
