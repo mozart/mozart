@@ -29,7 +29,6 @@
 
 #include "dgc_tl.hh"
 #include "referenceConsistency.hh"
-#include "msl_serialize.hh"
 
 namespace _dss_internal{
 

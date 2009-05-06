@@ -143,7 +143,6 @@ namespace _msl_internal{ //Start namespace
     virtual void m_connectionEstablished(DssChannel*);  
     virtual void m_stateChange(FaultState newState);
     virtual void m_virtualCircuitEstablished(int len , DSite *route[]);
-    virtual void m_takeDownConnection();
     virtual void m_monitorRTT(int maxrtt);
     // returns stringrep of id + length of string
     virtual BYTE* m_getId(int &len);

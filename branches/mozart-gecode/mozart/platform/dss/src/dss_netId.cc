@@ -30,7 +30,6 @@
 
 #include "dss_netId.hh"
 #include "dss_comService.hh"
-#include "msl_serialize.hh"
 #include "dssBase.hh"
 
 namespace _dss_internal{ //Start namespace

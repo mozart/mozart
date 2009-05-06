@@ -330,7 +330,7 @@ namespace _dss_internal{ //Start namespace
     Assert(!a_susps.isEmpty() || a_proxy->m_isHomeProxy());
     // wake up all suspended threads
     while (!a_susps.isEmpty())
-      a_susps.pop()->resumeDoLocal(NULL);   // NULL is not cool...
+      a_susps.pop()->resumeDoLocal();
     // forward the token
     if (a_successor)
       forwardToken();

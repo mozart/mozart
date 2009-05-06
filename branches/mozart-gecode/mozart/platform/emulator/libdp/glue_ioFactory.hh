@@ -30,6 +30,12 @@
 #ifndef __GLUE_IOFACTORY_HH
 #define __GLUE_IOFACTORY_HH
 
+enum ErrorClass {
+  EC_OK,
+  EC_GO_AHEAD,
+  EC_CONTINUE_LATER,
+  EC_LOST              // This perm only means the transObj should give up
+};
 
 // implementation of DSS channels, using sockets
 class SocketChannel : public DssChannel {

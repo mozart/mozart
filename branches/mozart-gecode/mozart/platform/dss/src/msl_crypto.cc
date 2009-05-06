@@ -47,13 +47,6 @@ namespace _msl_internal{ //Start namespace
     T tmp = t1; t1 = t2; t2 = tmp;
   }
   
-  inline void gf_printBuf(BYTE* const buf, size_t len){
-    for(unsigned int i = 0; i< len; ++i){
-      printf("%02x",static_cast<int>(buf[i]));
-    }
-    printf("\n");
-  }
-
   // Create an integer2char, taking int and BYTE*
   inline void gf_integer2char(BYTE* const buf, const u32& e){
 #ifdef BIG_ENDIAN_HOST
@@ -482,7 +475,6 @@ namespace _msl_internal{ //Start namespace
     gf_integer2char(ptr, len); ptr += 4; // store length
 
     //printf("ENCRYPTION(%02d): %d data into %d frames and %d padding\n",ctr,len,frames,padding);
-    //gf_printBuf("inbuf",inbuf,len);
 
     if (frames > 1){
       --frames;
@@ -503,7 +495,6 @@ namespace _msl_internal{ //Start namespace
     generate_garbage(ptr, padding);
     scramble(endptr,plain); endptr += CIPHER_BLOCK_BYTES;
 
-    //gf_printBuf("outbuf",outbuf,(endptr - outbuf));
     return (endptr - outbuf);
   }
 
@@ -523,7 +514,7 @@ namespace _msl_internal{ //Start namespace
 
     padding = frames * PLAIN_BLOCK_BYTES - (len + 4);
     
-    //printf("DECRYPTION(%02d) %d data, from %d buffer, into %d frames and %d padding\n",ctr, len,inlen,frames,padding);  gf_printBuf("inbuf",inbuf - CIPHER_BLOCK_BYTES,inlen);
+    //printf("DECRYPTION(%02d) %d data, from %d buffer, into %d frames and %d padding\n",ctr, len,inlen,frames,padding);
 
     //test that it seems to contain correct length
     if (len > inlen || static_cast<u32>(frames) != frame_est(len)) return -1;

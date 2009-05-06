@@ -36,10 +36,7 @@
 namespace _msl_internal{
 
   enum DCT_Types{
-    DctT_DAC,
-    DctT_intList,
-    DctT_appLayer,
-    DctT_cscLayer
+    DctT_DAC
   };
 
   // ERIK, VALENTIN, ZACHARIAS: To ease development, please comment
@@ -65,9 +62,7 @@ namespace _msl_internal{
   // ****************************** BUFFER TRANSPORTING*********************************
   //
   // Transports data areas, perfectly suitable to match with the
-  // simple buffers (and yes I know this is similar to
-  // DataAreaContainers but these works...)
- 
+  // simple buffers
   class DssSimpleDacDct: public DssCompoundTerm{
   private:
     enum DSDD_Mode{
@@ -94,7 +89,7 @@ namespace _msl_internal{
     }
 
     DssSimpleDacDct(const u32& sz, BYTE* const bf):a_buf(bf),a_pos(bf),a_size(sz),a_mode(DSDD_UNDEF){
-      //printf("DssSimpleDacDct(%p)::create %d\n",static_cast<void*>(this),sz); gf_printBuf("buffer", a_buf,a_size);
+      //printf("DssSimpleDacDct(%p)::create %d\n",static_cast<void*>(this),sz);
     }
 
     virtual ~DssSimpleDacDct(){ delete [] a_buf; }
@@ -116,31 +111,5 @@ namespace _msl_internal{
     virtual DCT_Types getType() const { return DctT_DAC; };
     virtual void resetMarshaling();
   };
-
-
-  // You want to transport unbounded long lists of
-  // integers? Use the IntListDct! This class can 
-  // probably be generalized to handle lists of
-  // any type..
-
-  class IntListDct: public DssCompoundTerm  {
-  private:
-    SimpleList<int> *a_list;
-    Position<int>   a_curPos;     // used for marshaling
-
-    IntListDct(const IntListDct&):a_list(NULL), a_curPos(){}
-    IntListDct& operator=(const IntListDct&){ return *this; }
-    
-  public:
-    IntListDct();
-    IntListDct(SimpleList<int>*);
-    virtual bool marshal(DssWriteBuffer *bb,MsgnLayerEnv* env); 
-    virtual bool unmarshal(DssReadBuffer *bb,MsgnLayerEnv* env); 
-    virtual void dispose(); 
-    virtual DCT_Types getType() const { return DctT_intList; }
-    virtual void resetMarshaling(); 
-    SimpleList<int> *getItems(); 
-  };
-
 }
 #endif
