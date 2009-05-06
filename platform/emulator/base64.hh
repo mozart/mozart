@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef _GLUE_UTILS_HH
-#define _GLUE_UTILS_HH
+#ifndef __BASE64H
+#define __BASE64H
 
 //------------------------- Base 64 encoding --------------------------
 

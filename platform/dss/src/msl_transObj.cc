@@ -76,7 +76,7 @@ namespace _msl_internal{
     int framesize;
     BYTE* pos;
 
-    dssLog(DLL_ALL,"TRANSOBJ      (%p): Marshal  ack:%d cont:%d",
+    dssLog(DLL_TOO_MUCH,"TRANSOBJ      (%p): Marshal  ack:%d cont:%d",
 	   this, acknum, msgC->checkFlag(MSG_HAS_MARSHALCONT));
 
     framesize = a_marshalBuffer->getFree(); // max framesize

@@ -26,23 +26,6 @@
 
 %builtins_all =
     (
-     # compute a CRC for a virtual string.  This is used to add a CRC
-     # to connection tickets, for instance.
-     'getCRC'	             => { in  => ['+virtualString'],
-		                  out => ['+int'],
-		                  BI  => BIgetCRC},
-
-     # marshal a port into a base-64-encoded string (may be used for
-     # tickets)
-     'marshalPort'           => { in  => ['+port'],
-				  out => ['+string'],
-				  BI  => BIportToMS},
-
-     # unmarshal a port from a base-64-encoded string (see above)
-     'unmarshalPort'         => { in  => ['+string'],
-				  out => ['+port'],
-				  BI  => BImsToPort},
-
      # initialize the DP module.  The port in argument is used by the
      # Glue to request connections, etc.
      'initDP'                => { in  => ['+port'],
@@ -153,7 +136,7 @@
 					  BI  => BIprintDssMemoryAllocation},
 
      # set the DSS log level (0: nothing, 1: normal, 2: important, 3:
-     # behavior, 4: debug, 5: all); see the internals of the DSS for
+     # behavior, 4: debug, 5: most, 6:too_much); see the internals of the DSS for
      # the exact meaning of these levels
      'setDssLogLevel'        => { in  => ['+int'],
 			          out => [],
@@ -205,23 +188,6 @@
      'getChannelStatus'      => { in => ['+value'],
 			          out => ['+value'],
 				  BI => BIgetChannelStatus},
-
-     # to be removed - related to former Fault module
-     'getEntityCond'	     => { in  => ['value'],
-			          out => ['value'],
-				  BI  => BIgetEntityCond},
-
-     'installFaultPort'      => { in  => ['+port'],
-			          out => [],
-				  BI  => BIinstallFaultPort},
-
-     'distHandlerInstall'    => { in  => ['value','+int','value'],
-			          out => ['+bool'],
-				  BI  => BIdistHandlerInstall},
-
-     'distHandlerDeInstall'  => { in  => ['value','+int','value'],
-			          out => ['+bool'],
-				  BI  => BIdistHandlerDeInstall},
 
      # return a list of broadcast addresses available (used in module
      # Discovery)

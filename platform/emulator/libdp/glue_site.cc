@@ -177,7 +177,8 @@ GlueSite::reportRTT(int rtt) {
     dsite->m_stateChange(FS_OK);
     // fall through
   case FS_OK:
-    if (rtt > RTT_UPPERBOUND) rtt = RTT_UPPERBOUND;
+    rtt = min(rtt, RTT_UPPERBOUND);
+    // consider rtt <= RTT_UPPERBOUND, larger values are abnormal
     if (rtt_avg) {
       int err = rtt - rtt_avg;
       rtt_avg += err / 2;
@@ -186,7 +187,8 @@ GlueSite::reportRTT(int rtt) {
       rtt_avg = rtt;
       rtt_mdev = rtt;
     }
-    rtt_timeout = rtt_avg + rtt_mdev;
+    rtt_timeout = rtt_avg + max(rtt_mdev, rtt_avg);
+    // rtt_timeout >= 2 * rtt_avg, this avoids too much sensitivity
     dsite->m_monitorRTT(rtt_timeout);
     // fall through
   default:

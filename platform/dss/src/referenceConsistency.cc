@@ -197,7 +197,7 @@ namespace _dss_internal{ //Start namespace
   HomeReference::m_isRoot(){
     dssLog(DLL_DEBUG,"HomeReference::isRoot");
     for(GCalgorithm *tmp = a_algs; tmp != NULL; tmp = tmp->a_next){
-      dssLog(DLL_ALL," checking alg %d",tmp->a_type);
+      dssLog(DLL_MOST," checking alg %d",tmp->a_type);
       if (!tmp->m_isRoot()) return false;
     }
     dssLog(DLL_DEBUG," ROOT!\n");
