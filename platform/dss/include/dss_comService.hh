@@ -103,30 +103,52 @@ public:
 
 // ************** BUFFER METHODS **************
 
-const int SIZE_INT = 4;
+#ifdef DEBUG_CHECK
+#define DSSAssert(Cond) if(!(Cond)){ dssAssert(__FILE__,__LINE__,#Cond); }
+//Copied from src/base.hh
+void  dssAssert(const char* const  file, const int& line, const char* const condition);
+#endif
 
-inline void putInt(DssWriteBuffer* const buf, int i){
-  for (int k=0; k<SIZE_INT; k++) { 
-    buf->putByte((i & 0xFF)); 
-    i = i>>8;
-  }
+inline void gf_Marshal8bitInt(DssWriteBuffer *bs, unsigned int i){
+#ifdef DEBUG_CHECK
+  DSSAssert((i & 0xFF) == i);
+#endif
+  bs->putByte(static_cast<BYTE>(i));
 }
 
-inline int getInt(DssReadBuffer* const buf){
-  int i = 0;
-  for (int k=0; k < SIZE_INT; ++k) {
-    i = i + ((buf->getByte())<<(k*8));
-  }
-  return static_cast<int>(i);
+inline int gf_Unmarshal8bitInt(DssReadBuffer *bs){
+  return static_cast<unsigned int>(bs->getByte());
 }
 
+const int sz_MNumberMax = 5;
+
+static const unsigned int SSBit = 1<<7;
+inline int gf_UnmarshalNumber(DssReadBuffer *bs){
+  unsigned int ret = 0, shft = 0;
+  unsigned int c = bs->getByte();
+  while (c >= SSBit) {
+    ret += ((c-SSBit) << shft);
+    c = bs->getByte();
+    shft += 7;
+  }
+  ret |= (c<<shft);
+  return ret;
+}
+
+inline  void gf_MarshalNumber(DssWriteBuffer *bs, unsigned int i) {
+  while(i >= SSBit) {
+    bs->putByte((i%SSBit)|SSBit);
+    i /= SSBit;
+  }
+  bs->putByte(i);
+}
 
 
 const int MSG_PRIO_EAGER  = 4;
-const int MSG_PRIO_LAZY   = 0;
-const int MSG_PRIO_HIGH   = 3;
+const int MSG_PRIO_HIGH   = 3; //Used only for routing messages (indirect connections)
 const int MSG_PRIO_MEDIUM = 2;
-const int MSG_PRIO_LOW    = 1;
+const int MSG_PRIO_LOW    = 1; //Not used for now/anymore
+const int MSG_PRIO_LAZY   = 0;
 
 
 
@@ -147,7 +169,7 @@ public:
   virtual int read(void* buf, const unsigned int& len) = 0;
   virtual int write(void* buf, const unsigned int& len) = 0;
 
-  // close the channel; the object can be deleted at this point
+  // close the channel
   virtual void close() = 0;
 };
 
@@ -192,7 +214,6 @@ public:
   virtual void m_monitorRTT(int maxrtt) = 0;
 
   virtual void m_stateChange(FaultState newState) = 0; 
-  virtual void m_takeDownConnection() = 0; 
   virtual ConnectivityStatus  m_getChannelStatus() = 0;
   // instruct DSite that CsSite has changed M-R
   virtual void m_invalidateMarshaledRepresentation() = 0; 
@@ -255,14 +276,12 @@ public:
   virtual void pushDSiteVal(DSite*) = 0;
   virtual void pushIntVal(int) = 0; 
   virtual void pushADC(ExtDataContainerInterface*) = 0; 
-  virtual void pushSDC(ExtDataContainerInterface*) = 0; 
   virtual void pushPstOut(PstOutContainerInterface*) = 0;
   virtual void pushMsgC(MsgContainer*) = 0; 
   
   virtual DSite* popDSiteVal() = 0; 
   virtual int popIntVal() = 0; 
   virtual ExtDataContainerInterface* popADC() = 0; 
-  virtual ExtDataContainerInterface* popSDC() = 0; 
   virtual PstInContainerInterface* popPstIn() = 0;
   virtual MsgContainer* popMsgC() = 0; 
   
@@ -297,7 +316,6 @@ public:
   // The CsSite Object
   virtual CsSiteInterface* unmarshalCsSite(DSite* Ds, DssReadBuffer* const buf) = 0; 
   virtual CsSiteInterface *connectSelfReps(MsgnLayer* ,DSite*) = 0; 
-  virtual ExtDataContainerInterface* m_createExtDataContainer(BYTE) = 0; 
   
   // Mark all DSites used by the CSC. 
   virtual void m_gcSweep() = 0; 

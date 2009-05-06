@@ -29,7 +29,7 @@
 #pragma interface
 #endif
 
-//#include "dssBase.hh"
+#include "base.hh"
 #include <stdio.h> //NULL
 
 namespace _msl_internal{ //Start namespace
@@ -46,11 +46,6 @@ namespace _msl_internal{ //Start namespace
 
   class PrioQueues {
   private:
-    // *********** Only internal ***********
-    static const int Q_PRIO_VAL_4;
-    static const int Q_PRIO_VAL_3;
-    static const int Q_PRIO_VAL_2;
-    
     Timers* const    e_timers;
     Queue            qs[5];
     Queue            unackedMsgs; // Sorted list of unacked msgCs
@@ -62,11 +57,15 @@ namespace _msl_internal{ //Start namespace
     int prio_val_3;
     int prio_val_2;
 
+#ifdef DEBUG_CHECK
     int noMsgs;
-
+#endif
+    
     PrioQueues(const PrioQueues&):e_timers(NULL), unackedMsgs(Queue()), recList(NULL),
-				  curq(NULL), prio_val_4(0), prio_val_3(0), prio_val_2(0),
-				  noMsgs(0){}
+				  curq(NULL), prio_val_4(0), prio_val_3(0), prio_val_2(0)
+    {
+      DebugCode(noMsgs=0);
+    }
     PrioQueues& operator=(const PrioQueues&){ return *this; };
   public:
     PrioQueues(Timers* tim);
@@ -89,9 +88,8 @@ namespace _msl_internal{ //Start namespace
     // ----------------------------
     bool hasNeed();
     bool hasQueued();
-    int getQueueStatus();
 
-    void clear5();  // Clears prio 5 (+ recList no Unmarshalcont)
+    void clear5();  // Clears prio 5 (+ !?not done!? recList no Unmarshalcont)
     MsgCnt* clearAll();
     void gcMsgCs();
   };

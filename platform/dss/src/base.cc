@@ -59,27 +59,6 @@
   //
   // *********************************************************************
 
-  char *gf_bool2string(const bool& b){
-    static char buf[6];
-    if(b) sprintf(buf,"TRUE");
-    else  sprintf(buf,"FALSE");
-    return buf;
-  }
-
-
-  void gf_printBuf(const char* const format,BYTE* const buf, int len){
-    BYTE c[4];
-    gf_integer2char(c,0);
-    printf("%s:%d:",format,len);
-    for(int i = 0; i< len; ++i){
-      c[0] = buf[i];
-      printf("%02x",gf_char2integer(c));
-      if(((i+1)%10) == 0 && (i > 0)) printf(" :%d: ",i+1);
-    }
-    printf("\n");
-  }
-
-
   void dssError(const char*  format, ...){
     fprintf(stderr,"DSS_FATAL_ERROR:");
     va_list ap;
@@ -111,7 +90,8 @@
     "DSS_IMPORTANT ",
     "DSS_BEHAVIOR  ",
     "DSS_DEBUG_INFO",
-    "DSS_EVERYTHING"
+    "DSS_MOST",
+    "DSS_TOO_MUCH"
   };
   
   void dssLog(DSS_LOG_LEVEL level,const char* const format, ...){
@@ -126,11 +106,6 @@
       va_end(ap);
     }
   }
-
-  // ****************** DSS LONGTIME ********************
-  //
-
-
 
 #endif
 

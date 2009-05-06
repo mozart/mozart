@@ -120,10 +120,6 @@ namespace _dss_internal{ //Start namespace
     void makeGCpreps();
     void msgReceived(::MsgContainer*,DSite*);
     
-    void remoteInitatedOperationCompleted(DssOperationId* opId,
-					  ::PstOutContainerInterface* pstOut){}
-    void localInitatedOperationCompleted(){ Assert(0); } 
-
     // check fault state
     virtual FaultState siteStateChanged(DSite*, const FaultState&);
   };

@@ -253,9 +253,9 @@ public:
   PortMediator();
   PortMediator(TaggedRef);
 
-  virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
+  virtual void callback_Write(DssThreadId*,
 				    PstInContainerInterface*);
-  virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
+  virtual void callback_Read(DssThreadId*,
 				   PstInContainerInterface*,
 				   PstOutContainerInterface*&);
   virtual PstOutContainerInterface *retrieveEntityRepresentation() {
@@ -273,14 +273,14 @@ public:
   CellMediator();
   CellMediator(TaggedRef);
 
-  AOcallback callback(DssThreadId*, DssOperationId*,
-		      PstInContainerInterface*, PstOutContainerInterface*&);
-  virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
-				    PstInContainerInterface*,
-				    PstOutContainerInterface*&);
-  virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
-				   PstInContainerInterface*,
-				   PstOutContainerInterface*&);
+  void callback(DssThreadId*,
+		PstInContainerInterface*, PstOutContainerInterface*&);
+  virtual void callback_Write(DssThreadId*,
+			      PstInContainerInterface*,
+			      PstOutContainerInterface*&);
+  virtual void callback_Read(DssThreadId*,
+			     PstInContainerInterface*,
+			     PstOutContainerInterface*&);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
@@ -295,12 +295,12 @@ public:
   LockMediator();
   LockMediator(TaggedRef);
 
-  virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
-				    PstInContainerInterface*,
-				    PstOutContainerInterface*&);
-  virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
-				   PstInContainerInterface*,
-				   PstOutContainerInterface*&);
+  virtual void callback_Write(DssThreadId*,
+			      PstInContainerInterface*,
+			      PstOutContainerInterface*&);
+  virtual void callback_Read(DssThreadId*,
+			     PstInContainerInterface*,
+			     PstOutContainerInterface*&);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
@@ -315,12 +315,12 @@ public:
   ArrayMediator();
   ArrayMediator(TaggedRef);
 
-  AOcallback callback(DssThreadId*, DssOperationId*,
-		      PstInContainerInterface*, PstOutContainerInterface*&);
-  virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
-				    PstInContainerInterface*,
-				    PstOutContainerInterface*&);
-  virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
+  void callback(DssThreadId*,
+		PstInContainerInterface*, PstOutContainerInterface*&);
+  virtual void callback_Write(DssThreadId*,
+			      PstInContainerInterface*,
+			      PstOutContainerInterface*&);
+  virtual void callback_Read(DssThreadId*,
 				   PstInContainerInterface*,
 				   PstOutContainerInterface*&);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
@@ -339,14 +339,14 @@ public:
   DictionaryMediator();
   DictionaryMediator(TaggedRef);
 
-  AOcallback callback(DssThreadId*, DssOperationId*,
-		      PstInContainerInterface*, PstOutContainerInterface*&);
-  virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
-				    PstInContainerInterface*,
-				    PstOutContainerInterface*&);
-  virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
-				   PstInContainerInterface*,
-				   PstOutContainerInterface*&);
+  void callback(DssThreadId*,
+		PstInContainerInterface*, PstOutContainerInterface*&);
+  virtual void callback_Write(DssThreadId*,
+			      PstInContainerInterface*,
+			      PstOutContainerInterface*&);
+  virtual void callback_Read(DssThreadId*,
+			     PstInContainerInterface*,
+			     PstOutContainerInterface*&);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
@@ -362,9 +362,9 @@ public:
   ObjectMediator(TaggedRef);
 
   virtual bool annotate(Annotation);
-  virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
-				   PstInContainerInterface*,
-				   PstOutContainerInterface*&);
+  virtual void callback_Read(DssThreadId*,
+			     PstInContainerInterface*,
+			     PstOutContainerInterface*&);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
   virtual void unmarshalData(ByteBuffer*);
@@ -378,14 +378,14 @@ public:
   ObjectStateMediator();
   ObjectStateMediator(TaggedRef);
 
-  AOcallback callback(DssThreadId*, DssOperationId*,
-		      PstInContainerInterface*, PstOutContainerInterface*&);
-  virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
-				    PstInContainerInterface*,
-				    PstOutContainerInterface*&);
-  virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
-				   PstInContainerInterface*,
-				   PstOutContainerInterface*&);
+  void callback(DssThreadId*,
+		PstInContainerInterface*, PstOutContainerInterface*&);
+  virtual void callback_Write(DssThreadId*,
+			      PstInContainerInterface*,
+			      PstOutContainerInterface*&);
+  virtual void callback_Read(DssThreadId*,
+			     PstInContainerInterface*,
+			     PstOutContainerInterface*&);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual PstOutContainerInterface *deinstallEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
@@ -400,12 +400,12 @@ public:
   OzThreadMediator();
   OzThreadMediator(TaggedRef);
 
-  virtual AOcallback callback_Write(DssThreadId*, DssOperationId*,
-				    PstInContainerInterface*,
-				    PstOutContainerInterface*&);
-  virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
-				   PstInContainerInterface*,
-				   PstOutContainerInterface*&);
+  virtual void callback_Write(DssThreadId*,
+			      PstInContainerInterface*,
+			      PstOutContainerInterface*&);
+  virtual void callback_Read(DssThreadId*,
+			     PstInContainerInterface*,
+			     PstOutContainerInterface*&);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*); 
   virtual void unmarshalData(ByteBuffer*);
@@ -426,12 +426,9 @@ public:
 
   void bind(TaggedRef);     // bind the variable and its fault stream
 
-  virtual AOcallback callback_Bind(DssOperationId *id,
-				   PstInContainerInterface* operation); 
-  virtual AOcallback callback_Append(DssOperationId *id,
-				     PstInContainerInterface* operation);
-  virtual AOcallback callback_Changes(DssOperationId* id,
-				      PstOutContainerInterface*& answer);
+  virtual void callback_Bind(PstInContainerInterface* operation); 
+  virtual void callback_Append(PstInContainerInterface* operation);
+  virtual void callback_Changes(PstOutContainerInterface*& answer);
   virtual PstOutContainerInterface *retrieveEntityRepresentation();
   virtual void installEntityRepresentation(PstInContainerInterface*);
   virtual void unmarshalData(ByteBuffer*);
@@ -451,9 +448,9 @@ public:
   UnusableMediator();
   UnusableMediator(TaggedRef);
 
-  virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
-				   PstInContainerInterface*,
-				   PstOutContainerInterface*&);
+  virtual void callback_Read(DssThreadId*,
+			     PstInContainerInterface*,
+			     PstOutContainerInterface*&);
   virtual PstOutContainerInterface *retrieveEntityRepresentation() {
     Assert(0); return NULL; }
   virtual void installEntityRepresentation(PstInContainerInterface*) {
@@ -497,9 +494,9 @@ public:
   ChunkMediator();
   ChunkMediator(TaggedRef);
 
-  virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
-				   PstInContainerInterface*,
-				   PstOutContainerInterface*&);
+  virtual void callback_Read(DssThreadId*,
+			     PstInContainerInterface*,
+			     PstOutContainerInterface*&);
   virtual void marshalData(ByteBuffer*);
   virtual void unmarshalData(ByteBuffer*);
   virtual int  getMarshaledDataSize() const;
@@ -512,9 +509,9 @@ public:
   ClassMediator();
   ClassMediator(TaggedRef);
 
-  virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
-				   PstInContainerInterface*,
-				   PstOutContainerInterface*&);
+  virtual void callback_Read(DssThreadId*,
+			     PstInContainerInterface*,
+			     PstOutContainerInterface*&);
   virtual void marshalData(ByteBuffer*);
   virtual void unmarshalData(ByteBuffer*);
   virtual int  getMarshaledDataSize() const;
@@ -527,9 +524,9 @@ public:
   ProcedureMediator();
   ProcedureMediator(TaggedRef);
 
-  virtual AOcallback callback_Read(DssThreadId*, DssOperationId*,
-				   PstInContainerInterface*,
-				   PstOutContainerInterface*&);
+  virtual void callback_Read(DssThreadId*,
+			     PstInContainerInterface*,
+			     PstOutContainerInterface*&);
   virtual void marshalData(ByteBuffer*);
   virtual void unmarshalData(ByteBuffer*);
   virtual int  getMarshaledDataSize() const;
