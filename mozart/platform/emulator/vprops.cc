@@ -46,10 +46,10 @@
 
 #include <stdarg.h>
 
-extern const char *AMVersion, *AMGecVersion, *AMDate;
+extern char *AMVersion, *AMGecVersion, *AMDate;
 
 // "ozplatform" (defined in version.cc) has the form <osname-cpu>, 
-extern const char *ozplatform;
+extern char *ozplatform;
 
 enum EmulatorPropertyIndex {
   // THREADS

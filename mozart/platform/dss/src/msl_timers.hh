@@ -164,5 +164,5 @@ namespace _msl_internal{ //Start namespace
     char* m_stringrep();
 
   };
-} // end _msl_internal
+} // end _dss_internal
 #endif

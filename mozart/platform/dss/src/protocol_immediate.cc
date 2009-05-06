@@ -57,6 +57,11 @@ namespace _dss_internal{ //Start namespace
   }
 
   void
+  ProtocolImmediateProxy::remoteInitatedOperationCompleted(DssOperationId* opId,
+							   PstOutContainerInterface* pstOut)
+  {;}
+
+  void
   ProtocolImmediateProxy::msgReceived(MsgContainer *msg, DSite* u) {}
 
   OpRetVal
@@ -66,5 +71,8 @@ namespace _dss_internal{ //Start namespace
   }
 
   ProtocolImmediateProxy::ProtocolImmediateProxy():ProtocolProxy(PN_IMMEDIATE){;}
+
+  void 
+  ProtocolImmediateProxy::localInitatedOperationCompleted(){ ; }
 
 } //end namespace

@@ -25,10 +25,10 @@
  */
 
 #if defined(INTERFACE)
-#pragma implementation "base64.hh"
+#pragma implementation "glue_utils.hh"
 #endif
 
-#include "base64.hh"
+#include "glue_utils.hh"
 #include <stdlib.h>
 
 //*********************************************************************
@@ -43,13 +43,13 @@
 
 const char          fillchar = '=';
 
-const char* cvt = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-";
+char* cvt = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-";
 
 
 int find(char c)
 {
   int ans = 0; 
-  for(  const char *ptr = cvt; *ptr!=c;ptr++)
+  for(  char *ptr = cvt; *ptr!=c;ptr++)
     ans ++; 
   return ans; 
 }

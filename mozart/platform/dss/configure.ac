@@ -86,7 +86,7 @@ AC_MSG_RESULT($CXX_VERSION)
 
 dnl Basis for warnings and CXXGLAGS
 WARNINGS="-Wall -Wold-style-cast -Woverloaded-virtual -Wshadow"
-CXX_BASE="-funsigned-char \$(INCS) \$(WARNINGS)"
+CXX_BASE="-funsigned-char \$(INCS) \$(EXCEPTS) \$(WARNINGS)"
 
 AC_MSG_RESULT()
 AC_MSG_RESULT(*************** CHECKING OPTIONS ****************)
@@ -97,17 +97,28 @@ AC_MSG_RESULT()
 AC_MSG_CHECKING(compiler alternative.)
 AC_ARG_ENABLE(opt, [--enable-opt)],,)
 case "$enable_opt" in
-    dbg | debug)
+    debug)
 	AC_MSG_RESULT(compile to debug mode)
-	CXXFLAGS="-O3 -fomit-frame-pointer -fno-inline -fno-default-inline -fno-inline-functions -DDEBUG_CHECK -DDSS_LOG -DINTERFACE -g3 -ggdb $CXX_BASE"
-	WARNINGS="-pedantic-errors $WARNINGS"
+	CXXFLAGS="-fno-inline -fno-default-inline -fno-inline-functions -DDEBUG_CHECK -DDSS_LOG -DINTERFACE -g3 -ggdb $CXX_BASE"
+	WARNINGS="-pedantic-errors"
     ;;
     *)
 	AC_MSG_RESULT(compile optimized mode)
 	CXXFLAGS="-O3 -fomit-frame-pointer $CXX_BASE"
-	WARNINGS="$WARNINGS"
+	WARNINGS="-Weffc++ $WARNINGS"
     ;;
 esac
+
+AC_MSG_CHECKING(exception handling...)
+AC_ARG_ENABLE(exceptions, [--enable-exceptions)],,)
+if test "$enable_exceptions" = yes -a "$enable_opt" != d; then
+    EXCEPTS="$EXCEPTS -fexceptions"
+    CXXFLAGS="-DEXCEPTIONS $CXXFLAGS"
+    AC_MSG_RESULT(using exceptions)
+else
+    EXCEPTS="$EXCEPTS -fno-exceptions"
+    AC_MSG_RESULT(no exceptions)
+fi
 
 AC_MSG_CHECKING(warning configuration)
 AC_ARG_ENABLE(exceptions, [--enable-warnings)],,)
@@ -116,12 +127,12 @@ if test "$enable_warnings" = no; then
     WARNINGS="-Wall"
 else
     AC_MSG_RESULT(using extensive warnings)
-    if test "$VERSION" = 3 -o "$VERSION" = ABOVE3 ; then
+    if test "$VERSION" = 3; then
 	WARNINGS="$WARNINGS -Wswitch -Wreturn-type -Wunused"
     fi
     if test "$enable_opt" != d; then
-	WARNINGS="$WARNINGS"
-	if test "$VERSION" = 3 -o "$VERSION" = ABOVE3 ; then
+	WARNINGS="-Winline $WARNINGS"
+	if test "$VERSION" = 3; then
 	    WARNINGS="-Wdisabled-optimization -Wuninitialized $WARNINGS"
 	fi
     fi
@@ -230,16 +241,11 @@ case "$host_cpu" in
 	CPU_FLAGS="-mtune=$host_cpu -DBIG_ENDIAN_HOST"
     ;;
     *)
-	if test "$enable_opt" = native; then
-	    AC_MSG_RESULT(native architecture)
-	    CPU_FLAGS="-march=native"
-	else
 	AC_MSG_RESULT($host_cpu architecture)
 	if test "$VERSION" = ABOVE3; then
 	    CPU_FLAGS="-march=$host_cpu -mtune=$host_cpu"
 	else
 	    CPU_FLAGS="-march=$host_cpu -mcpu=$host_cpu"
-	fi
 	fi
     ;;
 esac
@@ -255,6 +261,7 @@ fi
 
 dnl subst all variables!!
 AC_SUBST(WARNINGS)
+AC_SUBST(EXCEPTS)
 AC_SUBST(ENVTYPE)
 AC_SUBST(ENV)
 AC_SUBST(COPY_HEADERS)

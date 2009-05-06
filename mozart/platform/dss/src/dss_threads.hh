@@ -58,14 +58,14 @@ namespace _dss_internal{ //Start namespace
     GlobalThread(GlobalThreadTable* const ext); 
     ~GlobalThread() { DebugCode(a_allocated--); }
 
-    void resumeDoLocal(){
-      getThreadMediator()->resumeDoLocal();
+    WakeRetVal resumeDoLocal(DssOperationId* id){
+      return getThreadMediator()->resumeDoLocal(id);
     }
-    void resumeRemoteDone(PstInContainerInterface* pstin){
-      getThreadMediator()->resumeRemoteDone(pstin); 
+    WakeRetVal resumeRemoteDone(PstInContainerInterface* pstin){
+      return getThreadMediator()->resumeRemoteDone(pstin); 
     }
-    void resumeFailed() {
-      getThreadMediator()->resumeFailed();
+    WakeRetVal resumeFailed() {
+      return getThreadMediator()->resumeFailed();
     }
     virtual void dispose();
     void m_makeGCpreps();

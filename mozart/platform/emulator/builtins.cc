@@ -54,9 +54,6 @@
 #include "var_of.hh"
 #include "var_readonly.hh"
 #include "mozart_cpi.hh"
-#include "mozart.h"
-#include "base64.hh"
-#include "pickleBase.hh"
 #include "dictionary.hh"
 #include "dpInterface.hh"
 #include "bytedata.hh"
@@ -1410,36 +1407,6 @@ OZ_BI_define(BIvsToBs,3,1)
   }
 } OZ_BI_end
 
-OZ_BI_define(BIvsCRC,1,1) 
-{
-  oz_declareVirtualStringIN(0,s);
-
-  crc_t crc = update_crc(init_crc(),(unsigned char *) s, strlen(s));
-    
-  OZ_RETURN(OZ_unsignedInt(crc));
-} OZ_BI_end
-
-OZ_BI_define(BIvsEncodeB64,1,1) 
-{
-  oz_declareVirtualStringIN(0,s); 
-  //This is probably a bad idea.
-  //Since we want to encode to B64,
-  //we might have \0's inside.
-  int len = strlen(s);
-  char *str = encodeB64((char*) s, len);
-  //We probably leak the memory too!
-  OZ_RETURN(OZ_string(str));
-} OZ_BI_end
-
-OZ_BI_define(BIvsDecodeB64,1,1) 
-{
-  oz_declareVirtualStringIN(0,s);
-  int len = strlen(s); 
-  char* str = (char*) decodeB64((char*)s, len);
-  //Here also, we are leaking memory!
-  OZ_RETURN(OZ_string(str));
-} OZ_BI_end
-
 // ---------------------------------------------------------------------
 // Chunk
 // ---------------------------------------------------------------------
@@ -2461,7 +2428,7 @@ OZ_BI_define(BIaritySublist,2,1)
    Numbers
    ----------------------------------------------------------------------- */
 
-static OZ_Return bombArith(const char *type)
+static OZ_Return bombArith(char *type)
 {
   oz_typeError(-1,type);
 }
@@ -4507,7 +4474,7 @@ int oz_raise(OZ_Term cat, OZ_Term key, const char *label, int arity, ...)
  *=================================================================== */
 
 static
-char *getTypeOfPos(const char * t, int p)
+char *getTypeOfPos(char * t, int p)
 {
   static char buffer[100];
   int i, bi, comma;
@@ -4527,7 +4494,7 @@ char *getTypeOfPos(const char * t, int p)
   return buffer;
 }
 
-OZ_Return typeError(int Pos, const char *Comment, const char *TypeString)
+OZ_Return typeError(int Pos, char *Comment, char *TypeString)
 {
   (void) oz_raise(E_ERROR,E_KERNEL,
 		  "type",5,NameUnit,NameUnit,

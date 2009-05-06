@@ -162,7 +162,7 @@ void AM::init(int argc,char **argv)
 
   preparedCalls = NULL;
 
-  const char *home = osgetenv("OZHOME");
+  char *home = osgetenv("OZHOME");
   
   if (!home)
     home ="unknown";
@@ -235,7 +235,7 @@ void AM::init(int argc,char **argv)
   }
 
   if (!p2t && !initFile) {
-    const char* ini = "/share/Init.ozf";
+    char* ini = "/share/Init.ozf";
     int m = strlen(ozconf.ozHome);
     int n = m+strlen(ini)+1;
     char*s = new char[n];

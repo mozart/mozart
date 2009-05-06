@@ -34,6 +34,11 @@
 #include "value.hh"
 #include "os.hh"
 
+//
+Bool dpReadyStub() {
+  return (NO);
+}
+
 // ports
 OZ_Return distPortSendStub(OzPort *p, TaggedRef msg, TaggedRef) {
   OZD_error("'distPortSend' called without DP library?");
@@ -143,6 +148,9 @@ Bool distHandlerDeInstallStub(unsigned short x,unsigned short y,
 
 //
 // Link interface function pointers against stubs;
+
+//
+Bool (*dpReady)() = dpReadyStub;
 
 // ports
 OZ_Return (*distPortSend)(OzPort*, TaggedRef, TaggedRef)

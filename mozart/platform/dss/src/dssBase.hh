@@ -92,9 +92,12 @@ namespace _dss_internal{ //Start namespace
   class CoordinatorTable; 
   class GlobalThreadTable;
   class GlobalThread;
+  class GlobalNameTable;
   class DssMslClbk; 
+  class DksBackbone; 
   
   class DSS_Environment;
+  class DksInstanceHT; 
   class MD5;
 
   class DssSimpleWriteDct;
@@ -114,6 +117,8 @@ namespace _dss_internal{ //Start namespace
   //  - DEBUG_CHECK, enables asserts
   //  - INTERFACE,   enables pragma directives
   //  - DSS_LOG,     enables the logging utility.
+  //  - EXCEPTIONS,  enables throwing of exceptions (isn't used that often for now) 
+  //                 from interfaces to the MAP.
   //  - WIN32        chooses between windows environment and unix environment (header files)
 
   
@@ -212,15 +217,19 @@ namespace _dss_internal{ //Start namespace
     // *********************** GLOBAL VARIABLES ************************
     Mediation_Object*    const a_map;
     
+    DksInstanceHT*             a_dksInstHT; 
     ProxyTable*                a_proxyTable;
     CoordinatorTable*          a_coordinatorTable;
     GlobalThreadTable*         a_threadTable; 
+    GlobalNameTable*           a_nameTable;
     DSite*                     a_myDSite;
 
     DssConfigData              a_dssconf;
     DssMslClbk*                a_dssMslClbk;
     MsgnLayer*                 a_msgnLayer;
     
+    DksBackbone*                a_dksBackbone; 
+
     // For evaluation of how many operations done per site.
     // This is good to know when optimizing reference handling and 
     // configurating of dgc algs.
@@ -266,7 +275,14 @@ namespace _dss_internal{ //Start namespace
     
     ParamRetVal     m_operateIntParam(const DSS_AREA& area, const DSS_AREA_ID& id, const int& param, int& arg);
     ParamRetVal     m_operateStrParam(const DSS_AREA& area, const DSS_AREA_ID& id, const int& param, const char* const str);
+  
+    KbrInstance* m_createKbr(int K, int Bits, int Fail, KbrCallbackInterface* inf);
+    bool m_unmarshalKbr(DssReadBuffer* buf, KbrInstance* &inst);
+
+    void m_setupBackbone(DssWriteBuffer* buf);
+    void m_joinBackbone(DssReadBuffer *buf);
   };
+  
 
 } // End namespace
 

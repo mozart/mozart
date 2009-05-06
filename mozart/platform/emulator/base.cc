@@ -52,7 +52,7 @@ void prefixWarning()
   prefixError();
 }
 
-extern const char *AMVersion, *AMDate, *ozplatform;
+extern char *AMVersion, *AMGecVersion, *AMDate, *ozplatform;
 
 void OZ_error(OZ_CONST char *format, ...)
 {
@@ -149,7 +149,7 @@ void message(const char *format, ...)
 // kost@ : very quick hack to kill emulators that are lost...
 Bool isDeadSTDOUT()
 {
-  const char *buf = "\n";
+  char *buf = "\n";
   fflush(stdout);
   if (write(fileno(stdout), buf, 1) == -1)
     return (TRUE);

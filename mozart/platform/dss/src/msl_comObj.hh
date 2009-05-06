@@ -90,6 +90,7 @@ namespace _msl_internal{ //Start namespace
 
 
   class ComObj{
+    friend class ComController;
   private:
     MsgnLayerEnv * a_mslEnv;
     TransObj *a_transObj;
@@ -106,7 +107,7 @@ namespace _msl_internal{ //Start namespace
     int a_sentLrgMsg;
     int a_receivedLrgMsg;
 
-    // One timer to be used for reopening //Yves: What's the goal of this reopening business?
+    // One timer to be used for opening/closing/acking (one at a time)
     TimerElement *a_reopentimer;
 
     // Special timers for probing and acking
@@ -124,15 +125,21 @@ namespace _msl_internal{ //Start namespace
     int  a_msgAckTimeOut;
     int  a_msgAckLength;
 
+    // Statistics
+    int a_lastrtt;
+
     CState a_state;    
-    bool a_closeHardFlag; //Yves: This is always false! Error in m_CLOSED_2_OPENING_WF_HANDOVER() ?
+    bool a_closeHardFlag;
    // For probing
     bool a_probing;
+    bool a_msgSentDuringProbeInterval;
     bool a_msgReceivedDuringProbeInterval; 
     bool a_localRef;
     bool a_remoteRef;
     bool a_sentClearRef;
 
+    EndRouter* a_pred; // the transObj preceding this comObj.!!! change it
+    
     void m_setCState(const CState& s){
       a_state = s;
       if (s == WORKING && a_site->m_getCsSite()) {
@@ -141,6 +148,7 @@ namespace _msl_internal{ //Start namespace
 	a_site->m_getCsSite()->working();
       }
     }
+    CState m_getCState() const { return a_state; }
 
     // throw a State vector to check if in one of a set of states ->
     // (WORKING | CLOSED | ... )
@@ -154,6 +162,8 @@ namespace _msl_internal{ //Start namespace
     void setAckTimer();
     void clearAckTimer();
     void setProbeIntervalTimer();
+    void setProbeFaultTimer();
+
 
     // private methods
     void m_open();
@@ -161,6 +171,7 @@ namespace _msl_internal{ //Start namespace
     bool hasNeed();
     void createCI(DssSimpleWriteBuffer*, int);
     bool extractCI(DssSimpleReadBuffer*,int&);
+    bool adoptCI(DssSimpleReadBuffer*);
 
 
     bool m_merge(ComObj *old);
@@ -198,6 +209,7 @@ namespace _msl_internal{ //Start namespace
     static int a_allocated;
 #endif
 
+    void m_closeDownConnection();
     void m_closeErroneousConnection();
 
     ComObj(Site *site, MsgnLayerEnv* env);
@@ -209,6 +221,7 @@ namespace _msl_internal{ //Start namespace
     CState getState() const {return a_state;}
     void m_setLocalRef();
 
+    void setTransObj(TransObj *transObj) { a_transObj = transObj; }
     TransObj *getTransObj() const { return a_transObj; }
 
     void m_send(MsgCnt *, int prio);
@@ -216,6 +229,7 @@ namespace _msl_internal{ //Start namespace
     // Should this be moved to the comController?
     bool canBeFreed(); // A question that implicitly tells the comObj
     // that no local references exist.
+    int getQueueStatus();
     void m_makeGCpreps();
     bool hasQueued();
 
@@ -258,8 +272,12 @@ namespace _msl_internal{ //Start namespace
     void handoverRoute(DSite *vec[], int); 
     void m_acceptAnonConnection(TransObj *);
 
+    // Statistics
+    inline int getLastRTT() { return a_lastrtt; }
+
     // Extras for internal use (must be public anyway)
     inline unsigned int sendProbePing();
+    inline unsigned int probeFault();
     unsigned int sendAckTimer();
 
     void reopen();

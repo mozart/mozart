@@ -50,7 +50,7 @@ namespace _msl_internal{ //Start namespace
     TransObj& operator=(const TransObj&){ return *this; }
 
   public:
-    virtual void m_closeConnection() = 0; 
+    virtual DssChannel* m_closeConnection() = 0; 
     // ComObj keeps track of its deliver calls so that as long as 
     // it has called deliver, and TransObj has not pulled all of its
     // messages with getNextMsgContainer, it will not say deliver again.
@@ -77,7 +77,7 @@ namespace _msl_internal{ //Start namespace
   class BufferedTransObj: public TransObj {
   protected:
     // Minimal size required in buffer to even consider marshaling
-    static const unsigned int T_MIN_FOR_HEADER = 100;
+    static const int T_MIN_FOR_HEADER = 100;
 
     enum unmarshalReturn {
       U_MORE,
@@ -122,8 +122,8 @@ namespace _msl_internal{ //Start namespace
   private:
     // should not be used
     BufferedTransObj(const BufferedTransObj&)
-      : TransObj(0,NULL), a_readBuffer(NULL), a_unmarshalBuffer(NULL),
-	a_writeBuffer(NULL), a_marshalBuffer(NULL) {}
+      : TransObj(0,NULL), a_readBuffer(NULL), a_writeBuffer(NULL),
+	a_unmarshalBuffer(NULL), a_marshalBuffer(NULL) {}
     BufferedTransObj& operator=(const BufferedTransObj&){ return *this; }
     
   public:

@@ -57,7 +57,7 @@
 namespace _msl_internal { //Start namespace
   
   
-  const char *msl_mess_names[C_LAST] = {
+  char *msl_mess_names[C_LAST] = {
     "conn_first_NOT_A_VALID_MESSAGETYPE",
     "conn_anon_present",
     "conn_init_present",
@@ -138,16 +138,18 @@ namespace _msl_internal { //Start namespace
     e_timers(env->a_timers),
     a_msgAckTimeOut(0xFFFFFFFF),
     a_msgAckLength(0xFFFFFFFF),
+    a_lastrtt(-1),
     a_state(CLOSED),
     a_closeHardFlag(false),
     a_probing(false),
+    a_msgSentDuringProbeInterval(false),
     a_msgReceivedDuringProbeInterval(false),
     a_localRef(false), // Will be set true by the first send and false by gc
     a_remoteRef(false),
-    a_sentClearRef(false) // Introduced to correspond to the same variable as in the old DL
-  {
+    a_sentClearRef(false), // Introduced to correspond to the same variable as in the old DL
+    a_pred(NULL){
     a_sec.a_ticket = 0;
-    dssLog(DLL_MOST,"COMMUNICATION: ComObject created");
+    dssLog(DLL_ALL,"COMMUNICATION: ComObject created");
     //printf("ComObject %p created\n",static_cast<void*>(this));
     DebugCode(a_allocated++);
   }
@@ -192,8 +194,10 @@ namespace _msl_internal { //Start namespace
   void ComObj::m_close()
   {
     clearTimers();
+    a_lastrtt=-1;
     if(a_transObj){
-      a_transObj->m_closeConnection(); 
+      DssChannel* ch = a_transObj->m_closeConnection(); 
+      ch->close();          // the channel object can be freed
       delete a_transObj; 
       a_transObj=NULL;
       
@@ -202,6 +206,13 @@ namespace _msl_internal { //Start namespace
     m_setCState(CLOSED);
   }
   
+  void ComObj::m_closeDownConnection() { // ZACHARIAS: Is this code correct?? 
+    if(m_inState(OPENING_WF_PRESENT | OPENING_WF_NEGOTIATE | CLOSING_WEAK))
+      a_closeHardFlag = true;
+    else if(m_inState(WORKING))
+      m_WORKING_2_CLOSING_HARD();
+  }
+
   void ComObj::m_closeErroneousConnection(){
     // What about the queues?:
     //  a_queues->clearAll();
@@ -216,6 +227,7 @@ namespace _msl_internal { //Start namespace
       // So continue probing, and make sure that at least one message
       // is exchanged during the next probe interval.  Send a ping if
       // necessary.
+      a_msgSentDuringProbeInterval = false; 
       a_msgReceivedDuringProbeInterval = false; 
       if (!a_queues->hasNeed()) {   // possibly no communication
 	m_send(new MsgCnt(C_PING, false), MSG_PRIO_LAZY);
@@ -290,6 +302,7 @@ namespace _msl_internal { //Start namespace
 
   // Specials to opt imer management
   inline void ComObj::setProbeIntervalTimer(){
+    a_msgSentDuringProbeInterval     = false; 
     a_msgReceivedDuringProbeInterval = true; 
     sendProbePing();
     if(a_probeIntervalTimer == NULL){
@@ -328,6 +341,9 @@ namespace _msl_internal { //Start namespace
     a_ackCanceled   = true;
   }
 
+
+  // Specifying priority -1 means accepting the default as in msgFormat.m4 and
+  // should allways be used.
   void ComObj::m_send(MsgCnt *msgC, int priority){
     if(msgC == NULL)
       return ;
@@ -383,15 +399,14 @@ namespace _msl_internal { //Start namespace
   // The returnvalue indicates whether it is wanted or not
   void ComObj::handover(DssChannel* tc) {
     if(a_state!=OPENING_WF_HANDOVER) {
-      tc->close();
-      delete tc;
+      tc->close();     // the channel object can be freed
       return;
     }
     m_OPENING_WF_HANDOVER_2_OPENING_WF_PRESENT(tc); 
   }
 
   void ComObj::handoverRoute(DSite *succSite[], int len) {
-    if (a_state != OPENING_WF_HANDOVER) {
+    if (getState() != OPENING_WF_HANDOVER) {
       printf("Ooops, route not taken, aborted by com\n"); 
       return ; 
     }
@@ -743,7 +758,6 @@ namespace _msl_internal { //Start namespace
     m_open();
   CLOSE:
   FAILURE:    
-    dssLog(DLL_DEBUG,"Unexpected message type %d in state %d",mt,a_state);
     delete msgC; // A bit dangerous
     return false;
   }
@@ -775,6 +789,7 @@ namespace _msl_internal { //Start namespace
   void ComObj::msgAcked(int num) {
     int rtt = a_queues->msgAcked(num, false, a_probing && a_state==WORKING);
     if (rtt != -1) {
+      a_lastrtt = rtt;
       a_site->m_getCsSite()->reportRTT(t_max(rtt, MSG_ACK_TIMEOUT));
     }
     if (a_probing && a_state==WORKING) {   // we are probing
@@ -792,6 +807,7 @@ namespace _msl_internal { //Start namespace
       
       if(a_probing && !msgC->m_isInternalMsg()) {
 	msgC->setSendTime(e_timers->currTime());
+	a_msgSentDuringProbeInterval = true; 
       }
       if(a_state==WORKING && !a_ackCanceled) // Acknowledgement is being sent
 	clearAckTimer();
@@ -837,7 +853,7 @@ namespace _msl_internal { //Start namespace
   }
 
   void ComObj::connectionLost() {
-    dssLog(DLL_MOST,"COMMUNICATION (%p): Connection lost, state=%d",this, a_state);
+    dssLog(DLL_ALL,"COMMUNICATION (%p): Connection lost, state=%d",this, a_state);
     switch(a_state) {
     case CLOSING_HARD:
     case OPENING_WF_PRESENT:
@@ -879,6 +895,8 @@ namespace _msl_internal { //Start namespace
     }
   }
 
+  int ComObj::getQueueStatus(){return a_queues->getQueueStatus();}
+  
   void ComObj::m_makeGCpreps(){ a_queues->gcMsgCs(); }
 
   bool ComObj::hasQueued() { return a_queues->hasQueued(); }
@@ -892,6 +910,7 @@ namespace _msl_internal { //Start namespace
   
 
   void ComObj::clearTimers() {
+    //printf("clearTimers! %p, %p ,%p, %p\n", a_reopentimer, a_ackTimer ,a_probeIntervalTimer, a_probeFaultTimer );
     e_timers->clearTimer(a_reopentimer);
 
     // here we could destroy the expiration times too.
@@ -1025,7 +1044,7 @@ namespace _msl_internal { //Start namespace
       u32 ticket = dsrb->m_getInt();
       Assert(a_sec.a_ticket == 0);
 
-      if(memcmp(version2, dss_version, 3) == 0){ // ok send our data
+      if(strncmp((char*) version2, (char*) dss_version, 3) == 0){ // ok send our data
 	  
 	m_setCState(OPENING_WF_NEGOTIATE);
 
@@ -1197,14 +1216,13 @@ namespace _msl_internal { //Start namespace
     if(dsrb != NULL && dsrb->canRead(1+3)){
       dsrb->m_readOutBuffer(version2,3);
       
-      if(memcmp(version2, dss_version, 3) == 0 &&
+      if(strncmp((char*) version2, (char*) dss_version, 3) == 0 &&
 	 (dsrb->canRead(1+4)) && // SIZE OF DSITE
 	 ((s1 = a_mslEnv->a_siteHT->m_unmarshalSite(dsrb)) != NULL) &&
 	 (s1->m_getFaultState() != FS_GLOBAL_PERM)
 	 ){
 	len = dsrb->m_getInt();
-	Assert(len >= 0);
-	if(dsrb->availableData() == static_cast<size_t>(len)){
+	if(dsrb->availableData() == len){
 	  cipher = new BYTE[len];
 	  dsrb->readFromBuffer(cipher,len);
 	  dsrb->commitRead(len);
@@ -1350,7 +1368,7 @@ namespace _msl_internal { //Start namespace
   void ComObj::m_CLOSING_WF_DISCONNECT_2_CLOSING_WF_REMOTE(){
     m_close();
     m_setCState(CLOSED_WF_REMOTE);
-    dssLog(DLL_MOST,"COMMUNICATION (%p): Closed remote, setting timer", this);
+    dssLog(DLL_ALL,"COMMUNICATION (%p): Closed remote, setting timer", this);
     e_timers->setTimer(a_reopentimer,
 		       (a_mslEnv->a_ipIsbehindFW)?a_mslEnv->m_getFirewallReopenTimeout():a_mslEnv->m_getReopenRemoteTimeout(),
 		       if_comObj_reopen, this);
