@@ -97,15 +97,15 @@ AC_MSG_RESULT()
 AC_MSG_CHECKING(compiler alternative.)
 AC_ARG_ENABLE(opt, [--enable-opt)],,)
 case "$enable_opt" in
-    debug)
+    dbg | debug)
 	AC_MSG_RESULT(compile to debug mode)
-	CXXFLAGS="-fno-inline -fno-default-inline -fno-inline-functions -DDEBUG_CHECK -DDSS_LOG -DINTERFACE -g3 -ggdb $CXX_BASE"
-	WARNINGS="-pedantic-errors"
+	CXXFLAGS="-O3 -fomit-frame-pointer -fno-inline -fno-default-inline -fno-inline-functions -DDEBUG_CHECK -DDSS_LOG -DINTERFACE -g3 -ggdb $CXX_BASE"
+	WARNINGS="-pedantic-errors $WARNINGS"
     ;;
     *)
 	AC_MSG_RESULT(compile optimized mode)
 	CXXFLAGS="-O3 -fomit-frame-pointer $CXX_BASE"
-	WARNINGS="-Weffc++ $WARNINGS"
+	WARNINGS="$WARNINGS"
     ;;
 esac
 
@@ -116,12 +116,12 @@ if test "$enable_warnings" = no; then
     WARNINGS="-Wall"
 else
     AC_MSG_RESULT(using extensive warnings)
-    if test "$VERSION" = 3; then
+    if test "$VERSION" = 3 -o "$VERSION" = ABOVE3 ; then
 	WARNINGS="$WARNINGS -Wswitch -Wreturn-type -Wunused"
     fi
     if test "$enable_opt" != d; then
-	WARNINGS="-Winline $WARNINGS"
-	if test "$VERSION" = 3; then
+	WARNINGS="$WARNINGS"
+	if test "$VERSION" = 3 -o "$VERSION" = ABOVE3 ; then
 	    WARNINGS="-Wdisabled-optimization -Wuninitialized $WARNINGS"
 	fi
     fi

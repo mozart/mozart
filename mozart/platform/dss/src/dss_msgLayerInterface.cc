@@ -349,7 +349,7 @@ namespace _dss_internal{
 
   
   
-  int     
+  size_t
   InfiniteWriteBuffer::availableSpace() const {
     return 10000; // he, he, he
   }
@@ -428,7 +428,8 @@ namespace _dss_internal{
       if(a_buf == NULL)
 	{
 	  InfiniteWriteBuffer *iw = new InfiniteWriteBuffer(); 
-	  bool done = a_out->marshal(iw);
+	  DebugCode(bool done =)
+	    a_out->marshal(iw);
 	  Assert(done); 
 	  a_buf = iw->m_getBuffer();  
 	  printf("marshalDone size:%d\n", a_buf->a_end- a_buf->a_vec); 
@@ -459,11 +460,12 @@ namespace _dss_internal{
     }
     ~ReadBlockBuffer(){;}
 
-    virtual int availableData() const{
+    virtual size_t availableData() const{
       return a_end - a_cur; 
     }
     virtual bool canRead(size_t len) const{
-      return a_end - a_cur>=len;
+      Assert(a_end >= a_cur);
+      return static_cast<size_t>(a_end - a_cur)>=len;
     }
     virtual void readFromBuffer(BYTE* ptr, size_t len){
       memcpy(ptr,a_cur,len);
@@ -529,7 +531,7 @@ namespace _dss_internal{
       printf("marshaling, RCB totSize %d\n", buf->a_end-buf->a_vec); 
     }
     
-    int marshalSize =  t_min(bb->availableSpace() - 40, buf->a_end- a_cur);
+    int marshalSize =  t_min(bb->availableSpace() - 40, static_cast<size_t>(buf->a_end- a_cur));
     printf("marshaling, RCB blockSize %d\n", marshalSize); 
     gf_MarshalNumber(bb, marshalSize); 
     bb->writeToBuffer(a_cur, marshalSize); 
@@ -577,8 +579,8 @@ namespace _dss_internal{
       gf_MarshalNumber(bb, a_buffer->a_end - a_buffer->a_vec);
       printf("marshaling, EBA totSize %d\n", a_buffer->a_end - a_buffer->a_vec); 
     }
-    
-    int marshalSize =  t_max(0, t_min(bb->availableSpace() - 40, a_buffer->a_end- a_cur));
+    size_t marshalSize=0;
+    if(bb->availableSpace()>40) t_min(bb->availableSpace() - 40, static_cast<size_t>(a_buffer->a_end- a_cur));
     printf("marshaling, EBC blockSize %d\n", marshalSize); 
     gf_MarshalNumber(bb, marshalSize); 
     bb->writeToBuffer(a_cur, marshalSize); 

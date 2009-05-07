@@ -97,7 +97,7 @@ OZ_BI_define(io_is,1,1)
   OZ_RETURN_BOOL(OZ_isFileDescriptor(t));
 } OZ_BI_end
 
-extern int raiseUnixError(char *f,int n, char * e, char * g);
+extern int raiseUnixError(const char *f,int n, const char * e, const char * g);
 
 #define RETURN_UNIX_ERROR(f) \
 { return raiseUnixError(f,ossockerrno(), OZ_unixError(ossockerrno()), "os"); }
