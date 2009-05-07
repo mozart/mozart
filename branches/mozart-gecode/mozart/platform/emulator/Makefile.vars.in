@@ -93,7 +93,7 @@ LDFLAGS=	   @LDFLAGS@ $(CUSR)
 
 GECODEVERSION=`pkg-config --modversion gecode`
 
-LDFLAGS += `pkg-config --libs gecode` $(UNIV_LDFLAGS) -D_DARWIN_UNLIMITED_SELECT
+LDFLAGS += `pkg-config --libs gecode`
 
 
 EMULDFLAGS=	   @EMULDFLAGS@
@@ -104,7 +104,7 @@ TARGET_CXXFLAGS		=
 DEFS=		@DEFS@
 OZ_WARN=	@oz_warn@
 OZ_WARN_ERROR=	@oz_warn_error@
-CPPFLAGS=	@CPPFLAGS@ $(DEFS) $(INCS) $(DENYS_CPPFLAGS) $(SITE_PROPERTY_CPPFLAGS) `pkg-config --cflags gecode`  $(UNIV_FLAGS) -D_DARWIN_UNLIMITED_SELECT
+CPPFLAGS=	@CPPFLAGS@ $(DEFS) $(INCS) $(DENYS_CPPFLAGS) $(SITE_PROPERTY_CPPFLAGS) `pkg-config --cflags gecode`
 COPT=		@COPT@
 CDYNOPT=	@CDYNOPT@
 CXXFLAGS_NO_ERROR= @CXXFLAGS@ $(COPT) $(OZ_WARN) $(CUSR)

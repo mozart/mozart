@@ -42,6 +42,7 @@
 #undef IRIX
 #undef OS2
 #undef RHAPSODY
+#undef DARWIN
 
 #undef ARCH_I486
 #undef ARCH_SPARC
@@ -146,3 +147,6 @@ typedef int socklen_t;
 /* endianness */
 #undef ARCH_LITTLE_ENDIAN
 #undef ARCH_BIG_WORDIAN
+
+/* Operating system select on darwin */
+#undef _DARWIN_UNLIMITED_SELECT
