@@ -382,7 +382,7 @@ namespace _dss_internal{ //Start namespace
   void
   CoordinatorFwdChain::m_makeGCpreps(){
     t_gcList(a_refList);
-    for (Position<Pair<DSite*, MsgContainer*> > p(a_deliverQueue); p(); p++)
+    for (QueuePosition<Pair<DSite*, MsgContainer*> > p(a_deliverQueue); p(); p++)
       (*p).first->m_makeGCpreps();
     a_prot->makeGCpreps();
   }
