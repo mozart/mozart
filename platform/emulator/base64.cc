@@ -43,13 +43,13 @@
 
 const char          fillchar = '=';
 
-char* cvt = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-";
+const char* cvt = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-";
 
 
 int find(char c)
 {
   int ans = 0; 
-  for(  char *ptr = cvt; *ptr!=c;ptr++)
+  for(  const char *ptr = cvt; *ptr!=c;ptr++)
     ans ++; 
   return ans; 
 }

@@ -49,7 +49,7 @@ OZ_PropagatorProfile::OZ_PropagatorProfile(void)
   _all_headers = this;
 }
 
-OZ_PropagatorProfile::OZ_PropagatorProfile(char * propagator_name)
+OZ_PropagatorProfile::OZ_PropagatorProfile(const char * propagator_name)
   : _calls(0), _samples(0), _heap(0),
     _propagator_name(propagator_name)
 {
@@ -62,7 +62,7 @@ OZ_PropagatorProfile::OZ_PropagatorProfile(char * propagator_name)
 }
 
 
-void OZ_PropagatorProfile::operator = (char * propagator_name)
+void OZ_PropagatorProfile::operator = (const char * propagator_name)
 {
   _propagator_name = propagator_name;
 }

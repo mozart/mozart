@@ -5628,17 +5628,17 @@ if test "${enable_opt+set}" = set; then
 fi
 
 case "$enable_opt" in
-    debug)
+    dbg | debug)
 	{ echo "$as_me:$LINENO: result: compile to debug mode" >&5
 echo "${ECHO_T}compile to debug mode" >&6; }
-	CXXFLAGS="-fno-inline -fno-default-inline -fno-inline-functions -DDEBUG_CHECK -DDSS_LOG -DINTERFACE -g3 -ggdb $CXX_BASE"
-	WARNINGS="-pedantic-errors"
+	CXXFLAGS="-O3 -fomit-frame-pointer -fno-inline -fno-default-inline -fno-inline-functions -DDEBUG_CHECK -DDSS_LOG -DINTERFACE -g3 -ggdb $CXX_BASE"
+	WARNINGS="-pedantic-errors $WARNINGS"
     ;;
     *)
 	{ echo "$as_me:$LINENO: result: compile optimized mode" >&5
 echo "${ECHO_T}compile optimized mode" >&6; }
 	CXXFLAGS="-O3 -fomit-frame-pointer $CXX_BASE"
-	WARNINGS="-Weffc++ $WARNINGS"
+	WARNINGS="$WARNINGS"
     ;;
 esac
 
@@ -5656,12 +5656,12 @@ echo "${ECHO_T}no warnings (special)" >&6; }
 else
     { echo "$as_me:$LINENO: result: using extensive warnings" >&5
 echo "${ECHO_T}using extensive warnings" >&6; }
-    if test "$VERSION" = 3; then
+    if test "$VERSION" = 3 -o "$VERSION" = ABOVE3 ; then
 	WARNINGS="$WARNINGS -Wswitch -Wreturn-type -Wunused"
     fi
     if test "$enable_opt" != d; then
-	WARNINGS="-Winline $WARNINGS"
-	if test "$VERSION" = 3; then
+	WARNINGS="$WARNINGS"
+	if test "$VERSION" = 3 -o "$VERSION" = ABOVE3 ; then
 	    WARNINGS="-Wdisabled-optimization -Wuninitialized $WARNINGS"
 	fi
     fi
