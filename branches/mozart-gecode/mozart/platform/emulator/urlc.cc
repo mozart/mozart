@@ -1018,7 +1018,7 @@ urlc::get_ftp(char *file)
 
     // wise enough, htons, isn't it? it swaps, I don't care 
     // Intel is little-^H^H^H^H^H^H small-endian
-    sprintf(port_val, "%s,%d,%d", port_val, 
+    sprintf(port_val + strlen(port_val), ",%d,%d",
 	    (unsigned short)((htons(local_addr.sin_port) >> 8) & 0xff),
 	    (unsigned short)(htons(local_addr.sin_port) & 0xff));
     URLC_MSG(port_val);
