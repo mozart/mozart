@@ -330,6 +330,7 @@ case $platform in
     ;;
 esac
 
+
 case $platform in
     sunos*)
         TOOLLDCMD="ld"
@@ -400,6 +401,7 @@ case $platform in
     ;;
     darwin*)
 	AC_DEFINE(DARWIN)
+	AC_DEFINE(_DARWIN_UNLIMITED_SELECT)
 	EMULDFLAGS="-Wl,-keep_private_externs"
 	TOOLLDCMD="$CC -dynamic -bundle -flat_namespace -undefined suppress"
 	: ${oz_enable_modules_static=no}
