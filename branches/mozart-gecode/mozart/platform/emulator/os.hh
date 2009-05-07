@@ -226,7 +226,7 @@ int oskill(int pid, int sig);
 
 /* abstract acess to OS file handles */
 int osread(int fd, void *buf, unsigned int len);
-int oswrite(int fd, void *buf, unsigned int len);
+int oswrite(int fd, const void *buf, unsigned int len);
 int osclose(int fd);
 void ossleep(int sec);
 int osgetpid();
@@ -242,11 +242,11 @@ char *osinet_ntoa(char *);
 
 
 /* check for EINTR and make sure everything is written */
-int ossafewrite(int fd, char *buf, unsigned int len);
+int ossafewrite(int fd, const char *buf, unsigned int len);
 int ossaferead(int fd, char *buf, unsigned int len);
 
 char *ostmpnam(char *s);
-char *osgetenv(char *var);
+char *osgetenv(const char *var);
 
 char *oslocalhostname();
 

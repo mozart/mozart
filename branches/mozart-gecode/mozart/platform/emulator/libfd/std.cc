@@ -106,7 +106,7 @@ OZ_Term Propagator_D_D_D_I::getParameters(void) const
   RETURN_LIST4(reg_x, reg_y, reg_z, OZ_int(reg_c));
 }
 
-OZ_Term Propagator_D_D_D_I::getParametersC(char * lit) const
+OZ_Term Propagator_D_D_D_I::getParametersC(const char * lit) const
 {
   RETURN_LIST5(reg_x, reg_y, OZ_atom(lit), reg_z, OZ_int(reg_c));
 }
@@ -141,7 +141,7 @@ OZ_Term Propagator_D_D_I::getParameters(void) const
   RETURN_LIST3(reg_x, reg_y, OZ_int(reg_c));
 }
 
-OZ_Term Propagator_D_D_I::getParametersC(char * lit) const
+OZ_Term Propagator_D_D_I::getParametersC(const char * lit) const
 {
   RETURN_LIST4(reg_x, reg_y, OZ_atom(lit), OZ_int(reg_c));
 }
@@ -364,7 +364,7 @@ void Propagator_VI_VD_I::sClone(void) {
   reg_x = OZ_sCloneAllocBlock(reg_sz, reg_x);
 }
 
-OZ_Term Propagator_VI_VD_I::getParametersC(char * lit) const
+OZ_Term Propagator_VI_VD_I::getParametersC(const char * lit) const
 {
   INTVECTOR2LIST(reg_a, reg_sz, a);
   TERMVECTOR2LIST(reg_x, reg_sz, x);
@@ -384,7 +384,7 @@ void Propagator_VI_VD_I_D::sClone(void) {
   OZ_sCloneTerm(reg_b);
 }
 
-OZ_Term Propagator_VI_VD_I_D::getParametersC(char * lit) const
+OZ_Term Propagator_VI_VD_I_D::getParametersC(const char * lit) const
 {
   INTVECTOR2LIST(reg_a, reg_sz, a);
   TERMVECTOR2LIST(reg_x, reg_sz, x);
@@ -611,7 +611,7 @@ void Propagator_VI_VVD_I::sClone(void) {
   reg_smd_sz = OZ_copyCInts(reg_sz, reg_smd_sz);
 }
 
-OZ_Term Propagator_VI_VVD_I::getParametersC(char * lit) const
+OZ_Term Propagator_VI_VVD_I::getParametersC(const char * lit) const
 {
   INTVECTOR2LIST(reg_a, reg_sz, a);
 
@@ -753,7 +753,7 @@ void Propagator_VI_VD_D::sClone(void) {
   reg_a = OZ_copyCInts(reg_sz, reg_a);
 }
 
-OZ_Term Propagator_VI_VD_D::getParametersC(char *lit) const
+OZ_Term Propagator_VI_VD_D::getParametersC(const char *lit) const
 {
   INTVECTOR2LIST(reg_a, reg_sz, a);
   TERMVECTOR2LIST(reg_x, reg_sz, x);
