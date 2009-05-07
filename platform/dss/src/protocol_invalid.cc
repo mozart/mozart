@@ -105,7 +105,7 @@ namespace _dss_internal{ //Start namespace
     for (Position<DSite*> p(a_readers); p(); p++) msgPush(msg, *p);
     msgPush(msg, a_valid);
     msgPush(msg, a_requests.size());
-    for (Position<Request> p(a_requests); p(); p++) {
+    for (QueuePosition<Request> p(a_requests); p(); p++) {
       msgPush(msg, (*p).arg->loopBack2Out());
       if ((*p).caller) {
 	msgPush(msg, true); msgPush(msg, (*p).caller);
@@ -136,7 +136,7 @@ namespace _dss_internal{ //Start namespace
   void ProtocolInvalidManager::makeGCpreps() {
     ProtocolManager::makeGCpreps();
     t_gcList(a_readers);
-    for (Position<Request> p(a_requests); p(); p++) (*p).makeGCpreps();
+    for (QueuePosition<Request> p(a_requests); p(); p++) (*p).makeGCpreps();
   }
 
 
@@ -151,7 +151,7 @@ namespace _dss_internal{ //Start namespace
 	printf("No write request\n");
       } else {
 	printf("Write requests from\n");
-	for (Position<Request> p(a_requests); p(); p++)
+	for (QueuePosition<Request> p(a_requests); p(); p++)
 	  printf("   %s\n", (*p).caller ?
 		 (*p).caller->m_getGUIdSite()->m_stringrep() : "unknown");
       }
