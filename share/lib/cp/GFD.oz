@@ -198,7 +198,8 @@ export
 define
    
    %% Telling domains
-   FdInt = GFDB.int
+   FdInt = GFDB.'int'
+   FdDecl = GFDB.'decl'
    local
       
       proc {ListDom Xs Dom}
@@ -218,9 +219,6 @@ define
       end
       
    in
-      fun {FdDecl}
-	 {FdInt {GFDB.inf}#{GFDB.sup}}
-      end
       
       proc {FdDom Dom Vec}
 	 case {VectorToType Vec}
