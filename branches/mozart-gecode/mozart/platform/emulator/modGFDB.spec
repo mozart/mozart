@@ -11,23 +11,12 @@
  #
  
  ## Variable declaration
-#  'int' => { 
-#      in  => ['+value'],
-#      out => ['int'],
-#      bi  => new_intvar,
-#      fcp => ignore
-#  },
-
-
-    'int' => { 
-	in  => ['+value', 'int'],
-	out => [],
-	bi  => BINewIntVar},
-    
-    'decl' => { 
-	in  => ['int'],
-	out => [],
-	bi  => BIDeclIntVar},
+ 'int' => { 
+     in  => ['+value'],
+     out => ['int'],
+     bi  => new_intvar,
+     fcp => ignore
+ },
 
  ## Variable type testing
  'is' => { 

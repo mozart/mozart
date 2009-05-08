@@ -467,7 +467,7 @@ OZ_BI_define(gfd_element_5,5,0){
 		/**
        element(Space* home, const BoolVarArgs& x, IntVar y0, BoolVar y1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     */
-    BoolVarArgs __x = getBoolVarArgs(OZ_in(0));
+    DECLARE_BOOLVARARGS(0, __x, home);
     BoolVar *__x2 = boolOrBoolVar(OZ_in(2));
     try{
       //Gecode::element(home, __x, __x1, __x2, __ICL_DEF, __PK_DEF);
@@ -482,7 +482,7 @@ OZ_BI_define(gfd_element_5,5,0){
 	  /**
        element(Space* home, const BoolVarArgs& x, IntVar y0, int y1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     */
-    BoolVarArgs __x = getBoolVarArgs(OZ_in(0));
+    DECLARE_BOOLVARARGS(0, __x, home);
     int i = OZ_intToC(OZ_in(2));
 
     try{
@@ -644,7 +644,8 @@ OZ_BI_define(gfd_channel_5,5,0){
   for(int i=0; i<5; i++)
     SuspendPosting(OZ_in(i));
 
-  BoolVarArgs __x = getBoolVarArgs(OZ_in(0));
+
+  DECLARE_BOOLVARARGS(0, __x, home);
 
   if(OZ_isBoolVarArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && OZ_isInt(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
     /**
