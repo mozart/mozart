@@ -43,6 +43,41 @@
 */
 
 /**
+ * \brief Macros for variable declaration inside propagators posting built-ins. Space stability is affected as a side effect.
+ * @param p The new variable.
+ * @param s The space where the variable is declared.
+ */
+inline
+BoolVar* declareBV(OZ_Term p, GenericSpace *s) {
+  BoolVar *v = NULL;
+  if (OZ_isInt(p)) {
+    int val = OZ_intToC(p);
+    if (val == 0 || val == 1) {
+      v = new BoolVar(s,val,val);
+    }
+  } else if (OZ_isGeBoolVar(p)) {
+    v = &get_BoolVar(p);
+  } 
+  return v;
+} 
+
+/**
+ * \brief Macros for variable declaration inside propagators posting built-ins. 
+ * Space stability is affected as a side effect.
+ * @param p The position in OZ_in
+ * @param v Name of the new variable
+ * @param sp The space where the variable is declared.
+ */
+#define DeclareGeBoolVar(p,v,sp)					\
+  declareInTerm(p,v##x);						\
+  BoolVar v;								\
+  { BoolVar *vp = declareBV(v##x,sp);					\
+    if (vp == NULL) return OZ_typeError(p,"Error while declaring a BoolVar, expected BoolVar or Int between 0 and 1"); \
+    v = *vp;								\
+  }
+
+
+/**
  * \brief Return a BoolVar from a integer or a GeBoolVar
  * @param value integer or GeBoolVar representing a BoolVar
  */
@@ -56,53 +91,57 @@ BoolVar * boolOrBoolVar(TaggedRef value){
 }
 
 /**
- * \brief Return a BoolVarArgs. Space stability is affected as a side effect.
- * @param vaar Array of GeBoolVars and/or integers (0#1)
+ * \brief Declares a GeBoolVar inside a var array. Space stability is affected as a side effect.
+ * @param val integer value of the new variable
+ * @param ar array of variables where the new variable is posted
+ * @param i position in the array assigned to the variable
+ * @param sp Space where the array belongs to
  */
-inline
-Gecode::BoolVarArgs getBoolVarArgs(TaggedRef vaar){
-  int sz;
-  TaggedRef t = vaar;
+// TODO: Improve error reporting 0 s not the argument position
+#define DeclareGeBoolVarVA(val,ar,i,sp)					\
+  {  declareTerm(val,x);						\
+    if(OZ_isInt(val)) {							\
+      int domain=OZ_intToC(val);					\
+      if (domain < 0 || domain > 1) {					\
+	return OZ_typeError(0,"Cannot create a BoolVar form integers different from 0 or 1"); \
+      }									\
+      Gecode::BoolVar v(sp,domain,domain);				\
+      ar[i] = v;							\
+    }									\
+    else if(OZ_isGeBoolVar(val)) {					\
+      ar[i]=get_BoolVar(val);						\
+    }									\
+  }
 
-  Assert(OZ_isBoolVarArgs(vaar));
+/**
+ * \brief Declares a GeBoolVarArgs. Space stability is affected as a side effect.
+ * @param tIn Values of the variables in the new array
+ * @param array Array of variables
+ * @param sp Space where the array is declared
+ */
+#define DECLARE_BOOLVARARGS(tIn,array,sp) DECLARE_VARARGS(tIn,array,sp,BoolVarArgs,DeclareGeBoolVarVA)
 
-  if(OZ_isLiteral(OZ_deref(t))) {
-    sz=0;
-    BoolVarArgs array(sz);
-    return array;
-  } else
-    if(OZ_isCons(t)) {
-      sz = OZ_length(t);
-      BoolVarArgs array(sz);
-      for(int i=0; OZ_isCons(t); t=OZ_tail(t),i++){
-	BoolVar *iv = boolOrBoolVar(OZ_deref(OZ_head(t)));
-	array[i] = *iv;
-	delete iv;
-      }
-      return array;
-    } else 
-      if(OZ_isTuple(t)) {
-	sz=OZ_width(t);
-	BoolVarArgs array(sz);
-	for(int i=0; i<sz; i++) {
-	  BoolVar *iv = boolOrBoolVar(OZ_getArg(t,i));
-	  array[i] = *iv;
-	  delete iv;
-	}
-	return array;
-      } else {
-	Assert(OZ_isRecord(t));
-	OZ_Term al = OZ_arityList(t);
-	sz = OZ_width(t);
-	BoolVarArgs array(sz);
-	for(int i=0; OZ_isCons(al); al=OZ_tail(al),i++) {
-	  BoolVar *iv = boolOrBoolVar(OZ_subtree(t,OZ_head(al)));
-	  array[i] = *iv;
-	  delete iv;
-	}
-	return array;
-      }  
-}
+/**
+ * \brief Declares a variable form OZ_Term This declaration does not affect space stability so it can not be used in propagator's built ins.
+ * @param p argument at position p in the OZ_in
+ * @param v the new BoolVar Variable 
+ */
+#define DeclareGeBoolVar1(p,v)						\
+  BoolVar v;								\
+  {									\
+    declareInTerm(p,v##x);						\
+    if (OZ_isInt(v##x)) {						\
+      OZ_declareInt(p,domain);						\
+      if (domain < 0 || domain > 1) {return OZ_typeError(p,"Cannot create a BoolVar form integers different from 0 or 1");} \
+      BoolVar _tmp(oz_currentBoard()->getGenericSpace(),		\
+		   domain, domain);					\
+      v=_tmp;								\
+    }									\
+    else if(OZ_isGeBoolVar(v##x)) {					\
+      v = get_BoolVarInfo(v##x);					\
+    } else								\
+      return OZ_typeError(p,"BoolVar");					\
+  }
   
   
 /**
@@ -114,18 +153,19 @@ Gecode::BoolVarArgs getBoolVarArgs(TaggedRef vaar){
  * @param arg An integer refering to a BoolOpType
  * @param var the name of the bool operation
  */
-inline
-Gecode::BoolOpType getBoolOpType(TaggedRef arg){
-  Assert(OZ_isBoolOpType(arg));
-  int op = OZ_intToC(arg);
-  switch(op) {
-  case 0: return BOT_AND;
-  case 1: return BOT_OR;
-  case 2: return BOT_IMP;
-  case 3: return BOT_EQV; 
-  case 4: return BOT_XOR;
-  }
-} 
+#define DeclareBoolOpType(arg,var)					\
+  BoolOpType var;							\
+  {									\
+    OZ_declareInt(arg,op);						\
+    switch(op) {							\
+    case 0: var = BOT_AND; break;					\
+    case 1: var = BOT_OR; break;					\
+    case 2: var = BOT_IMP; break;					\
+    case 3: var = BOT_EQV; break;					\
+    case 4: var = BOT_XOR; break;					\
+    default: return OZ_typeError(arg,"Expecting atom with a logical operation: and, or, imp, eqv, xor");	\
+    }}
+  
 /**
    ############################## Miscelanious declare macros ##############################
 */

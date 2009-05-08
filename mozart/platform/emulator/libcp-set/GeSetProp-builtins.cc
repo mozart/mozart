@@ -76,7 +76,7 @@ OZ_BI_define(set_inter,3,0)
 OZ_BI_define(set_interN,2,0) 
 {
   DeclareGSpace(gs);  
-  SetVarArgs var = getSetVarArgs(OZ_in(0));
+  DECLARE_SETVARARGS(0,var,gs); 
   SetVar *v1 = setOrSetVar(OZ_in(1));
 
   try{
@@ -112,7 +112,7 @@ OZ_BI_define(set_union,3,0)
 OZ_BI_define(set_unionN,2,0) 
 {
   DeclareGSpace(gs);  
-  SetVarArgs var = getSetVarArgs(OZ_in(0));
+  DECLARE_SETVARARGS(0,var,gs); 
   SetVar *v1 = setOrSetVar(OZ_in(1));
   
   try{
