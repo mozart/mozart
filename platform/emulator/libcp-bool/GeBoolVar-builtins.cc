@@ -48,25 +48,24 @@ OZ_BI_define(new_boolvar,1,1)
   OZ_declareDetTerm(0,dom);
   
   if (OZ_isTuple(dom)) {
-    OZ_Term lower = OZ_getArg(dom,0);
-    OZ_Term upper = OZ_getArg(dom,1);
-    
-    if (!OZ_isInt(lower) || !OZ_isInt(upper))
-      return OZ_typeError(0,"Only integer values are allowed in bool var creation.");
-    
-    l = OZ_intToC(lower);
-    u = OZ_intToC(upper);
-    
-    // Only 0/1 values are allowed when declaring a bool var.
-    if (l > 1 || l < 0 || u > 1 || u < 0) 
-      return OZ_typeError(0,"Invalid value to create a bool var.");
+	OZ_Term lower = OZ_getArg(dom,0);
+	OZ_Term upper = OZ_getArg(dom,1);
+  
+	if (!OZ_isInt(lower) || !OZ_isInt(upper))
+		return OZ_typeError(0,"Only integer values are allowed in bool var creation.");
+	l = OZ_intToC(lower);
+	u = OZ_intToC(upper);
+  
+	// Only 0/1 values are allowed when declaring a bool var.
+	if (l > 1 || l < 0 || u > 1 || u < 0) 
+		return OZ_typeError(0,"Invalid value to create a bool var.");
   } else if (OZ_isInt(dom)) {
-    l = OZ_intToC(dom);
-    if (l > 1 || l < 0) 
-      return OZ_typeError(0,"Invalid value to create a bool var.");
-    u = l;
+	l = OZ_intToC(dom);
+	if (l > 1 || l < 0) 
+		return OZ_typeError(0,"Invalid value to create a bool var.");
+	u = l;
   } else {
-    return OZ_typeError(0, "Unknown domain specification for a boolean variable.");
+	return OZ_typeError(0, "Unknown domain specification for a boolean variable.");
   }
   
   OZ_RETURN(new_GeBoolVar(l,u));
