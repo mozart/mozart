@@ -38,6 +38,108 @@
 using namespace Gecode;
 using namespace Gecode::Set;
 
+
+// Declaration function
+/**
+ * \brief Binds a new Mozart variable to Gecode constraint variable.
+ *  This is used to declare a finite domain variable or assign a domain
+ *  to a already created finite domain variable.
+ *  @param v is the new Mozart variable
+ *  @param dom is the domain of \a v. 
+ *  If dom is the maximal allowed domain [Limits::min, Limits::max], 
+ *  then this create a new Finite domain variable. Else, narrow the
+ * domain of a variable already created.
+ */
+OZ_Return tellNewSetVar(OZ_Term v, const IntSet& dom1, const IntSet& dom2){
+  
+  DEREF(v, vptr);
+
+  if(dom1.min() < lim_inf || dom1.max() > lim_sup){
+    return OZ_typeError(0, GEOZ_FSETDESCR_SYNTAX);
+  }
+  if(dom2.min() < lim_inf || dom2.max() > lim_sup){
+    return OZ_typeError(1, GEOZ_FSETDESCR_SYNTAX);
+  }
+
+  Assert(!oz_isRef(v));
+  if (oz_isFree(v)) {
+    printf("GeSetVar-builtins isFree...\n");fflush(stdout);
+    GenericSpace *sp = oz_currentBoard()->getGenericSpace();
+    SetVar *x = new SetVar(sp,dom1, dom2);
+    GeSetVar *nv = new GeSetVar(sp->getVarsSize());
+    OzVariable * ov   = extVar2Var(nv);
+    OZ_Term * tcv = newTaggedVar(ov);
+    int index        = sp->newVar(static_cast<VarImpBase*>(x->var()), makeTaggedRef(tcv));
+    
+    if (oz_onToplevel())
+      oz_currentBoard()->getGenericSpace()->makeUnstable();
+    
+    postValReflector<SetView,SetVarImp>(sp,index);
+    
+    if (oz_isLocalVariable(v)) {
+      if (!oz_isOptVar(v)) {
+	oz_checkSuspensionListProp(tagged2Var(v));
+      }
+      bindLocalVar(vptr, tcv);
+    } else {
+      bindGlobalVar(vptr, tcv);
+    }
+    
+    delete x;
+    return PROCEED;
+
+  } else if(OZ_isGeSetVar(v)) {
+    printf("GeSetVar-builtins  isGeSetVar...\n");fflush(stdout);
+    GenericSpace *sp = oz_currentBoard()->getGenericSpace();
+    SetVar *svar = get_SetVarPtr(v);
+    SetVar *tmpvar = new SetVar(sp, dom1, dom2);
+    try {
+      //Gecode::dom(sp, *svar, dom1, dom2);
+      svar->update(sp, false, *tmpvar);
+    } catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+    
+    //    if (oz_onToplevel())
+    //oz_currentBoard()->getGenericSpace()->makeUnstable();
+
+    delete svar, tmpvar;
+    return PROCEED;
+  } else {
+    printf("pailander...\n");fflush(stdout);
+    return PROCEED;
+  }
+}
+
+/** 
+ * \brief Creates a new SetVar variable with bounds
+ * 
+ * @param 0 Domain description
+ * @param 1 Domain description
+ * @param 2 The new variable
+ */
+OZ_BI_define(BINewBounds,3,0){
+  if(OZ_isIntSet(OZ_in(0)) && OZ_isIntSet(OZ_in(1))){
+    IntSet dom1 = getIntSet(OZ_in(0));
+    IntSet dom2 = getIntSet(OZ_in(1));
+    return tellNewSetVar(OZ_in(2), dom1, dom2);
+  }
+  return OZ_typeError(1, GEOZ_FSETDESCR_SYNTAX);
+} OZ_BI_end
+
+
+/** 
+ * \brief Creates a new SetVar variable with the complement of an old one
+ * 
+ * @param 0 The old variable
+ * @param 1 The complement of the old variable as a new one
+ */
+  //OZ_BI_define(new_comp,2,0){
+  
+
+  //} OZ_BI_end
+
+
 /** 
  * \brief Creates a new SetVar variable with bounds
  * 
@@ -47,16 +149,27 @@ using namespace Gecode::Set;
  */
 OZ_BI_define(new_bounds,2,1)
 {
-  DECLARE_INT_SET3(dom1, val1, 0);   // the glb of the SetVar
-  DECLARE_INT_SET3(dom2, val2, 1);   // the lub of the SetVar
-
-  if(dom1.min() < lim_inf || dom1.max() > lim_sup){
-    return OZ_typeError(0, GEOZ_FSETDESCR_SYNTAX);
-  }
-  if(dom2.min() < lim_inf || dom2.max() > lim_sup){
-    return OZ_typeError(1, GEOZ_FSETDESCR_SYNTAX);
-  }
-  OZ_RETURN(new_GeSetVar(dom1,dom2));
+  if(oz_isFree(OZ_in(0))){
+    DEREF(OZ_in(0), varPtr);
+    oz_suspendOn(makeTaggedRef(varPtr));
+    return SUSPEND;
+  } else if(oz_isFree(OZ_in(1))) {
+    DEREF(OZ_in(1), varPtr);
+    oz_suspendOn(makeTaggedRef(varPtr));
+    return SUSPEND;
+  } else 
+    {
+      IntSet dom1 = getIntSet3(OZ_in(0)); // the glb of the SetVar
+      IntSet dom2 = getIntSet3(OZ_in(1)); // the lub of the SetVar
+      
+      if(dom1.min() < lim_inf || dom1.max() > lim_sup){
+	return OZ_typeError(0, GEOZ_FSETDESCR_SYNTAX);
+      }
+      if(dom2.min() < lim_inf || dom2.max() > lim_sup){
+	return OZ_typeError(1, GEOZ_FSETDESCR_SYNTAX);
+      }
+      OZ_RETURN(new_GeSetVar(dom1,dom2));
+    }
 }
 OZ_BI_end
 

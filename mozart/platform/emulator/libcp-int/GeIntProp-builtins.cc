@@ -39,10 +39,10 @@ using namespace Gecode::Int;
 OZ_BI_define(int_count,5,0)
 {
   DeclareGSpace(sp);
-  DECLARE_INTVARARGS(0,arreglo,sp);
+  IntVarArgs arreglo = getIntVarArgs(OZ_in(0));
   IntVar x1,x3;
-  DeclareIntRelType(2,rl);
-  DeclareIntConLevel(4,cl);
+  IntRelType rl = getIntRelType(OZ_in(2));
+  IntConLevel cl = getIntConLevel(OZ_in(4));
   
   if(OZ_isGeIntVar(OZ_deref(OZ_in(1))))
     x1 = get_IntVar(OZ_in(1));
@@ -76,14 +76,12 @@ OZ_BI_define(int_count,5,0)
 OZ_BI_define(int_sortedness,3,0)
 {
   DeclareGSpace(sp);
-  DECLARE_INTVARARGS(0,a1,sp);
-  DECLARE_INTVARARGS(1,a2,sp);
+  IntVarArgs a1 = getIntVarArgs(OZ_in(0));
+  IntVarArgs a2 = getIntVarArgs(OZ_in(1));
   OZ_declareInt(2,conLevel);
 
   try{
-
     sorted(sp,a1,a2,(IntConLevel)conLevel);
-
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -94,7 +92,7 @@ OZ_BI_define(int_sortedness,3,0)
 OZ_BI_define(int_assign,2,0)
 {
   DeclareGSpace(sp);
-  DECLARE_INTVARARGS(0,a,sp);
+  IntVarArgs a = getIntVarArgs(OZ_in(0));
   DeclareIntAssignType(1,at);
   
   try{
@@ -109,7 +107,7 @@ OZ_BI_define(int_assign,2,0)
 OZ_BI_define(int_reified,3,0)
 {
   DeclareGSpace(sp);
-  DECLARE_INT_SET(OZ_in(0),dom);
+  IntSet dom = getIntSet(OZ_in(0));
   IntVar *v0 = intOrIntVar(OZ_in(1));
   BoolVar *b0 = boolOrBoolVar(OZ_in(2));
   
@@ -126,7 +124,7 @@ OZ_BI_define(int_reified,3,0)
 OZ_BI_define(int_ext,2,0) 
 {
   DeclareGSpace(sp);
-  DECLARE_INTVARARGS(0,ar1,sp);
+  IntVarArgs ar1 = getIntVarArgs(OZ_in(0));
   /*OZ_Term _t = OZ_in(1);
   OZ_Term inputl = OZ_arityList(_t);
   OZ_Term inputs = OZ_subtree(_t, OZ_head(inputl));

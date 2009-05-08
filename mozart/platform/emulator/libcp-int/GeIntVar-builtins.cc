@@ -39,6 +39,120 @@ using namespace Gecode;
 using namespace Gecode::Int;
 
 
+// Declaration function
+/**
+ * \brief Binds a new Mozart variable to Gecode constraint variable.
+ *  This is used to declare a finite domain variable or assign a domain
+ *  to a already created finite domain variable.
+ *  @param v is the new Mozart variable
+ *  @param dom is the domain of \a v. 
+ *  If dom is the maximal allowed domain [Limits::min, Limits::max], 
+ *  then this create a new Finite domain variable. Else, narrow the
+ * domain of a variable already created.
+ */
+OZ_Return tellNewIntVar(OZ_Term v, const IntSet& dom){
+  
+  DEREF(v, vptr);
+
+  Assert(!oz_isRef(v));
+  if (oz_isFree(v)) {
+    //printf("GeIntVar-builtins isFree...\n");fflush(stdout);
+    GenericSpace *sp = oz_currentBoard()->getGenericSpace();
+    IntVar *x = new IntVar(sp,dom);
+    GeIntVar *nv = new GeIntVar(sp->getVarsSize());
+    OzVariable * ov   = extVar2Var(nv);
+    //OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
+    OZ_Term * tcv = newTaggedVar(ov);
+    int index        = sp->newVar(static_cast<VarImpBase*>(x->var()), makeTaggedRef(tcv));
+    //delete x;
+    
+    if (oz_onToplevel())
+      oz_currentBoard()->getGenericSpace()->makeUnstable();
+    
+    postValReflector<IntView,IntVarImp>(sp,index);
+    
+    if (oz_isLocalVariable(v)) {
+      if (!oz_isOptVar(v)) {
+	oz_checkSuspensionListProp(tagged2Var(v));
+      }
+      bindLocalVar(vptr, tcv);
+    } else {
+      bindGlobalVar(vptr, tcv);
+    }
+    
+    delete x;
+    return PROCEED;
+
+  } else if(OZ_isGeIntVar(v)) {
+    //printf("GeIntVar-builtins  isGeIntVar...\n");fflush(stdout);
+    GenericSpace *sp = oz_currentBoard()->getGenericSpace();
+    IntVar *ivar = get_IntVarPtr(v);
+    try {
+      Gecode::dom(sp, *ivar, dom);
+    } catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+    
+    //    if (oz_onToplevel())
+    //oz_currentBoard()->getGenericSpace()->makeUnstable();
+
+    delete ivar;
+    return PROCEED;
+  } else {
+    printf("pailander...\n");fflush(stdout);
+    return PROCEED;
+  }
+}
+
+
+OZ_BI_define(BINewIntVar,2,0){
+  
+  //*****************************************************************************
+
+#define GEOZ_FD_DESCR_SYNTAX						\
+  "The syntax of a " "description of a finite domain" " is:\n"				\
+  "   set_descr   ::= simpl_descr | compl(simpl_descr)\n"		\
+  "   simpl_descr ::= range_descr | nil | [range_descr+]\n"		\
+  "   range_descr ::= integer | integer#integer\n"			\
+  "   integer     ::= { Limits::Int::min ,..., Limits::Int::max}"
+
+//*****************************************************************************
+
+  //1) First case when the domain of the variable is a specific domain
+  if(OZ_isIntSet(OZ_in(0))){
+    IntSet is = getIntSet(OZ_in(0));
+    return tellNewIntVar(OZ_in(1), is);
+  }
+
+  //2) Second case when the domain of the variable is a complement of a specific domain
+  if(OZ_label(OZ_in(0)) == AtomCompl){
+    IntSet is = getIntSet(OZ_getArg(OZ_in(0),0));
+
+    GenericSpace *sp = oz_currentBoard()->getGenericSpace();
+    IntVar *x = new IntVar(sp,is);
+    ViewRanges<IntView> xvr(*x);
+    IntVar *xcompl = new IntVar(sp, Gecode::Int::Limits::min, Gecode::Int::Limits::max);
+    IntView xcv(*xcompl);
+    xcv.minus_r(sp, xvr);
+    ViewRanges<IntView> xcomplvr(xcv);
+    IntSet is2(xcomplvr);
+    
+    delete x, xcompl;
+    return tellNewIntVar(OZ_in(1), is2);
+  }
+  //3) Third case when case 1 and 2 fails!
+  OZ_typeError(0,GEOZ_FD_DESCR_SYNTAX);
+
+} OZ_BI_end
+
+OZ_BI_define(BIDeclIntVar,1,0){
+  
+  IntSet is(Int::Limits::min, Int::Limits::max);
+  return tellNewIntVar(OZ_in(0), is);
+
+} OZ_BI_end
+
+
 /** 
  * \brief Creates a new IntVar variable 
  * 
@@ -48,14 +162,18 @@ using namespace Gecode::Int;
  */
 OZ_BI_define(new_intvar,1,1)
 {
+  printf("new_intvar\n");fflush(stdout);
+  
   OZ_declareDetTerm(0,arg);
-  DECLARE_INT_SET(arg,dom);
+  
   if (OZ_isGeIntVar(OZ_in(1))) {
     // left = right(dom)
     GenericSpace *sp = oz_currentBoard()->getGenericSpace(); 
-    IntVar& left = get_IntVar(OZ_deref(OZ_in(1)));
-    IntVar right(sp,dom);
-    IntView vl(left), vr(right);
+    IntSet dom = getIntSet(OZ_in(0));
+    IntVar *left = get_IntVarPtr(OZ_deref(OZ_in(1)));
+    IntVar *right = new IntVar(sp,dom);
+    IntView vl(*left), vr(*right);
+    delete left, right;
     ViewRanges<IntView> vvr(vr);
     if (vl.inter_r(sp,vvr)==ME_GEN_FAILED ) {
       return FAILED;
@@ -63,10 +181,11 @@ OZ_BI_define(new_intvar,1,1)
     OZ_RETURN(OZ_in(1));
   } else {
     if(OZ_label(arg) == AtomCompl) {
-      DECLARE_INT_SET(OZ_getArg(arg,0), dom);
+      IntSet dom = getIntSet(OZ_getArg(OZ_in(0),0));
       OZ_RETURN(new_GeIntVarCompl(dom));
     }
-    DECLARE_INT_SET(arg,dom);   // the domain of the IntVar
+
+    IntSet dom = getIntSet(OZ_in(0));
     OZ_RETURN(new_GeIntVar(dom));
   }
 }
