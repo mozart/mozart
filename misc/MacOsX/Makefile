@@ -52,26 +52,27 @@ MOZ_DOC=/Users/gg/Desktop/Documentation
 ## Directories of mozart installation to be bundled.
 MOZ_DIRS= platform bin cache share include
 
-VERSION = $(shell $(MOZ_INST)/bin/oztool version)
-DATE=$(shell date +%d%h%y)
-NAME=Mozart
-APP=$(NAME).app
+VERSION := $(shell $(MOZ_INST)/bin/oztool version)
+PLATFORM := $(shell $(MOZ_INST)/bin/ozplatform)
+DATE := $(shell date +%d%h%y)
+NAME := Mozart
+APP := $(NAME).app
 
 ## Directories inside the bundle
-BND_CONTENTS=$(APP)/Contents
+BND_CONTENTS := $(APP)/Contents
 
 ## The Resources directory is where mozart installation files will be.
-BND_RESOURCES=$(BND_CONTENTS)/Resources
+BND_RESOURCES := $(BND_CONTENTS)/Resources
 
 ## The Frameworks directory is where shared libraries used by the emulator 
 ## will be placed. For instance, libgmp.dylib
 
-BND_FRAMEWORKS=$(BND_CONTENTS)/Frameworks
+BND_FRAMEWORKS := $(BND_CONTENTS)/Frameworks
 
 
 ## The path to the emulator inside the bundle
-PLATFORM=`$(MOZ_INST)/bin/oztool platform`
-EMULATOR=$(APP)/Contents/Resources/platform/$(PLATFORM)/emulator.exe
+PLATFORM := $(shell $(MOZ_INST)/bin/oztool platform)
+EMULATOR := $(BND_RESOURCES)/platform/$(PLATFORM)/emulator.exe
 
 ## Platypus call
 PLATCALL = $(PLAT) -D -X "oz|OZ" -V "1.5.0" -u 'Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>' -i 'appIcon.icns' script.sh ./$(APP)
@@ -92,7 +93,7 @@ bundle:
 
 
 fixpaths:
-	python ./bundlelibs.py $(APP)
+	python ./bundlelibs.py $(PLATFORM)
 
 
 diskimage:
