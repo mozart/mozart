@@ -32,8 +32,20 @@ def libDependencies(binary, visited, blacklist) :
 		visited.append( entry )
 		libDependencies( entry, visited, blacklist )
 
-def addDependentLibsToBundle( bundle ) :
-	binaries = glob.glob(bundle+"/Contents/Resources/platform/darwin-i386/emulator.exe")
+def addDependentLibsToBundle( bundle, platform ) :
+	## There are libraries which have to be patched in:
+	moz_home = bundle + "/Contents/Resources"
+	moz_boot = bundle + "/Contents/Resources/cache/x-oz/boot"
+	
+	binaries = glob.glob(moz_home+"/platform/"+platform+"/emulator.exe")
+	
+	binaries += glob.glob(moz_boot+"/GFDB.so-"+platform)
+	binaries += glob.glob(moz_boot+"/GFDP.so-"+platform)
+	binaries += glob.glob(moz_boot+"/GBDB.so-"+platform)
+	binaries += glob.glob(moz_boot+"/GBDP.so-"+platform)
+	binaries += glob.glob(moz_boot+"/GFSB.so-"+platform)
+	binaries += glob.glob(moz_boot+"/GFSP.so-"+platform)
+		
 	doNotChange = [
 		"/System/",
 		"/usr/lib/",
@@ -41,6 +53,7 @@ def addDependentLibsToBundle( bundle ) :
 	]
 	libsPath = []
 	for binary in binaries :
+		print "Working on ",binary
 		libDependencies(binary, libsPath, doNotChange)
 #	print libsPath
 
@@ -62,4 +75,4 @@ def addDependentLibsToBundle( bundle ) :
 			run("install_name_tool -change %(libpath)s @executable_path/../../../Frameworks/%(lib)s %(bundle)s/Contents/Frameworks/%(current)s" % locals() )
 
 if __name__ == "__main__":
-	addDependentLibsToBundle( "Mozart.app" )
+	addDependentLibsToBundle("Mozart.app","darwin-i386")
