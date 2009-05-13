@@ -38,14 +38,13 @@ def addDependentLibsToBundle( bundle, platform ) :
 	moz_boot = bundle + "/Contents/Resources/cache/x-oz/boot"
 	
 	binaries = glob.glob(moz_home+"/platform/"+platform+"/emulator.exe")
-	
-	binaries += glob.glob(moz_boot+"/GFDB.so-"+platform)
-	binaries += glob.glob(moz_boot+"/GFDP.so-"+platform)
-	binaries += glob.glob(moz_boot+"/GBDB.so-"+platform)
-	binaries += glob.glob(moz_boot+"/GBDP.so-"+platform)
-	binaries += glob.glob(moz_boot+"/GFSB.so-"+platform)
-	binaries += glob.glob(moz_boot+"/GFSP.so-"+platform)
-		
+
+	binaries += glob.glob(moz_boot+"/*.so-"+platform)
+
+	## Glue and libDSS are built with the emulator so there is no risk for them
+	## to include or point to an external library.
+	binaries.remove(moz_boot+"/Glue.so-"+platform)
+
 	doNotChange = [
 		"/System/",
 		"/usr/lib/",
@@ -53,7 +52,7 @@ def addDependentLibsToBundle( bundle, platform ) :
 	]
 	libsPath = []
 	for binary in binaries :
-		print "Working on ",binary
+		# print "Working on ",binary
 		libDependencies(binary, libsPath, doNotChange)
 #	print libsPath
 
@@ -75,4 +74,4 @@ def addDependentLibsToBundle( bundle, platform ) :
 			run("install_name_tool -change %(libpath)s @executable_path/../../../Frameworks/%(lib)s %(bundle)s/Contents/Frameworks/%(current)s" % locals() )
 
 if __name__ == "__main__":
-	addDependentLibsToBundle("Mozart.app","darwin-i386")
+	addDependentLibsToBundle("Mozart.app",sys.argv[1])
