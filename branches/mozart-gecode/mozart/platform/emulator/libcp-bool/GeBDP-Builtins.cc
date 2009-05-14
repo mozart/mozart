@@ -46,7 +46,6 @@ OZ_BI_define(gbd_rel_5,5,0){
   
   DeclareIntConLevel(3, __icl);
   DeclarePropKind(4, __pk);
-
   if(OZ_isGeBoolVar(OZ_in(0)) && OZ_isIntRelType(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
     /**
        void  Gecode::rel (Space *home, BoolVar x0, IntRelType r, BoolVar x1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
