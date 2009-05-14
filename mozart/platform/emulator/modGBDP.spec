@@ -1,4 +1,4 @@
-###
+##
 ### Authors:
 ###   Alberto Delgado <adelgado@cic.puj.edu.co> 
 ###
@@ -34,21 +34,21 @@ $module_name          = "GBD";
 
 ## Relation propagators
 
-	'rel_BV_BT_BV_BV' => {in => ['+value','+value','+value','+value'],
-	    out => [],
-	    bi => bool_rel_BV_BT_BV_BV},
-
+    'rel_BV_BT_BV_BV' => {in => ['+value','+value','+value','+value'],
+	out => [],
+	bi => bool_rel_BV_BT_BV_BV},
+    
 ## Builtins Propagators
-
-'gbd_rel_4' => { in => ['+value', '+value', '+value', '+value'],
-  out=>[],
-  bi => gbd_rel_4 }
-,
-
-'gbd_rel_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
+    
+    'gbd_rel_4' => { in => ['+value', '+value', '+value', '+value'],
+	out=>[],
+	bi => gbd_rel_4 }
+    ,
+    
+    'gbd_rel_5' => { in => ['+value', '+value', '+value', '+value', '+value'],
 	out=>[],
 	bi => gbd_rel_5 }
-,
+    ,
 
 'gbd_rel_6' => { in => ['+value', '+value', '+value', '+value', '+value', '+value'],
 	out=>[],
@@ -72,23 +72,7 @@ $module_name          = "GBD";
 
 ##Propagators
 
-    'not'		 => { in  => ['+value','+value', 'int'],
+'not'		 => { in  => ['+value','+value'],
 			     out => [],
 			     bi  => bool_not},
-
-##    'eq'		 => { in  => ['+value','+value', 'int'],
-##			     out => [],
-##			     bi  => bool_eq},
-##  'andA'		 => { in  => ['+value','+value','int'],
-##			     out => [],
-##			     bi  => bool_and_arr},
-##    'orA'		 => { in  => ['+value','+value','int'],
-##			     out => [],
-##			     bi  => bool_or_arr},
-##    'rel'		 => { in  => ['+value','int', '+value', 'int'],
-##			     out => [],
-##			     bi  => bool_rel},
-##    'linear'		 => { in  => ['+value','int', '+value', 'int'],
-##			     out => [],
-##			     bi  => bool_linear},
  );

@@ -328,13 +328,6 @@ define
    end
 
 %%%
-   %%Determine if E belongs to Rt record
-   proc {IsRt L E ?B}
-      case L of
-	 X|Xr then if X == E then B = true else {IsRt Xr E B} end
-      else B = false
-      end
-   end
    
    proc {RelP S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
@@ -343,10 +336,7 @@ define
       %% Assert 2 is a GFD.rt.*
       case W
       of 5 then
-	 %%TODO: where the domain of IntVar is define (i.e. X :: 0#3),
-	 %%call relP using as second param a string (e.g '=:', '<:')
-	 %%instead a record value (i.e. GFD.rt.'*')
-	 if {IsRt {Arity Rt} Sc.2} then
+	 if {Value.hasFeature Rt Sc.2} then
 	    {GFDP.gfd_rel_5 Sc.1 Rt.(Sc.2) Sc.3 Sc.cl Sc.pk}
 	 else
 	    {GFDP.gfd_rel_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
@@ -498,7 +488,7 @@ define
       of 5 then
 	 {GFDP.gfd_linear_5 Sc.1 Rt.(Sc.2) Sc.3 Sc.cl Sc.pk}
       [] 6 then
-	 if {IsRt {Arity Rt} Sc.2} then
+	 if {Value.hasFeature Rt Sc.2} then
 	    {GFDP.gfd_linear_6 Sc.1 Rt.(Sc.2) Sc.3 Sc.4 Sc.cl Sc.pk}
 	 else
 	    {GFDP.gfd_linear_6 Sc.1 Sc.2 Rt.(Sc.3) Sc.4 Sc.cl Sc.pk}
@@ -561,7 +551,7 @@ define
 	 {GFDP.gfd_count_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
       [] 6 then
       % Post propagator count_6 support domain-consistency only.
-	 if {IsRt {Arity Rt} Sc.3} then
+	 if {Value.hasFeature Rt Sc.3} then
 	    {GFDP.gfd_count_6 Sc.1 Sc.2 Rt.(Sc.3) Sc.4 Cl.dom Sc.pk}
 	 else
 	    {GFDP.gfd_count_6 Sc.1 Sc.2 Sc.3 Sc.4 Cl.dom Sc.pk}
