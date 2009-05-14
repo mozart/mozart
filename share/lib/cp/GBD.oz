@@ -4,6 +4,7 @@
 %%%
 %%%  Contributors:
 %%% 	Andres Felipe Barco <anfelbar@univalle.edu.co>
+%%%     Victor Rivera Zuniga <varivera@javerianacali.edu.co>
 %%%
 %%% Copyright:
 %%%     Alberto Delgado, 2006
@@ -61,7 +62,7 @@ prepare
 	   )
    
    %% Bool Operator Type
-   BOT = '#'('and': 0 'or':1 'imp':2 'eqv':3 'xor':4)
+   BOT = '#'('AND': 0 'OR':1 'IMP':2 'EQV':3 'XOR':4)
    
    %% Propagator kind
    Pk = '#'(
@@ -88,7 +89,7 @@ export
    dom:    GBDDom
    list:   BoolVarList
    tuple:  BoolVarTuple
-	 bool: BoolVar
+   bool: BoolVar
 
    %% Testing
    is:    IsVar
@@ -120,8 +121,8 @@ export
    and: And
    'or': Or
    xor: Xor
-   imp: Imp
-   eqv: Eqv
+   impl: Impl
+   equi: Equi
 
   %% Propagators Builtins
   
@@ -131,20 +132,16 @@ export
    %% some aliases
    disj:    Or
    conj:    And
-   'not':   Bool_not
+   nega:   Bool_not
 
-   
-%    conjA      :Bool_and_arr
-%    disjA      :Bool_or_arr
-%    rel        :Rel
-%    linear     :Linear
    %Watch
    
    %%Branching
    %ValSel VarSel
    %%%distribute:     IntVarDistribute
    %Distribute
-   distribute: GBDDistribute   
+   distributeBR: GBDDistribute
+   distribute: DistributeV
 
    %%Space
    
@@ -222,23 +219,23 @@ define
 
    %% Bolean relations (propagators)
    proc {And X Y Z}
-      {VarRel X BOT.and Y Z}
+      {VarRel X BOT.'AND' Y Z}
    end
 
    proc {Or X Y Z}
-      {VarRel X BOT.'or' Y Z}
+      {VarRel X BOT.'OR' Y Z}
    end
 
    proc {Xor X Y Z}
-      {VarRel X BOT.xor Y Z}
+      {VarRel X BOT.'XOR' Y Z}
    end
 
-   proc {Imp X Y Z}
-      {VarRel X BOT.imp Y Z}
+   proc {Impl X Y Z}
+      {VarRel X BOT.'IMP' Y Z}
    end
 
-   proc {Eqv X Y Z}
-      {VarRel X BOT.eqv Y Z}
+   proc {Equi X Y Z}
+      {VarRel X BOT.'EQV' Y Z}
    end
 
 
@@ -250,32 +247,50 @@ define
    in
       case W
       of 5 then
-   {GBDP.gbd_rel_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+	 if {List.is Sc.2} then
+	    if {Value.hasFeature BOT Sc.1} then
+	       {GBDP.gbd_rel_5 BOT.(Sc.1) Sc.2 Sc.3 Sc.cl Sc.pk}
+	    else
+	       raise malformed('Rel constraint post') end
+	    end
+	 else
+	    if {Value.hasFeature Rt Sc.2} then
+	       {GBDP.gbd_rel_5 Sc.1 Rt.(Sc.2) Sc.3 Sc.cl Sc.pk}
+	    else
+	       raise malformed('asd Rel constraint post') end
+	    end
+	 end
       []  6 then
-   {GBDP.gbd_rel_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
+	 if {Value.hasFeature Rt Sc.2} then
+	    {GBDP.gbd_rel_6 Sc.1 Rt.(Sc.2) Sc.3 Sc.4 Sc.cl Sc.pk}
+	 elseif {Value.hasFeature BOT Sc.2} then
+	    {GBDP.gbd_rel_6 Sc.1 BOT.(Sc.2) Sc.3 Sc.4 Sc.cl Sc.pk}
+	 else
+	    raise malformed('Rel constraint post') end
+	 end
       []  4 then
-   {GBDP.gbd_rel_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+	 {GBDP.gbd_rel_4 Sc.1 Rt.(Sc.2) Sc.cl Sc.pk}
       else
-   raise malformed('Rel constraint post') end
+	 raise malformed('Rel constraint post') end
       end
    end
-  
+   
    proc {LinearP S}
       Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
       W = {Record.width Sc}
    in
       case W
       of 5 then
-   {GBDP.gbd_linear_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+	 {GBDP.gbd_linear_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
       []  6 then
-   {GBDP.gbd_linear_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
+	 {GBDP.gbd_linear_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
       [] 7 then
-   {GBDP.gbd_linear_7 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl Sc.pk}
+	 {GBDP.gbd_linear_7 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl Sc.pk}
       else
-   raise malformed('Linear constraint post') end
+	 raise malformed('Linear constraint post') end
       end
    end
-
+   
    %% Bool Var distribution
    proc {GBDDistribute Spec Vs}
       case {Label Spec}
@@ -289,6 +304,10 @@ define
 	  fd(unknownDistributionStrategy
 	     'BD.distribute' [Spec Vs] 1)}
       end 
-   end 
-   
+   end
+   local
+      \insert GeBoolVarDist
+   in
+      DistributeV = BoolVarDistribute
+   end
 end

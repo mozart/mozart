@@ -61,7 +61,6 @@
     DEREF(tt, t_ptr);				\
     Assert(!oz_isRef(tt));			\
     if(oz_isFree(tt)){				\
-      printf("here!\n");fflush(stdout);		\
       oz_suspendOn(makeTaggedRef(t_ptr));	\
     }						\
   }
