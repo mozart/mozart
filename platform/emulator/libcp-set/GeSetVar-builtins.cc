@@ -47,8 +47,8 @@ using namespace Gecode::Set;
  */
 OZ_BI_define(new_bounds,2,1)
 {
-  DECLARE_INT_SET3(dom1, val1, 0);   // the glb of the SetVar
-  DECLARE_INT_SET3(dom2, val2, 1);   // the lub of the SetVar
+  IntSet dom1 = getIntSet3(OZ_in(0)); // lower bound
+  IntSet dom2 = getIntSet3(OZ_in(1)); // upper bound
 
   if(dom1.min() < lim_inf || dom1.max() > lim_sup){
     return OZ_typeError(0, GEOZ_FSETDESCR_SYNTAX);

@@ -38,7 +38,7 @@ OZ_BI_define(bool_rel_BV_BT_BV_BV,4,0)
 {
   DeclareGSpace(sp);
   BoolVar *v1 = boolOrBoolVar(OZ_in(0));
-  DeclareBoolOpType(1,bt);
+  BoolOpType bt = getBoolOpType(OZ_in(1));
   BoolVar *v2 = boolOrBoolVar(OZ_in(2));
   BoolVar *v3 = boolOrBoolVar(OZ_in(3));
  

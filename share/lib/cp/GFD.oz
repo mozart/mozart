@@ -488,10 +488,12 @@ define
       of 5 then
 	 {GFDP.gfd_linear_5 Sc.1 Rt.(Sc.2) Sc.3 Sc.cl Sc.pk}
       [] 6 then
-	 if {Value.hasFeature Rt Sc.2} then
+	 if {IsAtom Sc.3} andthen {Value.hasFeature Rt Sc.3} then
+	    {GFDP.gfd_linear_6 Sc.1 Sc.2 Rt.(Sc.3) Sc.4 Sc.cl Sc.pk}
+	 elseif {IsAtom Sc.2} andthen {Value.hasFeature Rt Sc.2} then
 	    {GFDP.gfd_linear_6 Sc.1 Rt.(Sc.2) Sc.3 Sc.4 Sc.cl Sc.pk}
 	 else
-	    {GFDP.gfd_linear_6 Sc.1 Sc.2 Rt.(Sc.3) Sc.4 Sc.cl Sc.pk}
+	    {GFDP.gfd_linear_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
 	 end
       [] 7 then
 	 {GFDP.gfd_linear_7 Sc.1 Sc.2 Rt.(Sc.3) Sc.4 Sc.5 Sc.cl Sc.pk}

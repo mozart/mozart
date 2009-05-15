@@ -241,7 +241,7 @@ local
 	    UnknownVal = {MinElement Unknown}
 	    {ReifiedInclude post(UnknownVal X B)}
 	 in
-	    {GBD.distribute generic(order:naive value:max) [B]}
+	    {GBD.distributeBR generic(order:naive value:max) [B]}
 	    {FSDistNaive Xs}
 	 end
       end
@@ -269,7 +269,7 @@ local
 	    DistVar   ={Sel  HSL}
 	    {ReifiedInclude post(UnknownVal DistVar B)}
 	 in
-	    {GBD.distribute generic(order:naive value:max) [B]}
+	    {GBD.distributeBR generic(order:naive value:max) [B]}
 	    {FSDistGeneric {RRobin FilteredSL}
 	     Order FCond Elem RRobin Sel Proc}
 	 end 
