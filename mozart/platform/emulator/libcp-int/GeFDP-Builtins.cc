@@ -467,7 +467,7 @@ OZ_BI_define(gfd_element_5,5,0){
 		/**
        element(Space* home, const BoolVarArgs& x, IntVar y0, BoolVar y1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     */
-    DECLARE_BOOLVARARGS(0, __x, home);
+    BoolVarArgs __x = getBoolVarArgs(OZ_in(0));
     BoolVar *__x2 = boolOrBoolVar(OZ_in(2));
     try{
       //Gecode::element(home, __x, __x1, __x2, __ICL_DEF, __PK_DEF);
@@ -482,7 +482,7 @@ OZ_BI_define(gfd_element_5,5,0){
 	  /**
        element(Space* home, const BoolVarArgs& x, IntVar y0, int y1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     */
-    DECLARE_BOOLVARARGS(0, __x, home);
+    BoolVarArgs __x = getBoolVarArgs(OZ_in(0));
     int i = OZ_intToC(OZ_in(2));
 
     try{
@@ -645,7 +645,7 @@ OZ_BI_define(gfd_channel_5,5,0){
     SuspendPosting(OZ_in(i));
 
 
-  DECLARE_BOOLVARARGS(0, __x, home);
+  BoolVarArgs __x = getBoolVarArgs(OZ_in(0));
 
   if(OZ_isBoolVarArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && OZ_isInt(OZ_in(2)) && OZ_isIntConLevel(OZ_in(3)) && OZ_isPropKind(OZ_in(4))){
     /**
@@ -1091,7 +1091,6 @@ OZ_BI_define(gfd_count_4,4,0){
     /**
        count (Space *home, const IntVarArgs &x, const IntSetArgs &c, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
      */
-    //DECLARE_INT_SET_ARGS(1, __c);
     Gecode::IntSetArgs __c = getIntSetArgs(OZ_in(1));
     
     try{
@@ -1139,7 +1138,6 @@ OZ_BI_define(gfd_count_5,5,0){
     /**
        count (Space *home, const IntVarArgs &x, const IntSetArgs &c, const IntArgs &v, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
      */
-    //DECLARE_INT_SET_ARGS(1, __c);
     Gecode::IntSetArgs __c = getIntSetArgs(OZ_in(1));
     
     try{

@@ -84,7 +84,6 @@ OZ_BI_define(gfs_projector_4,4,0){
 
 OZ_BI_define(gfs_projector_3,3,0){
   DeclareGSpace(home);
-  DECLARE_SETVARARGS(0, __xa, home);
   DECLARE_PROJECTOR_SET(1, __ps);
   DeclareBool(2, __negated);
   try{
@@ -156,7 +155,7 @@ OZ_BI_define(gfs_dom_3,3,0){
     SuspendPosting(OZ_in(i));
 
   SetVar *__s = setOrSetVar(OZ_in(0));
-  DeclareSetRelType(1, __r);
+  SetRelType __r = getSetRelType(OZ_in(1));
 
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
      OZ_isInt(OZ_in(2))){
@@ -179,7 +178,7 @@ OZ_BI_define(gfs_dom_3,3,0){
       void Gecode::dom (Space *home, SetVar x, SetRelType r, const IntSet &s)
       Propagates $ x \sim_r s$. 
     */
-    DECLARE_INT_SET(2, __is);
+    IntSet __is = getIntSet(OZ_in(2));
     try{
       Gecode::dom(home, *__s, __r, __is);
       delete __s;
@@ -203,7 +202,7 @@ OZ_BI_define(gfs_dom_4,4,0){
     SuspendPosting(OZ_in(i));
   
   SetVar *__s = setOrSetVar(OZ_in(0));
-  DeclareSetRelType(1, __r);
+  SetRelType __r = getSetRelType(OZ_in(1));
   
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
      OZ_isInt(OZ_in(2)) && OZ_isInt(OZ_in(3))){
@@ -245,7 +244,7 @@ OZ_BI_define(gfs_dom_4,4,0){
       BoolVar b)
       Post propagator for $ (x \sim_r s) \Leftrightarrow b $. 
      */
-    DECLARE_INT_SET(2, __is);
+    IntSet __is = getIntSet(OZ_in(2));
     BoolVar *__b = boolOrBoolVar(OZ_in(3));
     try{
       Gecode::dom(home, *__s, __r, __is, *__b);
@@ -270,7 +269,7 @@ OZ_BI_define(gfs_dom_5,5,0){
     SuspendPosting(OZ_in(i));
 
   SetVar *__x = setOrSetVar(OZ_in(0));
-  DeclareSetRelType(1, __r);
+  SetRelType __r = getSetRelType(OZ_in(1));
   DeclareInt2(2, __i);
   DeclareInt2(3, __j);
   BoolVar *__b = boolOrBoolVar(OZ_in(4));
@@ -341,7 +340,7 @@ OZ_BI_define(gfs_rel_3,3,0){
        rel (Space *home, SetVar x, SetRelType r, SetVar y)
      */
     SetVar *__x = setOrSetVar(OZ_in(0));
-    DeclareSetRelType(1, __r);
+    SetRelType __r = getSetRelType(OZ_in(1));
     SetVar *__y = setOrSetVar(OZ_in(2));
 
     try{
@@ -358,7 +357,7 @@ OZ_BI_define(gfs_rel_3,3,0){
        rel (Space *home, SetVar s, SetRelType r, IntVar x)
      */
     SetVar *__s = setOrSetVar(OZ_in(0));
-    DeclareSetRelType(1, __r);
+    SetRelType __r = getSetRelType(OZ_in(1));
     IntVar *__x = intOrIntVar(OZ_in(2));
     try{
       Gecode::rel(home, *__s, __r, *__x);
@@ -375,7 +374,7 @@ OZ_BI_define(gfs_rel_3,3,0){
        rel (Space *home, IntVar x, SetRelType r, SetVar s)
      */
     IntVar *__x = intOrIntVar(OZ_in(0));
-    DeclareSetRelType(1, __r);
+    SetRelType __r = getSetRelType(OZ_in(1));
     SetVar *__s = setOrSetVar(OZ_in(2));
     try{
       Gecode::rel(home, *__x, __r, *__s);
@@ -392,7 +391,7 @@ OZ_BI_define(gfs_rel_3,3,0){
        rel (Space *home, SetVar s, IntRelType r, IntVar x)
      */
     SetVar *__s = setOrSetVar(OZ_in(0));
-    DeclareIntRelType(1, __r);
+    IntRelType __r = getIntRelType(OZ_in(1));
     IntVar *__x = intOrIntVar(OZ_in(2));
     try{
       Gecode::rel(home, *__s, __r, *__x);
@@ -408,7 +407,7 @@ OZ_BI_define(gfs_rel_3,3,0){
        rel (Space *home, IntVar x, IntRelType r, SetVar s)
      */
     IntVar *__x = intOrIntVar(OZ_in(0));
-    DeclareIntRelType(1, __r);
+    IntRelType __r = getIntRelType(OZ_in(1));
     SetVar *__s = setOrSetVar(OZ_in(2));
     try{
       Gecode::rel(home, *__x, __r, *__s);
@@ -423,8 +422,8 @@ OZ_BI_define(gfs_rel_3,3,0){
     /**
        rel (Space *home, SetOpType op, const SetVarArgs &x, SetVar y)
      */
-    DeclareSetOpType(0, __op);
-    DECLARE_SETVARARGS(1, __x, home);
+    SetOpType __op = getSetOpType(OZ_in(0));
+    SetVarArgs __x = getSetVarArgs(OZ_in(1));
     SetVar *__y = setOrSetVar(OZ_in(2));
     try{
       Gecode::rel(home, __op, __x, *__y);
@@ -439,8 +438,9 @@ OZ_BI_define(gfs_rel_3,3,0){
     /**
        rel (Space *home, SetOpType op, const IntVarArgs &x, SetVar y)
      */
-    DeclareSetOpType(0, __op);
-    DECLARE_INTVARARGS(1, __x, home);
+    SetOpType __op = getSetOpType(OZ_in(0));
+    IntVarArgs __x = getIntVarArgs(OZ_in(1));
+
     SetVar *__y = setOrSetVar(OZ_in(2));
     try{
       Gecode::rel(home, __op, __x, *__y);
@@ -470,7 +470,7 @@ OZ_BI_define(gfs_rel_4,4,0){
        rel (Space *home, SetVar x, SetRelType r, SetVar y, BoolVar b)
      */
     SetVar *__x = setOrSetVar(OZ_in(0));
-    DeclareSetRelType(1, __r);
+    SetRelType __r = getSetRelType(OZ_in(1));
     SetVar *__y = setOrSetVar(OZ_in(2));
     BoolVar *__b = boolOrBoolVar(OZ_in(3));
     
@@ -488,7 +488,7 @@ OZ_BI_define(gfs_rel_4,4,0){
        rel (Space *home, SetVar s, SetRelType r, IntVar x, BoolVar b)
      */
     SetVar *__s = setOrSetVar(OZ_in(0));
-    DeclareSetRelType(1, __r);
+    SetRelType __r = getSetRelType(OZ_in(1));
     IntVar *__x = intOrIntVar(OZ_in(2));
     BoolVar *__b = boolOrBoolVar(OZ_in(3));
     
@@ -506,7 +506,7 @@ OZ_BI_define(gfs_rel_4,4,0){
        rel (Space *home, IntVar x, SetRelType r, SetVar s, BoolVar b)
      */
     IntVar *__x = intOrIntVar(OZ_in(0));
-    DeclareSetRelType(1, __r);
+    SetRelType __r = getSetRelType(OZ_in(1));
     SetVar *__s = setOrSetVar(OZ_in(2));
     BoolVar *__b = boolOrBoolVar(OZ_in(3));
 
@@ -523,9 +523,9 @@ OZ_BI_define(gfs_rel_4,4,0){
     /**
        rel (Space *home, SetOpType op, const SetVarArgs &x, const IntSet &z, SetVar y)
      */
-    DeclareSetOpType(0, __op);
-    DECLARE_SETVARARGS(1, __x, home);
-    DECLARE_INT_SET(2, __z);
+    SetOpType __op = getSetOpType(OZ_in(0));
+    SetVarArgs __x = getSetVarArgs(OZ_in(1));
+    IntSet __z = getIntSet(OZ_in(2));
     SetVar *__y = setOrSetVar(OZ_in(3));
     try{
       Gecode::rel(home, __op, __x, __z, *__y);
@@ -540,9 +540,9 @@ OZ_BI_define(gfs_rel_4,4,0){
     /**
        rel (Space *home, SetOpType op, const IntVarArgs &x, const IntSet &z, SetVar y)
      */
-    DeclareSetOpType(0, __op);
-    DECLARE_INTVARARGS(1, __x, home);
-    DECLARE_INT_SET(2, __z);
+    SetOpType __op = getSetOpType(OZ_in(0));
+    IntVarArgs __x = getIntVarArgs(OZ_in(1));
+    IntSet __z = getIntSet(OZ_in(2));
     SetVar *__y = setOrSetVar(OZ_in(3));
     try{
       Gecode::rel(home, __op, __x, __z, *__y);
@@ -566,8 +566,8 @@ OZ_BI_define(gfs_rel_5,5,0){
   for(int i=0; i<5; i++)
     SuspendPosting(OZ_in(i));
   
-  DeclareSetOpType(1, __op);
-  DeclareSetRelType(3, __r);
+  SetOpType __op = getSetOpType(OZ_in(1));
+  SetRelType __r = getSetRelType(OZ_in(3));
 
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetOpType(OZ_in(1)) && 
      OZ_isGeSetVar(OZ_in(2)) && OZ_isSetRelType(OZ_in(3)) && 
@@ -592,7 +592,7 @@ OZ_BI_define(gfs_rel_5,5,0){
     /**
        rel (Space *home, const IntSet &x, SetOpType op, SetVar y, SetRelType r, SetVar z)
      */
-    DECLARE_INT_SET(0, __x);
+    IntSet __x = getIntSet(OZ_in(0));
     SetVar *__y = setOrSetVar(OZ_in(2));
     SetVar *__z = setOrSetVar(OZ_in(4));
     try{
@@ -610,7 +610,7 @@ OZ_BI_define(gfs_rel_5,5,0){
        rel (Space *home, SetVar x, SetOpType op, const IntSet &y, SetRelType r, SetVar z)
      */
     SetVar *__x = setOrSetVar(OZ_in(0));
-    DECLARE_INT_SET(2, __y);
+    IntSet __y = getIntSet(OZ_in(2));
     SetVar *__z = setOrSetVar(OZ_in(4));
     try{
       Gecode::rel(home, *__x, __op, __y, __r, *__z);
@@ -628,7 +628,7 @@ OZ_BI_define(gfs_rel_5,5,0){
      */
     SetVar *__x = setOrSetVar(OZ_in(0));
     SetVar *__y = setOrSetVar(OZ_in(2));
-    DECLARE_INT_SET(4, __z);
+    IntSet __z = getIntSet(OZ_in(4));
     try{
       Gecode::rel(home, *__x, __op, *__y, __r, __z);
       delete __x, __y;
@@ -643,9 +643,9 @@ OZ_BI_define(gfs_rel_5,5,0){
     /**
        rel (Space *home, const IntSet &x, SetOpType op, SetVar y, SetRelType r, const IntSet &z)
      */
-    DECLARE_INT_SET3(__x, val, 0);
+    IntSet __x = getIntSet3(OZ_in(0));
     SetVar *__y = setOrSetVar(OZ_in(2));
-    DECLARE_INT_SET3(__z, val1, 4);
+    IntSet __z = getIntSet3(OZ_in(4));
     try{
       Gecode::rel(home, __x, __op, *__y, __r, __z);
       delete __y;
@@ -661,8 +661,8 @@ OZ_BI_define(gfs_rel_5,5,0){
        rel (Space *home, SetVar x, SetOpType op, const IntSet &y, SetRelType r, const IntSet &z)
      */
     SetVar *__x = setOrSetVar(OZ_in(0));
-    DECLARE_INT_SET3(__y, val, 2);
-    DECLARE_INT_SET3(__z, val2, 4);
+    IntSet __y = getIntSet(OZ_in(2));
+    IntSet __z = getIntSet(OZ_in(4));
     try{
       Gecode::rel(home, *__x, __op, __y, __r, __z);
       delete __x;
@@ -736,7 +736,7 @@ OZ_BI_define(gfs_sequence_1,1,0){
       void Gecode::sequence (Space *home, const SetVarArgs &x)
       Post propagator for $\forall 0\leq i< |x|-1 : \max(x_i)<\min(x_{i+1})$. 
     */ 
-    DECLARE_SETVARARGS(0, __x, home);
+    SetVarArgs __x = getSetVarArgs(OZ_in(0));
     try{
       Gecode::sequence(home, __x);
 
@@ -765,7 +765,7 @@ OZ_BI_define(gfs_sequentialUnion_2,2,0){
       Post propagator for $\forall 0\leq i< |x|-1 : \max(x_i)<\min(x_{i+1})$ 
       and $ x = \bigcup_{i\in\{0,\dots,n-1\}} y_i $. 
     */
-    DECLARE_SETVARARGS(0, __y, home);
+    SetVarArgs __y = getSetVarArgs(OZ_in(0));
     SetVar *__x = setOrSetVar(OZ_in(1));
     try{
       Gecode::sequentialUnion(home, __y, *__x);
@@ -803,7 +803,7 @@ OZ_BI_define(atmostOne_2,2,0){
       $\forall 0\leq i<j\leq |x| : |x_i\cap x_j|\leq 1$. 
     */
 
-    DECLARE_SETVARARGS(0, __x, home);
+    SetVarArgs __x = getSetVarArgs(OZ_in(0));
     DeclareInt2(1, __c);
 
     try{
@@ -868,7 +868,7 @@ OZ_BI_define(gfs_match_2,2,0){
       sorted in non-descending order. 
     */
     SetVar *__s = setOrSetVar(OZ_in(0));
-    DECLARE_INTVARARGS(1, __x, home);
+    IntVarArgs __x = getIntVarArgs(OZ_in(1));
 
     try{
       Gecode::match(home, *__s, __x);
@@ -898,8 +898,8 @@ OZ_BI_define(gfs_channel_2,2,0){
       const SetVarArgs &y)
       Post propagator for $x_i=j \Leftrightarrow i\in y_j$. 
     */
-    DECLARE_INTVARARGS(0, __x, home);
-    DECLARE_SETVARARGS(1, __y, home);
+    IntVarArgs __x = getIntVarArgs(OZ_in(0));
+    SetVarArgs __y = getSetVarArgs(OZ_in(1));
     try{
       Gecode::channel(home, __x, __y);
 
@@ -913,7 +913,7 @@ OZ_BI_define(gfs_channel_2,2,0){
       void Gecode::channel (Space *home, const BoolVarArgs &x, SetVar y)
       Post propagator for $x_i=1 \Leftrightarrow i\in y$. 
     */
-    DECLARE_BOOLVARARGS(0, __x, home);
+    BoolVarArgs __x = getBoolVarArgs(OZ_in(0));
     SetVar *__y = setOrSetVar(OZ_in(1));
     try{
       Gecode::channel(home, __x, *__y);
@@ -1002,8 +1002,8 @@ OZ_BI_define(gfs_weights_4,4,0){
       const IntArgs &weights, SetVar x, IntVar y)
       Post propagator for $y = \mathrm{weight}(x)$. 
     */
-    DECLARE_INTARGS(0, __elements);
-    DECLARE_INTARGS(1, __weights);
+    IntArgs __elements = getIntArgs(OZ_in(0));
+    IntArgs __weights = getIntArgs(OZ_in(1));
     SetVar *__x = setOrSetVar(OZ_in(2));
     IntVar *__y = intOrIntVar(OZ_in(3));
     try{
@@ -1043,7 +1043,7 @@ OZ_BI_define(gfs_elementsUnion_3,3,0){
       SetVar z)
       Post propagator for $ z=\bigcup\langle x_0,\dots,x_{n-1}\rangle[y] $. 
     */
-    DECLARE_SETVARARGS(0, __x, home);
+    SetVarArgs __x = getSetVarArgs(OZ_in(0));
     try{
       Gecode::elementsUnion(home, __x, *__y, *__z);
     }
@@ -1058,7 +1058,7 @@ OZ_BI_define(gfs_elementsUnion_3,3,0){
       SetVar z)
       Post propagator for $ z=\bigcup\langle s_0,\dots,s_{n-1}\rangle[y] $. 
     */
-    DECLARE_INT_SET_ARGS(0, __s);
+    IntSetArgs __s = getIntSetArgs(OZ_in(0));
     try{
       Gecode::elementsUnion(home, __s, *__y, *__z);
     }
@@ -1090,10 +1090,10 @@ OZ_BI_define(gfs_elementsInter_4,4,0){
       using u as universe. 
     */
     
-    DECLARE_SETVARARGS(0, __x, home);
+    SetVarArgs __x = getSetVarArgs(OZ_in(0));
     SetVar *__y = setOrSetVar(OZ_in(1));
     SetVar *__z = setOrSetVar(OZ_in(2));
-    DECLARE_INT_SET(3, __u);
+    IntSet __u = getIntSet(OZ_in(3));
     
     try{
       Gecode::elementsInter(home, __x, *__y, *__z, __u);
@@ -1125,7 +1125,7 @@ OZ_BI_define(gfs_elementsInter_3,3,0){
       using $ \mathcal{U} $ as universe. 
     */
     
-    DECLARE_SETVARARGS(0, __x, home);
+    SetVarArgs __x = getSetVarArgs(OZ_in(0));
     SetVar *__y = setOrSetVar(OZ_in(1));
     SetVar *__z = setOrSetVar(OZ_in(2));
     try{
@@ -1161,7 +1161,7 @@ OZ_BI_define(gfs_element_3,3,0){
       Post propagator for $ z=\langle x_0,\dots,x_{n-1}\rangle[y] $. 
     */
     
-    DECLARE_SETVARARGS(0, __x, home);
+    SetVarArgs __x = getSetVarArgs(OZ_in(0));
     try{
       Gecode::element(home, __x, *__y, *__z);
       delete __y;
@@ -1178,7 +1178,7 @@ OZ_BI_define(gfs_element_3,3,0){
       Post propagator for $ z=\langle s_0,\dots,s_{n-1}\rangle[y] $. 
     */
     
-    DECLARE_INT_SET_ARGS(0, __s);
+    IntSetArgs __s = getIntSetArgs(OZ_in(0));
     try{
       Gecode::element(home, __s, *__y, *__z);
       delete __y;
@@ -1209,7 +1209,7 @@ OZ_BI_define(gfs_elementsDisjoint_2,2,0){
       Post propagator for $ \parallel\langle x_0,\dots,x_{n-1}\rangle[y] $. 
     */
     
-    DECLARE_SETVARARGS(0, __x, home);
+    SetVarArgs __x = getSetVarArgs(OZ_in(0));
     SetVar *__y = setOrSetVar(OZ_in(1));
 
     try{
