@@ -52,9 +52,7 @@ Bool GeIntVar::validV(OZ_Term val) {
     if(n >= Int::Limits::min &&
        n <= Int::Limits::max)
       {
-	IntVar *iv = getIntVarInfoPtr();
-	IntView w((*iv));
-	delete iv;
+	IntView w = getIntView();
 	return w.in(n);
       }
     else {
@@ -73,7 +71,8 @@ OZ_Term GeIntVar::statusV() {
 VarImpBase* GeIntVar::clone(void) {
   GenericSpace* gs = getGSpace(); //extVar2Var(this)->getBoardInternal()->getGenericSpace(true);
   Assert(gs);
-  IntVar *v = getIntVarInfoPtr();
+  Int::IntView iv(static_cast<IntVarImp*>(gs->getVar(index)));
+  IntVar *v = new IntVar(iv);
   IntVar x;
   x.update(gs,false,(*v));
   delete v;
@@ -85,16 +84,13 @@ VarImpBase* GeIntVar::clone(void) {
 //x is the local variable,  the one that its domain is modified
 inline
 bool GeIntVar::intersect(TaggedRef x) {
-  IntVar *gv = getIntVarInfoPtr();
-  ViewRanges<IntView> gvr(*gv);
+  IntView gv = getIntView();
+  ViewRanges<IntView> gvr(gv);
 
-  IntVar *liv = get_IntVarInfoPtr(x);
-  IntView vw(*liv);
-  
+  IntView vw = get_IntView(x);
   //printf("GeIntVar.cc min1=%d - max1=%d -- min2=%d - max2=%d\n",vw.min(), vw.max(),tmp2.min(),tmp2.max());fflush(stdout);  
   //TODO: Ask Alejandro about the use of getGSpace() instead of oz_currentBoard()
-  delete gv;
-  delete liv;
+
   return (vw.inter_r(oz_currentBoard()->getGenericSpace(),gvr)==ME_GEN_FAILED ? false: true);
 }
 
@@ -102,9 +98,7 @@ bool GeIntVar::intersect(TaggedRef x) {
 //lx is the local value
 inline
 bool GeIntVar::In(TaggedRef lx) {
-  IntVar *gv = getIntVarInfoPtr();
-  IntView vw(*gv);
-  delete gv;
+  IntView vw = getIntView();
   return vw.in(oz_intToC(lx));
 }
 
@@ -118,12 +112,10 @@ TaggedRef GeIntVar::clone(TaggedRef v) {
 inline
 bool GeIntVar::hasSameDomain(TaggedRef v) {
   Assert(OZ_isGeIntVar(v));
-  IntVar *v1 = get_IntVarInfoPtr(v);
-  IntVar *v2 = getIntVarInfoPtr();
-  ViewRanges< IntView > vr1 (*v1);
-  ViewRanges< IntView > vr2 (*v2);
-  delete v1;
-  delete v2;
+  IntView v1 = get_IntView(v);
+  IntView v2 = getIntView();
+  ViewRanges< IntView > vr1 (v1);
+  ViewRanges< IntView > vr2 (v2);
   
   while(true) {
     if(!vr1() && !vr2()) return true;
@@ -142,12 +134,10 @@ TaggedRef GeIntVar::newVar(void) {
 
 inline
 bool GeIntVar::IsEmptyInter(TaggedRef* var1,  TaggedRef* var2) {
-  IntVar *v1 = get_IntVarInfoPtr(*var1);
-  IntVar *v2 = get_IntVarInfoPtr(*var2);
-  ViewRanges<IntView > vr1 (*v1);
-  ViewRanges<IntView > vr2 (*v2);
-  delete v1;
-  delete v2;
+  IntView v1 = get_IntView(*var1);
+  IntView v2 = get_IntView(*var2);
+  ViewRanges<IntView > vr1 (v1);
+  ViewRanges<IntView > vr2 (v2);
   
   while(true) {
     if(!vr1() || !vr2() ) return true;
@@ -162,11 +152,10 @@ bool GeIntVar::IsEmptyInter(TaggedRef* var1,  TaggedRef* var2) {
 }
 
 void GeIntVar::toStream(ostream &out) {
-  IntVar *iv =  getIntVarInfoPtr();
+  IntView iv =  getIntView();
   std::stringstream oss;
-  oss << (*iv);
+  oss << (iv);
   out << "<GeIntVar " << oss.str().c_str() << ">"; 
-  delete iv;
 }
 
 // Init the the module containing the propagators

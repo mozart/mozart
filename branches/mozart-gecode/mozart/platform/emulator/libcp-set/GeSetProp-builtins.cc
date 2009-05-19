@@ -353,10 +353,9 @@ OZ_BI_define(gfs_reifiedIsIn, 3, 0)
   if(OZ_isGeIntVar(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2))){
     SetVar *fsvar = setOrSetVar(OZ_in(1));
     BoolVar *bv = boolOrBoolVar(OZ_in(2));
-    IntVar *vaa = intOrIntVar(OZ_in(0));
-    IntView iv(*vaa);
+    IntView iv = intOrIntView(OZ_in(0));
     Gecode::Set::SingletonView sin(iv);
-    delete vaa;
+    
     try{
       IsInReified(gs, fsvar->var(), sin, bv->var());
       delete fsvar, bv;

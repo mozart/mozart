@@ -40,26 +40,30 @@ OZ_BI_define(int_count,5,0)
 {
   DeclareGSpace(sp);
   IntVarArgs arreglo = getIntVarArgs(OZ_in(0));
-  IntVar x1,x3;
+  IntView x1,x3;
   IntRelType rl = getIntRelType(OZ_in(2));
   IntConLevel cl = getIntConLevel(OZ_in(4));
   
   if(OZ_isGeIntVar(OZ_deref(OZ_in(1))))
-    x1 = get_IntVar(OZ_in(1));
+    x1 = intOrIntView(OZ_in(1));
   else if (OZ_isInt(OZ_in(1))) {
     OZ_declareInt(1,valTmp);
-    IntVar tmp(sp,valTmp,valTmp);
-    x1 = tmp;
+    IntVar *tmp = new IntVar(sp,valTmp,valTmp);
+    IntView view(*tmp);
+    delete tmp;
+    x1 = view;
   }
   else
     return OZ_typeError(1,"The second argument must be either Int or GeIntVar");
   
   if(OZ_isGeIntVar(OZ_deref(OZ_in(3))))
-    x3 = get_IntVar(OZ_in(3));
+    x3 = intOrIntView(OZ_in(3));
   else if (OZ_isInt(OZ_in(3))) {
     OZ_declareInt(3,valTmp);
-    IntVar tmp(sp,valTmp,valTmp);
-    x3 = tmp;
+    IntVar *tmp = new IntVar(sp,valTmp,valTmp);
+    IntView view(*tmp);
+    delete tmp;
+    x3 = view;
   }
   else
     return OZ_typeError(3,"The threeth argument must be either Int or GeIntVar");
@@ -110,12 +114,12 @@ OZ_BI_define(int_reified,3,0)
 {
   DeclareGSpace(sp);
   IntSet dom = getIntSet(OZ_in(0));
-  IntVar *v0 = intOrIntVar(OZ_in(1));
+  IntView v0 = intOrIntView(OZ_in(1));
   BoolVar *b0 = boolOrBoolVar(OZ_in(2));
   
   try{
-    Gecode::dom(sp,*v0,dom,*b0);
-    delete v0, b0;
+    Gecode::dom(sp,v0,dom,*b0);
+    delete b0;
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
