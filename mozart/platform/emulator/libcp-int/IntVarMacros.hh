@@ -51,15 +51,30 @@
  * \brief Return a IntVar from a integer or a GeIntVar
  * @param value integer or GeIntVar representing a IntVar
  */
+// inline
+// Gecode::IntVar * intOrIntVar(TaggedRef value){
+//   if(OZ_isInt(value)){
+//     return new IntVar(oz_currentBoard()->getGenericSpace(), OZ_intToC(value), OZ_intToC(value));
+//   }else {
+//     return get_IntVarPtr(value);
+//   }
+// }
+
+/**
+ * \brief Return a IntVar from a integer or a GeIntVar
+ * @param value integer or GeIntVar representing a IntVar
+ */
 inline
-Gecode::IntVar * intOrIntVar(TaggedRef value){
+IntView intOrIntView(TaggedRef value){
   if(OZ_isInt(value)){
-    return new IntVar(oz_currentBoard()->getGenericSpace(), OZ_intToC(value), OZ_intToC(value));
+    IntVar *iv = new IntVar(oz_currentBoard()->getGenericSpace(), OZ_intToC(value), OZ_intToC(value));
+    IntView vw(*iv);
+    delete iv;
+    return vw;
   }else {
-    return get_IntVarPtr(value);
+    return get_IntView(value);
   }
 }
-
 
 /**
  * \brief Return a IntVarArgs. Space stability is affected as a side effect.
@@ -81,9 +96,8 @@ Gecode::IntVarArgs getIntVarArgs(TaggedRef vaar){
       sz = OZ_length(t);
       IntVarArgs array(sz);
       for(int i=0; OZ_isCons(t); t=OZ_tail(t),i++){
-	IntVar *iv = intOrIntVar(OZ_deref(OZ_head(t)));
-	array[i] = *iv;
-	delete iv;
+	IntView iv = intOrIntView(OZ_deref(OZ_head(t)));
+	array[i] = iv;
       }
       return array;
     } else 
@@ -91,9 +105,8 @@ Gecode::IntVarArgs getIntVarArgs(TaggedRef vaar){
 	sz=OZ_width(t);
 	IntVarArgs array(sz);
 	for(int i=0; i<sz; i++) {
-	  IntVar *iv = intOrIntVar(OZ_getArg(t,i));
-	  array[i] = *iv;
-	  delete iv;
+	  IntView iv = intOrIntView(OZ_getArg(t,i));
+	  array[i] = iv;
 	}
 	return array;
       } else {
@@ -102,9 +115,8 @@ Gecode::IntVarArgs getIntVarArgs(TaggedRef vaar){
 	sz = OZ_width(t);
 	IntVarArgs array(sz);
 	for(int i=0; OZ_isCons(al); al=OZ_tail(al),i++) {
-	  IntVar *iv = intOrIntVar(OZ_subtree(t,OZ_head(al)));
-	  array[i] = *iv;
-	  delete iv;
+	  IntView iv = intOrIntView(OZ_subtree(t,OZ_head(al)));
+	  array[i] = iv;
 	}
 	return array;
       }  

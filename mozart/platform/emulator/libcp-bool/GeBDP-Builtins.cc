@@ -269,10 +269,9 @@ OZ_BI_define(gbd_linear_5,5,0){
     /**
        void Gecode::linear (Space* home, const BoolVarArgs& x, IntRelType r, IntVar y, IntConLevel icl, PropKind pk); 
     */
-    IntVar *__y = intOrIntVar(OZ_in(2));
+    IntView __y = intOrIntView(OZ_in(2));
     try{
-      Gecode::linear(home, __x, __r, *__y, __icl, __pk);
-      delete __y;
+      Gecode::linear(home, __x, __r, __y, __icl, __pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -318,11 +317,11 @@ OZ_BI_define(gbd_linear_6,6,0){
     */
     BoolVarArgs __x = getBoolVarArgs(OZ_in(0));
     IntRelType __r = getIntRelType(OZ_in(1));
-    IntVar *__y = intOrIntVar(OZ_in(2));
+    IntView __y = intOrIntView(OZ_in(2));
     BoolVar *__b = boolOrBoolVar(OZ_in(3));
     try{
-      Gecode::linear(home, __x, __r, *__y, *__b, __icl, __pk);
-      delete __y, __b;
+      Gecode::linear(home, __x, __r, __y, *__b, __icl, __pk);
+      delete __b;
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -350,10 +349,9 @@ OZ_BI_define(gbd_linear_6,6,0){
     IntArgs __a = getIntArgs(OZ_in(0));
     BoolVarArgs __x = getBoolVarArgs(OZ_in(1));
     IntRelType __r = getIntRelType(OZ_in(2));
-    IntVar *__y = intOrIntVar(OZ_in(3));
+    IntView __y = intOrIntView(OZ_in(3));
     try{
-      Gecode::linear(home, __a, __x, __r, *__y, __icl, __pk);
-      delete __y;
+      Gecode::linear(home, __a, __x, __r, __y, __icl, __pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -397,10 +395,9 @@ OZ_BI_define(gbd_linear_7,7,0){
     /**
        void Gecode::linear (Space* home, const IntArgs& a, const BoolVarArgs& x, IntRelType r, IntVar y, BoolVar b, IntConLevel icl, PropKind pk);
     */   
-    IntVar *__y = intOrIntVar(OZ_in(3));
+    IntView __y = intOrIntView(OZ_in(3));
     try{
-      Gecode::linear(home, __a, __x, __r, *__y, *__b, __icl, __pk);
-      delete __y;
+      Gecode::linear(home, __a, __x, __r, __y, *__b, __icl, __pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
