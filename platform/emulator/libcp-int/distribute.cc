@@ -51,9 +51,7 @@ class VarBasics<IntView, int> {
 public:
   static IntView getView(OZ_Term t) {
     Assert(OZ_isGeIntVar(t));
-    IntVar *iv = get_IntVarInfoPtr(t);
-    IntView vi(*iv);
-    delete iv;
+    IntView vi = get_IntView(t);
     return vi;
   }
   static bool assigned(OZ_Term t) {

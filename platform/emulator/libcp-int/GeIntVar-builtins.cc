@@ -52,17 +52,15 @@ OZ_BI_define(new_intvar,1,1)
   //DECLARE_INT_SET(arg,dom);
   //IntSet dom = getIntSet(OZ_in(0));
   if (OZ_isGeIntVar(OZ_in(1))) {
-    // left = right(dom)
     GenericSpace *sp = oz_currentBoard()->getGenericSpace(); 
-    IntVar *left = get_IntVarPtr(OZ_deref(OZ_in(1)));
     IntSet dom = getIntSet(OZ_in(0));
     IntVar right(sp,dom);
-    IntView vl(*left), vr(right);
+    IntView vl = get_IntView(OZ_in(1));
+    IntView vr(right);
     ViewRanges<IntView> vvr(vr);
     if (vl.inter_r(sp,vvr)==ME_GEN_FAILED ) {
       return FAILED;
     }
-    delete left;
     OZ_RETURN(OZ_in(1));
   } else {
     if(OZ_label(arg) == AtomCompl) {
@@ -122,9 +120,7 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getMin,1,1)
 {
-  IntVar *iv = intOrIntVar(OZ_in(0));
-  IntView view(*iv);
-  delete iv;
+  IntView view = intOrIntView(OZ_in(0));
   OZ_RETURN_INT(view.min());
 }
 OZ_BI_end
@@ -138,9 +134,7 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getMax,1,1)
 {
-  IntVar *iv = intOrIntVar(OZ_in(0));
-  IntView view(*iv);
-  delete iv;
+  IntView view = intOrIntView(OZ_in(0));
   OZ_RETURN_INT(view.max());
 }
 OZ_BI_end
@@ -153,9 +147,7 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getSize,1,1)
 {
-  IntVar *iv = intOrIntVar(OZ_in(0));
-  IntView view(*iv);
-  delete iv;
+  IntView view = intOrIntView(OZ_in(0));
   OZ_RETURN_INT(view.size());
 }
 OZ_BI_end
@@ -169,7 +161,7 @@ OZ_BI_define(int_dom,1,1)
 {
   if(!OZ_isGeIntVar(OZ_deref(OZ_in(0))))
     OZ_typeError(0,"IntVar");
-  IntVar Tmp = get_IntVar(OZ_in(0));
+  IntView Tmp = get_IntView(OZ_in(0));
   
   IntVarRanges TmpRange(Tmp);
   int TotalRangs = 0;
@@ -184,6 +176,7 @@ OZ_BI_define(int_dom,1,1)
 
   if(TotalRangs==1) OZ_RETURN(TmpArray[0]);
   OZ_Term DomList = OZ_toList(TotalRangs,TmpArray);
+  
   OZ_RETURN(DomList);
 }
 OZ_BI_end
@@ -198,7 +191,7 @@ OZ_BI_define(int_domList,1,1)
 {
   if(!OZ_isGeIntVar(OZ_deref(OZ_in(0))))
     OZ_typeError(0,"IntVar");
-  IntVar Tmp = get_IntVar(OZ_in(0));
+  IntView Tmp = get_IntView(OZ_in(0));
   IntVarRanges TmpRange(Tmp);
   OZ_Term TmpArray[Tmp.size()];
   int i = 0;
@@ -221,9 +214,9 @@ OZ_BI_define(int_nextLarger,2,1)
   if(!OZ_isGeIntVar(OZ_deref(OZ_in(0))))
     OZ_typeError(0,"IntVar");
   int Val = OZ_intToC(OZ_in(1));
-  IntVar Tmp = get_IntVar(OZ_in(0));
+  IntView Tmp = get_IntView(OZ_in(0));
   IntVarRanges TmpRange(Tmp);
-
+  
   for(;TmpRange(); ++TmpRange) {
     if(TmpRange.min() <= Val && TmpRange.max() > Val)
       OZ_RETURN_INT(Val+1);
@@ -246,11 +239,13 @@ OZ_BI_define(int_nextSmaller,2,1)
   if(!OZ_isGeIntVar(OZ_deref(OZ_in(0))))
     OZ_typeError(0,"IntVar");
   int Val = OZ_intToC(OZ_in(1));
-  IntVar Tmp = get_IntVar(OZ_in(0));
+  IntView Tmp = get_IntView(OZ_in(0));
   IntVarRanges TmpRange(Tmp);
   int Min = Gecode::Int::Limits::max;
-  if(Tmp.min() >= Val)
+  if(Tmp.min() >= Val){
     return OZ_typeError(0,"Input value is smaller that domain of input variable");
+  }
+  
   for(;TmpRange(); ++TmpRange) {
     if(TmpRange.min() >= Val)
       OZ_RETURN_INT(Min);
@@ -272,9 +267,7 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getMed,1,1)
 {
-  IntVar *iv = intOrIntVar(OZ_in(0));
-  IntView view(*iv);
-  delete iv;
+  IntView view = intOrIntView(OZ_in(0));
   OZ_RETURN_INT(view.med());
 }
 OZ_BI_end
@@ -288,9 +281,7 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getWidth,1,1)
 {
-  IntVar *iv = intOrIntVar(OZ_in(0));
-  IntView view(*iv);
-  delete iv;
+  IntView view = intOrIntView(OZ_in(0));
   OZ_RETURN_INT(view.width());
 }
 OZ_BI_end
@@ -303,9 +294,7 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getRegretMin,1,1)
 {
-  IntVar *iv = intOrIntVar(OZ_in(0));
-  IntView view(*iv);
-  delete iv;
+  IntView view = intOrIntView(OZ_in(0));
   OZ_RETURN_INT(view.regret_min());
 }
 OZ_BI_end
@@ -318,9 +307,7 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_getRegretMax,1,1)
 {
-  IntVar *iv = intOrIntVar(OZ_in(0));
-  IntView view(*iv);
-  delete iv;
+  IntView view = intOrIntView(OZ_in(0));
   OZ_RETURN_INT(view.regret_max());
 }
 OZ_BI_end
@@ -333,9 +320,7 @@ OZ_BI_end
  */
 OZ_BI_define(intvar_propSusp,1,1)
 {
-  IntVar *iv = intOrIntVar(OZ_in(0));
-  IntView view(*iv);
-  delete iv;
+  IntView view = intOrIntView(OZ_in(0));
   GeVarBase *gv = get_GeVar(OZ_in(0));
   OZ_RETURN_INT(view.degree()-gv->varprops());
 }
