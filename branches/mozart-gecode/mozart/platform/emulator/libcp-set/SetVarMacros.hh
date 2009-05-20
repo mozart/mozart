@@ -43,15 +43,18 @@
 */
 
 /**
- * Return a SetVar pointer from a GeSetVar or SetValue
+ * Return a SetView from a GeSetVar or SetValue
  * @param set GeSetVar or SetValue
  */
 inline
-SetVar * setOrSetVar(TaggedRef set){
+SetView setOrSetView(TaggedRef set){
   if(SetValueM::OZ_isSetValueM(set)){
-    return new SetVar((oz_currentBoard()->getGenericSpace()), SetValueM::tagged2SetVal(set)->getLBValue(), SetValueM::tagged2SetVal(set)->getLBValue());
+    SetVar *sv = new SetVar((oz_currentBoard()->getGenericSpace()), SetValueM::tagged2SetVal(set)->getLBValue(), SetValueM::tagged2SetVal(set)->getLBValue());
+    SetView vw(*sv);
+    delete sv;
+    return vw;
   } else if (OZ_isGeSetVar(set)){
-    return get_SetVarPtr(set);
+    return get_SetView(set);
   }
 }
 
@@ -75,9 +78,8 @@ Gecode::SetVarArgs getSetVarArgs(TaggedRef vaar){
       sz = OZ_length(t);
       SetVarArgs array(sz);
       for(int i=0; OZ_isCons(t); t=OZ_tail(t),i++){
-	SetVar *iv = setOrSetVar(OZ_deref(OZ_head(t)));
-	array[i] = *iv;
-	delete iv;
+	SetView iv = setOrSetView(OZ_deref(OZ_head(t)));
+	array[i] = iv;
       }
       return array;
     } else 
@@ -85,9 +87,8 @@ Gecode::SetVarArgs getSetVarArgs(TaggedRef vaar){
 	sz=OZ_width(t);
 	SetVarArgs array(sz);
 	for(int i=0; i<sz; i++) {
-	  SetVar *iv = setOrSetVar(OZ_getArg(t,i));
-	  array[i] = *iv;
-	  delete iv;
+	  SetView iv = setOrSetView(OZ_getArg(t,i));
+	  array[i] = iv;
 	}
 	return array;
       } else {
@@ -96,9 +97,8 @@ Gecode::SetVarArgs getSetVarArgs(TaggedRef vaar){
 	sz = OZ_width(t);
 	SetVarArgs array(sz);
 	for(int i=0; OZ_isCons(al); al=OZ_tail(al),i++) {
-	  SetVar *iv = setOrSetVar(OZ_subtree(t,OZ_head(al)));
-	  array[i] = *iv;
-	  delete iv;
+	  SetView iv = setOrSetView(OZ_subtree(t,OZ_head(al)));
+	  array[i] = iv;
 	}
 	return array;
       }  

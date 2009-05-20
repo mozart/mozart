@@ -47,8 +47,7 @@ template<>
 class VarBasics<SetView, int> {
 public:
   static SetView getView(OZ_Term t) {
-    Assert(OZ_isGeSetVar(t));
-    return SetView(get_SetVarInfo(t).var());
+    return get_SetView(t);
   }
   static bool assigned(OZ_Term t) {
     /**

@@ -164,11 +164,9 @@ OZ_BI_define(gfs_unknownSize,1,1){
   int num = 0;
   
   if(OZ_isGeSetVar(OZ_in(0))){
-    SetVar *__s = setOrSetVar(OZ_in(0));
+    SetView v = setOrSetView(OZ_in(0));
     try{
-      Gecode::Set::SetView sv(*__s);
-      num = sv.unknownSize();
-      delete __s;
+      num = v.unknownSize();
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -212,14 +210,14 @@ OZ_BI_define(gfs_unknown,1,1){
   DeclareGSpace(home);
   
   if(OZ_isGeSetVar(OZ_in(0))){
-    SetVar *__s = setOrSetVar(OZ_in(0));
+    SetView __s = setOrSetView(OZ_in(0));
 
     int cont1 = 0;
-    Gecode::SetVarUnknownRanges ranges1(*__s);
+    Gecode::SetVarUnknownRanges ranges1(__s);
     for(;ranges1(); ++ranges1, cont1++);
     TaggedRef array[cont1];
 
-    Gecode::SetVarUnknownRanges ranges2(*__s);
+    Gecode::SetVarUnknownRanges ranges2(__s);
     int cont2 = 0;
 
     while(ranges2()){
@@ -237,7 +235,6 @@ OZ_BI_define(gfs_unknown,1,1){
       ++ranges2;
       cont2++;
     }
-    delete __s;
     OZ_RETURN(OZ_toList(cont2, array));  
   } else {
     /**anfelbar@: this is not what we want.
@@ -252,15 +249,14 @@ OZ_BI_define(gfs_unknownList,1,1){
   DeclareGSpace(home);
 
   if(OZ_isGeSetVar(OZ_in(0))){
-    SetVar *__s = setOrSetVar(OZ_in(0));
+    SetView sv = setOrSetView(OZ_in(0));
 
-    Gecode::Set::SetView sv(*__s);
     int n = sv.unknownSize();
     int cont=0;
     TaggedRef array[n];
 
     try{
-      Gecode::SetVarUnknownValues values(*__s);
+      Gecode::SetVarUnknownValues values(sv);
       while(values()){
 	//FIXME: makeTaggedSmallInt() is bad here, it causes an assertion due to overflow in mozart int limits
 	//but with OZ_int() the builtin blocks and it never returns :(
@@ -272,7 +268,6 @@ OZ_BI_define(gfs_unknownList,1,1){
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
     }
-    delete __s;
     OZ_RETURN(OZ_toList(n, array));
   }
   //TODO: raise a more descriptive error
@@ -285,14 +280,14 @@ OZ_BI_define(gfs_getGlb,1,1){
   DeclareGSpace(home);
   
   if(OZ_isGeSetVar(OZ_in(0))){
-    SetVar *__s = setOrSetVar(OZ_in(0));
+    SetView __s = setOrSetView(OZ_in(0));
     
     int cont1 = 0;
-    Gecode::SetVarGlbRanges ranges1(*__s);
+    Gecode::SetVarGlbRanges ranges1(__s);
     for(;ranges1(); ++ranges1, cont1++);
     TaggedRef array[cont1];
 
-    Gecode::SetVarGlbRanges ranges2(*__s);
+    Gecode::SetVarGlbRanges ranges2(__s);
     int cont2 = 0;
 
     while(ranges2()){
@@ -310,7 +305,6 @@ OZ_BI_define(gfs_getGlb,1,1){
       ++ranges2;
       cont2++;
     }
-    delete __s;
     OZ_RETURN(OZ_toList(cont2, array));
   }
 }OZ_BI_end
@@ -319,14 +313,14 @@ OZ_BI_define(gfs_getLub,1,1){
   DeclareGSpace(home);
   
   if(OZ_isGeSetVar(OZ_in(0))){
-    SetVar *__s = setOrSetVar(OZ_in(0));
+    SetView __s = setOrSetView(OZ_in(0));
     
     int cont1 = 0;
-    Gecode::SetVarLubRanges ranges1(*__s);
+    Gecode::SetVarLubRanges ranges1(__s);
     for(;ranges1(); ++ranges1, cont1++);
     TaggedRef array[cont1];
 
-    Gecode::SetVarLubRanges ranges2(*__s);
+    Gecode::SetVarLubRanges ranges2(__s);
     int cont2 = 0;
 
     while(ranges2()){
@@ -344,7 +338,6 @@ OZ_BI_define(gfs_getLub,1,1){
       ++ranges2;
       cont2++;
     }
-    delete __s;
     OZ_RETURN(OZ_toList(cont2, array));
   }
 }OZ_BI_end
@@ -353,14 +346,14 @@ OZ_BI_define(gfs_getGlbList,1,1){
   DeclareGSpace(home);
   
   if(OZ_isGeSetVar(OZ_in(0))){
-    SetVar *__s = setOrSetVar(OZ_in(0));
+    SetView __s = setOrSetView(OZ_in(0));
 
     int cont1 = 0;
-    Gecode::SetVarGlbValues values1(*__s);
+    Gecode::SetVarGlbValues values1(__s);
     for(;values1(); ++values1, cont1++);
     TaggedRef array[cont1];
 
-    Gecode::SetVarGlbValues values2(*__s);
+    Gecode::SetVarGlbValues values2(__s);
     int cont2 = 0;
 
     while(values2()){
@@ -368,7 +361,6 @@ OZ_BI_define(gfs_getGlbList,1,1){
       ++values2;
       cont2++;
     }
-    delete __s;
     OZ_RETURN(OZ_toList(cont2, array));
   }
 }OZ_BI_end
@@ -377,14 +369,14 @@ OZ_BI_define(gfs_getLubList,1,1){
   DeclareGSpace(home);
   
   if(OZ_isGeSetVar(OZ_in(0))){
-    SetVar *__s = setOrSetVar(OZ_in(0));
+    SetView __s = setOrSetView(OZ_in(0));
 
     int cont1 = 0;
-    Gecode::SetVarLubValues values1(*__s);
+    Gecode::SetVarLubValues values1(__s);
     for(;values1(); ++values1, cont1++);
     TaggedRef array[cont1];
 
-    Gecode::SetVarLubValues values2(*__s);
+    Gecode::SetVarLubValues values2(__s);
     int cont2 = 0;
 
     while(values2()){
@@ -392,7 +384,6 @@ OZ_BI_define(gfs_getLubList,1,1){
       ++values2;
       cont2++;
     }
-    delete __s;
     OZ_RETURN(OZ_toList(cont2, array));
   }
 }OZ_BI_end
