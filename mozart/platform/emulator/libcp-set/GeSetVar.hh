@@ -62,46 +62,18 @@ public:
   GeSetVar(int index) :
     GeVar(index,T_GeSetVar) {}
 
-  //TODO: Be carefull this function should return a view and not a variable
-  SetVar& getSetVar(void) {
-    GenericSpace *gs = getGSpace();
-    Set::SetView sv(static_cast<SetVarImp*>(gs->getVar(index)));
-    gs->makeUnstable();
-    SetVar *tmp = new SetVar(sv);
-    return (*tmp);
-  }
-
-  // the returned reference should be constant
-  SetVar& getSetVarInfo(void) {
-    Set::SetView sv(static_cast<SetVarImp*>(getGSpace()->getVar(index)));
-    SetVar *tmp = new SetVar(sv);
-    return (*tmp);
-  }
-
-
   /**
-   * Methods getSetVarPtr & getSetVarInfoPtr are intented to
-   * provide access to gecode variables with clean memory
-   * magnament. The returned pointer *most be deleted* whenever
-   * it is used.
+   * \brief Return a SetView from the corresponding SetVarImpl
+   * associated with this GeSetVar.
    */
-  SetVar * getSetVarPtr(void) {
-    GenericSpace *gs = getGSpace();
-    Set::SetView sv(static_cast<SetVarImp*>(gs->getVar(index)));
-    gs->makeUnstable();
-    return new SetVar(sv);
-  }
-
-  SetVar * getSetVarInfoPtr(void) {
+  SetView getSetView(void) {
     Set::SetView sv(static_cast<SetVarImp*>(getGSpace()->getVar(index)));
-    return new SetVar(sv);
+    return sv;
   }
 
-  
   //this is really working?
   virtual void printDomain(void) {
     Assert(false);
-    SetVar *tmp = getSetVarInfoPtr();
   }
   
   /**
@@ -132,10 +104,9 @@ public:
   virtual TaggedRef newVar(void);
 
   virtual void propagator(GenericSpace *s, GeVar *lgevar, GeVar *rgevar) {
-    SetVar *lsetvar = (static_cast<GeSetVar*>(lgevar))->getSetVarInfoPtr();
-    SetVar *rsetvar = (static_cast<GeSetVar*>(rgevar))->getSetVarInfoPtr();    
-    rel(s,*lsetvar, Gecode::SRT_EQ,*rsetvar);
-    delete lsetvar, rsetvar;
+    SetView lsetvar = (static_cast<GeSetVar*>(lgevar))->getSetView();
+    SetView rsetvar = (static_cast<GeSetVar*>(rgevar))->getSetView();    
+    rel(s,lsetvar, Gecode::SRT_EQ,rsetvar);
   }
 
   // TODO: see whether when getSetVarInfo is used is it possible to use a view.
@@ -143,9 +114,8 @@ public:
     //printf("bind GeSetVar.hh");fflush(stdout);
     IntSetRanges tmpLB(SetValueM::tagged2SetVal(val)->getLBValue());
     IntSetRanges tmpUB(SetValueM::tagged2SetVal(val)->getUBValue());
-    SetVar *sv = getSetVarInfoPtr();
-    SetView ViewVar(*sv);    
-    delete sv;
+    SetView ViewVar = getSetView();
+
     if(ViewVar.intersectI(s,tmpUB)!=Gecode::ME_GEN_FAILED)    
       return ViewVar.includeI(s,tmpLB);  
     return Gecode::ME_GEN_FAILED;
@@ -257,44 +227,14 @@ GeSetVar* get_GeSetVar(OZ_Term v, bool cgv = true) {
 }
 
 /**
-   \brief Retrieve gecode variable from an OZ_Term afecting 
-   space stability. A call to this method will make the gecode
-   space unstable.
-*/
-inline SetVar& get_SetVar(OZ_Term v) {
-  return get_GeSetVar(v)->getSetVar();
-}
-
-/**
-   \brief Retrieve gecode variable from an OZ_Term without afecting 
-   space stability. A call to this method will not make the gecode
-   space unstable.
-*/
-inline SetVar& get_SetVarInfo(OZ_Term v) {
-  return get_GeSetVar(v,false)->getSetVarInfo();
-}
-
-
-/**
-   \brief Retrieve gecode pointer variable from an OZ_Term afecting 
-   space stability. A call to this method will make the gecode
-   space unstable.
-*/
+ * \briefd Retrieves a SetView from an OZ_Term.
+ * @param v must be a finite set variable (GeSetVar)
+ * Space stability is not afected with this function
+ */
 inline
-SetVar * get_SetVarPtr(OZ_Term v) {
-  return get_GeSetVar(v)->getSetVarPtr();
+SetView get_SetView(OZ_Term v){
+  return get_GeSetVar(v)->getSetView();
 }
-
-/**
-   \brief Retrieve gecode pointer variable from an OZ_Term without afecting 
-   space stability. A call to this method will not make the gecode
-   space unstable.
-*/
-inline
-SetVar * get_SetVarInfoPtr(OZ_Term v) {
-  return get_GeSetVar(v,false)->getSetVarInfoPtr();
-}
-
 
 
 inline OZ_Term new_GeSetVarComp(OZ_Term V1) {
@@ -307,7 +247,7 @@ inline OZ_Term new_GeSetVarComp(OZ_Term V1) {
   OzVariable* ov   = extVar2Var(nv);
   OZ_Term ref      = makeTaggedRef(newTaggedVar(ov));
   int index        = sp->newVar(static_cast<VarImpBase*>(x->var()), ref);
-  rel(sp, *x, SRT_CMPL, get_SetVar(V1));
+  rel(sp, *x, SRT_CMPL, get_SetView(V1));
   //nv->ensureValReflection();
   postValReflector<SetView,SetVarImp>(sp,index);
   delete x;
@@ -325,7 +265,7 @@ inline OZ_Term new_GeSetVarComplIn(OZ_Term V1,OZ_Term V2) {
   int index        = sp->newVar(static_cast<VarImpBase*>(x.var()), ref);
   
   
-  rel(sp, get_SetVar(V2),SOT_MINUS, get_SetVar(V1), SRT_EQ , x);
+  rel(sp, get_SetView(V2),SOT_MINUS, get_SetView(V1), SRT_EQ , x);
 
 
   //nv->ensureValReflection();
@@ -336,7 +276,7 @@ inline OZ_Term new_GeSetVarComplIn(OZ_Term V1,OZ_Term V2) {
 
 inline OZ_Return inc_GeSetVarVal(OZ_Term V1,  int val){
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
-  SetView Var(get_SetVar(V1));
+  SetView Var = get_SetView(V1);
   if(Gecode::ME_GEN_FAILED==Var.include(sp,val))    
     return FAILED;
   else
@@ -345,7 +285,7 @@ inline OZ_Return inc_GeSetVarVal(OZ_Term V1,  int val){
 
 inline OZ_Return exc_GeSetVarVal(OZ_Term V1,  int val){
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
-  SetView Var(get_SetVar(V1));  
+  SetView Var = get_SetView(V1);  
   if(Gecode::ME_GEN_FAILED==Var.exclude(sp,val))    
     return FAILED;
   else
@@ -355,7 +295,7 @@ inline OZ_Return exc_GeSetVarVal(OZ_Term V1,  int val){
 inline OZ_Term isIn_GeSetVar(OZ_Term V1, int val, OZ_Term VBool)
 {
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
-  SetView Var(get_SetVar(V1));  
+  SetView Var = get_SetView(V1);  
   BoolView tmpBool(get_BoolVar(VBool));
   //OZ_Term boolVar = new_GeBoolVar(0,1);
   //BoolView tmpBool(get_BoolVar(boolVar));
@@ -365,7 +305,7 @@ inline OZ_Term isIn_GeSetVar(OZ_Term V1, int val, OZ_Term VBool)
     if(Var.contains(val))
       tmpBool.one(sp);    
     else
-      Gecode::dom(sp,get_SetVar(V1),Gecode::SRT_SUB,val,get_BoolVar(VBool));}
+      Gecode::dom(sp,get_SetView(V1),Gecode::SRT_SUB,val,get_BoolVar(VBool));}
   return VBool;
 }
 
