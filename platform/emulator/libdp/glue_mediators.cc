@@ -164,6 +164,8 @@ Mediator *glue_getMediator(TaggedRef entity) {
         return NULL;               // no mediator, but a GlueSite instead!
 
       // fall through, other extensions are unusables
+    case Co_Foreign_Pointer:
+    case Co_Space:
     case Co_Resource:
       return getCTWHMediator<UnusableMediator>(ct);
 

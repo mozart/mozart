@@ -991,15 +991,15 @@ TaggedRef makeTaggedFSetValue(OZ_FSetValue * fsv) {
  * ForeignPointer
  *=================================================================== */
 
-class ForeignPointer: public ConstTerm {
+class ForeignPointer: public ConstTermWithHome {
 private:
   void* ptr;
 public:
   OZPRINT
   NO_DEFAULT_CONSTRUCTORS2(ForeignPointer)
 
-  ForeignPointer():ConstTerm(Co_Foreign_Pointer),ptr(0){}
-  ForeignPointer(void*p):ConstTerm(Co_Foreign_Pointer),ptr(p){}
+  ForeignPointer():ConstTermWithHome(NULL,Co_Foreign_Pointer),ptr(0){}
+  ForeignPointer(void*p):ConstTermWithHome(NULL,Co_Foreign_Pointer),ptr(p){}
   void*getPointer(){ return ptr; }
   ForeignPointer * cac(void);
 };
