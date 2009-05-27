@@ -24,10 +24,10 @@
 %%
 %% Load graphical plugin for Explorer
 %%
-declare
-[Graphics]={Module.link [({Property.get 'oz.home'}#
-			  '/examples/fd/graphics/Queens.ozf')]}
-{Graphics.add}
+%declare
+%[Graphics]={Module.link [({Property.get 'oz.home'}#
+%			  '/examples/fd/graphics/Queens.ozf')]}
+%{Graphics.add}
 
 
 
@@ -45,8 +45,8 @@ fun {Queens N}
    end
 end
 
-{ExploreOne {Queens 33}}  % tough
-
+%{ExploreOne {Queens 33}}  % tough
+{Show {SearchOne {Queens 10}}}
 
 
 /*
