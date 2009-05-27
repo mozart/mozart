@@ -78,8 +78,7 @@ Gecode::SetVarArgs getSetVarArgs(TaggedRef vaar){
       sz = OZ_length(t);
       SetVarArgs array(sz);
       for(int i=0; OZ_isCons(t); t=OZ_tail(t),i++){
-	SetView iv = setOrSetView(OZ_deref(OZ_head(t)));
-	array[i] = iv;
+	array[i] = setOrSetView(OZ_deref(OZ_head(t)));
       }
       return array;
     } else 
@@ -87,8 +86,7 @@ Gecode::SetVarArgs getSetVarArgs(TaggedRef vaar){
 	sz=OZ_width(t);
 	SetVarArgs array(sz);
 	for(int i=0; i<sz; i++) {
-	  SetView iv = setOrSetView(OZ_getArg(t,i));
-	  array[i] = iv;
+	  array[i] = setOrSetView(OZ_getArg(t,i));
 	}
 	return array;
       } else {
@@ -97,8 +95,7 @@ Gecode::SetVarArgs getSetVarArgs(TaggedRef vaar){
 	sz = OZ_width(t);
 	SetVarArgs array(sz);
 	for(int i=0; OZ_isCons(al); al=OZ_tail(al),i++) {
-	  SetView iv = setOrSetView(OZ_subtree(t,OZ_head(al)));
-	  array[i] = iv;
+	  array[i] = setOrSetView(OZ_subtree(t,OZ_head(al)));
 	}
 	return array;
       }  

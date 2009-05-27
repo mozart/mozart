@@ -50,7 +50,7 @@ OZ_BI_define(gfs_projector_4,4,0){
     }
   }
   else if(OZ_isGeSetVar(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2)) && OZ_isProjectorSet(OZ_in(3))){
-  BoolVar *__bv = boolOrBoolVar(OZ_in(2));
+  BoolView __bv = boolOrBoolView(OZ_in(2));
     DECLARE_PROJECTOR_SET(3, __ps);
     try{
       Gecode::projector(home, *__xa, *__ya, *__bv, __ps);
@@ -103,7 +103,7 @@ OZ_BI_define(gfs_projector_5,5,0){
     }
   }
   else if(OZ_isGeSetVar(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && OZ_isGeSetVar(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3)) && OZ_isProjectorSet(OZ_in(4))){
-  BoolVar *__bv = boolOrBoolVar(OZ_in(3));
+  BoolView __bv = boolOrBoolView(OZ_in(3));
     DECLARE_PROJECTOR_SET(4, __ps);
     try{
       Gecode::projector(home, *__xa, *__ya, *__za, *__bv, __ps);
@@ -212,10 +212,9 @@ OZ_BI_define(gfs_dom_4,4,0){
       Post propagator for $ (x \sim_r \{i\}) \Leftrightarrow b $. 
     */
     DeclareInt2(2, __i);
-    BoolVar *__b = boolOrBoolVar(OZ_in(3));
+    BoolView __b = boolOrBoolView(OZ_in(3));
     try{
-      Gecode::dom(home, __s, __r, __i, *__b);
-      delete __b;
+      Gecode::dom(home, __s, __r, __i, __b);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -229,10 +228,9 @@ OZ_BI_define(gfs_dom_4,4,0){
       Post propagator for $ (x \sim_r s) \Leftrightarrow b $. 
      */
     IntSet __is = getIntSet(OZ_in(2));
-    BoolVar *__b = boolOrBoolVar(OZ_in(3));
+    BoolView __b = boolOrBoolView(OZ_in(3));
     try{
-      Gecode::dom(home, __s, __r, __is, *__b);
-      delete __b;
+      Gecode::dom(home, __s, __r, __is, __b);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -256,7 +254,7 @@ OZ_BI_define(gfs_dom_5,5,0){
   SetRelType __r = getSetRelType(OZ_in(1));
   DeclareInt2(2, __i);
   DeclareInt2(3, __j);
-  BoolVar *__b = boolOrBoolVar(OZ_in(4));
+  BoolView __b = boolOrBoolView(OZ_in(4));
 
   if(OZ_isGeSetVar(OZ_in(0)) && OZ_isSetRelType(OZ_in(1)) && 
      OZ_isInt(OZ_in(2)) && OZ_isInt(OZ_in(3)) && OZ_isGeBoolVar(OZ_in(4))){
@@ -266,8 +264,7 @@ OZ_BI_define(gfs_dom_5,5,0){
       Post propagator for $ (x \sim_r \{i,\dots,j\}) \Leftrightarrow b $. 
     */
     try{
-      Gecode::dom(home, __x, __r, __i, __j, *__b);
-      delete __b;
+      Gecode::dom(home, __x, __r, __i, __j, __b);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -445,11 +442,10 @@ OZ_BI_define(gfs_rel_4,4,0){
     SetView __x = setOrSetView(OZ_in(0));
     SetRelType __r = getSetRelType(OZ_in(1));
     SetView __y = setOrSetView(OZ_in(2));
-    BoolVar *__b = boolOrBoolVar(OZ_in(3));
+    BoolView __b = boolOrBoolView(OZ_in(3));
     
     try{
-      Gecode::rel(home, __x, __r, __y, *__b);
-      delete __b;
+      Gecode::rel(home, __x, __r, __y, __b);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -463,11 +459,10 @@ OZ_BI_define(gfs_rel_4,4,0){
     SetView __s = setOrSetView(OZ_in(0));
     SetRelType __r = getSetRelType(OZ_in(1));
     IntView __x = intOrIntView(OZ_in(2));
-    BoolVar *__b = boolOrBoolVar(OZ_in(3));
+    BoolView __b = boolOrBoolView(OZ_in(3));
     
     try{
-      Gecode::rel(home, __s, __r, __x, *__b);
-      delete __b;
+      Gecode::rel(home, __s, __r, __x, __b);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -481,11 +476,10 @@ OZ_BI_define(gfs_rel_4,4,0){
     IntView __x = intOrIntView(OZ_in(0));
     SetRelType __r = getSetRelType(OZ_in(1));
     SetView __s = setOrSetView(OZ_in(2));
-    BoolVar *__b = boolOrBoolVar(OZ_in(3));
+    BoolView __b = boolOrBoolView(OZ_in(3));
 
     try{
-      Gecode::rel(home, __x, __r, __s, *__b);
-      delete __b;
+      Gecode::rel(home, __x, __r, __s, __b);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);

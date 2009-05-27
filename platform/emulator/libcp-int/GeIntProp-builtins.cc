@@ -115,11 +115,10 @@ OZ_BI_define(int_reified,3,0)
   DeclareGSpace(sp);
   IntSet dom = getIntSet(OZ_in(0));
   IntView v0 = intOrIntView(OZ_in(1));
-  BoolVar *b0 = boolOrBoolVar(OZ_in(2));
+  BoolView b0 = boolOrBoolView(OZ_in(2));
   
   try{
-    Gecode::dom(sp,v0,dom,*b0);
-    delete b0;
+    Gecode::dom(sp,v0,dom,b0);
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);

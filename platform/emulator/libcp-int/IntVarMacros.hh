@@ -96,8 +96,7 @@ Gecode::IntVarArgs getIntVarArgs(TaggedRef vaar){
       sz = OZ_length(t);
       IntVarArgs array(sz);
       for(int i=0; OZ_isCons(t); t=OZ_tail(t),i++){
-	IntView iv = intOrIntView(OZ_deref(OZ_head(t)));
-	array[i] = iv;
+	array[i] = intOrIntView(OZ_deref(OZ_head(t)));
       }
       return array;
     } else 
@@ -105,8 +104,7 @@ Gecode::IntVarArgs getIntVarArgs(TaggedRef vaar){
 	sz=OZ_width(t);
 	IntVarArgs array(sz);
 	for(int i=0; i<sz; i++) {
-	  IntView iv = intOrIntView(OZ_getArg(t,i));
-	  array[i] = iv;
+	  array[i] = intOrIntView(OZ_getArg(t,i));
 	}
 	return array;
       } else {
@@ -115,8 +113,7 @@ Gecode::IntVarArgs getIntVarArgs(TaggedRef vaar){
 	sz = OZ_width(t);
 	IntVarArgs array(sz);
 	for(int i=0; OZ_isCons(al); al=OZ_tail(al),i++) {
-	  IntView iv = intOrIntView(OZ_subtree(t,OZ_head(al)));
-	  array[i] = iv;
+	  array[i] = intOrIntView(OZ_subtree(t,OZ_head(al)));
 	}
 	return array;
       }  
