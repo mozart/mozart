@@ -91,9 +91,7 @@ OZ_BI_end
  */
 OZ_BI_define(boolvar_getSize,1,1)
 {
-  BoolVar *v = boolOrBoolVar(OZ_in(0));
-  BoolView bv(*v);
-  delete v;
+  BoolView bv = boolOrBoolView(OZ_in(0));
   OZ_RETURN_INT(bv.size());
 }
 OZ_BI_end
@@ -107,9 +105,7 @@ OZ_BI_end
  */
 OZ_BI_define(boolvar_getZero,1,1)
 {
-  BoolVar *v = boolOrBoolVar(OZ_in(0));
-  BoolView bv(*v);
-  delete v;
+  BoolView bv = boolOrBoolView(OZ_in(0));
   OZ_RETURN_INT(bv.zero());
 }
 OZ_BI_end
@@ -123,9 +119,7 @@ OZ_BI_end
  */
 OZ_BI_define(boolvar_getOne,1,1)
 {
-  BoolVar *v = boolOrBoolVar(OZ_in(0));
-  BoolView bv(*v);
-  delete v;
+  BoolView bv = boolOrBoolView(OZ_in(0));
   OZ_RETURN_INT(bv.one());
 }
 OZ_BI_end

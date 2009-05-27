@@ -52,12 +52,11 @@ OZ_BI_define(gbd_rel_5,5,0){
        void  Gecode::rel (Space *home, BoolVar x0, IntRelType r, BoolVar x1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
        Post propagator for $ x_0 \sim_r x_1$. 
     */
-    BoolVar *__x0 = boolOrBoolVar(OZ_in(0));
+    BoolView __x0 = boolOrBoolView(OZ_in(0));
     IntRelType __r = getIntRelType(OZ_in(1));
-    BoolVar *__x1 = boolOrBoolVar(OZ_in(2));
+    BoolView __x1 = boolOrBoolView(OZ_in(2));
     try{
-      Gecode::rel(home, *__x0, __r, *__x1, __icl, __pk);
-      delete __x0, __x1;
+      Gecode::rel(home, __x0, __r, __x1, __icl, __pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -70,10 +69,9 @@ OZ_BI_define(gbd_rel_5,5,0){
     */
     BoolVarArgs __x = getBoolVarArgs(OZ_in(0));
     IntRelType __r = getIntRelType(OZ_in(1));
-    BoolVar *__y = boolOrBoolVar(OZ_in(2));
+    BoolView __y = boolOrBoolView(OZ_in(2));
     try{
-      Gecode::rel(home, __x, __r, *__y, __icl, __pk);
-      delete __y;
+      Gecode::rel(home, __x, __r, __y, __icl, __pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -84,12 +82,11 @@ OZ_BI_define(gbd_rel_5,5,0){
        void  Gecode::rel (Space *home, BoolVar x, IntRelType r, int n, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
        Propagates $ x \sim_r n$. 
     */
-    BoolVar *__x0 = boolOrBoolVar(OZ_in(0));
+    BoolView __x0 = boolOrBoolView(OZ_in(0));
     IntRelType __r = getIntRelType(OZ_in(1));
     DeclareInt2(2, __n);
     try{
-      Gecode::rel(home, *__x0, __r, __n, __icl, __pk);
-      delete __x0;
+      Gecode::rel(home, __x0, __r, __n, __icl, __pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -131,10 +128,9 @@ OZ_BI_define(gbd_rel_5,5,0){
     */
     BoolOpType __o = getBoolOpType(OZ_in(0));
     BoolVarArgs __x = getBoolVarArgs(OZ_in(1));
-    BoolVar *__y = boolOrBoolVar(OZ_in(2));
+    BoolView __y = boolOrBoolView(OZ_in(2));
     try{
-      Gecode::rel(home, __o, __x, *__y, __icl, __pk);
-      delete __y;
+      Gecode::rel(home, __o, __x, __y, __icl, __pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -194,9 +190,9 @@ OZ_BI_define(gbd_rel_6,6,0){
   for(int i=0; i<6; i++)
     SuspendPosting(OZ_in(i));
   
-  BoolVar *__x0 = boolOrBoolVar(OZ_in(0));
+  BoolView __x0 = boolOrBoolView(OZ_in(0));
   BoolOpType __o = getBoolOpType(OZ_in(1));
-  BoolVar *__x1 = boolOrBoolVar(OZ_in(2));
+  BoolView __x1 = boolOrBoolView(OZ_in(2));
   IntConLevel __icl = getIntConLevel(OZ_in(4));
   PropKind __pk = getPropKind(OZ_in(5));
   
@@ -204,10 +200,9 @@ OZ_BI_define(gbd_rel_6,6,0){
     /**
        void Gecode::rel (Space* home, BoolVar x0, BoolOpType o, BoolVar x1, BoolVar x2, IntConLevel icl, PropKind pk);
     */
-    BoolVar *__x2 = boolOrBoolVar(OZ_in(3));
+    BoolView __x2 = boolOrBoolView(OZ_in(3));
     try{
-      Gecode::rel(home, *__x0, __o, *__x1, *__x2, __icl, __pk);
-      delete __x2;
+      Gecode::rel(home, __x0, __o, __x1, __x2, __icl, __pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -219,7 +214,7 @@ OZ_BI_define(gbd_rel_6,6,0){
     */
     DeclareInt2(3, __n);
     try{
-      Gecode::rel(home, *__x0, __o, *__x1, __n, __icl, __pk);
+      Gecode::rel(home, __x0, __o, __x1, __n, __icl, __pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -229,7 +224,6 @@ OZ_BI_define(gbd_rel_6,6,0){
     return OZ_typeError(0, "Malformed Propagator");
   }
   
-  delete __x0, __x1;
   CHECK_POST(home);
 }OZ_BI_end
 
@@ -302,10 +296,9 @@ OZ_BI_define(gbd_linear_6,6,0){
     BoolVarArgs __x = getBoolVarArgs(OZ_in(0));
     IntRelType __r = getIntRelType(OZ_in(1));
     DeclareInt2(2, __c);
-    BoolVar *__b = boolOrBoolVar(OZ_in(3));
+    BoolView __b = boolOrBoolView(OZ_in(3));
     try{
-      Gecode::linear(home, __x, __r, __c, *__b, __icl, __pk);
-      delete __b;
+      Gecode::linear(home, __x, __r, __c, __b, __icl, __pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -318,10 +311,9 @@ OZ_BI_define(gbd_linear_6,6,0){
     BoolVarArgs __x = getBoolVarArgs(OZ_in(0));
     IntRelType __r = getIntRelType(OZ_in(1));
     IntView __y = intOrIntView(OZ_in(2));
-    BoolVar *__b = boolOrBoolVar(OZ_in(3));
+    BoolView __b = boolOrBoolView(OZ_in(3));
     try{
-      Gecode::linear(home, __x, __r, __y, *__b, __icl, __pk);
-      delete __b;
+      Gecode::linear(home, __x, __r, __y, __b, __icl, __pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -374,7 +366,7 @@ OZ_BI_define(gbd_linear_7,7,0){
   IntArgs __a = getIntArgs(OZ_in(0));
   BoolVarArgs __x = getBoolVarArgs(OZ_in(1));
   IntRelType __r = getIntRelType(OZ_in(2));
-  BoolVar *__b = boolOrBoolVar(OZ_in(4));
+  BoolView __b = boolOrBoolView(OZ_in(4));
   IntConLevel __icl = getIntConLevel(OZ_in(5));
   PropKind __pk = getPropKind(OZ_in(6));
  
@@ -384,7 +376,7 @@ OZ_BI_define(gbd_linear_7,7,0){
     */ 
     DeclareInt2(3, __c);
     try{
-      Gecode::linear(home, __a, __x, __r, __c,*__b, __icl, __pk);
+      Gecode::linear(home, __a, __x, __r, __c,__b, __icl, __pk);
    
     }
     catch(Exception e){
@@ -397,7 +389,7 @@ OZ_BI_define(gbd_linear_7,7,0){
     */   
     IntView __y = intOrIntView(OZ_in(3));
     try{
-      Gecode::linear(home, __a, __x, __r, __y, *__b, __icl, __pk);
+      Gecode::linear(home, __a, __x, __r, __y, __b, __icl, __pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -406,7 +398,6 @@ OZ_BI_define(gbd_linear_7,7,0){
   else{
     return OZ_typeError(0, "Malformed Propagator");
   }
-  delete __b;
   CHECK_POST(home);
 }OZ_BI_end
 

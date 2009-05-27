@@ -37,14 +37,13 @@ using namespace Gecode::Int;
 OZ_BI_define(bool_rel_BV_BT_BV_BV,4,0)
 {
   DeclareGSpace(sp);
-  BoolVar *v1 = boolOrBoolVar(OZ_in(0));
+  BoolView v1 = boolOrBoolView(OZ_in(0));
   BoolOpType bt = getBoolOpType(OZ_in(1));
-  BoolVar *v2 = boolOrBoolVar(OZ_in(2));
-  BoolVar *v3 = boolOrBoolVar(OZ_in(3));
+  BoolView v2 = boolOrBoolView(OZ_in(2));
+  BoolView v3 = boolOrBoolView(OZ_in(3));
  
   try{
-    rel(sp,*v1,bt,*v2,*v3);
-    delete v1, v2, v3;
+    rel(sp,v1,bt,v2,v3);
   }
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
@@ -57,11 +56,10 @@ OZ_BI_define(bool_rel_BV_BT_BV_BV,4,0)
 OZ_BI_define(bool_not,2,0)
 {
   DeclareGSpace(sp);
-  BoolVar *v1 = boolOrBoolVar(OZ_in(0));
-  BoolVar *v2 = boolOrBoolVar(OZ_in(1));
+  BoolView v1 = boolOrBoolView(OZ_in(0));
+  BoolView v2 = boolOrBoolView(OZ_in(1));
   try{
-    rel(sp,*v1,IRT_NQ,*v2);
-    delete v1, v2;
+    rel(sp,v1,IRT_NQ,v2);
   }
   catch(Exception e){
     RAISE_GE_EXCEPTION(e);
