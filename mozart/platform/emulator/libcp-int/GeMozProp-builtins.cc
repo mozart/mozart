@@ -82,11 +82,10 @@ OZ_BI_define(int_disjointC,5,0)
   OZ_declareInt(3,i4);
   IntView v1 = intOrIntView(OZ_in(0));
   IntView v3 = intOrIntView(OZ_in(2));
-  BoolVar *v5 = boolOrBoolVar(OZ_in(4));
+  BoolView v5 = boolOrBoolView(OZ_in(4));
     
   try{
-    DisjointC(sp,v1,i2,v3,i4,*v5);    
-    delete v5;
+    DisjointC(sp,v1,i2,v3,i4,v5);    
   }
   catch(Exception e) {
     RAISE_GE_EXCEPTION(e);
@@ -305,7 +304,7 @@ OZ_BI_define(reified_sumAC,7,0)
     IntVarArgs iva = getIntVarArgs(OZ_in(1));
     IntRelType relType = getIntRelType(OZ_in(2));
     IntView D1 = intOrIntView(OZ_in(3));
-    BoolVar *D2 = boolOrBoolVar(OZ_in(4));
+    BoolView D2 = boolOrBoolView(OZ_in(4));
     Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(5));
     Gecode::PropKind __PK_DEF = getPropKind(OZ_in(6));
     
@@ -328,8 +327,7 @@ OZ_BI_define(reified_sumAC,7,0)
       /**
 	 rel (Space *home, IntVar x0, IntRelType r, IntVar x1, BoolVar b, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
       */
-      Gecode::rel (sp, tmpD, relType, D1, *D2, __ICL_DEF, __PK_DEF);
-      delete D2;
+      Gecode::rel (sp, tmpD, relType, D1, D2, __ICL_DEF, __PK_DEF);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -352,7 +350,7 @@ OZ_BI_define(reified_sumCN,7,0)
   OZ_Term Dvv = OZ_deref(OZ_in(1));
   IntRelType relType = getIntRelType(OZ_in(2));
   IntView D1 = intOrIntView(OZ_in(3));
-  BoolVar *D2 = boolOrBoolVar(OZ_in(4));
+  BoolView D2 = boolOrBoolView(OZ_in(4));
   Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(5));
   Gecode::PropKind __PK_DEF = getPropKind(OZ_in(6));
   IntVar ScalarProduct = scalarProduct(sp, ia, Dvv, __ICL_DEF, __PK_DEF);
@@ -360,8 +358,7 @@ OZ_BI_define(reified_sumCN,7,0)
     return OZ_typeError(0, "Vectors must have same size: reified.sumCN");
   }
   
-  Gecode::rel (sp, ScalarProduct, relType, D1, *D2, __ICL_DEF, __PK_DEF);
-  delete D2;
+  Gecode::rel (sp, ScalarProduct, relType, D1, D2, __ICL_DEF, __PK_DEF);
   
   CHECK_POST(sp);
 } OZ_BI_end
@@ -376,7 +373,7 @@ OZ_BI_define(reified_sumACN,7,0)
   OZ_Term Dvv = OZ_deref(OZ_in(1));
   IntRelType relType = getIntRelType(OZ_in(2));
   IntVar D1 = intOrIntView(OZ_in(3));
-  BoolVar *D2 = boolOrBoolVar(OZ_in(4));
+  BoolView D2 = boolOrBoolView(OZ_in(4));
   Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(5));
   Gecode::PropKind __PK_DEF = getPropKind(OZ_in(6));
   
@@ -388,8 +385,8 @@ OZ_BI_define(reified_sumACN,7,0)
   ABSsp.init(sp,Int::Limits::min,Int::Limits::max);
   Gecode::abs(sp,ScalarProduct,ABSsp,ICL_VAL);
   
-  Gecode::rel (sp, ABSsp, relType, D1, *D2, __ICL_DEF, __PK_DEF);
-  delete D2;
+  Gecode::rel (sp, ABSsp, relType, D1, D2, __ICL_DEF, __PK_DEF);
+
   CHECK_POST(sp);
 } OZ_BI_end
 
@@ -408,7 +405,7 @@ OZ_BI_define(reified_dom,3,0){
   if (OZ_isInt(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2))){
     int Spec = OZ_intToC(OZ_in(0));
     IntVarArgs iva = getIntVarArgs(OZ_in(1));
-    BoolVar *D1 = boolOrBoolVar(OZ_in(2));
+    BoolView D1 = boolOrBoolView(OZ_in(2));
     
     BoolVarArray tmpArray(sp, iva.size(), 0,1);
     for (int i = 0; i < iva.size(); i++){
@@ -436,8 +433,7 @@ OZ_BI_define(reified_dom,3,0){
     catch (Exception e){
       RAISE_GE_EXCEPTION(e);
     }
-    Gecode::rel(sp,res,IRT_EQ,*D1,ICL_VAL);
-    delete D1;
+    Gecode::rel(sp,res,IRT_EQ,D1,ICL_VAL);
   }
   else{
     return OZ_typeError(0, "Malformed Propagator: reified.dom");
@@ -453,11 +449,9 @@ OZ_BI_define(gfd_reifiedCard, 4, 0){
   IntView ew1 = intOrIntView(OZ_in(0));
   BoolVarArgs bva = getBoolVarArgs(OZ_in(1));
   IntView ew2 = intOrIntView(OZ_in(2));
-  BoolVar *bo = boolOrBoolVar(OZ_in(3));
+  BoolView bv = boolOrBoolView(OZ_in(3));
   
   ViewArray<BoolView> varr(home, bva);
-  BoolView bv(*bo);
-  delete bo;
   
   try {
     ReifiedCard(home, ew1, varr, ew2, bv);

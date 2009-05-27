@@ -86,10 +86,10 @@ OZ_BI_define(gfd_dom_5,5,0){
     */
     IntView iv = intOrIntView(OZ_in(0));
     Gecode::IntSet is = getIntSet(OZ_in(1));
-    BoolVar *__b = boolOrBoolVar(OZ_in(2));
+    BoolView __b = boolOrBoolView(OZ_in(2));
     
     try{
-      Gecode::dom(home, iv, is, *__b, icl, pk);
+      Gecode::dom(home, iv, is, __b, icl, pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -165,13 +165,13 @@ OZ_BI_define(gfd_dom_6,6,0){
     IntView iv = intOrIntView(OZ_in(0));
     int i = OZ_intToC(OZ_in(1));
     int j = OZ_intToC(OZ_in(2));
-    BoolVar *__b = boolOrBoolVar(OZ_in(3));
+    BoolView __b = boolOrBoolView(OZ_in(3));
 
     Gecode::IntConLevel icl = getIntConLevel(OZ_in(4));
     Gecode::PropKind pk = getPropKind(OZ_in(5));  
 
     try{
-      Gecode::dom(home, iv, i, j, *__b, icl, pk);
+      Gecode::dom(home, iv, i, j, __b, icl, pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -279,7 +279,7 @@ OZ_BI_define(gfd_rel_5,5,0){
 
 OZ_BI_define(gfd_rel_6,6,0){
   DeclareGSpace(home);
-  BoolVar *__b = boolOrBoolVar(OZ_in(3));
+  BoolView __b = boolOrBoolView(OZ_in(3));
 
   //test whether input is ref or var
   for(int i=0; i<6; i++)
@@ -298,8 +298,7 @@ OZ_BI_define(gfd_rel_6,6,0){
     IntView iv2 = intOrIntView(OZ_in(2));
     
     try{
-      Gecode::rel(home, iv1, irt, iv2, *__b, icl, pk);
-      delete __b;
+      Gecode::rel(home, iv1, irt, iv2, __b, icl, pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -313,8 +312,7 @@ OZ_BI_define(gfd_rel_6,6,0){
     
     try{
       
-      Gecode::rel(home, iv1, irt, i, *__b, icl, pk);
-      delete __b;
+      Gecode::rel(home, iv1, irt, i, __b, icl, pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -395,11 +393,10 @@ OZ_BI_define(gfd_element_5,5,0){
        element(Space* home, const IntArgs& n, IntVar x0, BoolVar x1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     */
     Gecode::IntArgs iar = getIntArgs(OZ_in(0));
-    BoolVar *__x2 = boolOrBoolVar(OZ_in(2));
+    BoolView __x2 = boolOrBoolView(OZ_in(2));
     
     try{
-      Gecode::element(home, iar, iv1, *__x2, icl, pk);
-      delete __x2;
+      Gecode::element(home, iar, iv1, __x2, icl, pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -452,10 +449,9 @@ OZ_BI_define(gfd_element_5,5,0){
        element(Space* home, const BoolVarArgs& x, IntVar y0, BoolVar y1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     */
     BoolVarArgs __x = getBoolVarArgs(OZ_in(0));
-    BoolVar *__x2 = boolOrBoolVar(OZ_in(2));
+    BoolView __x2 = boolOrBoolView(OZ_in(2));
     try{
-      Gecode::element(home, __x, iv1, *__x2, icl, pk);
-      delete __x2;
+      Gecode::element(home, __x, iv1, __x2, icl, pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -582,12 +578,11 @@ OZ_BI_define(gfd_channel_4,4,0){
     /**
        channel(Space* home, BoolVar x0, IntVar x1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF);
     */
-    BoolVar *__x0 = boolOrBoolVar(OZ_in(0));
+    BoolView __x0 = boolOrBoolView(OZ_in(0));
     IntView iv = intOrIntView(OZ_in(1));
     
     try{
-      Gecode::channel(home, *__x0, iv, icl, pk);
-      delete __x0;
+      Gecode::channel(home, __x0, iv, icl, pk);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -598,11 +593,10 @@ OZ_BI_define(gfd_channel_4,4,0){
        channel(Space* home, IntVar x0, BoolVar x1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF) {
     */
     IntView iv = intOrIntView(OZ_in(0));
-    BoolVar *__x1 = boolOrBoolVar(OZ_in(1));
+    BoolView __x1 = boolOrBoolView(OZ_in(1));
     
     try{
-      Gecode::channel(home, iv, *__x1, icl, pk);
-      delete __x1;
+      Gecode::channel(home, iv, __x1, icl, pk);
 
     }
     catch(Exception e){
@@ -1637,11 +1631,10 @@ OZ_BI_define(gfd_linear_6,6,0){
     IntVarArgs iva = getIntVarArgs(OZ_in(0));
     Gecode::IntRelType irt = getIntRelType(OZ_in(1));
     int i = OZ_intToC(OZ_in(2));
-    BoolVar *__b = boolOrBoolVar(OZ_in(3));
+    BoolView __b = boolOrBoolView(OZ_in(3));
     
     try{
-      Gecode::linear(home, iva, irt, i, *__b, __ICL_DEF, __PK_DEF);
-      delete __b;
+      Gecode::linear(home, iva, irt, i, __b, __ICL_DEF, __PK_DEF);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -1655,11 +1648,10 @@ OZ_BI_define(gfd_linear_6,6,0){
     IntVarArgs iva = getIntVarArgs(OZ_in(0));
     Gecode::IntRelType irt = getIntRelType(OZ_in(1));
     IntView iv = intOrIntView(OZ_in(2));
-    BoolVar *__b = boolOrBoolVar(OZ_in(3));
+    BoolView __b = boolOrBoolView(OZ_in(3));
     
     try{
-      Gecode::linear(home, iva, irt, iv, *__b, __ICL_DEF, __PK_DEF);
-      delete __b;
+      Gecode::linear(home, iva, irt, iv, __b, __ICL_DEF, __PK_DEF);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -1717,7 +1709,7 @@ OZ_BI_define(gfd_linear_7,7,0){
   Gecode::IntArgs  __a = getIntArgs(OZ_in(0));
   IntVarArgs  __x = getIntVarArgs(OZ_in(1));
   Gecode::IntRelType __r = getIntRelType(OZ_in(2));
-  BoolVar *__b = boolOrBoolVar(OZ_in(4));
+  BoolView __b = boolOrBoolView(OZ_in(4));
   Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(5));
   Gecode::PropKind __PK_DEF = getPropKind(OZ_in(6));
 
@@ -1730,7 +1722,7 @@ OZ_BI_define(gfd_linear_7,7,0){
     int i = OZ_intToC(OZ_in(3));
     
     try{
-      Gecode::linear(home, __a, __x, __r, i, *__b, __ICL_DEF, __PK_DEF);
+      Gecode::linear(home, __a, __x, __r, i, __b, __ICL_DEF, __PK_DEF);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -1745,7 +1737,7 @@ OZ_BI_define(gfd_linear_7,7,0){
     IntView iv = intOrIntView(OZ_in(3));
     
     try{
-      Gecode::linear(home, __a, __x, __r, iv, *__b, __ICL_DEF, __PK_DEF);
+      Gecode::linear(home, __a, __x, __r, iv, __b, __ICL_DEF, __PK_DEF);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -1754,7 +1746,6 @@ OZ_BI_define(gfd_linear_7,7,0){
   else{
     return OZ_typeError(0, "Malformed Propagator");
   }
-  delete __b;
   CHECK_POST(home);
 }OZ_BI_end
 
