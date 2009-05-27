@@ -107,6 +107,7 @@ public:
     sync = oz_newVariable(bb);
     DebugCode(sel_var = -1);
     sel_val = (TaggedRef) 0;
+    id = bb->NewDistributorId();
   }
 
   void dispose(void) {
@@ -129,6 +130,63 @@ public:
   void selectValMax(void);
   void selectValSplitMin(void);
   void selectValSplitMax(void);
+
+
+  /*
+   *\brief Notify stability to the distributor. This method is called
+   * from checkStability when space stability is guaranted. 
+   * This return value (-1) means this is an old style distributor.
+   * This method is not in charge of disposing this distributor,
+   * the board and commit are in charge.
+   */
+  virtual int notifyStable(Board *bb) {
+    //printf("calling notifyStable in fd...\n");fflush(stdout);
+    /* Create branching in space. We don't care about get variable and value,
+     * this is done by getAlternatives method. We only want to assign some value to
+     * the branchings of this space, so assign branchings 1 and 2. 
+     * The variable and the value are stored in this distributor anyway. 
+     */
+    TaggedRef fb = 
+      OZ_mkTuple(OZ_atom("#"),3,OZ_int(id),OZ_int(1),OZ_int(1));
+
+    TaggedRef sb = 
+      OZ_mkTuple(OZ_atom("#"),3,OZ_int(id),OZ_int(2),OZ_int(2));
+    
+    bb->setBranching(OZ_cons(fb,OZ_cons(sb,OZ_nil())));
+    return -1;
+  }
+
+  /*
+    \brief Commit a branch to the distributor. 
+    This method are intented to provide this old style 
+    distributor with the new space commitment operation style.
+  */
+  virtual int commitBranch(Board *bb, TaggedRef bd) {
+    //printf("call to commitBranch fd \n");fflush(stdout);
+    Assert(OZ_isTuple(bd));
+    int bd_id = OZ_intToC(OZ_getArg(bd,0));
+    if (bd_id == id) {
+      int pos = OZ_intToC(OZ_getArg(bd,1));
+      //Wich alternative was choiced ¿1 or 2?
+      TaggedRef value = OZ_getArg(bd,2);
+      int n = OZ_intToC(value);
+      
+      //Tell constraint (commit)
+      TaggedRef dom;
+      if (n == 1) {
+	dom = sel_val;
+      } else {
+	SRecord * st = SRecord::newSRecord(AtomCompl, 1);
+	st->setArg(0, sel_val);
+	dom = makeTaggedSRecord(st);
+      }
+      Assert(sel_var != -1);
+      tell_dom(bb,vars[sel_var],dom);
+      return 1;
+    }
+    //This is not the rigth distributor.
+    return -1;
+  }
 
   virtual int commit(Board * bb, int n) {
     if (n > 2)
