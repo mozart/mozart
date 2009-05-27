@@ -47,11 +47,14 @@
  * @param value integer or GeBoolVar representing a BoolVar
  */
 inline
-BoolVar * boolOrBoolVar(TaggedRef value){
+BoolView  boolOrBoolView(TaggedRef value){
   if(OZ_isInt(value)){
-    return new BoolVar(oz_currentBoard()->getGenericSpace(), OZ_intToC(value), OZ_intToC(value));
+    BoolVar *bv = new BoolVar(oz_currentBoard()->getGenericSpace(), OZ_intToC(value), OZ_intToC(value));
+    BoolView vw(*bv);
+    delete bv;
+    return vw;
   }else {
-    return get_BoolVarPtr(value);
+    return get_BoolView(value);
   }
 }
 
@@ -75,9 +78,7 @@ Gecode::BoolVarArgs getBoolVarArgs(TaggedRef vaar){
       sz = OZ_length(t);
       BoolVarArgs array(sz);
       for(int i=0; OZ_isCons(t); t=OZ_tail(t),i++){
-	BoolVar *iv = boolOrBoolVar(OZ_deref(OZ_head(t)));
-	array[i] = *iv;
-	delete iv;
+	array[i] = boolOrBoolView(OZ_deref(OZ_head(t)));
       }
       return array;
     } else 
@@ -85,9 +86,7 @@ Gecode::BoolVarArgs getBoolVarArgs(TaggedRef vaar){
 	sz=OZ_width(t);
 	BoolVarArgs array(sz);
 	for(int i=0; i<sz; i++) {
-	  BoolVar *iv = boolOrBoolVar(OZ_getArg(t,i));
-	  array[i] = *iv;
-	  delete iv;
+	  array[i] = boolOrBoolView(OZ_getArg(t,i));
 	}
 	return array;
       } else {
@@ -96,9 +95,7 @@ Gecode::BoolVarArgs getBoolVarArgs(TaggedRef vaar){
 	sz = OZ_width(t);
 	BoolVarArgs array(sz);
 	for(int i=0; OZ_isCons(al); al=OZ_tail(al),i++) {
-	  BoolVar *iv = boolOrBoolVar(OZ_subtree(t,OZ_head(al)));
-	  array[i] = *iv;
-	  delete iv;
+	  array[i] = boolOrBoolView(OZ_subtree(t,OZ_head(al)));
 	}
 	return array;
       }  

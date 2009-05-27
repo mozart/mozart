@@ -40,45 +40,14 @@ protected:
 public:
   GeBoolVar(int index) :
     GeVar(index,T_GeBoolVar) {}
-
-  //TODO: Be carefull this function should return a view and not a variable
-  BoolVar& getBoolVar(void) {
-    GenericSpace *gs = getGSpace();
-    Int::BoolView bv(static_cast<BoolVarImp*>(gs->getVar(index)));
-    gs->makeUnstable();
-    
-    BoolVar *tmp = new BoolVar(bv);
-
-    return (*tmp);
-  }
-
-  // the returned reference should be constant
-
-  BoolVar& getBoolVarInfo() {
-    Int::BoolView bv(static_cast<BoolVarImp*>(getGSpace()->getVar(index)));
-    BoolVar *tmp = new BoolVar(bv);
-    return (*tmp);
-  }
-
-
-  /**
-   * Methods getBoolVarPtr & getBoolVarInfoPtr are intented to
-   * provide accees to gecode variables with clean memory
-   * magnament. The returned pointer *most be deleted* when
-   * it is used.
-   */
-  BoolVar * getBoolVarPtr(void){
-    GenericSpace *gs = getGSpace();
-    Int::BoolView bv(static_cast<BoolVarImp*>(gs->getVar(index)));
-    gs->makeUnstable();
-    return new BoolVar(bv);
-  }
-
-  BoolVar * getBoolVarInfoPtr(void) {
-    Int::BoolView bv(static_cast<BoolVarImp*>(getGSpace()->getVar(index)));
-    return new BoolVar(bv);
-  }
   
+  /**
+   * \brief Return a BoolView from the corresponding BoolVarImpl
+   * associated with this GeBoolVar.
+   */
+  BoolView getBoolView(void){
+    return BoolView(static_cast<BoolVarImp*>(getGSpace()->getVar(index)));
+  }
 
   /**
      \brief Put in out a text representation of the variable.
@@ -114,18 +83,14 @@ public:
   virtual TaggedRef newVar(void);
 
   virtual void propagator(GenericSpace *s, GeVar *lgevar, GeVar *rgevar) {
-    BoolVar *lbvar = (static_cast<GeBoolVar*>(lgevar))->getBoolVarInfoPtr();
-    BoolVar *rbvar = (static_cast<GeBoolVar*>(rgevar))->getBoolVarInfoPtr();    
-    rel(s,*lbvar,IRT_EQ,*rbvar);
-    delete lbvar, rbvar;
+    BoolView lbvar = (static_cast<GeBoolVar*>(lgevar))->getBoolView();
+    BoolView rbvar = (static_cast<GeBoolVar*>(rgevar))->getBoolView();    
+    rel(s,lbvar,IRT_EQ,rbvar);
   }
 
   virtual ModEvent bind(GenericSpace *s, GeVar *v, OZ_Term val) {
     int n = OZ_intToC(val);
-    BoolVar *var = getBoolVarInfoPtr();
-    Int::BoolView bv(*var);
-    delete var;
-    return bv.eq(s,n);
+    return getBoolView().eq(s,n);
   }
 
   virtual Bool validV(OZ_Term v);
@@ -136,8 +101,7 @@ public:
   }
   
   virtual OZ_Term getVal(void) {
-    BoolView bv = BoolView(static_cast<BoolVarImp*>(getGSpace()->getVar(index)));
-    return OZ_int(bv.val());
+    return OZ_int(BoolView(static_cast<BoolVarImp*>(getGSpace()->getVar(index))).val());
   }
 
   virtual void ensureDomReflection(void) {
@@ -145,8 +109,7 @@ public:
   }
   
   virtual int degree(void) { 
-    BoolView vi(static_cast<BoolVarImp*>(getGSpace()->getVar(index))); 
-    return vi.degree(); 
+    return BoolView(static_cast<BoolVarImp*>(getGSpace()->getVar(index))).degree(); 
   }
 };
 
@@ -211,42 +174,13 @@ GeBoolVar* get_GeBoolVar(OZ_Term v, bool cgv = true) {
 }
 
 /**
-   \brief Retrieve gecode variable from an OZ_Term afecting 
-   space stability. A call to this method will make the gecode
-   space unstable.
-*/
-inline BoolVar& get_BoolVar(OZ_Term v) {
-    return get_GeBoolVar(v)->getBoolVar();
-}
-
-/**
-   \brief Retrieve gecode variable from an OZ_Term without afecting 
-   space stability. A call to this method will not make the gecode
-   space unstable.
-*/
-inline BoolVar& get_BoolVarInfo(OZ_Term v) {
-  return get_GeBoolVar(v,false)->getBoolVarInfo();
-}
-
-
-/**
-   \brief Retrieve gecode variable pointer from an OZ_Term afecting 
-   space stability. A call to this method will make the gecode
-   space unstable.
-*/
-inline 
-BoolVar * get_BoolVarPtr(OZ_Term v) {
-  return get_GeBoolVar(v)->getBoolVarPtr();
-}
-
-/**
-   \brief Retrieve gecode variable pointer from an OZ_Term without afecting 
-   space stability. A call to this method will not make the gecode
-   space unstable.
-*/
-inline 
-BoolVar * get_BoolVarInfoPtr(OZ_Term v) {
-  return get_GeBoolVar(v,false)->getBoolVarInfoPtr();
+ * \briefd Retrieves a BoolView from an OZ_Term.
+ * @param v must be a boolean domain variable (GeBoolVar)
+ * Space stability is not afected with this function
+ */
+inline
+BoolView get_BoolView(OZ_Term v){
+  return get_GeBoolVar(v)->getBoolView();
 }
 
 /**
