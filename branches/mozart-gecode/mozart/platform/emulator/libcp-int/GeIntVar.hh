@@ -54,8 +54,7 @@ public:
    * associated with this GeIntVar.
    */
   IntView getIntView(void){
-    Int::IntView iv(static_cast<IntVarImp*>(getGSpace()->getVar(index)));
-    return iv;
+    return IntView(static_cast<IntVarImp*>(getGSpace()->getVar(index)));
   }
   
   /**
@@ -101,8 +100,7 @@ public:
 
   virtual ModEvent bind(GenericSpace *s, GeVar *v, OZ_Term val) {
     int n = OZ_intToC(val);
-    IntView w = getIntView();
-    return w.eq(s,n);
+    return getIntView().eq(s,n);
   }
 
   virtual Bool validV(OZ_Term v);
@@ -113,8 +111,7 @@ public:
   }
   
   virtual OZ_Term getVal(void) {
-    IntView iv(static_cast<IntVarImp*>(getGSpace()->getVar(index)));
-    return OZ_int(iv.val());
+    return OZ_int(IntView(static_cast<IntVarImp*>(getGSpace()->getVar(index))).val());
   }
   
   virtual void ensureDomReflection(void) {
@@ -122,8 +119,7 @@ public:
   }
   
   virtual int degree(void) { 
-    IntView vi(static_cast<IntVarImp*>(getGSpace()->getVar(index))); 
-    return vi.degree(); 
+    return IntView(static_cast<IntVarImp*>(getGSpace()->getVar(index))).degree(); 
   }
 
 };

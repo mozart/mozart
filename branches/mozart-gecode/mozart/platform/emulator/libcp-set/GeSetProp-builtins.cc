@@ -334,13 +334,12 @@ OZ_BI_define(gfs_reifiedIsIn, 3, 0)
   DeclareGSpace(gs);
   if(OZ_isGeIntVar(OZ_in(0)) && OZ_isGeSetVar(OZ_in(1)) && OZ_isGeBoolVar(OZ_in(2))){
     SetView sv = setOrSetView(OZ_in(1));
-    BoolVar *bv = boolOrBoolVar(OZ_in(2));
+    BoolView bv = boolOrBoolView(OZ_in(2));
     IntView iv = intOrIntView(OZ_in(0));
     Gecode::Set::SingletonView sin(iv);
     
     try{
-      IsInReified(gs, sv, sin, bv->var());
-      delete bv;
+      IsInReified(gs, sv, sin, bv);
     }
     catch(Exception e) {
       RAISE_GE_EXCEPTION(e);

@@ -52,8 +52,7 @@ Bool GeIntVar::validV(OZ_Term val) {
     if(n >= Int::Limits::min &&
        n <= Int::Limits::max)
       {
-	IntView w = getIntView();
-	return w.in(n);
+	return getIntView().in(n);
       }
     else {
       GEOZ_DEBUG_PRINT(("Invalid integer.\n All domain ranges must be between %d and %d",Int::Limits::min,Int::Limits::max));
@@ -84,22 +83,19 @@ VarImpBase* GeIntVar::clone(void) {
 //x is the local variable,  the one that its domain is modified
 inline
 bool GeIntVar::intersect(TaggedRef x) {
-  IntView gv = getIntView();
-  ViewRanges<IntView> gvr(gv);
-
-  IntView vw = get_IntView(x);
+  ViewRanges<IntView> gvr(getIntView());
+	
   //printf("GeIntVar.cc min1=%d - max1=%d -- min2=%d - max2=%d\n",vw.min(), vw.max(),tmp2.min(),tmp2.max());fflush(stdout);  
   //TODO: Ask Alejandro about the use of getGSpace() instead of oz_currentBoard()
 
-  return (vw.inter_r(oz_currentBoard()->getGenericSpace(),gvr)==ME_GEN_FAILED ? false: true);
+  return (get_IntView(x).inter_r(oz_currentBoard()->getGenericSpace(),gvr)==ME_GEN_FAILED ? false: true);
 }
 
 //(this) is the global variable
 //lx is the local value
 inline
 bool GeIntVar::In(TaggedRef lx) {
-  IntView vw = getIntView();
-  return vw.in(oz_intToC(lx));
+  return getIntView().in(oz_intToC(lx));
 }
 
 TaggedRef GeIntVar::clone(TaggedRef v) {
@@ -112,10 +108,8 @@ TaggedRef GeIntVar::clone(TaggedRef v) {
 inline
 bool GeIntVar::hasSameDomain(TaggedRef v) {
   Assert(OZ_isGeIntVar(v));
-  IntView v1 = get_IntView(v);
-  IntView v2 = getIntView();
-  ViewRanges< IntView > vr1 (v1);
-  ViewRanges< IntView > vr2 (v2);
+  ViewRanges< IntView > vr1 (get_IntView(v));
+  ViewRanges< IntView > vr2 (getIntView());
   
   while(true) {
     if(!vr1() && !vr2()) return true;
@@ -134,10 +128,8 @@ TaggedRef GeIntVar::newVar(void) {
 
 inline
 bool GeIntVar::IsEmptyInter(TaggedRef* var1,  TaggedRef* var2) {
-  IntView v1 = get_IntView(*var1);
-  IntView v2 = get_IntView(*var2);
-  ViewRanges<IntView > vr1 (v1);
-  ViewRanges<IntView > vr2 (v2);
+  ViewRanges<IntView > vr1 (get_IntView(*var1));
+  ViewRanges<IntView > vr2 (get_IntView(*var2));
   
   while(true) {
     if(!vr1() || !vr2() ) return true;
@@ -152,9 +144,8 @@ bool GeIntVar::IsEmptyInter(TaggedRef* var1,  TaggedRef* var2) {
 }
 
 void GeIntVar::toStream(ostream &out) {
-  IntView iv =  getIntView();
   std::stringstream oss;
-  oss << (iv);
+  oss << (getIntView());
   out << "<GeIntVar " << oss.str().c_str() << ">"; 
 }
 

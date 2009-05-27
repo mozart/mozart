@@ -94,11 +94,8 @@ bool GeSetVar::intersect(TaggedRef x) {
 // If lx's Lub is a subset of the variable then In returns true otherwise it returns false
 inline
 bool GeSetVar::In(TaggedRef lx) {
-  SetView vwg = getSetView();
-  SetView vwl = get_SetView(lx);
-
-  Set::LubRanges<Set::SetView> lxLub(vwl);
-  Set::LubRanges<Set::SetView> vLub(vwg);
+  Set::LubRanges<Set::SetView> lxLub(get_SetView(lx));
+  Set::LubRanges<Set::SetView> vLub(getSetView());
   return (Iter::Ranges::subset(lxLub,vLub));
 }
 
@@ -136,11 +133,9 @@ TaggedRef GeSetVar::newVar(void) {
 //We have to be very carefull here,  ther order in the parameters of the function DOES matter!!!!
 inline
 bool GeSetVar::IsEmptyInter(TaggedRef* var1,  TaggedRef* var2) {
-  SetView v1 = get_SetView(*var1);
-  SetVar v2 = get_SetView(*var2);
-  
-  LubRanges<SetView> x1ub(v1);
-  LubRanges<SetView> x2ub(v2);
+
+  LubRanges<SetView> x1ub(get_SetView(*var1));
+  LubRanges<SetView> x2ub(get_SetView(*var2));
 
   //GlbRanges<SetView> x1lb(v1);
   //GlbRanges<SetView> x2lb(v2);
@@ -149,9 +144,8 @@ bool GeSetVar::IsEmptyInter(TaggedRef* var1,  TaggedRef* var2) {
 }
 
 void GeSetVar::toStream(ostream &out) {
-  SetView sv = getSetView();
   std::stringstream oss;
-  oss << sv;
+  oss << getSetView();
   out << "<GeSetVar " << oss.str().c_str() << ">"; 
 }
   

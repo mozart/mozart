@@ -67,8 +67,7 @@ public:
    * associated with this GeSetVar.
    */
   SetView getSetView(void) {
-    Set::SetView sv(static_cast<SetVarImp*>(getGSpace()->getVar(index)));
-    return sv;
+    return SetView(static_cast<SetVarImp*>(getGSpace()->getVar(index)));
   }
 
   //this is really working?
@@ -142,9 +141,8 @@ public:
     postDomReflector<SetView, SetVarImp, PC_SET_ANY>(getGSpace(),this);
   }
 
-  virtual int degree(void) { 
-    SetView vi(static_cast<SetVarImp*>(getGSpace()->getVar(index))); 
-    return vi.degree(); 
+  virtual int degree(void) {  
+    return SetView(static_cast<SetVarImp*>(getGSpace()->getVar(index))).degree(); 
   }
 };
 
@@ -276,8 +274,7 @@ inline OZ_Term new_GeSetVarComplIn(OZ_Term V1,OZ_Term V2) {
 
 inline OZ_Return inc_GeSetVarVal(OZ_Term V1,  int val){
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
-  SetView Var = get_SetView(V1);
-  if(Gecode::ME_GEN_FAILED==Var.include(sp,val))    
+  if(Gecode::ME_GEN_FAILED==get_SetView(V1).include(sp,val))    
     return FAILED;
   else
     return PROCEED;
@@ -285,8 +282,7 @@ inline OZ_Return inc_GeSetVarVal(OZ_Term V1,  int val){
 
 inline OZ_Return exc_GeSetVarVal(OZ_Term V1,  int val){
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
-  SetView Var = get_SetView(V1);  
-  if(Gecode::ME_GEN_FAILED==Var.exclude(sp,val))    
+  if(Gecode::ME_GEN_FAILED==get_SetView(V1).exclude(sp,val))    
     return FAILED;
   else
     return PROCEED;
@@ -296,16 +292,15 @@ inline OZ_Term isIn_GeSetVar(OZ_Term V1, int val, OZ_Term VBool)
 {
   GenericSpace* sp = oz_currentBoard()->getGenericSpace();
   SetView Var = get_SetView(V1);  
-  BoolView tmpBool(get_BoolVar(VBool));
+  BoolView tmpBool(get_BoolView(VBool));
   //OZ_Term boolVar = new_GeBoolVar(0,1);
-  //BoolView tmpBool(get_BoolVar(boolVar));
   if(Var.notContains(val))
     tmpBool.zero(sp);
   else{
     if(Var.contains(val))
       tmpBool.one(sp);    
     else
-      Gecode::dom(sp,get_SetView(V1),Gecode::SRT_SUB,val,get_BoolVar(VBool));}
+      Gecode::dom(sp,get_SetView(V1),Gecode::SRT_SUB,val,tmpBool);}
   return VBool;
 }
 
