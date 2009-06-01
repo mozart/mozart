@@ -28,7 +28,7 @@
 
 #include "codearea.hh"
 #include "indexing.hh"
-#include "unistd.h"
+#include <unistd.h>
 
 #ifdef RECINSTRFETCH
 
