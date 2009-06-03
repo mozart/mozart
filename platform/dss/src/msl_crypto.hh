@@ -33,7 +33,6 @@
 // comment this line to disable actual encryption
 //#define CRYPTO_ENABLED
 
-#include <cstdio>
 #include <gmp.h>
 #include <string.h>
 #include <stdio.h>
