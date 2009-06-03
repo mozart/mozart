@@ -50,12 +50,19 @@ AM am;
 
 static
 void usage(int /* argc */,char **argv) {
+#ifdef ANDROID
+  printf("usage: %s <options>\n", argv[0]);
+  printf(" -init <file> : init functor\n");
+  printf(" -u <url>     : application functor\n");
+  printf(" -- <args> ...: application arguments\n");
+#else
   fprintf(stderr,
           "usage: %s <options>\n",
           argv[0]);
   fprintf(stderr, " -init <file> : init functor\n");
   fprintf(stderr, " -u <url>     : application functor\n");
   fprintf(stderr, " -- <args> ...: application arguments\n");
+#end
   osExit(1);
 }
 

@@ -66,6 +66,10 @@ extern "C" int dlclose(void *);
 
 #endif
 
+#ifdef ANDROID
+#define _POSIX_OPEN_MAX 16
+#endif
+
 #ifdef IRIX
 #include <bstring.h>
 #include <sys/time.h>

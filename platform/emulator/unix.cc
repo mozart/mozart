@@ -229,7 +229,7 @@ int raiseUnixError(const char *f,int n, const char * e, const char * g) {
 { return raiseUnixError(f,ossockerrno(), errnoToString(ossockerrno()), "os"); }
 
 
-#if defined(ULTRIX_MIPS) || defined(OS2_I486)
+#if defined(ULTRIX_MIPS) || defined(OS2_I486) || defined(ANDROID)
 
 #define RETURN_NET_ERROR(f) \
 { return raiseUnixError(f, 0, "Host lookup failure.", "host"); }
@@ -729,7 +729,7 @@ OZ_BI_iodefine(unix_uName,0,1) {
   if (uname(&buf) < 0)
     RETURN_UNIX_ERROR("uname");
 
-#if (defined(SUNOS_SPARC) || defined(LINUX)) && !defined(__FCC_VERSION)
+#if (defined(SUNOS_SPARC) || defined(LINUX)) && !defined(__FCC_VERSION) && !defined(ANDROID)
 
   char dname[65];
   if (getdomainname(dname, 65)) {
