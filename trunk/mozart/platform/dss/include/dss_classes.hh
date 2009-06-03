@@ -57,6 +57,10 @@ class CoordinatorAssistant;
 #endif
 #endif
 
+#ifdef ANDROID
+#define DSS_NO_RTTI
+#endif
+
 //****************************** Not in the documantation yet *************************
 
 // A ThreadMediator is used to provide the DSS an interface to a

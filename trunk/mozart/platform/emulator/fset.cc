@@ -40,6 +40,9 @@
 
 //*****************************************************************************
 
+#ifdef ANDROID
+void print_to_fsfile (const char *format, ...){}
+#else
 #ifdef DEBUG_FSET_CONSTRREP
 
 void print_to_fsfile (const char *format, ...)
@@ -57,6 +60,7 @@ void print_to_fsfile (const char *format, ...)
 FILE * _fset_file = fopen("/tmp/fset_ir_debug_file.oz", "w+");
 #else
 FILE * _fset_file = stdout;
+#endif
 #endif
 
 //*****************************************************************************
