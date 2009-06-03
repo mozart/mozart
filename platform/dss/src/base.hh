@@ -70,10 +70,13 @@
 #include <stdio.h> //NULL  
 #include "dss_enums.hh"
 
+#ifdef __i386__
+#define DSS_SLOPPY_ALIGNMENT
+#endif
 
 // Create an integer2char, taking int and BYTE*
 inline void gf_integer2char(BYTE* const buf, const u32& e){
-#ifdef BIG_ENDIAN_HOST
+#if defined(BIG_ENDIAN_HOST) || ! defined(DSS_SLOPPY_ALIGNMENT)
   buf[0] = e, buf[1] = (e >>  8), buf[2] = (e >> 16), buf[3] = (e >> 24);
 #else
   *reinterpret_cast<u32*>(buf) = e;
@@ -81,7 +84,7 @@ inline void gf_integer2char(BYTE* const buf, const u32& e){
 }
 
 inline u32 gf_char2integer(BYTE* const buf){
-#ifdef BIG_ENDIAN_HOST
+#if defined(BIG_ENDIAN_HOST) || ! defined(DSS_SLOPPY_ALIGNMENT)
   return (buf[3] << 24 | buf[2] << 16 | buf[1] << 8 | buf[0]);
 #else
   return *reinterpret_cast<u32*>(buf);
