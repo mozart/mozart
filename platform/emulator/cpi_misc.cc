@@ -29,6 +29,7 @@
 
 //-----------------------------------------------------------------------------
 
+#ifndef ANDROID
 #ifdef CPI_FILE_PRINT
 
 FILE *cpi_fileout = NULL;
@@ -53,6 +54,7 @@ FILE *cpi_fileout = stdout;
 
 ostream * cpi_cout = &cout;
 
+#endif
 #endif
 
 //-----------------------------------------------------------------------------

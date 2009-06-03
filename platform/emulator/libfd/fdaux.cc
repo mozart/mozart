@@ -270,6 +270,9 @@ void vectorToLinear(OZ_Term v, int &a, OZ_Term &x)
 
 //-----------------------------------------------------------------------------
 
+#ifdef ANDROID
+void oz_debugprint(char *format, ...){}
+#else
 extern FILE *cpi_fileout;
 
 void oz_debugprint(char *format, ...)
@@ -282,7 +285,7 @@ void oz_debugprint(char *format, ...)
   fprintf(cpi_fileout, "\n");
   fflush(cpi_fileout);
 }
-
+#endif
 //-----------------------------------------------------------------------------
 
 sum_ops getSumOps(OZ_Term op) {
