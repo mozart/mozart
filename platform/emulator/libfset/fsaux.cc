@@ -29,6 +29,9 @@
 #include "fsaux.hh"
 
 template class _OZ_ParamIterator<OZ_Return>;
+#ifdef ANDROID
+void oz_fsetdebugprint(char *format, ...){}
+#else
 extern FILE *cpi_fileout;
 
 void oz_fsetdebugprint(char *format, ...)
@@ -41,5 +44,4 @@ void oz_fsetdebugprint(char *format, ...)
   fprintf(cpi_fileout, "\n");
   fflush(cpi_fileout);
 }
-
-
+#endif

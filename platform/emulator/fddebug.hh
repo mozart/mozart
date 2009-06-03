@@ -55,8 +55,9 @@
 #define DEBUG_FSET_CONSTRREP_DETAILED_OUTPUT
 #endif
 
+#ifndef ANDROID
 extern FILE * _fdomn_file, * _fset_file;
-
+#endif
 
 //-----------------------------------------------------------------------------
 #ifdef DEBUG_FD_CONSTRREP

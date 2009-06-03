@@ -44,7 +44,9 @@
 //-----------------------------------------------------------------------------
 
 #include "bits.hh"
-
+#ifdef ANDROID
+void print_to_fdfile (const char *format, ...){}
+#else
 #ifdef DEBUG_FD_CONSTRREP
 
 void print_to_fdfile (const char *format, ...)
@@ -62,6 +64,7 @@ void print_to_fdfile (const char *format, ...)
 FILE * _fdomn_file = fopen("/tmp/fdomn_ir_debug__file.oz", "w+");
 #else
 FILE * _fdomn_file = stdout;
+#endif
 #endif
 
 //-----------------------------------------------------------------------------
