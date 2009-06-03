@@ -188,7 +188,7 @@ namespace _msl_internal{ //Start namespace
     if(len > 0){
       BYTE* end = (dest + len);
       while(dest + 4 <= end){
-        *reinterpret_cast<int*>(dest) = random_u32();
+        gf_integer2char(dest, random_u32());
         dest += 4;
       }
       while(dest < end){ // rest just fill with "S-BOX" values
