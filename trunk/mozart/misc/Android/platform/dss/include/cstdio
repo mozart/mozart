@@ -1,0 +1,4 @@
+#include <stdio.h>
+namespace std {
+   using ::FILE;
+}
