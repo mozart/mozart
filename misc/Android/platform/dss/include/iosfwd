@@ -1,0 +1,4 @@
+namespace std {
+   class istream;
+   class ostream;
+}
