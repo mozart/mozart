@@ -131,8 +131,13 @@ enum GlueTag {
 // Mediator is the abstract class for all mediators.  Mediator extends
 // class AbstractEntity, and each concrete mediator class extends one
 // of Mutable/Monotonic/Immutable AbstractEntity.
-
-class Mediator : public virtual AbstractEntity {
+class Mediator : public
+#ifdef DSS_NO_RTTI
+VAbstractEntity
+#else
+virtual AbstractEntity
+#endif
+{
   friend class MediatorTable;
 
 protected:

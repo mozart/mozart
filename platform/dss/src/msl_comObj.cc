@@ -922,7 +922,7 @@ namespace _msl_internal { //Start namespace
   verifyEncryptedMessage(Site* enc_site, MsgCnt* msgC){
     if(msgC->m_getFT() == FT_DCT) { // continue
       DssCompoundTerm *dct = static_cast<DssCompoundTerm*>(msgC->popDctVal());
-      DssSimpleDacDct* dsrd = dynamic_cast<DssSimpleDacDct*>(dct);
+      DssSimpleDacDct* dsrd = static_cast<DssSimpleDacDct*>(dct);
       // should check that msgC is empty now...
 
       if (dsrd != NULL)

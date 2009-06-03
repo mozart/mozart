@@ -415,7 +415,7 @@ namespace _msl_internal{ //Start namespace
   DSite*
   MsgCnt::popDSiteVal() {
     Site* ans = popSiteVal();
-    return dynamic_cast<DSite*>(ans);
+    return static_cast<DSite*>(ans);
   }
 
 

@@ -107,7 +107,13 @@ public:
 
 // The abstract classes result from the merging of former interfaces
 // AbstractEntity and Mediator (by raph).
-
+#ifdef DSS_NO_RTTI
+class MutableAbstractEntity;
+class RelaxedMutableAbstractEntity;
+class MonotonicAbstractEntity;
+class ImmutableAbstractEntity;
+class VAbstractEntity;
+#endif
 class DSSDLLSPEC AbstractEntity {
 protected:
   CoordinatorAssistant* a_proxy;
@@ -144,9 +150,21 @@ public:
 
   // report the entity's new fault state
   virtual void reportFaultState(const FaultState& fs) = 0;
-
+#ifdef DSS_NO_RTTI
+  virtual MutableAbstractEntity* asMutableAbstractEntity(){return 0;}
+  virtual RelaxedMutableAbstractEntity* asRelaxedMutableAbstractEntity(){return 0;}
+  virtual MonotonicAbstractEntity* asMonotonicAbstractEntity(){return 0;}
+  virtual ImmutableAbstractEntity* asImmutableAbstractEntity(){return 0;}
+  virtual VAbstractEntity* asVAbstractEntity(){return 0;}
+#endif
   MACRO_NO_DEFAULT_CONSTRUCTORS(AbstractEntity);
 };
+
+#ifdef DSS_NO_RTTI
+class DSSDLLSPEC VAbstractEntity: public virtual AbstractEntity{
+  virtual VAbstractEntity* asVAbstractEntity(){return this;}
+};
+#endif
 
 // ABOUT THE COORDINATION PROXY.  (1) Coordination proxies are created
 // by a DSS_Object.  A proxy p is attached to its abstract entity ae
@@ -174,6 +192,27 @@ public:
 //                              \        /
 //                               \      /
 //                           MyMutableEntity
+//
+// When there is no RTTI, we cannot dynamic_cast an AbstractEntity to a MyEntity
+// or a MutableAbstractEntity. Therefore, we introduce virtual methods in AbstractEntity
+// to 'cast' an AbstractEntity to MutableAbstractEntity, RelaxedMutableAbstractEntity, etc.
+// We also introduce a class VAbstractEntity, virtually inheriting from AbstractEntity,
+// to which we can 'cast' from AbstractEntity by a virtual method and from which MyEntity
+// can directly derive.
+//
+// The diagram thus become:
+//                            AbstractEntity
+//                               /      \.
+//                      virtual /        \ virtual
+//                             /         VAbstractEntity
+//                            /           |
+//            MutableAbstractEntity       |
+//                            \           |
+//                             \         MyEntity
+//                              \        /
+//                               \      /
+//                           MyMutableEntity
+
 
 class DSSDLLSPEC MutableAbstractEntity: public virtual AbstractEntity{
 public:
@@ -183,6 +222,9 @@ public:
   virtual AbstractEntityName getAEName() const { return AEN_MUTABLE; }
   OpRetVal abstractOperation_Read(DssThreadId*, PstOutContainerInterface**&);
   OpRetVal abstractOperation_Write(DssThreadId*, PstOutContainerInterface**&);
+#ifdef DSS_NO_RTTI
+  virtual MutableAbstractEntity* asMutableAbstractEntity(){return this;}
+#endif
 
   /************************* SUPPLIED BY USER *************************/
   virtual void callback_Write(DssThreadId* id_of_calling_thread,
@@ -202,6 +244,9 @@ public:
   virtual AbstractEntityName getAEName() const { return AEN_RELAXED_MUTABLE; }
   OpRetVal abstractOperation_Read(DssThreadId*, PstOutContainerInterface**&);
   OpRetVal abstractOperation_Write(PstOutContainerInterface**&);
+#ifdef DSS_NO_RTTI
+  virtual RelaxedMutableAbstractEntity* asRelaxedMutableAbstractEntity(){return this;}
+#endif
 
   /************************* SUPPLIED BY USER *************************/
   virtual void callback_Write(DssThreadId* id_of_calling_thread,
@@ -220,6 +265,9 @@ public:
   virtual AbstractEntityName getAEName() const { return AEN_TRANSIENT; }
   OpRetVal abstractOperation_Bind(DssThreadId*, PstOutContainerInterface**&);
   OpRetVal abstractOperation_Append(DssThreadId*, PstOutContainerInterface**&);
+#ifdef DSS_NO_RTTI
+  virtual MonotonicAbstractEntity* asMonotonicAbstractEntity(){return this;}
+#endif
 
   /************************* SUPPLIED BY USER *************************/
   virtual void callback_Bind(PstInContainerInterface* operation) = 0;
@@ -237,6 +285,9 @@ public:
   /************************* SUPPLIED BY DSS *************************/
   virtual AbstractEntityName getAEName() const { return AEN_IMMUTABLE; }
   OpRetVal abstractOperation_Read(DssThreadId*, PstOutContainerInterface**&);
+#ifdef DSS_NO_RTTI
+  virtual ImmutableAbstractEntity* asImmutableAbstractEntity(){return this;}
+#endif
 
   /************************* SUPPLIED BY USER *************************/
   virtual void callback_Read(DssThreadId* id_of_calling_thread,

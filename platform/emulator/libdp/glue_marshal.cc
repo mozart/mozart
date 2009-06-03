@@ -124,7 +124,12 @@ bool glue_unmarshalEntity(ByteBuffer *bs, TaggedRef &entity) {
   GlueTag tag = static_cast<GlueTag>(bs->get());
 
   // unmarshal entity-specific data
+#ifdef DSS_NO_RTTI
+  AbstractEntity* ae=proxy->getAbstractEntity();
+  Mediator* med = (ae==0)?0:static_cast<Mediator*>(ae->asVAbstractEntity());
+#else
   Mediator* med = dynamic_cast<Mediator*>(proxy->getAbstractEntity());
+#endif
   if (!med) { // create mediator
     med = glue_newMediator(tag);
     med->setProxy(proxy);
