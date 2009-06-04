@@ -175,7 +175,7 @@ namespace _dss_internal{ //Start namespace
       MutableAbstractEntity* mae = ae->asMutableAbstractEntity(ae);
 #else
       MutableAbstractEntity* mae = dynamic_cast<MutableAbstractEntity*>(ae);
-#end
+#endif
       switch (aop) {
       case AO_STATE_WRITE:
         mae->callback_Write(tid, pstin, pstout);
