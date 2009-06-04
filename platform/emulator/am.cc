@@ -62,7 +62,7 @@ void usage(int /* argc */,char **argv) {
   fprintf(stderr, " -init <file> : init functor\n");
   fprintf(stderr, " -u <url>     : application functor\n");
   fprintf(stderr, " -- <args> ...: application arguments\n");
-#end
+#endif
   osExit(1);
 }
 
