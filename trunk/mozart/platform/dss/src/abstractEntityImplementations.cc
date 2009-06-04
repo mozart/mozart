@@ -32,16 +32,6 @@
 #include "abstractEntityImplementations.hh"
 #include "coordinator.hh"
 #include "protocols.hh"
-//Yves: Do we need to include all the protocols headers here?
-#include "protocol_invalid.hh"
-#include "protocol_migratory.hh"
-#include "protocol_once_only.hh"
-#include "protocol_transient_remote.hh"
-#include "protocol_pilgrim.hh"
-#include "protocol_simple_channel.hh"
-#include "protocol_immutable_lazy.hh"
-#include "protocol_immutable_eager.hh"
-#include "protocol_immediate.hh"
 
 using namespace _dss_internal;
 
