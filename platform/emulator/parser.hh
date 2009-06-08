@@ -104,7 +104,7 @@
      T_try = 320,
      T_unit = 321,
      T_UNIT_LABEL = 322,
-     T_for = 323,
+     T_while = 323,
      T_FOR = 324,
      T_do = 325,
      T_ENDOFFILE = 326,
@@ -201,7 +201,7 @@
 #define T_try 320
 #define T_unit 321
 #define T_UNIT_LABEL 322
-#define T_for 323
+#define T_while 323
 #define T_FOR 324
 #define T_do 325
 #define T_ENDOFFILE 326
@@ -241,7 +241,7 @@ typedef union YYSTYPE
   OZ_Term t;
   int i;
 }
-/* Line 1489 of yacc.c.  */
+/* Line 1529 of yacc.c.  */
 
         YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

@@ -49,7 +49,7 @@ char xyFileName[maxFileNameSize];
 char xyhelpFileName[maxFileNameSize];
 OZ_Term xyFileNameAtom;
 
-int xy_gumpSyntax, xy_allowDeprecated;
+int xy_gumpSyntax, xy_allowDeprecated, xy_allowWhileLoop;
 OZ_Term xy_errorMessages;
 
 static int errorFlag;
@@ -1036,6 +1036,8 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 "try"                          { return T_try; }
 "try"/\(                       { return T_try; }
 "unit"                         { return T_unit; }
+"while"                        { return xy_allowWhileLoop? T_while: T_OZATOM; }
+"while"/\(                     { return xy_allowWhileLoop? T_while: T_ATOM_LABEL; }
 
 {OZATOM}                       { stripTrans('\''); return T_OZATOM; }
 "'"[^']*"'"                    { if (get_cond()) xyreportError("lexical error","illegal atom syntax",xyFileName,xylino,xycharno()); return T_OZATOM;}

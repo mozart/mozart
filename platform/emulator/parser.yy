@@ -65,7 +65,7 @@ extern char xyFileName[];   // name of the current file, "" means stdin
 extern char xyhelpFileName[];
 extern OZ_Term xyFileNameAtom;
 
-extern int xy_gumpSyntax, xy_allowDeprecated;
+extern int xy_gumpSyntax, xy_allowDeprecated, xy_allowWhileLoop;
 extern OZ_Term xy_errorMessages;
 
 extern int xylino;
@@ -111,7 +111,7 @@ static void xyerror(const char *);
 // Atom definitions
 //-----------------
 
-#define PA_MAX_ATOM 111
+#define PA_MAX_ATOM 112
 
 OZ_Term _PA_AtomTab[PA_MAX_ATOM+1];
 
@@ -221,12 +221,13 @@ OZ_Term _PA_AtomTab[PA_MAX_ATOM+1];
 #define PA_pos                                  _PA_AtomTab[103]
 #define PA_warn                                 _PA_AtomTab[104]
 #define PA_zy                                   _PA_AtomTab[105]
-#define PA_fLoop                                _PA_AtomTab[106]
+#define PA_fWhile                               _PA_AtomTab[106]
 #define PA_fMacro                               _PA_AtomTab[107]
 #define PA_fDotAssign                           _PA_AtomTab[108]
 #define PA_fFOR                                 _PA_AtomTab[109]
 #define PA_fColonEquals                         _PA_AtomTab[110]
 #define PA_parens                               _PA_AtomTab[111]
+#define PA_allowwhileloop                       _PA_AtomTab[112]
 
 const char * _PA_CharTab[] = {
         "allowdeprecated",                      //0
@@ -335,12 +336,13 @@ const char * _PA_CharTab[] = {
         "pos",                                  //103
         "warn",                                 //104
         "zy",                                   //105
-        "fLoop",                                //106
+        "fWhile",                               //106
         "fMacro",                               //107
         "fDotAssign",                           //108
         "fFOR",                                 //109
         "fColonEquals",                         //110
         "parentheses",                          //111
+        "allowwhileloop",                       //112
 };
 
 void parser_init(void) {
@@ -593,7 +595,7 @@ void xy_setParserExpect() {
 %token T_false T_FALSE_LABEL T_feat T_finally T_from T_fun T_functor
 %token T_if T_import T_in T_local T_lock T_meth T_not T_of T_or
 %token T_prepare T_proc T_prop T_raise T_require T_self T_skip T_then
-%token T_thread T_true T_TRUE_LABEL T_try T_unit T_UNIT_LABEL T_for T_FOR T_do
+%token T_thread T_true T_TRUE_LABEL T_try T_unit T_UNIT_LABEL T_while T_FOR T_do
 
 %token T_ENDOFFILE
 
@@ -735,9 +737,6 @@ void xy_setParserExpect() {
 %type <t>  synInstTerm
 %type <t>  synLabel
 %type <t>  synProdCallParams
-%type <t>  iterators
-%type <t>  iterator
-%type <t>  optIteratorStep
 %type <t>  FOR_decls
 %type <t>  FOR_decl
 %type <t>  FOR_gen
@@ -800,6 +799,8 @@ switch          : '+' T_SWITCHNAME
                       xy_gumpSyntax = 1;
                     if (!strcmp(xytext,"allowdeprecated"))
                       xy_allowDeprecated = 1;
+                    if (!strcmp(xytext,"allowwhileloop"))
+                      xy_allowWhileLoop = 1;
                     $$ = newCTerm(PA_on,OZ_atom(xytext),pos());
                   }
                 | '-' T_SWITCHNAME
@@ -807,6 +808,8 @@ switch          : '+' T_SWITCHNAME
                       xy_gumpSyntax = 0;
                     if (!strcmp(xytext,"allowdeprecated"))
                       xy_allowDeprecated = 0;
+                    if (!strcmp(xytext,"allowwhileloop"))
+                      xy_allowWhileLoop = 0;
                     $$ = newCTerm(PA_off,OZ_atom(xytext),pos());
                   }
                 ;
@@ -962,12 +965,10 @@ phrase2         : phrase2 add coord phrase2 %prec T_ADD
                   { $$ = $1; }
                 | T_LMACRO coord phraseList T_RMACRO coord
                   { $$ = newCTerm(PA_fMacro,$3,makeLongPos($2,$5)); }
-                | T_for coord iterators T_do inSequence T_end coord
-                  { $$ = newCTerm(PA_fLoop,
-                                  newCTerm(PA_fAnd,$3,$5),
-                                  makeLongPos($2,$7)); }
                 | T_FOR coord FOR_decls T_do inSequence T_end coord
                   { $$ = newCTerm(PA_fFOR,$3,$5,makeLongPos($2,$7)); }
+                | T_while coord phrase T_do inSequence T_end coord
+                  { $$ = newCTerm(PA_fWhile,$3,$5,makeLongPos($2,$7)); }
                 ;
 
 FOR_decls       : /* empty */
@@ -1010,56 +1011,6 @@ FOR_genOptC     : phrase FOR_genOptC2
 
 FOR_genOptC2    : /* empty */
                   { $$ = NameUnit; }
-                | ';' phrase
-                  { $$ = $2; }
-                ;
-
-iterators       : iterators iterator
-                  {
-                    $$ = newCTerm(PA_fAnd,$1,$2);
-                  }
-                | iterator
-                ;
-
-iterator        : nakedVariable T_in coord phrase T_2DOTS phrase optIteratorStep coord
-                  {
-                    $$ = newCTerm(PA_fMacro,
-                                  oz_list(newCTerm(PA_fAtom,oz_atom("for"),NameUnit),
-                                          unwrap($1),
-                                          newCTerm(PA_fAtom,oz_atom("from"),NameUnit),
-                                          unwrap($4),
-                                          newCTerm(PA_fAtom,oz_atom("to"),NameUnit),
-                                          unwrap($6),
-                                          newCTerm(PA_fAtom,oz_atom("by"),NameUnit),
-                                          (unwrap($7) == 0)?makeInt("1",NameUnit):unwrap($7),
-                                          0),
-                                  makeLongPos(OZ_subtree($1,makeTaggedSmallInt(2)),$8));
-                  }
-                | nakedVariable T_in coord phrase optIteratorStep coord
-                  {
-                    /* <<for X 'in' L>>
-                       <<for X = E1 'then' E2>> */
-                    if ($5 == 0) {
-                      $$ = newCTerm(PA_fMacro,
-                                    oz_list(newCTerm(PA_fAtom,oz_atom("for"),NameUnit),
-                                            unwrap($1),
-                                            newCTerm(PA_fAtom,oz_atom("in"),NameUnit),
-                                            unwrap($4),
-                                            0),
-                                    makeLongPos(OZ_subtree($1,makeTaggedSmallInt(2)),$6));
-                    } else {
-                      $$ = newCTerm(PA_fMacro,
-                                    oz_list(newCTerm(PA_fAtom,oz_atom("for"),NameUnit),
-                                            newCTerm(PA_fEq,$1,$4,NameUnit),
-                                            newCTerm(PA_fAtom,oz_atom("next"),NameUnit),
-                                            unwrap($5),
-                                            0),
-                                    makeLongPos(OZ_subtree($1,makeTaggedSmallInt(2)),$6));
-                    }
-                  }
-                ;
-
-optIteratorStep : { $$ = 0; }
                 | ';' phrase
                   { $$ = $2; }
                 ;
@@ -1939,6 +1890,9 @@ static OZ_Term init_options(OZ_Term optRec) {
 
   x = OZ_subtree(optRec, PA_allowdeprecated);
   xy_allowDeprecated = x == 0? 1: OZ_eq(x, NameTrue);
+
+  x = OZ_subtree(optRec, PA_allowwhileloop);
+  xy_allowWhileLoop = x == 0? 0: OZ_eq(x, NameTrue);
 
   OZ_Term defines = OZ_subtree(optRec, PA_defines);
   return defines;
