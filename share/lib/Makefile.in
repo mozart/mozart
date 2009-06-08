@@ -101,7 +101,7 @@ DPSRC   = Connection Discovery Remote RemoteServer Fault URL DPStatistics \
 	  DP DPDefaults DPErrorFormatters DPService Site $(DENYS_DPSRCS)
 WPSRC   = Tk TkTools Tix
 SUPPSRC = Type Narrator Listener ErrorListener DefaultURL ObjectSupport
-MACSRC	= Macro BackquoteMacro LoopMacro
+MACSRC	= Macro BackquoteMacro
 
 RUNFUNCTORS1 = \
 	$(SPSRC:%=%.ozf) \
@@ -254,7 +254,7 @@ COMPILERSRC1 = \
 	StaticAnalysis.oz POTypes.oz PatternMatching.oz CodeGen.oz \
 	CodeStore.oz CodeEmitter.oz BindingAnalysis.oz TupleSyntax.oz \
 	Unnester.oz UnnestFD.oz Assembler.oz Interface.oz Abstractions.oz \
-	Errors.oz RunTime.oz ForLoop.oz
+	Errors.oz RunTime.oz ForLoop.oz WhileLoop.oz
 
 COMPILERSRCEXTRA = compiler-Builtins.oz
 
@@ -282,7 +282,7 @@ compiler-Builtins.oz: $(BIMODFILES)
 FUNFUNCTORS = PrintName.ozf Builtins.ozf Unnester.ozf Core.ozf \
 	StaticAnalysis.ozf CodeGen.ozf CodeStore.ozf CodeEmitter.ozf \
 	Assembler.ozf Main.ozf RunTime.ozf Annotate.ozf GroundZip.ozf \
-	ForLoop.ozf
+	ForLoop.ozf WhileLoop.ozf
 
 PrintName.ozf: compiler/PrintName.oz
 

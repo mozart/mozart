@@ -246,6 +246,8 @@ local
 	 'raise'#IN#NL#{OzBlock S}#EX#NL#'end'
       [] fGrammar(T Obj _) then
 	 {Obj output(T $)}
+      [] fWhile(E B _) then
+	 PU#'while '#{OutputOz E}#' do'#IN#NL#{OzBlock B}#EX#NL#PO#'end'
       [] fFOR(Ds B _) then
 	 'for '#{LI {Map Ds OutputOz} ' '}#' do '#{OutputOz B}#' end'
       [] forPattern(P G) then {OutputOz P}#' in '#{OutputOz G}
