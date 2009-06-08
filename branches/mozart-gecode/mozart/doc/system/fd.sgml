@@ -892,6 +892,34 @@ can be of the following forms:
 >>>
 <item> ?_{PE} can be of the form <<post(X0 X1)>> meaning that <math>\lfloor\sqrt{X0}\rfloor=X1 </math>. Only bounds-consistency is supported.
 
+<entry>
+<index class=module/GFD<and>divmod/
+<<divmod>>
+<synopsis>
+<<<
+{GFD.divmod ?*{PE}}
+>>>
+<item> ?_{PE} can be of the form <<post(X0 X1 X2 X3)>> meaning that <math> X0 \mathrm{div} X1=X2 \land X0 \mathrm{mod} X1 = X1 </math>. Only bounds-consistency is supported.
+<!--<math>\lfloor\sqrt{X0}\rfloor=X1 </math>-->
+
+<entry>
+<index class=module/GFD<and>div/
+<<div>>
+<synopsis>
+<<<
+{GFD.div ?*{PE}}
+>>>
+<item> ?_{PE} can be of the form <<post(X0 X1 X2)>> meaning that <math> X0 \mathrm{div} X1=X2 </math>. Only bounds-consistency is supported.
+
+<entry>
+<index class=module/GFD<and>mod/
+<<mod>>
+<synopsis>
+<<<
+{GFD.mod ?*{PE}}
+>>>
+<item> ?_{PE} can be of the form <<post(X0 X1 X2)>> meaning that <math> X0 \mathrm{mod} X1=X2 </math>. Only bounds-consistency is supported.
+
 </list>
 
 </section>
@@ -2056,7 +2084,7 @@ constraints.  The following procedure creates branching descriptions that
 define a search tree. Decisions are made by commiting a branching description
 to a computation space to create another node in the search tree. Assume  <<Dv>> 
 to be a vector of finite domain integers. The distribution differs in the 
-order of the choice-points and in the constraint with which is distributed.
+order of the branchings and in the constraint with which is distributed.
 
  Essentially, it works as follows
 <list class=enum>
@@ -2071,11 +2099,11 @@ The order of <<Dv>> is preserved.
 
 <list>
 <entry>
-<index class=module/FD<and>distribute/
+<index class=module/GFD<and>distribute/
 <<distribute>>
 <synopsis>
 <<<
-{FD.distribute ?+{Dist} ?+{Xv}}
+{GFD.distribute ?+{Dist} ?+{Xv}}
 >>>
 <item>
 The vector ?_{Xv} is distributed according to the specification 
@@ -2088,22 +2116,22 @@ the atom <<naive>>, <<ff>> (for first-fail), <<split>> or a record with label <<
 ?_{Xv} must be a vector of finite domain integers.
 Considers only non-determined elements of ?_{Xv}. Chooses the leftmost
 variable <<X>> in ?_{Xv}.
-Creates a choice point for <<X=L>> and <<X\=:L>>, where <<L>> is the lower
+Creates a branching description for <<X=L>> and <<X\=:L>>, where <<L>> is the lower
 bound of the domain of <<X>>.
 
 <item> <<ff>>:
 ?_{Xv} must be a vector of finite domain integers.
 Considers only non-determined elements of ?_{Xv}. Chooses the leftmost
 variable <<X>> in ?_{Xv}, whose domain size is minimal. 
-Creates a choice point for <<X=L>> and <<X\=:L>>, where <<L>> is the lower
+Creates a branching description for <<X=L>> and <<X\=:L>>, where <<L>> is the lower
 bound of the domain of <<X>>. 
 
 <item> <<split>>:
 ?_{Xv} must be a vector of finite domain integers.
 Considers only non-determined elements of ?_{Xv}. Chooses the leftmost
 variable <<X>> in ?_{Xv}, whose domain size is minimal. 
-Creates a choice point for <<X=<:M>> and <<X>:M>>, where <<M>> is the
-middle of the domain of <<X>> (see <<FD.reflect.mid>>). 
+Creates a branching description for <<X=<:M>> and <<X>:M>>, where <<M>> is the
+middle of the domain of <<X>> (see <<GFD.reflect.mid>>). 
 
 <item> 
 <<<
@@ -2116,7 +2144,7 @@ generic(order:     ?+{Order}  <= size
 Considers only those elements in ?_{Xv}, for which ?_{Filter} is
 true. Chooses the leftmost element, which is minimal with respect to ?_{Order}
 and selects the 
-corresponding variable <<D>> by ?_{Select}. Creates a choice point for
+corresponding variable <<D>> by ?_{Select}. Creates a branching description for
 <<D::Spec>> and <<D::compl(Spec)>>, where <<Spec>> is selected by
 <<Value>>. 
 <p>
@@ -2180,69 +2208,68 @@ Note, that in case ?_{Det} is <<det>> or in case ?_{Order} is <<size>>,
 <<lower>>, <<upper>>, or <<nbSusps>>, the elements of ?_{Xv} must be
 finite domain integers. 
 <p>
-For example, <<{FD.distribute ff Dv}>> can be expressed as 
+For example, <<{GFD.distribute ff Dv}>> can be expressed as 
 <<<
-{FD.distribute generic Dv},
+{GFD.distribute generic Dv},
 >>>
-<<{FD.distribute split Dv}>> as 
+<<{GFD.distribute split Dv}>> as 
 <<<
-{FD.distribute generic(value: splitMin) Dv},
+{GFD.distribute generic(value: splitMin) Dv},
 >>>
-and <<{FD.distribute naive Dv}>> as
+and <<{GFD.distribute naive Dv}>> as
 <<<
-{FD.distribute generic(order: naive) Dv}
+{GFD.distribute generic(order: naive) Dv}
 >>>
 </list>
 The naive distribution can also be defined as follows using the <<value>>
 feature.
 <<<
-{FD.distribute 
+{GFD.distribute 
 generic(value: fun {$ D}
-		  {FD.reflect.min D}
+		  {GFD.reflect.min D}
 	       end) Ds}
 >>>
 
-<entry>
-<index class=module/FD<and>choose/
-<<choose>>
-<synopsis>
-<<<
-{FD.choose ?+{Dist} ?+{Xv} ??{X} ??{Spec}}
->>>
-<item>
-Chooses the element ?_{X} in ?_{Xv} according to the description
-?_{Dist}. A specification ?_{Spec} for the element ?_{X} is returned
-according  to the description ?_{Dist}. The parameter ?_{Dist} is
-defined in the same way as for <<FD.distribute>> except for the value
-selection. If the feature <<value>> is used for generic distribution, the
-field must be constrained to a unary function <<P>> which selects a value
-from the domain of the selected variable (see below for an example). For
-example, 
-<<<
-{FD.choose ff Xs E S}
->>>
-selects the element <<E>> in the list <<Xs>> according to the first-fail
-strategy and binds <<S>> to the current lower bound of <<E>>. 
-<<<
-{FD.choose generic(value:splitMin) Xv E S}
->>>
-selects the element <<E>> in the list <<Xs>> according to the first-fail
-strategy and binds <<S>> to the pair <<0#M>>, where <<M>> is the result of
-<<{FD.reflect.mid E}>>.
-For the naive distribution strategy, the following may be used. 
-<<<
-{FD.choose generic(value: fun{$ X}
-			     {FD.reflect.min X}
-			  end)
- Xv E S}
->>>
+<!-- <entry> -->
+<!-- <index class=module/FD<and>choose/ -->
+<!-- <<choose>> -->
+<!-- <synopsis> -->
+<!-- <<< -->
+<!-- {FD.choose ?+{Dist} ?+{Xv} ??{X} ??{Spec}} -->
+<!-- >>> -->
+<!-- <item> -->
+<!-- Chooses the element ?_{X} in ?_{Xv} according to the description -->
+<!-- ?_{Dist}. A specification ?_{Spec} for the element ?_{X} is returned -->
+<!-- according  to the description ?_{Dist}. The parameter ?_{Dist} is -->
+<!-- defined in the same way as for <<FD.distribute>> except for the value -->
+<!-- selection. If the feature <<value>> is used for generic distribution, the -->
+<!-- field must be constrained to a unary function <<P>> which selects a value -->
+<!-- from the domain of the selected variable (see below for an example). For -->
+<!-- example,  -->
+<!-- <<< -->
+<!-- {FD.choose ff Xs E S} -->
+<!-- >>> -->
+<!-- selects the element <<E>> in the list <<Xs>> according to the first-fail -->
+<!-- strategy and binds <<S>> to the current lower bound of <<E>>.  -->
+<!-- <<< -->
+<!-- {FD.choose generic(value:splitMin) Xv E S} -->
+<!-- >>> -->
+<!-- selects the element <<E>> in the list <<Xs>> according to the first-fail -->
+<!-- strategy and binds <<S>> to the pair <<0#M>>, where <<M>> is the result of -->
+<!-- <<{FD.reflect.mid E}>>. -->
+<!-- For the naive distribution strategy, the following may be used.  -->
+<!-- <<< -->
+<!-- {FD.choose generic(value: fun{$ X} -->
+<!-- 			     {FD.reflect.min X} -->
+<!-- 			  end) -->
+<!--  Xv E S} -->
+<!-- >>> -->
+
 </list>
 </section>
+<!--**********************************************************************-->
 
-<!--
-**********************************************************************
---> 
-<!--
+
 <section id="section.fd.assignment"><title/Assigning Values/
 <p>
 Special support is available for assigning particular values to
@@ -2254,11 +2281,11 @@ with distribution <ptr to="section.fd.distribution">.
 <p>
 <list>
 <entry>
-<index class=module/FD<and>assign/
+<index class=module/GFD<and>assign/
 <<assign>>
 <synopsis>
 <<<
-{FD.assign ?+{ValA} ?+{Xv}}
+{GFD.assign ?+{ValA} ?+{Xv}}
 >>>
 <item>
 The vector ?_{Xv} is assigned according to the specification 
@@ -2269,16 +2296,15 @@ medium, or largest element is assigned to each variable.
 <p>
 Is equivalent to (for a list of variables <<Xs>>):
 <p>
-<<<proc {FD.assign ValA Xs}
+<<<proc {GFD.assign ValA Xs}
    for X in Xs do 
-      %% {Space.waitStable} %% - why?
-      X = {FD.reflect.ValA X}
+	X = {GFD.reflect.ValA X}
    end
 end>>>
 </list>
 </p>
 </section>
--->
+
 
 </chapter>
 
