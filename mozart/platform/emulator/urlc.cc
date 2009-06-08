@@ -1,9 +1,9 @@
 /*
  *  Authors:
- *    Flaviu Turean (tf@info.ucl.ac.be)
+ *    Flaviu Turean <tf@info.ucl.ac.be>
  * 
  *  Contributors:
- *    optional, Contributor's name (Contributor's email address)
+ *    Gustavo A. Gomez Farhat <gafarhat@univalle.edu.co>
  * 
  *  Copyright:
  *    Organization or Person (Year(s))
@@ -625,13 +625,13 @@ urlc::parse_ftp(const char* line)
     }
     port = 21;
 
-    p_collon = strchr(line, ':');
-    p_at = strchr(line, '@');
+    p_collon = (char*)strchr(line, ':');
+    p_at = (char*)strchr(line, '@');
     if(NULL != p_at) // we have a pass
 	p_slash = strchr(p_at + 1, '/');
     else
-	p_slash = strchr(line, '/'); 
-    p_semi = strchr(line, ';'); // to avoid masking by pass
+      p_slash = (char*)strchr(line, '/'); 
+    p_semi = (char*)strchr(line, ';'); // to avoid masking by pass
     
     // sanity checks
     if((NULL != p_collon) && (0 == p_collon[1]))
@@ -1140,8 +1140,8 @@ urlc::parse_http(const char* line)
 
     if((NULL == line) || (0 == *line)) // emtpy line?
 	return (URLC_EEMPTY);
-    p_collon = strchr(line, ':');
-    p_slash = strchr(line, '/');
+    p_collon = (char*)strchr(line, ':');
+    p_slash = (char*)strchr(line, '/');
     
     // sanity checks
     if((NULL != p_collon) && (0 == p_collon[1])) // nothing after :
