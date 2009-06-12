@@ -234,21 +234,21 @@ OZ_BI_define(int_sumCN,4,0)
 	* This method makes a scalar produt between two list or a list and matrix.
 	* This method will be use to these reified constraints not implented by Gecode.
 	*/
-IntVar scalarProduct(GenericSpace *sp, IntArgs ia, IntVarArgs iva, IntConLevel __ICL_DEF, PropKind __PK_DEF){
+IntVar scalarProduct(GenericSpace *sp, IntArgs ia, IntVarArgs iva, IntConLevel __ICL_DEF){
   IntVarArray arrayTmp(sp,iva.size(),Int::Limits::min,Int::Limits::max);
   for (int i = 0; i < iva.size();i++){
     IntVar valVar;
     int domain = ia[i];
     valVar.init(sp,domain,domain);
-    Gecode::mult(sp,valVar,iva[i],arrayTmp[i],__ICL_DEF, __PK_DEF);
+    Gecode::mult(sp,valVar,iva[i],arrayTmp[i],__ICL_DEF);
   }
   IntVar ScalarProduct;
   ScalarProduct.init(sp,Int::Limits::min,Int::Limits::max);
-  Gecode::linear(sp,arrayTmp,IRT_EQ,ScalarProduct,__ICL_DEF, __PK_DEF);
+  Gecode::linear(sp,arrayTmp,IRT_EQ,ScalarProduct,__ICL_DEF);
   return ScalarProduct;
 }
 
-IntVar scalarProduct(GenericSpace *sp, IntArgs ia, OZ_Term Dvv, IntConLevel __ICL_DEF, PropKind __PK_DEF){
+IntVar scalarProduct(GenericSpace *sp, IntArgs ia, OZ_Term Dvv, IntConLevel __ICL_DEF){
   int lenD;
   OZ_Term *Mat = vectorToOzTerms2(Dvv,lenD);
   
@@ -280,14 +280,14 @@ IntVar scalarProduct(GenericSpace *sp, IntArgs ia, OZ_Term Dvv, IntConLevel __IC
     
     for (int j=0; j<lenV;j++){
       IntView valVec = get_IntView(OZ_deref(Vec[j]));
-      Gecode::mult (sp, valVec, arrayTmp[j], arrayTmp[j+1]	, __ICL_DEF, __PK_DEF);
+      Gecode::mult (sp, valVec, arrayTmp[j], arrayTmp[j+1]	, __ICL_DEF);
     }
     tmp.init(sp,ia[i],ia[i]);
-    Gecode::mult (sp, arrayTmp[lenV], tmp, arrayScaPro[i], __ICL_DEF, __PK_DEF);
+    Gecode::mult (sp, arrayTmp[lenV], tmp, arrayScaPro[i], __ICL_DEF);
   }
   IntVar ScalarProduct;
   ScalarProduct.init(sp,Int::Limits::min,Int::Limits::max);
-  Gecode::linear(sp,arrayScaPro,IRT_EQ,ScalarProduct,__ICL_DEF, __PK_DEF);
+  Gecode::linear(sp,arrayScaPro,IRT_EQ,ScalarProduct,__ICL_DEF);
   return ScalarProduct;
 }
 
@@ -295,7 +295,7 @@ IntVar scalarProduct(GenericSpace *sp, IntArgs ia, OZ_Term Dvv, IntConLevel __IC
 /**
 	*  Implementing of reified.sumAC constraint using mult, abs, linear and rel constraint of gecode
 */
-OZ_BI_define(reified_sumAC,7,0)
+OZ_BI_define(reified_sumAC,6,0)
 {
   DeclareGSpace(sp);
   
@@ -306,12 +306,11 @@ OZ_BI_define(reified_sumAC,7,0)
     IntView D1 = intOrIntView(OZ_in(3));
     BoolView D2 = boolOrBoolView(OZ_in(4));
     Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(5));
-    Gecode::PropKind __PK_DEF = getPropKind(OZ_in(6));
     
     if (ia.size() != iva.size())
       return OZ_typeError(0, "Vectors must have same size: reified.sumAC");
     
-    IntVar ScalarProduct = scalarProduct(sp,ia,iva, __ICL_DEF, __PK_DEF);
+    IntVar ScalarProduct = scalarProduct(sp,ia,iva, __ICL_DEF);
     IntVar tmpD;
     tmpD.init(sp,Int::Limits::min,Int::Limits::max);
     try {
@@ -327,7 +326,7 @@ OZ_BI_define(reified_sumAC,7,0)
       /**
 	 rel (Space *home, IntVar x0, IntRelType r, IntVar x1, BoolVar b, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
       */
-      Gecode::rel (sp, tmpD, relType, D1, D2, __ICL_DEF, __PK_DEF);
+      Gecode::rel (sp, tmpD, relType, D1, D2, __ICL_DEF);
     }
     catch(Exception e){
       RAISE_GE_EXCEPTION(e);
@@ -343,7 +342,7 @@ OZ_BI_define(reified_sumAC,7,0)
 /**
 	*  Implementing of reified.sumCN constraint using mult, abs, linear and rel constraint of gecode
 */
-OZ_BI_define(reified_sumCN,7,0)
+OZ_BI_define(reified_sumCN,6,0)
 {
   DeclareGSpace(sp);
   IntArgs ia = getIntArgs(OZ_in(0));
@@ -352,13 +351,13 @@ OZ_BI_define(reified_sumCN,7,0)
   IntView D1 = intOrIntView(OZ_in(3));
   BoolView D2 = boolOrBoolView(OZ_in(4));
   Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(5));
-  Gecode::PropKind __PK_DEF = getPropKind(OZ_in(6));
-  IntVar ScalarProduct = scalarProduct(sp, ia, Dvv, __ICL_DEF, __PK_DEF);
+
+  IntVar ScalarProduct = scalarProduct(sp, ia, Dvv, __ICL_DEF);
   if (ScalarProduct.size() == 0){
     return OZ_typeError(0, "Vectors must have same size: reified.sumCN");
   }
   
-  Gecode::rel (sp, ScalarProduct, relType, D1, D2, __ICL_DEF, __PK_DEF);
+  Gecode::rel (sp, ScalarProduct, relType, D1, D2, __ICL_DEF);
   
   CHECK_POST(sp);
 } OZ_BI_end
@@ -366,7 +365,7 @@ OZ_BI_define(reified_sumCN,7,0)
 /**
 	*  Implementing of reified.sumACN constraint using mult, abs, linear and rel constraint of gecode
 */
-OZ_BI_define(reified_sumACN,7,0)
+OZ_BI_define(reified_sumACN,6,0)
 {
   DeclareGSpace(sp);
   IntArgs ia = getIntArgs(OZ_in(0));
@@ -375,9 +374,8 @@ OZ_BI_define(reified_sumACN,7,0)
   IntVar D1 = intOrIntView(OZ_in(3));
   BoolView D2 = boolOrBoolView(OZ_in(4));
   Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(5));
-  Gecode::PropKind __PK_DEF = getPropKind(OZ_in(6));
   
-  IntVar ScalarProduct = scalarProduct(sp, ia, Dvv, __ICL_DEF, __PK_DEF);
+  IntVar ScalarProduct = scalarProduct(sp, ia, Dvv, __ICL_DEF);
   //if (ScalarProduct )
   //		return OZ_typeError(0, "Vectors must have same size: reified.sumACN");
   
@@ -385,7 +383,7 @@ OZ_BI_define(reified_sumACN,7,0)
   ABSsp.init(sp,Int::Limits::min,Int::Limits::max);
   Gecode::abs(sp,ScalarProduct,ABSsp,ICL_VAL);
   
-  Gecode::rel (sp, ABSsp, relType, D1, D2, __ICL_DEF, __PK_DEF);
+  Gecode::rel (sp, ABSsp, relType, D1, D2, __ICL_DEF);
 
   CHECK_POST(sp);
 } OZ_BI_end

@@ -233,20 +233,6 @@ bool OZ_isIntConLevel(OZ_Term t) {
   return false; 
 }
 
-/**
-   \brief Checks if the term is a propKind
-*/
-
-inline
-bool OZ_isPropKind(OZ_Term t) {
-  if(OZ_isInt(t)){
-    int pk = OZ_intToC(t);
-    return pk == PK_DEF 
-      || pk == PK_SPEED 
-      || pk == PK_MEMORY ? true : false;
-  }
-  return false; 
-}
 
 /**
    \brief Checks if the term is a IntRelType.

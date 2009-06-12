@@ -305,16 +305,6 @@ Gecode::IntConLevel getIntConLevel(TaggedRef icl){
 }
 
 /**
- * \brief Return a PropKind.
- * @param pk OZ integer representing the PropKind
- */
-inline
-Gecode::PropKind getPropKind(TaggedRef pk){
-  Assert(OZ_isPropKind(pk));
-  return (PropKind) OZ_intToC(pk);
-}
-
-/**
  * \brief Return a IntRelType.
  * @param irt OZ integer representing the IntRelType
  */

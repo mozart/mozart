@@ -40,13 +40,12 @@ constraints which may block.
 <p>
 To get an unified call interface for propagators, all propagator
 posting functions take only a record as argument. This record
-contains all the parameters needed to call the propagator and two
-optional fields: <<cl>> and <<pk>>. <<cl>> is for specifying which
+contains all the parameters needed to call the propagator and one
+optional field: <<cl>>. <<cl>> is for specifying which
 consistency level should be used by the propagator, options include
-domain consistency, bounds consistency, etc. <<pk>> is used to tell
-the propagator whether to prefer extensive use of cpu over memory
-or not. Both fields are completely optional as default values are
-internally choosen when they are not provided by user.
+domain consistency, bounds consistency, etc. 
+This field are completely optional as default value are
+internally choosen when it are not provided by user.
 
 <!-- <p>
 Most of the propagators perform interval propagation. Only some
@@ -484,8 +483,7 @@ with ?_{Rt} as formal parameter.
 <section id="section.fd.consistency"><title/Post functions/
 <p>
 Propagators API functions post propagators in the current computation 
-space. All these functions takes as parammeters a <em>consistency level</em>
- and a propagator kind. 
+space. All these functions takes as parammeters a <em>consistency level</em>. 
 Consistency level defines propgators semantic, for instance the bound consistency
 level indicates that the propagator only removes values from domain boundaries.
 
@@ -510,20 +508,20 @@ one of the above values for the feature <<cl>>.
 </section>
 
 <!-- ********************************************************************** -->
-<section id="section.fd.kind"><title/Propagation kinds/
-<p>
-Signals that a particular kind is used in propagation for the implementation of 
-a particular constraint. Possible values include:
+<!-- <section id="section.fd.kind"><title/Propagation kinds/ -->
+<!-- <p> -->
+<!-- Signals that a particular kind is used in propagation for the implementation of  -->
+<!-- a particular constraint. Possible values include: -->
 
-<table>
-<tr><td/<<GFD.pk.def>>/ <td>  Make a default decision. </td></tr>
-<tr><td/<<GFD.pk.speed>>/ <td> Prefer speed over memory consumption. </td></tr>
-<tr><td/<<GFD.pk.memory>>/ <td> Prefer little memory over speed.</td></tr>
-</table>
+<!-- <table> -->
+<!-- <tr><td/<<GFD.pk.def>>/ <td>  Make a default decision. </td></tr> -->
+<!-- <tr><td/<<GFD.pk.speed>>/ <td> Prefer speed over memory consumption. </td></tr> -->
+<!-- <tr><td/<<GFD.pk.memory>>/ <td> Prefer little memory over speed.</td></tr> -->
+<!-- </table> -->
 
-Propagator kinds can be specified in propagator posting procedures by associating
-one of the above values for the feature <<pk>>. 
-</section>
+<!-- Propagator kinds can be specified in propagator posting procedures by associating -->
+<!-- one of the above values for the feature <<pk>>.  -->
+<!-- </section> -->
 
 <!-- ********************************************************************** -->
 <section id="section.fd.dom"><title/Domain constraints/
@@ -819,7 +817,41 @@ can be of the following forms:
 
 <!-- ********************************************************************** -->
 <section id="section.fd.extensional"><title/Extensional constraints/
+<p>
+This particular constraint has an extra optional field; <<pk>>. It is used to tell
+the propagator whether to prefer extensive use of cpu over memory or not. 
+This field are completely optional as default value are
+internally choosen when it are not provided by user.
+
+<p>
+Signals that a particular kind is used in propagation for the implementation of 
+a particular constraint. Possible values include:
+
+<table>
+<tr><td/<<GFD.pk.def>>/ <td>  Make a default decision. </td></tr>
+<tr><td/<<GFD.pk.speed>>/ <td> Prefer speed over memory consumption. </td></tr>
+<tr><td/<<GFD.pk.memory>>/ <td> Prefer little memory over speed.</td></tr>
+</table>
+
+<list>
+<entry>
+<index class=module/GFD<and>extensional/
+<<extensionalP>>
+<synopsis>
+<<<
+{GFD.extensionalP ?*{PE}}
+>>>
+<item> Post an extensional propagator according to the post especification ?_{PE}. ?_{PE} 
+can be of the following forms:
+
+<list class=enum>
+<item> <<post(Lx DFA)>>: Post propagator for extensional constraint defined by DFA(Deterministic Finite Automaton). The elements of Lx must be a word of 
+the language described by the DFA.
+<item><<post(X T)>>:  Post propagator for <math> X \in T </math> been <<T>> a tuple set.
+</list>
+</list>
 </section>
+
 
 <!-- ********************************************************************** -->
 <section id="section.fd.arithmetic"><title/Arithmetic constraints

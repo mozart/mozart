@@ -242,50 +242,50 @@ define
   %%Propagators Builtins
   
    proc {RelP S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 5 then
+      of 4 then
 	 if {List.is Sc.2} then
 	    if {Value.hasFeature BOT Sc.1} then
-	       {GBDP.gbd_rel_5 BOT.(Sc.1) Sc.2 Sc.3 Sc.cl Sc.pk}
+	       {GBDP.gbd_rel_5 BOT.(Sc.1) Sc.2 Sc.3 Sc.cl}
 	    else
 	       raise malformed('Rel constraint post') end
 	    end
 	 else
 	    if {Value.hasFeature Rt Sc.2} then
-	       {GBDP.gbd_rel_5 Sc.1 Rt.(Sc.2) Sc.3 Sc.cl Sc.pk}
+	       {GBDP.gbd_rel_5 Sc.1 Rt.(Sc.2) Sc.3 Sc.cl}
 	    else
 	       raise malformed('asd Rel constraint post') end
 	    end
 	 end
-      []  6 then
+      []  5 then
 	 if {Value.hasFeature Rt Sc.2} then
-	    {GBDP.gbd_rel_6 Sc.1 Rt.(Sc.2) Sc.3 Sc.4 Sc.cl Sc.pk}
+	    {GBDP.gbd_rel_6 Sc.1 Rt.(Sc.2) Sc.3 Sc.4 Sc.cl}
 	 elseif {Value.hasFeature BOT Sc.2} then
-	    {GBDP.gbd_rel_6 Sc.1 BOT.(Sc.2) Sc.3 Sc.4 Sc.cl Sc.pk}
+	    {GBDP.gbd_rel_6 Sc.1 BOT.(Sc.2) Sc.3 Sc.4 Sc.cl}
 	 else
 	    raise malformed('Rel constraint post') end
 	 end
-      []  4 then
-	 {GBDP.gbd_rel_4 Sc.1 Rt.(Sc.2) Sc.cl Sc.pk}
+      []  3 then
+	 {GBDP.gbd_rel_4 Sc.1 Rt.(Sc.2) Sc.cl}
       else
 	 raise malformed('Rel constraint post') end
       end
    end
    
    proc {LinearP S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 5 then
-	 {GBDP.gbd_linear_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
-      []  6 then
-	 {GBDP.gbd_linear_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
-      [] 7 then
-	 {GBDP.gbd_linear_7 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl Sc.pk}
+      of 4 then
+	 {GBDP.gbd_linear_5 Sc.1 Sc.2 Sc.3 Sc.cl}
+      []  5 then
+	 {GBDP.gbd_linear_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl}
+      [] 6 then
+	 {GBDP.gbd_linear_7 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl}
       else
 	 raise malformed('Linear constraint post') end
       end

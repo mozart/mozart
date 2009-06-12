@@ -566,7 +566,6 @@ in
    end
 */
    proc{Rel Sc}
-      %S = {Adjoin '#'(cl:Cl.def pk:Pk.def) Sc}
       W = {Record.width Sc}
    in
       case W
