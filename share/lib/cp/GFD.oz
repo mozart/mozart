@@ -64,12 +64,13 @@ prepare
 	   med: 1  %Select median value.
 	   max: 2  %Select maximum value.
 	   )
-   
+
    Pk = '#'(
 	   def:   0  %Make a default decision
 	   speed: 1  %Prefer speed over memory consumption
 	   memory:2  %Prefer little memory over speed
 	   )
+  
    
 export
    %% Telling domains
@@ -312,16 +313,16 @@ define
    
    %% Propagators Builtins      
    proc {Dom S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 5 then
-	 {GFDP.gfd_dom_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
-      [] 4 then
-	 {GFDP.gfd_dom_4 Sc.1 Sc.2 Sc.cl Sc.pk}
-      [] 6 then
-	 {GFDP.gfd_dom_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
+      of 4 then
+	 {GFDP.gfd_dom_5 Sc.1 Sc.2 Sc.3 Sc.cl}
+      [] 3 then
+	 {GFDP.gfd_dom_4 Sc.1 Sc.2 Sc.cl}
+      [] 5 then
+	 {GFDP.gfd_dom_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl}
       else
 	 raise malformed('Domain constraint post') end
       end
@@ -330,74 +331,74 @@ define
 %%%
    
    proc {RelP S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       %% Assert 2 is a GFD.rt.*
       case W
-      of 5 then
+      of 4 then
 	 if {Value.hasFeature Rt Sc.2} then
-	    {GFDP.gfd_rel_5 Sc.1 Rt.(Sc.2) Sc.3 Sc.cl Sc.pk}
+	    {GFDP.gfd_rel_5 Sc.1 Rt.(Sc.2) Sc.3 Sc.cl}
 	 else
-	    {GFDP.gfd_rel_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+	    {GFDP.gfd_rel_5 Sc.1 Sc.2 Sc.3 Sc.cl}
 	 end
-      []  6 then
-	 {GFDP.gfd_rel_6 Sc.1 Rt.(Sc.2) Sc.3 Sc.4 Sc.cl Sc.pk}
-      [] 4 then
-	 {GFDP.gfd_rel_4 Sc.1 Rt.(Sc.2) Sc.cl Sc.pk}
+      []  5 then
+	 {GFDP.gfd_rel_6 Sc.1 Rt.(Sc.2) Sc.3 Sc.4 Sc.cl}
+      [] 3 then
+	 {GFDP.gfd_rel_4 Sc.1 Rt.(Sc.2) Sc.cl}
       else
 	 raise malformed('Rel post') end
       end
    end
    
    proc {Element S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 5 then
-	 {GFDP.gfd_element_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      of 4 then
+	 {GFDP.gfd_element_5 Sc.1 Sc.2 Sc.3 Sc.cl}
       else
 	 raise malformed('Element constraint post') end
       end
    end
    
    proc {Channel S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 4 then
-	 {GFDP.gfd_channel_4 Sc.1 Sc.2 Sc.cl Sc.pk}
-      [] 5 then
+      of 3 then
+	 {GFDP.gfd_channel_4 Sc.1 Sc.2 Sc.cl}
+      [] 4 then
 	 % TODO: Sc.3 can be 0 by default.
-	 {GFDP.gfd_channel_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+	 {GFDP.gfd_channel_5 Sc.1 Sc.2 Sc.3 Sc.cl}
       else
 	 raise malformed('Channel constraint post') end
       end
    end
    
    proc {Circuit S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 3 then
-	 {GFDP.gfd_circuit_3 Sc.1 Sc.cl Sc.pk}
+      of 2 then
+	 {GFDP.gfd_circuit_3 Sc.1 Sc.cl}
       else
 	 raise malformed('Circuit constraint post') end
       end
    end
    
    proc {Sorted S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 4 then
-	 {GFDP.gfd_sorted_4 Sc.1 Sc.2 Sc.cl Sc.pk}
-      [] 5 then
-	 {GFDP.gfd_sorted_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      of 3 then
+	 {GFDP.gfd_sorted_4 Sc.1 Sc.2 Sc.cl}
+      [] 4 then
+	 {GFDP.gfd_sorted_5 Sc.1 Sc.2 Sc.3 Sc.cl}
       else
 	 raise malformed('Sorted constraint post') end
       end
@@ -416,26 +417,26 @@ define
    end
    
    proc {Cumulatives S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 9 then
-	 {GFDP.gfd_cumulatives_9 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.6 Sc.7 Sc.cl Sc.pk}
+      of 8 then
+	 {GFDP.gfd_cumulatives_9 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.6 Sc.7 Sc.cl}
       else
 	 raise malformed('Cumulatives constraint post') end
       end
    end
    
    proc {MinP S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 4 then
-	 {GFDP.gfd_min_4 Sc.1 Sc.2 Sc.cl Sc.pk}
-      [] 5 then
-	 {GFDP.gfd_min_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      of 3 then
+	 {GFDP.gfd_min_4 Sc.1 Sc.2 Sc.cl}
+      [] 4 then
+	 {GFDP.gfd_min_5 Sc.1 Sc.2 Sc.3 Sc.cl}
       else
 	 raise malformed('Min constraint post') end
       end
@@ -443,120 +444,120 @@ define
    
    
    proc {MaxP S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 4 then
-	 {GFDP.gfd_max_4 Sc.1 Sc.2 Sc.cl Sc.pk}
-      [] 5 then
-	 {GFDP.gfd_max_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      of 3 then
+	 {GFDP.gfd_max_4 Sc.1 Sc.2 Sc.cl}
+      [] 4 then
+	 {GFDP.gfd_max_5 Sc.1 Sc.2 Sc.3 Sc.cl}
       else
 	 raise malformed('Max constraint post') end
       end
    end
    
    proc {MultP S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 5 then
-	 {GFDP.gfd_mult_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      of 4 then
+	 {GFDP.gfd_mult_5 Sc.1 Sc.2 Sc.3 Sc.cl}
       else
 	 raise malformed('Mult constraint post') end
       end
    end
    
    proc {Abs S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 4 then
-	 {GFDP.gfd_abs_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+      of 3 then
+	 {GFDP.gfd_abs_4 Sc.1 Sc.2 Sc.cl}
       else
 	 raise malformed('Abs constraint post') end
       end
    end
    
    proc {LinearP S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 5 then
-	 {GFDP.gfd_linear_5 Sc.1 Rt.(Sc.2) Sc.3 Sc.cl Sc.pk}
-      [] 6 then
+      of 4 then
+	 {GFDP.gfd_linear_5 Sc.1 Rt.(Sc.2) Sc.3 Sc.cl}
+      [] 5 then
 	 if {IsAtom Sc.3} andthen {Value.hasFeature Rt Sc.3} then
-	    {GFDP.gfd_linear_6 Sc.1 Sc.2 Rt.(Sc.3) Sc.4 Sc.cl Sc.pk}
+	    {GFDP.gfd_linear_6 Sc.1 Sc.2 Rt.(Sc.3) Sc.4 Sc.cl}
 	 elseif {IsAtom Sc.2} andthen {Value.hasFeature Rt Sc.2} then
-	    {GFDP.gfd_linear_6 Sc.1 Rt.(Sc.2) Sc.3 Sc.4 Sc.cl Sc.pk}
+	    {GFDP.gfd_linear_6 Sc.1 Rt.(Sc.2) Sc.3 Sc.4 Sc.cl}
 	 else
-	    {GFDP.gfd_linear_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
+	    {GFDP.gfd_linear_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl}
 	 end
-      [] 7 then
-	 {GFDP.gfd_linear_7 Sc.1 Sc.2 Rt.(Sc.3) Sc.4 Sc.5 Sc.cl Sc.pk}
+      [] 6 then
+	 {GFDP.gfd_linear_7 Sc.1 Sc.2 Rt.(Sc.3) Sc.4 Sc.5 Sc.cl}
       else
 	 raise malformed('Linear constraint post') end
       end
    end
    
    proc {Distinct Vec}
-      {GFDP.gfd_distinct_3 Vec Cl.val Pk.def}
+      {GFDP.gfd_distinct_3 Vec Cl.val}
    end
 
    proc {DistinctB Vec}
-      {GFDP.gfd_distinct_3 Vec Cl.bnd Pk.def}
+      {GFDP.gfd_distinct_3 Vec Cl.bnd}
    end
 
    proc {DistinctD Vec}
-      {GFDP.gfd_distinct_3 Vec Cl.dom Pk.def}
+      {GFDP.gfd_distinct_3 Vec Cl.dom}
    end
 
    proc {DistinctOffset S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 4 then
+      of 3 then
 	 % Notice that in Mozart the integer list is the second argument, but in
 	 % Gecode it is the first one
-	 {GFDP.gfd_distinct_4 Sc.2 Sc.1 Sc.cl Sc.pk}
+	 {GFDP.gfd_distinct_4 Sc.2 Sc.1 Sc.cl}
       else
 	 raise malformed('DistinctOffset constraint post') end
       end
    end
    
    proc {DistinctP S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 3 then
-	 {GFDP.gfd_distinct_3 Sc.1 Sc.cl Sc.pk}
-      [] 4 then
-	 {GFDP.gfd_distinct_4 Sc.2 Sc.1 Sc.cl Sc.pk}
+      of 2 then
+	 {GFDP.gfd_distinct_3 Sc.1 Sc.cl}
+      [] 3 then
+	 {GFDP.gfd_distinct_4 Sc.2 Sc.1 Sc.cl}
       else
 	 raise malformed('Distinct constraint post') end
       end
    end
      
    proc {CountP S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 4 then
-	 {GFDP.gfd_count_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+      of 3 then
+	 {GFDP.gfd_count_4 Sc.1 Sc.2 Sc.cl}
+      [] 4 then
+	 {GFDP.gfd_count_5 Sc.1 Sc.2 Sc.3 Sc.cl}
       [] 5 then
-	 {GFDP.gfd_count_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
-      [] 6 then
       % Post propagator count_6 support domain-consistency only.
 	 if {Value.hasFeature Rt Sc.3} then
-	    {GFDP.gfd_count_6 Sc.1 Sc.2 Rt.(Sc.3) Sc.4 Cl.dom Sc.pk}
+	    {GFDP.gfd_count_6 Sc.1 Sc.2 Rt.(Sc.3) Sc.4 Cl.dom}
 	 else
-	    {GFDP.gfd_count_6 Sc.1 Sc.2 Sc.3 Sc.4 Cl.dom Sc.pk}
+	    {GFDP.gfd_count_6 Sc.1 Sc.2 Sc.3 Sc.4 Cl.dom}
 	 end
       else
 	 raise malformed('Count constraint post') end
@@ -571,48 +572,48 @@ define
    %% Miscelaneus
 	 
    proc {DivP S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 5 then
-	 {GFDP.gfd_div_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      of 4 then
+	 {GFDP.gfd_div_5 Sc.1 Sc.2 Sc.3 Sc.cl}
       else
 	 raise malformed('Mult constraint post') end
       end
    end
 
    proc {DivMod S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 6 then
-	 {GFDP.gfd_divmod_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl Sc.pk}
+      of 5 then
+	 {GFDP.gfd_divmod_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl}
       else
 	 raise malformed('divmod constraint post') end
       end
    end
 
    proc {Sqrt S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 4 then
-	 {GFDP.gfd_sqrt_4 Sc.1 Sc.2 Sc.cl Sc.pk}
+      of 3 then
+	 {GFDP.gfd_sqrt_4 Sc.1 Sc.2 Sc.cl}
       else
 	 raise malformed('Sqrt constraint post') end
       end
    end
    
    proc {ModP S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 5 then
-	 {GFDP.gfd_mod_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      of 4 then
+	 {GFDP.gfd_mod_5 Sc.1 Sc.2 Sc.3 Sc.cl}
       else
 	 raise malformed('Mod constraint post') end
       end
@@ -620,23 +621,23 @@ define
    
    
    proc {PowerP S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 5 then
-	 {GFDP.gfd_power_5 Sc.1 Sc.2 Sc.3 Sc.cl Sc.pk}
+      of 4 then
+	 {GFDP.gfd_power_5 Sc.1 Sc.2 Sc.3 Sc.cl}
       else
 	 raise malformed('Power constraint post') end
       end
    end
 
    proc {FdMaximum V1 V2 V3}
-      {GFDP.gfd_max_5 V1 V2 V3 Cl.def Pk.def}
+      {GFDP.gfd_max_5 V1 V2 V3 Cl.def}
    end
 
    proc {FdMinimum V1 V2 V3}
-      {GFDP.gfd_min_5 V1 V2 V3 Cl.def Pk.def}
+      {GFDP.gfd_min_5 V1 V2 V3 Cl.def}
    end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -645,36 +646,36 @@ define
    %% Reified constraint not supported by Gecode
    
    proc {SumACP S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-	 of 7 then
-	 {GFDP.reified_sumAC Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl Sc.pk}
+	 of 6 then
+	 {GFDP.reified_sumAC Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl}
       else
 	 raise malformed('sumAC constraint post') end
       end
    end
    
    proc {SumCNP S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 7 then
-	 {GFDP.reified_sumCN Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl Sc.pk}
+      of 6 then
+	 {GFDP.reified_sumCN Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl}
       else
 	 raise malformed('sumCN constraint post') end
       end
    end
 
    proc {SumACNP S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      Sc = {Adjoin '#'(cl:Cl.def) S}
       W = {Record.width Sc}
    in
       case W
-      of 7 then
-	 {GFDP.reified_sumACN Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl Sc.pk}
+      of 6 then
+	 {GFDP.reified_sumACN Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl}
       else
 	 raise malformed('sumCN constraint post') end
       end
