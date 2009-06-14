@@ -67,7 +67,7 @@ in
        {ForAll Ys proc {$ Y} Plan.X \=: Plan.Y end}
     end
        end}
-      {GFD.distributeBR naive Plan}
+      {GFD.distribute naive Plan}
    end
 end
 

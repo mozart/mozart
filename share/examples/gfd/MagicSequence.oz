@@ -38,7 +38,7 @@ fun{MagicSequence N}
       end
       {GFD.sum Seq '=:' N}
       {GFD.sumC Cs Seq '=:' 0}
-      {GFD.distributeBR ff Seq}
+      {GFD.distribute ff Seq}
    end
 end
 

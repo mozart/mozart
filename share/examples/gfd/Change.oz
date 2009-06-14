@@ -42,7 +42,7 @@ in
 			    Change.I  =<: Available.I
 			end}
       {GFD.sumC Denomination Change '=:' Amount}
-      {GFD.distributeBR generic(order:naive value:max) Change}
+      {GFD.distribute generic(order:naive value:max) Change}
    end
 end
 

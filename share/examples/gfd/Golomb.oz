@@ -41,7 +41,7 @@ in
       end
    in
       S = s(k:K dm:{DIJ 1 N})
-      K.1 =: 0
+      K.1 = 0
       K.2 =: {GFD.int 0#NN}
       for I in 1..N-1 do
 	 %% K.(I+1) >: K.I
@@ -52,12 +52,9 @@ in
 	 end
       end
       {GFD.distinctP post(D cl:GFD.cl.val)}
-      {GFD.distributeBR naive K}
+      {GFD.distribute naive K}
    end
 end
 
-
 %{Show {SearchBest {MakeGolomb 7} Better}}
 {Show {SearchOne {MakeGolomb 7}}}
-
-

@@ -40,7 +40,7 @@ fun{AllInterval N}
       X.1 =<: X.2
       D.1 >=: D.2
       
-      {GFD.distributeBR naive Root}
+      {GFD.distribute naive Root}
    end
 end
 
