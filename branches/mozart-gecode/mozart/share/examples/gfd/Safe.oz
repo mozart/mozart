@@ -49,7 +49,7 @@ in
    for I in 1..9 do
       {List.nth C I} \=: I
    end
-   {GFD.distributeBR ff C}
+   {GFD.distribute ff C}
 end
 
 {Show {SearchAll Safe}}

@@ -176,9 +176,9 @@ export
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    
    %% Distribution
-   distribute : FdDistribute
+   %distribute : FdDistribute
    %distributeC : FdDistributeC
-   distributeBR : FdDistributeBR
+   distribute : FdDistributeBR
    %% Miscelaneus
    inf : FdInf
    sup : FdSup
@@ -685,12 +685,7 @@ define
    FdSup = {GFDB.sup}
    FdIs  = GFDB.is
    
-   %FdDistributeC = GFDP.distribute
-   local
-      \insert GeIntVarDist
-   in
-      FdDistribute = IntVarDistribute
-   end
+
    local
       \insert GeIntVarDistBR
    in

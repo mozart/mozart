@@ -35,7 +35,7 @@ proc{Pythagoras Root}
 in
 
    {GFD.dom 1#1000 Root}
-   {GFD.dom 0#FD.sup [AA BB CC]}
+   {GFD.dom 0#GFD.sup [AA BB CC]}
    {Square A AA}
    {Square B BB}
    {Square C CC}
