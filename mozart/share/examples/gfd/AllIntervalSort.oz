@@ -82,7 +82,7 @@ fun{AllInterval N}
       {Adiff_sn X N}
       {Adiff_sn_star D N}
       
-      {GFD.distributeBR ff X}
+      {GFD.distribute ff X}
    end
 end
 

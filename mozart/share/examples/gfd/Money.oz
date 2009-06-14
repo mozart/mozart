@@ -44,8 +44,7 @@ proc{Money Root}
    M \=: 0
   
    {GFD.distinctP  post(Root cl:GFD.cl.bnd)}
-   {GFD.distributeBR generic(order:naive value:max) Root}
-   %{Wait {GFD.distributeC Root}}
+   {GFD.distribute generic(order:naive value:max) Root}
 end
 
 
