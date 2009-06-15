@@ -298,6 +298,12 @@ if test "${GXX}" = yes; then
             ;;
         esac
         ;;
+    linux-x86_64_32)
+        oz_opt="-O3 -pipe -fno-strict-aliasing"
+        oz_om="-m32 -march=i686 -mtune=generic -fomit-frame-pointer"
+        oz_copt_debug="-m32 -g3 -DINTERFACE -fno-inline -fno-default-inline -fno-inline-functions"
+        EMULATE_CXXFLAGS=-finline-limit=500
+        ;;
     *)  ;;
     esac
 
@@ -320,6 +326,11 @@ case $platform in
     sunos*)
         TOOLLDCMD="ld"
         oz_enable_modules_static=yes
+        ;;
+    linux-x86_64_32)
+        TOOLLDCMD="gcc -shared"
+        LDFLAGS="$LDFLAGS -m32"
+        : ${oz_enable_modules_static=no}
         ;;
     linux*)
         TOOLLDCMD="gcc -shared"
@@ -1355,6 +1366,10 @@ case ${platform} in
     PICOPTIONS="-fPIC -fpic -Kpic"
     PICOPTIONSCC="-fPIC -fpic -Kpic"
     PICOPTIONSEXTRA="-fno-common"
+    ;;
+linux-x86_64_32)
+    PICOPTIONS="-m32 -fpic -Kpic"
+    PICOPTIONSCC="-m32 -fpic -Kpic"
     ;;
 *)  PICOPTIONS="-fpic -Kpic"
     PICOPTIONSCC="-fpic -Kpic"
