@@ -1,12 +1,17 @@
 To compile Mozart for Android
 =============================
 
-1) Download the Android sources in myandroid/
-2) Create a directory myandroid/vendor/myvendorid/
-3) Create a file myandroid/vendor/myvendorid/Android.mk with the single line:
+1) Download the Android sources in mydroid/ . You can get them from
+http://source.android.com/download
+
+WARNING! Only the sources are about 2.8GB and for building you'll need about
+10GB through the whole process.
+
+2) Create a directory mydroid/vendor/myvendorid/
+3) Create a file mydroid/vendor/myvendorid/Android.mk with the single line:
 include $(call first-makefiles-under,$(call my-dir))
-4) Create a directory myandroid/vendor/myvendorid/gmp
-5) Create a file myandroid/vendor/myvendorid/gmp/Android.mk with the following 9 line:
+4) Create a directory mydroid/vendor/myvendorid/gmp
+5) Create a file mydroid/vendor/myvendorid/gmp/Android.mk with the following 9 line:
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES := libgmp.a
@@ -16,11 +21,11 @@ LOCAL_MODULE_CLASS := STATIC_LIBRARIES
 MOZART_GMP_INC := $(LOCAL_PATH)
 include $(BUILD_PREBUILT)
 $(warning $(LOCAL_BUILT_MODULE))
-6) Download Mozart in myandroid/vendor/myvendorid/mozart
+6) Download Mozart in mydroid/vendor/myvendorid/mozart
 7) Create a directory mybuild/
 8) Download Mozart in mybuild/mozart
 9) Run "./configure" in mybuild/mozart
-10) Copy the following files from mybuild/mozart to myandroid/vendor/myvendorid/mozart:
+10) Copy the following files from mybuild/mozart to mydroid/vendor/myvendorid/mozart:
 platform/emulator/atoms.cc
 platform/emulator/atoms.hh
 platform/emulator/config.h
@@ -30,7 +35,7 @@ platform/emulator/mod*-if.cc
 platform/emulator/opcodes.cc
 platform/emulator/opcodes.hh
 platform/emulator/picklecode.cc
-11)Copy (recursively) the files from mybuild/mozart/misc/Android/platform to myandroid/vendor/myvendorid/mozart/platform
+11)Copy (recursively) the files from mybuild/mozart/misc/Android/platform to mydroid/vendor/myvendorid/mozart/platform
 12)Create a directory mybuild/gmp/
 13)Download GMP in mybuild/gmp/gmp-<version>
 14)Create a directory mybuild/gmp/build/
@@ -38,8 +43,8 @@ platform/emulator/picklecode.cc
 16)Download agcc from http://plausible.org/andy/agcc and put it somewhere in your PATH.
 17)Run "../gmp-<version>/configure --host=arm-eabi --build=local --disable-fft --disable-shared CC=agcc" in mybuild/gmp/build/
 18)Run "make && make DESTDIR=mybuild/gmp/install install" in mybuild/gmp/build/
-19)Copy mybuild/gmp/install/usr/local/include/gmp.h to myandroid/vendor/myvendorid/gmp/
-20)Copy mybuild/gmp/install/usr/local/lib/libgmp.a to myandroid/vendor/myvendorid/gmp/
-21)Run make in myandroid/
-After a while, the emulator will be in myandroid/out/target/product/generic/system/bin/ozEmulator
-and the boot modules will be in myandroid/out/target/product/generic/system/lib/*.so-android-arm
+19)Copy mybuild/gmp/install/usr/local/include/gmp.h to mydroid/vendor/myvendorid/gmp/
+20)Copy mybuild/gmp/install/usr/local/lib/libgmp.a to mydroid/vendor/myvendorid/gmp/
+21)Run make in mydroid/
+After a while, the emulator will be in mydroid/out/target/product/generic/system/bin/ozEmulator
+and the boot modules will be in mydroid/out/target/product/generic/system/lib/*.so-android-arm
