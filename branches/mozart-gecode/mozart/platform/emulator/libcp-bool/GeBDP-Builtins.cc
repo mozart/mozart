@@ -42,7 +42,7 @@ OZ_BI_define(gbd_rel_5,4,0){
 
   //test whether input is ref or var
   for(int i=0; i<5; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
   
   IntConLevel __icl = getIntConLevel(OZ_in(3));
   
@@ -125,6 +125,7 @@ OZ_BI_define(gbd_rel_5,4,0){
     /**
        void Gecode::rel (Space* home, BoolOpType o, const BoolVarArgs& x, BoolVar y, IntConLevel icl, PropKind pk);
     */
+    
     BoolOpType __o = getBoolOpType(OZ_in(0));
     BoolVarArgs __x = getBoolVarArgs(OZ_in(1));
     BoolView __y = boolOrBoolView(OZ_in(2));
@@ -162,7 +163,7 @@ OZ_BI_define(gbd_rel_4,3,0){
 
   //test whether input is ref or var
   for(int i=0; i<4; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
   BoolVarArgs __x = getBoolVarArgs(OZ_in(0));
   IntRelType __r = getIntRelType(OZ_in(1));
@@ -186,7 +187,7 @@ OZ_BI_define(gbd_rel_6,5,0){
   
   //test whether input is ref or var
   for(int i=0; i<6; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
   
   BoolView __x0 = boolOrBoolView(OZ_in(0));
   BoolOpType __o = getBoolOpType(OZ_in(1));
@@ -236,7 +237,7 @@ OZ_BI_define(gbd_linear_5,4,0){
 
   //test whether input is ref or var
   for(int i=0; i<5; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
   BoolVarArgs __x = getBoolVarArgs(OZ_in(0));
   IntRelType __r = getIntRelType(OZ_in(1));
@@ -279,7 +280,7 @@ OZ_BI_define(gbd_linear_6,5,0){
 
   //test whether input is ref or var
   for(int i=0; i<6; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
   IntConLevel __icl = getIntConLevel(OZ_in(4));
   
@@ -356,7 +357,7 @@ OZ_BI_define(gbd_linear_7,6,0){
 
   //test whether input is ref or var
   for(int i=0; i<7; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
   IntArgs __a = getIntArgs(OZ_in(0));
   BoolVarArgs __x = getBoolVarArgs(OZ_in(1));

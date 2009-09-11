@@ -57,7 +57,7 @@ in
       {GFD.tuple plan NbSessions 1#NbSlots Plan} 
       %% at most NbParSessions per slot
       {For 1 NbSlots 1  
-       proc {$ Slot} {GFD.atMost NbParSessions Plan Slot} end}
+       proc {$ Slot} {GFD.countP post(Plan Slot '=<:' NbParSessions cl:val)} end}
       %% impose Constraints
       {ForAll Constraints
        proc {$ C}

@@ -48,11 +48,10 @@ in
       {FD.record color Countries 1#NbColors Color}
       {ForAll Data
        proc {$ A#Bs}
-	  {ForAll Bs proc {$ B} Color.A \=: Color.B end}
+	  {ForAll Bs proc {$ B} {FD.sum [Color.A] '\\=:' Color.B} end}
        end}
       {FD.distribute ff Color}
    end
 end
 
-{ExploreOne {MapColoring Data}}
-
+{Show {SearchOne {MapColoring Data}}}

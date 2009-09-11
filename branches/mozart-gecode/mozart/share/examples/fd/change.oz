@@ -29,14 +29,13 @@ in
    proc {$ Change}
       {FD.tuple change NbDenoms 0#Amount Change}
       {For 1 NbDenoms 1 proc {$ I}
-			   Change.I =<: Available.I
+			   {FD.lesseq Change.I Available.I}
 			end}
       {FD.sumC Denomination Change '=:' Amount}
       {FD.distribute generic(order:naive value:max) Change}
    end
 end
 
-BillAndCoins = r(6#100  8#25  10#10  1#5  5#1)
+BillAndCoins = r(6#100 8#25 10#10 1#5 5#1)
 
-{ExploreOne {ChangeMoney BillAndCoins 142}}
-
+{Show {SearchOne {ChangeMoney BillAndCoins 142}}}

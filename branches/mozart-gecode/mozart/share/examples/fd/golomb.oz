@@ -35,24 +35,21 @@ in
    in
       S = s(k:K dm:{DIJ 1 N})
       K.1 = 0
-      K.2 :: 0#NN
+      {FD.int 0#NN K.2}
       for I in 1..N-1 do
-	 K.(I+1) >: K.I
+	 {FD.greater K.(I+1) K.I}
 	 for J in I+1..N do
-	    K.J - K.I =: {DIJ I J}
+	    {FD.sumC [1 ~1] [K.J K.I] '=:' {DIJ I J}}
 	 end
       end
       {FD.distinctB D}
-      {FD.distribute naive K}
+      {FD.distribute ff K}
    end
 end
 
 proc {Better O N}
-   O.dm >: N.dm
+   {FD.greater O.dm N.dm}
 end
 
-/*
-
-{ExploreBest {MakeGolomb 9} Better}
-
-*/
+{Show {SearchOne {MakeGolomb 9}}}
+%{Show {SearchBest {MakeGolomb 9} Better}}

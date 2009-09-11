@@ -41,7 +41,7 @@ in
                            %Change.I =<: Available.I
 			    Change.I  =<: Available.I
 			end}
-      {GFD.sumC Denomination Change '=:' Amount}
+      {GFD.linearP post(Denomination Change '=:' Amount cl:val)}
       {GFD.distribute generic(order:naive value:max) Change}
    end
 end

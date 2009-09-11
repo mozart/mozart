@@ -29,7 +29,7 @@ proc{Adiff_sn X N}
    for I in N..1;~1 do
       SN.I = {GFD.int (I-1)#(I-1)}
    end
-   {GFD.sortedness X SN GFD.cl.bnd}
+   {GFD.sortedP post(X SN cl:bnd)}
 end
 
 proc{Adiff_sn_star X N}
@@ -39,7 +39,7 @@ proc{Adiff_sn_star X N}
       %%SNSTAR.I = {GFD.int (I+1)#(I+1)}
       SNSTAR.I = {GFD.int I#I}
    end
-   {GFD.sortedness X SNSTAR GFD.cl.bnd}
+   {GFD.sortedP post(X SNSTAR cl:bnd)}
 end
 
 proc{Difference X D N}
@@ -49,8 +49,8 @@ proc{Difference X D N}
       DIFF.I = {GFD.int (1-N)-1#(N-1)}
    end
    for I in 1..(N-1) do
-      {GFD.sumC [1 ~1] [X.(I+1) X.I] '=:' DIFF.I}
-      {GFD.abs post(DIFF.I D.I cl:GFD.cl.bnd)}
+      {GFD.linearP post([1 ~1] [X.(I+1) X.I] '=:' DIFF.I cl:val)}
+      {GFD.absP post(DIFF.I D.I cl:bnd)}
    end
 end
 

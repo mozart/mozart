@@ -23,33 +23,20 @@
 declare
 proc {Money Root}
    S E N D M O R Y
-   RootVal
 in
-   Root =  [S E N D M O R Y]
-   RootVal = [1000 100 10 1 1000 100 10 1 ~10000 ~1000 ~100 ~10 ~1]
+   Root = [S E N D M O R Y]
    {FD.dom 0#9 Root}
    {FD.distinct Root}
-   {FD.sumC RootVal
+   {FD.sumC
+    [1000 100 10 1 1000 100 10 1 ~10000 ~1000 ~100 ~10 ~1]
     [S E N D M O
      R E M O N E Y]
     '=:' 0}
+   
+   {FD.sum [S] '\\=:' 0}
+   {FD.sum [M] '\\=:' 0}
 
-    {FD.distribute ff Root}
-
-   S \=: 0 
-   M \=: 0
-                1000*S + 100*E + 10*N + D
-   +            1000*M + 100*O + 10*R + E
-   =: 10000*M + 1000*O + 100*N + 10*E + Y
    {FD.distribute ff Root}
 end
 
-%{ExploreAll Money}
-{Browse {SearchOne Money}}
-
-/*
-{Inspect {SearchOne Money}}
-
-{Inspect {SearchAll Money}}
-
-*/
+{Show {SearchOne Money}}

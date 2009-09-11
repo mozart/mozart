@@ -25,10 +25,10 @@
 %% Load graphical plugin for Explorer
 %%
 
-declare
-[Graphics]={Module.link [({Property.get 'oz.home'}#
-			  '/examples/fd/graphics/Knights.ozf')]}
-{Graphics.add}
+% declare
+% [Graphics]={Module.link [({Property.get 'oz.home'}#
+% 			  '/examples/fd/graphics/Knights.ozf')]}
+% {Graphics.add}
 
 declare
 fun {Knights N}
@@ -74,12 +74,12 @@ in
       % for every field F
       {For 1 NN 1
        proc {$ F}
-	  Nbs   = {Neighbours F}
+	  Nbs = {Neighbours F}
        in
-	  Pred.F :: Nbs
-	  Succ.F :: Nbs
+	  {FD.int Nbs Pred.F}
+	  {FD.int Nbs Succ.F}
 	  % redundant constraint: avoid trivial cycles
-	  Succ.F \=: Pred.F
+	  {FD.sum [Succ.F] '\\=:' Pred.F}
           % for every neighbour G of F
 	  {ForAll Nbs
 	   proc {$ G}
@@ -92,7 +92,7 @@ in
    end
 end
 
-{ExploreOne {Knights 8}}
+{Show {SearchOne {Knights 8}}}
 
 /*
 

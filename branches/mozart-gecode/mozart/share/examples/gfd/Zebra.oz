@@ -1,13 +1,13 @@
 %%%
 %%% Authors:
-%%%   Gert Smolka <smolka@ps.uni-sb.de>
+%%%   Andres Felipe Barco <anfelbar@univalle.edu.co>
 %%%
 %%% Copyright:
-%%%   Gert Smolka, 1998
+%%%   Andres Felipe Barco, 2008
 %%%
 %%% Last change:
-%%%   $Date$ by $Author$
-%%%   $Revision$
+%%%   $Date: $ by $Author:$
+%%%   $Revision:$
 %%%
 %%% This file is part of Mozart, an implementation
 %%% of Oz 3
@@ -47,7 +47,7 @@
 %%%    The zebra is in the white house.
 %%% 
 %%% Who lives where?
-						     
+
 declare
 proc {Zebra Nb}
    Groups     = [ [english spanish japanese italian norvegian]
@@ -58,14 +58,14 @@ proc {Zebra Nb}
    Properties = {FoldR Groups Append nil}
    proc {Partition Group}
       %% The properties in Group hold for distinct house numbers
-      {FD.distinct {Map Group fun {$ P} Nb.P end}}
+      {GFD.distinctP post({Map Group fun {$ P} Nb.P end})}
    end
    proc {Adjacent X Y}
-      {FD.distance X Y '=:' 1}
+      {GFD.distance X Y '=:' 1}
    end
 in
    %% Nb maps all properties to house numbers
-   {FD.record number Properties 1#5 Nb}
+   {GFD.record number Properties 1#5 Nb}
    {ForAll Groups Partition}
    Nb.english = Nb.red
    Nb.spanish = Nb.dog
@@ -73,7 +73,7 @@ in
    Nb.italian = Nb.tea
    Nb.norvegian = 1
    Nb.green = Nb.coffee
-   {FD.less Nb.green Nb.white}
+   Nb.green >: Nb.white
    Nb.sculptor = Nb.snails
    Nb.diplomat = Nb.yellow
    Nb.milk = 3
@@ -82,7 +82,7 @@ in
    {Adjacent Nb.fox Nb.doctor}
    {Adjacent Nb.horse Nb.diplomat}
    Nb.zebra = Nb.white
-   {FD.distribute ff Nb}
+   {GFD.distribute ff Nb}
 end
 
-{Show {SearchAll Zebra}}
+{Browse {SearchOne Zebra}}

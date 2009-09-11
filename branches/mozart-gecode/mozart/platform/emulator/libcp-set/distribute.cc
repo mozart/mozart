@@ -72,8 +72,8 @@ public:
 
 /**
    Variable selection strategies for finite sets
-   This strategies is taken from the Gecode ones.
-   See http://www.gecode.org/gecode-doc-latest/group__TaskModelSetBranch.html
+   These strategies are taken from the Gecode ones.
+   See http://www.gecode.org/doc/2.2.0/reference/group__TaskModelSetBranch.html
    for more information
 */
 enum SetVarSelection {
@@ -86,8 +86,8 @@ enum SetVarSelection {
 
 /**
    Value selection strategies for finite sets
-   This strategies is taken from the Gecode ones.
-   See http://www.gecode.org/gecode-doc-latest/group__TaskModelSetBranch.html
+   These strategies are taken from the Gecode ones.
+   See http://www.gecode.org/doc/2.2.0/reference/group__TaskModelSetBranch.html
    for more information
 */
 enum SetValSelection {

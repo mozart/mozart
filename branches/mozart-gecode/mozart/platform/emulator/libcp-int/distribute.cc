@@ -5,7 +5,8 @@
  *
  *  Contributing authors:
  *     Victor Alfonso Rivera <varivera@puj.edu.co>
- *     Andres Felipe Barco <anfelbar@univalle.edu.co>                                                                                                       
+ *     Andres Felipe Barco <anfelbar@univalle.edu.co>
+ *     Gustavo A. Gomez Farhat <gafarhat@univalle.edu.co>
  *
  *  Copyright:
  *    Raphael Collet, 2008
@@ -37,7 +38,7 @@
 /*
   To access the implemented view selection and value section
   strategies shiped with gecode.
- */
+*/
 #include "gecode/int/branch.hh"
 
 
@@ -72,19 +73,19 @@ public:
    Template class for width variable selection.
    Selects the variable with greatest domain width.
    Not implemented by gecode.
- */
+*/
 template<class View>
 class ByWidth {
 protected:
   /// min width and current minwidth
   int minwidth;
 public:
-  /// Intialize with view \a x                                                                                                                             
+  /// Intialize with view \a x
   ViewSelStatus init(const Gecode::Space* home, View x){
     int minwidth = x.width();
     return VSS_SELECT;
   }
-  /// Possibly select better view \a x                                                                                                                     
+  /// Possibly select better view \a x
   ViewSelStatus select(const Gecode::Space* home, View x){
     if(x.width() > minwidth){
       minwidth = x.width();
@@ -105,7 +106,7 @@ enum IntVarSelection {
   iVarBySizeMin,
   iVarByMinMin,
   iVarByMaxMax,
-  iVarByDegreeMin, //this is the same of NbProp (number of propagators associated)
+  iVarByDegreeMin, //this is the same of nbSusps (propagators associated)
   iVarByWidth
 };
 
@@ -127,29 +128,29 @@ enum IntValSelection {
    This Macro test whether element v is an 
    undetermined GeIntVar or a determined one.
    If v is varOrRef then suspend, otherwise raise error.
- */
-#define TestGeIntVar(v)					\
-  {							\
-    DEREF(v, v_ptr);					\
-    Assert(!oz_isRef(v));				\
-    if (OZ_isGeIntVar(v)) {				\
-      n++;						\
-    } else if (OZ_isInt(v)) {			\
-      ;							\
-    } else if (oz_isVarOrRef(v)) {			\
-      oz_suspendOnPtr(v_ptr);				\
-    } else {						\
-      oz_typeError(0,"vector of finite domains");	\
-    }							\
+*/
+#define TestGeIntVar(v)                                 \
+  {                                                     \
+    DEREF(v, v_ptr);                                    \
+    Assert(!oz_isRef(v));                               \
+    if (OZ_isInt(v)) {					\
+      ;                                                 \
+    } else if (OZ_isGeIntVar(v)) {				\
+      n++;                                              \
+    } else if (oz_isVarOrRef(v)) {                      \
+      oz_suspendOnPtr(v_ptr);                           \
+    } else {                                            \
+      oz_typeError(0,"vector of finite domains");       \
+    }                                                   \
   }
 
 
 #define PP(I,J) I*(iVarByWidth+1)+J  
 
-#define PPCL(I,J)					\
-  case PP(iVar ## I, i ## J):				\
-  gfdd = new GeVarDistributor<IntView,int,I<IntView>,	\
-			    J<IntView> >(bb,vars,n);	\
+#define PPCL(I,J)                                       \
+  case PP(iVar ## I, i ## J):                           \
+  gfdd = new GeVarDistributor<IntView,int,I<IntView>,   \
+                              J<IntView> >(bb,vars,n);  \
   break;
 
 OZ_BI_define(gfd_distribute, 3, 1) {
@@ -160,6 +161,7 @@ OZ_BI_define(gfd_distribute, 3, 1) {
   int n = 0;
   TaggedRef * vars;
 
+  Assert(!oz_isRef(vv));
   if (oz_isLiteral(vv)) {
     ;
   } else if (oz_isLTupleOrRef(vv)) {
@@ -173,7 +175,7 @@ OZ_BI_define(gfd_distribute, 3, 1) {
       DEREF(vs, vs_ptr);
       Assert(!oz_isRef(vs));
       if (oz_isVarOrRef(vs))
-	oz_suspendOnPtr(vs_ptr);
+        oz_suspendOnPtr(vs_ptr);
     }
     
     if (!oz_isNil(vs))
@@ -189,8 +191,6 @@ OZ_BI_define(gfd_distribute, 3, 1) {
   } else 
     oz_typeError(0,"vector of finite domains");
   
-  
-
   // If there are no variables in the input then return unit
   if (n == 0)
     OZ_RETURN(NameUnit);
@@ -202,18 +202,19 @@ OZ_BI_define(gfd_distribute, 3, 1) {
   Assert(!oz_isRef(vv));
   if (oz_isLTupleOrRef(vv)) {
     TaggedRef vs = vv;
-    for (int i =0; i < n; i++) {
+    for (int i = 0; i < n; i++) {
       TaggedRef v = oz_head(vs);
       vars[i] = v;
       vs = oz_deref(oz_tail(vs));
       Assert(!oz_isRef(vs));
     }
   } else {
-      int j = 0;
-      for (int i = tagged2SRecord(vv)->getWidth(); i--; ) {
-	TaggedRef v = tagged2SRecord(vv)->getArg(i);
-	vars[j++] = v;
-      }
+    int j = 0;
+    for (int i = 0; i < tagged2SRecord(vv)->getWidth(); i++) {
+      TaggedRef v = tagged2SRecord(vv)->getArg(i);
+      if (!oz_isSmallInt(oz_deref(v)))
+        vars[j++] = v;
+    }
   }
 
   Board * bb = oz_currentBoard();
@@ -262,7 +263,7 @@ OZ_BI_define(gfd_distribute, 3, 1) {
     PPCL(ByWidth,ValSplitMax);
     
   default:
-   Assert(false);
+    Assert(false);
   }
   
   bb->setDistributor(gfdd);
@@ -304,7 +305,7 @@ OZ_BI_define(gfd_assign, 2, 1) {
   Assert(!oz_isRef(vv));
   if (oz_isLTupleOrRef(vv)) {
     TaggedRef vs = vv;
-    for (int i =0; i < n; i++) {
+    for (int i = 0; i < n; i++) {
       TaggedRef v = oz_head(vs);
       vars[i] = v;
       vs = oz_deref(oz_tail(vs));
@@ -320,16 +321,19 @@ OZ_BI_define(gfd_assign, 2, 1) {
   Distributor * gfda;
   
   if (oz_eq(val_sel,AtomMin)) {
-    gfda = new GeVarAssignment<IntView,int,ByNone<IntView>,ValMin<IntView> >(bb,vars,n);
+    gfda = new GeVarAssignment<IntView,int,
+      ByNone<IntView>,ValMin<IntView> >(bb,vars,n);
   } else if (oz_eq(val_sel,AtomMid)) {
-    gfda = new GeVarAssignment<IntView,int,ByNone<IntView>,ValMed<IntView> >(bb,vars,n);
+    gfda = new GeVarAssignment<IntView,int,
+      ByNone<IntView>,ValMed<IntView> >(bb,vars,n);
   } else if (oz_eq(val_sel,AtomMax)) {
-    gfda = new GeVarAssignment<IntView,int,ByNone<IntView>,ValMax<IntView> >(bb,vars,n);
+    gfda = new GeVarAssignment<IntView,int,
+      ByNone<IntView>,ValMax<IntView> >(bb,vars,n);
   } else {
     oz_typeError(0,"min/mid/max");
   }
 
-   bb->setDistributor(gfda);
+  bb->setDistributor(gfda);
   
   OZ_RETURN(gfda->getSync()); 
 }

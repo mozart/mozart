@@ -574,6 +574,7 @@ define
 			{Proc}
 			{Space.waitStable}
 		     end
+		     
 		     choice {FdInt D        V}
 		     []     {FdInt compl(D) V}
 		     end

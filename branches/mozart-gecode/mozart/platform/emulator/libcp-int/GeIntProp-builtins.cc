@@ -5,8 +5,9 @@
  *     Alejandro Arbelaez <aarbelaez@cic.puj.edu.co>
  *
  *  Contributing authors:
- *			Andres Felipe Barco <anfelbar@univalle.edu.co>
- *			Victor Rivera Zuniga <varivera@javerianacali.edu.co>
+ *     Andres Felipe Barco <anfelbar@univalle.edu.co>
+ *     Victor Rivera Zuniga <varivera@javerianacali.edu.co>
+ *
  *  Copyright:
  *    Alberto Delgado, 2006-2007
  *    Alejandro Arbelaez, 2006-2007
@@ -66,7 +67,7 @@ OZ_BI_define(int_count,5,0)
     x3 = view;
   }
   else
-    return OZ_typeError(3,"The threeth argument must be either Int or GeIntVar");
+    return OZ_typeError(3,"The third argument must be either Int or GeIntVar");
   try {
     count(sp,arreglo,x1,rl,x3,cl);
   }

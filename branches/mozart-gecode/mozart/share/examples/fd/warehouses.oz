@@ -56,10 +56,12 @@ proc {WareHouse X}
    TotalCost   = {FD.decl}
 in
    X = plan(supplier:Supplier cost:Cost totalCost:TotalCost)
-   TotalCost =: SumCost + NbOpen*BuildingCost
+   %TotalCost =: SumCost + NbOpen*BuildingCost
+   {FD.sumCN [1 1 ~1] [[SumCost] [NbOpen BuildingCost] [TotalCost]] '=:' 0}
    {For 1 NbStores 1
     proc {$ S}
-       Cost.S :: {Record.toList CostMatrix.S}
+       %Cost.S :: {Record.toList CostMatrix.S}
+       {FD.int {Record.toList CostMatrix.S} Cost.S}
        {FD.element Supplier.S CostMatrix.S Cost.S}
        thread Open.(Supplier.S) = 1 end
     end}
@@ -72,4 +74,6 @@ in
     Cost}
 end
 
-{ExploreBest WareHouse proc {$ Old New} Old.totalCost >: New.totalCost end}
+{Show
+ {SearchBest WareHouse proc {$ Old New}
+			  {FD.greater Old.totalCost New.totalCost} end}}

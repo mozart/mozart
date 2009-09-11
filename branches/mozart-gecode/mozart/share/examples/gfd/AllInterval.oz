@@ -29,13 +29,13 @@ fun{AllInterval N}
       X = {GFD.tuple x N 0#N-1}
       D = {GFD.tuple d N-1 1#N-1}
       X = Root
-      for I in 1..(N-1) do Tmp1 in
-	 Tmp1 = {GFD.decl}
-	 {GFD.minus X.(I+1) X.I Tmp1}
-	 {GFD.abs post(Tmp1 D.I cl:GFD.cl.bnd)}
+      for I in 1..(N-1) do T1 in
+	 T1 = {GFD.decl}
+	 {GFD.linearP post([X.I T1] '=:' X.(I+1))} % X.(I+1) - X.I = T1
+	 {GFD.absP post(T1 D.I cl:bnd)}
       end
-      {GFD.distinctP post(X cl:GFD.cl.bnd)}
-      {GFD.distinctP post(D cl:GFD.cl.bnd)}
+      {GFD.distinctP posht(X cl:bnd)}
+      {GFD.distinctP post(D cl:bnd)}
       
       X.1 =<: X.2
       D.1 >=: D.2

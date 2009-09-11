@@ -54,8 +54,8 @@ proc {Family Root}
    end
    proc {AgeList L}
       {FD.list 3 0#9 L}
-      {Nth L 1} >: {Nth L 2}
-      {Nth L 2} >: {Nth L 3}
+      {FD.greater {Nth L 1} {Nth L 2}}
+      {FD.greater {Nth L 2} {Nth L 3}}
    end
    Maria = {FamilyC maria}
    Clara = {FamilyC clara}
@@ -64,14 +64,13 @@ proc {Family Root}
    Ages = {FoldR [Clara.girls Clara.boys Maria.girls Maria.boys] Append nil}
 in
    Root = Maria#Clara
-   {ForAll Maria.boys proc {$ A} A >: AgeOfMariasYoungestGirl end}
+   {ForAll Maria.boys proc {$ A} {FD.greater A AgeOfMariasYoungestGirl} end}
    AgeOfClarasYoungestGirl = 0
    {FD.sum Ages '=:' 60}
    {FD.distribute split Ages}
 end
 
-
-{ExploreAll Family}
+{Show {SearchAll Family}}
 
 
 %%% Having Clara's kids first prunes better
@@ -79,5 +78,3 @@ end
 %%% together this reduces search tree by factor 3
 %%% The redundant constraint AgeOfMariasYoungestGirl <: 5
 %%% doubles the search space
-
-

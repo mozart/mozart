@@ -30,20 +30,16 @@ in
       [A B C] = Root
       AA BB CC
    in
-      Root ::: 1#1000
+      {FD.dom 1#1000 Root}
       AA = {Square A}
       BB = {Square B}
       CC = {Square C}
-      AA + BB =: CC           % A*A + B*B =: C*C propagates much worse
-      A =<: B
-      B =<: C
-      2*BB >=: CC             % redundant constraint
+      {FD.sum [AA BB] '=:' CC} % A*A + B*B =: C*C propagates much worse
+      {FD.lesseq A B}
+      {FD.lesseq B C}
+      {FD.sumC [2 ~1] [BB CC] '>=:' 0} % redundant constraint
       {FD.distribute ff Root}
    end
 end
 
-{ExploreOne Pythagoras}
-
-/*
-{SearchAll Pythagoras _}
-*/
+{Show {SearchOne Pythagoras}}

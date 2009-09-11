@@ -38,14 +38,24 @@ proc {Grocery Root}
    A#B#C#D = Root
    S       = 711
 in
-   Root ::: 0#S
-   A*B*C*D =: S*100*100*100
-   A+B+C+D =: S
+   %Root ::: 0#S
+   {FD.dom 0#S Root}
+   
+   %A*B*C*D =: S*100*100*100
+   {FD.sumCN [1 ~100*100*100] [[A B C D] [S]] '=:' 0}
+
+   %A+B+C+D =: S
+   {FD.sum [A B C D] '=:' S}
+   
    %% eliminate symmetries
-   A =: 79*{FD.decl}  % 79 is prime factor of S=711
-   B =<: C
-   C =<: D 
+   %A =: 79*{FD.decl}  % 79 is prime factor of S=711
+   {FD.sumC [1 ~79] [A {FD.decl}] '=:' 0}
+   %B =<: C
+   {FD.lesseq B C}
+   %C =<: D 
+   {FD.lesseq C D}
+   
    {FD.distribute generic(value:splitMax) Root}
 end
 
-{ExploreAll Grocery}
+{Show {SearchAll Grocery}}

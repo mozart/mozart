@@ -89,11 +89,10 @@ export
    dom:    GBDDom
    list:   BoolVarList
    tuple:  BoolVarTuple
+   %record: BoolVarRecord
    bool: BoolVar
 
-   %% Testing
-   is:    IsVar
-   
+       
    %%Access
    Reflect
    'reflect.size':       Size
@@ -110,7 +109,9 @@ export
    bo:    BOT
    
    %% Miscellaneous
- 
+   sup: BdSup
+   inf: BdInf
+   is: IsVar
 
    %% propagators
 
@@ -120,7 +121,7 @@ export
    %% boolean relations
    and: And
    'or': Or
-   xor: Xor
+   exor: Xor
    impl: Impl
    equi: Equi
 
@@ -216,14 +217,20 @@ define
       end
    end
 
-
+   %proc {BoolVarRecord L As Dom ?R}
+   %	R={MakeRecord L As} {CreateDomainRecord As R Dom}
+   %end
+   
+   BdSup = 1
+   BdInf = 0
+   
    %% Bolean relations (propagators)
    proc {And X Y Z}
-      {VarRel X BOT.'AND' Y Z}
+      {RelP post(X 'AND' Y Z)}
    end
 
    proc {Or X Y Z}
-      {VarRel X BOT.'OR' Y Z}
+      {RelP post(X 'OR' Y Z)}
    end
 
    proc {Xor X Y Z}
@@ -249,7 +256,7 @@ define
       of 4 then
 	 if {List.is Sc.2} then
 	    if {Value.hasFeature BOT Sc.1} then
-	       {GBDP.gbd_rel_5 BOT.(Sc.1) Sc.2 Sc.3 Sc.cl}
+               {GBDP.gbd_rel_5 BOT.(Sc.1) Sc.2 Sc.3 Sc.cl}
 	    else
 	       raise malformed('Rel constraint post') end
 	    end
@@ -259,15 +266,15 @@ define
 	    else
 	       raise malformed('asd Rel constraint post') end
 	    end
-	 end
+         end
       []  5 then
 	 if {Value.hasFeature Rt Sc.2} then
 	    {GBDP.gbd_rel_6 Sc.1 Rt.(Sc.2) Sc.3 Sc.4 Sc.cl}
-	 elseif {Value.hasFeature BOT Sc.2} then
+         elseif {Value.hasFeature BOT Sc.2} then
 	    {GBDP.gbd_rel_6 Sc.1 BOT.(Sc.2) Sc.3 Sc.4 Sc.cl}
 	 else
 	    raise malformed('Rel constraint post') end
-	 end
+         end
       []  3 then
 	 {GBDP.gbd_rel_4 Sc.1 Rt.(Sc.2) Sc.cl}
       else
@@ -281,11 +288,17 @@ define
    in
       case W
       of 4 then
-	 {GBDP.gbd_linear_5 Sc.1 Sc.2 Sc.3 Sc.cl}
-      []  5 then
-	 {GBDP.gbd_linear_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl}
+	 {GBDP.gbd_linear_5 Sc.1 Rt.(Sc.2) Sc.3 Sc.cl}
+      [] 5 then
+	 if {IsAtom Sc.3} andthen {Value.hasFeature Rt Sc.3} then
+	    {GBDP.gbd_linear_6 Sc.1 Sc.2 Rt.(Sc.3) Sc.4 Sc.cl}
+	 elseif {IsAtom Sc.2} andthen {Value.hasFeature Rt Sc.2} then
+	    {GBDP.gbd_linear_6 Sc.1 Rt.(Sc.2) Sc.3 Sc.4 Sc.cl}
+	 else
+	    {GBDP.gbd_linear_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl}
+	 end
       [] 6 then
-	 {GBDP.gbd_linear_7 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5 Sc.cl}
+	 {GBDP.gbd_linear_7 Sc.1 Sc.2 Rt.(Sc.3) Sc.4 Sc.5 Sc.cl}
       else
 	 raise malformed('Linear constraint post') end
       end

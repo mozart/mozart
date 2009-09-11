@@ -42,19 +42,21 @@ in
    in
       S = s(k:K dm:{DIJ 1 N})
       K.1 = 0
-      K.2 =: {GFD.int 0#NN}
+      {GFD.int 0#NN K.2}
       for I in 1..N-1 do
-	 %% K.(I+1) >: K.I
-	 K.(I+1) >: K.I
+	 {GFD.relP post(K.(I+1) '>:' K.I cl:val)}
 	 for J in I+1..N do
-	    %% K.J - K.I =: {DIJ I J}
-	    {GFD.sumC [1 ~1] [K.J K.I] '=:' {DIJ I J}}
+	    {GFD.linearP post([1 ~1] [K.J K.I] '=:' {DIJ I J} cl:val)}
 	 end
       end
-      {GFD.distinctP post(D cl:GFD.cl.val)}
+      {GFD.distinctP post(D cl:val)}
       {GFD.distribute naive K}
    end
 end
 
+proc {Better O N}
+   {GFD.relP post(O.dm '>:' N.dm cl:val)}
+end
+
 %{Show {SearchBest {MakeGolomb 7} Better}}
-{Show {SearchOne {MakeGolomb 7}}}
+{Show {SearchOne {MakeGolomb 9}}}

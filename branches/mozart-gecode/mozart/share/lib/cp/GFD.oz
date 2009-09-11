@@ -41,7 +41,7 @@ import
    GFDB at 'x-oz://boot/GFDB'
    GFDP at 'x-oz://boot/GFDP'
    Space
-   System(nbSusps show)
+   System(nbSusps)
    
 prepare
    %%This record must reflect the IntRelType in gecode/int.hh
@@ -108,18 +108,21 @@ export
    timesD:          TimesD
    power:	    Power
    divI:            DivI
+   divP:            DivP
    modI:	    ModI
+   modP:            ModP
    divD:            DivI2
    modD:            ModI2
    distance:	    DistanceI
    less:            Less
-   lessEq:          LessEq
+   lesseq:          LessEq
    greater:         Greater
-   greaterEq:       GreaterEq
+   greatereq:       GreaterEq
    disjoint:        Disjoint 
    disjointC:       DisjointC
-   sqrt:            Sqrt
-   divmod:          DivMod
+   sqrP:            Sqr
+   sqrtP:           Sqrt
+   divmodP:          DivMod
    max:             FdMaximum
    min:             FdMinimum
    
@@ -141,7 +144,7 @@ export
    distinctB:       DistinctB
    distinctD:       DistinctD
    distinctOffset:  DistinctOffset
-   distinctP: DistinctP
+   distinctP:       DistinctP
    atMost:          AtMost
    atLeast:         AtLeast
    exactly:         Exactly
@@ -160,14 +163,15 @@ export
    domP: Dom
    relP: RelP
    element: Element
-   channel: Channel
+   elementP: ElementP
+   channelP: Channel
    circuit: Circuit
    sortedP: Sorted
    extensionalP: Extensional
-   cumulatives: Cumulatives
+   cumulativesP: Cumulatives
    minP: MinP
    maxP: MaxP
-   abs: Abs
+   absP: Abs
    multP: MultP
    linearP: LinearP
    countP: CountP
@@ -252,24 +256,19 @@ define
 	 {GFDB.'reflect.nbProp' X} + {System.nbSusps X}
       end
    in
-      FdReflect = reflect(min    : GFDB.'reflect.min'
-			  max    : GFDB.'reflect.max'
-			  size   : GFDB.'reflect.size'  %% cardinality
-			  dom    : GFDB.'reflect.dom'
-			  domList: GFDB.'reflect.domList'
+      FdReflect = reflect(min         : GFDB.'reflect.min'
+			  max         : GFDB.'reflect.max'
+			  size        : GFDB.'reflect.size'
+			  dom         : GFDB.'reflect.dom'
+			  domList     : GFDB.'reflect.domList'
 			  nextSmaller : GFDB.'reflect.nextSmaller'
-			  nextLarger : GFDB.'reflect.nextLarger'
-			  med    : GFDB.'reflect.med'   %% median of domain
-			  %% distance between maximum and minimum
-			  width  : GFDB.'reflect.width' 
-			  %% regret of domain minimum (distance to next larger value).
-			  regretMin : GFDB.'reflect.regretMin'
-			  %% regret of domain maximum (distance to next smaller value). 
-			  regretMax : GFDB.'reflect.regretMax'
-			  %% number of propagators associated with the variable
-			  nbProp: GFDB.'reflect.nbProp'
-			  %% number of suspendables associated with the variables
-			  nbSusps: NBSusps 
+			  nextLarger  : GFDB.'reflect.nextLarger'
+			  mid         : GFDB.'reflect.mid'  
+			  width       : GFDB.'reflect.width' 
+			  regretMin   : GFDB.'reflect.regretMin'
+			  regretMax   : GFDB.'reflect.regretMax'
+			  nbProp      : GFDB.'reflect.nbProp'
+			  nbSusps     : NBSusps 
 			 )
    end
    %% Watching variables
@@ -313,7 +312,8 @@ define
    
    %% Propagators Builtins      
    proc {Dom S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
@@ -331,18 +331,15 @@ define
 %%%
    
    proc {RelP S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       %% Assert 2 is a GFD.rt.*
       case W
       of 4 then
-	 if {Value.hasFeature Rt Sc.2} then
-	    {GFDP.gfd_rel_5 Sc.1 Rt.(Sc.2) Sc.3 Sc.cl}
-	 else
-	    {GFDP.gfd_rel_5 Sc.1 Sc.2 Sc.3 Sc.cl}
-	 end
-      []  5 then
+	 {GFDP.gfd_rel_5 Sc.1 Rt.(Sc.2) Sc.3 Sc.cl}
+      [] 5 then
 	 {GFDP.gfd_rel_6 Sc.1 Rt.(Sc.2) Sc.3 Sc.4 Sc.cl}
       [] 3 then
 	 {GFDP.gfd_rel_4 Sc.1 Rt.(Sc.2) Sc.cl}
@@ -350,9 +347,17 @@ define
 	 raise malformed('Rel post') end
       end
    end
+
+    %Backward compatibility
+   proc {Element D Dv I}
+      % Notice that in Mozart the list is the second argument, but in
+      % Gecode it is the first one
+      {GFDP.gfd_element_5 Dv D I Cl.def}
+   end
    
-   proc {Element S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+   proc {ElementP S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}      
       W = {Record.width Sc}
    in
       case W
@@ -364,7 +369,8 @@ define
    end
    
    proc {Channel S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}     
       W = {Record.width Sc}
    in
       case W
@@ -379,7 +385,8 @@ define
    end
    
    proc {Circuit S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
@@ -391,7 +398,8 @@ define
    end
    
    proc {Sorted S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
@@ -405,7 +413,8 @@ define
    end
    
    proc {Extensional S}
-      Sc = {Adjoin '#'(cl:Cl.def pk:Pk.def) S}
+      St = {Adjoin '#'(cl:def pk:Pk.def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
@@ -417,7 +426,8 @@ define
    end
    
    proc {Cumulatives S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
@@ -429,7 +439,8 @@ define
    end
    
    proc {MinP S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
@@ -444,7 +455,8 @@ define
    
    
    proc {MaxP S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
@@ -458,7 +470,8 @@ define
    end
    
    proc {MultP S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
@@ -470,7 +483,8 @@ define
    end
    
    proc {Abs S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
@@ -482,7 +496,8 @@ define
    end
    
    proc {LinearP S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
@@ -515,22 +530,15 @@ define
       {GFDP.gfd_distinct_3 Vec Cl.dom}
    end
 
-   proc {DistinctOffset S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
-      W = {Record.width Sc}
-   in
-      case W
-      of 3 then
-	 % Notice that in Mozart the integer list is the second argument, but in
-	 % Gecode it is the first one
-	 {GFDP.gfd_distinct_4 Sc.2 Sc.1 Sc.cl}
-      else
-	 raise malformed('DistinctOffset constraint post') end
-      end
+   proc {DistinctOffset V E}
+      % Notice that in Mozart the integer list is the second argument, but in
+      % Gecode it is the first one
+      {GFDP.gfd_distinct_4 E V Cl.def}
    end
-   
+      
    proc {DistinctP S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
@@ -544,7 +552,8 @@ define
    end
      
    proc {CountP S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
@@ -569,10 +578,11 @@ define
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    
-   %% Miscelaneus
+   %% Miscelaneous
 	 
    proc {DivP S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
@@ -584,19 +594,34 @@ define
    end
 
    proc {DivMod S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
       of 5 then
 	 {GFDP.gfd_divmod_6 Sc.1 Sc.2 Sc.3 Sc.4 Sc.cl}
       else
-	 raise malformed('divmod constraint post') end
+	 raise malformed('DivMod constraint post') end
+      end
+   end
+
+   proc {Sqr S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
+      W = {Record.width Sc}
+   in
+      case W
+      of 3 then
+	 {GFDP.gfd_sqr_4 Sc.1 Sc.2 Sc.cl}
+      else
+	 raise malformed('Sqrt constraint post') end
       end
    end
 
    proc {Sqrt S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
@@ -608,7 +633,8 @@ define
    end
    
    proc {ModP S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
@@ -621,7 +647,8 @@ define
    
    
    proc {PowerP S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
@@ -646,7 +673,8 @@ define
    %% Reified constraint not supported by Gecode
    
    proc {SumACP S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
@@ -658,7 +686,8 @@ define
    end
    
    proc {SumCNP S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W
@@ -670,7 +699,8 @@ define
    end
 
    proc {SumACNP S}
-      Sc = {Adjoin '#'(cl:Cl.def) S}
+      St = {Adjoin '#'(cl:def) S}
+      Sc = {Adjoin St post(cl:Cl.(St.cl))}
       W = {Record.width Sc}
    in
       case W

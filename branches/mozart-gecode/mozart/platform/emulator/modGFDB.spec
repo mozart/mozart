@@ -1,12 +1,14 @@
+### -*- mode: perl -*-
 ###
 ### Authors:
-###   Gustavo Gutierrez <>
+###   Gustavo Gutierrez <ggutierrez@cic.puj.edu.co>
 ###
 ### Copyright:
 ###   Gustavo Gutierrez, 2008-2009
 ###
 ### Contributors:
 ###   Andres Barco <anfelbar@univalle.edu.co>
+###   Gustavo A. Gomez Farhat <gafarhat@univalle.edu.co>
 ###
 ### Last change:
 ###   $Date$ by $Author$
@@ -36,12 +38,22 @@
  #
  
  ## Variable declaration
- 'int' => { 
-     in  => ['+value'],
-     out => ['int'],
-     bi  => new_intvar,
-     fcp => ignore
- },
+#  'int' => { 
+#      in  => ['+value'],
+#      out => ['int'],
+#      bi  => new_intvar,
+#      fcp => ignore
+#  },
+
+    'int' => { 
+	in  => ['+value', 'int'],
+	out => [],
+	bi  => BINewIntVar},
+    
+    'decl' => { 
+	in  => ['int'],
+	out => [],
+	bi  => BIDeclIntVar},
 
  ## Variable type testing
  'is' => { 
@@ -50,7 +62,7 @@
      bi  => intvar_is,
      fcp => ignore
  },
-
+ 
  ## misc. operations
  'inf' => { 
      in  => [],
@@ -113,12 +125,10 @@
      bi  => intvar_propSusp
  },
  
-## Still missing:
-## -mid
- 'reflect.med' => { 
+ 'reflect.mid' => { 
      in  => ['*int'],
      out => ['+int'],
-     bi  => intvar_getMed
+     bi  => intvar_getMid
  },
 
  'reflect.width' => {

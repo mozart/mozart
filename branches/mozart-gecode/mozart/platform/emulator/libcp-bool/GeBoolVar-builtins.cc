@@ -4,7 +4,7 @@
  *
  *  Contributing authors:
  *    Andres Felipe Barco <anfelbar@univalle.edu.co>
- *    Gustavo A. Gómez Farhat <gafarhat@univalle.edu.co>
+ *    Gustavo A. Gomez Farhat <gafarhat@univalle.edu.co>
  *
  *  Copyright:
  *    Alberto Delgado, 2006-2007
