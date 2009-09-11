@@ -34,11 +34,12 @@
 
 <p>
 We are now well-prepared to write and run our
-first finite domain problem solvers in Oz.  For
-running, analyzing, and debugging problem solvers
-we will use the <Ref.extern to="ozdoc:explorer"/Explorer/, a graphical
-tool of the 
-Mozart programming environment.
+first finite domain problem solvers in Oz.  
+<!-- For -->
+<!-- running, analyzing, and debugging problem solvers -->
+<!-- we will use the <Ref.extern to="ozdoc:explorer"/Explorer/, a graphical -->
+<!-- tool of the  -->
+<!-- Mozart programming environment. -->
 
 <p>
 A <def/script/ for a finite domain problem is a
@@ -147,13 +148,13 @@ proc {Money Root}
 in
    Root = sol(s:S e:E n:N d:D m:M o:O r:R y:Y)       % 1
    Root ::: 0#9                                      % 2
-   {FD.distinct Root}                                % 3
+   {GFD.distinctP post(Root)}                        % 3
    S \=: 0                                           % 4
    M \=: 0
                 1000*S + 100*E + 10*N + D            % 5
    +            1000*M + 100*O + 10*R + E
    =: 10000*M + 1000*O + 100*N + 10*E + Y
-   {FD.distribute ff Root}
+   {GFD.distribute ff Root}
 end
 </chunk>
 </figure>
@@ -204,12 +205,12 @@ information into the constraint store since the
 store already knows domains for <<S>> and <<M>>.
 
 <p>
-The last line <<{FD.distribute ff Root}>> posts a
+The last line <<{GFD.distribute ff Root}>> posts a
 distributor that will distribute on the field of
 <<Root>> with the first-fail strategy (specified by
 the atom <<ff>>).  Equivalently, we could write
 <<<
-{FD.distribute ff [D E M N O R S Y]}
+{GFD.distribute ff [D E M N O R S Y]}
 >>>
 and thus specify the variables and their order
 explicitly.  The order of the fields of ?{Root} is
@@ -290,201 +291,201 @@ e:[6\#7]\ m:1\ n:[7\#8]\ o:0\ r:[2\#8]\ s:9\ y:[2\#8])}}
 </figure>
 </section>
 
-<section id="section.problem.explorer">
-  <title/The Explorer/
+<!-- <section id="section.problem.explorer"> -->
+<!--   <title/The Explorer/ -->
 
-<p>
-The Explorer is a graphical tool of the Mozart
-programming environment.  It can run scripts and
-display the explored search trees.  It can also
-display the information in the constraint stores
-associated with the nodes of the search tree.
+<!-- <p> -->
+<!-- The Explorer is a graphical tool of the Mozart -->
+<!-- programming environment.  It can run scripts and -->
+<!-- display the explored search trees.  It can also -->
+<!-- display the information in the constraint stores -->
+<!-- associated with the nodes of the search tree. -->
 
-<p>
-The statement
-<chunk class=anonymous><title/{ExploreAll Money}/
-{ExploreAll Money}
-</chunk>
-tells the Explorer to run the script <<Money>> and
-explore the entire search tree.  The Explorer
-will pop up a window and display the explored
-nodes of the search tree (see left part of
-<Ptr to="figConOzSolver">).  Choice nodes
-appear as blue circles, failure
-nodes as red boxes, and solution nodes as
-green diamonds.  Fully explored
-subtrees not containing solution nodes are
-collapsed into a single red triangle.
+<!-- <p> -->
+<!-- The statement -->
+<!-- <chunk class=anonymous><title/{ExploreAll Money}/ -->
+<!-- {ExploreAll Money} -->
+<!-- </chunk> -->
+<!-- tells the Explorer to run the script <<Money>> and -->
+<!-- explore the entire search tree.  The Explorer -->
+<!-- will pop up a window and display the explored -->
+<!-- nodes of the search tree (see left part of -->
+<!-- <Ptr to="figConOzSolver">).  Choice nodes -->
+<!-- appear as blue circles, failure -->
+<!-- nodes as red boxes, and solution nodes as -->
+<!-- green diamonds.  Fully explored -->
+<!-- subtrees not containing solution nodes are -->
+<!-- collapsed into a single red triangle. -->
 
-<P>
-<figure id="figConOzSolver">
-<caption/The Explorer with the search tree of <<Money>>./
-<table class=dyptic id="fig.conozsolver.table">
-<tr><td><Picture.Extern id="pic.explorer-a" to="explorer-a.gif" type=gif></td> 
-    <td><Picture.Extern id="pic.explorer-b" to="explorer-b.gif" type=gif></td>
-</tr>
-</table>
-</figure>
+<!-- <P> -->
+<!-- <figure id="figConOzSolver"> -->
+<!-- <caption/The Explorer with the search tree of <<Money>>./ -->
+<!-- <table class=dyptic id="fig.conozsolver.table"> -->
+<!-- <tr><td><Picture.Extern id="pic.explorer-a" to="explorer-a.gif" type=gif></td>  -->
+<!--     <td><Picture.Extern id="pic.explorer-b" to="explorer-b.gif" type=gif></td> -->
+<!-- </tr> -->
+<!-- </table> -->
+<!-- </figure> -->
 
-<p>
-You can select any node of the displayed search
-tree by clicking it with the left mouse button.
-Select the red triangle and type the command <KBD/h/
-(hide/unhide).  This will replace the triangle with
-the actual nodes of the tree (see right part of
-<Ptr to="figConOzSolver">).  You now see the
-full search tree of <<Money>>, which consists of
-three choice nodes, three failure nodes, and one
-solution node.  Typing the command <KBD/h/ once more
-will switch back to the compact representation of
-the failed subtree.
+<!-- <p> -->
+<!-- You can select any node of the displayed search -->
+<!-- tree by clicking it with the left mouse button. -->
+<!-- Select the red triangle and type the command <KBD/h/ -->
+<!-- (hide/unhide).  This will replace the triangle with -->
+<!-- the actual nodes of the tree (see right part of -->
+<!-- <Ptr to="figConOzSolver">).  You now see the -->
+<!-- full search tree of <<Money>>, which consists of -->
+<!-- three choice nodes, three failure nodes, and one -->
+<!-- solution node.  Typing the command <KBD/h/ once more -->
+<!-- will switch back to the compact representation of -->
+<!-- the failed subtree. -->
 
-<Para><title/double clicking nodes/
-Next, double click the green solution node with
-the left mouse button.
-<p>
-This will display the unique solution
-<<<
-sol(d:7 e:5 m:1 n:6 o:0 r:8 s:9 y:2)
->>>
-of the Money Puzzle in the Browser.  You can also
-double click a blue choice node.  This will
-display the information about the solution that
-was accumulated in the constraint store before
-the node was distributed.  Double clicking the
-top node of the tree, for instance, will display
-<<<
-sol(d:_[2#8]  e:_[4#7]  m:1  n:_[5#8] 
-    o:0       r:_[2#8]  s:9  y:_[2#8])
->>>
-in the Browser.  This way, the Explorer and the
-Browser can display the annotated search tree
-shown in <Ptr to="figConMoneyTree">.
+<!-- <Para><title/double clicking nodes/ -->
+<!-- Next, double click the green solution node with -->
+<!-- the left mouse button. -->
+<!-- <p> -->
+<!-- This will display the unique solution -->
+<!-- <<< -->
+<!-- sol(d:7 e:5 m:1 n:6 o:0 r:8 s:9 y:2) -->
+<!-- >>> -->
+<!-- of the Money Puzzle in the Browser.  You can also -->
+<!-- double click a blue choice node.  This will -->
+<!-- display the information about the solution that -->
+<!-- was accumulated in the constraint store before -->
+<!-- the node was distributed.  Double clicking the -->
+<!-- top node of the tree, for instance, will display -->
+<!-- <<< -->
+<!-- sol(d:_[2#8]  e:_[4#7]  m:1  n:_[5#8]  -->
+<!--     o:0       r:_[2#8]  s:9  y:_[2#8]) -->
+<!-- >>> -->
+<!-- in the Browser.  This way, the Explorer and the -->
+<!-- Browser can display the annotated search tree -->
+<!-- shown in <Ptr to="figConMoneyTree">. -->
 
-<para><title/open and closed choice nodes/
-The statement
-<chunk class=anonymous><title/{ExploreOne Money}/
-{ExploreOne Money}
-</chunk>
-tells the Explorer to run the script <<Money>>
-until the first solution is found.  This time the
-Explorer will show a partial search tree that
-contains the solution node in the rightmost
-position, and also contains an open choice node.
-An <def/open choice node/ is a choice node for which
-not all direct descendents have been explored yet.
-A <Def/closed choice node/ is a choice node for
-which all direct descendents have been explored
-already.  While closed choice nodes are displayed
-in dark blue, open choice nodes are displayed in
-light blue.  Not yet explored descendents of an
-open choice node are not displayed.
+<!-- <para><title/open and closed choice nodes/ -->
+<!-- The statement -->
+<!-- <chunk class=anonymous><title/{ExploreOne Money}/ -->
+<!-- {ExploreOne Money} -->
+<!-- </chunk> -->
+<!-- tells the Explorer to run the script <<Money>> -->
+<!-- until the first solution is found.  This time the -->
+<!-- Explorer will show a partial search tree that -->
+<!-- contains the solution node in the rightmost -->
+<!-- position, and also contains an open choice node. -->
+<!-- An <def/open choice node/ is a choice node for which -->
+<!-- not all direct descendents have been explored yet. -->
+<!-- A <Def/closed choice node/ is a choice node for -->
+<!-- which all direct descendents have been explored -->
+<!-- already.  While closed choice nodes are displayed -->
+<!-- in dark blue, open choice nodes are displayed in -->
+<!-- light blue.  Not yet explored descendents of an -->
+<!-- open choice node are not displayed. -->
 
-<p>
-To check whether there are further solutions, you
-can resume the search process by selecting the
-root node and typing the command <KBD/n/ (next).
-This will resume the search until either the next
-solution is found or all nodes of the search tree
-are explored.
+<!-- <p> -->
+<!-- To check whether there are further solutions, you -->
+<!-- can resume the search process by selecting the -->
+<!-- root node and typing the command <KBD/n/ (next). -->
+<!-- This will resume the search until either the next -->
+<!-- solution is found or all nodes of the search tree -->
+<!-- are explored. -->
 
-<para><title/stopping exploration/
-You can stop the exploring Explorer at any time
-by typing the command <kbd/C-g/.
+<!-- <para><title/stopping exploration/ -->
+<!-- You can stop the exploring Explorer at any time -->
+<!-- by typing the command <kbd/C-g/. -->
 
-<para><title/resuming exploration/
-You can resume the exploration of a partial
-search tree by
-selecting any choice node and typing the command
-<kbd/n/  or <kbd/a/.  The command <kbd/n/  (next) will
-resume the exploration of the selected subtree
-until a further solution is found or the subtree
-is fully explored.  The command <kbd/a/  (all) will
-resume the exploration of the selected subtree
-until it is fully explored.
+<!-- <para><title/resuming exploration/ -->
+<!-- You can resume the exploration of a partial -->
+<!-- search tree by -->
+<!-- selecting any choice node and typing the command -->
+<!-- <kbd/n/  or <kbd/a/.  The command <kbd/n/  (next) will -->
+<!-- resume the exploration of the selected subtree -->
+<!-- until a further solution is found or the subtree -->
+<!-- is fully explored.  The command <kbd/a/  (all) will -->
+<!-- resume the exploration of the selected subtree -->
+<!-- until it is fully explored. -->
 
-<para><title/resetting the Explorer/
-The command <kbd/C-r/ will reset the Explorer and
-show only the
-root node of the search tree.  By double clicking
-you can see in the Browser what is known about the
-solution before the first distribution step.  You
-can request the exploration of the seach tree by
-typing <kbd/n/ or <kbd/a/.
+<!-- <para><title/resetting the Explorer/ -->
+<!-- The command <kbd/C-r/ will reset the Explorer and -->
+<!-- show only the -->
+<!-- root node of the search tree.  By double clicking -->
+<!-- you can see in the Browser what is known about the -->
+<!-- solution before the first distribution step.  You -->
+<!-- can request the exploration of the seach tree by -->
+<!-- typing <kbd/n/ or <kbd/a/. -->
 
-<para><title/hand-guided exploration/
-You can guide the search of the Explorer by
-hand.  Reset
-the Explorer by typing <kbd/C-r/.  This will select
-the root node, which is an open choice node.  Now
-type the command <kbd/o/ (one) to compute the first
-descendent of the root.  Select the root once
-more and type <kbd/o/ again.  This will compute the
-second and final descendent of the root.  Note
-that the root has now changed from light blue
-indicating an open choice node to dark blue
-indicating a closed choice node.
+<!-- <para><title/hand-guided exploration/ -->
+<!-- You can guide the search of the Explorer by -->
+<!-- hand.  Reset -->
+<!-- the Explorer by typing <kbd/C-r/.  This will select -->
+<!-- the root node, which is an open choice node.  Now -->
+<!-- type the command <kbd/o/ (one) to compute the first -->
+<!-- descendent of the root.  Select the root once -->
+<!-- more and type <kbd/o/ again.  This will compute the -->
+<!-- second and final descendent of the root.  Note -->
+<!-- that the root has now changed from light blue -->
+<!-- indicating an open choice node to dark blue -->
+<!-- indicating a closed choice node. -->
 
-<para><title/zooming the search tree/
-The right vertical scroll bar of the Explorer's
-window zooms
-the size of the displayed search tree.  You can
-zoom the tree to fit the size of the window by
-clicking the zoom bar with the right mouse button.
-<p>
+<!-- <para><title/zooming the search tree/ -->
+<!-- The right vertical scroll bar of the Explorer's -->
+<!-- window zooms -->
+<!-- the size of the displayed search tree.  You can -->
+<!-- zoom the tree to fit the size of the window by -->
+<!-- clicking the zoom bar with the right mouse button. -->
+<!-- <p> -->
 
-<Exercise id="problem.ex.a">
-With the Explorer it is easy to observe the
-effect of different distribution strategies.
-Replace the first-fail distribution strategy in
-<<Money>>  with the naive strategy
-<<<
-{FD.distribute naive Root}
->>>
-which distributes on the leftmost undetermined
-variable and its least possible value.  Draw the
-new search tree with the Explorer and observe
-that it is twice as large as the tree obtained
-with first-fail distribution.
-</Exercise>
+<!-- <Exercise id="problem.ex.a"> -->
+<!-- With the Explorer it is easy to observe the -->
+<!-- effect of different distribution strategies. -->
+<!-- Replace the first-fail distribution strategy in -->
+<!-- <<Money>>  with the naive strategy -->
+<!-- <<< -->
+<!-- {GFD.distribute naive Root} -->
+<!-- >>> -->
+<!-- which distributes on the leftmost undetermined -->
+<!-- variable and its least possible value.  Draw the -->
+<!-- new search tree with the Explorer and observe -->
+<!-- that it is twice as large as the tree obtained -->
+<!-- with first-fail distribution. -->
+<!-- </Exercise> -->
 
-<Answer to="problem.ex.a">
-This does not really require to be answered. Just try it.
-</Answer>
+<!-- <Answer to="problem.ex.a"> -->
+<!-- This does not really require to be answered. Just try it. -->
+<!-- </Answer> -->
 
-<Exercise id="problem.ex.b">
-Write a script that finds distinct digits for the
-letters <math/A/, <math/B/, <math/D/, <math/E/, <math/G/, <math/L/,
-<math/N/, <math/O/,
-<math/R/, and <math/T/ such that the equation
-<math display/
-DONALD+GERALD=ROBERT
-/
-holds without leading zeros.  Run the script with
-the Explorer and study the search tree.  Try both
-first-fail and naive distribution.  Observe that
-first-fail distribution yields a search tree that
-is by one order of magnitude smaller than the
-search tree obtained with naive distribution.
-</Exercise>
+<!-- <Exercise id="problem.ex.b"> -->
+<!-- Write a script that finds distinct digits for the -->
+<!-- letters <math/A/, <math/B/, <math/D/, <math/E/, <math/G/, <math/L/, -->
+<!-- <math/N/, <math/O/, -->
+<!-- <math/R/, and <math/T/ such that the equation -->
+<!-- <math display/ -->
+<!-- DONALD+GERALD=ROBERT -->
+<!-- / -->
+<!-- holds without leading zeros.  Run the script with -->
+<!-- the Explorer and study the search tree.  Try both -->
+<!-- first-fail and naive distribution.  Observe that -->
+<!-- first-fail distribution yields a search tree that -->
+<!-- is by one order of magnitude smaller than the -->
+<!-- search tree obtained with naive distribution. -->
+<!-- </Exercise> -->
 
-<Answer to="problem.ex.b">
-<chunk class=anonymous><title/Donald/
-proc {Donald Root}
-   sol(a:A b:B d:D e:E g:G l:L n:N  o:O r:R t:T) = Root
-in
-   Root ::: 0#9
-   {FD.distinct Root}
-   D\=:0  R\=:0  G\=:0
-      100000*D + 10000*O + 1000*N + 100*A + 10*L + D
-   +  100000*G + 10000*E + 1000*R + 100*A + 10*L + D
-   =: 100000*R + 10000*O + 1000*B + 100*E + 10*R + T
-   {FD.distribute split Root}
-end
-</chunk>
-</Answer>
+<!-- <Answer to="problem.ex.b"> -->
+<!-- <chunk class=anonymous><title/Donald/ -->
+<!-- proc {Donald Root} -->
+<!--    sol(a:A b:B d:D e:E g:G l:L n:N  o:O r:R t:T) = Root -->
+<!-- in -->
+<!--    Root ::: 0#9 -->
+<!--    {GFD.distinctP (Root)} -->
+<!--    D\=:0  R\=:0  G\=:0 -->
+<!--       100000*D + 10000*O + 1000*N + 100*A + 10*L + D -->
+<!--    +  100000*G + 10000*E + 1000*R + 100*A + 10*L + D -->
+<!--    =: 100000*R + 10000*O + 1000*B + 100*E + 10*R + T -->
+<!--    {GFD.distribute split Root} -->
+<!-- end -->
+<!-- </chunk> -->
+<!-- </Answer> -->
 
-</section>
+<!-- </section> -->
 
 <section id="section.problem.primitives">
   <title/New Primitives/<p>
@@ -551,14 +552,14 @@ predefined functionality (&eg;, <<SearchOne>> and
 <p>
 All functionality related to finite domain
 constraints is provided through the procedures of
-the module <<FD>>.  We have already seen
-<<FD.distinct>>  (creates a propagator) and
-<<FD.distribute>>  (creates a distributor) in the
+the module <<GFD>>.  We have already seen
+<<GFD.distinctP>>  (creates a propagator) and
+<<GFD.distribute>>  (creates a distributor) in the
 script for the Send More Money Puzzle (see
 <Ptr to="section.problem.money">).  
 
 <para><title/infix notations/
-For some of the procedures of the module <<FD>>,
+For some of the procedures of the module <<GFD>>,
 Oz provides special
 infix notations governed by the following
 operators:
@@ -580,16 +581,13 @@ proc {Money Root}
    S E N D M O R Y
 in
    Root = sol(s:S e:E n:N d:D m:M o:O r:R y:Y)
-   {FD.dom 0#9 Root}
-   {FD.distinct Root}
-   {FD.sum [S] '\\=:' 0}
-   {FD.sum [M] '\\=:' 0}
-   {FD.sumC
-    [1000  100   10  1  1000  100  10  1  ~10000  ~1000  ~100  ~10  ~1]
-    [   S    E    N  D     M    O   R  E       M      O     N    E   Y]
-    '=:'
-    0}
-   {FD.distribute ff Root}
+   {GFD.dom 0#9 Root}
+   {GFD.distinctP post(Root)}
+   {GFD.relP post(S '\\=:' 0)}
+   {GFD.relP post(M '\\=:' 0)}
+   {GFD.linearP post(RootVal
+        	     [S E N D M O R E M O N E Y] '=:' 0 cl:val)
+   {GFD.distribute ff Root}
 end
 </chunk>
 </figure>
@@ -655,15 +653,26 @@ strategy.
 <figure class="Figure" id="ProgSafe">
 <caption/A script for the Safe Puzzle./
 <chunk class=anonymous><title/Safe/
-proc {Safe C}
-   {FD.tuple code 9 1#9 C}
-   {FD.distinct C}
-   C.4 - C.6 =: C.7
-   C.1 * C.2 * C.3 =: C.8 + C.9
-   C.2 + C.3 + C.6 <: C.8
-   C.9 <: C.8
-   {For 1 9 1 proc {$ I} C.I \=: I end}
-   {FD.distribute ff C}
+proc{Safe C}
+   {GFD.tuple code 9 1#9 C}
+   {GFD.distinctP  post(C cl:bnd)}
+   {GFD.linearP post([1 ~1 ~1] [C.4 C.6 C.7] '=:' 0 cl:val)}
+
+   local Tmp1 Tmp2 in
+      Tmp1 = {GFD.decl}
+      Tmp2 = {GFD.decl}
+      {GFD.multP post(C.1 C.2 Tmp1)}
+      {GFD.multP post(Tmp1 C.3 Tmp2)}
+      {GFD.linearP post([1 ~1 ~1] [Tmp2 C.8 C.9] '=:' 0 cl:val)}
+   end
+
+   {GFD.linearP post([1 1 1 ~1] [C.2 C.3 C.6 C.8] '<:' 0 cl:val)}
+   {GFD.linearP post([1 ~1] [C.9 C.8] '<:' 0 cl:val)}
+
+   for I in 1..9 do
+      C.I \=: I
+   end
+   {GFD.distribute ff C}
 end
 </chunk>
 </figure>
@@ -675,7 +684,7 @@ end
 <Ptr to="ProgSafe"> shows a script for the Safe
 Puzzle.  The statement
 <<<
-{FD.tuple code 9 1#9 C}
+{GFD.tuple code 9 1#9 C}
 >>>
 constrains the root variable <<C>> to a tuple
 with label <<code>> whose components are
@@ -711,24 +720,24 @@ declare
 
 
 
-%%
-%% The Explorer
-%%
+<!-- %% -->
+<!-- %% The Explorer -->
+<!-- %% -->
 
-<chunk.ref/{ExploreAll Money}/
+<!-- <chunk.ref/{ExploreAll Money}/ -->
 
-<chunk.ref/{ExploreOne Money}/
+<!-- <chunk.ref/{ExploreOne Money}/ -->
 
 
 
-%%
-%% New Primitives
-%%
+<!-- %% -->
+<!-- %% New Primitives -->
+<!-- %% -->
 
-declare
-<chunk.ref/MoneyRaw/
+<!-- declare -->
+<!-- <chunk.ref/MoneyRaw/ -->
 
-{ExploreAll Money}
+<!-- {ExploreAll Money} -->
 
 
 
@@ -752,23 +761,23 @@ declare
 
 
 </chunk>
-<chunk><title/ANSWERS/
-%%%
-%%% Chapter: Writing Problem Solvers in Oz
-%%%
+<!-- <chunk><title/ANSWERS/ -->
+<!-- %%% -->
+<!-- %%% Chapter: Writing Problem Solvers in Oz -->
+<!-- %%% -->
 
-%%
-%% DONALD + GERALD = ROBERT
-%%
+<!-- %% -->
+<!-- %% DONALD + GERALD = ROBERT -->
+<!-- %% -->
 
-declare
-<chunk.ref/Donald/
+<!-- declare -->
+<!-- <chunk.ref/Donald/ -->
 
-{ExploreAll Donald}
+<!-- {ExploreAll Donald} -->
 
 
 
-</chunk>
+<!-- </chunk> -->
 ]]>
 
 </chapter>

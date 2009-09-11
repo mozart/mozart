@@ -693,7 +693,7 @@ implementing a <def/distribution strategy/.  If a
 thread creates a distributor, the thread is
 blocked until the distributor has done its job.
 If a distribution step is needed, the distributor
-becomes active and generates the constraint with
+becomes active and generates the constraint, called a <<branch>>, with
 which the space will be distributed.  If there is
 more than one distributor in existence, one of
 them is chosen indeterministically whenever a
@@ -708,7 +708,8 @@ sequence and distributes on this variable.
 
 <para><title/standard possibilities to distribute
 on a variable/
-There are a few standard possibilities to distribute on a variable <math/x/:
+There are a few standard possibilities to distribute on a variable <math/x/,
+those possibilities are the branches for the space:
 <list>
 <item>
 distribute with <math/x=l/, where <math/l/ is the least

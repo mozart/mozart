@@ -152,8 +152,9 @@ if Memory Consumption is a Problem/
 Scripts which create a large number of variables or propagators or
 scripts for which the search tree is very deep might use too much
 memory to be feasible. Search engines described in <Ptr.extern
-to="ozdoc:system" key="chapter.search"> and the Explorer (see
-<Ptr.extern to="ozdoc:explorer">) feature support
+to="ozdoc:system" key="chapter.search"> and the Explorer 
+<!--(see <Ptr.extern to="ozdoc:explorer">) -->
+feature support
 for so-called <def/ recomputation/. Recomputation reduces the space
 requirements for these problems in that it trades space for time.
 
