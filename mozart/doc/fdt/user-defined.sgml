@@ -33,7 +33,7 @@ In this section we show how the user can program his or her own
 distributors. 
 
 <section id="section.user-defined.naive">
-  <title/A Naive Distribution Strategy/
+  <title/A Naive Distribution Strategy (Old Style)/
 
 <p>
 The distributor we program in this section
@@ -48,12 +48,12 @@ distributor is shown in <ptr to=fig.naiveDist>.
 proc {NaiveDistributor Is}
    {Space.waitStable}
    local
-      Fs={Filter Is fun {$ I} {FD.reflect.size I}>1 end}
+      Fs={Filter Is fun {$ I} {GFD.reflect.size I}>1 end}
    in
       case Fs
       of nil then skip
-      [] F|Fr then M={FD.reflect.min F} in
-	 choice F=M   {NaiveDistributor Fr}
+      [] F|Fr then M={GFD.reflect.min F} in
+	 choice F=:M   {NaiveDistributor Fr}
 	 []     F\=:M {NaiveDistributor Fs}
 	 end
       end
@@ -74,7 +74,7 @@ Thus, the variable <<Fs>> in <ptr
 to=fig.naiveDist> denotes the list of undetermined
 variables after ?{S} has become stable. To
 detect undetermined variables we use the procedure
-<<FD.reflect.size>> that returns the current
+<<GFD.reflect.size>> that returns the current
 size of a variable's domain. If the domain size is
 one, the variable is determined and consequently
 not included in the list <<Fs>>.
@@ -83,7 +83,7 @@ not included in the list <<Fs>>.
 Then the least possible value for the first 
 undetermined variable <<F>> is computed by 
 <<<
-M={FD.reflect.min I}
+M={GFD.reflect.min I}
 >>>
 
 <para><title/binary choice-statements/
@@ -113,8 +113,135 @@ value. The distribution is done if no undetermined variables are left.
 
 </section>
 
+<section id="section.user-defined.naive.new">
+  <title/A Naive Distribution Strategy (New Style)/
+
+<p>
+The distributor we program in this section
+implements a naive distribution strategy: choose
+the first not yet determined variable from a list
+and try the smallest possible value first. The
+distributor is shown in <ptr to=fig.naiveDistNew>.
+
+<para><title/Batch recomputation/ This distributor 
+implements batch recomputation
+by means of lazy propagation. This is achieved with
+the <<Space.getChoice>> primitive. We do not use
+<<Space.waitStable>> since there is no need for
+stability to perform a commit operation nor to known
+the branches of the space. Thus the stability operation
+is performed from the search engine.
+
+<figure id=fig.naiveDistNew>
+<caption/A distributor for a naive distribution strategy./
+<chunk class=anonymous><title/NaiveDistributor/
+
+proc {NaiveDistribute Xs}
+   V = if {IsList Xs} then {List.toTuple '#' Xs} else Xs end
+   proc {Distribute L}
+      case {Space.getChoice}
+      of I#D  then 
+	 case D
+	 of eq(M) then V.I =: M
+	 [] neq(M) then V.I \=: M
+	 end
+	 {Distribute L}
+      [] nil then
+	 case {List.dropWhile L fun {$ I#X} {IsDet X} end}
+	 of nil then
+	    skip
+	 [] L1 then		  
+	    I#X = {SelectSize L1}
+	    M={GFD.reflect.min X}
+	 in
+	    {Space.branch [I#eq(M) I#neq(M)]}
+	    {Distribute L1}
+	 end
+      end
+   end
+in
+   {Distribute {Record.toListInd V}}
+end
+
+</chunk>
+
+<para><title/getChoice-statement/ This statement
+asks the space for branches to distribute with. A
+tuple of the form <<I#D>> tell us that a new commit
+can happend, thus we apply relation constraints <<eq>>
+and <<neq>>. If choices of the space are <<nil>> then
+search one and assign it to the <<Space>>.
+
+<p>
+Thus, the variable <<L1>> in <ptr
+to=fig.naiveDistNew> denotes the list of undetermined
+variables after ?{S} has become stable. To
+detect undetermined variables we use the procedure
+<<List.dropWhile>> that makes a filter on the variables and
+remove all determined variables.
+
+<figure id=fig.selectSize>
+<caption/Auxiliar function./
+<chunk class=anonymous><title/Function to variable selection/
+
+ fun {SelectSize L}
+   fun {SelectSizeAux L Lst}
+      case L of nil then Lst
+      [] (A#X)|Xs then
+	 if {GFD.reflect.size X} < {GFD.reflect.size Lst.1} then
+	    {SelectSizeAux Xs A#X}
+	 else
+	    {SelectSizeAux Xs Lst}
+	 end
+      end
+   end
+in
+   {SelectSizeAux L L.1}
+end
+
+</chunk>
+
+<p>
+Then, once we have all undetermined variables 
+the next step is select one with smallest domain.
+To detect the variable we use the procedure
+<<SelectSize>> wich returns a tuple with a
+index in the tuple and the variable. That procedure
+uses <<GFD.reflect.size>> that returns the current
+size of a variable's domain. It search for the
+variable with smallest domain.
+
+<p>
+Then the least possible value for the first 
+undetermined variable <<X>> is computed by 
+<<<
+M={GFD.reflect.min X}
+>>>
+
+<para><title/binary branching-statements/ If
+this space has no branches, then make a filter obtaining
+only undetermined variables. Once we have a
+distributable variable then we get the value and create
+two branches for the space; one of them containing the selected value and
+other containing all other values.
+
+
+<p>
+Distribution yields two spaces, one obtained by replacing
+the first branch (<<F#eq(M)>>) by the statement ?{eq(M)}, one obtained by replacing
+the second branch (<<F#neq(M)>>) by the statement ?{neq(M)}. 
+All search engines in this tutorial will explore the
+space first which hosts the ?{eq(M)} constraint.
+
+<p>
+In <ptr to=fig.naiveDistNew>, we distribute with the constraint that
+the selected variable is determined to the current least possible
+value. The distribution is done if no undetermined variables are left. 
+
+</section>
+
 <section  id="section.user-defined.split">
-  <title/A Domain-Splitting Distributor/
+  <title/A Domain-Splitting Distributor (Old Style)/
 
 <p>
 In this section we program a distributor for the domain-splitting
@@ -127,19 +254,19 @@ The program is shown in <ptr to=fig.splitDist>.
 proc {SplitDistributor Is}
    {Space.waitStable}
    local
-      Fs={Filter Is fun {$ I} {FD.reflect.size I}>1 end}
+      Fs={Filter Is fun {$ I} {GFD.reflect.size I}>1 end}
    in 
       case Fs 
       of nil then skip
       [] F|Fr then 
 	 MinVar#_ = {FoldL Fr fun {$ Var#Size X}
-				 if {FD.reflect.size X}<Size then
-				    X#{FD.reflect.size X}
+				 if {GFD.reflect.size X}<Size then
+				    X#{GFD.reflect.size X}
 				 else 
                                     Var#Size
 				 end
-			      end F#{FD.reflect.size F}}
-	 Mid = {FD.reflect.mid MinVar} 
+			      end F#{GFD.reflect.size F}}
+	 Mid = {GFD.reflect.mid MinVar} 
       in
 	 choice MinVar =<: Mid {SplitDistributor Fs}
 	 []     MinVar >: Mid  {SplitDistributor Fs}
@@ -156,9 +283,61 @@ first-fail distribution strategy).
 For the selected variable we determine the value that is in the middle of the
 least and largest possible value by
 <<<
-Mid = {FD.reflect.mid MinVar} 
+Mid = {GFD.reflect.mid MinVar} 
 >>>
 After this is done we distribute with the constraint that <<MinVar>>
+should be smaller than or equal to <<Mid>>. 
+</section>
+
+<section  id="section.user-defined.split.new">
+  <title/A Domain-Splitting Distributor (New Style)/
+
+<p>
+In this section we program a distributor for the domain-splitting
+strategy (see <ptr to=page.domainsplitting>).  
+The program is shown in <ptr to=fig.splitDistNew>. 
+
+<figure id=fig.splitDistNew>
+<caption/A distributor for a  domain-splitting strategy./
+<chunk class=anonymous><title/SplitDistributor/<![ RCDATA [
+proc {SplitDistributor Xs}
+   V = if {IsList Xs} then {List.toTuple '#' Xs} else Xs end
+   proc {Distribute L}
+      case {Space.getChoice}
+      of I#D  then 
+   case D
+   of lessEq(M) then V.I =<: M
+   [] greater(M) then V.I >: M
+   end
+   {Distribute L}
+   [] nil then
+      case {List.dropWhile L fun {$ I#X} {IsDet X} end}
+	of nil then
+	skip
+	[] L1 then  
+	I#X = {SelectSize L1}
+	Mid={GFD.reflect.mid X}
+    in
+        {Space.branch [I#lessEq(M) I#greater(M)]}
+	{Distribute L1}
+	end
+      end
+   end
+in
+   {Distribute {Record.toListInd V}}
+end]]>
+</chunk>
+
+As in the previous section we first discard all determined
+variables. Then we select the index and the 
+variable <<I#X>> which has the smallest domain (as it is done for the
+first-fail distribution strategy).
+For the selected variable we determine the value that is in the middle of the
+least and largest possible value by
+<<<
+Mid = {GFD.reflect.mid X} 
+>>>
+After this is done we distribute with the constraint that <<X>>
 should be smaller than or equal to <<Mid>>. 
 </section>
 

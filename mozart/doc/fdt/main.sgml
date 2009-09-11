@@ -96,11 +96,11 @@
     <Meta name="html.split" value="chapter.problem">
     <Meta name="html.split" value="section.problem.script">
     <Meta name="html.split" value="section.problem.money">
-    <Meta name="html.split" value="section.problem.explorer">
+    <!-- <Meta name="html.split" value="section.problem.explorer"> -->
     <Meta name="html.split" value="section.problem.primitives">
     <Meta name="html.split" value="section.problem.watching">
     <Meta name="html.split" value="section.problem.safe">
-    <Meta name="html.split" value="problem.ex.b">
+    <!-- <Meta name="html.split" value="problem.ex.b"> -->
 
     <Meta name="html.split" value="chapter.elimination">
     <Meta name="html.split" value="section.elimination.grocery">
@@ -134,7 +134,9 @@
 
     <Meta name="html.split" value="chapter.user-defined">
     <Meta name="html.split" value="section.user-defined.naive">
+    <Meta name="html.split" value="section.user-defined.naive.new">
     <Meta name="html.split" value="section.user-defined.split">
+    <Meta name="html.split" value="section.user-defined.split.new">
 
     <Meta name="html.split" value="chapter.bab">
     <Meta name="html.split" value="section.bab.align">

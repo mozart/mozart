@@ -113,7 +113,7 @@ in
    A =<: B
    B =<: C
    C =<: D
-   {FD.distribute generic(value:splitMax) Root}
+   {GFD.distribute generic(value:splitMax) Root}
 end
 </chunk>
 </figure>
@@ -146,13 +146,13 @@ loss of generality that 79 is a prime factor of
 the price <<A>> of the first item.  We adapt our
 script by replacing the statement <<A=<:B>>  with
 <<<
-A =: 79*{FD.decl}
+A =: 79*{GFD.decl}
 >>>
-The procedure <<{FD.decl X}>> constrains its
+The procedure <<{GFD.decl X}>> constrains its
 argument to an integer in the finite domain
 <<0#sup>>, where <<sup>> stands for a large
 implementation-dependent integer
-(<<134217726>> in Mozart on Linux or Sparcs).
+(<<2147483646>> in Mozart on Linux or Sparcs).
 
 <p>
 The new propagator for <<A=:79*X>> reduces the
@@ -181,8 +181,8 @@ programming.
 
 <p>
 The script for the example will employ the
-procedures <<FD.sum>>, <<FD.sumC>>, and
-<<FD.sumCN>>, which create propagators for linear
+procedures <<GFD.linearP>> and
+<<GFD.sumCN>>, which create propagators for linear
 and nonlinear summation constraints.
 
 <subsection class=unnumbered>
@@ -257,8 +257,8 @@ in
    Root = Maria#Clara
    {ForAll Maria.boys proc {$ A} A >: AgeOfMariasYoungestGirl end}
    AgeOfClarasYoungestGirl = 0
-   {FD.sum Ages '=:' 60}
-   {FD.distribute split Ages}
+   {GFD.linearP post(Ages '=:' 60)}
+   {GFD.distribute split Ages}
 end
 </chunk>
 </figure>
@@ -287,7 +287,7 @@ descending order (see <Ptr to="figure.elim.familydef">).
 <p>
 <chunk><title/Definition of AgeList/
 proc {AgeList L}
-   {FD.list 3 0#9 L}
+   {GFD.list 3 0#9 L}
    {Nth L 1} >: {Nth L 2}
    {Nth L 2} >: {Nth L 3}
 end
@@ -299,9 +299,9 @@ fun {IsFamily Name}
    GirlsAges = {AgeList}
    Ages      = {Append BoysAges GirlsAges}
 in
-   {FD.distinct Ages}
-   {FD.sumC Coeffs Ages '=:' 0}
-   {FD.sumCN Coeffs {Map Ages fun {$ A} [A A] end} '=:' 0}
+   {GFD.distinctP post(Ages)}
+   {GFD.linearP post(Coeffs Ages '=:' 0)}
+   {GFD.sumCN Coeffs {Map Ages fun {$ A} [A A] end} '=:' 0}
    Name(boys:BoysAges girls:GirlsAges)
 end
 </chunk>
@@ -311,7 +311,7 @@ end
 <p>
 The statement
 <<<
-{FD.sumC Coeffs Ages '=:' 0}
+{GFD.linearP post(Coeffs Ages '=:' 0)}
 >>>
 creates a propagator for the constraint
 <math display/
@@ -321,7 +321,7 @@ creates a propagator for the constraint
 saying that the sum of the ages of the boys equals
 the sum of the ages of the girls.  The statement
 <<<
-{FD.sumCN Coeffs {Map Ages fun {$ A} [A A] end} '=:' 0}
+{GFD.sumCN Coeffs {Map Ages fun {$ A} [A A] end} '=:' 0}
 >>>
 creates a propagator for the constraint
 <math display/
@@ -337,7 +337,7 @@ saying that the sum of the squares of the ages of the
 boys equals the sum of the squares of the ages of the
 girls.  The statement
 <<<
-{FD.sum Ages '=:' 60}
+{GFD.linearP post(Ages '=:' 60)}
 >>>
 creates a propagator for the constraint saying
 that the sum of the ages of all kids equals <<60>>.
@@ -437,14 +437,14 @@ proc {Zebra Nb}
                   [juice water tea coffee milk] ]
    Properties = {FoldR Groups Append nil}
    proc {Partition Group}
-      {FD.distinct {Map Group fun {$ P} Nb.P end}}
+      {GFD.distinctP post({Map Group fun {$ P} Nb.P end})}
    end
    proc {Adjacent X Y}
-      {FD.distance X Y '=:' 1}
+      {GFD.distance X Y '=:' 1}
    end
 in
    %% Nb maps all properties to house numbers
-   {FD.record number Properties 1#5 Nb}
+   {GFD.record number Properties 1#5 Nb}
    {ForAll Groups Partition}
    Nb.english = Nb.red
    Nb.spanish = Nb.dog
@@ -461,7 +461,7 @@ in
    {Adjacent Nb.fox Nb.doctor}
    {Adjacent Nb.horse Nb.diplomat}
    Nb.zebra = Nb.white
-   {FD.distribute ff Nb}
+   {GFD.distribute ff Nb}
 end
 </chunk>
 </figure>
@@ -493,7 +493,7 @@ for houses that are next to each other.
 
 The statement
 <<<
-{FD.distance X Y '=:' 1}
+{GFD.distance X Y '=:' 1}
 >>>
 creates a propagator for <math/|X-Y|=1/.
 <p>

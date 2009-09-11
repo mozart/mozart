@@ -28,30 +28,16 @@
   -->
 
 <Chapter id="Chapter.FD">
-  <Title/Finite Domain Constraints: <<GFD>>/
+  <Title/Finite Domain Constraints: <<FD>> (Deprecated!)/
 
 <p>
 The procedures in this module have the following properties. 
-
-<!-- <p>
+<p>
 Each of their applications creates a new thread except for basic
 constraints which may block.
--->
 <p>
-To get an unified call interface for propagators, all propagator
-posting functions take only a record as argument. This record
-contains all the parameters needed to call the propagator and one
-optional field: <<cl>>. <<cl>> is for specifying which
-consistency level should be used by the propagator, options include
-domain consistency, bounds consistency, etc. 
-This field are completely optional as default value are
-internally choosen when it are not provided by user.
-
-<!-- <p>
 Most of the propagators perform interval propagation. Only some
 do domain propagation (&ie; cut holes into domains). 
--->
-
 <p>
 Equality between variables is exploited, except for some non-linear
 propagators.  For example, <<A+A=:B>> is equivalent to <<2*A=:B>> (for
@@ -60,49 +46,20 @@ notation see&nbsp;sec.infix-ps).
 The constraint store is amplified with constraints <<X::Spec>>  and
 equality between variables, &eg;, <<X=:Y>> is equivalent to <<X=Y>>.
 
-<para><title/Relation symbols/
-There are propagator posting procedures that take an argument <<Rt>> to denote 
-an arithmetic relation <math/\sim_{Rt}/. The possible values and the associated 
-relations are summarized below. 
+<para><title/relation symbols/
+There are generic procedures who take
+an atomic argument <<A>> to denote an arithmetic relation <math/\sim_A/. The 
+possible atoms and the associated relations are summarized below. 
 <table>
-<tr><td/<<GFD.rt.'=:'>>/ <td> Equality (<math>=</math>)</td></tr>
-<tr><td/<<GFD.rt.'\\=:'>>/ <td> Disequality (<math>\neq</math>)</td></tr>
-<tr><td/<<GFD.rt.'=<:'>>/ <td> Less or equal (<math>\leq</math>)</td></tr>
-<tr><td/<<GFD.rt.'<:'>>/ <td> Less (<math><</math>)</td></tr>
-<tr><td/<<GFD.rt.'>=:'>>/ <td> Greater or equal (<math>\geq</math>)</td></tr>
-<tr><td/<<GFD.rt.'>:'>>/ <td> Greater (<math>></math>)</td></tr>
+<tr/<td/<<A>>/<td/<<'=:'>> /<td/ <<'&gt;:'>> /<td/ <<'&gt;=:'>> /<td/ <<'&lt;:'>> /<td/ <<'=&lt;:'>> /<td/ <<'\\=:'>>//
+<tr/<td/<math>\sim_A</math> /<td/ <math>=</math> /<td/ <math>&gt;</math> /<td/ <math>\geq</math> /<td/ <math><</math> /<td/ <math>\leq</math> /<td/ <math>\neq</math>//
 </table>
 
-<para><title/Lazy propagation/
-When a propagator is posted in a computation space it does not performs any
-domain pruning. This behavior allows the implementation of batch recomputation 
-enabled search engines (REF paper). Lazy propagation is only acheved in sub-spaces, it is, when on toplevel propagation is performe eagerly. To perform propagation in a sub-space you have to ask the space to do so by calling <<Space.ask>>.
-
-<p>
-A propagator ceases to exist at least if all the variables it is posted
-on are determined. In the following
-sections, only exceptions from this rule are mentioned, &ie; if the
-propagator ceases to exist earlier. For example, {<<X =<: Y>>} ceases to
-exist if the current upper bound of <<X>> is smaller than or equal to the
-current lower bound of <<Y>>.
-
-  
 <!-- ********************************************************************** -->
-<!--
 <section id="section.fd.facts"><title/Some Facts About Propagators/
 
 <para><title/domain propagation,
 interval propagation/
-When a propagator is posted in a computation space it does not perform any 
-domain pruning. This behavior allows batch recomputation enabled search engines
-(see PAPER). Different consistency levels are implemented by finite domain
-propagators including value, bound and domain consistency when no consistency 
-level is specified on propagator posting, domain consistency is used (see Reference section.fd.consistency).
-Also, it is possible to choice between memory consumption over speed when posting 
-propagators. Section reference section.fd.kind for more details. 
--->
-
-<!-- 
 If a propagator is invoked, it tries to narrow the domains of the
 variables it is posted on. The amount of narrowing of domains depends on
 the operational semantics of the propagator. There are two main schemes
@@ -112,14 +69,18 @@ solution of the modeled constraint. But due to efficiency reasons,
 most propagators provide only interval 
 propagation, &ie; only the bounds of domains are narrowed. For some
 propagators, there is an operational semantics in between both schemes.
--->
 
-
-<!-- </section> -->
+<p>
+A propagator ceases to exist at least if all the variables it is posted
+on are determined. In the following
+sections, only exceptions from this rule are mentioned, &ie; if the
+propagator ceases to exist earlier. For example, {<<X =<: Y>>} ceases to
+exist if the current upper bound of <<X>> is smaller than or equal to the
+current lower bound of <<Y>>.
+</section>
 
 <!-- ********************************************************************** -->
-<!--
-<section id="section.fd.condis"><title/The Concept of Constructive Disjunction - Not anymore/
+<section id="section.fd.condis"><title/The Concept of Constructive Disjunction/
 
 <p>
 The operational semantics of some propagators is based on the concept
@@ -155,53 +116,45 @@ end
 Constructive disjunction narrows the domains of <<X>> and <<Y>>
 to&nbsp;<math/\{0,1,9,10\}/.
 </section>
--->
 
 <!-- ********************************************************************** -->
 <section id="section.fd.general"><title/Finite Domains/
 <p>
 <index scope="section.fd.general"/Finite Domains/
 
-<p>
-The integer limits are chosen such that addition and subtraction of two values 
-within the limits can be done safely without numerical overflow. Also, changing 
-the sign is always possible without overflow.
-
 <list>
-<entry>
-<index class=module/GFD<and>sup/
-<<sup>>
-<synopsis>
-<<<
-GFD.sup
->>>
-<item>
-Largest allowed integer value. Constant value: 2 147 483 646
-<!-- In Mozart <<FD.sup>> is 134 217 726. -->
 
 <entry>
-<index class=module/GFD<and>inf/
+<index class=module/FD<and>inf/
 <<inf>>
 <synopsis>
 <<<
-GFD.inf
+FD.inf
 >>>
 <item>
-Smallest allowed integer value. Constant value: ~2 147 483 646
-
-<!-- In Mozart <<FD.inf>> is 0. -->
-
+is a constant integer. Its concrete value is implementation dependent. 
+In Mozart <<FD.inf>> is 0.
 
 <entry>
-<index class=module/GFD<and>is/
+<index class=module/FD<and>sup/
+<<sup>>
+<synopsis>
+<<<
+FD.sup
+>>>
+<item>
+is a constant integer. Its concrete value is implementation dependent. 
+In Mozart <<FD.sup>> is 134 217 726.
+
+<entry>
+<index class=module/FD<and>is/
 <<is>>
 <synopsis>
 <<<
-{GFD.is ?*{V} ??{B}}  
+{FD.is ?*{D} ??{B}}  
 >>>
 <item>
-tests whether ?_{V} is a finite domain variable. <!-- integer between 0 and <<FD.sup>>. <<be_careful_the meaning is different>> -->
-
+tests whether ?_{D} is an integer between 0 and <<FD.sup>>. 
 </list>
 </section>
 
@@ -210,45 +163,45 @@ tests whether ?_{V} is a finite domain variable. <!-- integer between 0 and <<FD
 <p>
 <list>
 <entry>
-<index class=module/GFD<and>int/
+<index class=module/FD<and>int/
 <<::>>
 <synopsis>
 <<<
 ??{D}::?+{Spec}
-{GFD.int ?+{Spec} ??{D}}  
+{FD.int ?+{Spec} ??{D}}  
 >>>
 <item>
 tells the constraint store that ?_{D} is an integer in ?_{Spec}. 
 
 <entry>
-<index class=module/GFD<and>dom/
+<index class=module/FD<and>dom/
 <<:::>>
 <synopsis>
 <<<
 ?_{Dv}:::?+{Spec}
-{GFD.dom ?+{Spec} ??{Dv}}
+{FD.dom ?+{Spec} ??{Dv}}
 >>>
 <item>
 tells the constraint store that ?_{Dv} is a vector of integers in
 ?_{Spec}. Waits until ?_{Dv} is constrained to a vector. 
 
 <entry>
-<index class=module/GFD<and>list/
+<index class=module/FD<and>list/
 <<list>>
 <synopsis>
 <<<
-{GFD.list ?+{I} ?+{Spec} ??{Ds}}  
+{FD.list ?+{I} ?+{Spec} ??{Ds}}  
 >>>
 <item>
 tells the constraint store that
 ?_{Ds} is a list of integers in ?_{Spec} of length ?_{I}.
 
 <entry>
-<index class=module/GFD<and>tuple/
+<index class=module/FD<and>tuple/
 <<tuple>>
 <synopsis>
 <<<
-{GFD.tuple ?+{L} ?+{I} ?+{Spec} ??{Dt}}  
+{FD.tuple ?+{L} ?+{I} ?+{Spec} ??{Dt}}  
 >>>
 <item>
 tells the constraint store that
@@ -256,11 +209,11 @@ tells the constraint store that
 and label ?_{L}. 
 
 <entry id="FD.record">
-<index class=module/GFD<and>record/
+<index class=module/FD<and>record/
 <<record>>
 <synopsis>
 <<<
-{GFD.record ?+{L} ?+{Ls} ?+{Spec} ??{Dr}}  
+{FD.record ?+{L} ?+{Ls} ?+{Spec} ??{Dr}}  
 >>>
 <item>
 tells the constraint store that
@@ -269,14 +222,14 @@ tells the constraint store that
 label ?_{L}. 
 
 <entry>
-<index class=module/GFD<and>decl/
+<index class=module/FD<and>decl/
 <<decl>>
 <synopsis>
 <<<
-{GFD.decl ??{D}}  
+{FD.decl ??{D}}  
 >>>
 <item>
-Abbreviates <<{GFD.int GFD.inf#GFD.sup ?_{D}}>>.
+Abbreviates <<{FD.int 0#FD.sup ?_{D}}>>.
 </list>
 </section>
 
@@ -285,143 +238,103 @@ Abbreviates <<{GFD.int GFD.inf#GFD.sup ?_{D}}>>.
 <p>
 <list>
 <entry>
-<index class=module/GFD<and>reflect<and>min/
+<index class=module/FD<and>reflect<and>min/
 <<reflect.min>>
 <synopsis>
 <<<
-{GFD.reflect.min ?*{D1} ??{D2}}
+{FD.reflect.min ?*{D1} ??{D2}}
 >>>
 <item>
 returns the current lower bound of ?_{D1}.
 
 <entry>
-<index class=module/GFD<and>reflect<and>max/
+<index class=module/FD<and>reflect<and>max/
 <<reflect.max>>
 <synopsis>
 <<<
-{GFD.reflect.max ?*{D1} ??{D2}}
+{FD.reflect.max ?*{D1} ??{D2}}
 >>>
 <item>
 returns the current upper bound of ?_{D1}.
 
 <entry>
-<index class=module/GFD<and>reflect<and>med/
-<<reflect.med>>
+<index class=module/FD<and>reflect<and>mid/
+<<reflect.mid>>
 <synopsis>
 <<<
-{GFD.reflect.med ?*{D1} ??{D2}}
+{FD.reflect.mid ?*{D1} ??{D2}}
 >>>
 <item>
-returns the median of the domain.
+returns the integer which is closest to the 
+middle of the current domain (the arithmetical means of the lower and upper
+bound of ?_{D1}). In case of ties, the smaller
+element	is selected.
 
 <entry>
-<index class=module/GFD<and>reflect<and>nextLarger/
+<index class=module/FD<and>reflect<and>nextLarger/
 <<reflect.nextLarger>>
 <synopsis>
 <<<
-{GFD.reflect.nextLarger ?*{D1} ?+{D2} ??{D3}}
+{FD.reflect.nextLarger ?*{D1} ?+{D2} ??{D3}}
 >>>
 <item>
 returns the smallest integer in the domain of ?_{D1} which is larger than
 ?_{D2}. 
 
 <entry>
-<index class=module/GFD<and>reflect<and>nextSmaller/
+<index class=module/FD<and>reflect<and>nextSmaller/
 <<reflect.nextSmaller>>
 <synopsis>
 <<<
-{GFD.reflect.nextSmaller ?*{D1} ?+{D2} ??{D3}}
+{FD.reflect.nextSmaller ?*{D1} ?+{D2} ??{D3}}
 >>>
 <item>
 returns the largest integer in the domain of ?_{D1} which is smaller than
 ?_{D2}.
 
 <entry>
-<index class=module/GFD<and>reflect<and>size/
+<index class=module/FD<and>reflect<and>size/
 <<reflect.size>>
 <synopsis>
 <<<
-{GFD.reflect.size ?*{D1} ??{D2}}
+{FD.reflect.size ?*{D1} ??{D2}}
 >>>
 <item>
 returns the size of the current domain of ?_{D1}.
 
 <entry>
-<index class=module/GFD<and>reflect<and>width/
-<<reflect.width>>
-<synopsis>
-<<<
-{GFD.reflect.width ?*{D1} ??{D2}}
->>>
-<item>
-returns width of domain (distance between maximum and minimum) ?_{D1}.
-
-
-<entry>
-<index class=module/GFD<and>reflect<and>domList/
+<index class=module/FD<and>reflect<and>domList/
 <<reflect.domList>>
 <synopsis>
 <<<
-{GFD.reflect.domList ?*{D} ??{Ds}}  
+{FD.reflect.domList ?*{D} ??{Ds}}  
 >>>
 <item>
 returns the current domain of ?_{D} as an ordered list of integers.
 
 <entry>
-<index class=module/GFD<and>reflect<and>dom/
+<index class=module/FD<and>reflect<and>dom/
 <<reflect.dom>>
 <synopsis>
 <<<
-{GFD.reflect.dom ?*{D} ??{Spec}}
+{FD.reflect.dom ?*{D} ??{Spec}}
 >>>
 <item>
 returns the current domain of  ?_{D} as a domain specification.
 
 <entry>
-<index class=module/GFD<and>reflect<and>regretMin/
-<<reflect.regretMin>>
-<synopsis>
-<<<
-{GFD.reflect.regretMin ?*{D} ??{D2}}
->>>
-<item>
-Return regret of domain minimum (distance to next larger value). 
-
-<entry>
-<index class=module/GFD<and>reflect<and>regretMax/
-<<reflect.regretMax>>
-<synopsis>
-<<<
-{GFD.reflect.regretMax ?*{D} ??{D2}}
->>>
-<item>
-Return regret of domain maximum (distance to next smaller value). 
-
-<entry>
-<index class=module/GFD<and>reflect<and>nbSusps/
+<index class=module/FD<and>reflect<and>nbSusps/
 <<reflect.nbSusps>>
 <synopsis>
 <<<
-{GFD.reflect.nbSusps ?*{D} ??{I}}
+{FD.reflect.nbSusps ?*{D} ??{I}}
 >>>
 <item>
-returns the current number of threads suspending on ?_{D}.
-
-<entry>
-<index class=module/GFD<and>reflect<and>nbProp/
-<<reflect.nbProp>>
-<synopsis>
-<<<
-{GFD.reflect.nbProp ?*{D} ??{I}}
->>>
-<item>
-returns the current number of propagators related with ?_{D}.
-
+returns the current number of suspensions  on ?_{D}.
 </list>
 </section>
 
 <!-- ********************************************************************** -->
-<!--
 <section id="section.fd.watching"><title/Watching Domains/
 <p>
 <list>
@@ -461,554 +374,9 @@ Returns <<true>> when the size of the domain of ?_{D1} becomes smaller
 than ?_{D2}.
 </list>
 </section>
--->
-<!-- ********************************************************************** -->
-<!--
-<section id="section.fd.prop"><title/Porpagators information/
-<p>
-Relation types for integer constraint variables:
-<list class=enum>
-<item> <<FD.rt.'=:'>> Equality (<math>=</math>).
-<item> <<FD.rt.'\\=:'>> Disequality (<math>\neq</math>).
-<item> <<FD.rt.'=<:'>> Less or equal (<math>\leq</math>).
-<item> <<FD.rt.'<:'>> Less (<math><</math>).
-<item> <<FD.rt.'>=:'>> Greater or equal (<math>\geq</math>).
-<item> <<FD.rt.'>:'>> Greater (<math> > </math>).
-</list>
-
-Any of the above mentioned relation can be passed as an argument to functions
-with ?_{Rt} as formal parameter.
--->
-<!-- ********************************************************************** -->
-<section id="section.fd.consistency"><title/Post functions/
-<p>
-Propagators API functions post propagators in the current computation 
-space. All these functions takes as parammeters a <em>consistency level</em>. 
-Consistency level defines propgators semantic, for instance the bound consistency
-level indicates that the propagator only removes values from domain boundaries.
-
-<p>
-Not all propagators provide all consistency techniques implementation so passing
-different values as consistency level parameter will do nothing. It is not 
-required that a propagator achieves full domain-consistency or full 
-bounds-consistency. It is more like: which level of consistency comes closest.
-
-<p>
-If in the description of a constraint below no consistency level is mentioned, the propagator for the constraint implements domain-consistency.
-
-<table>
-<tr><td/<<GFD.cl.val>>/ <td> Value consistency (naive).</td></tr>
-<tr><td/<<GFD.cl.bnd>>/ <td>  Bounds consistency. </td></tr>
-<tr><td/<<GFD.cl.dom>>/ <td> Domain consistency.</td></tr>
-<tr><td/<<GFD.cl.def>>/ <td> The default consistency for a constraint. </td></tr>
-</table>
-
-Consistency levels can be specified in propagator posting procedures by associating
-one of the above values for the feature <<cl>>. 
-</section>
 
 <!-- ********************************************************************** -->
-<!-- <section id="section.fd.kind"><title/Propagation kinds/ -->
-<!-- <p> -->
-<!-- Signals that a particular kind is used in propagation for the implementation of  -->
-<!-- a particular constraint. Possible values include: -->
-
-<!-- <table> -->
-<!-- <tr><td/<<GFD.pk.def>>/ <td>  Make a default decision. </td></tr> -->
-<!-- <tr><td/<<GFD.pk.speed>>/ <td> Prefer speed over memory consumption. </td></tr> -->
-<!-- <tr><td/<<GFD.pk.memory>>/ <td> Prefer little memory over speed.</td></tr> -->
-<!-- </table> -->
-
-<!-- Propagator kinds can be specified in propagator posting procedures by associating -->
-<!-- one of the above values for the feature <<pk>>.  -->
-<!-- </section> -->
-
-<!-- ********************************************************************** -->
-<section id="section.fd.dom"><title/Domain constraints/
-
-<p>
-
-<list>
-<entry>
-<index class=module/GFD<and>domP/
-<<domP>>
-<synopsis>
-<<<
-{GFD.domP ?*{PE}}
->>>
-<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
-can be of the following forms:
-
-<list class=enum>
-<item> <<post(X L M)>>: Post propagator for  <math> L \leq X\leq M </math>.
-<item> <<post(Lx L M)>>: Post prpagator for  <math> L\leq Lx_i\leq M </math> 
-for all <math>0\leq i<|x| </math>.
-<item> <<post(X S)>>: Propagates <math> X\in S </math>, being <<S>> a domain 
-specification.
-<item> <<post(Lx S)>>:  Propagates <math> Lx_i\in S</math> for all <math>0\leq i<|X| </math>, 
-being <<S>> a domain specification.
-<item> <<post(X L M B)>>: Post propagator for <math> (L\leq X \leq M) \Leftrightarrow B</math>, 
-being <<B>> a constraint boolean variable (REFERENCE).
-<item> <<post(X S B)>>:  Post propagator for <math> (X \in S) \Leftrightarrow B </math>.
-</list>
-</list>
-</section>
-
-<!-- ********************************************************************** -->
-<section id="section.fd.rel"><title/Simple relation constraints/
-
-<p>
-
-<list>
-<entry>
-<index class=module/GFD<and>relP/
-<<relP>>
-<synopsis>
-<<<
-{GFD.relP ?*{PE}}
->>>
-<item> Post a relation propagator according to the post especification ?_{PE}. ?_{PE} 
-can be of the following forms:
-
-<list class=enum>
-  <item> <<post(Lx Rt Y)>>: Post propagator for <math> Lx_i \sim_{Rt} Y </math> for all <math>0\leq i<|X| </math>. <p>Supports both bounds (<<GFD.cl.bnd>>) and domain-consistency (<<GFD.cl.dom>>, default).
-<item> <<post(X Rt C)>>:  Propagates <math> X \sim_{Rt} C </math>.
-<item> <<post(Lx Rt C)>>: Propagates <math> Lx_i \sim_{Rt} C </math> for all <math> 0\leq i<|X|</math>. 
-<item> <<post(X0 Rt X1 B)>>: Post propagator for <math> (X0 \sim_{Rt} X1)\Leftrightarrow B </math>.<p>Supports both bounds (<<GFD.cl.bnd>>) and domain-consistency (<<GFD.cl.dom>>, default).
-<item> <<post(X Rt C B)>>: Post propagator for <math> (X \sim_{Rt} C)\Leftrightarrow B </math>. <p>Supports both bounds (<<FD.cl.bnd>>) and domain-consistency (<<FD.cl.dom>>, default).
-<item> <<post(Lx Rt)>>: Post propagator for pairwise relation on  <<Lx>>. States that the elements of  ?_{Lx} are in the following relation:
-<list class=enum>
-  <item> if <<rt:GFD.rt.'=:'>>, then all elements of <<Lx>> must be equal. 
-	<p>Supports both bounds (<<GFD.cl.bnd>>) and domain-consistency (<<GFD.cl.dom>>, default).
-<item>if <<rt:FD.rt.'<:'>>,<<rt:FD.rt.'=<:'>>, <<rt:FD.rt.'>:'>>, or <<rt:FD.rt.'>=:'>>, then the elements of <<Lx>> are ordered with respt to <<Rt>>. <p>Supports domain-consistency (<<GFD.cl.dom>>, default).
-  <item>if <<rt:FD.rt.'\\=:'>>, then all elements of <<Lx>> must be pairwise distinct (corresponds to the distinct constraint). <p>Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). <p>Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
-</list>
-<item> <<post(X Rt Y)>>: Post propagator for relation <<Rt>> between  <<X>> and <<Y>>. 
-    <p> Note that for the inequality relations this corresponds to the lexical order between \a <<X>> and <<Y>>. <p>Supports both bounds (<<cl:FD.cl.bnd>>) and domain-consistency (<<cl:FD.cl.dom>>, default). <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<X>> and <<Y>> are of different size.
-</list>
-</list>
-
-</section>
- 
-<!-- ********************************************************************** -->
-<section id="section.fd.element"><title/Element constraints/
-<p>
-
-<list>
-<entry>
-<index class=module/GFD<and>element/
-<<element>>
-<synopsis>
-<<<
-{GFD.element ?*{PE}}
->>>
-<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
-can be of the following forms:
-
-<list class=enum>
-<item> <<post(N X0 X1)>>:  Post propagator for <math> N_{X0}=X1 </math>. Being <<N>> a vector of integers and  <<X0>> and <<X1>>  integer constraint variables. <p>Throws an exception of type Int::OutOfLimits, if the integers in  <<N>> exceed the limits in Int::Limits.
-<item> <<post(N X0 B)>>: Post propagator for <math> N_{X0}=B </math>. Being <<N>> a vector of integers, <<X0>> an integer constraint variable and <<B>> a boolean constraint variable. <p>Throws an exception of type Int::OutOfLimits, if the integers in <<N>> exceed the limits in Int::Limits.
-<item> <<post(N X0 C)>>: Post propagator for <math> N_{X0}=C </math>.  Being <<N>> a vector of integers, <<X0>> an integer constraint variable and <<C>> an integer. <p>Throws an exception of type Int::OutOfLimits, if the integers in <<N>> exceed the limits in Int::Limits.
-<item> <<post(Lx Y0 Y1)>>:  Post propagator for <math> Lx_{Y0}=Y1 </math>. Being <<Lx>> a vector of integer constraint variables and <<Y0>> and <<Y1>>  integer constraint variables. <p>Supports both bounds (<<cl:GFD.cl.bnd>>) and domain-consistency (<<cl:GFD.cl.dom>>, default).
-<item> <<post(Lx Y0 C)>>:  Post propagator for <math> Lx_{Y0}=C </math>. Being  <<Lx>> a vector of integer constraint variables, <<Y0>> an integer constraint variable and <<C>> an integer value. <p>Supports both bounds (<<cl:GFD.cl.bnd>>) and domain-consistency (<<cl:GFD.cl.dom>>, default).
-<item> <<post(Bv Y0 B)>>:  Post propagator for <math> Bv_{Y0}=Y1 </math>. Being <<Bv>> a vector of boolean constraint variables, <<Y0>> an integer constraint variable and <<B>> a boolean constraint variable.
-<item> <<post(Bv Y0 C)>>: Post propagator for <math>  Bv_{Y0}=C </math>. Being <<Bv>> a vector of boolean constraint variables, <<Y0>> an integer constraint variable and <<C>> an integer constant.
-</list>
-</list>
-</section>
-
-<!-- ********************************************************************** -->
-<section id="section.fd.distinct"><title/Distinct constraints/
-<p>
-
-<list>
-<entry>
-<index class=module/GFD<and>distinct/
-<<distinct>>
-<synopsis>
-<<<
-{GFD.distinct ?*{PE}}
->>>
-<item> Post a domain propagator according to the post especification ?_{PE}. ?_{PE} 
-can be of the following forms:
-
-<list class=enum>
-<item> <<post(Lx)>>: Post propagator for <math> Lx_i\neq Lx_j </math> for all <math>0\leq i\neq j<|x|</math>. <p>Supports value (<<cl:GFD.cl.val>>), default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). <p>Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
-<item> <<post(N Lx)>>: Post propagator for <math> Lx_i+N_i\neq Lx_j+N_j </math> for all <math>0\leq i\neq j<|x|</math>. Being <<N>> and <<X>> vectors of integers and integer constraint variables resp. <p>Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>),  and domain-consistency (<<cl:GFD.cl.dom>>). <p>Throws an exception of type Int::OutOfLimits, if the integers in <<N>> exceed the limits in Int::Limits or if the sum of <<n>> and <<Lx>> exceed the limits. <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<Lx>> and <<N>> are of different size. <p>Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply. 
-</list>
-</list>
-
-</section>
-
-<!-- ********************************************************************** -->
-<section id="section.fd.channel"><title/Channel constraints/
-
-<p>
-
-<list>
-<entry>
-<index class=module/GFD<and>distinct/
-<<channel>>
-<synopsis>
-<<<
-{GFD.channel ?*{PE}}
->>>
-<item> Post a channel propagator according to the post especification ?_{PE}. ?_{PE} 
-can be of the following forms:
-
-<list class=enum>
-<item> <<post(Lx Ly)>>: Post propagator for <math> Lx_i = j\leftrightarrow Ly_j=i</math> 
-for all <math>0\leq i<|x|</math>. 
-   <list class=enum>
-     <item>Supports domain (<<cl:GFD.cl.dom>>) and value propagation (all other values for a consistency level).
-   <item> Throws an exception of type Int::ArgumentSizeMismatch, if <<Lx>> and <<Ly>> are of different size.
-   <item> Throws an exception of type Int::ArgumentSame, if <<Lx>> or <<Ly>> contain the same unassigned variable multiply. Note that a variable can occur in both <<Lx>> and <<Ly>>, but not more than once in either <<Lx>> or <<Ly>>.
-</list>
-<item> <<post(B X)>>:  Post propagator for channeling a boolean and an integer variable <math>B = X</math>.
-<item> <<post(X B)>>: Post propagator for channeling an integer and a boolean variable <math> X = B</math>.
-<item> <<post(Lb Y O)>>: Post propagator for channeling Boolean and integer variables <math>Lb_i = 1\leftrightarrow Y=i+O</math>. Being <<Lb>> a vector of boolean variables. <p>Throws an exception of type Int::ArgumentSame, if <<Lb>> contains the same unassigned variable multiply.
-</list>
-</list>
-
-</section>
-
-<!-- ********************************************************************** -->
-<section id="section.fd.graph"><title/Graph constraints/
-
-<p>
-
-<list>
-<entry>
-<index class=module/GFD<and>distinct/
-<<graph>>
-<synopsis>
-<<<
-{GFD.graph ?*{PE}}
->>>
-<item> Post a graph propagator according to the post especification ?_{PE}. ?_{PE} 
-can be of the following forms:
-
-<list class=enum>
-<item> <<post(Lx)>>:  Post propagator such that <<Lx>> forms a circuit. <<Lx>> forms a circuit if the graph with edges <math> i \to j</math>  where <math>Lx_i=j</math> has a single cycle covering all nodes. <p>Supports domain (<<cl:GFD.cl.dom>>) and value propagation (all other values for <<cl>>), where this refers to whether value or domain-consistent distinct in enforced on <<Lx>>. <p>Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
-</list>
-</list>
-
-
-</section>
-
-<!-- ********************************************************************** -->
-<section id="section.fd.scheduling"><title/Scheduling constraints/
-
-
-<p>
-<list>
-<entry>
-<index class=module/GFD<and>distinct/
-<<cumulatives>>
-<synopsis>
-<<<
-{GFD.cumulatives ?*{PE}}
->>>
-<item>
-This procedure creates propagators for the cumulatives constraint presented in 
-<em>"A new multi-resource cumulatives constraint with negative heights"</em>, 
-Nicolas Beldiceanu and Mats Carlsson, Principles and Practice of Constraint 
-Programming 2002. The constraint models a set of machines and a set of tasks that
-should be assigned to the machines. The machines have a positive resource limit and 
-the tasks each have a resource usage that can be either positive, negative, or zero. 
-The constraint is enforced over each point in time for a machine where there is at 
-least one task assigned.
-<p>
-The limit for a machine is either the maximum amount available at any given time 
-(\a at_most = true), or else the least amount to be used (\a at_most = false).
-
-<list class=enum>
-<item> <<Machine>>:  <math> Machine_i </math> is the machine assigned to task <math> i </math>
-<item> <<Start>>: <math>Start_i</math> is the start date assigned to task <math> i </math>
-<item> <<Duration>>: <math>Duration_i </math> is the duration of task <math> i </math>.
-<item> <<End>>: <math> End_i </math> is the end date assigned to task <math> i</math>.
-<item> <<Height>>: <math>Height_i </math> is the height is the amount of resources consumed by task <math> i</math>
-<item> <<Limit>>: <math>Limit_r </math> is the amount of resource available for machine <math> r </math>
-<item> <<At_most>>: <<At_most>> tells if the amount of resources used for a machine should be less than 
-the limit (<<At_most=true>>) or greater than the limit (<<At_most=false>>) 
-</list>
-<p>
- Supports value-consistency only (<<cl:GFD.cl.val>>, default). An exception  Int::ArgumentSizeMismatch thrown if the sizes of the arguments representing tasks does not match. An exception Int::OutOfLimits thrown if any numerical argument is larger than <<GFD.sup>>  or less than <<GFD.inf>>.
-</list>
-<list class=enum>
-<item> <<post(Machine Start Duration End Height Limit At_most)>>: Post propagator for the cumulatives constraint. All parameters except <<At_most>> are vectors of finite domain variables.
-<item> <<post(Machine Start Duration End Height Limit At_most)>>: Post propagator for the cumulatives constraint. <<Machine>> and <<Limit>> are vectors of integers numbers, all others, except <<At_most>>, are vectors of finite domain variables.
-<item> <<post(Machine Start Duration End Height Limit At_most)>>: Post propagator for the cumulatives constraint. <<Duration>> and <<Limit>> are vectors of integers numbers, all others, except <<At_most>>, are vectors of finite domain variables.
-<item> <<post(Machine Start Duration End Height Limit At_most)>>: Post propagator for the cumulatives constraint. <<Machine>>, <<Duration>> and <<Limit>> are vectors of integers numbers, all others, except <<At_most>>, are vectors of finite domain variables.
-<item> <<post(Machine Start Duration End Height Limit At_most)>>: Post propagator for the cumulatives constraint. <<Height>> and <<Limit>> are vectors of integers numbers, all others, except <<At_most>>, are vectors of finite domain variables.
-<item> <<post(Machine Start Duration End Height Limit At_most)>>: Post propagator for the cumulatives constraint. <<Machine>>, <<Height>> and <<Limit>> are vectors of integers numbers, all others, except <<At_most>>, are vectors of finite domain variables.
-<item> <<post(Machine Start Duration End Height Limit At_most)>>: Post propagator for the cumulatives constraint. <<Duration>>, <<Height>> and <<Limit>> are vectors of integers numbers, all others, except <<At_most>>, are vectors of finite domain variables.
-<item> <<post(Machine Start Duration End Height Limit At_most)>>: Post propagator for the cumulatives constraint. <<Machine>>, <<Duration>>, <<Height>> and <<Limit>> are vectors of integers numbers, all others, except <<At_most>>, are vectors of finite domain variables.
-</list>
-</section>
-
-<!-- ********************************************************************** -->
-<section id="section.fd.sorted"><title/Sorted constraints/
-<p>
-
-<list>
-<entry>
-<index class=module/GFD<and>sorted/
-<<sorted>>
-<synopsis>
-<<<
-{GFD.sorted ?*{PE}}
->>>
-<item> Post a sorted propagator according to the post especification ?_{PE}. ?_{PE} 
-can be of the following forms:
-
-<list class=enum>
-<item> <<post(Lx Ly)>>: Post propagator that <<Ly>> is <<Lx>> sorted in increasing order. Might throw the following exceptions:
-<list class=enum>
-<item> Int::ArgumentSizeMismatch, if <<Lx>> and <<Ly>> differ in size.
-<item> Int::ArgumentSame, if <<Lx>> or <<Ly>> contain shared unassigned variables.
-</list>
-<item> <<post(Lx Ly Lz)>>: Post propagator that <<Ly>> is <<Lx>> sorted in increasing order. The values 
-in <<Lz>> describe the sorting permutation, that is <math>\forall i\in\{0,\dots,|x|-1\}: x_i=y_{z_i} </math>. Might throw the following exceptions:
-<list class=enum>
-<item> Int::ArgumentSizeMismatch, if <<Lx>> and <<Ly>> differ in size.
-<item> Int::ArgumentSame, if <<Lx>> or <<Ly>> contain shared unassigned variables.
-</list>
-</list>
-</list>
-</section>
-
-<!-- ********************************************************************** -->
-<section id="section.fd.cardinality"><title/Cardinality constraints/
-<p>
-Domain consistency on the extended cardinality variables of the Global 
-Cardinality Propagator is only obtained if they are bounds consistent, 
-otherwise the problem of enforcing domain consistency on the cardinality 
-variables is NP-complete as proved by <em>Qumiper et. al. in Improved 
-Algorithms for the Global Cardinality Constraint</em>.
-
-<list>
-<entry>
-<index class=module/GFD<and>count/
-<<count>>
-<synopsis>
-<<<
-{GFD.count ?*{PE}}
->>>
-<item> Post a count propagator according to the post especification ?_{PE}. ?_{PE} 
-can be of the following forms:
-
-<list class=enum>
-<item> <<post(Lx N Rt M)>>:  Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=N\}\sim_{Rt} M</math>. <p>Supports domain-consistent propagation only.
-<item> <<post(Lx Y Rt M)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=y\}\sim_{Rt} M</math>. <p>Supports domain-consistent propagation only.
-<item> <<post(Lx Y Rt M)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=Y_i\}\sim_{Rt} M</math>. <p>Supports domain-consistent propagation only. <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<Lx>> and <<Y>> are of different size.
-<item> <<post(Lx N Rt Z)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=N\}\sim_{Rt} Z</math>. <p>Supports domain-consistent propagation only.
-<item> <<post(Lx Y Rt Z)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=Y\}\sim_{Rt} Z</math>. <p>Supports domain-consistent propagation only.
-<item> <<post(Lx Y Rt Z)>>: Post propagator for <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=Y_i\}\sim_{Rt} Z</math>. <p>Supports domain-consistent propagation only. <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<Lx>> and <<Y>> are of different size.
-<item> <<post(Lx C)>>:  Posts a global count (cardinality) constraint. Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=j\}=C_j</math> and <math> \bigcup_i \{Lx_i\} \subseteq \{0,\ldots,|C|-1\}</math> (no other value occurs). <p>Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). <p>Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
-<item> <<post(Lx C)>>: Posts a global count (cardinality) constraint. Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=j\}\in C_j</math> and <math> \bigcup_i \{Lx_i\} \subseteq \{0,\ldots,|C|-1\}</math> (no other value occurs). <p>Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). <p>Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply.
-<item><<post(Lx C V)>>: Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=V_j\}=C_j</math> and <math>\bigcup_i \{Lx_i\} \subseteq \bigcup_j \{V_j\}</math> (no other value occurs). <p>Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). <p>Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply. <p>Throws an exception of type Int::ArgumentSizeMismatch, if  <<C>> and <<V>> are of different size.
-<item><<post(Lx C V)>>:  Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=V_j\}\in C_j</math> and <math>\bigcup_i \{Lx_i\} \subseteq \bigcup_j \{V_j\}</math> (no other value occurs). <p>Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). <p>Throws an exception of type Int::ArgumentSame, if <<Lx>> contains the same unassigned variable multiply. <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<C>> and <<V>> are of different size.
-<item><<post(Lx C V)>>:  Posts the constraint that <math>\#\{i\in\{0,\ldots,|Lx|-1\}\;|\;Lx_i=V_j\}\in C</math> and <math> \bigcup_i \{Lx_i\} \subseteq \bigcup_j \{V_j\}</math> (no other value occurs). <p>Supports value (<<cl:GFD.cl.val>>, default), bounds (<<cl:GFD.cl.bnd>>), and domain-consistency (<<cl:GFD.cl.dom>>). <p>Throws an exception of type Int::ArgumentSame, if Lx contains the same unassigned variable multiply. <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<C>> and <<V>> are of different size.
-</list>
-</list>
-
-</section>
-
-<!-- ********************************************************************** -->
-<section id="section.fd.extensional"><title/Extensional constraints/
-<p>
-This particular constraint has an extra optional field; <<pk>>. It is used to tell
-the propagator whether to prefer extensive use of cpu over memory or not. 
-This field are completely optional as default value are
-internally choosen when it are not provided by user.
-
-<p>
-Signals that a particular kind is used in propagation for the implementation of 
-a particular constraint. Possible values include:
-
-<table>
-<tr><td/<<GFD.pk.def>>/ <td>  Make a default decision. </td></tr>
-<tr><td/<<GFD.pk.speed>>/ <td> Prefer speed over memory consumption. </td></tr>
-<tr><td/<<GFD.pk.memory>>/ <td> Prefer little memory over speed.</td></tr>
-</table>
-
-<list>
-<entry>
-<index class=module/GFD<and>extensional/
-<<extensionalP>>
-<synopsis>
-<<<
-{GFD.extensionalP ?*{PE}}
->>>
-<item> Post an extensional propagator according to the post especification ?_{PE}. ?_{PE} 
-can be of the following forms:
-
-<list class=enum>
-<item> <<post(Lx DFA)>>: Post propagator for extensional constraint defined by DFA(Deterministic Finite Automaton). The elements of Lx must be a word of 
-the language described by the DFA.
-<item><<post(X T)>>:  Post propagator for <math> X \in T </math> been <<T>> a tuple set.
-</list>
-</list>
-</section>
-
-
-<!-- ********************************************************************** -->
-<section id="section.fd.arithmetic"><title/Arithmetic constraints
-<p>
-
-<list>
-<entry>
-<index class=module/GFD<and>min/
-<<min>>
-<synopsis>
-<<<
-{GFD.min ?*{PE}}
->>>
-<item> Post an arithmetic (min) propagator according to the post especification ?_{PE}. ?_{PE} 
-can be of the following forms:
-
-<list class=enum>
-<item> <<post(X0 X1 X2)>>: Post propagator for <math> \min\{X0,X1\}=X2</math>. Only bounds-consistency is supported.
-<item><<post(Lx Y)>>:  Post propagator for <math> \min Lx=Y</math>. Only bounds-consistency is supported.
-</list>
-
-<entry>
-<index class=module/GFD<and>max/
-<<max>>
-<synopsis>
-<<<
-{GFD.max ?*{PE}}
->>>
-<item> Post an arithmetic (max) propagator according to the post especification ?_{PE}. ?_{PE} 
-can be of the following forms:
-
-<list class=enum>
-<item> <<post(X0 X1 X2)>>: Post propagator for <math> \max\{X0,X1\}=X2</math>. Only bounds-consistency is supported.
-<item><<post(Lx Y)>>:  Post propagator for <math> \max Lx=Y</math>. Only bounds-consistency is supported.
-</list>
-
-<entry>
-<index class=module/GFD<and>abs/
-<<abs>>
-<synopsis>
-<<<
-{GFD.abs ?*{PE}}
->>>
-<item> ?_{PE} can be of the form <<post(X0 X1)>> meaning that <math> |X0|=X1 </math>. Only bounds-consistency is supported.
-
-<entry>
-<index class=module/GFD<and>mult/
-<<mult>>
-<synopsis>
-<<<
-{GFD.mult ?*{PE}}
->>>
-<item> ?_{PE} can be of the form <<post(X0 X1 X2)>> meaning that <math> X0\cdot X1=X2 </math>. Only bounds-consistency is supported.
-
-<entry>
-<index class=module/GFD<and>sqr/
-<<sqr>>
-<synopsis>
-<<<
-{GFD.sqr ?*{PE}}
->>>
-<item> ?_{PE} can be of the form <<post(X0 X1)>> meaning that <math> X0\cdot X0=X1</math>. Only bounds-consistency is supported.
-
-<entry>
-<index class=module/GFD<and>sqrt/
-<<sqrt>>
-<synopsis>
-<<<
-{GFD.sqrt ?*{PE}}
->>>
-<item> ?_{PE} can be of the form <<post(X0 X1)>> meaning that <math>\lfloor\sqrt{X0}\rfloor=X1 </math>. Only bounds-consistency is supported.
-
-<entry>
-<index class=module/GFD<and>divmod/
-<<divmod>>
-<synopsis>
-<<<
-{GFD.divmod ?*{PE}}
->>>
-<item> ?_{PE} can be of the form <<post(X0 X1 X2 X3)>> meaning that <math> X0 \mathrm{div} X1=X2 \land X0 \mathrm{mod} X1 = X1 </math>. Only bounds-consistency is supported.
-<!--<math>\lfloor\sqrt{X0}\rfloor=X1 </math>-->
-
-<entry>
-<index class=module/GFD<and>div/
-<<div>>
-<synopsis>
-<<<
-{GFD.div ?*{PE}}
->>>
-<item> ?_{PE} can be of the form <<post(X0 X1 X2)>> meaning that <math> X0 \mathrm{div} X1=X2 </math>. Only bounds-consistency is supported.
-
-<entry>
-<index class=module/GFD<and>mod/
-<<mod>>
-<synopsis>
-<<<
-{GFD.mod ?*{PE}}
->>>
-<item> ?_{PE} can be of the form <<post(X0 X1 X2)>> meaning that <math> X0 \mathrm{mod} X1=X2 </math>. Only bounds-consistency is supported.
-
-</list>
-
-</section>
-
-<!-- ********************************************************************** -->
-<section id="section.fd.linear"><title/Linear constraints/
-<p>
-All variants for linear constraints over integer variables share
-the following properties:
-<list class=enum>
-<item> Bounds-consistency (over the real numbers) is supported for
-       all constraints (actually, for disequlities always domain-consistency
-       is used as it is cheaper). Domain-consistency is supported for all
-       non-reified constraint. As bounds-consistency for inequalities
-       coincides with domain-consistency, the only real variation is for 
-       linear equations. Domain-consistent linear equations have exponential 
-       complexity, so use with care!
-<item> Variables occurring multiply in the argument arrays are replaced
-       by a single occurrence: for example, <math>ax+bx</math> becomes
-       <math>(a+b)x</math>.
-<item> If in the above simplification the value for <math>(a+b)</math> (or for
-       <math>a</math> and <math>b</math>) exceeds the limits for integers as
-       defined in Int::Limits, an exception of type Int::OutOfLimits is thrown.
-<item>Assume the constraint <math>\sum_{i=0}^{|x|-1}a_i\cdot x_i\sim_r c</math>.
-       If  <math>|c|+\sum_{i=0}^{|x|-1}a_i\cdot x_i</math> exceeds the maximal
-       available precision (at least <math>2^{48}</math>), an exception of
-       type Int::OutOfLimits is thrown.
-<item>In all other cases, the created propagators are accurate (that
-       is, they will not silently overflow during propagation).
-</list>
-
-<list>
-<entry>
-<index class=module/GFD<and>linear/
-<<linear>>
-<synopsis>
-<<<
-{GFD.linear ?*{PE}}
->>>
-<item> Post a linear propagator according to the post especification ?_{PE}. ?_{PE} can be of the following forms:
-
-<list class=enum>
-<item> <<post(Lx Rt C)>>: Post propagator for <math>\sum_{i=0}^{|Lx|-1}Lx_i\sim_{Rt} C</math>.
-<item><<post(Lx Rt Y)>>:  Post propagator for <math>\sum_{i=0}^{|Lx|-1}Lx_i\sim_{Rt} Y</math>
-<item> <<post(Lx Rt C B)>>:  Post propagator for <math>\left(\sum_{i=0}^{|Lx|-1}Lx_i\sim_{Rt} C\right)\Leftrightarrow B </math>
-<item> <<post(Lx Rt Y B)>>: Post propagator for <math>\left(\sum_{i=0}^{|Lx|-1}Lx_i\sim_{Rt} Y\right)\Leftrightarrow B</math>
-<item> <<post(A Lx Rt C)>>: Post propagator for <math>\sum_{i=0}^{|Lx|-1}A_i\cdot Lx_i\sim_{Rt} C</math>. <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<A>> and <<Lx>> are of different size.
-<item><<post(A Lx Rt Y)>>: Post propagator for <math>\sum_{i=0}^{|Lx|-1}A_i\cdot Lx_i\sim_{Rt} Y</math>. <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<A>> and <<Lx>> are of different size.
-<item> <<post(A L Rt C B)>>: Post propagator for <math>\left(\sum_{i=0}^{|Lx|-1}A_i\cdot Lx_i\sim_{Rt} C\right)\Leftrightarrow B</math>. <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<A>> and <<Lx>> are of different size.
-<item><<post(A Lx Rt Y B)>>:  Post propagator for <math>\left(\sum_{i=0}^{|Lx|-1}A_i\cdot Lx_i\sim_{Rt} Y\right)\Leftrightarrow B</math>. <p>Throws an exception of type Int::ArgumentSizeMismatch, if <<A>> and <<Lx>> are of different size.
-</list>
-</list>
-</section>
-
-<!-- ********************************************************************** -->
-<!--
-<section id="section.fd.arithmetic2"><title/Generic Propagators/
+<section id="section.fd.arithmetic"><title/Generic Propagators/
 <p>
 The generic propagators <<FD.sum>>, <<FD.sumC>> and <<FD.sumCN>> do
 interval propagation. The propagators  <<FD.sumAC>> and
@@ -1381,9 +749,8 @@ supported, as for inequalities domain and bounds propagation are
 equivalent.
 </list>
 </section>
--->
+
 <!-- ********************************************************************** -->
-<!--
 <section id="section.fd.nonlinear"><title/Symbolic Propagators/
 <p>
 The following propagators do domain propagation or amplify the store by
@@ -1512,9 +879,8 @@ other values. For example,
 to <math/\{5,7\}/. 
 ?_{D1} is constrained to be greater than 0. 
 </list></section>
--->
+
 <!-- ********************************************************************** -->
-<!--
 <section id="section.fd.bool"><title>0/1 Propagators</title>
 <p>
 Using the mapping from <<0>> and <<1>> to the truth values <def/false/ and
@@ -1604,9 +970,8 @@ end
 ?_{D3} is the equivalence of ?_{D1} by ?_{D2} 
 (<Q/<math/{\tt D1}\leftrightarrow{\tt D2}//). 
 </list></section>
--->
+
 <!-- ********************************************************************** -->
-<!--
 <section id="section.fd.reified"><title/Reified Constraints/
 <p>
 Reified constraints reflect the validity of a constraint ?{C} into a 0/1-valued
@@ -1756,9 +1121,8 @@ or D1 =<: D1 + ... + Dn
 end	
 >>>
 </list></section>
--->
+
 <!-- ********************************************************************** -->
-<!--
 <section id="section.fd.misc"><title/Miscellaneous Propagators/
 <p>
 <list>
@@ -2105,37 +1469,34 @@ two tasks must overlap. This propagator is used in applications which
 shall be able to deal with overlapping tasks.
 
 </section>
--->
+
 
 <!--
 **********************************************************************
 --> <section id="section.fd.distribution"><title/Distribution/
 <p>
 In this section it is shown how Oz supports distribution with
-constraints.  The following procedure creates branching descriptions that
-define a search tree. Decisions are made by commiting a branching description
-to a computation space to create another node in the search tree. Assume  <<Dv>> 
-to be a vector of finite domain integers. The distribution differs in the 
-order of the branchings and in the constraint with which is distributed.
-
+constraints.  The following procedure creates binary
+choice-points for variables. The choice is delayed until propagation has
+reached a fixed point. Assume  <<Dv>> to be a vector of finite 
+domain integers. The distribution differs in the order of the
+choice-points and in the constraint with which is distributed.
  Essentially, it works as follows
 <list class=enum>
 <item> Select an element <<D>> of <<Dv>> which is not determined.
 <item> Select a value or a domain specification <<Spec>> in the current
 domain of <<D>>. 
-<item> Create a branching description for this space as <<[X::Spec X::compl(Spec)]>>. 
+<item> Create a choice point for <<X::Spec>> and <<X::compl(Spec)>>. 
 <item> If not all elements of <<Dv>> are determined, go to step 1.
 </list>
-
 The order of <<Dv>> is preserved. 
-
 <list>
 <entry>
-<index class=module/GFD<and>distribute/
+<index class=module/FD<and>distribute/
 <<distribute>>
 <synopsis>
 <<<
-{GFD.distribute ?+{Dist} ?+{Xv}}
+{FD.distribute ?+{Dist} ?+{Xv}}
 >>>
 <item>
 The vector ?_{Xv} is distributed according to the specification 
@@ -2148,22 +1509,22 @@ the atom <<naive>>, <<ff>> (for first-fail), <<split>> or a record with label <<
 ?_{Xv} must be a vector of finite domain integers.
 Considers only non-determined elements of ?_{Xv}. Chooses the leftmost
 variable <<X>> in ?_{Xv}.
-Creates a branching description for <<X=L>> and <<X\=:L>>, where <<L>> is the lower
+Creates a choice point for <<X=L>> and <<X\=:L>>, where <<L>> is the lower
 bound of the domain of <<X>>.
 
 <item> <<ff>>:
 ?_{Xv} must be a vector of finite domain integers.
 Considers only non-determined elements of ?_{Xv}. Chooses the leftmost
 variable <<X>> in ?_{Xv}, whose domain size is minimal. 
-Creates a branching description for <<X=L>> and <<X\=:L>>, where <<L>> is the lower
+Creates a choice point for <<X=L>> and <<X\=:L>>, where <<L>> is the lower
 bound of the domain of <<X>>. 
 
 <item> <<split>>:
 ?_{Xv} must be a vector of finite domain integers.
 Considers only non-determined elements of ?_{Xv}. Chooses the leftmost
 variable <<X>> in ?_{Xv}, whose domain size is minimal. 
-Creates a branching description for <<X=<:M>> and <<X>:M>>, where <<M>> is the
-middle of the domain of <<X>> (see <<GFD.reflect.mid>>). 
+Creates a choice point for <<X=<:M>> and <<X>:M>>, where <<M>> is the
+middle of the domain of <<X>> (see <<FD.reflect.mid>>). 
 
 <item> 
 <<<
@@ -2176,7 +1537,7 @@ generic(order:     ?+{Order}  <= size
 Considers only those elements in ?_{Xv}, for which ?_{Filter} is
 true. Chooses the leftmost element, which is minimal with respect to ?_{Order}
 and selects the 
-corresponding variable <<D>> by ?_{Select}. Creates a branching description for
+corresponding variable <<D>> by ?_{Select}. Creates a choice point for
 <<D::Spec>> and <<D::compl(Spec)>>, where <<Spec>> is selected by
 <<Value>>. 
 <p>
@@ -2198,9 +1559,7 @@ The values under the respective features must be as follows:
         <item> <<nbSusps>>: Selects the variable with the
                          largest number of suspensions. If 
 several variables suspend on the maximal number of constraints, 
-the leftmost variable whose domain is minimal is selected.
-	<item> <<nbProps>>: Selects the variable with the largest number of 
-                            associated propagators.
+the leftmost variable whose domain is minimal is selected.  
 </list>
 <item> ?_{Filter}: 
 <list>
@@ -2240,72 +1599,73 @@ Note, that in case ?_{Det} is <<det>> or in case ?_{Order} is <<size>>,
 <<lower>>, <<upper>>, or <<nbSusps>>, the elements of ?_{Xv} must be
 finite domain integers. 
 <p>
-For example, <<{GFD.distribute ff Dv}>> can be expressed as 
+For example, <<{FD.distribute ff Dv}>> can be expressed as 
 <<<
-{GFD.distribute generic Dv},
+{FD.distribute generic Dv},
 >>>
-<<{GFD.distribute split Dv}>> as 
+<<{FD.distribute split Dv}>> as 
 <<<
-{GFD.distribute generic(value: splitMin) Dv},
+{FD.distribute generic(value: splitMin) Dv},
 >>>
-and <<{GFD.distribute naive Dv}>> as
+and <<{FD.distribute naive Dv}>> as
 <<<
-{GFD.distribute generic(order: naive) Dv}
+{FD.distribute generic(order: naive) Dv}
 >>>
 </list>
 The naive distribution can also be defined as follows using the <<value>>
 feature.
 <<<
-{GFD.distribute 
+{FD.distribute 
 generic(value: fun {$ D}
-		  {GFD.reflect.min D}
+		  {FD.reflect.min D}
 	       end) Ds}
 >>>
 
-<!-- <entry> -->
-<!-- <index class=module/FD<and>choose/ -->
-<!-- <<choose>> -->
-<!-- <synopsis> -->
-<!-- <<< -->
-<!-- {FD.choose ?+{Dist} ?+{Xv} ??{X} ??{Spec}} -->
-<!-- >>> -->
-<!-- <item> -->
-<!-- Chooses the element ?_{X} in ?_{Xv} according to the description -->
-<!-- ?_{Dist}. A specification ?_{Spec} for the element ?_{X} is returned -->
-<!-- according  to the description ?_{Dist}. The parameter ?_{Dist} is -->
-<!-- defined in the same way as for <<FD.distribute>> except for the value -->
-<!-- selection. If the feature <<value>> is used for generic distribution, the -->
-<!-- field must be constrained to a unary function <<P>> which selects a value -->
-<!-- from the domain of the selected variable (see below for an example). For -->
-<!-- example,  -->
-<!-- <<< -->
-<!-- {FD.choose ff Xs E S} -->
-<!-- >>> -->
-<!-- selects the element <<E>> in the list <<Xs>> according to the first-fail -->
-<!-- strategy and binds <<S>> to the current lower bound of <<E>>.  -->
-<!-- <<< -->
-<!-- {FD.choose generic(value:splitMin) Xv E S} -->
-<!-- >>> -->
-<!-- selects the element <<E>> in the list <<Xs>> according to the first-fail -->
-<!-- strategy and binds <<S>> to the pair <<0#M>>, where <<M>> is the result of -->
-<!-- <<{FD.reflect.mid E}>>. -->
-<!-- For the naive distribution strategy, the following may be used.  -->
-<!-- <<< -->
-<!-- {FD.choose generic(value: fun{$ X} -->
-<!-- 			     {FD.reflect.min X} -->
-<!-- 			  end) -->
-<!--  Xv E S} -->
-<!-- >>> -->
-
+<entry>
+<index class=module/FD<and>choose/
+<<choose>>
+<synopsis>
+<<<
+{FD.choose ?+{Dist} ?+{Xv} ??{X} ??{Spec}}
+>>>
+<item>
+Chooses the element ?_{X} in ?_{Xv} according to the description
+?_{Dist}. A specification ?_{Spec} for the element ?_{X} is returned
+according  to the description ?_{Dist}. The parameter ?_{Dist} is
+defined in the same way as for <<FD.distribute>> except for the value
+selection. If the feature <<value>> is used for generic distribution, the
+field must be constrained to a unary function <<P>> which selects a value
+from the domain of the selected variable (see below for an example). For
+example, 
+<<<
+{FD.choose ff Xs E S}
+>>>
+selects the element <<E>> in the list <<Xs>> according to the first-fail
+strategy and binds <<S>> to the current lower bound of <<E>>. 
+<<<
+{FD.choose generic(value:splitMin) Xv E S}
+>>>
+selects the element <<E>> in the list <<Xs>> according to the first-fail
+strategy and binds <<S>> to the pair <<0#M>>, where <<M>> is the result of
+<<{FD.reflect.mid E}>>.
+For the naive distribution strategy, the following may be used. 
+<<<
+{FD.choose generic(value: fun{$ X}
+			     {FD.reflect.min X}
+			  end)
+ Xv E S}
+>>>
 </list>
 </section>
-<!--**********************************************************************-->
 
-
-<section id="section.fd.assignment"><title/Assigning Values/
+<!--
+**********************************************************************
+--> <section id="section.fd.assignment"><title/Assigning Values/
 <p>
 Special support is available for assigning particular values to
-vectors of variables. 
+vectors of variables. Assignment interleaves the assignment of a
+value proper to a variable and synchronization until stability
+after each assignment.
 </p>
 <p>The selection of variables and the selection of values is as
 with distribution <ptr to="section.fd.distribution">.
@@ -2313,11 +1673,11 @@ with distribution <ptr to="section.fd.distribution">.
 <p>
 <list>
 <entry>
-<index class=module/GFD<and>assign/
+<index class=module/FD<and>assign/
 <<assign>>
 <synopsis>
 <<<
-{GFD.assign ?+{ValA} ?+{Xv}}
+{FD.assign ?+{ValA} ?+{Xv}}
 >>>
 <item>
 The vector ?_{Xv} is assigned according to the specification 
@@ -2328,15 +1688,15 @@ medium, or largest element is assigned to each variable.
 <p>
 Is equivalent to (for a list of variables <<Xs>>):
 <p>
-<<<proc {GFD.assign ValA Xs}
+<<<proc {FD.assign ValA Xs}
    for X in Xs do 
-	X = {GFD.reflect.ValA X}
+      {Space.waitStable}
+      X = {FD.reflect.ValA X}
    end
 end>>>
 </list>
 </p>
 </section>
-
 
 </chapter>
 

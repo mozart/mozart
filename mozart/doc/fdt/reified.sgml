@@ -81,11 +81,12 @@ To understand these rules, you need to be
 familiar with the definitions in
 <Ptr to="section.constraints.propagation">.
 
-<para><Title>0/1-variables</Title>
-A <Em>0/1-variable</Em> is
+<para><Title>Boolean variables</Title>
+A <Em>Boolean variable</Em> is
 a variable that is constrained to the finite
-domain <math/0\#1/.  The control variables of reified
-constraints are 0/1-variables.
+domain <math/0\#1/. This kind of variables bellows to the module <<GBD>> and can bee
+declared with the <<GBD.decl>> procedure. The control variables of reified
+constraints are Boolean variables (0/1-variables).
 
 
 <para><title/posting refied constraints/
@@ -93,19 +94,19 @@ Here are examples for statements creating
 propagators for reified constraints:
 <list>
 <item>
-<<(X<:Y)=B>> creates a propagator for the
+<<{GFD.relP post( X '<:' Y B)}>> creates a propagator for the
 reification of <Math/X<Y/ &wrt; <Math/B/.
 <item>
-<<(X+Y+Z=:0)=B>> creates a propagator for the
+<<{GFD.linearP post([X Y Z] '=:' 0 B)}>> creates a propagator for the
 reification of <Math/X+Y+Z=0/ &wrt; <Math/B/.
 <item>
-<<(X\=:Y)=B>> creates a propagator for the
+<<{GFD.relP post(X '\\=:' Y B)}>> creates a propagator for the
 reification of <Math/X\neq Y/ &wrt; <Math/B/.
 <item>
-<<(X::0#10)=B>> creates a propagator for the
+<<{GFD.domP post(X 0 10 B)}>> creates a propagator for the
 reification of <Math/X\in0\#10/ &wrt; <Math/B/.
 <item>
-<<{FD.reified.distance X Y '=:' Z B}>> creates a
+<<{GFD.reified.distance X Y '=:' Z B}>> creates a
 propagator for the reification of
 <Math/|X-Y|=Z/ &wrt; <Math/B/.
 </list>
@@ -119,14 +120,15 @@ equivalence
 <Math display/
 X<Y\;\leftrightarrow\; X<Z
 /
-can be posted with the statement
+<!-- can be posted with the statement -->
+<!-- <<< -->
+<!-- X<:Y = X<:Z -->
+<!-- >>> -->
+<!-- This statement is a notational convenience for -->
 <<<
-X<:Y = X<:Z
->>>
-This statement is a notational convenience for
-<<<
-local B in  
-   X<:Y=B  X<:Z=B  
+local B in 
+   B = {GBD.decl}
+   {GFD.relP post( X '<:' Y B)}  {GFD.relP post(X '<:' Z B)}  
 end
 >>>
 and creates 2 propagators for reified
@@ -140,84 +142,92 @@ respective Boolean constraints can be posted by
 means of the following procedures:
 <list>
 <item>
-<<{FD.conj X Y Z}>> posts the constraint <Math/(X\land Y)=Z/.
+<<{GFD.conj X Y Z}>> posts the constraint <Math/(X\land Y)=Z/.
 <item>
-<<{FD.disj X Y Z}>> posts the constraint <Math/(X\lor Y)=Z/.
+<<{GFD.disj X Y Z}>> posts the constraint <Math/(X\lor Y)=Z/.
 <item>
-<<{FD.impl X Y Z}>> posts the constraint <Math/(X\to Y)=Z/.
+<<{GFD.impl X Y Z}>> posts the constraint <Math/(X\to Y)=Z/.
 <item>
-<<{FD.equi X Y Z}>> posts the constraint
+<<{GFD.equi X Y Z}>> posts the constraint
 <Math/(X\leftrightarrow Y)=Z/.
 <item>
-<<{FD.nega X Y}>> posts the constraint <Math/\neg X=Y/.
+<<{GFD.nega X Y}>> posts the constraint <Math/\neg X=Y/.
 </list>
 
-<subsection class=unnumbered>
-  <title/Exercises/
+<!-- <subsection class=unnumbered> -->
+<!--   <title/Exercises/ -->
 
-<Exercise id="reified.ex.a">
-Write a statement that posts the constraint
-<Math display/
-(X<Y\;\to\; X+Y=Z)
-\;\;\leftrightarrow\;\;
-(X\cdot Y=Z\;\lor\;Z\neq 5)
-/
-</Exercise>
+<!-- <Exercise id="reified.ex.a"> -->
+<!-- Write a statement that posts the constraint -->
+<!-- <Math display/ -->
+<!-- (X<Y\;\to\; X+Y=Z) -->
+<!-- \;\;\leftrightarrow\;\; -->
+<!-- (X\cdot Y=Z\;\lor\;Z\neq 5) -->
+<!-- / -->
+<!-- </Exercise> -->
 
-<Answer to="reified.ex.a">
-<<<{FD.impl X<:Y  X+Y=:Z} = {FD.disj  X*Y=:Z  Z\=:5}>>>
-</Answer>
+<!-- <Answer to="reified.ex.a"> -->
+<!-- <<< -->
+<!-- B1 B2 -->
+<!-- B3 B4 -->
+<!-- {GFD.relP post(X '<:' Y B1)} -->
+<!-- {GFD.linearP post([X Y] '<:' Z B2)} -->
+<!-- {GFD.impl B1  B2 B3}  -->
 
-<Exercise id="reified.ex.b">
-Write a procedure <<{Conj X Y Z}>> that posts the
-constraints
-<Math display/
-(X\land Y)=Z
-,\quad
-X\in0\#1
-,\quad
-Y\in0\#1
-/
-<P>
-The procedure should post the conjunction
-<Math/(X\land Y)=Z/. by means of the reified form of
-the infix operator <<=:>>.
-<P>
-Write analogous procedures <<Equi>> and <<Nega>>
-posting equivalences and negations.
-<P>
-Write an analogous procedure <<Dis>> posting a
-disjunction <Math/(X\lor Y)=Z/.  Use the reified form
-of <code/<:/ to post the disjunction.
-<P>
-How would you write a procedure posting an
-implication <Math/(X\to Y)=Z/?
-</Exercise>
+<!-- {FD.disj  X*Y=:Z  Z\=:5} -->
+<!-- >>> -->
+<!-- </Answer> -->
 
-<Answer to="reified.ex.b">
-<<<
-proc {Conj X Y Z}
-   X::0#1  Y::0#1
-   (X+Y=:2) = Z
-end
-proc {Equi X Y Z}
-   X::0#1  Y::0#1
-   (X=:Y) = Z 
-end
-proc {Nega X Z}
-   X::0#1
-   (X=:0) = Z  
-end
-proc {Disj X Y Z}
-   X::0#1  Y::0#1
-   (X+Y>:0) = Z
-end
-proc {Impl X Y Z}
-   X::0#1  Y::0#1
-   (Y-X>=:0) = Z
-end
->>>
-</Answer>
+<!-- <Exercise id="reified.ex.b"> -->
+<!-- Write a procedure <<{Conj X Y Z}>> that posts the -->
+<!-- constraints -->
+<!-- <Math display/ -->
+<!-- (X\land Y)=Z -->
+<!-- ,\quad -->
+<!-- X\in0\#1 -->
+<!-- ,\quad -->
+<!-- Y\in0\#1 -->
+<!-- / -->
+<!-- <P> -->
+<!-- The procedure should post the conjunction -->
+<!-- <Math/(X\land Y)=Z/. by means of the reified form of -->
+<!-- the infix operator <<=:>>. -->
+<!-- <P> -->
+<!-- Write analogous procedures <<Equi>> and <<Nega>> -->
+<!-- posting equivalences and negations. -->
+<!-- <P> -->
+<!-- Write an analogous procedure <<Dis>> posting a -->
+<!-- disjunction <Math/(X\lor Y)=Z/.  Use the reified form -->
+<!-- of <code/<:/ to post the disjunction. -->
+<!-- <P> -->
+<!-- How would you write a procedure posting an -->
+<!-- implication <Math/(X\to Y)=Z/? -->
+<!-- </Exercise> -->
+
+<!-- <Answer to="reified.ex.b"> -->
+<!-- <<< -->
+<!-- proc {Conj X Y Z} -->
+<!--    X::0#1  Y::0#1 -->
+<!--    (X+Y=:2) = Z -->
+<!-- end -->
+<!-- proc {Equi X Y Z} -->
+<!--    X::0#1  Y::0#1 -->
+<!--    (X=:Y) = Z  -->
+<!-- end -->
+<!-- proc {Nega X Z} -->
+<!--    X::0#1 -->
+<!--    (X=:0) = Z   -->
+<!-- end -->
+<!-- proc {Disj X Y Z} -->
+<!--    X::0#1  Y::0#1 -->
+<!--    (X+Y>:0) = Z -->
+<!-- end -->
+<!-- proc {Impl X Y Z} -->
+<!--    X::0#1  Y::0#1 -->
+<!--    (Y-X>=:0) = Z -->
+<!-- end -->
+<!-- >>> -->
+<!-- </Answer> -->
 
 </section>
 
@@ -326,19 +336,19 @@ proc {Photo Root}
    Preferences   = [betty#gary betty#mary  chris#betty chris#gary
 		    fred#mary  fred#donald paul#fred   paul#donald]
    NbPersons     = {Length Persons}
-   Alignment     = {FD.record alignment Persons 1#NbPersons}
-   Satisfaction  = {FD.decl} 
+   Alignment     = {GFD.record alignment Persons 1#NbPersons}
+   Satisfaction  = {GFD.decl} 
    proc {Satisfied P#Q S}
-      {FD.reified.distance Alignment.P Alignment.Q '=:' 1 S}
+      {GFD.reified.distance Alignment.P Alignment.Q '=:' 1 S}
    end
 in
    Root = r(satisfaction: Satisfaction
 	    alignment:    Alignment)
-   {FD.distinct Alignment}
-   {FD.sum {Map Preferences Satisfied} '=:' Satisfaction}
+   {GFD.distinctP post(Alignment)}
+   {GFD.linearP post({Map Preferences Satisfied} '=:' Satisfaction)}
    Alignment.fred <: Alignment.betty     % breaking symmetries
-   {FD.distribute generic(order:naive value:max) [Satisfaction]}
-   {FD.distribute split Alignment}
+   {GFD.distribute generic(order:naive value:max) [Satisfaction]}
+   {GFD.distribute split Alignment}
 end
 </chunk>
 </figure>
@@ -362,7 +372,7 @@ which implements the reification of the constraint
 <P>
 The statement
 <<<
-{FD.sum {Map Preferences Satisfied} '=:' Satisfaction}
+{GFD.linearP post({Map Preferences Satisfied} '=:' Satisfaction)}
 >>>
 constrains the variable <<Satisfaction>> to the
 number of satisfied preferences.
@@ -394,7 +404,7 @@ To minimize the value of <<Satisfaction>>, we
 modify the distributor for <<Satisfaction>> such
 that it tries smaller values first:
 <<<
-{FD.distribute generic(order:naive value:min) [Satisfaction]}
+{GFD.distribute generic(order:naive value:min) [Satisfaction]}
 >>>
 It turns out that the persons can be aligned such
 that no preference is satisfied.

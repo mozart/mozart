@@ -27,6 +27,7 @@
   -
   -->
 
+
 <!DOCTYPE BOOK SYSTEM "ozdoc.dtd" [
 
 <!-- Extension to the DTD -->
@@ -67,8 +68,11 @@
 <!ENTITY chapter.space       SYSTEM "space.sgml">
 <!ENTITY chapter.recordc     SYSTEM "recordc.sgml">
 <!ENTITY chapter.combinator SYSTEM "combinator.sgml">
-<!ENTITY chapter.fd       SYSTEM "fd.sgml">
-<!ENTITY chapter.fs       SYSTEM "fs.sgml">
+<!ENTITY chapter.fd      SYSTEM "fd.sgml">
+<!ENTITY chapter.fs      SYSTEM "fs.sgml">
+<!ENTITY chapter.gfd      SYSTEM "gfd.sgml">
+<!ENTITY chapter.gbd       SYSTEM "gbd.sgml">
+<!ENTITY chapter.gfs       SYSTEM "gfs.sgml">
 <!ENTITY chapter.types_modes_constr SYSTEM "types_modes_constr.sgml">
 <!ENTITY chapter.schedule SYSTEM "schedule.sgml">
 <!ENTITY chapter.search   SYSTEM "search.sgml">
@@ -181,41 +185,17 @@
     <Meta name="html.split"       value="section.fd.general">
     <Meta name="html.split"       value="section.fd.telling">
     <Meta name="html.split"       value="section.fd.reflection">
-    <Meta name="html.split"       value="section.fd.prop">
-    <Meta name="html.split"       value="section.fd.consistency">
-    <Meta name="html.split"       value="section.fd.kind">
-    <Meta name="html.split"       value="section.fd.dom">
-    <Meta name="html.split"       value="section.fd.rel">
-    <Meta name="html.split"       value="section.fd.element">
-    <Meta name="html.split"       value="section.fd.distinct">
-    <Meta name="html.split"       value="section.fd.channel">
-    <Meta name="html.split"       value="section.fd.graph">
-    <Meta name="html.split"       value="section.fd.scheduling">
-    <Meta name="html.split"       value="section.fd.sorted">
-    <Meta name="html.split"       value="section.fd.cardinality">
-    <Meta name="html.split"       value="section.fd.extensional">
-    <Meta name="html.split"       value="section.fd.arithmetic">
-    <Meta name="html.split"       value="section.fd.linear">
-    <Meta name="html.split"       value="section.fd.distribution">
-    <Meta name="html.split"       value="section.fd.assignment">
-	
-<!--    <Meta name="html.split"       value="section.fd.watching"> 
+    <Meta name="html.split"       value="section.fd.watching">
     <Meta name="html.split"       value="section.fd.arithmetic">
     <Meta name="html.split"       value="section.fd.nonlinear">
     <Meta name="html.split"       value="section.fd.bool">
     <Meta name="html.split"       value="section.fd.reified">
     <Meta name="html.split"       value="section.fd.misc">
--->
-
-    <Meta name="html.split"       value="chapter.schedule">
-    <Meta name="html.split"       value="section.schedule.unary">
-    <Meta name="html.split"       value="section.schedule.distribute">
-    <Meta name="html.split"       value="section.schedule.cumulative">
-    <Meta name="html.split"       value="section.schedule.misc">
-
+    <Meta name="html.split"       value="section.fd.distribution">
+    <Meta name="html.split"       value="section.fd.assignment">
 
     <Meta name="html.split"       value="chapter.fs">
-    <Meta name="html.split"       value="section.fs.genral">
+    <Meta name="html.split"       value="section.fs.general">
     <Meta name="html.split"       value="section.fs.integers">
     <Meta name="html.split"       value="section.fs.standard">
     <Meta name="html.split"       value="section.fs.vars">
@@ -224,6 +204,72 @@
     <Meta name="html.split"       value="section.fs.iterating">
     <Meta name="html.split"       value="section.fs.reflection">
     <Meta name="html.split"       value="section.fs.distribution">
+
+    <Meta name="html.split"       value="chapter.gfd">
+    <Meta name="html.split"       value="section.gfd.facts">
+    <Meta name="html.split"       value="section.gfd.condis">
+    <Meta name="html.split"       value="section.gfd.general">
+    <Meta name="html.split"       value="section.gfd.telling">
+    <Meta name="html.split"       value="section.gfd.reflection">
+    <Meta name="html.split"       value="section.gfd.watching"> 
+    <Meta name="html.split"       value="section.gfd.backward">
+        <Meta name="html.split"       value="section.gfd.arithmetic2">
+        <Meta name="html.split"       value="section.gfd.nonlinear">
+        <Meta name="html.split"       value="section.gfd.reified">
+        <Meta name="html.split"       value="section.gfd.misc">
+    <Meta name="html.split"       value="section.gfd.finite">
+        <Meta name="html.split"       value="section.gfd.consistency">
+        <Meta name="html.split"       value="section.gfd.dom">
+        <Meta name="html.split"       value="section.gfd.rel">
+        <Meta name="html.split"       value="section.gfd.element">
+        <Meta name="html.split"       value="section.gfd.distinct">
+        <Meta name="html.split"       value="section.gfd.channel">
+        <Meta name="html.split"       value="section.gfd.scheduling">
+        <Meta name="html.split"       value="section.gfd.sorted">
+        <Meta name="html.split"       value="section.gfd.cardinality">
+        <Meta name="html.split"       value="section.gfd.extensional">
+        <Meta name="html.split"       value="section.gfd.arithmetic">
+        <Meta name="html.split"       value="section.gfd.linear">
+    <Meta name="html.split"       value="section.gfd.distribution">
+    <Meta name="html.split"       value="section.gfd.assignment">
+
+
+
+
+    <Meta name="html.split"       value="chapter.gbd">
+    <Meta name="html.split"       value="section.gbd.general">
+    <Meta name="html.split"       value="section.gbd.telling">
+    <Meta name="html.split"       value="section.gbd.bool">
+    <Meta name="html.split"       value="section.gbd.rel">
+    <Meta name="html.split"       value="section.gbd.distribution">
+    <Meta name="html.split"       value="section.gbd.assignment">
+
+
+    <Meta name="html.split"       value="chapter.schedule">
+    <Meta name="html.split"       value="section.schedule.unary">
+    <Meta name="html.split"       value="section.schedule.distribute">
+    <Meta name="html.split"       value="section.schedule.cumulative">
+    <Meta name="html.split"       value="section.schedule.misc">
+
+
+    <Meta name="html.split"       value="chapter.gfs">
+    <Meta name="html.split"       value="section.gfs.general">
+    <Meta name="html.split"       value="section.gfs.integers">
+    <Meta name="html.split"       value="section.gfs.vars">
+    <Meta name="html.split"       value="section.gfs.consts">
+    <Meta name="html.split"       value="section.gfs.iterating">
+    <Meta name="html.split"       value="section.gfs.reflection">
+    <Meta name="html.split"       value="section.gfs.backward">
+        <Meta name="html.split"       value="section.gfs.standard">
+	<Meta name="html.split"       value="section.gfs.reified">
+    <Meta name="html.split"       value="section.gfs.set">
+        <Meta name="html.split"       value="section.gfs.dom">
+	<Meta name="html.split"       value="section.gfs.rel">
+	<Meta name="html.split"       value="section.gfs.sequence">
+	<Meta name="html.split"       value="section.gfs.distinct">
+	<Meta name="html.split"       value="section.gfs.connection">
+	<Meta name="html.split"       value="section.gfs.element">
+    <Meta name="html.split"       value="section.gfs.distribution">
 
     <Meta name="html.split"       value="chapter.recordc">
 
@@ -342,8 +388,11 @@
     &chapter.types_modes_constr;
     &chapter.search;
     &chapter.fd;
-    &chapter.schedule;
     &chapter.fs;
+    &chapter.gfd;
+    &chapter.gbd;
+    &chapter.schedule;
+    &chapter.gfs;
     &chapter.recordc;
     &chapter.combinator;
     &chapter.space;

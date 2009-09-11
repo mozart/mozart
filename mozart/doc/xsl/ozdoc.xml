@@ -464,9 +464,9 @@
     <xsl:when test="$to='ozdoc:browser'">
      <xsl:text>The Oz Browser</xsl:text>
     </xsl:when>
-    <xsl:when test="$to='ozdoc:explorer'">
-     <xsl:text>Oz Explorer - Visual Constraint Programming Support</xsl:text>
-    </xsl:when>
+    <!-- <xsl:when test="$to='ozdoc:explorer'"> -->
+<!--      <xsl:text>Oz Explorer - Visual Constraint Programming Support</xsl:text> -->
+<!--     </xsl:when> -->
     <xsl:when test="$to='ozdoc:panel'">
      <xsl:text>Oz Panel</xsl:text>
     </xsl:when>
