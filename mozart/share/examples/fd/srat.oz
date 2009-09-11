@@ -20,6 +20,8 @@
 %%% WARRANTIES.
 %%%
 
+%%% FIXME: This is not ported yet to work with GeOz
+
 declare
 proc {SRAT Q}
    proc {Vector V}  
@@ -71,5 +73,4 @@ in
    {FD.distribute ff Q}
 end
 
-{ExploreAll SRAT}
-
+{Show {SearchAll SRAT}}

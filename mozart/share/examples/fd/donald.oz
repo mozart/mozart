@@ -21,16 +21,26 @@
 %%%
 
 declare
-proc {Donald Root}
-   sol(a:A b:B d:D e:E g:G l:L n:N  o:O r:R t:T) = Root
+proc{Donald Root}
+   D O N A L
+   G E R B T
+   RootArgs
 in
-   Root ::: 0#9
+   Root = [D O N A L G E R B T]
+   RootArgs = [100000 10000 1000 100 10 1
+	       100000 10000 1000 100 10 1
+	       ~100000 ~10000 ~1000 ~100 ~10 ~1]
+   {FD.dom 0#9 Root}
+   {FD.sum [D] '\\=:' 0}
+   {FD.sum [G] '\\=:' 0}
+   {FD.sum [R] '\\=:' 0}
+   {FD.sumC RootArgs
+    [D O N A L D
+     G E R A L D
+     R O B E R T]
+    '=:' 0}
    {FD.distinct Root}
-   D\=:0  R\=:0  G\=:0
-      100000*D + 10000*O + 1000*N + 100*A + 10*L + D
-   +  100000*G + 10000*E + 1000*R + 100*A + 10*L + D
-   =: 100000*R + 10000*O + 1000*B + 100*E + 10*R + T
    {FD.distribute ff Root}
 end
 
-{ExploreAll Donald}
+{Show {SearchOne Donald}}

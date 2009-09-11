@@ -129,9 +129,8 @@ in
                   
       {SequencedDisjoint Flights}
  
-      %{GFS.distribute generic(order:naive value:min) Flights}
-      {GFS.distribute naive Flights}
-
+      {GFS.distribute generic(order:naive value:min) Flights}
+      
       Sol = {Map Flights
 	     fun {$ F}
 		{Ints2Lits CrewSet {GFS.monitorIn F}}

@@ -54,9 +54,9 @@ fun {Plug RackSpecs CardSpecs NbRacks Cards}
       {ForAllTail Racks 
        proc {$ Rs}
 	  case Rs of A|B|_ then
-	     A.type =<: B.type
+	     {FD.lesseq A.type B.type}
 	     thread
-		if A.type == B.type then A.cards.1 >=: B.cards.1 end
+		if A.type == B.type then {FD.greatereq A.cards.1 B.cards.1} end
 	     end
 	  else skip end
        end}
@@ -98,11 +98,6 @@ CardSpecs = [c(power:20)
 NbRacks   = 5
 Cards     = cards(10 4 2 1)
 
-Order     = proc {$ Old New} Old.price >: New.price end
+Order     = proc {$ Old New} {FD.greater Old.price New.price} end
 
-{ExploreBest {Plug RackSpecs CardSpecs NbRacks Cards} Order}
-
-
-/*
-{SearchBest {Plug RackSpecs CardSpecs NbRacks Cards} Order _}
-*/
+{Show {SearchBest {Plug RackSpecs CardSpecs NbRacks Cards} Order}}

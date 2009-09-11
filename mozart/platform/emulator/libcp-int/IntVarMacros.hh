@@ -31,7 +31,6 @@
  */ 
 
  
- 
 #ifndef __GFD_INT_DECLARE_MACROS_HH__
 #define __GFD_INT_DECLARE_MACROS_HH__
 
@@ -43,22 +42,11 @@
 #include "../libcp-bool/BoolVarMacros.hh"
 
 
-/**
-   ############################## Variable declaration macros ##############################
-*/
+
 
 /**
- * \brief Return a IntVar from a integer or a GeIntVar
- * @param value integer or GeIntVar representing a IntVar
- */
-// inline
-// Gecode::IntVar * intOrIntVar(TaggedRef value){
-//   if(OZ_isInt(value)){
-//     return new IntVar(oz_currentBoard()->getGenericSpace(), OZ_intToC(value), OZ_intToC(value));
-//   }else {
-//     return get_IntVarPtr(value);
-//   }
-// }
+   ####################### Variable declaration macros #########################
+*/
 
 /**
  * \brief Return a IntVar from a integer or a GeIntVar
@@ -67,11 +55,12 @@
 inline
 IntView intOrIntView(TaggedRef value){
   if(OZ_isInt(value)){
-    IntVar *iv = new IntVar(oz_currentBoard()->getGenericSpace(), OZ_intToC(value), OZ_intToC(value));
+    IntVar *iv = new IntVar(oz_currentBoard()->getGenericSpace(),
+			    OZ_intToC(value), OZ_intToC(value));
     IntView vw(*iv);
     delete iv;
     return vw;
-  }else {
+  } else {
     return get_IntView(value);
   }
 }
@@ -291,7 +280,7 @@ Gecode::IntArgs getIntArgs(TaggedRef inar){
   Gecode::TupleSet ds(aa);
 
 /**
-   ############################## New variables from Gecode declare macros ##############################
+   ################# New variables from Gecode declare macros ##################
 */
 
 /**
@@ -351,7 +340,7 @@ Gecode::IntRelType getIntRelType(TaggedRef irt){
   Gecode::DFA dfa(_istate, _trans, _fl);
   
 /**
-   ############################## Miscelanious declare macros ##############################
+   ######################## Miscelanous declare macros #########################
 */
 
 /**

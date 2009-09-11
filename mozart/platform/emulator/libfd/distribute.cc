@@ -390,18 +390,25 @@ void FdDistributor::selectValSplitMax(void) {
  * Create class for different combinations
  */
 
-#define DefFdDistClass(CLASS,VARSEL,VALSEL) \
-class CLASS : public FdDistributor {              \
-  public:                                         \
-  CLASS(Board * b, TaggedRef * v, int s) :        \
-    FdDistributor(b,v,s) {}                       \
-  virtual int getAlternatives(void) {             \
-    VARSEL();                                     \
-    if (size > 0) { VALSEL(); return 2;           \
-    } else {                  return 1;           \
-    }                                             \
-  }                                               \
-}
+#define DefFdDistClass(CLASS,VARSEL,VALSEL)				\
+  class CLASS : public FdDistributor {					\
+  public:								\
+  CLASS(Board * b, TaggedRef * v, int s) :				\
+    FdDistributor(b,v,s) {}						\
+  virtual int notifyStable(Board *bb) {					\
+    TaggedRef fb =							\
+      OZ_mkTuple(OZ_atom("#"),3,OZ_int(id),OZ_int(1),OZ_int(1));	\
+    TaggedRef sb =							\
+      OZ_mkTuple(OZ_atom("#"),3,OZ_int(id),OZ_int(2),OZ_int(2));	\
+    bb->setBranching(OZ_cons(fb,OZ_cons(sb,OZ_nil())));			\
+    VARSEL();								\
+    if(size > 0){ VALSEL(); return 1;					\
+    } else { tell_eq(bb,sync,makeTaggedSmallInt(0));			\
+      dispose();							\
+      return 0;								\
+    }									\
+  }									\
+  }
 
 DefFdDistClass(FdDist_Naive_Min,selectVarNaive,selectValMin);
 DefFdDistClass(FdDist_Naive_Mid,selectVarNaive,selectValMid);

@@ -27,7 +27,6 @@
 %%% Each unit has a capacity, eg. 2 of 3: of 3 consecutive slots at
 %%% most 2 may afford this unit (option).
 
-
 declare StateConstraints in
 
 local 
@@ -36,7 +35,8 @@ local
       {List.make NbSlots Slots}      
       Slots = {FD.dom 1#NbClasses}
       {MakeTuple a NbOptions*NbSlots Options}
-      {Record.forAll Options proc{$ O} O::0#1 end}
+      %{Record.forAll Options proc{$ O} O::0#1 end}
+      {Record.forAll Options proc{$ O} {FD.int 0#1 O} end}
    end
    
    %% Implements R out of S for option Option
@@ -48,30 +48,31 @@ local
       From To in
       From = (Option-1)*NbSlots + 1
       To = (Option-1)*NbSlots + NbSlots - (S-1)
-      {Loop.for From To 1 proc{$ C} {SumUp Ops C C+S-1}=<:R end}
+      %{For From To 1 proc{$ C} {SumUp Ops C C+S-1}=<:R end}
+      {For From To 1 proc{$ C} {FD.lesseq {SumUp Ops C C+S-1} R} end}
    end
    
    %% Ops.From + Ops.(From+1) + ... + Ops.To = Res
    proc {SumUp Ops From To Res}
-      {Loop.forThread From To 1 fun{$ In Index}
-				   {FD.plus In Ops.Index}
-				end 
+      {ForThread From To 1 fun{$ In Index}
+                              {FD.plus In Ops.Index}
+                           end 
        0 Res}
    end
    
    %% OptionInfo.1 = R#S#O|...  R outof S  from option O
    proc {StateCapacityConstraints Options NbSlots OptionInfo}
       {ForAll OptionInfo proc{$ X} R#S#O = !X in 
-			    {OutOf R S Options NbSlots O} 
-			 end}
+                            {OutOf R S Options NbSlots O} 
+                         end}
    end
    
    fun {GetNumber CarInfo OpInfo}
       case OpInfo#CarInfo 
       of (H|R)#(_#Nb|T) then
-	 if H==1 then Nb+{GetNumber T R} 
-	 else {GetNumber T R} 
-	 end
+         if H==1 then Nb+{GetNumber T R} 
+         else {GetNumber T R} 
+         end
       [] nil#nil then 0
       end
    end
@@ -81,17 +82,18 @@ local
    proc {StateSurrogates Options NbSlots OptionInfo2 OptionInfo1 CarInfo}
       case OptionInfo2#OptionInfo1
       of (H2|T2)#((R#S#O)|T1) then
-	 % P = number of cars requiring option coded by H2
-	 P={GetNumber CarInfo H2}
+         % P = number of cars requiring option coded by H2
+         P={GetNumber CarInfo H2}
       in
-	 {Loop.for 1 NbSlots div S 1
-	  proc {$ K}
-	     From = (O-1)*NbSlots+1
-	     To   = (O-1)*NbSlots+NbSlots-K*S
-	  in
-	     {SumUp Options From To}>=:P-K*R 
+         {For 1 NbSlots div S 1
+          proc {$ K}
+             From = (O-1)*NbSlots+1
+             To   = (O-1)*NbSlots+NbSlots-K*S
+          in
+             %{SumUp Options From To}>=:P-K*R
+	     {FD.greatereq {SumUp Options From To} P-K*R}
 	  end}
-	 {StateSurrogates Options NbSlots T2 T1 CarInfo}
+         {StateSurrogates Options NbSlots T2 T1 CarInfo}
       [] nil#nil then skip
       end
    end
@@ -107,10 +109,10 @@ local
    proc {StateLinkConstraints Slots Options NbSlots OptionInfo}
       {List.forAllInd Slots
        proc {$ SC Slot}
-	  {List.forAllInd OptionInfo
-	   proc {$ OC OI}
-	      {FD.element Slot OI Options.((OC-1)*NbSlots+SC)}
-	   end} 
+          {List.forAllInd OptionInfo
+           proc {$ OC OI}
+              {FD.element Slot OI Options.((OC-1)*NbSlots+SC)}
+           end} 
        end}
    end
 in 
@@ -120,10 +122,10 @@ in
    in 
       SlotVars = {List.make NbSlots}
       Slots = {List.foldLInd SlotVars 
-	       fun {$ Ind In S} 
-		  {AdjoinAt In {VirtualString.toAtom 'slot'#Ind} S}
-	       end
-	       slots}
+               fun {$ Ind In S} 
+                  {AdjoinAt In {VirtualString.toAtom 'slot'#Ind} S}
+               end
+               slots}
       {StateDomains SlotVars Options NbSlots NbClasses NbOptions}
       {StateCapacityConstraints Options NbSlots OptionInfo.1}
       {StateDemandConstraints SlotVars CarInfo}
@@ -133,21 +135,17 @@ in
 
 end % of local
 
-/*
+
 declare
 OutOfInfo  = [1#2#1 2#3#2 1#3#3 2#5#4 1#5#5]  % R out of S for option
 OptionInfo = [[1 0 0 0 1 1]
-	      [0 0 1 1 0 1]
-	      [1 0 0 0 1 0]
-	      [1 1 0 1 0 0]
-	      [0 0 1 0 0 0]]  % class requires option?
+              [0 0 1 1 0 1]
+              [1 0 0 0 1 0]
+              [1 1 0 1 0 0]
+              [0 0 1 0 0 0]]  % class requires option?
 CarInfo    = [1#1 2#1 3#2 4#2 5#2 6#2]    % number of cars of class
 
-{ExploreOne proc {$ Slots} 
-	       {StateConstraints Slots 10 5 6 
-		OutOfInfo#OptionInfo CarInfo} 
-	    end}
-
-*/
-
-
+{Show {SearchOne proc {$ Slots} 
+                    {StateConstraints Slots 10 5 6 
+                     OutOfInfo#OptionInfo CarInfo} 
+                 end}}

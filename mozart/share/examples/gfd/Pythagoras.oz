@@ -36,13 +36,13 @@ in
 
    {GFD.dom 1#1000 Root}
    {GFD.dom 0#GFD.sup [AA BB CC]}
-   {Square A AA}
-   {Square B BB}
-   {Square C CC}
-   {GFD.sum [AA BB] '=:' CC}
+   AA = {Square A}
+   BB = {Square B}
+   CC = {Square C}
+   AA + BB =: CC
    A =<: B
    B =<: C
-
+   2*BB >=: CC %% redundant constraint
    {GFD.distribute ff Root}
 end
 

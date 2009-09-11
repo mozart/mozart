@@ -48,7 +48,7 @@ proc {Tournament Solution}
        Player = o(table   : {FD.tuple o N 1#N }
 		  opponent: {FD.tuple o N 1#NN})
        %% never plays against himself
-       {For 1 N 1 proc {$ R} Player.opponent.R\=:I end}
+       {For 1 N 1 proc {$ R} {FD.sum [Player.opponent.R] '\\=:' I} end}
        %% never plays the same opponent twice
        {FD.distinct Player.opponent}
        %% never plays at the same table twice
@@ -73,7 +73,7 @@ proc {Tournament Solution}
 	proc {$ J} P2 = Players.J in
 	   {For 1 N 1
 	    proc {$ R} B in
-	       B::0#1
+	       B = {FD.int 0#1}
 	       B
 	       =(P1.table.R=:P2.table.R)
 	       =(P1.opponent.R=:J)
@@ -101,4 +101,4 @@ in
 	nil}}
 end
 
-{ExploreOne Tournament}
+{Browse {SearchOne Tournament}}

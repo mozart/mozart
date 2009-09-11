@@ -52,7 +52,9 @@ proc {Family Root}
       F = Name(boys:{AgeList} girls:{AgeList})
       Ages = {Append F.boys F.girls}
       {GFD.distinctP post(Ages)}
-      {GFD.sumC Coeffs Ages '=:' 0}
+      {GFD.linearP post(Coeffs Ages '=:' 0 cl:val)}
+      %Next constraint cannot be aplied with some other constraint
+      %for Gecode. But can we do it by split it in two or more constraints?
       {GFD.sumCN Coeffs {Map Ages fun {$ A} [A A] end} '=:' 0}
    end
    proc {AgeList L}
@@ -69,7 +71,7 @@ in
    Root = Maria#Clara
    {ForAll Maria.boys proc {$ A} A >: AgeOfMariasYoungestGirl end}
    AgeOfClarasYoungestGirl =: 0
-   {GFD.sum Ages '=:' 60}
+   {GFD.linearP post(Ages '=:' 60 cl:val)}
    {GFD.distribute split Ages}
 end
 

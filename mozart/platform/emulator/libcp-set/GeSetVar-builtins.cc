@@ -258,7 +258,8 @@ OZ_BI_define(gfs_unknownList,1,1){
     try{
       Gecode::SetVarUnknownValues values(sv);
       while(values()){
-	//FIXME: makeTaggedSmallInt() is bad here, it causes an assertion due to overflow in mozart int limits
+	//FIXME: makeTaggedSmallInt() is bad here, it causes an assertion due
+	//to overflow in mozart int limits
 	//but with OZ_int() the builtin blocks and it never returns :(
 	array[cont] = OZ_int(values.val());
 	++values;

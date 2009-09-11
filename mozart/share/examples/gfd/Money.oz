@@ -33,23 +33,15 @@ proc{Money Root}
    Root =  [S E N D M O R Y]
    
    RootVal = [1000 100 10 1 1000 100 10 1 ~10000 ~1000 ~100 ~10 ~1]
-   Root:::0#9
-   {GFD.sumC RootVal
-		[S E N D M O
-		 R E M O N E Y]
-		 '=:' 0
-		 }
+   {GFD.dom 0#9 Root}
+   {GFD.linearP post(RootVal
+		     [S E N D M O R E M O N E Y] '=:' 0)}
    
-   S \=: 0
-   M \=: 0
+   {GFD.relP post(S '\\=:' 0)}
+   {GFD.relP post(M '\\=:' 0)}
   
-   {GFD.distinctP  post(Root cl:GFD.cl.bnd)}
-   {GFD.distribute generic(order:naive value:max) Root}
+   {GFD.distinctP post(Root cl:bnd)}
+   {GFD.distribute ff Root}
 end
 
-
 {Show {SearchOne Money}}
-
-
-
-

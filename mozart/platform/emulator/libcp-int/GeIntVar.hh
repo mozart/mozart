@@ -350,40 +350,7 @@ bool OZ_isIntArgs(OZ_Term t) {
   // TODO: Why the old definition requiered to test for a literal??
   return checkAll(t, &IsInt); 
 }
-/*
-  inline
-  bool OZ_isIntArgs(OZ_Term t){
-  if(OZ_isLiteral(t)) {
-  OZ_Term d = OZ_deref(t);
-  if(OZ_isInt(d)) return true;
-  else return false;
-  }
-  else if(OZ_isCons(t)) {
-  for(int i=0; OZ_isCons(t); t=OZ_tail(t))
-  {
-  OZ_Term d = OZ_head(t);
-  if(!OZ_isInt(d)) return false;
-  }
-  return true;
-  }
-  else if(OZ_isTuple(t)) {
-  int sz=OZ_width(t);
-  for(int i=0; i < sz; i++) {
-  OZ_Term tmp = OZ_getArg(t,i);
-  if(!OZ_isInt(tmp)) return false;
-  }
-  return true;
-  }
-  else if(OZ_isRecord(t)){
-  OZ_Term al = OZ_arityList(t);
-  for(int i = 0; OZ_isCons(al); al=OZ_tail(al)){
-  if(!OZ_isInt(OZ_subtree(t,OZ_head(al)))) return false;
-  }
-  return true;
-  }
-  return false;
-  }
-*/
+
 /**
    \brief Checks if the term is a TupleSet.
 */

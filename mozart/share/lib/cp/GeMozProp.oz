@@ -33,48 +33,47 @@ proc{SumCN Iv Dvv A D}
 end
 
 proc{Sum Dv A D}
-   {LinearP post(Dv A D cl:Cl.val)}
+   {LinearP post(Dv A D cl:val)}
 end
    
 proc{SumC Iv Dv A D}
-   {LinearP post(Iv Dv A D cl:Cl.val)}
+   {LinearP post(Iv Dv A D cl:val)}
 end
 
 proc{SumD Dv A D}
-   {LinearP post(Dv A D cl:Cl.dom)}
+   {LinearP post(Dv A D cl:dom)}
 end
 
 proc{SumCD Iv Dv A D}
-   {LinearP post(Iv Dv A D cl:Cl.dom)}
+   {LinearP post(Iv Dv A D cl:dom)}
 end
 
 
 proc{SumAC Iv Dv A D} Tmp in
    Tmp = {FdDecl}
    {SumC Iv Dv A Tmp}
-   {Abs post(Tmp D cl:Cl.val)}
+   {Abs post(Tmp D cl:val)}
 end
 
 proc{SumACN Iv Dv A D} Tmp in
    Tmp = {FdDecl}
    {SumCN Iv Dv A Tmp}
-   {Abs post(Tmp D cl:Cl.val)}
+   {Abs post(Tmp D cl:val)}
 end
 
 %%Reified Propagators
 Reified = reified(int:_ dom:_ sum:_ sumC:_ sumCN:_ sumAC:_ sumACN:_ distance:_ card:_)
-%      reified(int:SI dom:NO sum:SI sumC:SI sumCN:SI sumAC:SI sumACN:NO distance:NO card:NO)
 
 proc{SumR Dv A D1 D2}
-   {LinearP post(Dv A D1 D2 cl:Cl.val)}
+   {LinearP post(Dv A D1 D2 cl:val)}
 end
 
 proc{SumCR Iv Dv A D1 D2}
-   {LinearP post(Iv Dv A D1 D2 cl:Cl.val)}
+   {LinearP post(Iv Dv A D1 D2 cl:val)}
 end
 
 proc{SumCNR Iv Dvv A D1 D2}
-   {SumCNP post(Iv Dvv Rt.A D1 D2 cl:Cl.val)}
+   {SumCNP post(Iv Dvv Rt.A D1 D2 cl:val)}
 end
 
 proc{SumACR Iv Dv A D1 D2}
@@ -90,7 +89,7 @@ proc{DistanceR D1 D2 A D3 D4} Min Max in
    Max = {FdDecl}
    {MaxP post(D1 D2 Max)}
    {MinP post(D1 D2 Min)}
-   {LinearP post([1 ~1] [Max Min] A D3 D4 cl:Cl.val)}
+   {LinearP post([1 ~1] [Max Min] A D3 D4 cl:val)}
 end
 
 Reified.int = GFDP.int_reified
@@ -106,15 +105,15 @@ Reified.card = GFDP.'int_reifiedCard'
 %%Symbolic propagators
    
 proc{AtLeast D Dv I}
-   {CountP post(Dv I '>=:' D cl:Cl.val)}
+   {CountP post(Dv I '>=:' D cl:val)}
 end
    
 proc{AtMost D Dv I}
-   {CountP post(Dv I '=<:' D cl:Cl.val)}
+   {CountP post(Dv I '=<:' D cl:val)}
 end
    
 proc{Exactly D Dv I}
-   {CountP post(Dv I '=:' D cl:Cl.val)}
+   {CountP post(Dv I '=:' D cl:val)}
 end
 
    
@@ -139,19 +138,19 @@ proc{MinusD D1 D2 D3}
 end
 
 proc{Less D1 D2}
-   {RelP post(D1 '<:' D2 cl:Cl.val)}
+   {RelP post(D1 '<:' D2 cl:val)}
 end
 
 proc{LessEq D1 D2}
-   {RelP post(D1 '=<:' D2 cl:Cl.val)}
+   {RelP post(D1 '=<:' D2 cl:val)}
 end
 
 proc{Greater D1 D2}
-   {RelP post(D1 '>:' D2 cl:Cl.val)}
+   {RelP post(D1 '>:' D2 cl:val)}
 end
 
 proc{GreaterEq D1 D2}
-   {RelP post(D1 '>=:' D2 cl:Cl.val)}
+   {RelP post(D1 '>=:' D2 cl:val)}
 end
 
 %%maybe this proc have to change something after we have all gecode propagators implemented
@@ -172,11 +171,11 @@ proc{ModI D1 I D3}
 end
 
 proc{DivI2 D1 I D3}
-   {DivP post(D1 I D3 cl:Cl.dom)}
+   {DivP post(D1 I D3 cl:dom)}
 end
 
 proc{ModI2 D1 I D3}
-   {ModP post(D1 I D3 cl:Cl.dom)}
+   {ModP post(D1 I D3 cl:dom)}
 end
 
 proc{DistanceI D1 D2 A D3} Maximum Minimum in
@@ -184,11 +183,11 @@ proc{DistanceI D1 D2 A D3} Maximum Minimum in
    Minimum = {FdDecl}
    {MaxP post(D1 D2 Maximum)}
    {MinP post(D1 D2 Minimum)}
-   {LinearP post([1 ~1] [Maximum Minimum] A D3 cl:Cl.val)}
+   {LinearP post([1 ~1] [Maximum Minimum] A D3 cl:val)}
 end
 
 proc {Power D1 I D2}
-   {PowerP post(D1 I D2 cl:Cl.val)}
+   {PowerP post(D1 I D2 cl:val)}
 end
 
 

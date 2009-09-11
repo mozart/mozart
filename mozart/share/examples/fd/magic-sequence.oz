@@ -44,10 +44,9 @@ in
 end
 
 
-{ExploreAll {MagicSequence 17}}
+{Show {SearchAll {MagicSequence 17}}}
 
 
 
 %% Conjecture: for N>5 is X_0 = N-3
 %% case N>5 then S.1=N-3 else skip end
-

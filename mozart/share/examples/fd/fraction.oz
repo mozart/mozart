@@ -35,29 +35,29 @@ proc {Fraction Root}
    EF = {FD.decl}
    HI = {FD.decl}
 in
-   Root ::: 1#9
+   %Root ::: 1#9
+   {FD.dom 1#9 Root}
    {FD.distinct Root}
-   BC =: 10*B + C
-   EF =: 10*E + F
-   HI =: 10*H + I 
-   A*EF*HI + D*BC*HI + G*BC*EF =: BC*EF*HI
+   %BC =: 10*B + C
+   {FD.sumC [10 1] [B C] '=:' BC}
+   %EF =: 10*E + F
+   {FD.sumC [10 1] [E F] '=:' EF}
+   %HI =: 10*H + I
+   {FD.sumC [10 1] [H I] '=:' HI}
+   %A*EF*HI + D*BC*HI + G*BC*EF =: BC*EF*HI
+   {FD.sumCN [1 1 1 ~1] [[A EF HI] [D BC HI] [G BC EF] [BC EF HI]] '=:' 0}
    %% impose order
-   A*EF >=: D*BC    
-   D*HI >=: G*EF
+   %A*EF >=: D*BC
+   {FD.sumCN [1 ~1] [[A EF] [D BC]] '>=:' 0}
+   %D*HI >=: G*EF
+   {FD.sumCN [1 ~1] [[D HI] [G EF]] '>=:' 0}
    %% redundant constraints
-   3*A >=: BC
-   3*G =<: HI
+   %3*A >=: BC
+   {FD.sumC [3] [A] '>:' BC}
+   %3*G =<: HI
+   {FD.sumC [3] [G] '<:' HI}
 
    {FD.distribute split Root}
 end
 
-{ExploreAll Fraction}
-
-
-
-
-/*
-
-{SearchAll Fraction _}
-
-*/
+{Show {SearchAll Fraction}}

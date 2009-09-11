@@ -30,24 +30,23 @@
 declare
 
 proc{Safe C}
-   C1 C2 C3 C4 C5 C6 C7 C8 C9
-in
-   C = [C1 C2 C3 C4 C5 C6 C7 C8 C9]
-   C:::1#9
-   {GFD.distinctP  post(C cl:GFD.cl.bnd)}
-
-   {GFD.sumC [1 ~1 ~1] [C4 C6 C7] '=:' 0}
+   {GFD.tuple code 9 1#9 C}
+   {GFD.distinctP  post(C cl:bnd)}
+   {GFD.linearP post([1 ~1 ~1] [C.4 C.6 C.7] '=:' 0 cl:val)}
+   
    local Tmp1 Tmp2 in
       Tmp1 = {GFD.decl}
       Tmp2 = {GFD.decl}
-      {GFD.multP post(C1 C2 Tmp1)}
-      {GFD.multP post(Tmp1 C3 Tmp2)}
-      {GFD.sumC [1 ~1 ~1] [Tmp2 C8 C9] '=:' 0}
+      {GFD.multP post(C.1 C.2 Tmp1)}
+      {GFD.multP post(Tmp1 C.3 Tmp2)}
+      {GFD.linearP post([1 ~1 ~1] [Tmp2 C.8 C.9] '=:' 0 cl:val)}
    end
-   {GFD.sumC [1 1 1 ~1] [C2 C3 C6 C8] '<:' 0}
-   {GFD.sumC [1 ~1] [C9 C8] '<:' 0}
+   
+   {GFD.linearP post([1 1 1 ~1] [C.2 C.3 C.6 C.8] '<:' 0 cl:val)}
+   {GFD.linearP post([1 ~1] [C.9 C.8] '<:' 0 cl:val)}
+
    for I in 1..9 do
-      {List.nth C I} \=: I
+      C.I \=: I
    end
    {GFD.distribute ff C}
 end
