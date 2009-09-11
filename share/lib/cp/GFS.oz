@@ -5,6 +5,7 @@
 %%%  Contributors:
 %%%     Andres Felipe Barco <anfelbar@univalle.edu.co>
 %%%     Gustavo A. Gomez Farhat <gafarhat@univalle.edu.co>
+%%%     Victor Rivera Zuniga <varivera@javerianacali.edu.co>
 %%%
 %%% Copyright:
 %%%     Alberto Delgado, 2007
@@ -130,20 +131,20 @@ export
    
    
    %% Gecode propagators %%
-   sequence        : Sequence
-   sequentialUnion : SequentialUnion
-   atMostOne       : AtMostOne
-   dom             : Dom
-   min             : Min
-   max             : Max
-   match           : Match
-   channel         : Channel
-   weights         : Weights 
-   elementsUnion   : ElementsUnion
-   elementsInter   : ElementsInter
-   elementsDisjoint: ElementsDisjoint
-   element         : Element
-   %rel: Rel
+   sequenceP        : Sequence
+   sequentialUnionP : SequentialUnion
+   atMostOneP       : AtMostOne
+   domP             : Dom
+   minP             : Min
+   maxP             : Max
+   matchP           : Match
+   channelP         : Channel
+   weightsP         : Weights 
+   elementsUnionP   : ElementsUnion
+   elementsInterP   : ElementsInter
+   elementsDisjointP: ElementsDisjoint
+   elementP         : Element
+   relP: Rel
    
    %% Set relation types %%
    rt:    Rt
@@ -178,7 +179,7 @@ define
    Diff = GFSP.diff
    Inter = GFSP.intersect
    InterN = GFSP.intersectN
-   Union = GFSP.union
+   Union = GFSP.'union'
    UnionN = GFSP.unionN
    Subset = GFSP.subset
    Disj = GFSP.disjoint
@@ -425,7 +426,7 @@ in
       end
    end
 
-   GFSUniversalRefl = [0#Sup]
+   GFSUniversalRefl = [Inf#Sup]
    GFSUniversal     = {GFSSetValue GFSUniversalRefl}
    GFSSetValueToString = GFSB.'value.toString'
    GFSisValue = GFSB.'value.is'
@@ -517,11 +518,11 @@ in
    in
       case W
       of 3 then
-	 {GFSP.gfs_dom_3 Sc.1 Sc.2 Sc.3}
+	 {GFSP.gfs_dom_3 Sc.1 Rt.(Sc.2) Sc.3}
       []  4 then
-	 {GFSP.gfs_dom_4 Sc.1 Sc.2 Sc.3 Sc.4}
+	 {GFSP.gfs_dom_4 Sc.1 Rt.(Sc.2) Sc.3 Sc.4}
       []  5 then
-	 {GFSP.gfs_dom_5 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5}
+	 {GFSP.gfs_dom_5 Sc.1 Rt.(Sc.2) Sc.3 Sc.4 Sc.5}
       else
 	 raise malformed('Dom constraint post') end
       end
@@ -568,13 +569,14 @@ in
    proc{Rel Sc}
       W = {Record.width Sc}
    in
+      {System.show [Sc {Value.hasFeature SOP Sc.1} Sc.1]}
       case W
       of 3 then
-	 {GFSP.gfs_rel_3 Sc.1 Sc.2 Sc.3}
+	 {GFSP.gfs_rel_3 Sc.1 Rt.(Sc.2) Sc.3}
       []  4 then
-	 {GFSP.gfs_rel_4 Sc.1 Sc.2 Sc.3 Sc.4}
+	 {GFSP.gfs_rel_4 Sc.1 Rt.(Sc.2) Sc.3 Sc.4}
       []  5 then
-	 {GFSP.gfs_rel_5 Sc.1 Sc.2 Sc.3 Sc.4 Sc.5}
+	 {GFSP.gfs_rel_5 Sc.1 SOP.(Sc.2) Sc.3 Rt.(Sc.4) Sc.5}
       else
 	 raise malformed('Rel constraint post') end
       end

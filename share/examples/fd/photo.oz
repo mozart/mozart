@@ -36,16 +36,10 @@ in
    Root = Satisfaction#Alignment
    {FD. distinct Alignment}
    {FD.sum {Map Preferences Satisfied} '=:' Satisfaction}
-   Alignment.fred <: Alignment.betty     % redundant
+   {FD.less Alignment.fred Alignment.betty} % redundant
    {FD.distribute generic(order:naive value:max) [Satisfaction]}
    {FD.distribute split Alignment}
 end
 
-
-{ExploreOne Photo}
-
-
-/*
-{ExploreBest Photo proc {$ Old New} Old.1 <: New.1 end}
-{SearchBest Photo proc {$ Old New} Old.1 <: New.1 end _}
-*/
+{Show {SearchOne Photo}}
+%{Show {SearchBest Photo proc {$ Old New} {FD.less Old.1 New.1} end}}

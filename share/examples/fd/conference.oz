@@ -59,9 +59,9 @@ in
       {ForAll Constraints
        proc {$ C}
 	  case C
-	  of before(X Y) then Plan.X <: Plan.Y
+	  of before(X Y) then {FD.less Plan.X Plan.Y}
 	  [] disjoint(X Ys) then
-	     {ForAll Ys proc {$ Y} Plan.X \=: Plan.Y end}
+	     {ForAll Ys proc {$ Y} {FD.sum [Plan.X] '\\=:' Plan.Y} end}
 	  end
        end}
       {FD.distribute ff Plan}
@@ -85,4 +85,4 @@ Data = data(nbSessions: 11
 
 
 
-{ExploreOne {Conference Data}}
+{Show {SearchOne {Conference Data}}}

@@ -65,5 +65,29 @@
     }						\
   }
 
+/**
+   Macro for suspend the propagator posting if some his parametres are
+   a List, Tuple or Record with al least one of his elements been a free var.
+*/
+#define SuspendPostingOnLTR(ltr){			\
+    OZ_Term t = (ltr);					\
+    if(OZ_isCons(t)) {					\
+      for(; OZ_isCons(t); t=OZ_tail(t)){		\
+	SuspendPosting(OZ_head(t));			\
+      }							\
+    } else if(OZ_isTuple(t)) {				\
+      int sz=OZ_width(t);				\
+      for(int i=0; i < sz; i++) {			\
+	SuspendPosting(OZ_getArg(t,i));			\
+      }							\
+    } if(OZ_isRecord(t)){				\
+      OZ_Term al = OZ_arityList(t);			\
+      for(; OZ_isCons(al); al=OZ_tail(al)){		\
+	SuspendPosting(OZ_subtree(t,OZ_head(al)))	\
+	  }						\
+    } else SuspendPosting(ltr);				\
+  }
+
+
 
 #endif

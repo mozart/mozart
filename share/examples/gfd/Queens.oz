@@ -38,9 +38,9 @@ fun{Queens N}
       LM1N = {List.number ~1 ~N ~1}
    in
       Row = {GFD.tuple queens N 1#N}
-      {GFD.distinctP post(Row cl:GFD.cl.val)}
-      {GFD.distinctOffset post(Row L1N)}
-      {GFD.distinctOffset post(Row LM1N)}
+      {GFD.distinctP post(Row cl:val)}
+      {GFD.distinctP post(Row L1N)}
+      {GFD.distinctP post(Row LM1N)}
       {GFD.distribute ff Row}
    end
 end

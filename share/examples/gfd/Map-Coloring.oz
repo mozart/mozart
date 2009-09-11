@@ -122,12 +122,13 @@ proc {IntVarDistribute RawSpec Vec}
 	    in
 	       if Proc\=unit then
 		  {Proc}
+
 		  {Space.waitStable}
 	       end		  
 	       choice
-		  {GFD.relP post(V GFD.rt.'=:' {SelVal V} cl:GFD.cl.bnd)}
+		  {GFD.relP post(V '=:' {SelVal V} cl:bnd)}
 	       []
-		  {GFD.relP post(V GFD.rt.'\\=:' {SelVal V} cl:GFD.cl.bnd)}
+		  {GFD.relP post(V '\\=:' {SelVal V} cl:bnd)}
 	       end		  
 	       {Do Fs}
 	    end
@@ -171,7 +172,7 @@ in
       {GFD.record color Countries 1#NbColors Color}
       {ForAll Data
        proc {$ A#Bs}
-	  {ForAll Bs proc {$ B} {GFD.relP post(Color.A GFD.rt.'\\=:' Color.B)} end}
+	  {ForAll Bs proc {$ B} {GFD.relP post(Color.A '\\=:' Color.B)} end}
        end}
       %{GFD.distribute ff Color}
       {IntVarDistribute ff Color}

@@ -35,15 +35,13 @@ in
 	       100000 10000 1000 100 10 1
 	       ~100000 ~10000 ~1000 ~100 ~10 ~1]
    {GFD.dom 0#9 Root}
-   D \=: O
-   G \=: 0
-   R \=: 0
-   {GFD.sumC RootArgs
-    [D O N A L D
-     G E R A L D
-     R O B E R T]
-    '=:' 0}
-   {GFD.distinctP post(Root cl:GFD.cl.val)}
+   {GFD.relP post(D '\\=:' O)}
+   {GFD.relP post(G '\\=:' 0)}
+   {GFD.relP post(R '\\=:' 0)}
+   {GFD.linearP post(RootArgs
+    [D O N A L D  G E R A L D  R O B E R T] '=:' 0)}
+
+   {GFD.distinctP post(Root cl:val)}
    {GFD.distribute naive Root}
 end
 

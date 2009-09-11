@@ -44,8 +44,7 @@ OZ_BI_define(gfd_dom_5,4,0){
 
   //test whether input is ref or var
   for(int i=0; i<5; i++)
-    SuspendPosting(OZ_in(i));
-  
+    SuspendPostingOnLTR(OZ_in(i));
 
   Gecode::IntConLevel icl = getIntConLevel(OZ_in(3));
   
@@ -106,7 +105,7 @@ OZ_BI_define(gfd_dom_4,3,0){
 
     //test whether input is ref or var
   for(int i=0; i<4; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
   
 
   Gecode::IntConLevel icl = getIntConLevel(OZ_in(2));
@@ -152,7 +151,7 @@ OZ_BI_define(gfd_dom_6,5,0){
 
   //test whether input is ref or var
   for(int i=0; i<6; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
   if(OZ_isGeIntVar(OZ_in(0)) && OZ_isInt(OZ_in(1)) &&  OZ_isInt(OZ_in(2)) && OZ_isGeBoolVar(OZ_in(3)) && 
      OZ_isIntConLevel(OZ_in(4))){
@@ -191,7 +190,7 @@ OZ_BI_define(gfd_rel_5,4,0){
   
   //test whether input is ref or var
   for(int i=0; i<5; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
   Gecode::IntRelType irt = getIntRelType(OZ_in(1));
   Gecode::IntConLevel icl = getIntConLevel(OZ_in(3));
@@ -279,7 +278,7 @@ OZ_BI_define(gfd_rel_6,5,0){
 
   //test whether input is ref or var
   for(int i=0; i<6; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   IntView iv1 = intOrIntView(OZ_in(0));
@@ -325,7 +324,7 @@ OZ_BI_define(gfd_rel_4,3,0){
 
   //test whether input is ref or var
   for(int i=0; i<4; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   Gecode::IntRelType irt = getIntRelType(OZ_in(1));
@@ -361,7 +360,7 @@ OZ_BI_define(gfd_element_5,4,0){
 
   //test whether input is ref or var
   for(int i=0; i<5; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   IntView iv1 = intOrIntView(OZ_in(1));
@@ -482,7 +481,7 @@ OZ_BI_define(gfd_distinct_3,2,0){
 
   //test whether input is ref or var
   for(int i=0; i<3; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isIntConLevel(OZ_in(1))){
@@ -510,7 +509,7 @@ OZ_BI_define(gfd_distinct_4,3,0){
   
   //test whether input is ref or var
   for(int i=0; i<4; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   if( OZ_isIntArgs(OZ_in(0)) && OZ_isIntVarArgs(OZ_in(1)) && OZ_isIntConLevel(OZ_in(2))){
@@ -545,7 +544,7 @@ OZ_BI_define(gfd_channel_4,3,0){
 
   //test whether input is ref or var
   for(int i=0; i<4; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   Gecode::IntConLevel icl = getIntConLevel(OZ_in(2));
@@ -605,7 +604,7 @@ OZ_BI_define(gfd_channel_5,4,0){
 
   //test whether input is ref or var
   for(int i=0; i<5; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   BoolVarArgs __x = getBoolVarArgs(OZ_in(0));
@@ -640,7 +639,7 @@ OZ_BI_define(gfd_circuit_3,2,0){
 
   //test whether input is ref or var
   for(int i=0; i<3; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   if(OZ_isIntVarArgs(OZ_in(0)) &&  OZ_isIntConLevel(OZ_in(1))){
@@ -673,7 +672,7 @@ OZ_BI_define(gfd_cumulatives_9,8,0){
 
   //test whether input is ref or var
   for(int i=0; i<9; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   DeclareBool(6, __at_most);
@@ -839,7 +838,7 @@ OZ_BI_define(gfd_sorted_4,3,0){
 
   //test whether input is ref or var
   for(int i=0; i<4; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(2));
@@ -873,7 +872,7 @@ OZ_BI_define(gfd_sorted_5,4,0){
   
   //test whether input is ref or var
   for(int i=0; i<5; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(3));
@@ -912,7 +911,7 @@ OZ_BI_define(gfd_count_6,5,0){
   
   //test whether input is ref or var
   for(int i=0; i<6; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   IntVarArgs __x = getIntVarArgs(OZ_in(0));
@@ -1017,7 +1016,7 @@ OZ_BI_define(gfd_count_4,3,0){
   
   //test whether input is ref or var
   for(int i=0; i<4; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   IntVarArgs __x = getIntVarArgs(OZ_in(0));
@@ -1062,7 +1061,7 @@ OZ_BI_define(gfd_count_5,4,0){
   
   //test whether input is ref or var
   for(int i=0; i<5; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   IntVarArgs __x = getIntVarArgs(OZ_in(0));
@@ -1125,7 +1124,7 @@ OZ_BI_define(gfd_extensional_4,4,0){
 
   //test whether input is ref or var
   for(int i=0; i<4; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
   Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(2));
 
@@ -1190,7 +1189,7 @@ OZ_BI_define(gfd_max_5,4,0){
   
   //test whether input is ref or var
   for(int i=0; i<5; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
   
   if(OZ_isGeIntVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) &&
@@ -1220,7 +1219,7 @@ OZ_BI_define(gfd_max_4,3,0){
 
   //test whether input is ref or var
   for(int i=0; i<4; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1))){
@@ -1251,7 +1250,7 @@ OZ_BI_define(gfd_mult_5,4,0){
 
   //test whether input is ref or var
   for(int i=0; i<5; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   if(OZ_isGeIntVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) ){
@@ -1283,7 +1282,7 @@ OZ_BI_define(gfd_power_5,4,0){
 
   //test whether input is ref or var
   for(int i=0; i<5; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   if(OZ_isGeIntVar(OZ_in(0)) && OZ_isInt(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) ){
@@ -1329,7 +1328,7 @@ OZ_BI_define(gfd_div_5,4,0){
 
   //test whether input is ref or var
   for(int i=0; i<5; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   if(OZ_isGeIntVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) ){
@@ -1355,12 +1354,42 @@ OZ_BI_define(gfd_div_5,4,0){
   CHECK_POST(home);
 }OZ_BI_end
 
-OZ_BI_define(gfd_sqrt_4,3,0){
+OZ_BI_define(gfd_sqr_4,3,0){
   DeclareGSpace(home);
 
   //test whether input is ref or var
   for(int i=0; i<4; i++)
     SuspendPosting(OZ_in(i));
+
+
+  if(OZ_isGeIntVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1))){
+    
+    /**
+       sqrt (Space *home, IntVar x0, IntVar x1, IntConLevel icl=ICL_DEF, PropKind pk=PK_DEF)
+    */
+    IntView iv1 = intOrIntView(OZ_in(0));
+    IntView iv2 = intOrIntView(OZ_in(1));
+    Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(2));
+    
+    try{
+      Gecode::sqr (home, iv1, iv2, __ICL_DEF);
+    }
+    catch(Exception e){
+      RAISE_GE_EXCEPTION(e);
+    }
+  } else {
+    return OZ_typeError(0, "Malformed Propagator: Sqr");
+  }
+
+  CHECK_POST(home);
+}OZ_BI_end
+
+OZ_BI_define(gfd_sqrt_4,3,0){
+  DeclareGSpace(home);
+
+  //test whether input is ref or var
+  for(int i=0; i<4; i++)
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   if(OZ_isGeIntVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1))){
@@ -1391,7 +1420,7 @@ OZ_BI_define(gfd_mod_5,4,0){
 
   //test whether input is ref or var
   for(int i=0; i<5; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   if(OZ_isGeIntVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) ){
@@ -1422,7 +1451,7 @@ OZ_BI_define(gfd_divmod_6,5,0){
 
   //test whether input is ref or var
   for(int i=0; i<6; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   if(OZ_isGeIntVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) && OZ_isGeIntVar(OZ_in(4))){
@@ -1455,7 +1484,7 @@ OZ_BI_define(gfd_min_5,4,0){
 
   //test whether input is ref or var
   for(int i=0; i<5; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   if(OZ_isGeIntVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1)) && OZ_isGeIntVar(OZ_in(2)) ){
@@ -1484,7 +1513,7 @@ OZ_BI_define(gfd_min_4,3,0){
     
   //test whether input is ref or var
   for(int i=0; i<4; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   if(OZ_isIntVarArgs(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1))){
@@ -1514,7 +1543,7 @@ OZ_BI_define(gfd_abs_4,3,0){
   
   //test whether input is ref or var
   for(int i=0; i<4; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   if(OZ_isGeIntVar(OZ_in(0)) && OZ_isGeIntVar(OZ_in(1))){
@@ -1548,7 +1577,7 @@ OZ_BI_define(gfd_linear_5,4,0){
   
   //test whether input is ref or var
   for(int i=0; i<5; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(3));
@@ -1595,7 +1624,7 @@ OZ_BI_define(gfd_linear_6,5,0){
 
   //test whether input is ref or var
   for(int i=0; i<6; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   Gecode::IntConLevel __ICL_DEF = getIntConLevel(OZ_in(4));
@@ -1679,7 +1708,7 @@ OZ_BI_define(gfd_linear_7,6,0){
 
   //test whether input is ref or var
   for(int i=0; i<7; i++)
-    SuspendPosting(OZ_in(i));
+    SuspendPostingOnLTR(OZ_in(i));
 
 
   Gecode::IntArgs  __a = getIntArgs(OZ_in(0));

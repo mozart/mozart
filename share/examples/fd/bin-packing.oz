@@ -20,6 +20,8 @@
 %%% WARRANTIES.
 %%%
 
+%%% FIXME: This is not ported yet to work with GeOz
+
 declare
 fun {BinPacking Order}
    ComponentTypes = [glass plastic steel wood copper]
@@ -34,11 +36,20 @@ fun {BinPacking Order}
    in
       Bin = b(type:Type    glass:Glass  plastic:Plastic
 	      steel:Steel  wood:Wood    copper:Copper)
-      Components ::: 0#MaxBinCapacity
+      {FD.dom 0#MaxBinCapacity Components}
       {FD.sum Components '=<:' Capacity}
       {FD.impl Wood>:0  Plastic>:0 1}    % wood requires plastic
+      % FIXME
+      %{FD.impl {FD.greater Wood 0} {FD.greater Plastic 0} 1}    % wood requires plastic
       {FD.impl Glass>:0  Copper=:0 1}    % glass excludes copper
+      % FIXME
+      % {FD.impl {FD.greater Glass 0}
+%        {FD.sum [Copper] '=:' 0} 1}    % glass excludes copper
+      
       {FD.impl Copper>:0  Plastic=:0 1}  % copper excludes plastic
+      % FIXME
+      %{FD.impl {FD.greater Copper 0}
+       %{FD.sum [Plastic] '=:' 0} 1}  % copper excludes plastic
       thread
 	 case Type
 	 of !Red then Capacity=3  Plastic=0  Steel=0  Wood=<:1
@@ -95,8 +106,4 @@ in
    end
 end
 
-{ExploreOne {BinPacking order(glass:2 plastic:4 steel:3 wood:6 copper:4)}}
-
-/*
-{SearchOne {BinPacking order(glass:2 plastic:4 steel:3 wood:6 copper:4)} _}
-*/
+{Show {SearchOne {BinPacking order(glass:2 plastic:4 steel:3 wood:6 copper:4)}}}

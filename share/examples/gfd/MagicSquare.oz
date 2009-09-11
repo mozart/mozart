@@ -44,8 +44,6 @@ in
    {SelectSizeAux L L.1}
 end
 
-   
-   
 proc {NaiveDistribute Xs}
    V = if {IsList Xs} then {List.toTuple '#' Xs} else Xs end
    proc {Distribute L}
@@ -54,21 +52,16 @@ proc {NaiveDistribute Xs}
 	 case D
 	 of eq(M) then V.I =: M
 	 [] neq(M) then V.I \=: M
-	 %[] lt(M) then V.I =: M	   
 	 end
 	 {Distribute L}
       [] nil then
-	 case {List.dropWhile L fun {$ I#X} {IsDet X} end}
+	 case {List.dropWhile L fun {$ _#X} {IsDet X} end}
 	 of nil then
 	    skip
 	 [] L1 then		  
 	    I#X = {SelectSize L1}
-	    
-		  %I#X|_=L1
-	    M={GFD.reflect.med X}
+	    M={GFD.reflect.min X}
 	 in
-	    %{Show sel(I#M#Xs)}
-	    %{Space.branch [I#eq(M) I#lt(M) I#gt(M) ]}
 	    {Space.branch [I#eq(M) I#neq(M)]}
 	    {Distribute L1}
 	 end
@@ -89,7 +82,7 @@ in
       end
       proc {Assert F}
          %% {F 1} + {F 2} + ... + {F N} =: Sum
-	 {GFD.sum {Map L1N F} '=:' Sum}
+	 {GFD.linearP post({Map L1N F} '=:' Sum cl:val)}
       end
       Sum = {GFD.decl}
    in
@@ -109,15 +102,13 @@ in
       {Field N 1} <: {Field 1 N}
       {Field 1 1} <: {Field N 1} */
       %% Redundant: sum of all fields = (number rows) * Sum
-      %%%%%%%NN*(NN+1) div 2 =: N*Sum
-      {GFD.sumC [N] [Sum] '=:' NN*(NN+1) div 2}
+      %(NN*(NN+1) div 2) =: N*Sum
       %%
-      %{GFD.distribute split Square}
       {NaiveDistribute Square}
    end
 end
 
 
-{Show {SearchOne {MagicSquare 5}}}
+{Show {SearchOne {MagicSquare 3}}}
 %{Show {Search.one.depth {MagicSquare 6} 1 _}}
 

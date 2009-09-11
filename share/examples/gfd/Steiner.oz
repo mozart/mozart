@@ -40,7 +40,7 @@ fun {Steiner N}
          % triple elements must be different
 	 {ForAll Triples proc{$ T} {GFD.distinctP post(T)} end}
 	 % all pairs in two different triples must be different
-
+	 
 	 {ForAllTail Triples proc{$ [T11 T12 T13]|Tr}
 				{ForAll Tr
 				 proc{$ [T21 T22 T23]}
@@ -75,7 +75,7 @@ fun {Steiner N}
 				 in
 				    {GBD.linearP
 				     post([B1 B2 B3 B4 B5 B6 B7 B8 B9]
-					  GBD.rt.'=<:' 1)}
+					  '=<:' 1)}
 				 end}
 			     end}
          % order triple elements
@@ -85,11 +85,11 @@ fun {Steiner N}
 				case Tr of nil then skip
 				[] [T21 T22 T23]|_
 				then
-				   {GFD.sumC
-				         [N1N1 N1 1 ~N1N1 ~N1 ~1]
+				   {GFD.linearP
+				         post([N1N1 N1 1 ~N1N1 ~N1 ~1]
 					 [T11 T12 T13 T21 T22 T23]
 					 '<:'
-					 0}
+					 0 cl:val)}
 				end
 			     end}
 	 

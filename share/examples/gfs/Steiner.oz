@@ -46,12 +46,10 @@ fun {Steiner N}
 	      end}
 	  end}
 	 
-	 {GFS.distribute generic(order:order(sel:min)) Ss}
-	 %{GFS.distribute naive Ss}
+	 {GFS.distribute generic(order: naive value: min) Ss}
       end 
    else proc {$ _} fail end 
    end 
 end
-
 
 {Show {SearchOne {Steiner 7}}}

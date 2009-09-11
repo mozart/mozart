@@ -51,13 +51,11 @@ in
       {Field N 1} <: {Field 1 N}
       {Field 1 1} <: {Field N 1} */
       %% Redundant: sum of all fields = (number rows) * Sum
-      NN*(NN+1) div 2 =: N*Sum
+      %{FD.sum [NN*(NN+1) div 2] '=:' N*Sum}
       %%
       {FD.distribute split Square}
    end
 end
 
 
-{ExploreOne {MagicSquare 3}}
-
-
+{Show {SearchOne {MagicSquare 3}}}

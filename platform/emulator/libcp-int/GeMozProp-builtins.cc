@@ -232,7 +232,7 @@ OZ_BI_define(int_sumCN,4,0)
 
 /**
 	* This method makes a scalar produt between two list or a list and matrix.
-	* This method will be use to these reified constraints not implented by Gecode.
+	* This method will be use to these reified constraints, they are not implemented by Gecode.
 	*/
 IntVar scalarProduct(GenericSpace *sp, IntArgs ia, IntVarArgs iva, IntConLevel __ICL_DEF){
   IntVarArray arrayTmp(sp,iva.size(),Int::Limits::min,Int::Limits::max);
@@ -293,7 +293,7 @@ IntVar scalarProduct(GenericSpace *sp, IntArgs ia, OZ_Term Dvv, IntConLevel __IC
 
 
 /**
-	*  Implementing of reified.sumAC constraint using mult, abs, linear and rel constraint of gecode
+	*  Implementation of reified.sumAC constraint using mult, abs, linear and rel constraint of gecode
 */
 OZ_BI_define(reified_sumAC,6,0)
 {
@@ -340,7 +340,7 @@ OZ_BI_define(reified_sumAC,6,0)
 } OZ_BI_end
 
 /**
-	*  Implementing of reified.sumCN constraint using mult, abs, linear and rel constraint of gecode
+	*  Implementation of reified.sumCN constraint using mult, abs, linear and rel constraint of gecode
 */
 OZ_BI_define(reified_sumCN,6,0)
 {
@@ -363,7 +363,7 @@ OZ_BI_define(reified_sumCN,6,0)
 } OZ_BI_end
 
 /**
-	*  Implementing of reified.sumACN constraint using mult, abs, linear and rel constraint of gecode
+	*  Implementation of reified.sumACN constraint using mult, abs, linear and rel constraint of gecode
 */
 OZ_BI_define(reified_sumACN,6,0)
 {

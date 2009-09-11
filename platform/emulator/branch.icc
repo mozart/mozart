@@ -36,7 +36,7 @@ using namespace Gecode::Int::Branch;
 
 /**
    Distributor class methods
- */
+*/
 template<class View, class Val, class ViewSel, class ValSel>
 inline
 GeVarDistributor<View, Val, ViewSel, ValSel>::GeVarDistributor(Board *bb, TaggedRef *vs, int n) {
@@ -44,7 +44,7 @@ GeVarDistributor<View, Val, ViewSel, ValSel>::GeVarDistributor(Board *bb, Tagged
   size = n;
   sync = oz_newVariable(bb);
 
-  // Ask the board for a new identifier of this fistributor.
+  // Ask the board for a new identifier of this distributor.
   id = bb->NewDistributorId();
 }
 
@@ -109,7 +109,7 @@ int GeVarDistributor<View, Val, ViewSel, ValSel>::commitBranch(Board *bb, Tagged
   /*
     The commited branch does not correspond to this distributor. Let's
     delegate the responsablity to the board.
-   */
+  */
   return -1;
 }
 
@@ -469,4 +469,3 @@ Distributor * GeVarAssignment<View, Val, ViewSel, ValSel>::sClone(void) {
   t->vars = OZ_sCloneAllocBlock(size, t->vars);
   return t;
 }
-
