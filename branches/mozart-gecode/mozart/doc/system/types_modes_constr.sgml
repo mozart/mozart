@@ -114,13 +114,17 @@ to="type-abbrev-ps">.
  <Caption>Type Abbreviations</Caption>
 <Table>
  <TR/<TH/Abbreviation/<TH/Type//
- <TR/<TD/?{D}/<TD/finite domain integer//
+ <TR/<TD/?{X}/<TD/finite domain integer//
  <TR/<TD/?{M}/<TD/finite set of integers//
- <TR/<TD/?{Xr}/<TD/records of type ?{X}//
- <TR/<TD/?{Xt}/<TD/tuples of type ?{X}//
- <TR/<TD/?{Xv}/<TD/vectors of type ?{X}//
- <TR/<TD/?{Xvv}/<TD/vectors of vectors of type ?{X}//
- <TR/<TD/?{Xrr}/<TD/records of records of type ?{X}//
+ <TR/<TD/?{B}/<TD/boolean domain//
+ <TR/<TD/?{Tr}/<TD/records of type ?{T}//
+ <TR/<TD/?{Tt}/<TD/tuples of type ?{T}//
+ <TR/<TD/?{Tv}/<TD/vectors of type ?{T}//
+ <TR/<TD/?{Tvv}/<TD/vectors of vectors of type ?{T}//
+ <TR/<TD/?{Trr}/<TD/records of records of type ?{T}//
+ <TR/<TD/?{U}/<TD/integers//
+ <TR/<TD/?{Lu}/<TD/list of integers//
+ <TR/<TD/?{IS}/<TD/Int Set//
 </Table>
 </Figure>
 
@@ -180,13 +184,13 @@ constraints but apply of course for finite set constraints too.
 <Para><Title/Specification Input/
 The signature
 
-<<<{FD.int ?+{Spec} ??{D}}>>>
+<<<{GFD.int ?+{Spec} ??{D}}>>>
 
 specifies that an application of <<FD.int>> waits until ?+{Spec} is
 <Em/ground/, &ie;, contains no free variables.  Arguments of the
 form ?+{Spec} never occur. The signature 
 
-<<<{FD.distinct ?*{Dv}}>>>
+<<<{GFD.distinct ?*{Dv}}>>>
 
 specifies that an application of <<FD.distinct>> waits until its
 argument <<Dv>> is determined and all its elements are constrained to
@@ -194,7 +198,7 @@ finite domain integers. Analogously, ?+{Iv} specifies that the
 application waits until <<Iv>> and all its elements are
 determined. The scheme
 
-<<<{FD.sumCN ?+{Iv} ?*{Dvv}  ?+{A}  ?*{D}}>>> 
+<<<{GFD.sumCN ?+{Iv} ?*{Dvv}  ?+{A}  ?*{D}}>>> 
 
 specifies that the application waits until ?*{Dvv} and all its
 elements are determined, and until their elements are constrained to
@@ -205,7 +209,7 @@ For some procedures like that for generic
 propagators, an atom occurring as an argument denotes a relation
 symbol. For example, 
 
-<<<{FD.sum [X Y Z] '=:' D}>>>
+<<<{GFD.sum [X Y Z] '=:' D}>>>
 
 denotes the constraint
 <Math Display>X + Y + Z = D</Math>

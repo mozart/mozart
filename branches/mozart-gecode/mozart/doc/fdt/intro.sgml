@@ -106,10 +106,10 @@ Can you determine the code?
   <title/Coloring/
 
 <p>
-Given a map showing the West
-European countries Netherlands, Belgium, France,
-Spain, Portugal, Germany, Luxemburg, Switzerland,
-Austria, and Italy, find a coloring such that
+Given a map showing Latin American
+countries Colombia, Peru, Argentina,
+Chile, Paraguay, Brasil, Ecuardor, Venezuela,
+Bolivia, Panama and Uruguay, find a coloring such that
 neighboring countries have different color and a
 minimal number of colors is used.
 

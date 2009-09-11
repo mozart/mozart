@@ -99,12 +99,12 @@ standard first-fail strategy.
 <chunk class=anonymous><title/Fractions/
 proc {Fractions Root}
    sol(a:A b:B c:C d:D e:E f:F g:G h:H i:I) = Root
-   BC = {FD.decl}
-   EF = {FD.decl}
-   HI = {FD.decl}
+   BC = {GFD.decl}
+   EF = {GFD.decl}
+   HI = {GFD.decl}
 in
    Root ::: 1#9
-   {FD.distinct Root}
+   {GFD.distinctP post(Root cl:val)}
    BC =: 10*B + C
    EF =: 10*E + F
    HI =: 10*H + I 
@@ -115,7 +115,7 @@ in
    %% redundant constraints
    3*A >=: BC
    3*G =<: HI
-   {FD.distribute ff Root}
+   {GFD.distribute ff Root}
 end
 </chunk>
 </figure>
@@ -135,7 +135,7 @@ after all variables of the constraint implemented by
 the propagator are constrained to finite domains in
 the constraint store, the script constrains the
 auxiliary variables for the denominators to the
-maximal finite domain using the procedure <<FD.decl>>.
+maximal finite domain using the procedure <<GFD.decl>>.
 </section>
 
 
@@ -189,7 +189,7 @@ using the standard first-fail strategy.
 <p>
 <chunk class=anonymous><title/Definition of Square/
 proc {Square X S}
-   {FD.times X X S}
+   {GFD.multP post(X X S)}
 end
 </chunk>
 <chunk class=anonymous><title/Pythagoras/
@@ -198,6 +198,7 @@ proc {Pythagoras Root}
    AA BB CC
 in
    Root ::: 1#1000
+   {GFD.dom 0#GFD.sup [AA BB CC]}
    AA = {Square A}
    BB = {Square B}
    CC = {Square C}
@@ -205,7 +206,7 @@ in
    A =<: B
    B =<: C
    2*BB >=: CC  % redundant constraint
-   {FD.distribute ff Root}
+   {GFD.distribute ff Root}
 end
 </chunk>
 </p>
@@ -230,7 +231,7 @@ saying that <<S>> is the square of <<X>>.  This
 constraint is implemented with a propagator
 provided by
 <<<
-{FD.times X X S}
+{GFD.multP post(X X S)}
 >>>
 This propagator will start propagating as soon as
 the store constrains <<X>> to a finite domain.
@@ -241,7 +242,7 @@ in the constraint store.  To define <<Square>>
 with this constraint, we would have to write
 <<<
 proc {Square X S}
-   {FD.decl S}
+   {GFD.decl S}
    X*X =: S
 end
 >>>
@@ -397,12 +398,12 @@ in
       end
       proc {Assert F}
          % {F 1} + {F 2} + ... + {F N} =: Sum
-	 {FD.sum {Map L1N F} '=:' Sum}
+	 {GFD.linearP post({Map L1N F} '=:' Sum)}
       end
-      Sum = {FD.decl}
+      Sum = {GFD.decl}
    in
-      {FD.tuple square NN 1#NN Square}
-      {FD.distinct Square}
+      {GFD.tuple square NN 1#NN Square}
+      {GFD.distinctP post(Square)}
       %% Diagonals
       {Assert fun {$ I} {Field I I} end}
       {Assert fun {$ I} {Field I N+1-I} end}
@@ -419,7 +420,7 @@ in
       %% Redundant: sum of all fields = (number rows) * Sum
       NN*(NN+1) div 2 =: N*Sum
       %%
-      {FD.distribute split Square}
+      {GFD.distribute split Square}
    end
 end
 </chunk>
@@ -458,15 +459,15 @@ constraint it is straightforward to state that
 the sums of the rows, columns, and main diagonals
 are all equal to <<Sum>>.
 
-<p>
-With the Explorer you can find out that for <<N=3>>
-there is exactly one magic square satisfying the
-ordering constraints of our model.  Without the
-ordering constraints there are 8 different
-solutions.  Omitting the propagator for the
-redundant constraint will increase the search
-tree by an order of magnitude.
-<p>
+<!-- <p> -->
+<!-- With the Explorer you can find out that for <<N=3>> -->
+<!-- there is exactly one magic square satisfying the -->
+<!-- ordering constraints of our model.  Without the -->
+<!-- ordering constraints there are 8 different -->
+<!-- solutions.  Omitting the propagator for the -->
+<!-- redundant constraint will increase the search -->
+<!-- tree by an order of magnitude. -->
+<!-- <p> -->
 
 <section id="section.propagators.exercises">
   <title/Exercises/
@@ -494,7 +495,7 @@ enumerate all magic sequences of length <math/n/.
 <p> 
 The script should use the procedure
 <<<
-{FD.exactly ?{K} ?{S} ?{I}}
+{GFD.countP post(?{S} ?{I} '=:' ?{K})}
 >>>
 that creates a propagator for the constraint
 saying that exactly ?{K} fields of the record
@@ -540,14 +541,14 @@ fun {MagicSequence N}
    Cs = {List.number ~1 N-2 1}
 in
    proc {$ S}
-      {FD.tuple sequence N 0#N-1 S}
+      {GFD.tuple sequence N 0#N-1 S}
       {For 0 N-1 1 
-       proc {$ I} {FD.exactly S.(I+1) S I} end}
+       proc {$ I} {GFD.countP post(S I '=:' S.(I+1) cl:val)} end}
       %% redundant constraints
-      {FD.sum S '=:' N}
-      {FD.sumC Cs S '=:' 0}
+      {GFD.linearP post(S '=:' N)}
+      {GFD.linearP post(Cs S '=:' 0)}
       %%
-      {FD.distribute ff S}
+      {GFD.distribute ff S}
    end
 end
 </chunk>

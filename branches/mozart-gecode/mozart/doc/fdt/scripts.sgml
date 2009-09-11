@@ -151,14 +151,14 @@ fun {Queens N}
       L1N ={MakeTuple c N} 
       LM1N={MakeTuple c N}
    in
-      {FD.tuple queens N 1#N Row}
+      {GFD.tuple queens N 1#N Row}
       {For 1 N 1 proc {$ I}
                     L1N.I=I LM1N.I=~I
                  end}
-      {FD.distinct Row}
-      {FD.distinctOffset Row LM1N}
-      {FD.distinctOffset Row L1N}
-      {FD.distribute generic(value:mid) Row}
+      {GFD.distinctP post(Row)}
+      {GFD.distinctP post(Row LM1N)}
+      {GFD.distinctP post(Row L1N)}
+      {GFD.distribute generic(value:mid) Row}
    end
 end
 </chunk>
@@ -180,9 +180,9 @@ model.
 <p>
 The statements
 <<<
-{FD.distinct Row}
-{FD.distinctOffset Row LM1N}
-{FD.distinctOffset Row L1N}
+{GFD.distinctP post(Row)}
+{GFD.distinctP post(Row LM1N)}
+{GFD.distinctP post(Row L1N)}
 >>>
 create propagators for the constraints stating
 that the sequences
@@ -257,10 +257,10 @@ fun {ChangeMoney BillsAndCoins Amount}
    NbDenoms     = {Width Denomination}
 in
    proc {$ Change}
-      {FD.tuple change NbDenoms 0#Amount Change}
+      {GFD.tuple change NbDenoms 0#Amount Change}
       {For 1 NbDenoms 1 proc {$ I} Change.I =<: Available.I end}
-      {FD.sumC Denomination Change '=:' Amount}
-      {FD.distribute generic(order:naive value:max) Change}
+      {GFD.linearP post(Denomination Change '=:' Amount)}
+      {GFD.distribute generic(order:naive value:max) Change}
    end
 end
 

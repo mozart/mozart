@@ -51,10 +51,10 @@ parameterized script.
   <title/Problem Specification/
 
 <p>
-Given a map showing the West European countries
-Netherlands, Belgium, France, Spain, Portugal,
-Germany, Luxemburg, Switzerland, Austria, and
-Italy, find a coloring such that neighboring
+Given a map showing the Latin American countries
+Panama, Ecuador, Peru, Venezuela, Brasil,
+Bolivia, Chile, Uruguay, Paraguay, Argentina and Colombia,
+find a coloring such that neighboring
 countries have different color and a minimal
 number of colors is used.
 
@@ -92,27 +92,29 @@ in
    proc {$ Color}
       NbColors  = {FD.decl}
    in
-      {FD.distribute naive [NbColors]}
+      {GFD.distribute naive [NbColors]}
       %% Color: Countries --> 1#NbColors
-      {FD.record color Countries 1#NbColors Color}
+      {GFD.record color Countries 1#NbColors Color}
       {ForAll Data
        proc {$ A#Bs}
 	  {ForAll Bs proc {$ B} Color.A \=: Color.B end}
        end}
-      {FD.distribute ff Color}
+      {GFD.distribute ff Color}
    end
 end
 
-Data = [ austria     # [italy switzerland germany]
-	 belgium     # [france netherlands germany luxemburg]
-	 france      # [spain luxemburg italy]
-	 germany     # [austria france luxemburg netherlands]
-	 italy       # nil
-	 luxemburg   # nil
-	 netherlands # nil
-	 portugal    # nil
-	 spain       # [portugal]
-	 switzerland # [italy france germany austria] ]
+Data = [ colombia    # [panama ecuador peru venezuela brasil]
+         peru        # [ecuador brasil colombia bolivia chile]
+         argentina   # [chile uruguay paraguay bolivia] 
+         chile       # [peru bolivia argentina]
+         paraguay    # [bolivia argentina brasil]
+         brasil      # [bolivia venezuela]
+	 uruguay     # nil
+	 paraguay    # nil
+	 bolivia     # nil
+	 venezuela   # nil
+	 panama      # nil]
+
 </chunk>
 </figure>
 
@@ -147,16 +149,16 @@ the first-fail strategy.
 <p>
 The statement
 <<<
-{ExploreOne {MapColoring Data}}
+{SearchOne {MapColoring Data}}
 >>>
 will show the search tree explored to find the
 first solution, which looks as follows:
 <<<
 color(
-   austria:     1   belgium:  3   france:    1  
-   germany:     2   italy:    2   luxemburg: 4  
-   netherlands: 1   portugal: 1   spain:     2  
-   switzerland: 3 
+     argentina:   1  bolivia:    2   brasil:   1
+     chile:       3  colombia:   2   ecuador:  1
+     panama:      1  paraguay:   3   peru:     4
+     uruguay:     2  venezuela:  3
      )
 >>>
 The search tree of <<MapColoring>> is interesting.
@@ -174,7 +176,7 @@ not matter.
 
 <p>
 This example will employ the constraint provided
-by <<FD.atMost>>.
+by <<GFD.countP>>.
 
 <subsection class=unnumbered>
   <title/Problem Specification/
@@ -260,14 +262,14 @@ fun {Conference Data}
    MinNbSlots    = NbSessions div NbParSessions
 in
    proc {$ Plan}
-      NbSlots  = {FD.int MinNbSlots#NbSessions}
+      NbSlots  = {GFD.int MinNbSlots#NbSessions}
    in
-      {FD.distribute naive [NbSlots]}
+      {GFD.distribute naive [NbSlots]}
       %% Plan: Session --> Slot
-      {FD.tuple plan NbSessions 1#NbSlots Plan}
+      {GFD.tuple plan NbSessions 1#NbSlots Plan}
       %% at most NbParSessions per slot
       {For 1 NbSlots 1  
-       proc {$ Slot} {FD.atMost NbParSessions Plan Slot} end}
+       proc {$ Slot} {GFD.countP post(Plan Slot '=<:' NbParSessions)} end}
       %% impose constraints
       {ForAll Constraints
        proc {$ C}
@@ -278,7 +280,7 @@ in
 	     {ForAll Ys proc {$ Y} Plan.X \=: Plan.Y end}
 	  end
        end}
-      {FD.distribute ff Plan}
+      {GFD.distribute ff Plan}
    end
 end
 
@@ -317,7 +319,7 @@ Plan}_i/ of the model.
 <p>
 The statement
 <<<
-{FD.atMost NbParSessions Plan Slot}
+{GFD.countP post(Plan Slot '=<:' NbParSessions)}
 >>>
 creates a propagator for a constraint saying that
 at most <<NbParSessions>> components of <<Plan>>
