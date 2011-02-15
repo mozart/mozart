@@ -1,0 +1,37 @@
+#! /bin/bash
+zeroes=0000000000000000000000000000000000000000
+case $1 in
+    "-l")
+	cat subprojects | cut '-d ' -f1 | sort -u
+	;;
+    "-i")
+	join -j2 <(cat subprojects | grep "^$2 "| cut '-d ' -f2- | sed 's_ \(.*\)_ refs/fromSvnByPath/\1/c_' | sort -k2b,2) <(cat references | sort -k2b,2) | cut '-d ' -f2- |
+	while read ref sha
+	do
+	    git update-ref $ref $sha $zeroes
+	done
+	;;
+    "-u")
+	join -j2 <(cat subprojects | grep "^$2 "| cut '-d ' -f2- | sed 's_ \(.*\)_ refs/fromSvnByPath/\1/c_' | sort -k2b,2) <(cat references | sort -k2b,2) | cut '-d ' -f2- |
+	while read ref sha
+	do
+	    git update-ref -d $ref $sha
+	done
+	;;
+    *)
+	echo <<EOF
+Usage:
+
+retarget -l
+   Lists all subprojects.
+retarget -i <subproject>
+   Creates all heads and tags corresponding to <subproject>
+   if they don't exist.
+retarget -u <subproject>
+   Removes all the heads and tags corresponding to <subproject>,
+   only if they still have their original values.
+retarget -h
+   Displays this help message.
+EOF
+	;;
+esac

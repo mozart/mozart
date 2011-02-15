@@ -1,0 +1,124 @@
+contrib heads/master trunk/contrib
+
+CVSROOT heads/master trunk/CVSROOT
+CVSROOT tags/mozart-1-1-0 tags/mozart-1-1-0/CVSROOT
+CVSROOT tags/RelMM00 tags/RelMM00/CVSROOT
+
+gtk-canvas heads/master trunk/gtk-canvas
+gtk-canvas heads/v-0 branches/v-0/gtk-canvas
+gtk-canvas tags/mozart-1-2-5-r1 tags/mozart-1-2-5-r1/gtk-canvas
+gtk-canvas tags/mozart-1-2-5 tags/mozart-1-2-5/gtk-canvas
+gtk-canvas tags/mozart-1-3-0 tags/mozart-1-3-0/gtk-canvas
+gtk-canvas tags/r-0 tags/r-0/gtk-canvas
+
+meps heads/master trunk/meps
+meps heads/meps-vendor-0 branches/meps-vendor-0/meps
+meps tags/meps-release-0 tags/meps-release-0/meps
+
+mogul heads/master trunk/mogul
+mogul heads/mogulcvs branches/mogulcvs/mogul
+mogul heads/new-regime-2004-05-03 branches/new-regime-2004-05-03/mogul
+mogul tags/start tags/start/mogul
+
+mozart-contrib heads/master trunk/mozart-contrib
+mozart-contrib heads/mozart-1-2-0-fixes branches/mozart-1-2-0-fixes/mozart-contrib
+mozart-contrib heads/mozart-1-3-0-pthread branches/mozart-1-3-0-pthread/mozart-contrib
+mozart-contrib tags/mozart-1-0-0 tags/mozart-1-0-0/mozart-contrib
+mozart-contrib tags/mozart-1-0-1 tags/mozart-1-0-1/mozart-contrib
+mozart-contrib tags/mozart-1-1-0-rc1 tags/mozart-1-1-0-rc1/mozart-contrib
+mozart-contrib tags/mozart-1-1-0 tags/mozart-1-1-0/mozart-contrib
+mozart-contrib tags/mozart-1-2-0-pre0 tags/mozart-1-2-0-pre0/mozart-contrib
+mozart-contrib tags/mozart-1-2-0-pre1 tags/mozart-1-2-0-pre1/mozart-contrib
+mozart-contrib tags/mozart-1-2-0-pre2 tags/mozart-1-2-0-pre2/mozart-contrib
+mozart-contrib tags/mozart-1-2-0 tags/mozart-1-2-0/mozart-contrib
+mozart-contrib tags/mozart-1-2-1 tags/mozart-1-2-1/mozart-contrib
+mozart-contrib tags/mozart-1-2-2-a tags/mozart-1-2-2-a/mozart-contrib
+mozart-contrib tags/mozart-1-2-2 tags/mozart-1-2-2/mozart-contrib
+mozart-contrib tags/mozart-1-2-3-a tags/mozart-1-2-3-a/mozart-contrib
+mozart-contrib tags/mozart-1-2-3 tags/mozart-1-2-3/mozart-contrib
+mozart-contrib tags/mozart-contrib-devel tags/mozart-contrib-devel/mozart-contrib
+
+mozart-gtk heads/master trunk/mozart-gtk
+mozart-gtk heads/v-0 branches/v-0/mozart-gtk
+mozart-gtk tags/mozart-1-2-5-gtk-r1 tags/mozart-1-2-5-gtk-r1/mozart-gtk
+mozart-gtk tags/mozart-1-2-5-r1 tags/mozart-1-2-5-r1/mozart-gtk
+mozart-gtk tags/mozart-1-2-5 tags/mozart-1-2-5/mozart-gtk
+mozart-gtk tags/mozart-1-3-0 tags/mozart-1-3-0/mozart-gtk
+mozart-gtk tags/r-0 tags/r-0/mozart-gtk
+
+mozart heads/devel-without-gcc3 branches/devel-without-gcc3/mozart
+mozart heads/gtk-devel branches/gtk-devel/mozart
+mozart heads/inline-opcode-map branches/inline-opcode-map/mozart
+mozart heads/inline-opcode-map-v2 branches/inline-opcode-map-v2/mozart
+mozart heads/master trunk/mozart
+mozart heads/mozart-1-2-0-fixes branches/mozart-1-2-0-fixes/mozart
+mozart heads/mozart-1-2-0-gcc-3-2 branches/mozart-1-2-0-gcc-3-2/mozart
+mozart heads/mozart-1-3-0-fixes branches/mozart-1-3-0-fixes/mozart
+mozart heads/mozart-1-3-0-gcc-3-2 branches/mozart-1-3-0-gcc-3-2/mozart
+mozart heads/mozart-1-3-0-pthread branches/mozart-1-3-0-pthread/mozart
+mozart heads/mozart-1-4-x branches/mozart-1-4-x/mozart
+mozart heads/mozart-gecode branches/mozart-gecode/mozart
+mozart heads/mozart-pthread branches/mozart-pthread
+mozart heads/mozdss-branch branches/mozdss-branch/mozart
+mozart heads/new-byneed-branch branches/new-byneed-branch/mozart
+mozart heads/oz-1-9-9 branches/oz-1-9-9/mozart
+mozart heads/oz2 branches/oz2/mozart
+mozart heads/oz-devel branches/oz-devel/mozart
+mozart heads/SICS_EXP branches/SICS_EXP/mozart
+mozart tags/alice-release tags/alice-release/mozart
+mozart tags/mozart-1-0-0 tags/mozart-1-0-0/mozart
+mozart tags/mozart-1-0-1 tags/mozart-1-0-1/mozart
+mozart tags/mozart-1-1-0-rc1 tags/mozart-1-1-0-rc1/mozart
+mozart tags/mozart-1-1-0 tags/mozart-1-1-0/mozart
+mozart tags/mozart-1-2-0-pre0 tags/mozart-1-2-0-pre0/mozart
+mozart tags/mozart-1-2-0-pre1 tags/mozart-1-2-0-pre1/mozart
+mozart tags/mozart-1-2-0-pre2 tags/mozart-1-2-0-pre2/mozart
+mozart tags/mozart-1-2-0 tags/mozart-1-2-0/mozart
+mozart tags/mozart-1-2-1 tags/mozart-1-2-1/mozart
+mozart tags/mozart-1-2-2-a tags/mozart-1-2-2-a/mozart
+mozart tags/mozart-1-2-2 tags/mozart-1-2-2/mozart
+mozart tags/mozart-1-2-3-a tags/mozart-1-2-3-a/mozart
+mozart tags/mozart-1-2-3 tags/mozart-1-2-3/mozart
+mozart tags/mozart-1-2-4 tags/mozart-1-2-4/mozart
+mozart tags/mozart-1-2-5-r1 tags/mozart-1-2-5-r1/mozart
+mozart tags/mozart-1-2-5-rc1 tags/mozart-1-2-5-rc1/mozart
+mozart tags/mozart-1-2-5 tags/mozart-1-2-5/mozart
+mozart tags/mozart-1-3-0 tags/mozart-1-3-0/mozart
+mozart tags/mozart-1-3-1 tags/mozart-1-3-1/mozart
+mozart tags/mozart-1-3-2 tags/mozart-1-3-2/mozart
+mozart tags/mozart-1-4-0 tags/mozart-1-4-0/mozart
+mozart tags/new-byneed-orig tags/new-byneed-orig/mozart
+mozart tags/OzRelease0-5-14d tags/OzRelease0-5-14d/mozart
+mozart tags/preGYStackSpaceLeakFixes tags/preGYStackSpaceLeakFixes/mozart
+mozart tags/pre-mozdss tags/pre-mozdss/mozart
+mozart tags/preThreadCounting tags/preThreadCounting/mozart
+mozart tags/Rel-3-0-10 tags/Rel-3-0-10/mozart
+
+mozart-site heads/master trunk/mozart-site
+mozart-site heads/v-0 branches/v-0/mozart-site
+mozart-site tags/r-0 tags/r-0/mozart-site
+
+mozart-stdlib heads/devel-0 branches/devel-0/mozart-stdlib
+mozart-stdlib heads/instances-2004-03-19 branches/instances-2004-03-19/mozart-stdlib
+mozart-stdlib heads/master trunk/mozart-stdlib
+mozart-stdlib tags/alice-release tags/alice-release/mozart-stdlib
+mozart-stdlib tags/mozart-1-2-3 tags/mozart-1-2-3/mozart-stdlib
+mozart-stdlib tags/mozart-1-2-4 tags/mozart-1-2-4/mozart-stdlib
+mozart-stdlib tags/mozart-1-2-5-r1 tags/mozart-1-2-5-r1/mozart-stdlib
+mozart-stdlib tags/mozart-1-2-5-rc1 tags/mozart-1-2-5-rc1/mozart-stdlib
+mozart-stdlib tags/mozart-1-2-5 tags/mozart-1-2-5/mozart-stdlib
+mozart-stdlib tags/mozart-1-3-0 tags/mozart-1-3-0/mozart-stdlib
+mozart-stdlib tags/mozart-1-3-1 tags/mozart-1-3-1/mozart-stdlib
+mozart-stdlib tags/mozart-1-3-2 tags/mozart-1-3-2/mozart-stdlib
+mozart-stdlib tags/mozart-1-4-0 tags/mozart-1-4-0/mozart-stdlib
+mozart-stdlib tags/mozart-stdlib-1-0-0 tags/mozart-stdlib-1-0-0/mozart-stdlib
+mozart-stdlib tags/mozart-stdlib-debian-20060615-4 tags/mozart-stdlib-debian-20060615-4
+
+NSST-Satisfiability heads/master trunk/NSST-Satisfiability
+NSST-Satisfiability heads/NSST-Satisfiability branches/NSST-Satisfiability/NSST-Satisfiability
+NSST-Satisfiability tags/draft tags/draft/NSST-Satisfiability
+NSST-Satisfiability tags/merde tags/merde/NSST-Satisfiability
+
+portage heads/master trunk/portage
+
+svn heads/master whole

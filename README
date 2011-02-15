@@ -1,0 +1,32 @@
+This is the conversion of the Mozart repository from svn to git.
+
+The original svn was not in the format expected by git-svn. In particular,
+git-svn  expect:
+
+<subproject>/trunk/<files>
+<subproject>/branches/<branch>/<files>
+<subproject>/tags/<tag>/<files>
+
+and we were much closer to:
+
+trunk/<subproject>/<files>
+branches/<branch>/<subproject>/<files>
+tags/<tag>/<subproject>/<files>
+
+except that a few branches & tags where of the form
+
+branches/<branch>/<files>
+tags/<tag>/<files>
+
+with an implicit subproject.
+One branch even started as branches/<branch>/<files> before being moved to branches/<branch>/<subproject>/<files>.
+The conversion was done by using:
+
+git svn init -T/ --username mozart https://gforge.info.ucl.ac.be/svn/mozart/
+git svn fetch
+
+which produced a purely linear history of the repository. Scripts where then used to produce histories for each subproject.
+The files can be found in conv-tools but are not intended for generic use as they were designed as one-offs.
+
+The retarget script is intended to reconfigure the git repository it's called from into one for some subproject of the Mozart repository. See "retarget -h" for details.
+Any comments are welcomed on the hackers@mozart-oz.org mailing-list.

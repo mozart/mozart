@@ -1,0 +1,77 @@
+#! /bin/bash
+P=../infos2/f
+S=../infos2
+R=refs/fromSvnByPath
+zeroes=0000000000000000000000000000000000000000
+truncate -s0 $P/tracked
+git log '--pretty=format:%h %H' > $P/commitsShortLong
+echo >> $P/commitsShortLong
+git log '--pretty=format:%H' > $P/commitsLong
+echo >> $P/commitsLong
+join <(sort $P/commitsShortLong) <(sort $S/sourcesHandMod) | cut '-d ' -f2- > $P/sourcesL
+tac $P/commitsLong | 
+while read commit
+do
+    grep $commit $P/sourcesL | cut '-d ' -f2- |
+    while read p1 p2
+    do
+	if [ "x$p2" =  "x" ]; then
+	    echo add $p1
+	    theCommit=$(
+		export GIT_AUTHOR_NAME=`git log '--pretty=format:%an' $commit^..$commit`
+		export GIT_AUTHOR_EMAIL=`git log '--pretty=format:%ae' $commit^..$commit`
+		export GIT_AUTHOR_DATE=`git log '--pretty=format:%ai' $commit^..$commit`
+		export GIT_COMMITTER_NAME=`git log '--pretty=format:%cn' $commit^..$commit`
+		export GIT_COMMITTER_EMAIL=`git log '--pretty=format:%ce' $commit^..$commit`
+		export GIT_COMMITTER_DATE=`git log '--pretty=format:%ci' $commit^..$commit`
+		git log '--pretty=format:%B' $commit^..$commit | git commit-tree $commit:$p1
+	    )
+	else
+	    echo add $p1 from $p2
+	    theCommit=$(git show-ref -s $R/$p2/c)
+	fi
+	git update-ref $R/$p1/p $theCommit $zeroes
+	git update-ref $R/$p1/c $theCommit $zeroes
+	echo $p1 >> $P/tracked
+    done
+    cat $P/tracked |
+    while read p
+    do
+	if git diff-tree --quiet $R/$p/c $commit:$p; then
+	    true
+	else
+	    theCommit=$(
+		export GIT_AUTHOR_NAME=`git log '--pretty=format:%an' $commit^..$commit`
+		export GIT_AUTHOR_EMAIL=`git log '--pretty=format:%ae' $commit^..$commit`
+		export GIT_AUTHOR_DATE=`git log '--pretty=format:%ai' $commit^..$commit`
+		export GIT_COMMITTER_NAME=`git log '--pretty=format:%cn' $commit^..$commit`
+		export GIT_COMMITTER_EMAIL=`git log '--pretty=format:%ce' $commit^..$commit`
+		export GIT_COMMITTER_DATE=`git log '--pretty=format:%ci' $commit^..$commit`
+		git log '--pretty=format:%B' $commit^..$commit | git commit-tree $commit:$p -p $R/$p/c
+	    )
+	    git update-ref $R/$p/c $theCommit
+	fi
+    done
+done
+#This next commit contains non-trivial log-message but no real change.
+commit=01ab45ed3fd62b43bb7c461e22b7f0be4dbbc72f
+theCommit=$(
+    export GIT_AUTHOR_NAME=`git log '--pretty=format:%an' $commit^..$commit`
+    export GIT_AUTHOR_EMAIL=`git log '--pretty=format:%ae' $commit^..$commit`
+    export GIT_AUTHOR_DATE=`git log '--pretty=format:%ai' $commit^..$commit`
+    export GIT_COMMITTER_NAME=`git log '--pretty=format:%cn' $commit^..$commit`
+    export GIT_COMMITTER_EMAIL=`git log '--pretty=format:%ce' $commit^..$commit`
+    export GIT_COMMITTER_DATE=`git log '--pretty=format:%ci' $commit^..$commit`
+    git log '--pretty=format:%B' $commit^..$commit | git commit-tree $commit:tags/mozart-stdlib-debian-20060615-4 -p $R/tags/mozart-stdlib-debian-20060615-4/c
+)
+git update-ref $R/tags/mozart-stdlib-debian-20060615-4/c $theCommit
+
+echo "Merging in all the heads and tags to force them as part of the history." |
+git update-ref refs/tags/wholeSvnHistory $(git commit-tree $(echo -e "100644 blob $(git show-ref | git hash-object -w --stdin)\treferences" | git mktree) $(cat ../infos2/f/tracked | sed "s_^.*\$_-p $R/\0/c_" | tr '\n' ' ') -p master)
+
+cat $P/tracked |
+while read p
+do
+    git update-ref -d $R/$p/c
+    git update-ref -d $R/$p/p
+done
