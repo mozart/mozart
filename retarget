@@ -19,7 +19,7 @@ case $1 in
 	done
 	;;
     *)
-	echo <<EOF
+	cat <<EOF
 Usage:
 
 retarget -l
