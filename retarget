@@ -8,14 +8,14 @@ case $1 in
 	join -j2 <(cat subprojects | grep "^$2 "| cut '-d ' -f2- | sed 's_ \(.*\)_ refs/fromSvnByPath/\1/c_' | sort -k2b,2) <(cat references | sort -k2b,2) | cut '-d ' -f2- |
 	while read ref sha
 	do
-	    git update-ref $ref $sha $zeroes
+	    git update-ref refs/$ref $sha $zeroes
 	done
 	;;
     "-u")
 	join -j2 <(cat subprojects | grep "^$2 "| cut '-d ' -f2- | sed 's_ \(.*\)_ refs/fromSvnByPath/\1/c_' | sort -k2b,2) <(cat references | sort -k2b,2) | cut '-d ' -f2- |
 	while read ref sha
 	do
-	    git update-ref -d $ref $sha
+	    git update-ref -d refs/$ref $sha
 	done
 	;;
     *)
