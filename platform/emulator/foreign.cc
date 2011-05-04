@@ -1366,8 +1366,13 @@ char* OZ_vsToC(OZ_Term t,int*n)
     return null;
   }
   else if (OZ_isAtom(t)) {
+    int len;
     s = dropConst(OZ_atomToC(t));
-    if (n!=0) *n = strlen(s);
+    len = strlen(s);
+    if (len == 1 && s[0] == '#') {
+      s = OZ_virtualStringToC(t, &len);
+    }
+    if (n!=0) *n = len;
   } else {
     // Do not use bytestring directly, they are not null terminated! CS
     s = OZ_virtualStringToC(t,n);
