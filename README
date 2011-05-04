@@ -10,6 +10,16 @@ with some brief information for what you plan to use Mozart.
 
 Have lots of fun!
 
+Fast track compilation for Ubuntu.
+----------------------------------
+
+$ sudo apt-get install tk-dev tcl-dev build-essential libc6-dev g++-multilib ia32-libs lib32z1-dev lib32gmp3-dev
+$ git clone git://github.com/mozart/mozart
+$ mkdir build
+$ cd build
+$ ../mozart/configure
+$ make
+
 Installation.
 -------------
 
