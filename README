@@ -12,13 +12,29 @@ Have lots of fun!
 
 Fast track compilation for Ubuntu.
 ----------------------------------
-
 $ sudo apt-get install tk-dev tcl-dev build-essential libc6-dev g++-multilib ia32-libs lib32z1-dev lib32gmp3-dev
-$ git clone git://github.com/mozart/mozart
+$ mkdir ~/oz
+$ mkdir -p ~/dev/mozart
+$ cd ~/dev/mozart
+$ git clone git://github.com/mozart/mozart.git
 $ mkdir build
 $ cd build
-$ ../mozart/configure
-$ make
+$ ../mozart/configure --prefix=/home/<username>/oz
+$ make && make install
+
+Fast track compilation for OS X
+-------------------------------
+install homebrew https://github.com/mxcl/homebrew + xcode dependency
+$ brew install git emacs gmp gdbm zlib
+$ mkdir ~/oz
+$ mkdir -p ~/dev/mozart
+$ cd ~/dev/mozart
+$ git clone git://github.com/mozart/mozart.git
+$ mkdir build 
+$ cd build
+$ ../mozart/configure --prefix=/Users/<username>/oz
+$ make && make install
+
 
 Installation.
 -------------
