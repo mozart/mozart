@@ -35,7 +35,6 @@ $ cd build
 $ ../mozart/configure --prefix=/Users/<username>/oz
 $ make && make install
 
-
 Installation.
 -------------
 
