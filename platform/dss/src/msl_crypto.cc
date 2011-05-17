@@ -35,6 +35,7 @@
 #ifdef WIN32
 #define random rand
 #define srandom srand
+#include <windows.h>
 #endif
 
 namespace _msl_internal{ //Start namespace
@@ -113,7 +114,51 @@ namespace _msl_internal{ //Start namespace
     static mpz_t s_v;
 #endif
     static gmp_randstate_t s_state;
-    
+
+#ifdef WIN32
+    // return: success
+    bool createSeedWithRtlGenRandom(BYTE* bytes) {
+      HMODULE hLib=LoadLibrary("ADVAPI32.DLL");
+      if (!hLib) {
+	fprintf(stderr, "WARNING: msl_cypto.cc, could not load ADVAPI32.DLL\n");
+	return false;
+      }
+      BOOLEAN (APIENTRY *pfn)(void*, ULONG) = 
+	(BOOLEAN (APIENTRY *)(void*,ULONG))GetProcAddress(hLib,"SystemFunction036");
+      if (!pfn) {
+	FreeLibrary(hLib);
+	fprintf(stderr, "WARNING: msl_cypto.cc, could not access RtlGenRandom.\n");
+	return false;
+      }
+      if(!pfn(bytes,4)) {
+	FreeLibrary(hLib);
+	  fprintf(stderr, "WARNING: msl_cypto.cc, call to RtlGenRandom failed.\n");
+	  return false;
+      }
+      FreeLibrary(hLib);
+      return true;
+    }
+#endif
+
+    u32
+    getSeed(){
+      BYTE bytes[4];
+#ifdef WIN32
+      if (!createSeedWithRtlGenRandom(bytes)) {
+	// RtlGenRandom does not exist in Windows 2000 and older
+	return
+	  static_cast<u32>(GetCurrentProcessId())
+	  ^ static_cast<u32>( GetTickCount() << 16 );
+      }
+#else
+      //get four random bytes from random device
+      FILE* fp;
+      fp = fopen("/dev/random","r");
+      for (unsigned int i=0; i < 4; ++i){ bytes[i] = fgetc(fp); }
+      fclose(fp);
+#endif
+      return gf_char2integer(bytes);
+    }    
   }
 
   MD5 md5;
@@ -121,14 +166,7 @@ namespace _msl_internal{ //Start namespace
 
   void
   randomize_crypto(){
-    //get unsigned seed from random device
-    FILE* fp;
-    u32 seed(0);
-    BYTE bytes[4];
-    fp = fopen("/dev/random","r");
-    for (unsigned int i=0; i < 4; ++i){ bytes[i] = fgetc(fp); }
-    seed = gf_char2integer(bytes);
-    fclose(fp);
+    u32 seed = getSeed();
     gmp_randinit_default(s_state);
     gmp_randseed_ui(s_state,seed);
 
