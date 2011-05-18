@@ -1,13 +1,4 @@
 *~
 Makefile
 oz3
-config.cache
-config.log
-config.status
-platform/config.log
-platform/config.status
-platform/dss/Makefile.vars
-platform/dss/config.log
-platform/dss/config.status
-platform/emulator/confdefs.h
-platform/emulator/config.log
+*.orig
