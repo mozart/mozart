@@ -10,6 +10,8 @@ with some brief information for what you plan to use Mozart.
 
 Have lots of fun!
 
+
+
 Fast track compilation for Ubuntu.
 ----------------------------------
 $ sudo apt-get install tk-dev tcl-dev build-essential libc6-dev g++-multilib ia32-libs lib32z1-dev lib32gmp3-dev libgdbm-dev
@@ -21,6 +23,9 @@ $ mkdir build
 $ cd build
 $ ../mozart/configure --prefix=/home/<username>/oz
 $ make && make install
+amend and append the below to your ~/.profile file
+export OZHOME=/home/<username>/oz
+export PATH=$PATH:$OZHOME/bin
 
 Fast track compilation for OS X
 -------------------------------
@@ -34,6 +39,9 @@ $ mkdir build
 $ cd build
 $ ../mozart/configure --prefix=/Users/<username>/oz
 $ make && make install
+amend and append the below to the ~/.bash_profile file
+export OZHOME=/Users/<username>/oz
+export PATH=$PATH:$OZHOME/bin
 
 Installation.
 -------------
