@@ -1,25 +1,25 @@
 /*
  *  Authors:
  *    Zacharias El Banna (zeb@sics.se)
- * 
+ *
  *  Contributors:
  *    optional, Contributor's name (Contributor's email address)
- * 
+ *
  *  Copyright:
  *    Organization or Person (Year(s))
- * 
+ *
  *  Last change:
  *    $Date$ by $Author$
  *    $Revision$
- * 
- *  This file is part of Mozart, an implementation 
+ *
+ *  This file is part of Mozart, an implementation
  *  of Oz 3:
  *     http://www.mozart-oz.org
- * 
+ *
  *  See the file "LICENSE" or
  *     http://www.mozart-oz.org/LICENSE.html
- *  for information on usage and redistribution 
- *  of this file, and for a DISCLAIMER OF ALL 
+ *  for information on usage and redistribution
+ *  of this file, and for a DISCLAIMER OF ALL
  *  WARRANTIES.
  *
  */
@@ -35,6 +35,7 @@
 #ifdef WIN32
 #define random rand
 #define srandom srand
+#include <windows.h>
 #endif
 
 namespace _msl_internal{ //Start namespace
@@ -46,7 +47,7 @@ namespace _msl_internal{ //Start namespace
   void t_swap(T& t1, T& t2){
     T tmp = t1; t1 = t2; t2 = tmp;
   }
-  
+
   // Create an integer2char, taking int and BYTE*
   inline void gf_integer2char(BYTE* const buf, const u32& e){
 #ifdef BIG_ENDIAN_HOST
@@ -55,7 +56,7 @@ namespace _msl_internal{ //Start namespace
     *reinterpret_cast<u32*>(buf) = e;
 #endif
   }
-  
+
   inline void gf_char2integer(u32& e, BYTE* const buf){
 #ifdef BIG_ENDIAN_HOST
     e = buf[3] << 24 | buf[2] << 16 | buf[1] << 8 | buf[0];
@@ -70,22 +71,22 @@ namespace _msl_internal{ //Start namespace
     return *reinterpret_cast<u32*>(buf);
 #endif
   }
-  
+
 #endif //STAND_ALONE_TEST
 
 
   inline void gf_printMPZ(mpz_t p){
     printf("S:%d A:%d: ",p->_mp_size, p->_mp_alloc);
     for (int i = 0; i < p->_mp_size; ++i)
-      printf("%08x",static_cast<int>(p->_mp_d[i]));    
+      printf("%08x",static_cast<int>(p->_mp_d[i]));
     printf(" :\n");
   }
 
 
   // ******************************** MISC **************************************
   namespace{
- 
-    
+
+
     const int NO_OF_PRIMES=109;
     // r * k = x * 10,  (-1 since we don't have 2)
     const u32 primes[NO_OF_PRIMES] = {
@@ -113,7 +114,51 @@ namespace _msl_internal{ //Start namespace
     static mpz_t s_v;
 #endif
     static gmp_randstate_t s_state;
-    
+
+#ifdef WIN32
+    // return: success
+    bool createSeedWithRtlGenRandom(BYTE* bytes) {
+      HMODULE hLib=LoadLibrary("ADVAPI32.DLL");
+      if (!hLib) {
+	fprintf(stderr, "WARNING: msl_cypto.cc, could not load ADVAPI32.DLL\n");
+	return false;
+      }
+      BOOLEAN (APIENTRY *pfn)(void*, ULONG) =
+	(BOOLEAN (APIENTRY *)(void*,ULONG))GetProcAddress(hLib,"SystemFunction036");
+      if (!pfn) {
+	FreeLibrary(hLib);
+	fprintf(stderr, "WARNING: msl_cypto.cc, could not access RtlGenRandom.\n");
+	return false;
+      }
+      if(!pfn(bytes,4)) {
+	FreeLibrary(hLib);
+	  fprintf(stderr, "WARNING: msl_cypto.cc, call to RtlGenRandom failed.\n");
+	  return false;
+      }
+      FreeLibrary(hLib);
+      return true;
+    }
+#endif
+
+    u32
+    getSeed(){
+      BYTE bytes[4];
+#ifdef WIN32
+      if (!createSeedWithRtlGenRandom(bytes)) {
+	// RtlGenRandom does not exist in Windows 2000 and older
+	return
+	  static_cast<u32>(GetCurrentProcessId())
+	  ^ static_cast<u32>( GetTickCount() << 16 );
+      }
+#else
+      //get four random bytes from random device
+      FILE* fp;
+      fp = fopen("/dev/random","r");
+      for (unsigned int i=0; i < 4; ++i){ bytes[i] = fgetc(fp); }
+      fclose(fp);
+#endif
+      return gf_char2integer(bytes);
+    }
   }
 
   MD5 md5;
@@ -121,14 +166,7 @@ namespace _msl_internal{ //Start namespace
 
   void
   randomize_crypto(){
-    //get unsigned seed from random device
-    FILE* fp;
-    u32 seed(0);
-    BYTE bytes[4];
-    fp = fopen("/dev/random","r");
-    for (unsigned int i=0; i < 4; ++i){ bytes[i] = fgetc(fp); }
-    seed = gf_char2integer(bytes);
-    fclose(fp);
+    u32 seed = getSeed();
     gmp_randinit_default(s_state);
     gmp_randseed_ui(s_state,seed);
 
@@ -183,7 +221,7 @@ namespace _msl_internal{ //Start namespace
 
   // SEC-TODO: FIX THIS WHEN GOING REAL!!!
 
-  void 
+  void
   generate_garbage(BYTE* dest, size_t len){
     if(len > 0){
       BYTE* end = (dest + len);
@@ -219,7 +257,7 @@ namespace _msl_internal{ //Start namespace
 
   inline void mp_move(mpz_t rop, BYTE* inp, int n_bytes){
     memcpy(reinterpret_cast<BYTE*>(&(rop->_mp_d[0])),inp, n_bytes);
-    
+
     //int n_limbs = n_bytes / LIMB_BYTES;
     //Assert(rop->_mp_size == n_limbs);
     //for (int i = 0; i < n_limbs; ++i)
@@ -285,7 +323,7 @@ namespace _msl_internal{ //Start namespace
 
   RSA_public::~RSA_public(){
 #ifdef CRYPTO_ENABLED
-    mpz_clear(n); 
+    mpz_clear(n);
 #else
     delete [] n;
 #endif
@@ -318,21 +356,21 @@ namespace _msl_internal{ //Start namespace
     mpz_init2(dp, PRIME_BITS);   mpz_init2(dq, PRIME_BITS);
     mpz_init2(p_1,PRIME_BITS + LIMB_BITS);   mpz_init2(q_1,PRIME_BITS + LIMB_BITS);
     mpz_init2(u,  PRIME_BITS);   mpz_init2(d,  CIPHER_BLOCK_BITS);
-    
+
     generate_prime(p, PRIME_BITS); // p
     generate_prime(q, PRIME_BITS); // q
     mpz_sub_ui(p_1, p, 1);  mpz_sub_ui(q_1, q, 1);
-    
+
     mpz_mul(n,p,q); // n
-    
+
     // public key
     while ( mpz_gcd_ui(NULL,p_1,e) != 1 || mpz_gcd_ui(NULL,q_1,e) != 1 ) e += 2;
-    
+
     mpz_mul(u, p_1, q_1);
     mpz_set_ui(dp,e);
     mpz_invert(d, dp, u); // d, e, ((p-1)*(q-1)) , here we could test that mpz_inverts doesn't return 0
     // .. d is now private key
-    
+
     //cached values: CRT
     mpz_invert(u,q,p);
     mpz_mod(dp,d,p_1);
@@ -389,16 +427,16 @@ namespace _msl_internal{ //Start namespace
     mpz_powm(s_a, s_v, dp, p);
     mpz_mod( s_v, s_plain, q);
     mpz_powm(s_b, s_v, dq, q);
-  
+
     if(mpz_cmp(s_a,s_b) < 0) // a < b
       mpz_add(s_a,s_a,p);
-  
+
     //  x = b + q * ( ((a-b)*u) % p );
     mpz_sub(s_v,s_a,s_b); //   (a-b)
     mpz_mul(s_v,s_v,  u); //   (a-b) * u
     mpz_mod(s_v,s_v,  p); //  ((a-b) * u) % p
     mpz_mul(s_v,s_v,  q); // (((a-b) * u) % p ) * q
-    
+
     mpz_add(s_cipher ,s_v, s_b); // (((a-b) * u) % p ) * p + b
     mp_move(output, s_cipher, CIPHER_BLOCK_BYTES);
 #else
@@ -416,16 +454,16 @@ namespace _msl_internal{ //Start namespace
     mpz_powm(s_a, s_v, dp, p);
     mpz_mod( s_v, s_cipher, q);
     mpz_powm(s_b, s_v, dq, q);
-  
+
     if(mpz_cmp(s_a,s_b) < 0) // a < b
       mpz_add(s_a,s_a,p);
-  
+
     //  x = b + q * ( ((a-b)*u) % p );
     mpz_sub(s_v,s_a,s_b); //   (a-b)
     mpz_mul(s_v,s_v,  u); //   (a-b) * u
     mpz_mod(s_v,s_v,  p); //  ((a-b) * u) % p
     mpz_mul(s_v,s_v,  q); // (((a-b) * u) % p ) * q
-    
+
     mpz_add(s_plain ,s_v, s_b); // (((a-b) * u) % p ) * p + b
     mp_move(output, s_plain, PLAIN_BLOCK_BYTES);
 #else
@@ -433,24 +471,24 @@ namespace _msl_internal{ //Start namespace
 #endif
   }
 
-  
-  
+
+
   // ****************** ENCRYPT TEXT *******************
-  
+
   // requires an output buffer that is (input_size * 8 / 7 + 4)
   // and rounded upwards to nearest divisible with 32
-  
+
   // algorithm: Insert the size into the first 4 BYTEs (plain),
   // break the text into 224 bit frames and encrypt to 256 bit
   // frames. Pad the last frame with garbage to complete the
   // frames. Run the last block structure through 'encrypt'
   //
   // - possible TODO: use md5 and add signature in the front/end.
-  
+
   // another idea is to store garbage in the first 4 BYTEs of every
   // frame.
-  
-  
+
+
   int
   RSA_public::encrypt_text(BYTE* const outbuf, BYTE* inbuf, size_t len){
     // requires a buffer that is 'frames' * 256 / 224....
@@ -461,7 +499,7 @@ namespace _msl_internal{ //Start namespace
 
     // 28 * 8 = 224 => 28 BYTEs per frame, add 4 since we store the
     // length too
-    
+
     // another idea is to store garbage in the first 4 BYTEs of every frame
 
     //static int ctr;  ctr++;
@@ -471,7 +509,7 @@ namespace _msl_internal{ //Start namespace
     BYTE  plain[PLAIN_BLOCK_BYTES];
     BYTE* endptr = outbuf;
     BYTE* ptr    = plain;
-    
+
     gf_integer2char(ptr, len); ptr += 4; // store length
 
     //printf("ENCRYPTION(%02d): %d data into %d frames and %d padding\n",ctr,len,frames,padding);
@@ -480,7 +518,7 @@ namespace _msl_internal{ //Start namespace
       --frames;
       memcpy(ptr,inbuf, PLAIN_BLOCK_BYTES - 4); inbuf += (PLAIN_BLOCK_BYTES - 4);
       scramble(endptr,plain); endptr += CIPHER_BLOCK_BYTES;
-      
+
       while(frames > 1){
 	--frames;
 	scramble(endptr,inbuf); inbuf += PLAIN_BLOCK_BYTES; endptr += CIPHER_BLOCK_BYTES;
@@ -513,7 +551,7 @@ namespace _msl_internal{ //Start namespace
     u32 len = gf_char2integer(ptr); ptr +=4;
 
     padding = frames * PLAIN_BLOCK_BYTES - (len + 4);
-    
+
     //printf("DECRYPTION(%02d) %d data, from %d buffer, into %d frames and %d padding\n",ctr, len,inlen,frames,padding);
 
     //test that it seems to contain correct length
@@ -531,7 +569,7 @@ namespace _msl_internal{ //Start namespace
     } else {
       memcpy(outbuf, ptr, len);// outbuf += len;
     }
- 
+
     return len;
   }
 
@@ -590,7 +628,7 @@ namespace _msl_internal{ //Start namespace
 	0x11C81968,0x4E734A41,0xB3472DCA,0x7B14A94A,0x1B510052,0x9A532915,
 	0xD60F573F,0xBC9BC6E4,0x2B60A476,0x81E67400,0x08BA6FB5,0x571BE91F,
 	0xF296EC6B,0x2A0DD915,0xB6636521,0xE7B9F9B6,0xFF34052E,0xC5855664,
-	0x53B02D5D,0xA99F8FA1,0x08BA4799,0x6E85076A 
+	0x53B02D5D,0xA99F8FA1,0x08BA4799,0x6E85076A
       },{
 	0x4B7A70E9,0xB5B32944,0xDB75092E,0xC4192623,0xAD6EA6B0,0x49A7DF7D,
 	0x9CEE60B8,0x8FEDB266,0xECAA8C71,0x699A17FF,0x5664526C,0xC2B19EE1,
@@ -746,7 +784,7 @@ namespace _msl_internal{ //Start namespace
     gf_integer2char(&outbuf[4],d2);
   }
 
-  
+
 #ifdef BIG_ENDIAN_HOST
 #define F(x) ((( s[0][reinterpret_cast<BYTE*>(&x)[0]] + s[1][reinterpret_cast<BYTE*>(&x)[1]])	 \
 		   ^ s[2][reinterpret_cast<BYTE*>(&x)[2]]) + s[3][reinterpret_cast<BYTE*>(&x)[3]] )
@@ -754,7 +792,7 @@ namespace _msl_internal{ //Start namespace
 #define F(x) ((( s[0][reinterpret_cast<BYTE*>(&x)[3]] + s[1][reinterpret_cast<BYTE*>(&x)[2]])	 \
 		   ^ s[2][reinterpret_cast<BYTE*>(&x)[1]]) + s[3][reinterpret_cast<BYTE*>(&x)[0]] )
 #endif
-  
+
 #define R(l,r,i)  l ^= p[(i)]; r ^= F(l);
 
   inline void
@@ -787,7 +825,7 @@ namespace _msl_internal{ //Start namespace
   // uses CBC, ie. XOR with previously encrypted block
   //
   // !! remember to pad the data such that it has full 64-bit "frames" !!
-  // 
+  //
 
   void
   BlowFish::encrypt(BYTE* const cipher, BYTE* const plain, size_t len){
@@ -812,7 +850,7 @@ namespace _msl_internal{ //Start namespace
   BlowFish::decrypt(BYTE* const plain, BYTE* const cipher, size_t len){
     u32 d1, d2, od1, od2;
     unsigned int j = len - len % 8;
-    for(unsigned int i = 0; i < j; i+=8){   
+    for(unsigned int i = 0; i < j; i+=8){
       readblock(od1, od2, &(cipher[i]));
       d1 = od1; d2 = od2;
       do_decrypt(d1, d2);
@@ -837,7 +875,7 @@ namespace _msl_internal{ //Start namespace
     e_prev1(d1),e_prev2(d2),d_prev1(d1),d_prev2(d2){
     int i=0, j=0;
     u32 data=0, datal=0, datar=0;
-  
+
     // init
     for(i=0; i < 18; ++i)
       p[i] = ps[i];
@@ -846,7 +884,7 @@ namespace _msl_internal{ //Start namespace
 	     reinterpret_cast<BYTE*>(const_cast<u32*>(&ks[i][0])),
 	     1024);
     }
-  
+
     // set up P- and S-boxes
     for(i=j=0; i < (18); i++ ) {
       // this one is special since the key might wrap in the middle of an integer
@@ -864,7 +902,7 @@ namespace _msl_internal{ //Start namespace
       p[i] ^= data;
       j = (j+4) % keylen;
     }
-  
+
     for(i=0; i < (18); i += 2 ) {
       do_encrypt(datal, datar );
       p[i]   = datal;
@@ -936,7 +974,7 @@ namespace _msl_internal{ //Start namespace
 #else
     memcpy( x, block, 64 );
 #endif
-  
+
     // Round 1.
     OP (FF, a, b, c, d,  0,  7, 0xd76aa478);
     OP (FF, d, a, b, c,  1, 12, 0xe8c7b756);
@@ -1021,7 +1059,7 @@ namespace _msl_internal{ //Start namespace
     u32 index   = ((count[0] >> 3) & 0x3F); //    Compute number of bytes mod 64
     u32 partLen = 64 - index;
     // Update number of bits
-    if ((count[0] += (inputLen << 3)) < (inputLen << 3))  count[1]++;  
+    if ((count[0] += (inputLen << 3)) < (inputLen << 3))  count[1]++;
     count[1] += (inputLen >> 29);
 
     int i = 0;
@@ -1061,7 +1099,7 @@ namespace _msl_internal{ //Start namespace
 
 
   /*
-    
+
   Copyright (C) 1995-2002 Jean-loup Gailly and Mark Adler
 
   This software is provided 'as-is', without any express or implied
@@ -1086,7 +1124,7 @@ namespace _msl_internal{ //Start namespace
 
   * adler32.c -- compute the Adler-32 checksum of a data stream
   * Copyright (C) 1995-2002 Mark Adler
-  * For conditions of distribution and use, see copyright notice in zlib.h 
+  * For conditions of distribution and use, see copyright notice in zlib.h
   *
   */
 
