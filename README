@@ -43,6 +43,33 @@ amend and append the below to the ~/.bash_profile file
 export OZHOME=/Users/<username>/oz
 export PATH=$PATH:$OZHOME/bin
 
+Building mozart in OS X (X86_64)
+--------------------------------
+Install gmp:
+$ curl -O  ftp://ftp.gmplib.org/pub/gmp-4.3.2/gmp-4.3.2.tar.bz2
+$ tar xvfj gmp-4.3.2.tar.bz2
+$ cd gmp-4.3.2
+$ ./configure CFLAGS="-arch i386" CXXFLAGS="-arch i386" ABI="32" --prefix=/usr/local
+$ make
+$ sudo make install
+
+Install Mozart:
+$ git clone git://github.com/mozart/mozart.git
+$ cd mozart
+$ export CFLAGS="-arch i386"
+$ export CPPFLAGS="-arch i386"
+$ export LDFLAGS="-arch i386"
+$ ./configure  --prefix=/usr/local --disable-contrib-gdbm --disable-doc --disable-contrib-micq
+$ make
+$ sudo make install
+
+In case of any errors please send a message to the hackers list and _include_ the output
+of the following commands:
+$ uname -a
+$ gcc --version
+$ lipo -info /usr/local/lib/libgmp.dylib 
+
+
 Installation.
 -------------
 
