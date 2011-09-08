@@ -625,13 +625,13 @@ urlc::parse_ftp(char* line)
     }
     port = 21;
 
-    p_collon = strchr(line, ':');
-    p_at = strchr(line, '@');
+    p_collon = strchr(const_cast<char*>(line), ':');
+    p_at = strchr(const_cast<char*>(line), '@');
     if(NULL != p_at) // we have a pass
-        p_slash = strchr(p_at + 1, '/');
+      p_slash = strchr(p_at + 1, '/');
     else
-        p_slash = strchr(line, '/');
-    p_semi = strchr(line, ';'); // to avoid masking by pass
+      p_slash = strchr(const_cast<char*>(line), '/');
+    p_semi = strchr(const_cast<char*>(line), ';'); // to avoid masking by pass
 
     // sanity checks
     if((NULL != p_collon) && (0 == p_collon[1]))
@@ -1140,8 +1140,8 @@ urlc::parse_http(char* line)
 
     if((NULL == line) || (0 == *line)) // emtpy line?
         return (URLC_EEMPTY);
-    p_collon = strchr(line, ':');
-    p_slash = strchr(line, '/');
+    p_collon = strchr(const_cast<char*>(line), ':');
+    p_slash = strchr(const_cast<char*>(line), '/');
 
     // sanity checks
     if((NULL != p_collon) && (0 == p_collon[1])) // nothing after :
