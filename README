@@ -14,7 +14,7 @@ Have lots of fun!
 
 Building mozart for Arch Linux.
 --------------------------------------
-sudo packer -S mozart
+sudo packer -S mozart-git
 
 Building mozart for Ubuntu.
 ----------------------------------
