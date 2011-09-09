@@ -10,9 +10,13 @@ with some brief information for what you plan to use Mozart.
 
 Have lots of fun!
 
+-=Compilation=-
 
+Building mozart for Arch Linux.
+--------------------------------------
+sudo packer -S mozart
 
-Fast track compilation for Ubuntu.
+Building mozart for Ubuntu.
 ----------------------------------
 $ sudo apt-get install tk-dev tcl-dev build-essential libc6-dev g++-multilib ia32-libs lib32z1-dev lib32gmp3-dev libgdbm-dev
 $ mkdir ~/oz
@@ -27,7 +31,7 @@ amend and append the below to your ~/.profile file
 export OZHOME=/home/<username>/oz
 export PATH=$PATH:$OZHOME/bin
 
-Fast track compilation for OS X
+Building mozart for OS X
 -------------------------------
 install homebrew https://github.com/mxcl/homebrew + xcode dependency
 $ brew install git emacs gmp gdbm
