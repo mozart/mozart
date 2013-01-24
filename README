@@ -16,16 +16,13 @@ Building mozart for Arch Linux.
 --------------------------------------
 sudo packer -S mozart-git
 
-Building mozart for Ubuntu.
+Building mozart for Ubuntu/Debian (x64).
 ----------------------------------
-$ sudo apt-get install tk-dev tcl-dev build-essential libc6-dev g++-multilib ia32-libs lib32z1-dev lib32gmp3-dev libgdbm-dev
-$ mkdir ~/oz
+$ sudo apt-get install emacs flex bison tk-dev build-essential g++-multilib lib32z1-dev lib32gmp3-dev
 $ mkdir -p ~/dev/mozart
 $ cd ~/dev/mozart
 $ git clone git://github.com/mozart/mozart.git
-$ mkdir build
-$ cd build
-$ ../mozart/configure --prefix=/home/<username>/oz
+$ ./configure --prefix=/home/<username>/oz --disable-contrib-gdbm
 $ make && make install
 amend and append the below to your ~/.profile file
 export OZHOME=/home/<username>/oz
