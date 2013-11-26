@@ -7,7 +7,7 @@ CD="$1/Contents/Resources/CocoaDialog.app/Contents/MacOS/CocoaDialog"
 
 detectAquamacs()
 {
-    if [ ! -e "/Applications/Aquamacs Emacs.app" ]; then
+    if [ ! -e "/Applications/Aquamacs.app" ]; then
 	`$CD ok-msgbox --no-cancel --icon info --timeout 20 --title "Aquamacs not found" --text "This application is needed to run Mozart" --informative-text "You can download it from http://aquamacs.org/"`
 	exit 2
     fi
@@ -58,5 +58,5 @@ fi
 
 
 
-exec /Applications/Aquamacs\ Emacs.app/Contents/MacOS/Aquamacs\ Emacs --eval '(setq load-path (cons "'$OZHOME'/share/elisp" load-path))' -l oz.elc -f run-oz $2 &
+exec /Applications/Aquamacs.app/Contents/MacOS/Aquamacs --eval '(setq load-path (cons "'$OZHOME'/share/elisp" load-path))' -l oz.elc -f run-oz $2 &
 
