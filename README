@@ -13,12 +13,16 @@ Have lots of fun!
 Fast track compilation for Ubuntu.
 ----------------------------------
 
-$ sudo apt-get install tk-dev tcl-dev build-essential libc6-dev g++-multilib ia32-libs lib32z1-dev lib32gmp3-dev
+$ sudo apt-get install tk-dev tcl-dev build-essential libc6-dev g++-multilib zlib1g-dev:i386 libgmp-dev:i386
 $ git clone git://github.com/mozart/mozart
 $ mkdir build
 $ cd build
-$ ../mozart/configure
-$ make
+$ ../mozart/configure --disable-contrib-gdbm --with-prefix=/tmp/oz
+$ make && make install
+$ export OZHOME=/tmp/oz
+$ export PATH=$PATH:$OZHOME/bin
+
+Change the prefix path and `OZHOME` to where you want it installed. Run `oz` to start the IDE.
 
 Installation.
 -------------
