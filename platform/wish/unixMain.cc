@@ -37,7 +37,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
+#define USE_INTERP_RESULT 1
 #ifndef MAC_OSX_TK
 #include "conf.h"
 #endif
