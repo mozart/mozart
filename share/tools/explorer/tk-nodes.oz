@@ -128,9 +128,9 @@ local
 		       Scale*{IntToFloat (MyY - UpperSpaceI)}
 		       Scale*{IntToFloat MyX}
 		       Scale*{IntToFloat (MyY - CircleWidthI)})}
-	    {Canvas tk(mo NodeItem Scale*{IntToFloat MyByX} 0)}
+	    {Canvas tk(move NodeItem Scale*{IntToFloat MyByX} 0)}
 	    if Number\=0 then
-	       {Canvas tk(mo n#Number Scale*{IntToFloat MyByX} 0)}
+	       {Canvas tk(move n#Number Scale*{IntToFloat MyByX} 0)}
 	    end
 	    if @toDo\=nil orelse @isHidden then skip else
 	       {Canvas tk(itemco NodeItem
@@ -447,7 +447,7 @@ local
 		       Scale*{IntToFloat (MyY - UpperSpaceI)}
 		       Scale*{IntToFloat MyX}
 		       Scale*{IntToFloat (MyY - RectangleWidthI)})}
-	    {Canvas tk(mo Item+1 Scale*{IntToFloat MyByX} 0)}
+	    {Canvas tk(move Item+1 Scale*{IntToFloat MyByX} 0)}
 	 end
       
       end
@@ -525,9 +525,9 @@ local
 			  Scale*{IntToFloat (MyY - UpperSpaceI)}
 			  Scale*{IntToFloat MyX}
 			  Scale*{IntToFloat (MyY - RhombeWidthI)})}
-	       {Canvas tk(mo Item+1 Scale*{IntToFloat MyByX} 0)}
+	       {Canvas tk(move Item+1 Scale*{IntToFloat MyByX} 0)}
 	       if Number\=0 then
-		  {Canvas tk(mo n#Number Scale*{IntToFloat MyByX} 0)}
+		  {Canvas tk(move n#Number Scale*{IntToFloat MyByX} 0)}
 	       end
 	    end
 	    
