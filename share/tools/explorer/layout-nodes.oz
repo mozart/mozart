@@ -183,7 +183,7 @@ local
 	 LayoutLeaf,Layout(_ 0)
 	 LayoutLeaf,Adjust(Break RootX 0 RootY Scale Font)
 	 %% move away root link
-	 {Canvas tk(mo @item 0 ~VerSpaceF * MaxScale)}
+	 {Canvas tk(move @item 0 ~VerSpaceF * MaxScale)}
 	 {Canvas bounding(~HalfHorSpaceI HalfHorSpaceI VerSpaceI)}
       end
 
@@ -236,7 +236,7 @@ local
       in
 	 {Canvas {GetBoundingBox Shape}}
 	 LayoutNode,Adjust(Break RootX 0 RootY Scale Font)
-	 {Canvas tk(mo @item 0 ~VerSpaceF * MaxScale)}
+	 {Canvas tk(move @item 0 ~VerSpaceF * MaxScale)}
       end
 
       meth !Layout(?Shape Offset)
