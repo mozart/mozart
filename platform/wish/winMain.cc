@@ -1,5 +1,5 @@
 
-/* 
+/*
  * winMain.c --
  *
  *      Main entry point for wish and other Tk-based applications.
@@ -67,20 +67,20 @@ PutsCmd(ClientData clientData, Tcl_Interp *inter, int argc, char **argv)
     newline = 0;
     i++;
   }
-  
+
   if ((i < (argc-3)) || (i >= argc)) {
     Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
                      " ?-nonewline? ?fileId? string\"", (char *) NULL);
     return TCL_ERROR;
   }
-  
+
   if (i != (argc-1))
     i++;
-  
+
   sendToEngine(argv[i]);
   if (newline)
     sendToEngine("\n");
-  
+
   DebugCode(fprintf(dbgout,"********puts(%d):\n%s\n",inter,argv[i]); fflush(dbgout));
   return TCL_OK;
 }
@@ -151,9 +151,9 @@ void readHandler(ClientData clientData, int mask)
   // that the I/O manager calls a readHandler exactly once for each
   // channel. That is, it cannot happen that two 'readHandlers' are
   // started simultaneously.
-  if (tkLock == 1) 
+  if (tkLock == 1)
     return;
-  else 
+  else
     tkLock = 1;
   static int bufSize  = 1000;
   static char *buffer = NULL;
@@ -162,12 +162,12 @@ void readHandler(ClientData clientData, int mask)
   }
 
   static int used = 0;
-  
+
   if (used>=bufSize) {
     bufSize *= 2;
     buffer = (char *) realloc(buffer,bufSize+1);
     if (buffer==0)
-      WishPanic("realloc of buffer failed");    
+      WishPanic("realloc of buffer failed");
   }
 
 
@@ -175,11 +175,11 @@ void readHandler(ClientData clientData, int mask)
   int count = Tcl_Read(in,buffer+used,bufSize-used);
 
   if (count<0) {
-    WishPanic("Connection to engine lost: %d, %d, %d", 
+    WishPanic("Connection to engine lost: %d, %d, %d",
               count, in, Tcl_GetErrno());
   }
 
-  
+
   if (count==0) {
     if (Tcl_Eof(in)) {
       WishPanic("Eof on input stream");
@@ -191,9 +191,9 @@ void readHandler(ClientData clientData, int mask)
 
   used += count;
   buffer[used] = 0;
-  
+
   DebugCode(fprintf(dbgin,"\n### read done: %d\n%s\n",count,buffer); fflush(dbgin));
-  
+
   if ((buffer[used-1] != '\n') && (buffer[used-1] != ';') ||
       !Tcl_CommandComplete(buffer) ||
       used >=2 && buffer[used-2] == '\\') {
@@ -205,14 +205,14 @@ void readHandler(ClientData clientData, int mask)
   int code = Tcl_GlobalEval(interp, buffer);
   if (code != TCL_OK) {
     char buf[1000];
-    DebugCode(fprintf(dbgin,"### Error(%d):  %s\n", code,interp->result);
+    DebugCode(fprintf(dbgin,"### Error(%d):  %s\n", code,Tcl_GetStringResult(interp));
               fflush(dbgin));
-    sprintf(buf,"w --- %s---  %s\n---\n.\n", buffer,interp->result);
+    sprintf(buf,"w --- %s---  %s\n---\n.\n", buffer,Tcl_GetStringResult(interp));
     sendToEngine(buf);
   }
 
   used = 0;
-  // dragan: no race conditions here either: 
+  // dragan: no race conditions here either:
   tkLock = 0;
 }
 
@@ -248,7 +248,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCm
      */
     if (Tcl_Init(interp) == TCL_ERROR ||
         Tk_Init(interp) == TCL_ERROR) {
-      WishPanic("Tcl_Init failed: %s\n", interp->result);
+      WishPanic("Tcl_Init failed: %s\n", Tcl_GetStringResult(interp));
     }
 
     Tcl_ResetResult(interp);
@@ -279,7 +279,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmdLine, int nCm
     code = Tcl_GlobalEval(interp, "wm withdraw . ");
     if (code != TCL_OK) {
       char buf[1000];
-      sprintf(buf,"w %s\n.\n", interp->result);
+      sprintf(buf,"w %s\n.\n", Tcl_GetStringResult(interp));
       sendToEngine(buf);
     }
 
@@ -316,7 +316,7 @@ WishPanic TCL_VARARGS_DEF(const char *,arg1)
   const char *format = TCL_VARARGS_START(const char *,arg1,argList);
   char buf[1024];
   vsprintf(buf, format, argList);
-  
+
   MessageBeep(MB_ICONEXCLAMATION);
   MessageBox(NULL, buf, "Fatal Error in Wish",
              MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
@@ -330,7 +330,7 @@ WishInfo TCL_VARARGS_DEF(char *,arg1)
   char *format = TCL_VARARGS_START(char *,arg1,argList);
   char buf[1024];
   vsprintf(buf, format, argList);
-  
+
   MessageBox(NULL, buf, "Fatal Error in Wish",
              MB_ICONSTOP | MB_OK | MB_TASKMODAL | MB_SETFOREGROUND);
 }
