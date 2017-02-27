@@ -185,6 +185,9 @@ if test "${GXX}" = yes; then
     OZ_CXX_OPTIONS(-fpermissive,oz_a)
     CXXFLAGS="$CXXFLAGS $oz_a"
 
+    OZ_CXX_OPTIONS(-Wno-narrowing,oz_a)
+    CXXFLAGS="$CXXFLAGS $oz_a"
+
     : ${oz_enable_warnings=no}
     AC_MSG_CHECKING(for --enable-warnings)
     AC_ARG_ENABLE(warnings,
