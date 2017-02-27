@@ -879,7 +879,7 @@ if test "$oz_gmp_lib_found" != no; then
 #include <gmp.h>
 TheVersion __GNU_MP_VERSION __GNU_MP_VERSION_MINOR
 EOF
-    oz_tmp=`$CXXCPP $CPPFLAGS conftest.$ac_ext | egrep TheVersion`;
+    oz_tmp=`$CXXCPP -P $CPPFLAGS conftest.$ac_ext | egrep TheVersion`;
     rm -f conftest.$ac_ext 2>/dev/null
 changequote(<,>)
     OZ_GMP_MAJOR=`expr "$oz_tmp" : 'TheVersion *\([0-9]*\) '`
