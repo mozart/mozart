@@ -23,7 +23,7 @@ $ sudo apt-get install emacs flex bison tk-dev build-essential g++-multilib zlib
 $ mkdir -p ~/dev/mozart
 $ cd ~/dev/mozart
 $ git clone git://github.com/mozart/mozart.git
-$ ./configure --prefix=/home/<username>/oz --disable-contrib-gdbm
+$ ./configure --prefix=/home/<username>/oz --disable-contrib-gdbm --enable-modules-static
 $ make && make install
 amend and append the below to your ~/.profile file
 export OZHOME=/home/<username>/oz
@@ -39,7 +39,7 @@ $ cd ~/dev/mozart
 $ git clone git://github.com/mozart/mozart.git
 $ mkdir build
 $ cd build
-$ ../mozart/configure --prefix=/Users/<username>/oz
+$ ../mozart/configure --prefix=/Users/<username>/oz --enable-modules-static
 $ make && make install
 amend and append the below to the ~/.bash_profile file
 export OZHOME=/Users/<username>/oz
@@ -61,7 +61,7 @@ $ cd mozart
 $ export CFLAGS="-arch i386"
 $ export CPPFLAGS="-arch i386"
 $ export LDFLAGS="-arch i386"
-$ ./configure  --prefix=/usr/local --disable-contrib-gdbm --disable-doc --disable-contrib-micq
+$ ./configure  --prefix=/usr/local --disable-contrib-gdbm --disable-doc --disable-contrib-micq --enable-modules-static
 $ make
 $ sudo make install
 
