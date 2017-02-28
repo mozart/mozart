@@ -1,10 +1,11 @@
 For more information on Oz and Mozart see
 
-	http://www.mozart-oz.org
+	https://mozart.github.io/
 
-We would appreciate if you could send E-mail to
+We would appreciate if you could send E-mail to the
+mozart-users mailing list:
 
-	download@mozart-oz.org
+        https://groups.google.com/forum/#!forum/mozart-users
 
 with some brief information for what you plan to use Mozart.
 
@@ -74,4 +75,4 @@ $ lipo -info /usr/local/lib/libgmp.dylib
 Installation.
 -------------
 
-Please refer to this website for more detail : http://www.mozart-oz.org/documentation/install/index.html
+Please refer to this website for more detail : https://mozart.github.io/mozart-v1/doc-1.4.0/install/index.html
