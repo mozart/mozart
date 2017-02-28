@@ -1438,7 +1438,9 @@ void ConstTerm::_cacConstRecurse(void) {
 #ifdef G_COLLECT
 	gCollectPendThreadEmul(&(ll->pending));
 #endif
-	ll->setLocker(SuspToThread(ll->getLocker()->_cacSuspendable()));
+	if (ll->getLocker()) {
+		ll->setLocker(SuspToThread(ll->getLocker()->_cacSuspendable()));
+	}
 	maybeGCForFailure(t);
 	break;
       } 
