@@ -1,10 +1,11 @@
 For more information on Oz and Mozart see
 
-	http://www.mozart-oz.org
+	https://mozart.github.io/
 
-We would appreciate if you could send E-mail to
-        
-	download@mozart-oz.org
+We would appreciate if you could send E-mail to the
+mozart-users mailing list:
+
+        https://groups.google.com/forum/#!forum/mozart-users
 
 with some brief information for what you plan to use Mozart.
 
@@ -29,4 +30,4 @@ Change the prefix path and `OZHOME` to where you want it installed. Run `oz` to 
 Installation.
 -------------
 
-Please refer to this website for more detail : http://www.mozart-oz.org/documentation/install/index.html
+Please refer to this website for more detail : https://mozart.github.io/mozart-v1/doc-1.4.0/install/index.html
