@@ -1120,6 +1120,7 @@ With C-u C-u as prefix argument, send it a SIGKILL instead."
 	(message "Oz started."))))
 
 (defun oz-attach ()
+  (interactive)
   (let (host port)
     (cond ((>= (length command-line-args-left) 1)
 	   (setq host *oz-default-host*
