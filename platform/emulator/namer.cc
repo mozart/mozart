@@ -34,7 +34,7 @@ template class Namer<OZ_Term, const char *>;
 
 typedef Namer<OZ_Term, const char *> VarNamer;
 
-template <> VarNamer * VarNamer::_head = NULL;
+//template <> VarNamer * VarNamer::_head = NULL;
 
 VarNamer varNamer; 
 
@@ -99,7 +99,7 @@ template class Namer<Propagator *, OZ_Term>;
 
 typedef class Namer<Propagator *, OZ_Term> PropNamer;
 
-template <> PropNamer * PropNamer::_head = NULL;
+//template <> PropNamer * PropNamer::_head = NULL;
 
 PropNamer propNamer; 
 
