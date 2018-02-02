@@ -78,6 +78,8 @@ case $system in
    ;;
    *i*86*Darwin*)       OZARCH=darwin-i386
    ;;
+   x86_64*Darwin*)      OZARCH=darwin-x86_64_32
+   ;;
    x86_64\ Linux*)      OZARCH=linux-x86_64_32
    ;;
    *)  	                OZARCH=unknown-unknown

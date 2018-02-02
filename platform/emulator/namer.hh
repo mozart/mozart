@@ -195,7 +195,10 @@ public:
     }
   }
 };
-  
+
+template <class T_INDEX, class T_NAME>
+Namer<T_INDEX, T_NAME> *Namer<T_INDEX, T_NAME>::_head = NULL;
+
 #endif /* NEW_NAMER */
 
 /* ------------------------------------------------------------------------
