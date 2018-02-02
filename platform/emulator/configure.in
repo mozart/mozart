@@ -310,6 +310,12 @@ if test "${GXX}" = yes; then
         oz_copt_debug="-m32 -g3 -DINTERFACE -fno-inline -fno-default-inline -fno-inline-functions"
 	EMULATE_CXXFLAGS=-finline-limit=500
         ;;
+    darwin-x86_64_32)
+        oz_opt="-O3 -pipe -fno-strict-aliasing"
+	oz_om="-m32 -fomit-frame-pointer"
+        oz_copt_debug="-m32 -g3 -DINTERFACE -fno-inline -fno-default-inline -fno-inline-functions"
+	EMULATE_CXXFLAGS=-finline-limit=500
+        ;;
     *)  ;;
     esac
 
@@ -338,6 +344,13 @@ case $platform in
         LDFLAGS="$LDFLAGS -m32"
 	: ${oz_enable_modules_static=no}
 	;;
+    darwin-x86_64_32)
+	AC_DEFINE(DARWIN)
+	EMULDFLAGS="-Wl,-keep_private_externs"
+        LDFLAGS="$LDFLAGS -m32"
+	TOOLLDCMD="$CC -m32 -dynamiclib -flat_namespace -undefined suppress"
+	: ${oz_enable_modules_static=no}
+    ;;
     linux*)
         TOOLLDCMD="gcc -shared"
 	# kost@ : redundant now; ;; EMULDFLAGS="-Wl,--export-dynamic"
@@ -1364,6 +1377,10 @@ AC_SUBST(STATIC_MODULES)
 AC_SUBST(DYNAMIC_MODULES)
 
 case ${platform} in
+darwin-x86_64_32)
+    PICOPTIONS="-m32 -fpic -Kpic"
+    PICOPTIONSCC="-m32 -fpic -Kpic"
+    ;;
 *-darwin)
     ## seems needed on Darwin (MacOS X)
     ## emits pic code suitable for fynamic linking and avoiding
