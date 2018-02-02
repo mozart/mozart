@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#if __GLIBC__ == 2 || defined(WINDOWS) || defined(NETBSD) || defined(RHAPSODY) || defined(OPENBSD) || defined(__FreeBSD__)
+#if __GLIBC__ == 2 || defined(WINDOWS) || defined(NETBSD) || defined(RHAPSODY) || defined(OPENBSD) || defined(__FreeBSD__) || defined(ANDROID) || defined(__APPLE__)
 
 /* the following have been copied from linux's values.h */
 #define _DEXPLEN    11

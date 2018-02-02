@@ -27,6 +27,38 @@ $ export PATH=$PATH:$OZHOME/bin
 
 Change the prefix path and `OZHOME` to where you want it installed. Run `oz` to start the IDE.
 
+Building mozart for OS X
+------------------------
+In the instructions below, replace <username> with your Mac OS username.
+
+Install homebrew https://brew.sh + xcode dependency
+$ brew install emacs --with-cocoa
+$ brew install git gmp gdbm flex tcl-tk
+
+Install 32-bit gmp:
+$ curl -O https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
+$ tar xvf gmp-6.1.2.tar.bz2
+$ cd gmp-6.1.2
+$ ./configure CFLAGS="-arch i386" CXXFLAGS="-arch i386" ABI="32" --prefix=/Users/<username>/oz
+$ make
+$ make install
+
+Build and install Mozart/Oz
+$ git clone https://github.com/mozart/mozart.git
+$ CXX="g++ -Wno-deprecated" \
+  PATH="/usr/local/opt/tcl-tk/bin:/usr/local/opt/flex/bin:$PATH" \
+  PKG_CONFIG_PATH="/usr/local/opt/tcl-tk/lib/pkgconfig" \
+  LDFLAGS="-L/usr/local/opt/flex/lib" \
+  CPPFLAGS="-I/usr/local/opt/flex/include" \
+  ./configure --prefix=/Users/<username>/oz --enable-modules-static \
+              --with-tcl=/usr/local/Cellar/tcl-tk/8.6.8/lib/ \
+              --with-tk=/usr/local/Cellar/tcl-tk/8.6.8/lib
+$ make 
+$ make install
+amend and append the below to the ~/.bash_profile file
+export OZHOME=/Users/<username>/oz
+export PATH=$PATH:$OZHOME/bin
+
 Installation.
 -------------
 

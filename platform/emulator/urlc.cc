@@ -179,10 +179,10 @@ private:
     int parse_file(const char* line);
     int get_file(void);
 
-    int parse_http(const char* line);
+    int parse_http(char* line);
     int get_http(char *file);
 
-    int parse_ftp(const char* line);
+    int parse_ftp(char* line);
     int get_ftp(char *file);
 
     int parse(const char* line);
@@ -595,7 +595,7 @@ urlc::get_file(void)
    be % escaped _before_ given to this client
    */
 int
-urlc::parse_ftp(const char* line)
+urlc::parse_ftp(char* line)
 {
     char* p_collon = NULL; /* positions in line */
     char* p_at = NULL;
@@ -1124,7 +1124,7 @@ urlc::get_ftp(char *file)
    returns URLC_OK on successful parse, reason otherwise.
    */
 int
-urlc::parse_http(const char* line)
+urlc::parse_http(char* line)
 {
     char* p_collon = NULL; /* positions in line */
     char* p_slash = NULL;
