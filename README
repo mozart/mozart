@@ -20,12 +20,14 @@ sudo packer -S mozart-git
 Building mozart for Ubuntu/Debian (x64).
 ----------------------------------
 $ sudo apt-get install emacs flex bison tk-dev build-essential g++-multilib zlib1g-dev:i386 libgmp-dev:i386
+$ mkdir -p ~/dev/mozart
+$ cd ~/dev/mozart
 $ git clone https://github.com/mozart/mozart
 $ mkdir build
 $ cd build
-$ ../mozart/configure --prefix=/home/$USER/oz --disable-contrib-gdbm 
+$ ../mozart/configure --prefix=$HOME/oz --disable-contrib-gdbm 
 $ make && make install
-$ export OZHOME=/home/$USER/oz
+$ export OZHOME=$HOME/oz
 $ export PATH=$PATH:$OZHOME/bin
 
 Change the prefix path and `OZHOME` to where you want it installed. Run `oz` to start the IDE.
