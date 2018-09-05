@@ -303,7 +303,7 @@ if test "${GXX}" = yes; then
 	;;
     linux-x86_64_32)
         oz_opt="-O3 -pipe -fno-strict-aliasing"
-	oz_om="-m32 -march=i686 -mtune=generic -fomit-frame-pointer"
+	oz_om="-m32 -march=i686 -mtune=generic -fomit-frame-pointer -fno-tree-vrp"
         oz_copt_debug="-m32 -g3 -DINTERFACE -fno-inline -fno-default-inline -fno-inline-functions"
 	EMULATE_CXXFLAGS=-finline-limit=500
         ;;
