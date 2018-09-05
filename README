@@ -14,15 +14,15 @@ Have lots of fun!
 Fast track compilation for Ubuntu.
 ----------------------------------
 
-I get a segfault when building with gcc-6. A successful build with gcc-4.9 and the instructions below show how to select that compiler.
-
 $ sudo apt-get install tk-dev tcl-dev build-essential libc6-dev g++-multilib zlib1g-dev:i386 libgmp-dev:i386
-$ git clone git://github.com/mozart/mozart
+$ git clone https://github.com/mozart/mozart
+$ mkdir ~/dev/mozart
+$ cd ~/dev/mozart
 $ mkdir build
 $ cd build
-$ CC=gcc-4.9 CXX=g++-4.9 ../mozart/configure --disable-contrib-gdbm --prefix=/tmp/oz
+$ ../mozart/configure --disable-contrib-gdbm --prefix=$HOME/oz
 $ make && make install
-$ export OZHOME=/tmp/oz
+$ export OZHOME=$HOME/oz
 $ export PATH=$PATH:$OZHOME/bin
 
 Change the prefix path and `OZHOME` to where you want it installed. Run `oz` to start the IDE.
