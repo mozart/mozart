@@ -38,7 +38,7 @@
 
 OZ_BI_define(fdp_sum, 3, 0)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD","OZ_EM_LIT","OZ_EM_FD);
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_LIT "," OZ_EM_FD);
 
   PropagatorExpect pe;
 
@@ -82,8 +82,8 @@ template unsigned int make_lessEqOffsetN<unsigned int, PropagatorExpect, unsigne
 
 OZ_BI_define(fdp_sumC, 4, 0)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_INT","OZ_EM_VECT OZ_EM_FD","OZ_EM_LIT
-		   ","OZ_EM_FD);
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_FD "," OZ_EM_LIT
+		   "," OZ_EM_FD);
 
   PropagatorExpect pe;
 
@@ -134,8 +134,8 @@ OZ_BI_end
 
 OZ_BI_define(fdp_sumCN, 4, 0)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_INT","OZ_EM_VECT OZ_EM_VECT OZ_EM_FD
-		   ","OZ_EM_LIT","OZ_EM_FD);
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_VECT OZ_EM_FD
+		   "," OZ_EM_LIT "," OZ_EM_FD);
 
   PropagatorExpect pe;
 
