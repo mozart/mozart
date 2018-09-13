@@ -31,8 +31,8 @@
 
 OZ_BI_define(fdp_sumAC, 4, 0)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_INT","OZ_EM_VECT OZ_EM_FD","
-		   OZ_EM_LIT","OZ_EM_FD);
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_FD ","
+		   OZ_EM_LIT "," OZ_EM_FD);
   
   PropagatorExpect pe;
   OZ_EXPECT(pe, 0, expectVectorInt);

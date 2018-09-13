@@ -141,7 +141,7 @@ OZ_BI_end
 
 OZ_BI_define(fsp_diff, 3, 0)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_FSET","OZ_EM_FSET","OZ_EM_FSET);
+  OZ_EXPECTED_TYPE(OZ_EM_FSET "," OZ_EM_FSET "," OZ_EM_FSET);
 
   PropagatorExpect pe;
    int susp_count = 0;

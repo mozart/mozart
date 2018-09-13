@@ -107,8 +107,8 @@
 
 #define OZ_EM_LIT       "literal"
 #define OZ_EM_FLOAT     "float"
-#define OZ_EM_INT       "integer in [~"_OZ_EM_INTMAX"\\,...\\,"_OZ_EM_INTMAX"]"
-#define OZ_EM_FD        "finite domain integer in {"_OZ_EM_FDINF"\\,...\\,"_OZ_EM_FDSUP"}"
+#define OZ_EM_INT       "integer in [~" _OZ_EM_INTMAX "\\,...\\," _OZ_EM_INTMAX "]"
+#define OZ_EM_FD        "finite domain integer in {" _OZ_EM_FDINF "\\,...\\," _OZ_EM_FDSUP "}"
 #define OZ_EM_FDBOOL    "boolean finite domain integer in {0,1}"
 #define OZ_EM_FDDESCR   "description of a finite domain integer"
 #define OZ_EM_FSETVAL   "finite set of integers"
