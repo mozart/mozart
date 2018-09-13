@@ -4525,7 +4525,7 @@ int oz_raise(OZ_Term cat, OZ_Term key, const char *label, int arity, ...)
  *=================================================================== */
 
 static
-char *getTypeOfPos(char * t, int p)
+char *getTypeOfPos(char const * t, int p)
 {
   static char buffer[100];
   int i, bi, comma;
@@ -4545,7 +4545,7 @@ char *getTypeOfPos(char * t, int p)
   return buffer;
 }
 
-OZ_Return typeError(int Pos, char *Comment, char *TypeString)
+OZ_Return typeError(int Pos, char const *Comment, char const *TypeString)
 {
   (void) oz_raise(E_ERROR,E_KERNEL,
 		  "type",5,NameUnit,NameUnit,

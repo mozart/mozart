@@ -1096,7 +1096,7 @@ OZ_Boolean OZ_isEqualVars(OZ_Term v1, OZ_Term v2)
 #undef __OZ_CPI_hasStag
 #undef __OZ_CPI_isVar
 
-_FUNDECL(OZ_Return,OZ_typeErrorCPI,(char *, int, char *));
+_FUNDECL(OZ_Return,OZ_typeErrorCPI,(char const *, int, char const *));
 
 #define OZ_getFDInf() (0)
 #define OZ_getFDSup() (134217727-1)

@@ -389,7 +389,7 @@ OZ_Return oz_typeErrorInternal(const int pos, const char * type);
 
 #define oz_typeError(pos,type) return oz_typeErrorInternal(pos,type)
 
-OZ_Return typeError(int pos, char *comment, char *typeString);
+OZ_Return typeError(int pos, const char *comment, char const *typeString);
 
 #define ExpectedTypes(S) char * __typeString = S;
 #define TypeError(Pos, Comment) return typeError(Pos,Comment,__typeString);
