@@ -71,7 +71,7 @@ DSite* getSiteFromTertiaryProxy(Tertiary*);
 
 
 // MERGER CON OZ_Return raiseGeneric(char *msg, OZ_Term arg);
-OZ_Return raiseGeneric(char *id,char *msg, OZ_Term arg);
+OZ_Return raiseGeneric(char const *id,char const *msg, OZ_Term arg);
 
 void gCollectPendThread(PendThread **pt);
 

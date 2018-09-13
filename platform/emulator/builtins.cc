@@ -1038,7 +1038,7 @@ OZ_BI_define(BIatomToString, 1, 1)
 
   if (!oz_isAtom(t)) oz_typeError(0,"atom");
   
-  OZ_RETURN(OZ_string((OZ_CONST char*)tagged2Literal(t)->getPrintName()));
+  OZ_RETURN(OZ_string((const char*)tagged2Literal(t)->getPrintName()));
 } OZ_BI_end
 
 OZ_BI_define(BIstringToAtom,1,1)
@@ -2299,7 +2299,7 @@ OZ_BI_define(BIaritySublist,2,1)
    Numbers
    ----------------------------------------------------------------------- */
 
-static OZ_Return bombArith(char *type)
+static OZ_Return bombArith(char const *type)
 {
   oz_typeError(-1,type);
 }
@@ -2945,7 +2945,7 @@ OZ_BI_define(BIstringToFloat, 1,1)
 {
   oz_declareProperStringIN(0,str);
 
-  char *end = OZ_parseFloat(str);
+  char const *end = OZ_parseFloat(str);
   if (!end || *end != 0) {
     return oz_raise(E_ERROR,E_KERNEL,"stringNoFloat",1,OZ_in(0));
   }

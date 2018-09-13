@@ -48,7 +48,7 @@
 #define OZ_FAIL OZ_FAILED
 #define OZ_ENTAIL OZ_ENTAILED
 
-#define OZ_EXPECTED_TYPE(S) char * expectedType = S
+#define OZ_EXPECTED_TYPE(S) char const * expectedType = S
 
 
 #define __OZ_EXPECT(O, V, T, F)				\
@@ -657,17 +657,17 @@ class ozdeclspec OZ_PropagatorProfile {
 private:
   OZ_PropagatorProfile * _next;
   static OZ_PropagatorProfile * _all_headers;
-  char * _propagator_name;
+  char const * _propagator_name;
   unsigned _calls, _samples, _heap;
 
 public:
   OZ_PropagatorProfile(void);
 
-  OZ_PropagatorProfile(char * propagator_name);
+  OZ_PropagatorProfile(char const * propagator_name);
 
-  void operator = (char * propagator_name);
+  void operator = (char const * propagator_name);
 
-  char * getPropagatorName(void);
+  char const * getPropagatorName(void);
   void incSamples(void);
   void incCalls(void);
   unsigned getSamples(void);
@@ -682,7 +682,7 @@ public:
 };
 
 inline
-char * OZ_PropagatorProfile::getPropagatorName() {
+char const * OZ_PropagatorProfile::getPropagatorName() {
   return _propagator_name;
 }
 inline

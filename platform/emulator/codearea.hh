@@ -112,8 +112,8 @@ class CodeArea {
   friend class Statistics;
   static StringHashTable atomTab;
   static StringHashTable nameTab;
-  friend TaggedRef OZ_atom(OZ_CONST char *str);
-  friend TaggedRef oz_atomNoDup(OZ_CONST char *str);
+  friend TaggedRef OZ_atom(const char *str);
+  friend TaggedRef oz_atomNoDup(const char *str);
   friend TaggedRef oz_uniqueName(const char *str);
   friend inline void printAtomTab();
   friend inline void printNameTab();

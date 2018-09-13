@@ -32,7 +32,7 @@
 
 SendRecvCounter mess_counter[M_LAST];
 
-char *mess_names[M_LAST] = {
+char const *mess_names[M_LAST] = {
   "none",
 
   "port_send",

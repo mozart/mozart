@@ -842,7 +842,7 @@ OZ_BI_define(BIByteString_toStringWithTail,2,1)
   OZ_RETURN(list);
 } OZ_BI_end
 
-OZ_Term OZ_mkByteString(char*s,int n) {
+OZ_Term OZ_mkByteString(char const*s,int n) {
   ByteString* bs = new ByteString(n);
   memcpy((void*)bs->getData(),(void*)s,n);
   return makeTaggedExtension(bs);

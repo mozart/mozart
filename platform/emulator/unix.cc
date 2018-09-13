@@ -194,7 +194,7 @@ while ((RET = CALL) < 0) {				\
 // The string returned must be used immediately.
 // The definition relies on the following errors being defined for all 
 // platforms directly or as done in wsock.hh
-char *errnoToString(int aErrno) {
+char const *errnoToString(int aErrno) {
   switch(aErrno) {
   case ECONNREFUSED:
     return "Connection refused";
@@ -220,7 +220,7 @@ char *errnoToString(int aErrno) {
   }
 }
 
-int raiseUnixError(char *f,int n, char * e, char * g) {
+int raiseUnixError(char const *f,int n, char const * e, char const * g) {
   return oz_raise(E_SYSTEM,E_OS, g, 3, OZ_string(f), OZ_int(n), OZ_string(e)); 
 }
 
@@ -236,7 +236,7 @@ int raiseUnixError(char *f,int n, char * e, char * g) {
 
 #else
 
-static char* h_strerror(const int err) {
+static char const* h_strerror(const int err) {
   switch (err) {
   case HOST_NOT_FOUND:
     return "No such host is known.";
@@ -339,7 +339,7 @@ OZ_Return atom2buff(OZ_Term atom, char **write_buff, int *len,
   }
 
   if (*len == max_vs_length && c) {
-    *susp = OZ_string((OZ_CONST char*)string);
+    *susp = OZ_string((const char*)string);
     *rest = *susp;
     return SUSPEND;
   }
@@ -611,7 +611,7 @@ OZ_BI_iodefine(unix_getDir,1,1)
 OZ_BI_iodefine(unix_stat,1,1)
 {
   struct stat buf;
-  char *fileType;
+  char const *fileType;
   OZ_declareVsIN(0, filename);
 
  retry:
@@ -1352,7 +1352,7 @@ OZ_BI_iodefine(unix_acceptInet,1,3)
 
   WRAPCALL("accept",osaccept(sock,(struct sockaddr *)&from, &fromlen),fd);
 
-  char *host = inet_ntoa(from.sin_addr);
+  char const *host = inet_ntoa(from.sin_addr);
   if (strcmp(host,"127.0.0.1")==0) {  // this prevents network connections being    
     host = "localhost";               // opened when working at home for example
   } else {
@@ -1393,7 +1393,7 @@ OZ_BI_iodefine(unix_accept_nonblocking,1,3)
 #endif
   //
 
-  char *host = inet_ntoa(from.sin_addr);
+  char const *host = inet_ntoa(from.sin_addr);
   if (strcmp(host,"127.0.0.1")==0) {  // this prevents network connections being    
     host = "localhost";               // opened when working at home for example
   } else {
@@ -1657,8 +1657,8 @@ OZ_BI_iodefine(unix_receiveFromInet,5,3)
   if (ures == FAILED) return (FAILED);
 
   OZ_out(0) = OZ_string(gethost ?
-			(OZ_CONST char*) gethost->h_name :
-			(OZ_CONST char*) inet_ntoa(from.sin_addr));
+			(const char*) gethost->h_name :
+			(const char*) inet_ntoa(from.sin_addr));
   OZ_out(1) = OZ_int(ntohs(from.sin_port));
   OZ_out(2) = OZ_int(ret);
   return (PROCEED);

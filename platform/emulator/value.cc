@@ -1460,7 +1460,7 @@ TaggedRef oz_getPrintName(TaggedRef t) {
       case Co_Abstraction:
 	return ((Abstraction *) rec)->getName();
       case Co_Class:
-	return oz_atom((OZ_CONST char*)((ObjectClass *) rec)->getPrintName());
+	return oz_atom((const char*)((ObjectClass *) rec)->getPrintName());
       default:
 	break;
       }
@@ -1468,7 +1468,7 @@ TaggedRef oz_getPrintName(TaggedRef t) {
     }
   case LTAG_VAR0:
   case LTAG_VAR1:
-    return oz_atom((OZ_CONST char*) oz_varGetName(ot));
+    return oz_atom((const char*) oz_varGetName(ot));
   case LTAG_LITERAL:
     {
       const char *s = tagged2Literal(t)->getPrintName();

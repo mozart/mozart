@@ -73,7 +73,7 @@ void tkInitLiterals() {
 
 static OZ_Return raise_os_error(const char*s) {
   int xx = errno;
-  return oz_raise(E_SYSTEM,E_OS,"os",3,OZ_atom((OZ_CONST char*)s),OZ_int(xx),
+  return oz_raise(E_SYSTEM,E_OS,"os",3,OZ_atom((const char*)s),OZ_int(xx),
 		  OZ_string(OZ_unixError(xx)));
 }
 

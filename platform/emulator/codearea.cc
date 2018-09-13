@@ -82,14 +82,14 @@ Literal *addToLiteralTab(const char *str, StringHashTable *table,
 }
 
 
-OZ_Term OZ_atom(OZ_CONST char *str)
+OZ_Term OZ_atom(const char *str)
 {
   Assert(str != NULL);
   Literal *lit=addToLiteralTab(str,&CodeArea::atomTab,NO,OK);
   return makeTaggedLiteral(lit);
 }
 
-OZ_Term oz_atomNoDup(OZ_CONST char *str) {
+OZ_Term oz_atomNoDup(const char *str) {
   Assert(str != NULL);
   Literal *lit=addToLiteralTab(str,&CodeArea::atomTab,NO,NO);
   return makeTaggedLiteral(lit);
@@ -327,7 +327,7 @@ void CodeArea::getDefinitionArgs(ProgramCounter PC,
     file     = pred->getFile();
     line     = pred->getLine();
     colum    = pred->getColumn();
-    predName = OZ_atom((OZ_CONST char*)pred->getPrintName());
+    predName = OZ_atom((const char*)pred->getPrintName());
   } else {
     file     = AtomEmpty;
     line     = colum = 0;

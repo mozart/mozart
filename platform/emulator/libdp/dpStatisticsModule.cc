@@ -142,7 +142,7 @@ OZ_BI_define(BI_DistMemInfo,0,1)
 // Erik 
 const struct {
   MarshalTag tag;
-  char *name;
+  char const *name;
 } dif_Mynames[] = {
   { DIF_UNUSED0,         "unused0"},
   { DIF_SMALLINT,        "smallint"},

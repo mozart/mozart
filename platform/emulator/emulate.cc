@@ -95,7 +95,7 @@ static
 void enrichTypeException(TaggedRef value,const char *fun, OZ_Term args)
 {
   OZ_Term e = OZ_subtree(value,makeTaggedSmallInt(1));
-  OZ_putArg(e,1,OZ_atom((OZ_CONST char*)fun));
+  OZ_putArg(e,1,OZ_atom((const char*)fun));
   OZ_putArg(e,2,args);
 }
 
@@ -619,7 +619,7 @@ int engine(Bool init)
 
   TaggedRef auxTaggedA, auxTaggedB;
   int auxInt;
-  char *auxString;
+  char const *auxString;
 
 #ifdef THREADED
   if (init) {
