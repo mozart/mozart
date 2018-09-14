@@ -19,10 +19,9 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <mozart.h>
 
-extern char *calloc ();
-extern char *realloc ();
 extern void done ();
 
 char *

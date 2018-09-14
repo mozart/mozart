@@ -30,7 +30,7 @@
 
 OZ_BI_define(fdp_dsum, 3, 0)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD","OZ_EM_LIT","OZ_EM_FD);
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_FD "," OZ_EM_LIT "," OZ_EM_FD);
   
   PropagatorExpect pe;
 
@@ -53,8 +53,8 @@ OZ_BI_end
 
 OZ_BI_define(fdp_dsumC, 4, 0)
 {
-  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_INT","OZ_EM_VECT OZ_EM_FD","OZ_EM_LIT
-		   ","OZ_EM_FD);
+  OZ_EXPECTED_TYPE(OZ_EM_VECT OZ_EM_INT "," OZ_EM_VECT OZ_EM_FD "," OZ_EM_LIT
+		   "," OZ_EM_FD);
 
   PropagatorExpect pe;
 
