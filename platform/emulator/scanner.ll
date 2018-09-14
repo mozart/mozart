@@ -39,7 +39,7 @@
 
 #include "parser.hh"
 
-void xyreportError(char *kind, char *message,
+void xyreportError(char const *kind, char const *message,
 		   const char *file, int line, int column);
 void xy_setScannerPrefix();
 void xy_setParserExpect();
@@ -181,42 +181,8 @@ public:
 
 static XyFileEntry *bufferStack;
 
-static void push_insert(FILE *filep, char *fileName) {
-  bufferStack = new XyFileEntry(YY_CURRENT_BUFFER, xyFileNameAtom, xylino,
-				conditional_basep, bufferStack);
-  strncpy(xyFileName, fileName, maxFileNameSize - 1);
-  xyFileName[maxFileNameSize - 1] = '\0';
-  xyFileNameAtom = OZ_atom(fileName);
-  xyin = filep;
-  BEGIN(INITIAL);
-  xy_switch_to_buffer(xy_create_buffer(xyin, YY_BUF_SIZE));
-  xylino = 1;
-  conditional_basep = conditional_p;
-}
-
-static int pop_insert() {
-  if (conditional_p > conditional_basep)
-    xyreportError("macro directive error",
-		  "unterminated \\ifdef or \\ifndef",
-		  xyFileName,xylino,xycharno());
-  errorFlag = 0;
-  if (bufferStack != NULL) {
-    fclose(xyin);
-    xy_switch_to_buffer(bufferStack->buffer);
-    xyFileNameAtom = bufferStack->fileNameAtom;
-    const char *fileName = OZ_atomToC(xyFileNameAtom);
-    strncpy(xyFileName, fileName, maxFileNameSize - 1);
-    xyFileName[maxFileNameSize - 1] = '\0';
-    xylino = bufferStack->lino;
-    conditional_basep = bufferStack->conditional_basep;
-    XyFileEntry *old = bufferStack;
-    bufferStack = bufferStack->previous;
-    delete old;
-    return 0;
-  } else
-    return 1;
-}
-
+static void push_insert(FILE *filep, char *fileName);
+static int pop_insert();
 
 //**********
 // COMMENTS
@@ -327,7 +293,7 @@ static char *scExpndFileName(char *fileName, char *curfile) {
   }
 
   // search in OZPATH
-  char *path = osgetenv("OZPATH");
+  char const *path = osgetenv("OZPATH");
   if (path == NULL)
     path = ".";
 
@@ -1082,6 +1048,44 @@ REGEXCHAR    "["([^\]\\]|\\.)+"]"|\"[^"]+\"|\\.|[^<>"\[\]\\\n]
 			       }
 
 %%
+
+static void push_insert(FILE *filep, char *fileName)
+{
+  bufferStack = new XyFileEntry(YY_CURRENT_BUFFER, xyFileNameAtom, xylino,
+				conditional_basep, bufferStack);
+  strncpy(xyFileName, fileName, maxFileNameSize - 1);
+  xyFileName[maxFileNameSize - 1] = '\0';
+  xyFileNameAtom = OZ_atom(fileName);
+  xyin = filep;
+  BEGIN(INITIAL);
+  xy_switch_to_buffer(xy_create_buffer(xyin, YY_BUF_SIZE));
+  xylino = 1;
+  conditional_basep = conditional_p;
+}
+
+static int pop_insert() {
+  if (conditional_p > conditional_basep)
+    xyreportError("macro directive error",
+		  "unterminated \\ifdef or \\ifndef",
+		  xyFileName,xylino,xycharno());
+  errorFlag = 0;
+  if (bufferStack != NULL) {
+    fclose(xyin);
+    xy_switch_to_buffer(bufferStack->buffer);
+    xyFileNameAtom = bufferStack->fileNameAtom;
+    const char *fileName = OZ_atomToC(xyFileNameAtom);
+    strncpy(xyFileName, fileName, maxFileNameSize - 1);
+    xyFileName[maxFileNameSize - 1] = '\0';
+    xylino = bufferStack->lino;
+    conditional_basep = bufferStack->conditional_basep;
+    XyFileEntry *old = bufferStack;
+    bufferStack = bufferStack->previous;
+    delete old;
+    return 0;
+  } else
+    return 1;
+}
+
 
 static void xy_init(OZ_Term defines0) {
   xylino = 1;
