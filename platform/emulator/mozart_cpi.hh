@@ -48,7 +48,7 @@
 #define OZ_FAIL OZ_FAILED
 #define OZ_ENTAIL OZ_ENTAILED
 
-#define OZ_EXPECTED_TYPE(S) char * expectedType = S
+#define OZ_EXPECTED_TYPE(S) char const * expectedType = S
 
 
 #define __OZ_EXPECT(O, V, T, F)				\
@@ -107,8 +107,8 @@
 
 #define OZ_EM_LIT       "literal"
 #define OZ_EM_FLOAT     "float"
-#define OZ_EM_INT       "integer in [~"_OZ_EM_INTMAX"\\,...\\,"_OZ_EM_INTMAX"]"
-#define OZ_EM_FD        "finite domain integer in {"_OZ_EM_FDINF"\\,...\\,"_OZ_EM_FDSUP"}"
+#define OZ_EM_INT       "integer in [~" _OZ_EM_INTMAX "\\,...\\," _OZ_EM_INTMAX "]"
+#define OZ_EM_FD        "finite domain integer in {" _OZ_EM_FDINF "\\,...\\," _OZ_EM_FDSUP "}"
 #define OZ_EM_FDBOOL    "boolean finite domain integer in {0,1}"
 #define OZ_EM_FDDESCR   "description of a finite domain integer"
 #define OZ_EM_FSETVAL   "finite set of integers"
@@ -657,17 +657,17 @@ class ozdeclspec OZ_PropagatorProfile {
 private:
   OZ_PropagatorProfile * _next;
   static OZ_PropagatorProfile * _all_headers;
-  char * _propagator_name;
+  char const * _propagator_name;
   unsigned _calls, _samples, _heap;
 
 public:
   OZ_PropagatorProfile(void);
 
-  OZ_PropagatorProfile(char * propagator_name);
+  OZ_PropagatorProfile(char const * propagator_name);
 
-  void operator = (char * propagator_name);
+  void operator = (char const * propagator_name);
 
-  char * getPropagatorName(void);
+  char const * getPropagatorName(void);
   void incSamples(void);
   void incCalls(void);
   unsigned getSamples(void);
@@ -682,7 +682,7 @@ public:
 };
 
 inline
-char * OZ_PropagatorProfile::getPropagatorName() {
+char const * OZ_PropagatorProfile::getPropagatorName() {
   return _propagator_name;
 }
 inline
@@ -1096,7 +1096,7 @@ OZ_Boolean OZ_isEqualVars(OZ_Term v1, OZ_Term v2)
 #undef __OZ_CPI_hasStag
 #undef __OZ_CPI_isVar
 
-_FUNDECL(OZ_Return,OZ_typeErrorCPI,(char *, int, char *));
+_FUNDECL(OZ_Return,OZ_typeErrorCPI,(char const *, int, char const *));
 
 #define OZ_getFDInf() (0)
 #define OZ_getFDSup() (134217727-1)

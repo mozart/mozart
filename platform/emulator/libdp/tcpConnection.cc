@@ -40,7 +40,7 @@
 unsigned int  ipPortNumber  = OZReadPortNumber;
 int  ipIpNumber    = 0; // Zero indicates that the default should be used.
 
-void tcpListenPort(int port, char* nodename){
+void tcpListenPort(int port, char const* nodename){
   ip_address ip;
   if (ipIpNumber!=0) {
     ip=ipIpNumber;

@@ -30,7 +30,7 @@ define(message,`
 define(arg,`ifelse($1,Index,Ext_OB_TIndex ind,
                    $1,Term,TaggedRef t,
                    $1,FullTopTerm,TaggedRef t,
-		   $1,String,char *str,
+		   $1,String,char const *str,
                    $1,Credit,int c,
                    $1,Site,DSite *s1,
 	           $1,Site2,DSite *s2,

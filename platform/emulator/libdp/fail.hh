@@ -353,9 +353,9 @@ Bool distHandlerDeInstallImpl(unsigned short,unsigned short,
 
 void dealWithDeferredWatchers();
 
-TaggedRef mkOp1(char*,TaggedRef);
-TaggedRef mkOp2(char*,TaggedRef,TaggedRef);
-TaggedRef mkOp3(char*,TaggedRef,TaggedRef,TaggedRef);
+TaggedRef mkOp1(char const*,TaggedRef);
+TaggedRef mkOp2(char const*,TaggedRef,TaggedRef);
+TaggedRef mkOp3(char const*,TaggedRef,TaggedRef,TaggedRef);
 
 OZ_Return tertiaryFailHandle(Tertiary*, TaggedRef,EntityCond,TaggedRef);
 Bool tertiaryFail(Tertiary*, EntityCond &, TaggedRef&);

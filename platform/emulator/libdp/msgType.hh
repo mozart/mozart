@@ -111,7 +111,7 @@ enum MessageType {
 #define USE_PRIO_OF_SENDER -1 
 
 
-extern char *mess_names[];
+extern char const *mess_names[];
 extern int default_mess_priority[];
 
 #endif

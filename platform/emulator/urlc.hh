@@ -68,7 +68,7 @@ int localizeUrl(const char* Url, char* fnp);
 
 
 inline
-char *urlcStrerror(int err)
+char const *urlcStrerror(int err)
 {
   switch (err) {
   case URLC_EALLOC:   return "allocation error";

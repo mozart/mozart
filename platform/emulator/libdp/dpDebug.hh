@@ -97,7 +97,7 @@ extern TaggedRef BI_startTmp;
 
 #include <stdarg.h> 
 
-extern char *debugTypeStr[];
+extern char const *debugTypeStr[];
 
 class DebugVector{
 public:
@@ -117,7 +117,7 @@ Bool isPerdioInitializedImpl();
 
 void next50(MarshalerBuffer*);
 
-void _PD(int i,char *format,...);
+void _PD(int i,char const *format,...);
 
 void networkTimer(int);
 

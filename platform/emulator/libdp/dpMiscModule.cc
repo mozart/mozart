@@ -64,7 +64,7 @@ extern OZ_Term defaultAcceptProcedure;
 extern OZ_Term defaultConnectionProcedure;
 
 extern
-int raiseUnixError(char *f,int n, char * e, char * g);
+int raiseUnixError(char const *f,int n, char const * e, char const * g);
 
 
 //
@@ -435,7 +435,7 @@ OZ_BI_define(BIgetMsgPriority,0,1)
 {
   OZ_Term msgPrio=oz_nil();
   for (int i=M_NONE+1; i<C_FIRST; i++) {
-    char* prioType; 
+    char const* prioType; 
     switch(default_mess_priority[i]){
     case MSG_PRIO_EAGER: 
       prioType = "eager";

@@ -454,12 +454,12 @@ unsigned long OZ_intToCulong(OZ_Term term)
     return tagged2BigInt(term)->getUnsignedLong();
 }
 
-OZ_Term OZ_CStringToInt(char *str)
+OZ_Term OZ_CStringToInt(char const *str)
 {
   if (!str || str[0] == '\0')
     return 0;
 
-  char *aux = str;
+  char const *aux = str;
   int sign = 1;
   if (aux[0] == '~') {
     aux++;
@@ -511,8 +511,8 @@ OZ_Term OZ_CStringToInt(char *str)
 /*
  * parse: [~]<digit>+.<digit>*[(e|E)[~]<digit>+]
  */
-char *OZ_parseFloat(char *s) {
-  char *p = OZ_parseInt(s);
+char const *OZ_parseFloat(char const *s) {
+  char const *p = OZ_parseInt(s);
   if (!p || *p++ != '.') {
     return NULL;
   }
@@ -533,9 +533,9 @@ char *OZ_parseFloat(char *s) {
 /*
  * parse: [~]<digit>+
  */
-char *OZ_parseInt(char *s)
+char const *OZ_parseInt(char const *s)
 {
-  char *p = s;
+  char const *p = s;
   if (*p == '~') {
     p++;
   }
@@ -1193,12 +1193,12 @@ int OZ_termGetSize(OZ_Term term, int depth, int width)
  * Atoms
  */
 
-OZ_CONST char *OZ_atomToC(OZ_Term term)
+const char *OZ_atomToC(OZ_Term term)
 {
   term = oz_deref(term);
 
   Literal *a = tagged2Literal(term);
-  return (OZ_CONST char *)a->getPrintName();
+  return (const char *)a->getPrintName();
 }
 
 /* OZ_atom is defined in codearea.cc */
@@ -1214,7 +1214,7 @@ int OZ_boolToC(OZ_Term term)
  * -----------------------------------------------------------------*/
 
 /* convert a C string (char*) to an Oz string */
-OZ_Term OZ_string(OZ_CONST char *s) {
+OZ_Term OZ_string(char const *s) {
   return s ? oz_string(s,strlen(s),AtomNil) : AtomNil;
 }
 
@@ -1361,7 +1361,7 @@ char* OZ_vsToC(OZ_Term t,int*n)
 {
   char * s;
   if (OZ_isNil(t)) {
-    static char *null = "";
+    static char *null = strdup("");
     if (n!=0) *n = 0;
     return null;
   }
@@ -1437,7 +1437,7 @@ OZ_Term OZ_tuple(OZ_Term label, int width)
   return makeTaggedSRecord(SRecord::newSRecord(label,width));
 }
 
-OZ_Term OZ_mkTupleC(char *label,int arity,...)
+OZ_Term OZ_mkTupleC(char const *label,int arity,...)
 {
   if (arity == 0) {
     return OZ_atom(label);
@@ -1948,7 +1948,7 @@ OZ_Return OZ_raiseDebug(OZ_Term exc) {
   return RAISE;
 }
 
-OZ_Return OZ_raiseC(char *label,int arity,...)
+OZ_Return OZ_raiseC(char const *label,int arity,...)
 {
   if (arity == 0) {
     return OZ_raise(OZ_atom(label));
@@ -1976,7 +1976,7 @@ OZ_Return OZ_raiseError(OZ_Term exc) {
   return RAISE;
 }
 
-OZ_Return OZ_raiseErrorC(char *label,int arity,...)
+OZ_Return OZ_raiseErrorC(char const *label,int arity,...)
 {
   if (arity == 0) {
     return OZ_raiseError(OZ_atom(label));
@@ -1994,7 +1994,7 @@ OZ_Return OZ_raiseErrorC(char *label,int arity,...)
   return OZ_raiseError(tt);
 }
  
-OZ_Term OZ_makeException(OZ_Term cat,OZ_Term key,char*label,int arity,...)
+OZ_Term OZ_makeException(OZ_Term cat,OZ_Term key,char const* label,int arity,...)
 {
   OZ_Term exc=OZ_tuple(key,arity+1);
   OZ_putArg(exc,0,OZ_atom(label));
@@ -2151,7 +2151,7 @@ char *OZ_unixError(int aErrno) {
 #endif  
 }
 
-OZ_Return OZ_typeError(int pos,char *type)
+OZ_Return OZ_typeError(int pos,char const *type)
 {
   oz_typeError(pos,type);
 }
@@ -2179,7 +2179,7 @@ void OZ_send(OZ_Term port, OZ_Term val)
 // mm2: this is not longer needed in Oz 3.0, but for compatibility with
 // modules compiled for Oz 2.0 OZ_raiseA has to be defined
 extern "C" OZ_Return OZ_raiseA(char*, int, int);
-OZ_Return OZ_raiseA(char *name, int was, int shouldBe)
+OZ_Return OZ_raiseA(char const *name, int was, int shouldBe)
 {
   return oz_raise(E_ERROR,E_SYSTEM,"inconsistentArity",3,
 		  OZ_atom(name),OZ_int(was),OZ_int(shouldBe));

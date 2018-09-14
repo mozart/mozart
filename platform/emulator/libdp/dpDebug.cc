@@ -48,7 +48,7 @@ OZ_BI_define(BIcloseCon,1,1)
 
 DebugVector *DV = NULL;
 
-char *debugTypeStr[LAST] = {
+char const *debugTypeStr[LAST] = {
   "MSG_RECEIVED", //0
   "MSG_SENT",	
   "MSG_PREP",  
@@ -143,7 +143,7 @@ TaggedRef BI_startTmp;
 // thread {Delay T} {StartTmp I T} end
 
 
-void _PD(int i,char *format,...)
+void _PD(int i,char const *format,...)
 {
   if (isPerdioInitializedImpl() && DV->on(i)) {
     printf("%s: ",debugTypeStr[i]);

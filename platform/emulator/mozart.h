@@ -52,7 +52,7 @@
 #  define ozcdecl
 #endif
 
-#if defined(__STDC__) || defined(_MSC_VER)
+#if defined(__STDC__) || defined(__cplusplus) || defined(_MSC_VER)
 #define OZStringify(Name) #Name
 #define OZ_CONST const
 #else
@@ -164,8 +164,8 @@ _FUNDECL(OZ_Term ,OZ_termType,(OZ_Term));
 
 /* convert: C from/to Oz datastructure */
 
-_FUNDECL(OZ_CONST char* ,OZ_atomToC,(OZ_Term));
-_FUNDECL(OZ_Term ,OZ_atom,(OZ_CONST char *));
+_FUNDECL(const char* ,OZ_atomToC,(OZ_Term));
+_FUNDECL(OZ_Term ,OZ_atom,(const char *));
 _FUNDECL(int     ,OZ_featureCmp,(OZ_Term,OZ_Term));
 
 _FUNDECL(int     ,OZ_smallIntMin,(void));
@@ -184,14 +184,14 @@ _FUNDECL(int     ,OZ_intToC,(OZ_Term));
 _FUNDECL(long    ,OZ_intToCL,(OZ_Term));
 _FUNDECL(unsigned long,OZ_intToCulong,(OZ_Term));
 _FUNDECL(int     ,OZ_boolToC,(OZ_Term));
-_FUNDECL(OZ_Term ,OZ_CStringToInt,(char *str));
-_FUNDECL(char *  ,OZ_parseInt,(char *s));
+_FUNDECL(OZ_Term ,OZ_CStringToInt,(char const *str));
+_FUNDECL(char const *  ,OZ_parseInt,(char const *s));
 
 _FUNDECL(OZ_Term ,OZ_float,(double));
 _FUNDECL(double  ,OZ_floatToC,(OZ_Term));
 
 _FUNDECL(OZ_Term ,OZ_CStringToFloat,(char *s));
-_FUNDECL(char *  ,OZ_parseFloat,(char *s));
+_FUNDECL(char const *  ,OZ_parseFloat,(char const *s));
 
 _FUNDECL(OZ_Term ,OZ_CStringToNumber,(char *));
 
@@ -199,12 +199,12 @@ _FUNDECL(char *  ,OZ_toC,(OZ_Term, int, int));
 _FUNDECL(char *  ,OZ__toC,(OZ_Term, int, int, int*));
 _FUNDECL(int     ,OZ_termGetSize,(OZ_Term, int, int));
 
-_FUNDECL(OZ_Term ,OZ_string,(OZ_CONST char *));
+_FUNDECL(OZ_Term ,OZ_string,(char const *));
 _FUNDECL(char *  ,OZ_stringToC,(OZ_Term t,int*n));
 
 _FUNDECL(char*   ,OZ_vsToC,(OZ_Term t,int*n));
 _FUNDECL(char *  ,OZ_virtualStringToC,(OZ_Term t,int*n));
-_FUNDECL(OZ_Term ,OZ_mkByteString,(char*,int));
+_FUNDECL(OZ_Term ,OZ_mkByteString,(char const*,int));
 
 
 /* tuples */
@@ -213,7 +213,7 @@ _FUNDECL(int      ,OZ_width,(OZ_Term));
 _FUNDECL(OZ_Term ,OZ_tuple,(OZ_Term, int));
 #define OZ_tupleC(s,n) OZ_tuple(OZ_atom(s),n)
 _FUNDECL(OZ_Term  ,OZ_mkTuple,(OZ_Term label,int arity,...));
-_FUNDECL(OZ_Term  ,OZ_mkTupleC,(char *label,int arity,...));
+_FUNDECL(OZ_Term  ,OZ_mkTupleC,(char const *label,int arity,...));
 
 _FUNDECL(void     ,OZ_putArg,(OZ_Term, int, OZ_Term));
 _FUNDECL(OZ_Term  ,OZ_getArg,(OZ_Term, int));
@@ -321,8 +321,8 @@ _FUNDECL(OZ_Return ,OZ_valueToDatum,(OZ_Term  t, OZ_Datum* d));
 _FUNDECL(OZ_Return ,OZ_datumToValue,(OZ_Datum d, OZ_Term   t));
 
 /* print warnings/errors */
-_FUNDECL(void ,OZ_warning,(OZ_CONST char *, ...));
-_FUNDECL(void ,OZ_error,(OZ_CONST char *, ...));
+_FUNDECL(void ,OZ_warning,(const char *, ...));
+_FUNDECL(void ,OZ_error,(const char *, ...));
 
 /* generate the unix error string from an errno (see perror(3)) */
 _FUNDECL(char * ,OZ_unixError,(int err));
@@ -367,13 +367,13 @@ _FUNDECL(void ,OZ_gCollect,(OZ_Term *));
 _FUNDECL(void ,OZ_sClone,(OZ_Term *));
 
 /* raise exception */
-_FUNDECL(OZ_Return ,OZ_typeError,(int pos,char *type));
+_FUNDECL(OZ_Return ,OZ_typeError,(int pos,char const *type));
 _FUNDECL(OZ_Return ,OZ_raise,(OZ_Term));
 _FUNDECL(OZ_Return ,OZ_raiseDebug,(OZ_Term));
-_FUNDECL(OZ_Return ,OZ_raiseC,(char *label,int arity,...));
+_FUNDECL(OZ_Return ,OZ_raiseC,(char const *label,int arity,...));
 _FUNDECL(OZ_Return ,OZ_raiseError,(OZ_Term));
-_FUNDECL(OZ_Return ,OZ_raiseErrorC,(char *label,int arity,...));
-_FUNDECL(OZ_Term   ,OZ_makeException,(OZ_Term kind,OZ_Term key,char*label,int arity,...));
+_FUNDECL(OZ_Return ,OZ_raiseErrorC,(char const *label,int arity,...));
+_FUNDECL(OZ_Term   ,OZ_makeException,(OZ_Term kind,OZ_Term key,char const *label,int arity,...));
 
 /* Suspending builtins */
 
@@ -552,10 +552,10 @@ OZ_declareType(ARG,VAR,double,"Float",OZ_isFloat,OZ_floatToC)
 OZ_setType(ARG,VAR,double,"Float",OZ_isFloat,OZ_floatToC)
 
 #define OZ_declareAtom(ARG,VAR)			\
-OZ_declareType(ARG,VAR,OZ_CONST char*,"Atom",OZ_isAtom,OZ_atomToC)
+OZ_declareType(ARG,VAR,const char*,"Atom",OZ_isAtom,OZ_atomToC)
 
 #define OZ_setAtom(ARG,VAR)			\
-OZ_setType(ARG,VAR,OZ_CONST char*,"Atom",OZ_isAtom,OZ_atomToC)
+OZ_setType(ARG,VAR,const char*,"Atom",OZ_isAtom,OZ_atomToC)
 
 #define OZ_declareBitString(ARG,VAR)		\
 OZ_declareType(ARG,VAR,OZBitString,"BitString",	\

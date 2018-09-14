@@ -359,7 +359,7 @@ typedef void OsSigFun(int sig);
 
 typedef struct {
   int signo;
-  char *name;
+  char const *name;
   Bool pending;
   OsSigFun *chandler;
   OZ_Term  ozhandler;
@@ -766,10 +766,10 @@ int rawread(int fd, void *buf, int sz)
 
 
 static
-int rawwrite(int fd, void *buf, int sz)
+int rawwrite(int fd, void const *buf, int sz)
 {
   if (isSocket(fd))
-    return send(fd, (char *)buf, sz, 0);
+    return send(fd, (char const*)buf, sz, 0);
   
   return write(fd,buf,sz);
 }
@@ -1135,7 +1135,7 @@ char *ostmpnam(char *s) { return tmpnam(s); }
 
 int osdup(int fd) { return dup(fd); }
 
-char *osgetenv(char *var) { return getenv(var); }
+char *osgetenv(char const*var) { return getenv(var); }
 
 #endif
 
@@ -1540,12 +1540,12 @@ int ossaferead(int fd, char *buf, unsigned int len)
 
 
 /* currently no wrapping for write */
-int oswrite(int fd, void *buf, unsigned int len)
+int oswrite(int fd, void const *buf, unsigned int len)
 {
   return rawwrite(fd, buf, len);
 }
 
-int ossafewrite(int fd, char *buf, unsigned int len)
+int ossafewrite(int fd, char const*buf, unsigned int len)
 {
   int origLen = len;
 

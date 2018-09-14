@@ -182,15 +182,15 @@ EntityCond EntityInfo::getSummaryWatchCond(){
   return ec;
 }
 
-TaggedRef mkOp1(char* label,TaggedRef first){
+TaggedRef mkOp1(char const* label,TaggedRef first){
   return OZ_mkTupleC(label,1,first);
 }
 
-TaggedRef mkOp2(char* label,TaggedRef first,TaggedRef second){
+TaggedRef mkOp2(char const* label,TaggedRef first,TaggedRef second){
   return OZ_mkTupleC(label,2,first,second);
 }
 
-TaggedRef mkOp3(char* label,TaggedRef first,TaggedRef second,TaggedRef third){
+TaggedRef mkOp3(char const* label,TaggedRef first,TaggedRef second,TaggedRef third){
   return OZ_mkTupleC(label,3,first,second,third);
 }
 

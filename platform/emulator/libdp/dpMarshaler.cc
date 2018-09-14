@@ -1104,7 +1104,7 @@ void marshalTertiary(ByteBuffer *bs,
 
 
 static 
-char *tagToComment(MarshalTag tag)
+char const *tagToComment(MarshalTag tag)
 {
   switch(tag){
   case DIF_PORT:

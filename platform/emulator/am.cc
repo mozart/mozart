@@ -165,7 +165,7 @@ void AM::init(int argc,char **argv)
   char *home = osgetenv("OZHOME");
   
   if (!home)
-    home ="unknown";
+    home =strdup("unknown");
 #ifdef WINDOWS
   else
     home =strdup(home);
@@ -235,7 +235,7 @@ void AM::init(int argc,char **argv)
   }
 
   if (!p2t && !initFile) {
-    char* ini = "/share/Init.ozf";
+    char const* ini = "/share/Init.ozf";
     int m = strlen(ozconf.ozHome);
     int n = m+strlen(ini)+1;
     char*s = new char[n];

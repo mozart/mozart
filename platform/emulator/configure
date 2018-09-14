@@ -3586,7 +3586,7 @@ fi
 	    -Wcast-qual -Wconversion -Wimplicit-function-dec -Wimplicit-int -Wmissing-braces \
 	    -Wmissing-declarations -Wmissing-prototypes -Wnested-externs -Wparentheses \
 	    -Wsequence-point -Wpointer-arith -Wno-sign-compare -Wunknown-pragmas \
-	    -Wstrict-prototypes -Wno-write-strings -Wreturn-type -Wsynth -Wno-reorder \
+	    -Wstrict-prototypes -Wreturn-type -Wsynth -Wno-reorder \
 	    -Wno-uninitialized -Wunreachable-code -Wno-unused -Winline -Wdeprecated"
 	;;
 	esac

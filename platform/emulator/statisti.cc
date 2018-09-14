@@ -41,7 +41,7 @@
 
 Statistics ozstat;
 
-void printTime(FILE *fd,char *s,unsigned int t)
+void printTime(FILE *fd,char const *s,unsigned int t)
 {
   fprintf(fd,s);
   if (t < 1000) {
@@ -52,7 +52,7 @@ void printTime(FILE *fd,char *s,unsigned int t)
 }
 
 static
-void printPercent(FILE *fd,char *s,unsigned int t,unsigned int total)
+void printPercent(FILE *fd,char const *s,unsigned int t,unsigned int total)
 {
   fprintf(fd,s);
   if (total == 0) {
@@ -66,7 +66,7 @@ void printPercent(FILE *fd,char *s,unsigned int t,unsigned int total)
 int workaroundForBugInGCC1 = KB;
 int workaroundForBugInGCC2 = MB;
 
-void printMem(FILE *fd,char *s,double m)
+void printMem(FILE *fd,char const *s,double m)
 {
   fprintf(fd,s);
   if (m < KB) {
