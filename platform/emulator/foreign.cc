@@ -683,7 +683,7 @@ void float2buffer(ostream &out, OZ_Term term, const char sign)
     }
   }
   if (!hasDot) out << '.' << '0';
-  delete str;
+  delete [] str;
 }
 
 inline
