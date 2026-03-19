@@ -68,6 +68,8 @@
 #define _FUNTYPEDECL(rettype,fun,ignore) ozdeclspec rettype (ozcdecl *fun) ()
 #endif
 
+#include <stdint.h>
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
@@ -78,7 +80,7 @@ extern "C" {
  * I. type declarations
  * ------------------------------------------------------------------------ */
 
-typedef unsigned int OZ_Term;
+typedef uintptr_t OZ_Term;
 
 typedef unsigned int OZ_Return;
 

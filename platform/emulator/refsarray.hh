@@ -39,7 +39,7 @@
 
 class RefsArray {
 private:
-  int       _len;
+  intptr_t  _len;
   TaggedRef _a[1];
 
 public:
@@ -57,16 +57,16 @@ public:
   }
 
   void cacMark(RefsArray * fwd) {
-    _len = ((int) fwd) | 1;
+    _len = ((intptr_t) fwd) | 1;
   }
   
-  int32 ** cacGetMarkField(void) {
-    return (int32 **) &_len;
+  intptr_t ** cacGetMarkField(void) {
+    return (intptr_t **) &_len;
   }
 
   RefsArray * cacGetFwd(void) {
     Assert(cacIsMarked());
-    return (RefsArray *) (_len&~1);
+    return (RefsArray *) (_len & ~(intptr_t)1);
   }
 
   RefsArray * gCollect(void);
@@ -150,7 +150,7 @@ public:
   }
 
   TaggedRef * getFastArgRef(int i) {
-    return (TaggedRef *) (((char *) &(_a[0])) + (i - sizeof(int)));
+    return (TaggedRef *) (((char *) &(_a[0])) + (i - sizeof(intptr_t)));
   }
 
   TaggedRef getArg(int i) {

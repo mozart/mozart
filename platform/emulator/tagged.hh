@@ -139,20 +139,20 @@ enum ltag_t {
  *
  */
 
-#define __ltag_ptr(t,lt) ((TaggedRef) (((int) (t))+(lt)))
-#define __stag_ptr(t,st) ((TaggedRef) (((int) (t))+(st)))
+#define __ltag_ptr(t,lt) ((TaggedRef) (((ozsword) (t))+(lt)))
+#define __stag_ptr(t,st) ((TaggedRef) (((ozsword) (t))+(st)))
 
-#define __ltag_int(t,lt) ((TaggedRef) ((((int) (t))<<LTAG_BITS)+(lt)))
-#define __stag_int(t,st) ((TaggedRef) ((((int) (t))<<STAG_BITS)+(st)))
+#define __ltag_int(t,lt) ((TaggedRef) ((((ozsword) (t))<<LTAG_BITS)+(lt)))
+#define __stag_int(t,st) ((TaggedRef) ((((ozsword) (t))<<STAG_BITS)+(st)))
 
 #define __unltag_ptr(c,t,lt)   ((c) (((TaggedRef)(t))-(lt)))
 #define __unstag_ptr(c,t,st)   ((c) (((TaggedRef)(t))-(st)))
 
 #define __tagged2stag(t) ((stag_t) (((TaggedRef)(t)) & STAG_MASK))
-#define __hasStag(t,st)  !(__unstag_ptr(int,t,st) & STAG_MASK)
+#define __hasStag(t,st)  !(__unstag_ptr(ozword,t,st) & STAG_MASK)
 
 #define __tagged2ltag(t) ((ltag_t) (((TaggedRef)(t)) & LTAG_MASK))
-#define __hasLtag(t,lt)  !(__unltag_ptr(int,t,lt) & LTAG_MASK)
+#define __hasLtag(t,lt)  !(__unltag_ptr(ozword,t,lt) & LTAG_MASK)
 
 
 // FIXME
@@ -161,19 +161,19 @@ enum ltag_t {
 
 #ifdef ARITHMETIC_SHIFTS
 
-#define __unltag_int(t) (((int) (t))>>LTAG_BITS)
-#define __unstag_int(t) (((int) (t))>>STAG_BITS)
+#define __unltag_int(t) (((ozsword) (t))>>LTAG_BITS)
+#define __unstag_int(t) (((ozsword) (t))>>STAG_BITS)
 
 #else
 
 inline
-int __unltag_int(TaggedRef t) {
-  int i = (int) t;
+ozsword __unltag_int(TaggedRef t) {
+  ozsword i = (ozsword) t;
   return (i<0) ? ~((~i)>>LTAG_BITS) : (i>>LTAG_BITS);
 }
 inline
-int __unstag_int(TaggedRef t) {
-  int i = (int) t;
+ozsword __unstag_int(TaggedRef t) {
+  ozsword i = (ozsword) t;
   return (i<0) ? ~((~i)>>STAG_BITS) : (i>>STAG_BITS);
 }
 
@@ -216,9 +216,9 @@ inline int hasLtag(TaggedRef t, ltag_t lt) { return __hasLtag(t,lt); }
  *
  */
 
-#define isRTAligned(ptr)  (!(ToInt32(ptr) & RTAG_MASK))
-#define isSTAligned(ptr)  (!(ToInt32(ptr) & STAG_MASK))
-#define isLTAligned(ptr)  (!(ToInt32(ptr) & LTAG_MASK))
+#define isRTAligned(ptr)  (!(ToWord(ptr) & RTAG_MASK))
+#define isSTAligned(ptr)  (!(ToWord(ptr) & STAG_MASK))
+#define isLTAligned(ptr)  (!(ToWord(ptr) & LTAG_MASK))
 
 
 
@@ -248,17 +248,9 @@ inline int hasLtag(TaggedRef t, ltag_t lt) { return __hasLtag(t,lt); }
  */
 
 // If you change this, also change mozart_cpi.hh
-#define OzMaxInt (134217727)
-
-#if defined(FASTARITH) && defined(__GNUC__) && defined(__i386__)
-
-#define OzMinInt (~134217727)
-
-#else 
-
+// Compute from word size: (2^(bits-LTAG_BITS-1)) - 1
+#define OzMaxInt ((ozsword)((((ozword)1) << (sizeof(ozword)*8 - LTAG_BITS - 1)) - 1))
 #define OzMinInt (-(OzMaxInt+1))
-
-#endif
 
 #define TaggedOzMaxInt __ltag_int(OzMaxInt,LTAG_SMALLINT)
 #define TaggedOzMinInt __ltag_int(OzMinInt,LTAG_SMALLINT)
@@ -311,12 +303,12 @@ void * tagged2UnmarkedPtr(TaggedRef t) {
   return __unstag_ptr(void *,t,STAG_MARK);
 }
 inline
-int tagged2UnmarkedInt(TaggedRef t) {
+ozsword tagged2UnmarkedInt(TaggedRef t) {
   Assert(oz_isMark(t));
   return __unstag_int(t);
 }
-inline 
-int tagged2SmallInt(TaggedRef t) {
+inline
+ozsword tagged2SmallInt(TaggedRef t) {
   Assert(oz_isSmallInt(t));
   return __unltag_int(t);
 }
@@ -387,13 +379,13 @@ TaggedRef makeTaggedMarkPtr(void * p) {
   return __stag_ptr(p, STAG_MARK);
 }
 inline
-TaggedRef makeTaggedMarkInt(int i) {
+TaggedRef makeTaggedMarkInt(ozsword i) {
   return __stag_int(i, STAG_MARK);
 }
 // e.g. gentraverser needs static constants;
 #define makeTaggedMarkIntNOTEST(i)	__stag_int(i, STAG_MARK)
-inline 
-TaggedRef makeTaggedSmallInt(int i) {
+inline
+TaggedRef makeTaggedSmallInt(ozsword i) {
   Assert(i >= OzMinInt && i <= OzMaxInt);
   return __ltag_int(i,LTAG_SMALLINT);
 }
@@ -408,9 +400,9 @@ TaggedRef makeTaggedSmallInt(int i) {
 #define makeTaggedLiteral(p)        __ltag_ptr(((Literal*)(p)),LTAG_LITERAL)
 #define makeTaggedConst(p)          __stag_ptr(((ConstTerm*)(p)),STAG_CONST)
 #define makeTaggedMarkPtr(p)        __stag_ptr(((void*)(p)),STAG_MARK)
-#define makeTaggedMarkInt(p)        __stag_int(((int)(p)),STAG_MARK)
+#define makeTaggedMarkInt(p)        __stag_int(((ozsword)(p)),STAG_MARK)
 #define makeTaggedMarkIntNOTEST(p)  __stag_int(p,STAG_MARK)
-#define makeTaggedSmallInt(p)       __ltag_int(((int)(p)),LTAG_SMALLINT)
+#define makeTaggedSmallInt(p)       __ltag_int(((ozsword)(p)),LTAG_SMALLINT)
 
 #endif
 
@@ -576,33 +568,33 @@ void *tagged2Addr(TaggedRef t);
 
 class Tagged2 {
 private:
-  uint32 tagged;
+  ozword tagged;
   void checkTag(int tag)       { Assert(tag >=0 && tag <=__tagged2Mask); }
-  void checkVal(uint32 val)    { Assert((val & (__tagged2Mask<<(32-__tagged2Bits))) == 0); }
-  void checkPointer(void* ptr) { Assert((((uint32) ptr)&__tagged2Mask) == 0); }
+  void checkVal(ozword val)    { Assert((val & ((ozword)__tagged2Mask<<(sizeof(ozword)*8-__tagged2Bits))) == 0); }
+  void checkPointer(void* ptr) { Assert((((ozword) ptr)&__tagged2Mask) == 0); }
 public:
 
   int     getTag()  { return (tagged&__tagged2Mask); }
-  uint32  getData() { return tagged>>__tagged2Bits; }
-  void*   getPtr()  { return (void*)(tagged&~__tagged2Mask); }
+  ozword  getData() { return tagged>>__tagged2Bits; }
+  void*   getPtr()  { return (void*)(tagged&~((ozword)__tagged2Mask)); }
 
   void set(void* ptr,int tag) {
     checkPointer(ptr);
     checkTag(tag);
-    tagged = ((uint32)ptr) | tag;
+    tagged = ((ozword)ptr) | tag;
   }
-  void set(uint32 val,int tag) {
+  void set(ozword val,int tag) {
     checkTag(tag);
     checkVal(val);
     tagged = (val<<__tagged2Bits) | tag;
   }
   void setPtr(void* ptr) {
     checkPointer(ptr);
-    tagged = ((uint32)ptr) | getTag();
+    tagged = ((ozword)ptr) | getTag();
   }
   void setTag(int tag) {
     checkTag(tag);
-    tagged = (tagged & ~__tagged2Mask) | tag;
+    tagged = (tagged & ~((ozword)__tagged2Mask)) | tag;
   }
   void borTag(int tag) {
     checkTag(tag);
@@ -610,16 +602,16 @@ public:
   }
   void bandTag(int tag) {
     checkTag(tag & __tagged2Mask);
-    tagged = tagged & (tag | ~__tagged2Mask);
+    tagged = tagged & (tag | ~((ozword)__tagged2Mask));
   }
-  void setVal(uint32 val) {
+  void setVal(ozword val) {
     checkVal(val);
     tagged = (val<<__tagged2Bits) | getTag();
   }
 
   Tagged2()                   { tagged = 0; }
   Tagged2(void* ptr,int tag)  { set(ptr,tag); }
-  Tagged2(uint32 val,int tag) { set(val,tag); }
+  Tagged2(ozword val,int tag) { set(val,tag); }
 
 };
 

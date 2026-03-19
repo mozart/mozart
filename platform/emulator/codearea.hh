@@ -99,7 +99,7 @@ public:
 
 
 #ifdef THREADED
-  typedef uint32 AdressOpcode;
+  typedef ozword AdressOpcode;
 #else
   typedef Opcode AdressOpcode; 
 #endif
@@ -197,7 +197,7 @@ public:
 
   static AdressOpcode opcodeToAdress(Opcode oc) {
 #ifdef THREADED
-    return ToInt32(globalInstrTable[oc]);
+    return ToWord(globalInstrTable[oc]);
 #else
     return oc;
 #endif
@@ -205,11 +205,11 @@ public:
   static Opcode adressToOpcode(AdressOpcode adr) {
 #ifdef THREADED
 #ifdef INLINEOPCODEMAP
-    return Opcode (*((int32 *) (((char *) adr) - (1<<OPCODEALIGN))));
+    return Opcode (*((ByteCode *) (((char *) adr) - (1<<OPCODEALIGN))));
 #else
     void * ret = opcodeTable->htFind((void *) adr);
     Assert(ret != htEmpty);
-    return (Opcode) ToInt32(ret);
+    return (Opcode) ToWord(ret);
 #endif
 #else
     return adr;
@@ -249,9 +249,9 @@ private:
     return ptr+1; 
   }
 
-  static ProgramCounter writeWord(void *p, ProgramCounter ptr)  
-  { 
-    return writeWord((ByteCode)ToInt32(p),ptr);
+  static ProgramCounter writeWord(void *p, ProgramCounter ptr)
+  {
+    return writeWord((ByteCode)ToWord(p),ptr);
   }
 
 public:
@@ -319,7 +319,7 @@ public:
   static ProgramCounter writeYRegIndex(int index, ProgramCounter ptr)
   {
 #ifdef FASTREGACCESS
-    index = index*sizeof(TaggedRef) + sizeof(int); 
+    index = index*sizeof(TaggedRef) + sizeof(intptr_t);
 #else
 #ifdef CHECKREGACCESS
     index = ((index << 2) | 2);
@@ -380,7 +380,7 @@ public:
     *ptr = c;
   }
   static void writeWordAllocated(void *p, ProgramCounter ptr) {
-    writeWordAllocated((ByteCode)ToInt32(p),ptr);
+    writeWordAllocated((ByteCode)ToWord(p),ptr);
   }
 
   static void writeAddressAllocated(void *p, ProgramCounter ptr) {
@@ -414,7 +414,7 @@ public:
   // The builder expects the word to be word-aligned, so that it can
   // treat it as an s-pointer.
   static ProgramCounter allocateWord(ProgramCounter ptr) {
-    Assert(((unsigned int) ptr) / sizeof(int) * sizeof(int) == (unsigned int) ptr);
+    Assert(((uintptr_t) ptr) / sizeof(ByteCode) * sizeof(ByteCode) == (uintptr_t) ptr);
     return (ptr+1); 
   }
 };
@@ -479,15 +479,15 @@ GReg getGRegArg(ProgramCounter PC) {
  */
 
 class InlineCache {
-  uint32 key;
-  int32 value;
-      
+  ozword key;
+  ozsword value;
+
 public:
-  InlineCache() { key = value = 0; } 
+  InlineCache() { key = value = 0; }
 
   int lookup(SRecord *rec, TaggedRef feature)
   {
-    if (key!=(uint32)rec->getSRecordArity()) {
+    if (key!=(ozword)rec->getSRecordArity()) {
       int32 aux = rec->getIndex(feature);
       if (aux==-1)
 	return aux;
@@ -500,12 +500,12 @@ public:
   Abstraction *lookup(OzClass *c, TaggedRef meth,
 		      SRecordArity arity)
   {
-    if (ToInt32(c) != key) {
+    if (ToWord(c) != key) {
       Bool defaultsUsed = NO;
-      Abstraction *ret = c->getMethod(meth,arity,OK,defaultsUsed);      
+      Abstraction *ret = c->getMethod(meth,arity,OK,defaultsUsed);
       if (!defaultsUsed && ret) {
-	value = ToInt32(ret);
-	key   = ToInt32(c);
+	value = ToWord(ret);
+	key   = ToWord(c);
       }
       return ret;
     }
@@ -615,7 +615,7 @@ extern OZ_Location * OZ_ID_LOC;
 
 #endif
 
-#define YRegToInt(N) ((N-sizeof(int)) / sizeof(TaggedRef))
+#define YRegToInt(N) ((N-sizeof(intptr_t)) / sizeof(TaggedRef))
 #define YRegToPtr(Y,N) Y->getFastArgRef(N)
 
 #define GRegToInt(N) ((N) / sizeof(TaggedRef))
