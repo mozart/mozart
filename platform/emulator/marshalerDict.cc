@@ -42,11 +42,18 @@ const int TABLE_SIZE_BITS = 7;	// TABLE_SIZE == 2^TABLE_SIZE_BITS;
 // print statistics if on average there are more than that tries per search:
 #define DEBUG_THRESHOLD		2
 
+// golden ratio hash constant (pointer-width)
+#if __SIZEOF_POINTER__ == 8
+#define GOLDEN_HASH_CONST ((ozword) 0x9e3779b97f4a7c15ULL)
+#else
+#define GOLDEN_HASH_CONST ((ozword) 0x9e3779b9)
+#endif
+
 //
 // Note: 'mkTable()' resets the 'pass';
 void MarshalerDict::mkTable()
 {
-  const int totalBits = sizeof(unsigned int)*8;
+  const int totalBits = sizeof(ozword)*8;
   // leave exactly 'bits':
   rsBits = totalBits - bits;
   // would like to drop all of the pkey's bits, but have to retain at
@@ -109,16 +116,15 @@ MarshalerDict::~MarshalerDict()
 inline
 unsigned int MarshalerDict::primeHashFunc(OZ_Term i)
 {
-  // golden cut = 0.6180339887 = A/w, 32bit integers w = 4294967296,
-  // thus A = 2654435769.2829335552
-  // .. on a 64bit architecture A = 11400714819323198485
-  Assert(sizeof(unsigned int)*8 == 32);
-  return ((((unsigned int) i) * ((unsigned int) 0x9e3779b9)) >> rsBits);
+  // golden cut = 0.6180339887 = A/w
+  // 32bit: w = 4294967296, A = 2654435769
+  // 64bit: w = 18446744073709551616, A = 11400714819323198485
+  return ((((ozword) i) * GOLDEN_HASH_CONST) >> rsBits);
 }
 inline
 unsigned int MarshalerDict::incHashFunc(OZ_Term i)
 {
-  unsigned int m = ((unsigned int) i) * ((unsigned int) 0x9e3779b9);
+  ozword m = ((ozword) i) * GOLDEN_HASH_CONST;
   return (((m << slsBits) >> rsBits) | 0x1); // has to be odd;
 }
 
@@ -128,7 +134,7 @@ void MarshalerDict::recordNode(OZ_Term n, int ind)
   if (counter > percent) resize();
 
   //
-  unsigned int m = ((unsigned int) n) * ((unsigned int) 0x9e3779b9);
+  ozword m = ((ozword) n) * GOLDEN_HASH_CONST;
   unsigned int pkey = m >> rsBits;
   Assert(pkey == primeHashFunc(n));
   unsigned int ikey = 0;
@@ -164,7 +170,7 @@ void MarshalerDict::recordNode(OZ_Term n, int ind)
 //
 //
 #define FindNode(AuxCodeNotFound)					\
-  unsigned int m = ((unsigned int) n) * ((unsigned int) 0x9e3779b9);	\
+  ozword m = ((ozword) n) * GOLDEN_HASH_CONST;				\
   unsigned int pkey = m >> rsBits;					\
   Assert(pkey == primeHashFunc(n));					\
   unsigned int ikey = 0;						\

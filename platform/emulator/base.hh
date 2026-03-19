@@ -129,7 +129,7 @@ const Bool FALSE = 0;
 
 typedef unsigned char BYTE;
 
-typedef int32 ByteCode;
+typedef ozsword ByteCode;
 
 typedef ByteCode *ProgramCounter;
 
@@ -141,7 +141,7 @@ typedef PosInt XReg;
 typedef PosInt YReg;
 typedef PosInt GReg;
 
-typedef unsigned int32 TaggedRef;
+typedef ozword TaggedRef;
 
 typedef unsigned int32 crc_t;
 

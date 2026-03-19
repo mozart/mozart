@@ -29,11 +29,15 @@
 #define __MACHINEHH
 
 #include <limits.h>
+#include <stdint.h>
 
 /*
  * This file contains machine specific settings
  */
 
+/* pointer-sized integer types for 64-bit portability */
+typedef uintptr_t ozword;
+typedef intptr_t ozsword;
 
 /* a 32 bit integer, the same on alpha and other machines */
 #define int32 int
@@ -73,17 +77,19 @@
 
 #define textBase 0x0
 
-/* convert an uint32 to a pointer and vice versa */
-#define _ToPointer(i) ((void*) (i)) 
-#define _ToInt32(p) ((uint32)(p))
+/* convert an integer to a pointer and vice versa */
+#define _ToPointer(i) ((void*) (i))
+#define _ToWord(p) ((ozword)(p))
+#define _ToInt32(p) _ToWord(p)
 #ifdef DEBUG_CHECK
-inline void* ToPointer(uint32 i) { return _ToPointer(i); }
-inline uint32 ToInt32(const void *p) { return _ToInt32(p); }
-inline uint32 ToInt32(uint32 t) { return t; }
+inline void* ToPointer(ozword i) { return _ToPointer(i); }
+inline ozword ToWord(const void *p) { return _ToWord(p); }
+inline ozword ToWord(ozword t) { return t; }
 #else
 #define ToPointer(i) _ToPointer(i)
-#define ToInt32(p)   _ToInt32(p)
+#define ToWord(p)    _ToWord(p)
 #endif
+#define ToInt32 ToWord
 
 /* (un)set bits in a pointer */
 inline void *orPointer(void *p, int i)  { return (void*) ((intlong)p|(intlong)i); }

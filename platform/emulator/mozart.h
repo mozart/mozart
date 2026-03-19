@@ -52,6 +52,8 @@
 #  define ozcdecl
 #endif
 
+#include <stdint.h>
+
 #if defined(__STDC__) || defined(_MSC_VER)
 #define OZStringify(Name) #Name
 #define OZ_CONST const
@@ -78,7 +80,7 @@ extern "C" {
  * I. type declarations
  * ------------------------------------------------------------------------ */
 
-typedef unsigned int OZ_Term;
+typedef uintptr_t OZ_Term;
 
 typedef unsigned int OZ_Return;
 

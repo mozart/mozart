@@ -207,30 +207,30 @@ public:
     checkConsistency();
     Assert(isEmpty() == NO);
     DebugCode(rbuf.save(tos-1, *(tos-1)));
-    return (ToInt32(*(--tos)));
+    return (ToWord(*(--tos)));
   }
   OZ_Term lookup() {
     checkConsistency();
     DebugCode(rbuf.save(tos-1, *(tos-1)));
-    return (ToInt32(topElem()));
+    return (ToWord(topElem()));
   }
 
   //
   // For special 'GenTraverser' machinery: handling code areas, etc.
-  void putInt(int32 i) {
+  void putInt(intptr_t i) {
     checkConsistency();
     *tos++ = ToPointer(i);
   }
-  int32 getInt() {
+  intptr_t getInt() {
     checkConsistency();
     Assert(isEmpty() == NO);
     DebugCode(rbuf.save(tos-1, *(tos-1)));
-    return (ToInt32(*(--tos)));
+    return (intptr_t)(ToWord(*(--tos)));
   }
-  int32 lookupInt() {
+  intptr_t lookupInt() {
     checkConsistency();
     DebugCode(rbuf.save(tos-1, *(tos-1)));
-    return (ToInt32(topElem()));
+    return (intptr_t)(ToWord(topElem()));
   }
   void putPtr(void* ptr) {
     checkConsistency();
@@ -376,10 +376,10 @@ public:
 //
 
 //
-#define MAKETRAVERSERTASK(task)  makeTaggedMarkIntNOTEST((int32) task)
+#define MAKETRAVERSERTASK(task)  makeTaggedMarkIntNOTEST((ozsword) task)
 //
 inline
-int32 getTraverserTaskArg(OZ_Term taggedTraverserTask)
+ozsword getTraverserTaskArg(OZ_Term taggedTraverserTask)
 {
   Assert(oz_isMark(taggedTraverserTask));
   return tagged2UnmarkedInt(taggedTraverserTask);
@@ -906,7 +906,7 @@ public:
 
   //
   BuilderTaskType getLastType() {
-    return ((BuilderTaskType) int(buf[current-4]));
+    return ((BuilderTaskType) (intptr_t)(buf[current-4]));
   }
 
   //
@@ -924,7 +924,7 @@ public:
       if (index < 0) 
 	index = BUILDER_RINGBUFFER_BUFSIZE - BUILDER_RINGBUFFER_FRAME;
       //
-      int maybetask = (int32) buf[index+1];
+      intptr_t maybetask = (intptr_t) buf[index+1];
       if (maybetask >= 0 && maybetask < BT_NOTASK) {
 	const char *name = builderTaskNames[maybetask];
 	fprintf(stdout, " frame(%p) e0=%p (%s?), e1=%p, e2=%p\n",
@@ -997,24 +997,24 @@ public:
 
 #define GetBTTaskType(frame, type)			\
   BuilderTaskType type =			       	\
-    (BuilderTaskType) ToInt32(*(frame-1));		\
+    (BuilderTaskType) ToWord(*(frame-1));		\
   DebugCode(ringbuf.save(frame, type,			\
             *(frame-2), *(frame-3)););
 #define GetBTTaskTypeNoDecl(frame, type)		\
-  type = (BuilderTaskType) ToInt32(*(frame-1));		\
+  type = (BuilderTaskType) ToWord(*(frame-1));		\
   DebugCode(ringbuf.save(frame, type,			\
             *(frame-2), *(frame-3)););
 
 #define GetBTTaskArg1(frame, ATYPE, arg)		\
-  ATYPE arg = (ATYPE) ToInt32(*(frame-2));
+  ATYPE arg = (ATYPE) ToWord(*(frame-2));
 #define GetBTTaskPtr1(frame, PTYPE, ptr)		\
   PTYPE ptr = (PTYPE) *(frame-2);
 #define GetBTTaskArg1NoDecl(frame, ATYPE, arg)		\
-  arg = (ATYPE) ToInt32(*(frame-2));
+  arg = (ATYPE) ToWord(*(frame-2));
 #define GetBTTaskPtr1NoDecl(frame, PTYPE, ptr)		\
   ptr = (PTYPE) *(frame-2);
 #define GetBTTaskArg2(frame, ATYPE, arg)		\
-  ATYPE arg = (ATYPE) ToInt32(*(frame-3));
+  ATYPE arg = (ATYPE) ToWord(*(frame-3));
 #define GetBTTaskPtr2(frame, PTYPE, ptr)		\
   PTYPE ptr = (PTYPE) *(frame-3);
 #define GetBTTaskArg1Ref(frame, ATYPE)			\
@@ -1031,31 +1031,31 @@ public:
 // Special: lookup the type of the next frame...
 #define GetBTNextTaskType(frame, type)			\
   BuilderTaskType type = (BuilderTaskType)		\
-    ToInt32(*(frame - bsFrameSize - 1));		\
+    ToWord(*(frame - bsFrameSize - 1));			\
   DebugCode(ringbuf.save(frame-bsFrameSize, type,	\
             *(frame - bsFrameSize - 2),			\
             *(frame - bsFrameSize - 3)););
 #define GetBTNextTaskArg1(frame, ATYPE, arg)		\
-  ATYPE arg = (ATYPE) ToInt32(*(frame - bsFrameSize - 2));
+  ATYPE arg = (ATYPE) ToWord(*(frame - bsFrameSize - 2));
 #define GetBTNextTaskPtr1(frame, PTYPE, ptr)		\
   PTYPE ptr = (PTYPE) *(frame - bsFrameSize - 2);
 
 //
 #define GetBTFrameArg1(frame, ATYPE, arg)		\
-  ATYPE arg = (ATYPE) ToInt32(*(frame-1));
+  ATYPE arg = (ATYPE) ToWord(*(frame-1));
 #define GetBTFramePtr1(frame, PTYPE, ptr)		\
   PTYPE ptr = (PTYPE) *(frame-1);
 #define GetBTFrameArg2(frame, ATYPE, arg)		\
-  ATYPE arg = (ATYPE) ToInt32(*(frame-2));
+  ATYPE arg = (ATYPE) ToWord(*(frame-2));
 #define GetBTFramePtr2(frame, PTYPE, ptr)		\
   PTYPE ptr = (PTYPE) *(frame-2);
 #define GetBTFrameArg3(frame, ATYPE, arg)		\
-  ATYPE arg = (ATYPE) ToInt32(*(frame-3));
+  ATYPE arg = (ATYPE) ToWord(*(frame-3));
 #define GetBTFramePtr3(frame, PTYPE, ptr)		\
   PTYPE ptr = (PTYPE) *(frame-3);
 
 #define GetNextBTFrameArg1(frame, ATYPE, arg)		\
-  ATYPE arg = (ATYPE) ToInt32(*(frame - bsFrameSize - 1));
+  ATYPE arg = (ATYPE) ToWord(*(frame - bsFrameSize - 1));
 #define GetNextBTFramePtr1(frame, PTYPE, arg)		\
   PTYPE arg = (PTYPE) *(frame - bsFrameSize - 1);
 
@@ -1068,21 +1068,21 @@ public:
 
 #define PutBTTask(frame,type)				\
 {							\
-  DebugCode(*(frame) = ToPointer(0xffffffff););		\
-  DebugCode(*(frame+1) = ToPointer(0xffffffff););	\
+  DebugCode(*(frame) = ToPointer((ozword)0xffffffff););	\
+  DebugCode(*(frame+1) = ToPointer((ozword)0xffffffff););\
   *(frame+2) = ToPointer(type);				\
   frame = frame + bsFrameSize;				\
 }
 #define PutBTTaskPtr(frame,type,ptr)			\
 {							\
-  DebugCode(*(frame) = ToPointer(0xffffffff););		\
+  DebugCode(*(frame) = ToPointer((ozword)0xffffffff););	\
   *(frame+1) = ptr;					\
   *(frame+2) = ToPointer(type);				\
   frame = frame + bsFrameSize;				\
 }
 #define PutBTTaskArg(frame,type,arg)			\
 {							\
-  DebugCode(*(frame) = ToPointer(0xffffffff););		\
+  DebugCode(*(frame) = ToPointer((ozword)0xffffffff););	\
   *(frame+1) = ToPointer(arg);				\
   *(frame+2) = ToPointer(type);				\
   frame = frame + bsFrameSize;				\
@@ -1112,35 +1112,35 @@ public:
 //
 #define PutBTEmptyFrame(frame)				\
 {							\
-  DebugCode(*(frame) = ToPointer(0xffffffff););		\
-  DebugCode(*(frame+1) = ToPointer(0xffffffff););	\
-  DebugCode(*(frame+2) = ToPointer(0xffffffff););	\
+  DebugCode(*(frame) = ToPointer((ozword)0xffffffff););	\
+  DebugCode(*(frame+1) = ToPointer((ozword)0xffffffff););\
+  DebugCode(*(frame+2) = ToPointer((ozword)0xffffffff););\
   frame = frame + bsFrameSize;				\
 }
 #define PutBTFramePtr(frame,ptr)			\
 {							\
-  DebugCode(*(frame) = ToPointer(0xffffffff););		\
-  DebugCode(*(frame+1) = ToPointer(0xffffffff););	\
+  DebugCode(*(frame) = ToPointer((ozword)0xffffffff););	\
+  DebugCode(*(frame+1) = ToPointer((ozword)0xffffffff););\
   *(frame+2) = ptr;					\
   frame = frame + bsFrameSize;				\
 }
 #define PutBTFrameArg(frame,arg)			\
 {							\
-  DebugCode(*(frame) = ToPointer(0xffffffff););		\
-  DebugCode(*(frame+1) = ToPointer(0xffffffff););	\
+  DebugCode(*(frame) = ToPointer((ozword)0xffffffff););	\
+  DebugCode(*(frame+1) = ToPointer((ozword)0xffffffff););\
   *(frame+2) = ToPointer(arg);				\
   frame = frame + bsFrameSize;				\
 }
 #define PutBTFrame2Ptrs(frame,ptr1,ptr2)		\
 {							\
-  DebugCode(*(frame) = ToPointer(0xffffffff););		\
+  DebugCode(*(frame) = ToPointer((ozword)0xffffffff););	\
   *(frame+1) = ptr2;					\
   *(frame+2) = ptr1;					\
   frame = frame + bsFrameSize;				\
 }
 #define PutBTFramePtrArg(frame,ptr,arg)			\
 {							\
-  DebugCode(*(frame) = ToPointer(0xffffffff););		\
+  DebugCode(*(frame) = ToPointer((ozword)0xffffffff););	\
   *(frame+1) = ToPointer(arg);				\
   *(frame+2) = ptr;					\
   frame = frame + bsFrameSize;				\
@@ -1154,7 +1154,7 @@ public:
 }
 #define PutBTFrame2Args(frame,arg1,arg2)		\
 {							\
-  DebugCode(*(frame) = ToPointer(0xffffffff););		\
+  DebugCode(*(frame) = ToPointer((ozword)0xffffffff););	\
   *(frame+1) = ToPointer(arg2);				\
   *(frame+2) = ToPointer(arg1);				\
   frame = frame + bsFrameSize;				\
@@ -1204,14 +1204,14 @@ public:
   }
 
   //
-  void putTask(BuilderTaskType type, void* ptr1, uint32 arg2) {
+  void putTask(BuilderTaskType type, void* ptr1, ozword arg2) {
     StackEntry *newTop = Stack::ensureFree(bsFrameSize);
     *(newTop) = ToPointer(arg2);
     *(newTop+1) = ptr1;
     *(newTop+2) = ToPointer(type);
     setTop(newTop + bsFrameSize);
   }
-  void putTask(BuilderTaskType type, uint32 arg1, uint32 arg2) {
+  void putTask(BuilderTaskType type, ozword arg1, ozword arg2) {
     StackEntry *newTop = Stack::ensureFree(bsFrameSize);
     *(newTop) = ToPointer(arg2);
     *(newTop+1) = ToPointer(arg1);
@@ -1220,7 +1220,7 @@ public:
   }
   void putTask(BuilderTaskType type, void* ptr) {
     StackEntry *newTop = Stack::ensureFree(bsFrameSize);
-    DebugCode(*(newTop) = ToPointer(0xffffffff););
+    DebugCode(*(newTop) = ToPointer((ozword)0xffffffff););
     *(newTop+1) = ptr;
     *(newTop+2) = ToPointer(type);
     setTop(newTop + bsFrameSize);
@@ -1232,24 +1232,24 @@ public:
     *(newTop+2) = ToPointer(type);
     setTop(newTop + bsFrameSize);
   }
-  void putTask(BuilderTaskType type, uint32 arg) {
+  void putTask(BuilderTaskType type, ozword arg) {
     StackEntry *newTop = Stack::ensureFree(bsFrameSize);
-    DebugCode(*(newTop) = ToPointer(0xffffffff););
+    DebugCode(*(newTop) = ToPointer((ozword)0xffffffff););
     *(newTop+1) = ToPointer(arg);
     *(newTop+2) = ToPointer(type);
     setTop(newTop + bsFrameSize);
   }
-  void putTask2ndArg(BuilderTaskType type, uint32 arg) {
+  void putTask2ndArg(BuilderTaskType type, ozword arg) {
     StackEntry *newTop = Stack::ensureFree(bsFrameSize);
     *(newTop) = ToPointer(arg);
-    DebugCode(*(newTop+1) = ToPointer(0xffffffff););
+    DebugCode(*(newTop+1) = ToPointer((ozword)0xffffffff););
     *(newTop+2) = ToPointer(type);
     setTop(newTop + bsFrameSize);
   }
   void putTask(BuilderTaskType type) {
     StackEntry *newTop = Stack::ensureFree(bsFrameSize);
-    DebugCode(*(newTop) = ToPointer(0xffffffff););
-    DebugCode(*(newTop+1) = ToPointer(0xffffffff););
+    DebugCode(*(newTop) = ToPointer((ozword)0xffffffff););
+    DebugCode(*(newTop+1) = ToPointer((ozword)0xffffffff););
     *(newTop+2) = ToPointer(type);
     setTop(newTop + bsFrameSize);
   }
@@ -1267,7 +1267,7 @@ public:
       StackEntry e0 = *(--se);
       StackEntry e1 = *(--se);
       StackEntry e2 = *(--se);
-      int maybetask = (int32) e0;
+      intptr_t maybetask = (intptr_t) e0;
       if (maybetask >= 0 && maybetask < BT_NOTASK) {
 	const char *name = builderTaskNames[maybetask];
 	fprintf(stdout, " frame(%p) e0=%p (%s?), e1=%p, e2=%p\n",
@@ -1533,7 +1533,7 @@ public:
 };
 
 //
-typedef int BuilderOpaqueBA;
+typedef intptr_t BuilderOpaqueBA;
 typedef void (*OzValueProcessor)(GTAbstractEntity *arg, OZ_Term value);
 typedef void (*BuilderGenAction)(void *arg);
 
@@ -1905,7 +1905,7 @@ public:
 
     //
     Assert(bp);
-    opaque = (BuilderOpaqueBA) (ToInt32(frame) - ToInt32(getBottom()));
+    opaque = (BuilderOpaqueBA) (ToWord(frame) - ToWord(getBottom()));
     return (bp);
   }
 
@@ -1964,7 +1964,7 @@ public:
   // the stream (of terms previously declared with 'getOzValue()'):
   void suspendFillBinary(BuilderOpaqueBA opaque) {
     // That's a NOP: the task remains in place;
-    DebugCode(BTFrame* frame = (BTFrame *) (ToInt32(getBottom()) + opaque););
+    DebugCode(BTFrame* frame = (BTFrame *) (ToWord(getBottom()) + opaque););
     DebugCode(GetBTTaskType(frame, type););
     Assert(type == BT_binary);
   }
@@ -1974,7 +1974,7 @@ public:
   // invalidates it, so that 'buildValueOutline()' will get rid of it;
   void finishFillBinary(BuilderOpaqueBA opaque) {
     // trust user...
-    BTFrame* frame = (BTFrame *) (ToInt32(getBottom()) + opaque);
+    BTFrame* frame = (BTFrame *) (ToWord(getBottom()) + opaque);
     GetBTFrame(realBTFrame);
     //
     DebugCode(GetBTTaskType(frame, type););
