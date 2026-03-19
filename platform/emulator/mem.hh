@@ -105,8 +105,8 @@ void _oz_getNewHeapChunk(const size_t);
 
 // Static(local) checks. The tagged.hh's 'isSTAligned()' are not
 // available here.
-#define oz_isHeapAligned(p)       (!(ToInt32(p) & (OZ_HEAPALIGNMENT - 1)))
-#define oz_isDoubleHeapAligned(p) (!(ToInt32(p) & (2*OZ_HEAPALIGNMENT - 1)))
+#define oz_isHeapAligned(p)       (!(ToWord(p) & (OZ_HEAPALIGNMENT - 1)))
+#define oz_isDoubleHeapAligned(p) (!(ToWord(p) & (2*OZ_HEAPALIGNMENT - 1)))
 
 
 /*
@@ -326,7 +326,7 @@ void * oz_heapDoubleMalloc(const size_t sz)
    */
   size_t a_sz = oz_alignSize(sz);
   char * c = (char *) oz_heapMalloc(a_sz + OZ_HEAPALIGNMENT);
-  if (ToInt32(c) & OZ_HEAPALIGNMENT) {
+  if (ToWord(c) & OZ_HEAPALIGNMENT) {
     oz_freeListDispose(c,OZ_HEAPALIGNMENT);
     return c+OZ_HEAPALIGNMENT;
   } else {
@@ -344,8 +344,8 @@ void * oz_heapDoubleMalloc(const size_t sz)
  */
 inline void oz_freeListDisposeUnsafe(void * p, size_t s) {
   char * p_c = (char *) p;
-  size_t p_o = ((OZ_HEAPALIGNMENT - 
-		 (ToInt32(p_c) & (OZ_HEAPALIGNMENT - 1))) 
+  size_t p_o = ((OZ_HEAPALIGNMENT -
+		 (ToWord(p_c) & (OZ_HEAPALIGNMENT - 1)))
 		& (OZ_HEAPALIGNMENT - 1));
   size_t s_o = s - p_o;
   size_t s_a = s_o & (-OZ_HEAPALIGNMENT);

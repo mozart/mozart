@@ -128,14 +128,14 @@ public:
   static Atom *newAtom(const char *str);
   const char* getPrintName() { return printName; }
   int getSize() { return getOthers(); }
-  unsigned int hash() { return (ToInt32(this) >> LTAG_BITS); }
+  unsigned int hash() { return (ToWord(this) >> LTAG_BITS); }
 };
 
 /* This one goes onto the heap */
 class Name: public Literal {
 protected:
   static int NameCurrentNumber;
-  int32 homeOrGName;
+  intptr_t homeOrGName;
 public:
   NO_DEFAULT_CONSTRUCTORS(Name)
   static Name *newName(Board *b);
@@ -157,8 +157,8 @@ public:
   void cacMark(Name * fwd) {
     homeOrGName = makeTaggedMarkPtr(fwd);
   }
-  int32 ** cacGetMarkField(void) {
-    return (int32**) &homeOrGName;
+  intptr_t ** cacGetMarkField(void) {
+    return (intptr_t**) &homeOrGName;
   }
   Name * cacGetFwd(void) {
     Assert(cacIsMarked());
@@ -378,8 +378,8 @@ public:
   LTuple * cacGetFwd(void) {
     return (LTuple *) tagged2UnmarkedPtr(args[0]);
   }
-  int32 ** cacGetMarkField(void) {
-    return (int32**) &args[0];
+  intptr_t ** cacGetMarkField(void) {
+    return (intptr_t**) &args[0];
   }
   void gCollectRecurse(void);
   LTuple * gCollect(void);
@@ -1217,7 +1217,7 @@ TaggedRef makeTupleArityList(int i);
  * either an Arity* or an int
  */
 
-typedef int32 SRecordArity; /* do not want to use a pointer on the Alpha! */
+typedef intptr_t SRecordArity; /* must be pointer-width to store Arity pointers */
 
 inline 
 int sraIsTuple(SRecordArity a) {
@@ -1241,8 +1241,8 @@ int getTupleWidth(SRecordArity a) {
 
 inline 
 SRecordArity mkRecordArity(Arity *a) {
-  Assert(!a->isTuple()); 
-  return ToInt32(a); 
+  Assert(!a->isTuple());
+  return ToWord(a);
 }
 
 inline 
@@ -1285,13 +1285,13 @@ public:
   }
   SRecord * cacGetFwd(void) {
     Assert(cacIsMarked());
-    return (SRecord *) ToPointer(ToInt32(recordArity) & ~2);
+    return (SRecord *) ToPointer(ToWord(recordArity) & ~(intptr_t)2);
   }
-  int32 ** cacGetMarkField(void) {
-    return (int32 **) &recordArity;
+  intptr_t ** cacGetMarkField(void) {
+    return (intptr_t **) &recordArity;
   }
   void cacMark(SRecord * fwd) {
-    recordArity = (SRecordArity) (ToInt32(fwd) | 2);
+    recordArity = (SRecordArity) (ToWord(fwd) | 2);
   }
   
   SRecord *gCollectSRecord(void);
@@ -2500,8 +2500,8 @@ public:
     Assert(cacIsCopied());
     return (Abstraction *) UnMarkPointer(pred,1);
   }
-  int32 ** cacGetCopyField(void) {
-    return (int32 **) &pred;
+  intptr_t ** cacGetCopyField(void) {
+    return (intptr_t **) &pred;
   }
 
   void cacCopy(Abstraction * fwd) {
@@ -2583,7 +2583,7 @@ public:
       initname();
       Assert(!mod_name);
     }
-    return (TaggedRef) ToInt32(bi_name); 
+    return (TaggedRef) ToWord(bi_name);
   }
   const char * getPrintName(void) {
     return tagged2Literal(getName())->getPrintName();
