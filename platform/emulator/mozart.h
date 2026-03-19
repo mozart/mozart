@@ -74,11 +74,13 @@ extern "C" {
 
 #define FUNDECL(rettype,fun,args) _FUNDECL(rettype,fun,args)
 
+#include <stdint.h>
+
 /* ------------------------------------------------------------------------ *
  * I. type declarations
  * ------------------------------------------------------------------------ */
 
-typedef unsigned int OZ_Term;
+typedef uintptr_t OZ_Term;
 
 typedef unsigned int OZ_Return;
 
@@ -717,25 +719,25 @@ _FUNDECL(void*,_OZ_currentBoard,());
 
 class OZ_Container {
 public:
-  unsigned int tag;
-  void init(unsigned int t) {
+  uintptr_t tag;
+  void init(uintptr_t t) {
     tag = t << 1;
   }
   void initAsExtension(void) {
     init(OZ_CONTAINER_TAG);
   }
-  unsigned int cacIsMarked(void) { 
-    return tag&1; 
+  uintptr_t cacIsMarked(void) {
+    return tag&1;
   }
-  void cacMark(OZ_Container * c) { 
-    tag = ((unsigned int) c) | 1; 
+  void cacMark(OZ_Container * c) {
+    tag = ((uintptr_t) c) | 1;
   }
-  unsigned int ** cacGetMarkField(void) { 
-    return (unsigned int **) &tag; 
+  uintptr_t ** cacGetMarkField(void) {
+    return (uintptr_t **) &tag;
   }
   OZ_Container * cacGetFwd(void) {
     Assert(cacIsMarked());
-    return (OZ_Container *) (tag&~1);
+    return (OZ_Container *) (tag&~(uintptr_t)1);
   }
 };
 
